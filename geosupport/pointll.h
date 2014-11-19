@@ -76,9 +76,9 @@ class PointLL : public Point2 {
     if (cosb >= 1.0f)
       return 0.00001f;
     else if (cosb < -1.0f)
-      return PI_F * RAD_EARTH_KM;
+      return kPi * kRadEarthKm;
     else
-      return acosf(cosb) * RAD_EARTH_KM;
+      return acosf(cosb) * kRadEarthKm;
   }
 
   /**

@@ -252,7 +252,7 @@ class Vector2 {
   Vector2& Normalize() {
     // Normalize the vector if the norm is not 0 or 1
     float n = Norm();
-    if (n > EPSILON && n != 1.0f) {
+    if (n > kEpsilon && n != 1.0f) {
       x_ /= n;
       y_ /= n;
     }

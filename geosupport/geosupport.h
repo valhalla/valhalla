@@ -6,30 +6,29 @@
 #include <stdlib.h>
 
 // Time constants
-const float SEC_PER_HOUR = 3600.0f;
-const float HOUR_PER_SEC = 1.0f / 3600.0f;
+const float kSecPerHour = 3600.0f;
+const float kHourPerSec = 1.0f / 3600.0f;
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
  */
 inline int GetTime(const float length, const float speed) {
-  return (int)(length / (speed * HOUR_PER_SEC) + 0.5f);
+  return (int)(length / (speed * kHourPerSec) + 0.5f);
 }
 
 // Distance constants
-const float MILES_TO_KM   = 1.609344f;
-const float KM_TO_MILES   = 1.0f / MILES_TO_KM;
-const float RAD_EARTH_KM  = 6378.160187;
-const float KM_PER_DEGREE = 110.567f;
+const float kMilePerKm      = 1.609344f;
+const float kKmPerMile      = 1.0f / kMilePerKm;
+const float kRadEarthKm     = 6378.160187;
+const float kKmPerDegreeLat = 110.567f;
 
 // Angular measures
-const float PI_F    = 3.14159265f;
-const float PIOVER2 = (PI_F * 0.5f);
-const float PIOVER4 = (PI_F * 0.25f);
-const float D2R     = (PI_F / 180.0f);    // Degrees to radians conversion
-const float R2D     = (180.0f / PI_F);    // Radians to degrees conversion
-
-const float EPSILON = 0.000001f;
+const float kPi        = 3.14159265f;
+const float kPiOver2   = (kPi * 0.5f);
+const float kPiOver4   = (kPi * 0.25f);
+const float kDegPerRad = (kPi / 180.0f);    // Degrees to radians conversion
+const float kRadPerDeg = (180.0f / kPi);    // Radians to degrees conversion
+const float kEpsilon   = 0.000001f;
 
 // TODO - remove!??
 #define MAXV(a,b) (((a) > (b)) ? (a) : (b))
@@ -37,7 +36,7 @@ const float EPSILON = 0.000001f;
 #define SQR(x)    ((x) * (x))
 
 // Intersection cases.
-enum IntersectCase { WITHIN, CONTAINS, OUTSIDE, INTERSECTS };
+enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
 
 /**
  * Degrees to radians conversion
@@ -45,7 +44,7 @@ enum IntersectCase { WITHIN, CONTAINS, OUTSIDE, INTERSECTS };
  * @return  Returns the angle in radians.
  */
 inline float degrees_to_radians(const float d) {
-  return d * D2R;
+  return d * kDegPerRad;
 }
 
 /**
@@ -54,7 +53,7 @@ inline float degrees_to_radians(const float d) {
  * @return   Returns the angle in degrees.
  */
 inline float radians_to_degrees(const float r) {
-  return r * R2D;
+  return r * kRadPerDeg;
 }
 
 /**
