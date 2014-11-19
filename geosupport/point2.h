@@ -117,7 +117,7 @@ class Point2 {
    * @return  Returns the distance between this point and p.
    */
   virtual float Distance(const Point2& p) const {
-    return sqrtf( SQR(x_ - p.x()) + SQR(y_ - p.y()) );
+    return sqrtf(sqr(x_ - p.x()) + sqr(y_ - p.y()) );
   }
 
   /**
@@ -165,6 +165,13 @@ class Point2 {
    * @return  Returns a vector.
    */
   Vector2 operator - (const Point2& p) const;
+
+ private:
+
+  // Convenience method to square a value
+  float sqr(const float v) const {
+    return v*v;
+  }
 };
 
 #endif

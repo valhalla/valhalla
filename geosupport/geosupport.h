@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 // Time constants
-const float kSecPerHour = 3600.0f;
-const float kHourPerSec = 1.0f / 3600.0f;
+constexpr float kSecPerHour = 3600.0f;
+constexpr float kHourPerSec = 1.0f / 3600.0f;
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
@@ -17,23 +17,18 @@ inline int GetTime(const float length, const float speed) {
 }
 
 // Distance constants
-const float kMilePerKm      = 1.609344f;
-const float kKmPerMile      = 1.0f / kMilePerKm;
-const float kRadEarthKm     = 6378.160187;
-const float kKmPerDegreeLat = 110.567f;
+constexpr float kMilePerKm      = 1.609344f;
+constexpr float kKmPerMile      = 1.0f / kMilePerKm;
+constexpr float kRadEarthKm     = 6378.160187;
+constexpr float kKmPerDegreeLat = 110.567f;
 
 // Angular measures
-const float kPi        = 3.14159265f;
-const float kPiOver2   = (kPi * 0.5f);
-const float kPiOver4   = (kPi * 0.25f);
-const float kDegPerRad = (kPi / 180.0f);    // Degrees to radians conversion
-const float kRadPerDeg = (180.0f / kPi);    // Radians to degrees conversion
-const float kEpsilon   = 0.000001f;
-
-// TODO - remove!??
-#define MAXV(a,b) (((a) > (b)) ? (a) : (b))
-#define MINV(a,b) (((a) < (b)) ? (a) : (b))
-#define SQR(x)    ((x) * (x))
+constexpr float kPi        = 3.14159265f;
+constexpr float kPiOver2   = (kPi * 0.5f);
+constexpr float kPiOver4   = (kPi * 0.25f);
+constexpr float kDegPerRad = (kPi / 180.0f);    // Degrees to radians conversion
+constexpr float kRadPerDeg = (180.0f / kPi);    // Radians to degrees conversion
+constexpr float kEpsilon   = 0.000001f;
 
 // Intersection cases.
 enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
@@ -81,6 +76,7 @@ inline float FastInvSqrt(float x) {
 #include "point2.h"
 #include "pointll.h"
 #include "vector2.h"
+#include "aabb2.h"
 
 // Define the operators in Point2 that allow a vector to be added
 // to and subtracted from a point. Descriptions are in the Point2
