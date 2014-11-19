@@ -16,10 +16,10 @@ class Point2 {
   float y_;
 
  public:
-	/**
+  /**
    * Default constructor
    */
-	Point2() : x_(0.0f), y_(0.0f) { }
+  Point2() : x_(0.0f), y_(0.0f) { }
 
   /**
    * Constructor with initial values for x,y.
@@ -28,7 +28,7 @@ class Point2 {
    */
   Point2(const float x, const float y) : x_(x), y_(y) { }
 
-	/**
+  /**
    * Copy constructor.
    * @param   p   Point to copy to the new point.
    */
@@ -39,16 +39,16 @@ class Point2 {
    * @param   p   Point to assign to this point.
    * @return  Returns the address of this point.
    */
-	Point2& operator = (const Point2& p) {
+  Point2& operator = (const Point2& p) {
     x_ = p.x();
-		y_ = p.y();
-		return *this;
-	}
+    y_ = p.y();
+    return *this;
+  }
 
-	/**
-    * Destructor
-    */
-	~Point2() { }
+  /**
+   * Destructor
+   */
+  ~Point2() { }
 
   /**
    * Get the x component.
@@ -87,10 +87,10 @@ class Point2 {
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-	void Set(const float x, const float y) {
-		x_ = x;
-		y_ = y;
-	}
+  void Set(const float x, const float y) {
+    x_ = x;
+    y_ = y;
+  }
 
   /**
    * Equality operator.
@@ -117,19 +117,19 @@ class Point2 {
    * @return  Returns the distance between this point and p.
    */
   virtual float Distance(const Point2& p) const {
-
     return sqrtf( SQR(x_ - p.x()) + SQR(y_ - p.y()) );
   }
 
   /**
-   * Affine combination of this point with another point. 2 scalars are provided
-   * (a0 and a1) and the must add to 1.
+   * Affine combination of this point with another point. 2 scalars are
+   * provided (a0 and a1) and the must add to 1.
    * @param  a0  Scalar for this point
    * @param  a1  Scalar for p1
    * @param  p1  Point 1
    */
-  Point2 affineCombination(const float a0, const float a1, const Point2& p1) const {
-      return Point2(a0*x_ + a1*p1.x(), a0*y_ + a1*p1.y());
+  Point2 affineCombination(const float a0, const float a1,
+                           const Point2& p1) const {
+    return Point2(a0*x_ + a1*p1.x(), a0*y_ + a1*p1.y());
   }
 
   /**
@@ -141,7 +141,7 @@ class Point2 {
     return Point2(0.5f*x_ + 0.5f*p1.x(), 0.5f*y_ + 0.5f*p1.y());
   }
 
-   // The following methods are defined in geosupport.h
+  // The following methods are defined in geosupport.h
 
   /**
    * Add a vector to the current point.
@@ -164,7 +164,7 @@ class Point2 {
    * @param   Point to subtract from the current point.
    * @return  Returns a vector.
    */
-	Vector2 operator - (const Point2& p) const;
+  Vector2 operator - (const Point2& p) const;
 };
 
 #endif
