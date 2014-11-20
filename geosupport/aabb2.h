@@ -18,7 +18,7 @@ class AABB2 {
   /**
    * Default constructor.
    */
-  AABB2() : minx_(0.0f), miny_(0.0f), maxx_(0.0f), maxy(0.0f) { }
+  AABB2() : minx_(0.0f), miny_(0.0f), maxx_(0.0f), maxy_(0.0f) { }
 
   /**
    * Construct an AABB given a minimum and maximum point.
