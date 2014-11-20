@@ -11,10 +11,6 @@ class Vector2;
  * @author David W. Nesbitt
  */
 class Point2 {
- protected:
-  float x_;
-  float y_;
-
  public:
   /**
    * Default constructor
@@ -32,7 +28,7 @@ class Point2 {
    * Copy constructor.
    * @param   p   Point to copy to the new point.
    */
-	Point2(const Point2& p) : x_(p.x_), y_(p.y_) { }
+  Point2(const Point2& p) : x_(p.x_), y_(p.y_) { }
 
   /**
    * Assignment operator
@@ -166,8 +162,11 @@ class Point2 {
    */
   Vector2 operator - (const Point2& p) const;
 
- private:
+ protected:
+  float x_;
+  float y_;
 
+ private:
   // Convenience method to square a value
   float sqr(const float v) const {
     return v*v;

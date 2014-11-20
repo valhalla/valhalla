@@ -9,10 +9,7 @@
  * @author  David W. Nesbitt
  */
 class LineSegment2 {
- private:
-  Point2 a_;
-  Point2 b_;
-
+ public:
   /**
    * Default constructor.
    */
@@ -35,7 +32,7 @@ class LineSegment2 {
    * Get the first point of the segment.
    * @return  Returns first point of the segment.
    */
-  Point2 geta() const {
+  Point2 a() const {
     return a_;
   }
 
@@ -43,7 +40,7 @@ class LineSegment2 {
    * Get the second point of the segment.
    * @return  Returns second point of the segment.
    */
-  Point2 getb() const {
+  Point2 b() const {
     return b_;
   }
 
@@ -94,7 +91,7 @@ class LineSegment2 {
   bool Intersect(const LineSegment2& segment, Point2& intersect) {
     // Construct vectors
     Vector2 b = b_ - a_;
-    Vector2 d = segment.getb() - segment.geta();
+    Vector2 d = segment.b() - segment.a();
 
     // Set 2D perpendicular vector to d
     Vector2 dp = d.GetPerpendicular();
@@ -105,7 +102,7 @@ class LineSegment2 {
     return false;
 
     // Solve for the parameter t
-    Vector2 c = segment.geta() - a_;
+    Vector2 c = segment.a() - a_;
     float t = dp.Dot(c) / dtb;
     if (t < 0.0f || t > 1.0f)
       return false;
@@ -132,6 +129,9 @@ class LineSegment2 {
            (p.x() - a_.x()) * (b_.y() - a_.y());
   }
 
+ private:
+  Point2 a_;
+  Point2 b_;
 };
 
 #endif

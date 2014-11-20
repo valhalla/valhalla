@@ -8,12 +8,6 @@
  * @author  David W. Nesbitt
  */
 class AABB2 {
- protected:
-  float minx_;
-  float miny_;
-  float maxx_;
-  float maxy_;
-
  public:
   /**
    * Default constructor.
@@ -86,7 +80,7 @@ class AABB2 {
    * Get the point at the minimum x,y,z.
    * @return  Returns the min. point.
    */
-  Point2 get_minpt() const {
+  Point2 minpt() const {
     return Point2(minx_, miny_);
   }
 
@@ -94,7 +88,7 @@ class AABB2 {
    * Get the point at the maximum x,y,z.
    * @return  Returns the max. point.
    */
-  Point2 get_maxpt() const {
+  Point2 maxpt() const {
     return Point2(maxx_, maxy_);
   }
 
@@ -138,7 +132,7 @@ class AABB2 {
    * @return  true if within the bounding box and false if outside the extent.
    *          If the point lies along the minimum x,yx or y.
    */
-  bool Within(const Point2& pt) const {
+  bool Contains(const Point2& pt) const {
     return (pt.x() >= minx_ && pt.y() >= miny_ &&
             pt.x() <  maxx_ && pt.y() <  maxy_);
   }
@@ -150,7 +144,7 @@ class AABB2 {
    *          true if it is inside.
    */
   bool Contains(const AABB2& r2) const {
-    return (Within(r2.get_minpt()) && Within(r2.get_maxpt()));
+    return (Contains(r2.minpt()) && Contains(r2.maxpt()));
   }
 
   /**
@@ -208,6 +202,14 @@ class AABB2 {
     if (r2.maxy() > maxy_)
       maxy_ = r2.maxy();
   }
+
+ protected:
+  // Minumum and maximum x,y values (lower right and upper left corners
+  // of a rectangle / bounding box.
+  float minx_;
+  float miny_;
+  float maxx_;
+  float maxy_;
 };
 
 #endif
