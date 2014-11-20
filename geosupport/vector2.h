@@ -9,10 +9,6 @@
  * @author  David W. Nesbitt
  */
 class Vector2 {
- private:
-  float x_;
-  float y_;
-
  public:
   /**
    * Default constructor
@@ -302,6 +298,11 @@ class Vector2 {
     Vector2 d = *this;
     return (d - (normal * (2.0f * (d.Dot(normal)))));
   }
+
+ private:
+  // x,y coordinate of the point
+  float x_;
+  float y_;
 };
 
 #endif
