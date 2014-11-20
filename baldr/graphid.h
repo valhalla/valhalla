@@ -32,9 +32,9 @@ class GraphId {
   }
 
   /**
-  * Copy constructor.
-  * @param  g   GraphId to copy
-  */
+   * Copy constructor.
+   * @param  g   GraphId to copy
+   */
   GraphId(const GraphId& g) {
     Set(g.Hierarchy(), g.Id());
   }
@@ -64,18 +64,18 @@ class GraphId {
   }
 
   /**
-  * Convenience method to set individual greph Id elements.
-  * @param  hierarchy  hierarchy ID
-  * @param  id         Unique identifier within the hierarchy
-  */
+   * Convenience method to set individual greph Id elements.
+   * @param  hierarchy  hierarchy ID
+   * @param  id         Unique identifier within the hierarchy
+   */
   void Set(const unsigned int hierarchy, const unsigned int id) {
     graphid.id = (id < kMaxGraphId ) ? id : 0;
     graphid.hierarchy = (hierarchy < kMaxGraphHierarchy) ? hierarchy : 0;
   }
 
   /**
-  * Post increments the id.
-  */
+   * Post increments the id.
+   */
   void operator ++(int) {
     graphid.id++;
   }

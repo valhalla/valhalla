@@ -61,7 +61,7 @@ class PointLL : public Point2 {
   float Distance(const PointLL& ll2) const {
     // If points are the same, return 0
     if (*this == ll2)
-    return 0.0f;
+      return 0.0f;
 
     // Get the longitude difference.  Don't need to worry about
     // crossing 180 since cos(x) = cos(-x)

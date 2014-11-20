@@ -81,6 +81,7 @@ inline float FastInvSqrt(float x) {
 #include "segment2.h"
 #include "obb2.h"
 #include "ellipse.h"
+#include "clipper2.h"
 
 // Define the operators in Point2 that allow a vector to be added
 // to and subtracted from a point. Descriptions are in the Point2
