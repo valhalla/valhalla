@@ -56,10 +56,10 @@ class DirectedEdge {
     unsigned char taxi_         : 1;
     unsigned char truck_        : 1;
     unsigned char pedestrian_   : 1;
-    unsigned char m_pedestrian_ : 1;
     unsigned char bicycle_      : 1;
     unsigned char emergency_    : 1;
-    unsigned char horse_        : 1;
+    unsigned char horse_        : 1;  // ???
+    unsigned char spare_        : 1;
   };
   Access forwardaccess_;
   Access reverseaccess_;
