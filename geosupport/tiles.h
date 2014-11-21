@@ -6,118 +6,118 @@
 #include <map>
 
 /**
- * A class that provides a uniform tiling system for a specified
- * latitude,longitude bounding box and tile size.
+ * A class that provides a uniform (square) tiling system for a specified
+ * bounding box (either in x,y or f,lng) and tile size.
  * A unique tile ID is assigned for each tile based on the following rules:
- *    Tile numbers start at 0 at the min lat, lng (lower left)
- *    Tile numbers increase by column (longitude) then by row (latitude)
- *    Tile numbers increase along each row by increasing longitude.
- * Contains methods for converting latitude, longitude into tile ID and
- * vice-versa.  Methods for relative tiles (using row and column offsets)
+ *    Tile numbers start at 0 at the min y, x (lower left)
+ *    Tile numbers increase by column (x,longitude) then by row (y,latitude)
+ *    Tile numbers increase along each row by increasing x,longitude.
+ * Contains methods for converting x,y or lat,lng into tile ID and
+ * vice-versa.  Methods for relative tiles (using row and column offsets).
  * are also provided.
  * @author  David W. Nesbitt
  */
-class TilesLL {
+class Tiles {
  public:
   /**
-   * Constructor.  A latitude, longitude extent and tile size is specified.
+   * Constructor.  A bounding box and tile size is specified.
    * Sets class data members and precalculates the number of rows and columns
-   * based on the longitude extent and tile size.  Tiles must be square.
-   * @param   bounds    Latitude, longitude bounding box
-   * @param   tilesize  Tile size (in degrees)
+   * based on the bounding box and tile size.
+   * @param   bounds    Bounding box
+   * @param   tilesize  Tile size
    */
-  TilesLL(const AABBLL& bounds, const float tilesize) {
+  Tiles(const AABB2& bounds, const float tilesize) {
     tilebounds_ = bounds;
     tilesize_   = tilesize;
-    ncolumns_   = (int)ceil((bounds.maxlng() - bounds.minlng()) / tilesize_);
-    nrows       = (int)ceil((bounds.maxlat() - bounds.minlat()) / tilesize_);
+    ncolumns_   = (int)ceil((bounds.maxx() - bounds.minx()) / tilesize_);
+    nrows       = (int)ceil((bounds.maxy() - bounds.miny()) / tilesize_);
   }
 
   /**
    * Destructor.
    */
-  virtual ~TilesLL() { }
+  virtual ~Tiles() { }
 
   /**
-  * Get the tile size in degrees.
-  * @return Tile size in degrees.
+  * Get the tile size.
+  * @return Tile size.
   */
   float TileSize() const {
     return tilesize_;
   }
 
   /**
-   * Returns the extent of the tiling system
-   * @return The latitude,longitude extent (using LatLngExtent).
+   * Returns the bounding box of the tiling system
+   * @return Bounding box.
    */
-  AABBLL TileBounds() const {
+  AABB2 TileBounds() const {
     return tilebounds_;
   }
 
   /**
-   * Gets the "row" based on latitude.
-   * @param   lat   Latitude
-   * @return  Returns the latitude row. Returns -1 if outside the
+   * Gets the "row" based on y.
+   * @param   y   y coordinate
+   * @return  Returns the tile row. Returns -1 if outside the
    *          tile system bounds.
    */
-  int Row(const float lat) const {
+  int Row(const float y) const {
     // Return -1 if outside the tile system bounds
-    if (lat < tilebounds_.minlat() || lat > tilebounds_.maxlat())
+    if (y < tilebounds_.miny() || y > tilebounds_.maxy())
       return -1;
 
-    // If equal to the max lat return the largest row
-    if (lat == tilebounds_.maxlat())
+    // If equal to the max y return the largest row
+    if (y == tilebounds_.maxy())
       return nrows - 1;
     else {
-      return (int)((lat - tilebounds_.minlat()) / tilesize_);
+      return (int)((y - tilebounds_.miny()) / tilesize_);
     }
   }
 
   /**
-   * Gets the "column" based on longitude.
-   * @param   lng   Longitude
-   * @return  Returns the longitude column. Returns -1 if outside the
+   * Gets the "column" based on x.
+   * @param   x   x coordinate
+   * @return  Returns the tile column. Returns -1 if outside the
    *          tile system bounds.
    */
-  int Col(const float lng) const {
+  int Col(const float x) const {
     // Return -1 if outside the tile system bounds
-    if (lng < tilebounds_.minlng() || lng > tilebounds_.maxlng())
+    if (x < tilebounds_.minx() || x > tilebounds_.maxx())
       return -1;
 
-    // If equal to the max lng return the largest column
-    if (lng == tilebounds_.maxlng())
+    // If equal to the max x return the largest column
+    if (x == tilebounds_.maxx())
       return ncolumns_ - 1;
     else {
-      float col = (lng - tilebounds_.minlng()) / tilesize_;
+      float col = (x - tilebounds_.minx()) / tilesize_;
       return (col >= 0.0) ? (int)col : (int)col - 1;
     }
   }
 
   /**
    * Converts the center of a bounding box to a tile ID.
-   * @param   ll   Center point.
+   * @param   c   Center point.
    * @return  Returns the tile ID. If the latitude, longitude is outside
    *          the extent, an error (-1) is returned.
    */
-  int TileId(const PointLL& ll) {
-    return TileId(ll.lat(), ll.lng());
+  int TileId(const Point2& c) {
+    return TileId(c.y(), c.x());
   }
 
   /**
-   * Converts a latitude, longitude to a tile ID.
-   * @param   lat   Latitude (degrees)
-   * @param   lng   Longitude (degrees)
-   * @return  Returns the tile ID. If the latitude, longitude is outside
-   *          the extent, an error (-1) is returned.
+   * Converts x,y to a tile ID.
+   * @param   y   x (or lng)
+   * @param   x   y (or lat)
+   * @return  Returns the tile ID. -1 (errors( is returned if the x,y is
+   *          outside the bounding box of the tiles.
    */
-  int TileId(const float lat, const float lng) {
+  int TileId(const float y, const float x) {
     // Returns if totally outside the extent.
-    if (lat < tilebounds_.minlat() || lng < tilebounds_.minlng() ||
-        lat > tilebounds_.maxlat() || lng > tilebounds_.maxlng())
+    if (y < tilebounds_.miny() || x < tilebounds_.minx() ||
+        y > tilebounds_.maxy() || x > tilebounds_.maxx())
       return -1;
 
     // Find the tileid by finding the latitude row and longitude column
-    return (Row(lat) * ncolumns_) + Col(lng);
+    return (Row(y) * ncolumns_) + Col(x);
   }
 
   /**
@@ -128,62 +128,60 @@ class TilesLL {
   }
 
   /**
-   * Get the base latitude, longitude of a specified tile.
+   * Get the base x,y of a specified tile.
    * @param   tileid   Tile ID.
-   * @return  The base latitude, longitude of the specified tile.
+   * @return  The base x,y of the specified tile.
    */
-  PointLL BaseLatLng(const int tileid) const {
+  Point2 Base(const int tileid) const {
     int row = tileid / ncolumns_;
     int col = tileid - (row * ncolumns_);
-    return PointLL(tilebounds_.minlat() + (row * tilesize_),
-                   tilebounds_.minlng() + (col * tilesize_));
+    return Point2(tilebounds_.miny() + (row * tilesize_),
+                  tilebounds_.minx() + (col * tilesize_));
   }
 
   /**
-   * Gets the lat,lng extent of the specified tile.
+   * Gets the y,x extent of the specified tile.
    * @param   tileid   Tile ID.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABBLL TileBounds(const int tileid) const {
-    PointLL baseLL = BaseLatLng(tileid);
-    return AABBLL(baseLL.lat(), baseLL.lng(),
-                  baseLL.lat() + tilesize_, baseLL.lng() + tilesize_);
+  AABB2 TileBounds(const int tileid) const {
+    Point2 base = Base(tileid);
+    return AABB2(base.y(), base.x(), base.y() + tilesize_,
+                 base.x() + tilesize_);
   }
 
   /**
-   * Gets the lat,lng extent of the tile with specified row, column.
+   * Gets the y,x extent of the tile with specified row, column.
    * @param   col   Tile column.
    * @param   row   Tile row.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABBLL TileBounds(const int col, const int row) const {
-    float baseLat = ((float)row * tilesize_) + tilebounds_.minlat();
-    float baseLng = ((float)col * tilesize_) + tilebounds_.minlng();
-    return AABBLL(baseLat, baseLng,
-                  baseLat + tilesize_, baseLng + tilesize_);
+  AABB2 TileBounds(const int col, const int row) const {
+    float basey = ((float)row * tilesize_) + tilebounds_.miny();
+    float basex = ((float)col * tilesize_) + tilebounds_.minx();
+    return AABB2(basey, basex, basey + tilesize_, basex + tilesize_);
   }
 
   /**
-   * Gets the center lat,lng of the specified tile.
+   * Gets the center of the specified tile.
    * @param   tileid   Tile ID.
-   * @return  The center latitude, longitude of the specified tile.
+   * @return  The center x,y of the specified tile.
    */
-  PointLL Center(const int tileid) const {
-    PointLL baseLL = BaseLatLng(tileid);
-    return PointLL(baseLL.lat() + tilesize_ * 0.5,
-                   baseLL.lng() + tilesize_ * 0.5);
+  Point2 Center(const int tileid) const {
+    Point2 base = Base(tileid);
+    return Point2(base.y() + tilesize_ * 0.5, base.x() + tilesize_ * 0.5);
   }
 
   /**
    * Returns the new tile given a previous tile and a row, column offset.
    * @param   initial_tile      ID of the tile to offset from.
-   * @param   delta_lat_rows    Number of rows to offset (can be negative).
-   * @param   delta_lng_cols    Number of columns to offset (can be negative).
+   * @param   delta_rows    Number of rows to offset (can be negative).
+   * @param   delta_cols    Number of columns to offset (can be negative).
    * @return  Tile ID of the new tile.
    */
-  int GetRelativeTileId(const int initial_tile, const int delta_lat_rows,
-                        const int delta_lng_cols) const {
-    return initial_tile + (delta_lat_rows * ncolumns_) + delta_lng_cols;
+  int GetRelativeTileId(const int initial_tile, const int delta_rows,
+                        const int delta_cols) const {
+    return initial_tile + (delta_rows * ncolumns_) + delta_cols;
   }
 
    /**
@@ -192,15 +190,15 @@ class TilesLL {
     * Offsets can be positive or negative or 0.
     * @param   initial_tileid     Original tile.
     * @param   newtileid      Tile to which relative offset is desired.
-    * @param   delta_lat_rows    Return: Relative number of rows.
-    * @param   delta_lng_cols    Return: Relative number of columns.
+    * @param   delta_rows    Return: Relative number of rows.
+    * @param   delta_cols    Return: Relative number of columns.
     */
    void TileOffsets(const int initial_tileid, const int newtileid,
-                       int& delta_lat_rows, int& delta_lng_cols) const
+                       int& delta_rows, int& delta_cols) const
    {
       int deltaTile = newtileid - initial_tileid;
-      delta_lat_rows = (newtileid  / ncolumns_) - (initial_tileid / ncolumns_);
-      delta_lng_cols = deltaTile - (delta_lat_rows * ncolumns_);
+      delta_rows = (newtileid  / ncolumns_) - (initial_tileid / ncolumns_);
+      delta_cols = deltaTile - (delta_rows * ncolumns_);
    }
 
   /**
@@ -208,14 +206,14 @@ class TilesLL {
    * @return  Number of tiles.
    */
   unsigned int TileCount() const {
-    float nrows = (tilebounds_.maxlat() - tilebounds_.minlat()) /tilesize_;
+    float nrows = (tilebounds_.maxy() - tilebounds_.miny()) /tilesize_;
     return ncolumns_ * (int)ceil(nrows);
   }
 
   /**
-   * Gets the neighboring tileid - east.
+   * Gets the neighboring tileid to the right/east.
    */
-  int GetEastNeighbor(const int tileid) const {
+  int RightNeighbor(const int tileid) const {
     int row = tileid / ncolumns_;
     int col = tileid - (row * ncolumns_);
     return (col < ncolumns_ - 1) ?  tileid + 1 : tileid - ncolumns_ + 1;
@@ -224,7 +222,7 @@ class TilesLL {
   /**
    * Gets the neighboring tileid - west.
    */
-  int WestNeighbor(const int tileid) const {
+  int LeftNeighbor(const int tileid) const {
     int row = tileid / ncolumns_;
     int col = tileid - (row * ncolumns_);
     return (col > 0) ?  tileid - 1 : tileid + ncolumns_ - 1;
@@ -233,7 +231,7 @@ class TilesLL {
   /**
    * Gets the neighboring tileid - north.
    */
-  int NorthNeighbor(const int tileid) const {
+  int TopNeighbor(const int tileid) const {
     return (tileid < (int)(TileCount() - ncolumns_)) ?
             tileid + ncolumns_ : tileid;
   }
@@ -241,19 +239,19 @@ class TilesLL {
    /**
     * Gets the neighboring tileid - south.
     */
-   int SouthNeighbor(const int tileid) const {
+   int BottomNeighbor(const int tileid) const {
       return (tileid < ncolumns_) ? tileid : tileid - ncolumns_;
    }
 
   /**
-   * Gets the list of tiles required to support the given view. The method
-   * finds the center tile and spirals out by finding neighbors and
-   * recursively checking tile visibility and adding new tiles
-   * @param  view      View description. The view class must support the
-   *                   IsTileInView method.
+   * Gets the list of tiles that lie within the specified bounding box.
+   * The method finds the center tile and spirals out by finding neighbors
+   * and recursively checking if tile is inside and checking/adding
+   * neighboring tiles
+   * @param  boundingbox  Bounding box
    * @param  maxTiles  Maximum number of tiles to find.
    */
-  const std::vector<int>& GetTileList(const AABBLL& boundingbox,
+  const std::vector<int>& TileList(const AABB2& boundingbox,
                const unsigned int maxtiles = 4096) {
     // Clear lists
     checklist_.clear();
@@ -263,10 +261,7 @@ class TilesLL {
     // Get tile at the center of the boundinb box. Return -1 if the center
     // of the bounding box is not within the tiling system bounding box.
     // TODO - relax this to check edges of the bounding box?
-    // TODO - better way to use derived class?
-    Point2 center = boundingbox.Center();
-    PointLL ll(center.y(), center.x());
-    int tileid = TileId(ll);
+    int tileid = TileId(boundingbox.Center());
     if (tileid == -1)
       return tilelist_;
 
@@ -290,15 +285,15 @@ class TilesLL {
 
  protected:
   // Bounding box of the tiling system.
-  AABBLL tilebounds_;
+  AABB2 tilebounds_;
 
-  // Tile size in degrees.  Tiles are square (equal lat and lng size).
+  // Tile size.  Tiles are square (equal y and x size).
   float tilesize_;
 
-  // Number of latitude rows.
+  // Number of rows ( y or latitude)
   int nrows;
 
-  // Number of longitude columns.
+  // Number of longitude (x or longitude).
   int ncolumns_;
 
   // Tile list being constructed
@@ -313,32 +308,32 @@ class TilesLL {
   std::map<int, int> visitedtiles_;
 
   // Default constructor (private).  Forces use of the bounding box
-  TilesLL() { }
+  Tiles() { }
 
   // This function checks neighboring tiles. It adds these tiles to the
   // end of the CheckList if they are not already in there.
   void addNeighbors(const int tileid) {
     // Make sure we check that the neighbor tile is not equal to the
     // current tile - that happens at the edge of the coverage
-    int neighbor = WestNeighbor(tileid);
+    int neighbor = LeftNeighbor(tileid);
     if (neighbor != tileid && !InList(neighbor)) {
       checklist_.push_back(neighbor);
       visitedtiles_[neighbor] = 1;
     }
 
-    neighbor = GetEastNeighbor(tileid);
+    neighbor = RightNeighbor(tileid);
     if (neighbor != tileid && !InList(neighbor)) {
       checklist_.push_back(neighbor);
       visitedtiles_[neighbor] = 1;
     }
 
-    neighbor = NorthNeighbor(tileid);
+    neighbor = TopNeighbor(tileid);
     if (neighbor != tileid && !InList(neighbor)) {
       checklist_.push_back(neighbor);
       visitedtiles_[neighbor] = 1;
     }
 
-    neighbor = SouthNeighbor(tileid);
+    neighbor = BottomNeighbor(tileid);
     if (neighbor != tileid && !InList(neighbor)) {
       checklist_.push_back(neighbor);
       visitedtiles_[neighbor] = 1;
@@ -348,7 +343,7 @@ class TilesLL {
   // Returns the next tile from the check list that is inside the bounding
   // box. Adds its neighbors to the check list.
   // Returns the tileId or -1 if no more tiles are inside the bounding box.
-  int NextTile(const AABBLL& boundingbox) {
+  int NextTile(const AABB2& boundingbox) {
     int tileid;
     while (!checklist_.empty()) {
       // Get the element off the front of the list

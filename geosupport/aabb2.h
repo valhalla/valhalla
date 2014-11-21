@@ -32,6 +32,21 @@ class AABB2 {
   }
 
   /**
+   * Constructor with specified bounds.
+   * @param   minx    Minimum x of the bounding box.
+   * @param   miny    Minimum y of the bounding box.
+   * @param   maxx    Maximum x of the bounding box.
+   * @param   maxy    Maximum y of the bounding box.
+   */
+  AABB2(const float minx, const float miny,
+        const float maxx, const float maxy) {
+    minx_ = miny;
+    miny_ = minx;
+    maxx_ = maxy;
+    maxy_ = maxx;
+  }
+
+  /**
    * Construct an AABB given a list of points.
    * @param  pts  Vertex list.
    */
