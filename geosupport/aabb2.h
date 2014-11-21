@@ -1,5 +1,5 @@
-#ifndef __aabb2__
-#define __aabb2__
+#ifndef __aabb2_h__
+#define __aabb2_h__
 
 #include <vector>
 
@@ -127,7 +127,7 @@ class AABB2 {
    * Gets the center of the bounding box.
    * @return  Returns the center point of the bounding box.
    */
-  Point2 GetCenter() const {
+  Point2 Center() const {
     return Point2((minx_ + maxx_) * 0.5, (miny_ + maxy_) * 0.5);
   }
 
@@ -167,6 +167,72 @@ class AABB2 {
       return false;
 
     return true;
+  }
+
+  /**
+   * Tests whether the segment intersects the bounding box.
+   * @param   a  Endpoint of the segment
+   * @param   b  Endpoint of the segment
+   * @return  Returns true if the segment intersects (or lies completely
+   *          within) the bounding box.
+   */
+  bool Intersect(const Point2& a, const Point2& b) const {
+    // Trivial case - either point within with the bounding box
+    if (Contains(a) || Contains(b))
+      return true;
+
+    // Trivial rejection
+    if ((a.x() < minx_ && b.x() < minx_) ||    // Both left
+        (a.y() < miny_ && b.y() < miny_) ||    // Both below
+        (a.x() > maxx_ && b.x() > maxx_) ||    // Both right
+        (a.y() > maxy_ && b.y() > maxy_))      // Both above
+      return false;
+
+    // Vertical - return true if y coordinates are on opposite sides of
+    // either the top or bottom edge. Trivial reject case ensures y is
+    // within the bounding box
+    if (b.x() == a.x()) {
+      if (((a.y() < miny_) != (b.y() < miny_)) ||
+          ((a.y() > maxy_) != (b.y() > maxy_)))
+        return true;
+    }
+
+    // Horizontal - return true if x coordinates are on opposite sides of
+    // either the left or right edge. Trivial reject case ensures x is
+    // within the bounding box
+    if (b.y() == a.y()) {
+      if (((a.x() < minx_) != (b.x() < minx_)) ||
+          ((a.x() > maxx_) != (b.x() > maxx_)))
+        return true;
+    }
+
+    // Find slope and intercept for the line equation and check which
+    // edge(s) the segment crosses. Note that it is possible to cross
+    // multiple edges. If any one crossing is within the bounding box range
+    // we return true.
+    float m = (b.y() - a.y()) / (b.x() - a.x());
+    float s =  b.y() - (m * b.x());
+    if ((a.x() < minx_) != (b.x() < minx_)) {   // Crosses left edge
+      float y = m * minx_ + s;
+      if (miny_ <= y && y <= maxy_)
+        return true;
+    }
+    if ((a.x() > maxx_) != (b.x() > maxx_))  {  // Crosses right edge
+      float y = m * maxx_ + s;
+      if (miny_ <= y && y <= maxy_)
+        return true;
+    }
+    if ((a.y() < miny_) != (b.y() < miny_))  {  // Crosses bottom edge
+      float x = (miny_ - s) / m;
+      if (minx_ <= x && x <= maxx_)
+        return true;
+    }
+    if ((a.y() > maxy_) != (b.y() > maxy_))  {  // Crosses top edge
+      float x = (maxy_ - s) / m;
+      if (minx_ <= x && x <= maxx_)
+        return true;
+    }
+    return false;
   }
 
   /**
