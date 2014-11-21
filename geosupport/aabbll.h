@@ -20,9 +20,9 @@ class AABBLL : public AABB2 {
   /**
    * Constructor with specified bounds.
    * @param   minlat    Minimum latitude of the bounding box.
-   * @param   minlng    Minimum Maximum of the bounding box.
+   * @param   minlng    Minimum longitude of the bounding box.
    * @param   maxlat    Maximum latitude of the bounding box.
-   * @param   maxlng    Maximum Maximum of the bounding box.
+   * @param   maxlng    Maximum longitude of the bounding box.
    */
   AABBLL(const float minlat, const float minlng,
          const float maxlat, const float maxlng) {
