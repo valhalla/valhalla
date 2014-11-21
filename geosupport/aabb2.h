@@ -12,7 +12,12 @@ class AABB2 {
   /**
    * Default constructor.
    */
-  AABB2() : minx_(0.0f), miny_(0.0f), maxx_(0.0f), maxy_(0.0f) { }
+  AABB2()
+      : minx_(0.0f),
+        miny_(0.0f),
+        maxx_(0.0f),
+        maxy_(0.0f) {
+  }
 
   /**
    * Construct an AABB given a minimum and maximum point.
@@ -39,9 +44,9 @@ class AABB2 {
    * @param   r2  Bounding box to compare to.
    * @return  Returns true if the 2 bounding boxes are equal.
    */
-  bool operator == (const AABB2& r2) {
-    return (minx_ == r2.minx() && maxx_ == r2.maxx() &&
-            miny_ == r2.miny() && maxy_ == r2.maxy());
+  bool operator ==(const AABB2& r2) {
+    return (minx_ == r2.minx() && maxx_ == r2.maxx() && miny_ == r2.miny()
+        && maxy_ == r2.maxy());
   }
 
   /**
@@ -55,7 +60,7 @@ class AABB2 {
   /**
    * Get the maximum x
    * @return  Returns maximum x.
-  */
+   */
   float maxx() const {
     return maxx_;
   }
@@ -133,8 +138,8 @@ class AABB2 {
    *          If the point lies along the minimum x,yx or y.
    */
   bool Contains(const Point2& pt) const {
-    return (pt.x() >= minx_ && pt.y() >= miny_ &&
-            pt.x() <  maxx_ && pt.y() <  maxy_);
+    return (pt.x() >= minx_ && pt.y() >= miny_ && pt.x() < maxx_
+        && pt.y() < maxy_);
   }
 
   /**
@@ -155,10 +160,10 @@ class AABB2 {
   bool Intersects(const AABB2& r2) const {
     // The bounding boxes do NOT intersect if the other bounding box (r2) is
     // entirely LEFT, BELOW, RIGHT, or ABOVE this bounding box.
-    if ((r2.minx() < minx_ && r2.maxx() < minx_) ||
-        (r2.miny() < miny_ && r2.maxy() < miny_) ||
-        (r2.minx() > maxx_ && r2.maxx() > maxx_) ||
-        (r2.miny() > maxy_ && r2.maxy() > maxy_))
+    if ((r2.minx() < minx_ && r2.maxx() < minx_)
+        || (r2.miny() < miny_ && r2.maxy() < miny_)
+        || (r2.minx() > maxx_ && r2.maxx() > maxx_)
+        || (r2.miny() > maxy_ && r2.maxy() > maxy_))
       return false;
 
     return true;
