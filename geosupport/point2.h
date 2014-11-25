@@ -2,6 +2,7 @@
 #define __point2_h__
 
 #include <math.h>
+#include <vector>
 
 // Forward references
 class Vector2;
@@ -108,12 +109,21 @@ class Point2 {
   }
 
   /**
+   * Get the distance squared from this point to point p.
+   * @param   p  Other point.
+   * @return  Returns the distance squared between this point and p.
+   */
+  virtual float DistanceSquared(const Point2& p) const {
+    return sqr(x_ - p.x()) + sqr(y_ - p.y());
+  }
+
+  /**
    * Get the distance from this point to point p.
    * @param   p  Other point.
    * @return  Returns the distance between this point and p.
    */
   virtual float Distance(const Point2& p) const {
-    return sqrtf(sqr(x_ - p.x()) + sqr(y_ - p.y()) );
+    return sqrtf(sqr(x_ - p.x()) + sqr(y_ - p.y()));
   }
 
   /**
@@ -161,6 +171,18 @@ class Point2 {
    * @return  Returns a vector.
    */
   Vector2 operator - (const Point2& p) const;
+
+  /**
+   * Finds the closest point to the supplied polyline as well as the distance
+   * squared to that point.
+   * @param  pts     List of points on the polyline.
+   * @param  closest (OUT) Closest point along the polyline
+   * @param  idx     (OUT) Index of the segment of the polyline which contains
+   *                       the closest point.
+   * @return   Returns the distance squared of the closest point.
+   */
+  float ClosestPoint(const std::vector<Point2>& pts, Point2& closest,
+            int& idx) const;
 
  protected:
   float x_;
