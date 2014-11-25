@@ -196,7 +196,7 @@ inline float Point2::ClosestPoint(const std::vector<Point2>& pts,
 /**
  * TODO - move to .cc file!
  * Finds the closest point to the supplied polyline as well as the distance
- * squared to that point. Sse DistanceApproximator to set the point as the
+ * squared to that point. Uses DistanceApproximator to set the point as the
  * test point - then uses DistanceSquared method to get more accurate
  * distances than just Euclidean distance in lat,lng space
  * @param  pts     Polyline points
