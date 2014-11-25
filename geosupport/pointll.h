@@ -120,6 +120,20 @@ class PointLL : public Point2 {
     float bearing = radians_to_degrees(atan2f(y, x));
     return (bearing < 0.0f) ? bearing + 360.0f : bearing;
   }
+
+  // Method defined in geosupport.h
+
+  /**
+   * Finds the closest point to the supplied polyline as well as the distance
+   * squared to that point.
+   * @param  pts     List of points on the polyline.
+   * @param  closest (OUT) Closest point along the polyline
+   * @param  idx     (OUT) Index of the segment of the polyline which contains
+   *                       the closest point.
+   * @return   Returns the distance squared of the closest point.
+   */
+  float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
+            int& idx) const;
 };
 
 #endif

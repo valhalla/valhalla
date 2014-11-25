@@ -44,15 +44,15 @@ class LineSegment2 {
     return b_;
   }
 
-  /**
-   * Finds the distance of a specified point from the line segment
+/**
+   * Finds the distance squared of a specified point from the line segment
    * and the closest point on the segement to the specified point.
    * @param   p        Test point.
    * @param   closest  (Return) Closest point on the segment to c.
-   * @return  Returns the distance from pt to the closest point on
+   * @return  Returns the distance squared from pt to the closest point on
    *          the segment.
   */
-  float Distance(const Point2& p, Point2& closest) const {
+  float DistanceSquared(const Point2& p, Point2& closest) const {
     // Construct vector v (ab) and w (ap)
     Vector2 v(a_, b_);
     Vector2 w(a_, p);
@@ -77,7 +77,19 @@ class LineSegment2 {
         closest = a_ + v * (n / d);
       }
     }
-    return closest.Distance(p);
+    return closest.DistanceSquared(p);
+  }
+
+  /**
+   * Finds the distance of a specified point from the line segment
+   * and the closest point on the segement to the specified point.
+   * @param   p        Test point.
+   * @param   closest  (Return) Closest point on the segment to c.
+   * @return  Returns the distance from pt to the closest point on
+   *          the segment.
+  */
+  float Distance(const Point2& p, Point2& closest) const {
+    return sqrtf(DistanceSquared(p, closest));
   }
 
   /**
