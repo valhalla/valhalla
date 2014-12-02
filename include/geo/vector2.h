@@ -19,113 +19,91 @@ class Vector2 {
   /**
    * Default constructor
    */
-  Vector2() : x_(0.0f), y_(0.0f) { }
+  Vector2();
 
   /**
    * Constructor given a point.  Essentially a vector from the
    * origin to the point.
    * @param   p  Point.
    */
-  Vector2(const Point2& p) : x_(p.x()), y_(p.y()) { }
+  Vector2(const Point2& p);
 
   /**
    * Constructor given components of the vector.
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  Vector2(const float x, const float y) : x_(x), y_(y) { }
+  Vector2(const float x, const float y);
 
   /**
    * Constructor from one point to another.
    * @param   from  Point at origin of the vector.
    * @param   to    Point at end of vector
    */
-  Vector2(const Point2& from, const Point2& to) :
-        x_(to.x() - from.x()), y_(to.y() - from.y()) { }
+  Vector2(const Point2& from, const Point2& to);
 
   /**
    * Copy constructor.
    * @param   w  Vector to copy to the new vector.
    */
-  Vector2(const Vector2& w) : x_(w.x()), y_(w.y()) { }
+  Vector2(const Vector2& w);
 
   /**
    * Assignment operator
    * @param   w  Vector to copy to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator = (const Vector2& w) {
-    x_ = w.x();
-    y_ = w.y();
-    return *this;
-  }
+  Vector2& operator = (const Vector2& w);
 
   /**
    * Destructor
    */
-  ~Vector2() { }
+  ~Vector2();
 
   /**
    * Get the x component.
    * @return  Returns the x component of the vector.
    */
-  float x() const {
-    return x_;
-  }
+  float x() const;
 
   /**
    * Get the y component.
    * @return  Returns the y component of the vector.
    */
-  float y() const {
-    return y_;
-  }
+  float y() const;
 
   /**
    * Set the x component.
    * @param  x  x coordinate value.
    */
-  void set_x(const float x) {
-    x_ = x;
-  }
+  void set_x(const float x);
 
   /**
    * Set the y component.
    * @param  y  y coordinate value.
    */
-  void set_y(const float y) {
-    y_ = y;
-  }
+  void set_y(const float y);
 
   /**
    * Set the current vector to the specified components.
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  void Set(const float x, const float y) {
-    x_ = x;
-    y_ = y;
-  }
+  void Set(const float x, const float y);
 
   /**
    * Set the vector components to those of a point.  Essentially a
    * vector from the origin to the point.
    * @param   p  Point.
    */
-  void Set(const Point2& p)	{
-    x_ = p.x();
-    y_ = p.y();
-  }
+  void Set(const Point2& p);
 
   /**
    * Set the current vector to be from one point to another.
    * @param   from  Point at origin of the vector.
    * @param   to    Point at end of vector
    */
-  void Set(const Point2& from, const Point2& to) {
-    x_ = to.x() - from.x();
-    y_ = to.y() - from.y();
-  }
+  void Set(const Point2& from, const Point2& to);
 
   /**
    * Creates a new vector that is the current vector plus the
@@ -133,20 +111,14 @@ class Vector2 {
    * @param   w  Vector to add to the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator + (const Vector2& w) const {
-    return Vector2(x_ + w.x(), y_ + w.y());
-  }
+  Vector2 operator + (const Vector2& w) const;
 
   /**
    * Adds vector w to the current vector.
    * @param   w  Vector to add to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator += (const Vector2& w) {
-    x_ += w.x();
-    y_ += w.y();
-    return *this;
-  }
+  Vector2& operator += (const Vector2& w);
 
   /**
    * Creates a new vector that is the current vector minus the
@@ -154,20 +126,14 @@ class Vector2 {
    * @param   w  Vector to subtract from the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator - (const Vector2& w) const {
-    return Vector2(x_ - w.x(), y_ - w.y());
-  }
+  Vector2 operator - (const Vector2& w) const;
 
   /**
    * Subtracts vector w from the current vector.
    * @param   w  Vector to subtract from the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator -= (const Vector2& w) {
-    x_ -= w.x();
-    y_ -= w.y();
-    return *this;
-  }
+  Vector2& operator -= (const Vector2& w);
 
   /**
    * Creates a new vector that is the current vector multiplied
@@ -175,20 +141,14 @@ class Vector2 {
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the resulting vector
    */
-  Vector2 operator * (const float scalar) const {
-    return Vector2(x_ * scalar, y_ * scalar);
-  }
+  Vector2 operator * (const float scalar) const;
 
   /**
    * Multiplies the current vector by a scalar
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator *= (const float scalar) {
-    x_ *= scalar;
-    y_ *= scalar;
-    return *this;
-  }
+  Vector2& operator *= (const float scalar);
 
   /**
    * Equality operator.
@@ -196,9 +156,7 @@ class Vector2 {
    * @return  Returns true if vector w equals the current vector,
    *          false otherwise.
    */
-  bool operator == (const Vector2& w) const {
-    return (x_ == w.x() && y_ == w.y());
-  }
+  bool operator == (const Vector2& w) const;
 
   /**
    * Computes the dot product of the current vector with the
@@ -206,9 +164,7 @@ class Vector2 {
    * @param   w  Vector
    * @return  Returns the dot product (a scalar).
    */
-  float Dot(const Vector2& w) const {
-    return (x_ * w.x() + y_ * w.y());
-  }
+  float Dot(const Vector2& w) const;
 
   /**
    * Computes the 2D cross product of current vector with w0.
@@ -216,9 +172,7 @@ class Vector2 {
    * @return  Returns the magnitude of the resulting vector (which is
    *          along the z axis)
    */
-  float Cross(const Vector2& w) const {
-    return (x_ * w.y() - y_ * w.x());
-  }
+  float Cross(const Vector2& w) const;
 
   /**
    * Get a perpendicular vector to this vector.
@@ -226,40 +180,26 @@ class Vector2 {
    *                    If false, get the counter-clockwise oriented
    *                    perpendicular.
    */
-  Vector2 GetPerpendicular(const bool clockwise = false) const {
-    return (clockwise) ? Vector2(y_, -x_) : Vector2(-y_, x_);
-  }
+  Vector2 GetPerpendicular(const bool clockwise = false) const;
 
   /**
    * Computes the norm (length) of the current vector.
    * @return  Returns the length of the vector.
    */
-  float Norm() const {
-    return sqrtf(Dot(*this));
-  }
+  float Norm() const;
 
   /**
    * Computes the squared norm of a vector
    * (Useful when absolute distance is not required)
    * @return  Returns the length squared of the vector.
    */
-  float NormSquared(void) const {
-    return (Dot(*this));
-  }
+  float NormSquared(void) const;
 
   /**
    * Normalizes the vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& Normalize() {
-    // Normalize the vector if the norm is not 0 or 1
-    float n = Norm();
-    if (n > kEpsilon && n != 1.0f) {
-      x_ /= n;
-      y_ /= n;
-    }
-    return *this;
-  }
+  Vector2& Normalize();
 
   /**
    * Calculates the component of the current vector along the
@@ -267,10 +207,7 @@ class Vector2 {
    * @param   w  Vector to determine component along.
    * @return  Returns the component of the current vector along w.
    */
-  float Component(const Vector2& w) const {
-    float n = w.Dot(w);
-    return (n != 0.0f) ? (Dot(w) / n) : 0.0f;
-  }
+  float Component(const Vector2& w) const;
 
   /**
    * Creates a new vector that is the projection of the current
@@ -278,9 +215,7 @@ class Vector2 {
    * @param   w  Vector to determine projection along.
    * @return  Returns the new vector.
    */
-  Vector2 Projection(const Vector2& w) const {
-    return w * Component(w);
-  }
+  Vector2 Projection(const Vector2& w) const;
 
   /**
    * Calculates the angle (radians) between the current vector and
@@ -288,9 +223,7 @@ class Vector2 {
    * @param   w  Vector to determine angle from current vector.
    * @return  Returns the angle in radians between the two vectors.
    */
-  float AngleBetween(const Vector2& w) const {
-    return acosf(Dot(w) / (Norm() * w.Norm()));
-  }
+  float AngleBetween(const Vector2& w) const;
 
   /**
    * Reflects the current vector given a normal to the reflecting surface.
@@ -300,10 +233,7 @@ class Vector2 {
    * @param   normal  unit length normal to the vector where reflection occurs
    * @return  Returns the reflected vector
    */
-  Vector2 Reflect(const Vector2& normal) const {
-    Vector2 d = *this;
-    return (d - (normal * (2.0f * (d.Dot(normal)))));
-  }
+  Vector2 Reflect(const Vector2& normal) const;
 
  private:
   // x,y coordinate of the point

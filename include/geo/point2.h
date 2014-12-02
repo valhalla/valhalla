@@ -19,87 +19,70 @@ class Point2 {
   /**
    * Default constructor
    */
-  Point2() : x_(0.0f), y_(0.0f) { }
+  Point2();
 
   /**
    * Constructor with initial values for x,y.
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  Point2(const float x, const float y) : x_(x), y_(y) { }
+  Point2(const float x, const float y);
 
   /**
    * Copy constructor.
    * @param   p   Point to copy to the new point.
    */
-  Point2(const Point2& p) : x_(p.x_), y_(p.y_) { }
+  Point2(const Point2& p);
 
   /**
    * Assignment operator
    * @param   p   Point to assign to this point.
    * @return  Returns the address of this point.
    */
-  Point2& operator = (const Point2& p) {
-    x_ = p.x();
-    y_ = p.y();
-    return *this;
-  }
+  Point2& operator = (const Point2& p);
 
   /**
    * Destructor
    */
-  virtual ~Point2() { }
+  virtual ~Point2();
 
   /**
    * Get the x component.
    * @return  Returns the x component of the point.
    */
-  float x() const {
-    return x_;
-  }
+  float x() const;
 
   /**
    * Get the y component.
    * @return  Returns the y component of the point.
    */
-  float y() const {
-    return y_;
-  }
+  float y() const;
 
   /**
    * Set the x component.
    * @param  x  x coordinate value.
    */
-  void set_x(const float x) {
-    x_ = x;
-  }
+  void set_x(const float x);
 
   /**
    * Set the y component.
    * @param  y  y coordinate value.
    */
-  void set_y(const float y) {
-    y_ = y;
-  }
+  void set_y(const float y);
 
   /**
    * Set the coordinate components to the specified values.
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  void Set(const float x, const float y) {
-    x_ = x;
-    y_ = y;
-  }
+  void Set(const float x, const float y);
 
   /**
    * Equality operator.
    * @param   p  Point to compare to the current point.
    * @return  Returns true if two points are equal, false otherwise.
    */
-  bool operator == (const Point2& p) const {
-    return (x_ == p.x() && y_ == p.y());
-  }
+  bool operator == (const Point2& p) const;
 
   /**
    * Inequality operator.
@@ -107,27 +90,21 @@ class Point2 {
    * @return  Returns true if the supplied point is not equal to the
    *          point, false otherwise.
    */
-  bool operator!= (const Point2& p) const {
-    return (x_ != p.x() || y_ != p.y());
-  }
+  bool operator!= (const Point2& p) const;
 
   /**
    * Get the distance squared from this point to point p.
    * @param   p  Other point.
    * @return  Returns the distance squared between this point and p.
    */
-  virtual float DistanceSquared(const Point2& p) const {
-    return sqr(x_ - p.x()) + sqr(y_ - p.y());
-  }
+  virtual float DistanceSquared(const Point2& p) const;
 
   /**
    * Get the distance from this point to point p.
    * @param   p  Other point.
    * @return  Returns the distance between this point and p.
    */
-  virtual float Distance(const Point2& p) const {
-    return sqrtf(sqr(x_ - p.x()) + sqr(y_ - p.y()));
-  }
+  virtual float Distance(const Point2& p) const;
 
   /**
    * Affine combination of this point with another point. 2 scalars are
@@ -137,18 +114,13 @@ class Point2 {
    * @param  p1  Point 1
    */
   Point2 affineCombination(const float a0, const float a1,
-                           const Point2& p1) const {
-    return Point2(a0*x_ + a1*p1.x(), a0*y_ + a1*p1.y());
-  }
-
+                           const Point2& p1) const;
   /**
    * Gets the midpoint on a line segment between this point and point p1.
    * @param   p1  Point
    * @return  Returns the midpoint between this point and p1.
    */
-  Point2 midPoint(const Point2& p1) {
-    return Point2(0.5f*x_ + 0.5f*p1.x(), 0.5f*y_ + 0.5f*p1.y());
-  }
+  Point2 midPoint(const Point2& p1);
 
   // The following methods are defined in geo.h
 
@@ -192,10 +164,7 @@ class Point2 {
   float y_;
 
  private:
-  // Convenience method to square a value
-  float sqr(const float v) const {
-    return v*v;
-  }
+
 };
 
 }

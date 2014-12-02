@@ -1,4 +1,5 @@
 #include "geo/distanceapproximator.h"
+#include "geo/constants.h"
 
 namespace valhalla{
 namespace geo{
