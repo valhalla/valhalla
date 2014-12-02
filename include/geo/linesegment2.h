@@ -4,6 +4,9 @@
 #include <math.h>
 #include <vector>
 
+#include "point2.h"
+#include "vector2.h"
+
 namespace valhalla{
 namespace geo{
 

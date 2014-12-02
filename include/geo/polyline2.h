@@ -1,6 +1,11 @@
 #ifndef __polyline2_h_
 #define __polyline2_h_
 
+#include "point2.h"
+#include "aabb2.h"
+#include "clipper2.h"
+#include "linesegment2.h"
+
 namespace valhalla{
 namespace geo{
 

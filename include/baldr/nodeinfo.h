@@ -2,7 +2,10 @@
 #define __nodeinfo_h_
 
 #include "geo/geo.h"
+#include "geo/pointll.h"
 #include "graphid.h"
+
+using namespace valhalla::geo;
 
 namespace valhalla{
 namespace baldr{
@@ -18,7 +21,7 @@ class NodeInfo {
   /**
    * Constructor
    */
-  NodeInfo() {
+  NodeInfo():nedges_(0) {
     latlng_.Set(0.0f, 0.0f);
   }
 
@@ -72,6 +75,7 @@ class NodeInfo {
 // TODO - do we use the NodeInfo class as a read-only class and create a
 // derived class with Set methods?
 
+}
 }
 
 #endif

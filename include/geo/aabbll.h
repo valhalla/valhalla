@@ -1,6 +1,9 @@
 #ifndef __aabbll_h__
 #define __aabbll_h__
 
+#include "aabb2.h"
+#include "pointll.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -87,7 +90,7 @@ TODO - figure this out (how to use base class?
    * @return  Returns upper left lat,lng (maxlat, minlng)
    */
   PointLL GetUpperLeft() const {
-  return PointLL(maxy_, minx_);
+    return PointLL(maxy_, minx_);
   }
 
   /**

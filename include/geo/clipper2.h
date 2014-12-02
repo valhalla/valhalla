@@ -1,6 +1,11 @@
 #ifndef __clipper2_h__
 #define __clipper2_h__
 
+#include <vector>
+
+#include "aabb2.h"
+#include "point2.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -18,7 +23,7 @@ class Clipper2 {
   /**
    * Constructor
    */
-  Clipper2() { }
+  Clipper2():minx_(0),maxx_(0),miny_(0),maxy_(0) { }
 
   /**
    * Destructor

@@ -3,6 +3,11 @@
 
 #include <math.h>
 
+#include "point2.h"
+#include "geo.h"
+#include "linesegment2.h"
+#include "aabb2.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -14,7 +19,7 @@ class Ellipse {
   /**
    * Default constructor.
    */
-  Ellipse() {
+  Ellipse():s(0), c(0) {
     center_.Set(0.0f, 0.0f);
     a = b = 0.0f;
     k1_ = k2_ = k3_ = 0.0f;

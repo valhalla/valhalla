@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include "point2.h"
+#include "vector2.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -16,7 +19,7 @@ class OBB2 {
   /**
    * Constructor
    */
-  OBB2() { }
+  OBB2():extent0_(0),extent1_(0) { }
 
   void Set(const Point2& a0, const Point2& a1,
            const Point2& a2, const Point2& a3) {

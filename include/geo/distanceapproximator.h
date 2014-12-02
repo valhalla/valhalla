@@ -2,6 +2,10 @@
 #ifndef __distanceapproximator_h_
 #define __distanceapproximator_h_
 
+#include <math.h>
+
+#include "pointll.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -23,7 +27,7 @@ class DistanceApproximator
   /**
    * Constructor.
    */
-  DistanceApproximator() { }
+  DistanceApproximator():centerlat_(0),centerlng_(0),km_per_lng_degree_(0) { }
 
   /**
    * Destructor.

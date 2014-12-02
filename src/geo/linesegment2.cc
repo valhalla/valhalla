@@ -1,4 +1,4 @@
-#include "geo/segment2.h"
+#include "geo/linesegment2.h"
 
 namespace valhalla{
 namespace geo{

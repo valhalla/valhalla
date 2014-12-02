@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include "constants.h"
+#include "point2.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -307,6 +310,15 @@ class Vector2 {
   float x_;
   float y_;
 };
+
+/**
+ * Creates a new vector that is the specified vector multiplied
+ * with the specified scalar.
+ * @param   scalar   Scalar to muliply the vector with.
+ * @param   Vector2  Vector to be multiplied with the scalar
+ * @return  Returns the resulting vector
+ */
+Vector2 operator * (float s, const Vector2 &v);
 
 }
 }

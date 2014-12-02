@@ -48,7 +48,7 @@ class Point2 {
   /**
    * Destructor
    */
-  ~Point2() { }
+  virtual ~Point2() { }
 
   /**
    * Get the x component.

@@ -2,6 +2,7 @@
 #define __aabb2_h__
 
 #include <vector>
+#include "point2.h"
 
 namespace valhalla{
 namespace geo{

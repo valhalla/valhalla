@@ -58,7 +58,7 @@ include_HEADERS = \
 	include/baldr/directededge.h \
 	include/baldr/graphid.h \
 	include/baldr/nodeinfo.h \
-	include/geo/segment2.h \
+	include/geo/linesegment2.h \
 	include/geo/tiles.h \
 	include/geo/aabbll.h \
 	include/geo/polyline2.h \
@@ -77,7 +77,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/graphid.cc \
 	src/baldr/nodeinfo.cc \
-	src/geo/segment2.cc \
+	src/geo/linesegment2.cc \
 	src/geo/tiles.cc \
 	src/geo/aabbll.cc \
 	src/geo/polyline2.cc \

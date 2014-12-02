@@ -5,6 +5,8 @@
 #include <list>
 #include <map>
 
+#include "aabb2.h"
+
 namespace valhalla{
 namespace geo{
 
@@ -33,7 +35,7 @@ class Tiles {
     tilebounds_ = bounds;
     tilesize_   = tilesize;
     ncolumns_   = (int)ceil((bounds.maxx() - bounds.minx()) / tilesize_);
-    nrows       = (int)ceil((bounds.maxy() - bounds.miny()) / tilesize_);
+    nrows_       = (int)ceil((bounds.maxy() - bounds.miny()) / tilesize_);
   }
 
   /**
@@ -70,7 +72,7 @@ class Tiles {
 
     // If equal to the max y return the largest row
     if (y == tilebounds_.maxy())
-      return nrows - 1;
+      return nrows_ - 1;
     else {
       return (int)((y - tilebounds_.miny()) / tilesize_);
     }
@@ -294,7 +296,7 @@ class Tiles {
   float tilesize_;
 
   // Number of rows ( y or latitude)
-  int nrows;
+  int nrows_;
 
   // Number of longitude (x or longitude).
   int ncolumns_;
@@ -311,7 +313,7 @@ class Tiles {
   std::map<int, int> visitedtiles_;
 
   // Default constructor (private).  Forces use of the bounding box
-  Tiles() { }
+  Tiles():tilesize_(0), nrows_(0), ncolumns_(0) { }
 
   // This function checks neighboring tiles. It adds these tiles to the
   // end of the CheckList if they are not already in there.
