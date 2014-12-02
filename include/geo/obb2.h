@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Oriented bounding box (2-D).
  * @author David W. Nesbitt
@@ -77,5 +80,8 @@ class OBB2 {
    Vector2 basis0_;   // Basis vector defined by 1st edge
    Vector2 basis1_;   // Basis vector defined by 2nd edge
 };
+
+}
+}
 
 #endif

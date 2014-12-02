@@ -5,6 +5,9 @@
 #include <list>
 #include <map>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * A class that provides a uniform (square) tiling system for a specified
  * bounding box (either in x,y or f,lng) and tile size.
@@ -367,5 +370,8 @@ class Tiles {
     return (iter != visitedtiles_.end());
   }
 };
+
+}
+}
 
 #endif

@@ -1,5 +1,8 @@
-  #ifndef __pointll_h__
-  #define __pointll_h__
+#ifndef __pointll_h__
+#define __pointll_h__
+
+namespace valhalla{
+namespace geo{
 
 /**
  * Latitude, Longitude point. Derives from Point2 and allows access methods
@@ -121,7 +124,7 @@ class PointLL : public Point2 {
     return (bearing < 0.0f) ? bearing + 360.0f : bearing;
   }
 
-  // Method defined in geosupport.h
+  // Method defined in geo.h
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
@@ -135,5 +138,8 @@ class PointLL : public Point2 {
   float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
             int& idx) const;
 };
+
+}
+}
 
 #endif

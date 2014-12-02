@@ -7,6 +7,10 @@ constexpr unsigned int kMaxGraphHierarchy = 7;
 // Maximum unique identifier within a graph hierarchy (~536 million)
 constexpr unsigned int kMaxGraphId = 536870911;
 
+
+namespace valhalla{
+namespace baldr{
+
 /**
  * Identifier of a node or an edge within the graph. Includes a hierarchy
  * and a unique identifier within the hierarchy.
@@ -89,5 +93,8 @@ class GraphId {
   };
   Fields graphid;
 };
+
+}
+}
 
 #endif // __graphid_h__

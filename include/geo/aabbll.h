@@ -1,6 +1,9 @@
 #ifndef __aabbll_h__
 #define __aabbll_h__
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Rectangular latitude, longitude region defined by its bounding box.
  * @author  David W. Nesbitt
@@ -111,6 +114,9 @@ TODO - figure this out (how to use base class?
     return PointLL(miny_, maxx_);
   }
 };
+
+}
+}
 
 #endif
 

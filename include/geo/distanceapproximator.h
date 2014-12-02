@@ -2,6 +2,9 @@
 #ifndef __distanceapproximator_h_
 #define __distanceapproximator_h_
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Provides distance approximation in latitude, longitude space. Approximates
  * distance in kilometers between two points. This method is more efficient
@@ -87,6 +90,9 @@ private:
    float centerlng_;
    float km_per_lng_degree_;
 };
+
+}
+}
 
 #endif
 

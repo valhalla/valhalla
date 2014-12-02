@@ -1,8 +1,8 @@
 #ifndef __directededge_h_
 #define __directededge_h_
 
-#include "geosupport/geosupport.h"
-#include "graphid.h"
+namespace valhalla{
+namespace baldr{
 
 /**
  * Directed edge within the graph.
@@ -89,5 +89,7 @@ class DirectedEdge {
 };
 
 // TODO - do we derive a writeable class and treat the base class as read only?
+}
+}
 
 #endif

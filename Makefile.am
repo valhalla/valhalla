@@ -53,9 +53,43 @@ include/proto/stub_message.pb.h: proto/stub_message.proto
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla.la
-include_HEADERS = include/valhalla.hpp
+include_HEADERS = \
+	include/valhalla.h \
+	include/baldr/directededge.h \
+	include/baldr/graphid.h \
+	include/baldr/nodeinfo.h \
+	include/geo/segment2.h \
+	include/geo/tiles.h \
+	include/geo/aabbll.h \
+	include/geo/polyline2.h \
+	include/geo/obb2.h \
+	include/geo/pointll.h \
+	include/geo/vector2.h \
+	include/geo/clipper2.h \
+	include/geo/aabb2.h \
+	include/geo/point2.h \
+	include/geo/geo.h \
+	include/geo/distanceapproximator.h \
+	include/geo/ellipse.h
 libvalhalla_la_SOURCES = \
-	src/util.cpp
+	src/util.cc
+	src/valhalla.cc \
+	src/baldr/directededge.cc \
+	src/baldr/graphid.cc \
+	src/baldr/nodeinfo.cc \
+	src/geo/segment2.cc \
+	src/geo/tiles.cc \
+	src/geo/aabbll.cc \
+	src/geo/polyline2.cc \
+	src/geo/obb2.cc \
+	src/geo/pointll.cc \
+	src/geo/vector2.cc \
+	src/geo/clipper2.cc \
+	src/geo/aabb2.cc \
+	src/geo/point2.cc \
+	src/geo/geo.cc \
+	src/geo/distanceapproximator.cc \
+	src/geo/ellipse.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
@@ -65,14 +99,14 @@ endif
 # executable valhalla
 bin_PROGRAMS = valhalla
 valhalla_SOURCES = \
-	src/valhalla.cpp
+	src/valhalla.cc
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
 # tests
 check_PROGRAMS = \
 	test/valhalla
-test_valhalla_SOURCES = test/valhalla.cpp test/test.cpp
+test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
 

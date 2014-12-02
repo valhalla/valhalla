@@ -3,6 +3,9 @@
 
 #include <math.h>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Ellipse
  */
@@ -195,6 +198,9 @@ class Ellipse {
     return a * a;
   }
 };
+
+}
+}
 
 #endif
 

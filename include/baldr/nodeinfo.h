@@ -1,8 +1,11 @@
 #ifndef __nodeinfo_h_
 #define __nodeinfo_h_
 
-#include "geosupport/geosupport.h"
+#include "geo/geo.h"
 #include "graphid.h"
+
+namespace valhalla{
+namespace baldr{
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -68,5 +71,7 @@ class NodeInfo {
 
 // TODO - do we use the NodeInfo class as a read-only class and create a
 // derived class with Set methods?
+
+}
 
 #endif

@@ -1,6 +1,9 @@
 #ifndef __clipper2_h__
 #define __clipper2_h__
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Clipping support. Clips a polygon or polyline to a rectangular
  * boundary. If this is used to clip a polyline to a display region,
@@ -154,6 +157,9 @@ class Clipper2 {
     return false;
   }
 };
+
+}
+}
 
 #endif
 

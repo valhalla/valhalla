@@ -4,6 +4,9 @@
 #include <math.h>
 #include <vector>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Line segment in 2D
  * @author  David W. Nesbitt
@@ -145,5 +148,9 @@ class LineSegment2 {
   Point2 a_;
   Point2 b_;
 };
+
+
+}
+}
 
 #endif

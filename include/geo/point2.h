@@ -4,6 +4,9 @@
 #include <math.h>
 #include <vector>
 
+namespace valhalla{
+namespace geo{
+
 // Forward references
 class Vector2;
 
@@ -147,7 +150,7 @@ class Point2 {
     return Point2(0.5f*x_ + 0.5f*p1.x(), 0.5f*y_ + 0.5f*p1.y());
   }
 
-  // The following methods are defined in geosupport.h
+  // The following methods are defined in geo.h
 
   /**
    * Add a vector to the current point.
@@ -194,5 +197,8 @@ class Point2 {
     return v*v;
   }
 };
+
+}
+}
 
 #endif

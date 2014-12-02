@@ -1,6 +1,9 @@
 #ifndef __polyline2_h_
 #define __polyline2_h_
 
+namespace valhalla{
+namespace geo{
+
 /**
  * 2-D polyline
  */
@@ -153,5 +156,8 @@ protected:
     }
   }
 };
+
+}
+}
 
 #endif

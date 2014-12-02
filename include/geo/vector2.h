@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * 2D vector class. float x,y components.
  * @author  David W. Nesbitt
@@ -304,5 +307,8 @@ class Vector2 {
   float x_;
   float y_;
 };
+
+}
+}
 
 #endif

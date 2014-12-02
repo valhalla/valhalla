@@ -3,6 +3,9 @@
 
 #include <vector>
 
+namespace valhalla{
+namespace geo{
+
 /**
  * Axis Aligned Bounding Box (2 dimensional)
  * @author  David W. Nesbitt
@@ -297,5 +300,8 @@ class AABB2 {
   float maxx_;
   float maxy_;
 };
+
+}
+}
 
 #endif
