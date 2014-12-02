@@ -50,3 +50,9 @@ test/*.trs
 *.gcda
 coverage.info
 coverage/
+
+# tools
+.cproject
+.project
+.settings
+
