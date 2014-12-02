@@ -55,7 +55,7 @@ if test -x "$PROTOC_BIN" ; then
   AC_MSG_RESULT([yes])
 else
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR([cannot find protoc in your path, but it is required for building burritile. Please install protobuf-compiler.])
+  AC_MSG_ERROR([cannot find protoc in your path, but it is required. Please install protobuf-compiler.])
 fi
 AC_SUBST(PROTOC_BIN)
 
