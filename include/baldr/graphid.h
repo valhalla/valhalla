@@ -1,13 +1,6 @@
 #ifndef __graphid_h__
 #define __graphid_h__
 
-// Maximum of 8 (0-7) graph hierarchies are supported.
-constexpr unsigned int kMaxGraphHierarchy = 7;
-
-// Maximum unique identifier within a graph hierarchy (~536 million)
-constexpr unsigned int kMaxGraphId = 536870911;
-
-
 namespace valhalla{
 namespace baldr{
 
@@ -21,68 +14,50 @@ class GraphId {
   /**public:
    * Default constructor
    */
-  GraphId() {
-    // TODO - better way to initialize?
-    Set(0, 0);
-  }
+  GraphId();
 
   /**
    * Constructor.
    * @param  hierarchy   hierarchy ID
    * @param  id         Unique identifier within the hierarchy.
    */
-  GraphId(const unsigned int hierarchy, const unsigned int id) {
-    Set(hierarchy, id);
-  }
+  GraphId(const unsigned int hierarchy, const unsigned int id);
 
   /**
    * Copy constructor.
    * @param  g   GraphId to copy
    */
-  GraphId(const GraphId& g) {
-    Set(g.Hierarchy(), g.Id());
-  }
+  GraphId(const GraphId& g);
 
   /**
    * Gets the hierarchy number.
    * @return   Returns the hierarchy.
    */
-  unsigned int Hierarchy() const {
-    return graphid.hierarchy;
-  }
+  unsigned int Hierarchy() const;
 
   /**
    * Gets the identifier within the hierarchy.
    * @return   Returns the unique identifier within the hierarchy.
    */
-  unsigned int Id() const {
-    return graphid.id;
-  }
+  unsigned int Id() const;
 
   /**
    * Test if this is a valid graph element. Invalid elements have id == 0.
    * @return   Returns true if valid, false if not.
    */
-  bool IsValid() const {
-    return (graphid.id > 0);
-  }
+  bool IsValid() const;
 
   /**
    * Convenience method to set individual greph Id elements.
    * @param  hierarchy  hierarchy ID
    * @param  id         Unique identifier within the hierarchy
    */
-  void Set(const unsigned int hierarchy, const unsigned int id) {
-    graphid.id = (id < kMaxGraphId ) ? id : 0;
-    graphid.hierarchy = (hierarchy < kMaxGraphHierarchy) ? hierarchy : 0;
-  }
+  void Set(const unsigned int hierarchy, const unsigned int id);
 
   /**
    * Post increments the id.
    */
-  void operator ++(int) {
-    graphid.id++;
-  }
+  void operator ++(int);
 
   // TODO - do we need equality operator or does C++ take care of this?
 

@@ -21,41 +21,31 @@ class NodeInfo {
   /**
    * Constructor
    */
-  NodeInfo():nedges_(0) {
-    latlng_.Set(0.0f, 0.0f);
-  }
+  NodeInfo();
 
   /**
    * Sets the latitude and longitude.
    * @param  ll  Lat,lng position of the node.
    */
-  void SetLatLng(const PointLL& ll) {
-    latlng_ = ll;
-  }
+  void SetLatLng(const PointLL& ll);
 
   /**
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */
-  const PointLL& LatLng() const {
-    return latlng_;
-  }
+  const PointLL& LatLng() const;
 
   /**
    * Get the GraphId of the first outbound edge from this node.
    * @return  Returns the GraphId of the first outbound edge.
    */
-  GraphId Edge() {
-    return edge_;
-  }
+  GraphId Edge();
 
   /**
    * Get the number of outbound directed edges.
    * @return  Returns the number of outbound directed edges.
    */
-  unsigned int EdgeCount() {
-    return nedges_;
-  }
+  unsigned int EdgeCount();
 
  protected:
    // Latitude, longitude position of the node.

@@ -16,24 +16,19 @@ class DirectedEdge {
   /**
    * Constructor
    */
-  DirectedEdge():speed_(0), length_(0) {
-  }
+  DirectedEdge();
 
   /**
    * Gets the length of the link in kilometers.
    * @return  Returns the length in kilometers.
    */
-  float Length() const {
-    return length_;
-  }
+  float Length() const;
 
   /**
    * Gets the end node of this directed edge.
    * @return  Returns the end node.
    */
-  GraphId EndNode() const {
-    return endnode_;
-  }
+  GraphId EndNode() const;
 
   // TODO - methods for access
 
@@ -41,9 +36,7 @@ class DirectedEdge {
   * Gets the speed in KPH. TODO - cast to float instead?
   * @return  Returns the speed in KPH.
   */
-  unsigned int Speed() const {
-    return (unsigned int)speed_;
-  }
+  unsigned int Speed() const;
 
  private:
   // Length of the link in miles
