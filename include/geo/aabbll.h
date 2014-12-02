@@ -16,12 +16,7 @@ class AABBLL : public AABB2 {
   /**
    * Default constructor.  Sets the bounding box to be the entire earth.
    */
-  AABBLL() {
-    minx_ = 180.0f;      // Longitude
-    miny_ = -90.0f;      // Latitude
-    maxx_ = 180.0f;      // Longitude
-    maxy_ = 90.0f;       // Latitude
-  }
+  AABBLL();
 
   /**
    * Constructor with specified bounds.
@@ -31,12 +26,7 @@ class AABBLL : public AABB2 {
    * @param   maxlng    Maximum longitude of the bounding box.
    */
   AABBLL(const float minlat, const float minlng,
-         const float maxlat, const float maxlng) {
-    minx_ = minlng;
-    miny_ = minlat;
-    maxx_ = maxlng;
-    maxy_ = maxlat;
-  }
+         const float maxlat, const float maxlng);
 
   /**
    * Constructor given a list of lat,lng locations.
@@ -51,71 +41,55 @@ TODO - figure this out (how to use base class?
   /**
    *  Destructor
    */
-  ~AABBLL() { }
+  ~AABBLL();
 
   /**
    * Get the minimum latitude of the bounding box.
    * @return  Minimum latitude of the bounding box.
    */
-  float minlat() const {
-    return miny_;
-  }
+  float minlat() const;
 
   /**
   * Get the minimum longitude of the bounding box.
   * @return  Minimum longitude of the bounding box.
   */
-  float minlng() const {
-    return minx_;
-  }
+  float minlng() const;
 
   /**
    * Get the maximum latitude of the bounding box.
    * @return  Maximum latitude of the bounding box.
    */
-  float maxlat() const {
-    return maxy_;
-  }
+  float maxlat() const;
 
   /**
    * Get the maximum longitude of the bounding box
    * @return  Maximum longitude of the bounding box.
    */
-  float maxlng() const {
-    return maxx_;
-  }
+  float maxlng() const;
 
   /**
    * Gets the upper left lat,lng of the bounding box
    * @return  Returns upper left lat,lng (maxlat, minlng)
    */
-  PointLL GetUpperLeft() const {
-    return PointLL(maxy_, minx_);
-  }
+  PointLL GetUpperLeft() const;
 
   /**
    * Gets the upper right lat,lng of the bounding box
    * @return  Returns upper right lat,lng (maxlat, maxlng)
    */
-  PointLL GetUpperRight() const {
-    return PointLL(maxy_, maxx_);
-  }
+  PointLL GetUpperRight() const;
 
   /**
    * Gets the lower left lat,lng of the bounding box
    * @return  Returns lower left lat,lng (minlat, minlng)
    */
-  PointLL GetLowerLeft() const {
-    return PointLL(miny_, minx_);
-  }
+  PointLL GetLowerLeft() const;
 
   /**
    * Gets the lower right lat,lng of the bounding box
    * @return  Returns lower right lat,lng (minlat, maxlng)
    */
-  PointLL GetLowerRight() const {
-    return PointLL(miny_, maxx_);
-  }
+  PointLL GetLowerRight() const;
 };
 
 }

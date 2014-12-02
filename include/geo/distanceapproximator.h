@@ -12,7 +12,7 @@ namespace geo{
 /**
  * Provides distance approximation in latitude, longitude space. Approximates
  * distance in kilometers between two points. This method is more efficient
- * than using sphereical distance calculations. It computes an approximate
+ * than using spherical distance calculations. It computes an approximate
  * distance using the pythagorean theorem with the kilometers of latitude change
  * (exact) and the kilometers of longitude change at the "test point". Longitude
  * is inexact since kilometers per degree of longitude changes with latitude.
@@ -27,12 +27,12 @@ class DistanceApproximator
   /**
    * Constructor.
    */
-  DistanceApproximator():centerlat_(0),centerlng_(0),km_per_lng_degree_(0) { }
+  DistanceApproximator();
 
   /**
    * Destructor.
    */
-  ~DistanceApproximator() { }
+  ~DistanceApproximator();
 
   /**
    * Sets the test point.  This method is used when a distance is to be
@@ -40,11 +40,7 @@ class DistanceApproximator
    * precalculates the kilometers per degree of longitude.
    * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  void SetTestPoint(const PointLL& ll) {
-    centerlat_ = ll.lat();
-    centerlng_ = ll.lng();
-    km_per_lng_degree_  = KmPerLngDegree(centerlat_);
-  }
+  void SetTestPoint(const PointLL& ll);
 
   /**
    * Approximates the arc distance between the supplied position and the
@@ -56,11 +52,7 @@ class DistanceApproximator
    *          theorem.  Squared distance is returned for more efficient
    *          searching (avoids sqrt).
    */
-  float DistanceSquared(const PointLL& ll) const {
-    float latkm = (ll.lat() - centerlat_) * kKmPerDegreeLat;
-    float lngkm = (ll.lng() - centerlng_) * km_per_lng_degree_;
-    return (latkm * latkm + lngkm * lngkm);
-  }
+  float DistanceSquared(const PointLL& ll) const;
 
   /**
    * Approximates arc distance between 2 lat,lng positions using kilometers per
@@ -70,12 +62,7 @@ class DistanceApproximator
    * @param   ll2  Second point (lat,lng)
    * @return  Returns the approximate distance squared (in km)
    */
-  float DistanceSquared(const PointLL& ll1, const PointLL& ll2) const {
-    float latkm = (ll1.lat() - ll2.lat()) * kKmPerDegreeLat;
-    float lngkm = (ll1.lng() - ll2.lng()) *
-                  KmPerLngDegree((ll1.lat() + ll2.lat()) * 0.5);
-    return (latkm * latkm + lngkm * lngkm);
-  }
+  float DistanceSquared(const PointLL& ll1, const PointLL& ll2) const;
 
   /**
    * Gets the number of kilometers per degree of longitude for a specified
@@ -85,9 +72,7 @@ class DistanceApproximator
    * @param   lat   Latitude in degrees
    * @return  Returns the number of kilometers per degree of longitude
    */
-  float KmPerLngDegree(const float lat) const {
-    return cosf(degrees_to_radians(lat)) * kKmPerDegreeLat;
-  }
+  float KmPerLngDegree(const float lat) const;
 
 private:
    float centerlat_;

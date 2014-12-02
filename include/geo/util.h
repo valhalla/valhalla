@@ -59,6 +59,11 @@ inline float FastInvSqrt(float x) {
    // x *= 1.5f - xhalf*x*x;     // repeating step increases accuracy
 }
 
+// Convenience method.
+inline float sqr(const float a) {
+  return a * a;
+}
+
 }
 }
 #endif
