@@ -68,11 +68,10 @@ include_HEADERS = \
 	include/geo/clipper2.h \
 	include/geo/aabb2.h \
 	include/geo/point2.h \
-	include/geo/geo.h \
+	include/geo/util.h \
 	include/geo/distanceapproximator.h \
 	include/geo/ellipse.h
 libvalhalla_la_SOURCES = \
-	src/util.cc \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
 	src/baldr/graphid.cc \
@@ -87,7 +86,7 @@ libvalhalla_la_SOURCES = \
 	src/geo/clipper2.cc \
 	src/geo/aabb2.cc \
 	src/geo/point2.cc \
-	src/geo/geo.cc \
+	src/geo/util.cc \
 	src/geo/distanceapproximator.cc \
 	src/geo/ellipse.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)

@@ -2,7 +2,7 @@
 #define __pointll_h__
 
 #include "point2.h"
-#include "geo.h"
+#include "util.h"
 
 namespace valhalla{
 namespace geo{

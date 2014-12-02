@@ -1,7 +1,7 @@
 #ifndef __nodeinfo_h_
 #define __nodeinfo_h_
 
-#include "geo/geo.h"
+#include "geo/util.h"
 #include "geo/pointll.h"
 #include "graphid.h"
 

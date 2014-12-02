@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "point2.h"
-#include "geo.h"
+#include "util.h"
 #include "linesegment2.h"
 #include "aabb2.h"
 
