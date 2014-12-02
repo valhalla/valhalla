@@ -1,6 +1,9 @@
 #ifndef __directededge_h_
 #define __directededge_h_
 
+#include "geo/geo.h"
+#include "graphid.h"
+
 namespace valhalla{
 namespace baldr{
 
