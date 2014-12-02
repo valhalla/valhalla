@@ -72,7 +72,7 @@ include_HEADERS = \
 	include/geo/distanceapproximator.h \
 	include/geo/ellipse.h
 libvalhalla_la_SOURCES = \
-	src/util.cc
+	src/util.cc \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
 	src/baldr/graphid.cc \

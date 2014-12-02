@@ -1,4 +1,4 @@
-#include "valhalla.hpp"
+#include "valhalla.h"
 
 namespace valhalla{
 
