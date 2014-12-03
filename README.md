@@ -31,11 +31,7 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For convenience valhalla has a main executable, `valhalla`, that makes use of the library it builds. The purpose of this executable to serve as a starting point for building your own custom executable against your own custom library.
-
-To setup another repository of your own, based on `valhalla`, let's call it `foo_bar`, you might try the following sequence of commands:
-
-
+For convenience valhalla has a main executable, `valhalla`, that makes use of the library it builds. The purpose of this executable to serve as a starting point for building several custom executables against the various custom libraries.
 
 Contributing
 ------------
@@ -45,4 +41,11 @@ We welcome contributions to valhalla. If you would like to report an issue, plea
 If you would like to make an improvement to the code, please be aware that valhalla is written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We welcome contributions as pull requests to the [repository](https://github.com/mapzen/valhalla).
 
 It is possible to build a test coverage report, please see [test coverage documentation](docs/test_coverage.md) for details.
+
+Build Status
+------------
+
+| env |  branch | status |
+|:-------------|:--------|:------------|
+| Linux        | master  | [![Build Status](https://travis-ci.org/mapzen/valhalla.png?branch=master)](https://travis-ci.org/mapzen/valhalla) |
 
