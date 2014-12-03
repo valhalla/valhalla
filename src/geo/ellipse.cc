@@ -11,7 +11,7 @@ namespace geo{
   Ellipse::Ellipse(const Point2& p1, const Point2& p2, float angle) {
     // Set the center and get sin and cos of the angle
     center_.Set(p1.x() + p2.x() * 0.5f, p1.y() + p2.y() * 0.5f);
-    float angleRad = angle * kDegPerRad;
+    float angleRad = angle * kRadPerDeg;
     c = cosf(angleRad);
     s = sinf(angleRad);
 

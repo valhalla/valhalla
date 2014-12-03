@@ -27,7 +27,7 @@ namespace geo{
   }
 
   float DistanceApproximator::KmPerLngDegree(const float lat) const {
-    return cosf(lat * kDegPerRad) * kKmPerDegreeLat;
+    return cosf(lat * kRadPerDeg) * kKmPerDegreeLat;
   }
 }
 }

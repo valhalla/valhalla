@@ -20,8 +20,8 @@ constexpr float kKmPerDegreeLat = 110.567f;
 constexpr float kPi        = 3.14159265f;
 constexpr float kPiOver2   = (kPi * 0.5f);
 constexpr float kPiOver4   = (kPi * 0.25f);
-constexpr float kDegPerRad = (kPi / 180.0f);    // Degrees to radians conversion
-constexpr float kRadPerDeg = (180.0f / kPi);    // Radians to degrees conversion
+constexpr float kDegPerRad = (180.0f / kPi);  // Radians to degrees conversion
+constexpr float kRadPerDeg = (kPi / 180.0f);  // Degrees to radians conversion
 constexpr float kEpsilon   = 0.000001f;
 
 }

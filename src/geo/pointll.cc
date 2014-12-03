@@ -28,6 +28,11 @@ namespace geo{
     return x_;
   }
 
+  // Use DistanceApproximator rather than this distance squared method!
+  float PointLL::DistanceSquared(const PointLL& ll2) const {
+    return sqr(Distance(ll2));
+  }
+
   float PointLL::Distance(const PointLL& ll2) const {
     // If points are the same, return 0
     if (*this == ll2)
@@ -36,10 +41,10 @@ namespace geo{
     // Get the longitude difference.  Don't need to worry about
     // crossing 180 since cos(x) = cos(-x)
     float deltalng = ll2.lng() - lng();
-    float a = lat() * kDegPerRad;
-    float c = ll2.lat() * kDegPerRad;
+    float a = lat() * kRadPerDeg;
+    float c = ll2.lat() * kRadPerDeg;
     float cosb = (sinf(a) * sinf(c)) +
-                 (cosf(a) * cosf(c) * cosf(deltalng * kDegPerRad));
+                 (cosf(a) * cosf(c) * cosf(deltalng * kRadPerDeg));
 
     // Find the angle subtended in radians. Protect against cosb being outside
     // -1 to 1 range.
@@ -67,13 +72,13 @@ namespace geo{
       return 0.0f;
 
     // Convert to radians and compute bearing
-    float lat1 = lat() * kDegPerRad;
-    float lat2 = ll2.lat() * kDegPerRad;
-    float dlng = (ll2.lng() - lng()) * kDegPerRad;
+    float lat1 = lat() * kRadPerDeg;
+    float lat2 = ll2.lat() * kRadPerDeg;
+    float dlng = (ll2.lng() - lng()) * kRadPerDeg;
     float y = sinf(dlng) * cosf(lat2);
     float x = cosf(lat1) * sinf(lat2) -
               sinf(lat1) * cosf(lat2) * cosf(dlng);
-    float bearing = atan2f(y, x) * kRadPerDeg;
+    float bearing = atan2f(y, x) * kDegPerRad;
     return (bearing < 0.0f) ? bearing + 360.0f : bearing;
   }
 

@@ -54,6 +54,16 @@ class PointLL : public Point2 {
   float Distance(const PointLL& ll2) const;
 
   /**
+    * Calculates the distance squared between two lat/lng's in km.
+    * Uses spherical geometry. No benefit of using squared distances
+    * over a spherical earth. May want to use DistanceApproximator for
+    * squared distance approximations.
+    * @param   ll2   Second lat,lng position to calculate distance to.
+    * @return  Returns the distance squared in km.
+    */
+   float DistanceSquared(const PointLL& ll2) const;
+
+  /**
    * Calculates the curvature using this position and 2 others. Found by
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lat,lng position
