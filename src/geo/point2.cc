@@ -56,12 +56,12 @@ namespace geo{
     return sqrtf(sqr(x_ - p.x()) + sqr(y_ - p.y()));
   }
 
-  Point2 Point2::affineCombination(const float a0, const float a1,
+  Point2 Point2::AffineCombination(const float a0, const float a1,
                            const Point2& p1) const {
     return Point2(a0*x_ + a1*p1.x(), a0*y_ + a1*p1.y());
   }
 
-  Point2 Point2::midPoint(const Point2& p1) {
+  Point2 Point2::MidPoint(const Point2& p1) const {
     return Point2(0.5f*x_ + 0.5f*p1.x(), 0.5f*y_ + 0.5f*p1.y());
   }
 
