@@ -111,13 +111,17 @@ valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 # tests
 check_PROGRAMS = \
 	test/valhalla \
-	test/point2
+	test/point2 \
+	test/distanceapproximator
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
+test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
