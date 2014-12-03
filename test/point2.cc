@@ -1,7 +1,7 @@
 #include "test.h"
 
 #include "include/config.h"
-
+#include <vector>
 #include "geo/point2.h"
 #include "geo/vector2.h"
 
@@ -79,6 +79,39 @@ void TestDistanceSquared() {
   TryDistanceSquared(Point2(4.0f, 4.0f), Point2(8.0f, 8.0f), 32.0f);
 }
 
+void TryClosestPoint(const std::vector<Point2>& pts, const Point2&p,
+                     const Point2& c, const int idx, const float res) {
+  int index = 0;
+  Point2 closest;
+  float d = p.ClosestPoint(pts, closest, index);
+  if (fabs(d - res) > kEpsilon)
+    throw runtime_error("ClosestPoint test failed - distance squared is wrong");
+  if (idx != index )
+      throw runtime_error("ClosestPoint test failed -index of closest segment is wrong");
+  if (fabs(c.x() - closest.x()) > kEpsilon ||
+      fabs(c.y() - closest.y()) > kEpsilon)
+    throw runtime_error("ClosestPoint test failed - closest point is wrong");
+}
+void TestClosestPoint() {
+  // Construct a simple polyline
+  std::vector<Point2> pts = {
+      { 0.0f, 0.0f },
+      { 2.0f, 2.0f },
+      { 4.0f, 2.0f },
+      { 4.0f, 0.0f },
+      { 12.0f, 0.0f }
+  };
+
+  // Closest to the first point
+  TryClosestPoint(pts, Point2(-4.0f, 0.0f), Point2(0.0f, 0.0f), 0, 16.0f);
+
+  // Closest along the last segment
+  TryClosestPoint(pts, Point2(10.0f, -4.0f), Point2(10.0f, 0.0f), 3, 16.0f);
+
+  // Closest to the last point
+  TryClosestPoint(pts, Point2(15.0f, 4.0f), Point2(12.0f, 0.0f), 3, 25.0f);
+}
+
 }
 
 int main() {
@@ -105,7 +138,8 @@ int main() {
   // DistanceSquared
   suite.test(TEST_CASE(TestDistanceSquared));
 
-  // TODO: Closest point to a list of points
+  // Closest point to a list of points
+  suite.test(TEST_CASE(TestClosestPoint));
 
   return suite.tear_down();
 }
