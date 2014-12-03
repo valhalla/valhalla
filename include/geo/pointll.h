@@ -22,8 +22,8 @@ class PointLL : public Point2 {
 
   /**
    * Constructor using a latitude,longitude pair to initialize.
-   * @param   lt    Latitude in degrees
-   * @param   ln    Longitude in degrees
+   * @param   lat    Latitude in degrees
+   * @param   lng    Longitude in degrees
    */
   PointLL(const float lat, const float lng);
 

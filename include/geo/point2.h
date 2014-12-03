@@ -113,14 +113,14 @@ class Point2 {
    * @param  a1  Scalar for p1
    * @param  p1  Point 1
    */
-  Point2 affineCombination(const float a0, const float a1,
+  Point2 AffineCombination(const float a0, const float a1,
                            const Point2& p1) const;
   /**
    * Gets the midpoint on a line segment between this point and point p1.
    * @param   p1  Point
    * @return  Returns the midpoint between this point and p1.
    */
-  Point2 midPoint(const Point2& p1);
+  Point2 MidPoint(const Point2& p1) const;
 
   // The following methods are defined in geo.h
 

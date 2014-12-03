@@ -70,7 +70,10 @@ include_HEADERS = \
 	include/geo/point2.h \
 	include/geo/util.h \
 	include/geo/distanceapproximator.h \
-	include/geo/ellipse.h
+	include/geo/ellipse.h \
+	include/thor/adjacencylist.h \
+	include/thor/astarheuristic.h \
+	include/thor/edgecost.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -88,7 +91,10 @@ libvalhalla_la_SOURCES = \
 	src/geo/point2.cc \
 	src/geo/util.cc \
 	src/geo/distanceapproximator.cc \
-	src/geo/ellipse.cc
+	src/geo/ellipse.cc \
+	src/thor/adjacencylist.cc \
+	src/thor/astarheuristic.cc \
+	src/thor/edgecost.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
@@ -104,10 +110,14 @@ valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
 # tests
 check_PROGRAMS = \
-	test/valhalla
+	test/valhalla \
+	test/point2
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
+test_point2_SOURCES = test/point2.cc test/test.cc
+test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
