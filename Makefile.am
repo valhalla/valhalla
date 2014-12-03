@@ -70,7 +70,10 @@ include_HEADERS = \
 	include/geo/point2.h \
 	include/geo/util.h \
 	include/geo/distanceapproximator.h \
-	include/geo/ellipse.h
+	include/geo/ellipse.h \
+	include/thor/adjacencylist.h \
+	include/thor/astarheuristic.h \
+	include/thor/edgecost.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -88,7 +91,10 @@ libvalhalla_la_SOURCES = \
 	src/geo/point2.cc \
 	src/geo/util.cc \
 	src/geo/distanceapproximator.cc \
-	src/geo/ellipse.cc
+	src/geo/ellipse.cc \
+	src/thor/adjacencylist.cc \
+	src/thor/astarheuristic.cc \
+	src/thor/edgecost.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
