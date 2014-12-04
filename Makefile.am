@@ -77,7 +77,7 @@ include_HEADERS = \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
-	include/thor/edgestatus.h
+	include/thor/edgestatus.h \
 	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
@@ -100,7 +100,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
-	src/thor/edgestatus.cc
+	src/thor/edgestatus.cc \
 	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
