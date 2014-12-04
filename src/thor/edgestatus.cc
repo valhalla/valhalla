@@ -12,8 +12,6 @@ namespace thor{
   }
 
   void EdgeStatus::Set(const baldr::GraphId& edgeid, const EdgeLabel status) {
-  //  std::pair<GraphId, EdgeLabel> p(edgeid, status);
-  //  edgestatus_.insert(p);
     edgestatus_.emplace(edgeid, status);
   }
 
