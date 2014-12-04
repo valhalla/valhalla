@@ -1,5 +1,5 @@
-#ifndef __constants_h__
-#define __constants_h__
+#ifndef VALHALLA_GEO_CONSTANTS_H_
+#define VALHALLA_GEO_CONSTANTS_H_
 
 #include <math.h>
 
@@ -26,5 +26,5 @@ constexpr float kEpsilon   = 0.000001f;
 
 }
 }
-#endif
+#endif  // VALHALLA_GEO_CONSTANTS_H_
 

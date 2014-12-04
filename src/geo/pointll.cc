@@ -28,7 +28,7 @@ namespace geo{
     return x_;
   }
 
-  // Use DistanceApproximator rather than this distance squared method!
+  // May want to use DistanceApproximator!
   float PointLL::DistanceSquared(const PointLL& ll2) const {
     return sqr(Distance(ll2));
   }
@@ -38,16 +38,18 @@ namespace geo{
     if (*this == ll2)
       return 0.0f;
 
-    // Get the longitude difference.  Don't need to worry about
-    // crossing 180 since cos(x) = cos(-x)
+    // Delta longitude. Don't need to worry about crossing 180
+    // since cos(x) = cos(-x)
     float deltalng = ll2.lng() - lng();
     float a = lat() * kRadPerDeg;
     float c = ll2.lat() * kRadPerDeg;
+
+    // Find the angle subtended in radians (law of cosines)
     float cosb = (sinf(a) * sinf(c)) +
                  (cosf(a) * cosf(c) * cosf(deltalng * kRadPerDeg));
 
-    // Find the angle subtended in radians. Protect against cosb being outside
-    // -1 to 1 range.
+    // Angle subtended * radius of earth (portion of the circumference).
+    // Protect against cosb being outside -1 to 1 range.
     if (cosb >= 1.0f)
       return 0.00001f;
     else if (cosb < -1.0f)
@@ -66,12 +68,12 @@ namespace geo{
     return ((a * b * c) / (4.0f * k));
   }
 
-  float PointLL::Bearing(const PointLL& ll2) const {
+  float PointLL::Heading(const PointLL& ll2) const {
     // If points are the same, return 0
     if (*this == ll2)
       return 0.0f;
 
-    // Convert to radians and compute bearing
+    // Convert to radians and compute heading
     float lat1 = lat() * kRadPerDeg;
     float lat2 = ll2.lat() * kRadPerDeg;
     float dlng = (ll2.lng() - lng()) * kRadPerDeg;
@@ -91,11 +93,11 @@ namespace geo{
 
     // Iterate through the pts
     unsigned int count = pts.size();
-    bool beyond_end = true;               // Need to test past the end point?
-    Vector2 v1;                                                     // Segment vector (v1)
-    Vector2 v2;                                                     // Vector from origin to target (v2)
+    bool beyond_end = true;   // Need to test past the end point?
+    Vector2 v1;               // Segment vector (v1)
+    Vector2 v2;               // Vector from origin to target (v2)
     PointLL projpt;           // Projected point along v1
-    float dot;                                                      // Dot product of v1 and v2
+    float dot;                // Dot product of v1 and v2
     float comp;               // Component of v2 along v1
     float dist;               // Squared distance from target to closest point on line
     float mindist = 2147483647.0f;

@@ -1,5 +1,5 @@
-#ifndef __aabb2_h__
-#define __aabb2_h__
+#ifndef VALHALLA_GEO_AABB2_H_
+#define VALHALLA_GEO_AABB2_H_
 
 #include <vector>
 #include "point2.h"
@@ -163,4 +163,4 @@ class AABB2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_AABB2_H_
