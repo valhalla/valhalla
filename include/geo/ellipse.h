@@ -1,5 +1,5 @@
-#ifndef __ellipse_h__
-#define __ellipse_h__
+#ifndef VALHALLA_GEO_ELLIPSE_H_
+#define VALHALLA_GEO_ELLIPSE_H_
 
 #include <math.h>
 
@@ -73,6 +73,6 @@ class Ellipse {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_ELLIPSE_H_
 
 

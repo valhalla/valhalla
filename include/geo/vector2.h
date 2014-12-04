@@ -1,5 +1,5 @@
-#ifndef __vector2_h__
-#define __vector2_h__
+#ifndef VALHALLA_GEO_VECTOR2_H_
+#define VALHALLA_GEO_VECTOR2_H_
 
 #include <stdarg.h>
 #include <math.h>
@@ -253,4 +253,4 @@ Vector2 operator * (float s, const Vector2 &v);
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_VECTOR2_H_

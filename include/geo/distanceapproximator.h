@@ -1,6 +1,6 @@
 
-#ifndef __distanceapproximator_h_
-#define __distanceapproximator_h_
+#ifndef VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
+#define VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
 
 #include <math.h>
 
@@ -83,5 +83,5 @@ private:
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
 

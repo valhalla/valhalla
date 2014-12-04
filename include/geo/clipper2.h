@@ -1,5 +1,5 @@
-#ifndef __clipper2_h__
-#define __clipper2_h__
+#ifndef VALHALLA_GEO_CLIPPER2_H_
+#define VALHALLA_GEO_CLIPPER2_H_
 
 #include <vector>
 
@@ -72,5 +72,5 @@ class Clipper2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_CLIPPER2_H_
 

@@ -1,5 +1,5 @@
-#ifndef __aabbll_h__
-#define __aabbll_h__
+#ifndef VALHALLA_GEO_AABBLL_H_
+#define VALHALLA_GEO_AABBLL_H_
 
 #include "aabb2.h"
 #include "pointll.h"
@@ -95,5 +95,5 @@ TODO - figure this out (how to use base class?
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_AABBLL_H_
 

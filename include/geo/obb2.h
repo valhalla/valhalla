@@ -1,5 +1,5 @@
-#ifndef __obb2_h_
-#define __obb2_h_
+#ifndef VALHALLA_GEO_OBB2_H_
+#define VALHALLA_GEO_OBB2_H_
 
 #include <stdarg.h>
 #include <math.h>
@@ -40,4 +40,4 @@ class OBB2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_OBB2_H_

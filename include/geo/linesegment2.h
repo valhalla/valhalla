@@ -1,5 +1,5 @@
-#ifndef __segment2_h__
-#define __segment2_h__
+#ifndef VALHALLA_GEO_LINESEGMENT2_H_
+#define VALHALLA_GEO_LINESEGMENT2_H_
 
 #include <math.h>
 #include <vector>
@@ -87,4 +87,4 @@ class LineSegment2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_LINESEGMENT2_H_
