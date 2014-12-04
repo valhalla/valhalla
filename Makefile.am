@@ -41,14 +41,17 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto compilation etc
-PROTO_FILES = proto/stub_message.proto
-BUILT_SOURCES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-CLEANFILES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-nodist_libvalhalla_la_SOURCES = src/$(PROTO_FILES:.proto=.pb.cc)
+PROTO_FILES = proto/stub_message.proto proto/trippath.proto
+BUILT_SOURCES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 #src/proto/%.pb.cc: include/proto/%.pb.h
 #include/proto/%.pb.h: proto/%.proto
 src/proto/stub_message.pb.cc: include/proto/stub_message.pb.h
 include/proto/stub_message.pb.h: proto/stub_message.proto
+	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
+src/proto/trippath.pb.cc: include/proto/trippath.pb.h
+include/proto/trippath.pb.h: proto/trippath.proto
 	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
 
 # lib valhalla compilation etc
@@ -75,6 +78,7 @@ include_HEADERS = \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
 	include/thor/edgestatus.h
+	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -97,6 +101,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
 	src/thor/edgestatus.cc
+	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
