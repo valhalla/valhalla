@@ -1,5 +1,5 @@
-#ifndef __edgecost_h__
-#define __edgecost_h__
+#ifndef VALHALLA_THOR_EDGECOST_H_
+#define VALHALLA_THOR_EDGECOST_H_
 
 #include "baldr/directededge.h"
 
@@ -33,4 +33,4 @@ class EdgeCost {
 }
 }
 
-#endif
+#endif  // VALHALLA_THOR_EDGECOST_H_
