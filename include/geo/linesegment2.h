@@ -42,7 +42,7 @@ class LineSegment2 {
 
 /**
    * Finds the distance squared of a specified point from the line segment
-   * and the closest point on the segement to the specified point.
+   * and the closest point on the segment to the specified point.
    * @param   p        Test point.
    * @param   closest  (Return) Closest point on the segment to c.
    * @return  Returns the distance squared from pt to the closest point on
@@ -52,10 +52,10 @@ class LineSegment2 {
 
   /**
    * Finds the distance of a specified point from the line segment
-   * and the closest point on the segement to the specified point.
+   * and the closest point on the segment to the specified point.
    * @param   p        Test point.
    * @param   closest  (Return) Closest point on the segment to c.
-   * @return  Returns the distance from pt to the closest point on
+   * @return  Returns the distance from p to the closest point on
    *          the segment.
   */
   float Distance(const Point2& p, Point2& closest) const;
@@ -68,7 +68,7 @@ class LineSegment2 {
    * @param   intersect    (OUT) Intersection point.
    * @return  Returns true if an intersection exists, false if not.
    */
-  bool Intersect(const LineSegment2& segment, Point2& intersect);
+  bool Intersect(const LineSegment2& segment, Point2& intersect) const;
 
   /**
    * Tests if a point is to left, right, or on the line segment
@@ -76,7 +76,7 @@ class LineSegment2 {
    * @return   Returns >0 for point to the left, < 0 for point to the right,
    *           and 0 for a point on the line
    */
-  float IsLeft(const Point2& p);
+  float IsLeft(const Point2& p) const;
 
  private:
   Point2 a_;
