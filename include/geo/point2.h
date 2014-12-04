@@ -1,5 +1,5 @@
-#ifndef __point2_h__
-#define __point2_h__
+#ifndef VALHALLA_GEO_POINT2_H_
+#define VALHALLA_GEO_POINT2_H_
 
 #include <math.h>
 #include <vector>
@@ -170,4 +170,4 @@ class Point2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_POINT2_H_

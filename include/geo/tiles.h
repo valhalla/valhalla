@@ -1,6 +1,6 @@
 
-#ifndef __tilesll_h_
-#define __tilesll_h_
+#ifndef VALHALLA_GEO_TILES_H_
+#define VALHALLA_GEO_TILES_H_
 
 #include <list>
 #include <map>
@@ -220,4 +220,4 @@ class Tiles {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_TILES_H_

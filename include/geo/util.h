@@ -1,5 +1,5 @@
-#ifndef __geo_h__
-#define __geo_h__
+#ifndef VALHALLA_GEO_UTIL_H_
+#define VALHALLA_GEO_UTIL_H_
 
 namespace valhalla{
 namespace geo{
@@ -43,4 +43,4 @@ float sqr(const float a);
 
 }
 }
-#endif
+#endif  // VALHALLA_GEO_UTIL_H_

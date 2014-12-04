@@ -1,5 +1,5 @@
-#ifndef __pointll_h__
-#define __pointll_h__
+#ifndef VALHALLA_GEO_POINTLL_H_
+#define VALHALLA_GEO_POINTLL_H_
 
 #include "point2.h"
 #include "util.h"
@@ -9,8 +9,8 @@ namespace geo{
 
 /**
  * Latitude, Longitude point. Derives from Point2 and allows access methods
- * using lat,lng naming. Extends functionality to add bearing, distance based
- * on Haversine method.
+ * using lat,lng naming. Extends functionality to add heading, distance based
+ * on spherical geometry.
  * @author  David W. Nesbitt
  */
 class PointLL : public Point2 {
@@ -47,7 +47,7 @@ class PointLL : public Point2 {
 
   /**
    * Calculates the distance between two lat/lng's in km. Uses spherical
-   * geometry.
+   * geometry (law of cosines).
    * @param   ll2   Second lat,lng position to calculate distance to.
    * @return  Returns the distance in km.
    */
@@ -55,7 +55,7 @@ class PointLL : public Point2 {
 
   /**
     * Calculates the distance squared between two lat/lng's in km.
-    * Uses spherical geometry. No benefit of using squared distances
+    * Uses spherical geometry. No benefit when using squared distances
     * over a spherical earth. May want to use DistanceApproximator for
     * squared distance approximations.
     * @param   ll2   Second lat,lng position to calculate distance to.
@@ -73,13 +73,13 @@ class PointLL : public Point2 {
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
   /**
-   * Calculates the azimuth or bearing from the current lat,lng to the
+   * Calculates the heading or azimuth from the current lat,lng to the
    * specified lat,lng. This uses Haversine method (spherical geometry).
-   * @param    ll2   Lat,lng position to calculate the bearing to.
-   * @return   Returns the bearing in degrees with range [0,360] where 0 is
+   * @param    ll2   Lat,lng position to calculate the heading to.
+   * @return   Returns the heading in degrees with range [0,360] where 0 is
    *           due north, 90 is east, 180 is south, and 270 is west.
    */
-  float Bearing(const PointLL& ll2) const;
+  float Heading(const PointLL& ll2) const;
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
@@ -97,4 +97,4 @@ class PointLL : public Point2 {
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_POINTLL_H_

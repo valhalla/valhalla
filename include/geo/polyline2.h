@@ -1,5 +1,5 @@
-#ifndef __polyline2_h_
-#define __polyline2_h_
+#ifndef VALHALLA_GEO_POLYLINE2_H_
+#define VALHALLA_GEO_POLYLINE2_H_
 
 #include "point2.h"
 #include "aabb2.h"
@@ -91,4 +91,4 @@ protected:
 }
 }
 
-#endif
+#endif  // VALHALLA_GEO_POLYLINE2_H_
