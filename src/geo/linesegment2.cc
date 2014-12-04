@@ -53,7 +53,8 @@ namespace geo{
     return sqrtf(DistanceSquared(p, closest));
   }
 
-  bool LineSegment2::Intersect(const LineSegment2& segment, Point2& intersect) {
+  bool LineSegment2::Intersect(const LineSegment2& segment,
+               Point2& intersect) const {
     // Construct vectors
     Vector2 b = b_ - a_;
     Vector2 d = segment.b() - segment.a();
@@ -64,7 +65,7 @@ namespace geo{
     // Check if denominator will be 0 (lines are parallel)
     float dtb = dp.Dot(b);
     if (dtb == 0.0f)
-    return false;
+      return false;
 
     // Solve for the parameter t
     Vector2 c = segment.a() - a_;
@@ -83,7 +84,7 @@ namespace geo{
     return true;
   }
 
-  float LineSegment2::IsLeft(const Point2& p) {
+  float LineSegment2::IsLeft(const Point2& p) const {
     return (b_.x() - a_.x()) * (p.y() - a_.y()) -
            (p.x() - a_.x()) * (b_.y() - a_.y());
   }

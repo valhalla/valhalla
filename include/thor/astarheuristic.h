@@ -1,5 +1,5 @@
-#ifndef __astarheuristic_h_
-#define __astarheuristic_h_
+#ifndef VALHALLA_THOR_ASTARHEURISTIC_H_
+#define VALHALLA_THOR_ASTARHEURISTIC_H_
 
 #include "geo/util.h"
 #include "geo/pointll.h"
@@ -54,4 +54,4 @@ class AStarHeuristic {
 }
 }
 
-#endif
+#endif  // VALHALLA_THOR_ASTARHEURISTIC_H_

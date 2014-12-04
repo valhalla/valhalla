@@ -77,6 +77,7 @@ include_HEADERS = \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
+	include/thor/edgestatus.h \
 	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
@@ -99,6 +100,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
+	src/thor/edgestatus.cc \
 	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
@@ -117,7 +119,9 @@ valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 check_PROGRAMS = \
 	test/valhalla \
 	test/point2 \
-	test/distanceapproximator
+	test/distanceapproximator \
+	test/linesegment2 \
+	test/edgestatus
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -127,6 +131,12 @@ test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
 test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
+test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
+test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

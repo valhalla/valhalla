@@ -1,5 +1,5 @@
-#ifndef __nodeinfo_h_
-#define __nodeinfo_h_
+#ifndef VALHALLA_BALDR_NODEINFO_H_
+#define VALHALLA_BALDR_NODEINFO_H_
 
 #include "geo/util.h"
 #include "geo/pointll.h"
@@ -68,4 +68,4 @@ class NodeInfo {
 }
 }
 
-#endif
+#endif  // VALHALLA_BALDR_NODEINFO_H_

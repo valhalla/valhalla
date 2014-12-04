@@ -1,12 +1,12 @@
-#ifndef __graphid_h__
-#define __graphid_h__
+#ifndef VALHALLA_BALDR_GRAPHID_H_
+#define VALHALLA_BALDR_GRAPHID_H_
 
 namespace valhalla{
 namespace baldr{
 
 /**
  * Identifier of a node or an edge within the graph. Includes a hierarchy
- * and a unique identifier within the hierarchy.
+ * level and a unique identifier within the level.
  * @author  David W. Nesbitt
  */
 class GraphId {
@@ -18,10 +18,10 @@ class GraphId {
 
   /**
    * Constructor.
-   * @param  hierarchy   hierarchy ID
-   * @param  id         Unique identifier within the hierarchy.
+   * @param  level  Hierarchy level
+   * @param  id     Unique identifier within the level.
    */
-  GraphId(const unsigned int hierarchy, const unsigned int id);
+  GraphId(const unsigned int level, const unsigned int id);
 
   /**
    * Copy constructor.
@@ -30,14 +30,14 @@ class GraphId {
   GraphId(const GraphId& g);
 
   /**
-   * Gets the hierarchy number.
-   * @return   Returns the hierarchy.
+   * Gets the hierarchy level.
+   * @return   Returns the level.
    */
-  unsigned int Hierarchy() const;
+  unsigned int Level() const;
 
   /**
-   * Gets the identifier within the hierarchy.
-   * @return   Returns the unique identifier within the hierarchy.
+   * Gets the identifier within the hierarchy level.
+   * @return   Returns the unique identifier within the level.
    */
   unsigned int Id() const;
 
@@ -48,28 +48,33 @@ class GraphId {
   bool IsValid() const;
 
   /**
-   * Convenience method to set individual greph Id elements.
-   * @param  hierarchy  hierarchy ID
-   * @param  id         Unique identifier within the hierarchy
+   * Convenience method to set individual graph Id elements.
+   * @param  level  Hierarchy level
+   * @param  id     Unique identifier within the level
    */
-  void Set(const unsigned int hierarchy, const unsigned int id);
+  void Set(const unsigned int level, const unsigned int id);
 
   /**
    * Post increments the id.
    */
   void operator ++(int);
 
-  // TODO - do we need equality operator or does C++ take care of this?
+  /**
+   * Less than operator for sorting.
+   * @param  other  Other graph Id for comparison.
+   * @return  Returns true if this GraphId is less than the other.
+   */
+  bool operator < (const GraphId& other) const;
 
  protected:
   struct Fields {
-    unsigned int id        : 29;
-    unsigned int hierarchy : 3;
+    unsigned int id    : 29;
+    unsigned int level : 3;
   };
-  Fields graphid;
+  Fields graphid_;
 };
 
 }
 }
 
-#endif // __graphid_h__
+#endif // VALHALLA_BALDR_GRAPHID_H_
