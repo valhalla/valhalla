@@ -42,9 +42,9 @@ endif
 
 # proto compilation etc
 PROTO_FILES = proto/stub_message.proto proto/trippath.proto
-BUILT_SOURCES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-CLEANFILES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-nodist_libvalhalla_la_SOURCES = src/$(PROTO_FILES:.proto=.pb.cc)
+BUILT_SOURCES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 #src/proto/%.pb.cc: include/proto/%.pb.h
 #include/proto/%.pb.h: proto/%.proto
 src/proto/stub_message.pb.cc: include/proto/stub_message.pb.h
