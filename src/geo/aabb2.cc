@@ -18,17 +18,17 @@ namespace geo{
 
   AABB2::AABB2(const float minx, const float miny,
         const float maxx, const float maxy) {
-    minx_ = miny;
-    miny_ = minx;
-    maxx_ = maxy;
-    maxy_ = maxx;
+    minx_ = minx;
+    miny_ = miny;
+    maxx_ = maxx;
+    maxy_ = maxy;
   }
 
   AABB2::AABB2(std::vector<Point2>& pts) {
     Create(pts);
   }
 
-  bool AABB2::operator ==(const AABB2& r2) {
+  bool AABB2::operator ==(const AABB2& r2) const {
     return (minx_ == r2.minx() && maxx_ == r2.maxx() && miny_ == r2.miny()
         && maxy_ == r2.maxy());
   }
