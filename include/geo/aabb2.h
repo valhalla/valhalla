@@ -46,7 +46,7 @@ class AABB2 {
    * @param   r2  Bounding box to compare to.
    * @return  Returns true if the 2 bounding boxes are equal.
    */
-  bool operator ==(const AABB2& r2);
+  bool operator ==(const AABB2& r2) const;
 
   /**
    * Get the minimum x
