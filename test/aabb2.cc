@@ -57,7 +57,7 @@ void TryEquality(const AABB2& a, const AABB2& b) {
 }
 
 void TestEquality() {
-  TryContainsPt(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+  TryEquality(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
                 AABB2(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
