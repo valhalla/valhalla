@@ -1,5 +1,5 @@
-#ifndef __adjacencylist_h_
-#define __adjacencylist_h_
+#ifndef VALHALLA_THOR_ADJACENCYLIST_H_
+#define VALHALLA_THOR_ADJACENCYLIST_H_
 
 #include <vector>
 #include <list>
@@ -91,5 +91,5 @@ class AdjacencyList {
 }
 }
 
-#endif
+#endif  // VALHALLA_THOR_ADJACENCYLIST_H_
 

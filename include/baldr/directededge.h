@@ -1,5 +1,5 @@
-#ifndef __directededge_h_
-#define __directededge_h_
+#ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
+#define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
 #include "geo/util.h"
 #include "graphid.h"
@@ -88,4 +88,4 @@ class DirectedEdge {
 }
 }
 
-#endif
+#endif  // VALHALLA_BALDR_DIRECTEDEDGE_H_

@@ -42,6 +42,11 @@ libvalhalla.la
 test-suite.log
 test-driver
 test/valhalla
+test/point2
+test/linesegment2
+test/distanceapproximator
+test/edgestatus
+test/aabb2
 test/*.log
 test/*.trs
 

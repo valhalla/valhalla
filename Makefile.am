@@ -41,14 +41,17 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto compilation etc
-PROTO_FILES = proto/stub_message.proto
-BUILT_SOURCES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-CLEANFILES = include/$(PROTO_FILES:.proto=.pb.h) src/$(PROTO_FILES:.proto=.pb.cc)
-nodist_libvalhalla_la_SOURCES = src/$(PROTO_FILES:.proto=.pb.cc)
+PROTO_FILES = proto/stub_message.proto proto/trippath.proto
+BUILT_SOURCES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 #src/proto/%.pb.cc: include/proto/%.pb.h
 #include/proto/%.pb.h: proto/%.proto
 src/proto/stub_message.pb.cc: include/proto/stub_message.pb.h
 include/proto/stub_message.pb.h: proto/stub_message.proto
+	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
+src/proto/trippath.pb.cc: include/proto/trippath.pb.h
+include/proto/trippath.pb.h: proto/trippath.proto
 	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
 
 # lib valhalla compilation etc
@@ -73,7 +76,9 @@ include_HEADERS = \
 	include/geo/ellipse.h \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
-	include/thor/edgecost.h
+	include/thor/edgecost.h \
+	include/thor/edgestatus.h \
+	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -94,7 +99,9 @@ libvalhalla_la_SOURCES = \
 	src/geo/ellipse.cc \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
-	src/thor/edgecost.cc
+	src/thor/edgecost.cc \
+	src/thor/edgestatus.cc \
+	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
@@ -113,7 +120,9 @@ check_PROGRAMS = \
 	test/valhalla \
 	test/point2 \
 	test/distanceapproximator \
-	test/aabb2
+	test/aabb2 \
+	test/linesegment2 \
+	test/edgestatus
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -126,6 +135,12 @@ test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 test_aabb2_SOURCES = test/aabb2.cc test/test.cc
 test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_aabb2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
+test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
+test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

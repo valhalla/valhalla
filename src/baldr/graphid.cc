@@ -18,62 +18,44 @@ namespace baldr{
     Set(0, 0);
   }
 
-  /**
-   * Constructor.
-   * @param  hierarchy   hierarchy ID
-   * @param  id         Unique identifier within the hierarchy.
-   */
-  GraphId::GraphId(const unsigned int hierarchy, const unsigned int id) {
-    Set(hierarchy, id);
+  GraphId::GraphId(const unsigned int level, const unsigned int id) {
+    Set(level, id);
   }
 
-  /**
-   * Copy constructor.
-   * @param  g   GraphId to copy
-   */
   GraphId::GraphId(const GraphId& g) {
-    Set(g.Hierarchy(), g.Id());
+    Set(g.Level(), g.Id());
   }
 
-  /**
-   * Gets the hierarchy number.
-   * @return   Returns the hierarchy.
-   */
-  unsigned int GraphId::Hierarchy() const {
-    return graphid.hierarchy;
+  unsigned int GraphId::Level() const {
+    return graphid_.level;
   }
 
-  /**
-   * Gets the identifier within the hierarchy.
-   * @return   Returns the unique identifier within the hierarchy.
-   */
   unsigned int GraphId::Id() const {
-    return graphid.id;
+    return graphid_.id;
   }
 
-  /**
-   * Test if this is a valid graph element. Invalid elements have id == 0.
-   * @return   Returns true if valid, false if not.
-   */
   bool GraphId::IsValid() const {
-    return (graphid.id > 0);
+    return (graphid_.id > 0);
   }
 
-  /**
-   * Convenience method to set individual greph Id elements.
-   * @param  hierarchy  hierarchy ID
-   * @param  id         Unique identifier within the hierarchy
-   */
-  void GraphId::Set(const unsigned int hierarchy, const unsigned int id) {
-    graphid.id = (id < kMaxGraphId ) ? id : 0;
-    graphid.hierarchy = (hierarchy < kMaxGraphHierarchy) ? hierarchy : 0;
+  void GraphId::Set(const unsigned int level, const unsigned int id) {
+    graphid_.id = (id < kMaxGraphId ) ? id : 0;
+    graphid_.level = (level < kMaxGraphHierarchy) ? level : 0;
   }
 
   /**
    * Post increments the id.
    */
   void GraphId::operator ++(int) {
-    graphid.id++;
+    graphid_.id++;
+  }
+
+  // TODO - could this be simplified using unions in the struct?
+  bool GraphId::operator < (const GraphId& other) const {
+    if (Level() == other.Level()) {
+      return Id() < other.Id();
+    }
+    return Level() < other.Level();
   }
 
 }
