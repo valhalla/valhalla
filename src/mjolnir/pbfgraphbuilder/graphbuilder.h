@@ -3,7 +3,7 @@
 
 #include <sstream>
 #include <iostream>
-#include <stxxl/vector>
+#include <vector>
 #include <map>
 #include "pbfgraphbuilder.h"
 #include "osmpbfreader.h"
