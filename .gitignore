@@ -47,6 +47,7 @@ test/linesegment2
 test/distanceapproximator
 test/edgestatus
 test/aabb2
+test/aabbll
 test/*.log
 test/*.trs
 
