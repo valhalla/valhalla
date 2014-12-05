@@ -122,7 +122,8 @@ check_PROGRAMS = \
 	test/distanceapproximator \
 	test/aabb2 \
 	test/linesegment2 \
-	test/edgestatus
+	test/edgestatus \
+	test/aabbll
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -141,6 +142,10 @@ test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
 test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_aabbll_SOURCES = test/aabbll.cc test/test.cc
+test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
