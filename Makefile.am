@@ -77,6 +77,7 @@ include_HEADERS = \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
+	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
 	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
@@ -100,6 +101,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
+	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
@@ -109,11 +111,20 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 # executable valhalla
-bin_PROGRAMS = valhalla
+bin_PROGRAMS = valhalla pbfgraphbuilder
+lib_LTLIBRARIES = libvalhalla.la
+
 valhalla_SOURCES = \
 	src/valhalla.cc
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
+
+pbfgraphbuilder_SOURCES = \
+	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
+	src/mjolnir/pbfgraphbuilder/graphbuilder.cc
+pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+	-losmpbf -lprotobuf -lz -lpthread libvalhalla.la
 
 # tests
 check_PROGRAMS = \
