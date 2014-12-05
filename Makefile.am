@@ -113,7 +113,7 @@ check_PROGRAMS = \
 	test/valhalla \
 	test/point2 \
 	test/distanceapproximator \
-        test/aabb2
+	test/aabb2
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
