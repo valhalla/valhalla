@@ -71,9 +71,9 @@ void TryNormalize(Vector2& a, const Vector2& expected) {
 
 void TestNormalize() {
   Vector2 v(3.0f, 4.0f);
-  TryNormalize(v, Vector2(3.0f/5.0f, 4.0f/5.0f));
+  TryNormalize(v, Vector2(3.0f / 5.0f, 4.0f / 5.0f));
   Vector2 w(6.0f, 8.0f);
-  TryNormalize(w, Vector2(6.0f/10.0f, 8.0f/10.0f));
+  TryNormalize(w, Vector2(6.0f / 10.0f, 8.0f / 10.0f));
 }
 
 void TryComponent(const Vector2& a, const Vector2& b, float expected) {
@@ -87,7 +87,8 @@ void TestComponent() {
   TryComponent(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), 2.0f);
 }
 
-void TryProjection(const Vector2& a, const Vector2& b, const Vector2& expected) {
+void TryProjection(const Vector2& a, const Vector2& b,
+                   const Vector2& expected) {
   Vector2 result = a.Projection(b);
   if (!(expected == result))
     throw runtime_error("Projection test failed");
@@ -96,11 +97,12 @@ void TryProjection(const Vector2& a, const Vector2& b, const Vector2& expected) 
 void TestProjection() {
   TryProjection(Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f));
   TryProjection(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f));
-  TryProjection(Vector2(2.0f, 1.0f), Vector2(-3.0f, 4.0f), Vector2(6.0f/25.0f, -8.0f/25.0f));
+  TryProjection(Vector2(2.0f, 1.0f), Vector2(-3.0f, 4.0f),
+                Vector2(6.0f / 25.0f, -8.0f / 25.0f));
 }
 
 void TryAngleBetween(const Vector2& a, const Vector2& b, float expected) {
-  float result = (a.AngleBetween(b)*kDegPerRad);
+  float result = (a.AngleBetween(b) * kDegPerRad);
   if (expected != result)
     throw runtime_error("AngleBetween test failed");
 }
@@ -117,10 +119,10 @@ void TryReflect(const Vector2& a, const Vector2& b, const Vector2& expected) {
 }
 
 void TestReflect() {
-  Vector2 n1 {0.0f, 2.0f};
+  Vector2 n1 { 0.0f, 2.0f };
   n1.Normalize();
   TryReflect(Vector2(4.0f, -2.0f), n1, Vector2(4.0f, 2.0f));
-  Vector2 n2 {-3.0f, 0.0f};
+  Vector2 n2 { -3.0f, 0.0f };
   n2.Normalize();
   TryReflect(Vector2(3.0f, -4.0f), n2, Vector2(-3.0f, -4.0f));
 }
