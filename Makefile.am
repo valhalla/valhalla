@@ -123,7 +123,8 @@ check_PROGRAMS = \
 	test/aabb2 \
 	test/linesegment2 \
 	test/edgestatus \
-	test/aabbll
+	test/aabbll \
+	test/vector2
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -145,6 +146,9 @@ test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 test_aabbll_SOURCES = test/aabbll.cc test/test.cc
 test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_vector2_SOURCES = test/vector2.cc test/test.cc
+test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
 
 
 TESTS = $(check_PROGRAMS)

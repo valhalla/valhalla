@@ -48,6 +48,7 @@ test/distanceapproximator
 test/edgestatus
 test/aabb2
 test/aabbll
+test/vector2
 test/*.log
 test/*.trs
 
