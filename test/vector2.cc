@@ -76,6 +76,29 @@ void TestNormalize() {
   TryNormalize(w, Vector2(6.0f/10.0f, 8.0f/10.0f));
 }
 
+void TryComponent(const Vector2& a, const Vector2& b, float expected) {
+  float result = a.Component(b);
+  if (expected != result)
+    throw runtime_error("Component test failed");
+}
+
+void TestComponent() {
+  TryComponent(Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f), 0.5f);
+  TryComponent(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), 2.0f);
+}
+
+void TryProjection(const Vector2& a, const Vector2& b, const Vector2& expected) {
+  Vector2 result = a.Projection(b);
+  if (!(expected == result))
+    throw runtime_error("Projection test failed");
+}
+
+void TestProjection() {
+  TryProjection(Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f));
+  TryProjection(Vector2(6.0f, 8.0f), Vector2(3.0f, 4.0f), Vector2(6.0f, 8.0f));
+  TryProjection(Vector2(2.0f, 1.0f), Vector2(-3.0f, 4.0f), Vector2(6.0f/25.0f, -8.0f/25.0f));
+}
+
 void TryAngleBetween(const Vector2& a, const Vector2& b, float expected) {
   float result = (a.AngleBetween(b)*kDegPerRad);
   if (expected != result)
@@ -85,6 +108,21 @@ void TryAngleBetween(const Vector2& a, const Vector2& b, float expected) {
 void TestAngleBetween() {
   TryAngleBetween(Vector2(3.0f, 0.0f), Vector2(5.0f, 5.0f), 45.0f);
   TryAngleBetween(Vector2(3.0f, 4.0f), Vector2(-8.0f, 6.0f), 90.0f);
+}
+
+void TryReflect(const Vector2& a, const Vector2& b, const Vector2& expected) {
+  Vector2 result = a.Reflect(b);
+  if (!(expected == result))
+    throw runtime_error("Reflect test failed");
+}
+
+void TestReflect() {
+  Vector2 n1 {0.0f, 2.0f};
+  n1.Normalize();
+  TryReflect(Vector2(4.0f, -2.0f), n1, Vector2(4.0f, 2.0f));
+  Vector2 n2 {-3.0f, 0.0f};
+  n2.Normalize();
+  TryReflect(Vector2(3.0f, -4.0f), n2, Vector2(-3.0f, -4.0f));
 }
 
 }
@@ -110,8 +148,17 @@ int main() {
   // Normalize
   suite.test(TEST_CASE(TestNormalize));
 
+  // Component
+  suite.test(TEST_CASE(TestComponent));
+
+  // Projection
+  suite.test(TEST_CASE(TestProjection));
+
   // Angle Between
   suite.test(TEST_CASE(TestAngleBetween));
+
+  // Reflect
+  suite.test(TEST_CASE(TestReflect));
 
   return suite.tear_down();
 }
