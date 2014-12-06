@@ -75,6 +75,89 @@ void TestOpAssignment() {
   TryOpAssignment(Vector2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
 }
 
+void TryGet_x(const Vector2& v, const float expected) {
+  if (expected != v.x())
+    throw runtime_error("Get_x test failed");
+}
+
+void TestGet_x() {
+  TryGet_x(Vector2(3.0f, 0.0f), 3.0f);
+  TryGet_x(Vector2(-8.0f, 6.0f), -8.0f);
+}
+
+void TryGet_y(const Vector2& v, const float expected) {
+  if (expected != v.y())
+    throw runtime_error("Get_y test failed");
+}
+
+void TestGet_y() {
+  TryGet_y(Vector2(3.0f, 2.0f), 2.0f);
+  TryGet_y(Vector2(-8.0f, 6.0f), 6.0f);
+}
+
+void TrySet_x(Vector2& v, const float expected) {
+  v.set_x(expected);
+  if (expected != v.x())
+    throw runtime_error("Set_x test failed");
+}
+
+void TestSet_x() {
+  Vector2 v { 1.0f, 1.0f };
+  TrySet_x(v, 3.0f);
+  TrySet_x(v, -8.0f);
+}
+
+void TrySet_y(Vector2& v, const float expected) {
+  v.set_y(expected);
+  if (expected != v.y())
+    throw runtime_error("Set_y test failed");
+}
+
+void TestSet_y() {
+  Vector2 v { 1.0f, 1.0f };
+  TrySet_y(v, 3.0f);
+  TrySet_y(v, -8.0f);
+}
+
+void TrySetFloatFloat(const float x, const float y, const Vector2& expected) {
+  Vector2 result;
+  result.Set(x, y);
+  if (!(expected == result))
+    throw runtime_error("SetFloatFloat test failed");
+}
+
+void TestSetFloatFloat() {
+  TrySetFloatFloat(3.0f, 0.0f, Vector2(3.0f, 0.0f));
+  TrySetFloatFloat(-8.0f, 6.0f, Vector2(-8.0f, 6.0f));
+}
+
+void TrySetPoint2(const Point2& pt, const Vector2& expected) {
+  Vector2 result;
+  result.Set(pt);
+  if (!(expected == result))
+    throw runtime_error("SetPoint2 test failed");
+}
+
+void TestSetPoint2() {
+  TrySetPoint2(Point2(3.0f, 0.0f), Vector2(3.0f, 0.0f));
+  TrySetPoint2(Point2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
+}
+
+void TrySetPoint2Point2(const Point2& from, const Point2& to,
+                         const Vector2& expected) {
+  Vector2 result;
+  result.Set(from, to);
+  if (!(expected == result))
+    throw runtime_error("SetPoint2Point2 test failed");
+}
+
+void TestSetPoint2Point2() {
+  TrySetPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f),
+                      Vector2(-1.0f, 3.0f));
+  TrySetPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f),
+                      Vector2(0.0f, -4.0f));
+}
+
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Dot(b);
   if (expected != result)
@@ -215,6 +298,27 @@ int main() {
 
   // Op Assignment
   suite.test(TEST_CASE(TestOpAssignment));
+
+  // Get x
+  suite.test(TEST_CASE(TestGet_x));
+
+  // Get y
+  suite.test(TEST_CASE(TestGet_y));
+
+  // Set x
+  suite.test(TEST_CASE(TestSet_x));
+
+  // Set y
+  suite.test(TEST_CASE(TestSet_y));
+
+  // Set float, float
+  suite.test(TEST_CASE(TestSetFloatFloat));
+
+  // Set Point2
+  suite.test(TEST_CASE(TestSetPoint2));
+
+  // Set Point2, Point2
+  suite.test(TEST_CASE(TestSetPoint2Point2));
 
   // Dot Product
   suite.test(TEST_CASE(TestDotProduct));
