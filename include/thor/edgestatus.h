@@ -4,10 +4,10 @@
 #include <map>
 #include "baldr/graphid.h"
 
-namespace valhalla{
-namespace thor{
+namespace valhalla {
+namespace thor {
 
-enum EdgeLabel {
+enum EdgeStatusType {
   kUnreached = 0,   // Unreached - not yet encountered in search
   kPermanent = 1,   // Permanent - shortest path to this edge has been found
   kTemporary = 2    // Temporary - edge has been encountered but there could
@@ -36,12 +36,12 @@ class EdgeStatus {
    * @param  edgeid   GraphId of the directed edge to set.
    * @param  status   Label status for this directed edge.
    */
-  void Set(const baldr::GraphId& edgeid, const EdgeLabel status);
+  void Set(const baldr::GraphId& edgeid, const EdgeStatusType status);
 
   /**
    * Get the status of a directed edge given its GraphId.
    */
-  EdgeLabel Get(const baldr::GraphId& edgeid) const;
+  EdgeStatusType Get(const baldr::GraphId& edgeid) const;
 
  private:
   // Map to store the status of GraphIds that have been encountered.
@@ -49,7 +49,7 @@ class EdgeStatus {
   // TODO - compare performance of unordered_map (or other containers)
   // NOTE - will have lots of insert which can be time consuming in
   // hash maps
-  std::map<baldr::GraphId, EdgeLabel> edgestatus_;
+  std::map<baldr::GraphId, EdgeStatusType> edgestatus_;
 };
 
 }
