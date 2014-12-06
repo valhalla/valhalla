@@ -14,42 +14,41 @@ namespace geo{
     miny_ = bdry.miny();
     maxy_ = bdry.maxy();
 
-    // If the shape is closed make sure the last vertex equals the first
-    // or force closure by appending a vertex
-    int n = pts.size();
-    if (pts[0] != pts[n-1]) {
-      pts.push_back(pts[0]);
-    }
-
     // Temporary vertex list
     std::vector<Point2> tmp_pts;
 
     // Clip against each edge in succession. If at any time there are
     // no points kLeft we return 0 (everything outside)
-    if (clipAgainstEdge(kLeft, pts, tmp_pts) == 0) {
+    if (clipAgainstEdge(kLeft, closed, pts, tmp_pts) == 0) {
       return 0;
     }
-    if (clipAgainstEdge(kRight, tmp_pts, pts) == 0) {
+    if (clipAgainstEdge(kRight, closed, tmp_pts, pts) == 0) {
       return 0;
     }
-    if (clipAgainstEdge(kBottom, pts, tmp_pts) == 0) {
+    if (clipAgainstEdge(kBottom, closed, pts, tmp_pts) == 0) {
       return 0;
     }
-    if (clipAgainstEdge(kTop, tmp_pts, pts) == 0) {
+     if (clipAgainstEdge(kTop, closed, tmp_pts, pts) == 0) {
       return 0;
     }
+
     // Return number of vertices in the clipped shape
     return pts.size();
   }
 
-  int Clipper2::clipAgainstEdge(const ClipEdge bdry, std::vector<Point2>& vin,
-            std::vector<Point2>& vout) {
+  int Clipper2::clipAgainstEdge(const ClipEdge bdry, bool closed,
+            std::vector<Point2>& vin, std::vector<Point2>& vout) {
     // Clear the output vector
     vout.clear();
 
-    // Loop through all vertices (edges are created from v1 to v2)
+    // Special case for the 1st vertex. For polygons (closed) connect
+    // last vertex to first vertex. For polylines repeat the first vertex
+    unsigned int n = vin.size();
+    unsigned int v1 = closed ? n - 1 : 0;
+
+    // Loop through all vertices (edges are created from v1 to v2).
     bool v1in, v2in;
-    for (int v1 = 0, v2 = 1, n = vin.size(); v2 < n; v1++, v2++) {
+    for (unsigned int v2 = 0; v2 < n; v1 = v2, v2++) {
       // Relation of v1 and v2 with the bdry
       v1in = inside(bdry, vin[v1]);
       v2in = inside(bdry, vin[v2]);
