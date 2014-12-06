@@ -77,6 +77,7 @@ include_HEADERS = \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
+	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
 	include/odin/narrativebuilder.h
 libvalhalla_la_SOURCES = \
@@ -100,6 +101,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
+	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/odin/narrativebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
@@ -109,11 +111,20 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 # executable valhalla
-bin_PROGRAMS = valhalla
+bin_PROGRAMS = valhalla 
+#pbfgraphbuilder
+
 valhalla_SOURCES = \
 	src/valhalla.cc
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
+
+#pbfgraphbuilder_SOURCES = \
+#	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
+#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc
+#pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+#pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+#	-losmpbf -lprotobuf -lz -lpthread libvalhalla.la
 
 # tests
 check_PROGRAMS = \
@@ -130,26 +141,25 @@ test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
 test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_aabb2_SOURCES = test/aabb2.cc test/test.cc
 test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabb2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_aabb2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
 test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
 test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_aabbll_SOURCES = test/aabbll.cc test/test.cc
 test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
+test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_vector2_SOURCES = test/vector2.cc test/test.cc
 test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ -lvalhalla
-
+test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

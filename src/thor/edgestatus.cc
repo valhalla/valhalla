@@ -2,22 +2,24 @@
 
 using namespace valhalla::baldr;
 
-namespace valhalla{
-namespace thor{
+namespace valhalla {
+namespace thor {
 
-  EdgeStatus::EdgeStatus() { }
+EdgeStatus::EdgeStatus() {
+}
 
-  void EdgeStatus::Init() {
-    edgestatus_.clear();
-  }
+void EdgeStatus::Init() {
+  edgestatus_.clear();
+}
 
-  void EdgeStatus::Set(const baldr::GraphId& edgeid, const EdgeLabel status) {
-    edgestatus_.emplace(edgeid, status);
-  }
+void EdgeStatus::Set(const baldr::GraphId& edgeid,
+                     const EdgeStatusType status) {
+  edgestatus_.emplace(edgeid, status);
+}
 
-  EdgeLabel EdgeStatus::Get(const baldr::GraphId& edgeid) const {
-    auto p = edgestatus_.find(edgeid);
-    return (p == edgestatus_.end()) ? kUnreached : p->second;
-  }
+EdgeStatusType EdgeStatus::Get(const baldr::GraphId& edgeid) const {
+  auto p = edgestatus_.find(edgeid);
+  return (p == edgestatus_.end()) ? kUnreached : p->second;
+}
 }
 }

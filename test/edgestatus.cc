@@ -10,10 +10,10 @@ using namespace valhalla::thor;
 namespace {
 
 void TryGet(const EdgeStatus& edgestatus, const GraphId& edgeid,
-               const EdgeLabel expected) {
-  EdgeLabel r = edgestatus.Get(edgeid);
+               const EdgeStatusType expected) {
+  EdgeStatusType r = edgestatus.Get(edgeid);
   if (r != expected)
-    throw runtime_error("Point subtraction test failed");
+    throw runtime_error("EdgeStatus get test failed");
 }
 
 void TestStatus() {
