@@ -9,6 +9,72 @@ using namespace valhalla::geo;
 
 namespace {
 
+void TestCtorDefault() {
+  Vector2 target;
+  Vector2 expected { 0.0f, 0.0f };
+  if (!(expected == target))
+    throw runtime_error("CtorDefault test failed");
+}
+
+void TryCtorPoint2(const Point2& pt, const Vector2& expected) {
+  Vector2 result(pt);
+  if (!(expected == result))
+    throw runtime_error("CtorPoint2 test failed");
+}
+
+void TestCtorPoint2() {
+  TryCtorPoint2(Point2(3.0f, 0.0f), Vector2(3.0f, 0.0f));
+  TryCtorPoint2(Point2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
+}
+
+void TryCtorFloatFloat(const float x, const float y, const Vector2& expected) {
+  Vector2 result(x, y);
+  if (!(expected == result))
+    throw runtime_error("CtorFloatFloat test failed");
+}
+
+void TestCtorFloatFloat() {
+  TryCtorFloatFloat(3.0f, 0.0f, Vector2(3.0f, 0.0f));
+  TryCtorFloatFloat(-8.0f, 6.0f, Vector2(-8.0f, 6.0f));
+}
+
+void TryCtorPoint2Point2(const Point2& from, const Point2& to,
+                         const Vector2& expected) {
+  Vector2 result(from, to);
+  if (!(expected == result))
+    throw runtime_error("CtorPoint2Point2 test failed");
+}
+
+void TestCtorPoint2Point2() {
+  TryCtorPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f),
+                      Vector2(-1.0f, 3.0f));
+  TryCtorPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f),
+                      Vector2(0.0f, -4.0f));
+}
+
+void TryCtorVector2(const Vector2& v, const Vector2& expected) {
+  Vector2 result(v);
+  if (!(expected == result))
+    throw runtime_error("CtorVector2 test failed");
+}
+
+void TestCtorVector2() {
+  TryCtorVector2(Vector2(3.0f, 0.0f), Vector2(3.0f, 0.0f));
+  TryCtorVector2(Vector2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
+}
+
+void TryOpAssignment(const Vector2& v, const Vector2& expected) {
+  Vector2 result;
+  result = v;
+  if (!(expected == result))
+    throw runtime_error("OpAssignment test failed");
+}
+
+void TestOpAssignment() {
+  TryOpAssignment(Vector2(3.0f, 0.0f), Vector2(3.0f, 0.0f));
+  TryOpAssignment(Vector2(-8.0f, 6.0f), Vector2(-8.0f, 6.0f));
+}
+
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Dot(b);
   if (expected != result)
@@ -131,6 +197,24 @@ void TestReflect() {
 
 int main() {
   test::suite suite("vector2");
+
+  // Ctor default
+  suite.test(TEST_CASE(TestCtorDefault));
+
+  // Ctor Point2
+  suite.test(TEST_CASE(TestCtorPoint2));
+
+  // Ctor float, float
+  suite.test(TEST_CASE(TestCtorFloatFloat));
+
+  // Ctor Point2, Point2
+  suite.test(TEST_CASE(TestCtorPoint2Point2));
+
+  // Ctor Vector2
+  suite.test(TEST_CASE(TestCtorVector2));
+
+  // Op Assignment
+  suite.test(TEST_CASE(TestOpAssignment));
 
   // Dot Product
   suite.test(TEST_CASE(TestDotProduct));
