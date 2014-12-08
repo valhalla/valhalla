@@ -59,7 +59,10 @@ lib_LTLIBRARIES = libvalhalla.la
 include_HEADERS = \
 	include/valhalla.h \
 	include/baldr/directededge.h \
+	include/baldr/edgeinfo.h \
 	include/baldr/graphid.h \
+	include/baldr/graphtile.h \
+	include/baldr/graphtileheader.h \
 	include/baldr/nodeinfo.h \
 	include/geo/linesegment2.h \
 	include/geo/tiles.h \
@@ -83,7 +86,10 @@ include_HEADERS = \
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
+	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
+	src/baldr/graphtile.cc \
+	src/baldr/graphtileheader.cc \
 	src/baldr/nodeinfo.cc \
 	src/geo/linesegment2.cc \
 	src/geo/tiles.cc \

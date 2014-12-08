@@ -2,11 +2,13 @@
 
 namespace {
 
+constexpr unsigned int kMaxGraphTileId = 16777215;
+
 // Maximum of 8 (0-7) graph hierarchies are supported.
 constexpr unsigned int kMaxGraphHierarchy = 7;
 
-// Maximum unique identifier within a graph hierarchy (~536 million)
-constexpr unsigned int kMaxGraphId = 536870911;
+// Maximum unique identifier within a graph hierarchy.
+constexpr uint64_t kMaxGraphId = 68719476735;
 
 }
 
@@ -14,23 +16,27 @@ namespace valhalla{
 namespace baldr{
 
   GraphId::GraphId() {
-    // TODO - better way to initialize?
-    Set(0, 0);
+    Set(0, 0, 0);
   }
 
-  GraphId::GraphId(const unsigned int level, const unsigned int id) {
-    Set(level, id);
+  GraphId::GraphId(const unsigned int tileid, const unsigned int level,
+                   const unsigned int id) {
+    Set(tileid, level, id);
   }
 
   GraphId::GraphId(const GraphId& g) {
-    Set(g.Level(), g.Id());
+    Set(g.tileid(), g.level(), g.id());
   }
 
-  unsigned int GraphId::Level() const {
+  unsigned int GraphId::tileid() const {
+    return graphid_.tileid;
+  }
+
+  unsigned int GraphId::level() const {
     return graphid_.level;
   }
 
-  unsigned int GraphId::Id() const {
+  unsigned int GraphId::id() const {
     return graphid_.id;
   }
 
@@ -38,9 +44,11 @@ namespace baldr{
     return (graphid_.id > 0);
   }
 
-  void GraphId::Set(const unsigned int level, const unsigned int id) {
-    graphid_.id = (id < kMaxGraphId ) ? id : 0;
+  void GraphId::Set(const unsigned int tileid, const unsigned int level,
+                    const unsigned int id) {
+    graphid_.tileid = (tileid < kMaxGraphTileId ) ? tileid : 0;
     graphid_.level = (level < kMaxGraphHierarchy) ? level : 0;
+    graphid_.id = (id < kMaxGraphId ) ? id : 0;
   }
 
   /**
@@ -52,10 +60,10 @@ namespace baldr{
 
   // TODO - could this be simplified using unions in the struct?
   bool GraphId::operator < (const GraphId& other) const {
-    if (Level() == other.Level()) {
-      return Id() < other.Id();
+    if (level() == other.level()) {
+      return id() < other.id();
     }
-    return Level() < other.Level();
+    return level() < other.level();
   }
 
 }
