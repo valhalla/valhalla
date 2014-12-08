@@ -9,7 +9,7 @@ namespace thor{
 
   // TODO - use int or float?
 	float EdgeCost::Get(const DirectedEdge* edge) {
-    return edge->Length();
+    return edge->length();
   }
 
   /**

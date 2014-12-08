@@ -19,24 +19,24 @@ class DirectedEdge {
   DirectedEdge();
 
   /**
-   * Gets the length of the link in kilometers.
+   * Gets the length of the edge in kilometers.
    * @return  Returns the length in kilometers.
    */
-  float Length() const;
+  float length() const;
 
   /**
    * Gets the end node of this directed edge.
    * @return  Returns the end node.
    */
-  GraphId EndNode() const;
+  GraphId endnode() const;
 
   // TODO - methods for access
 
   /**
-  * Gets the speed in KPH. TODO - cast to float instead?
-  * @return  Returns the speed in KPH.
-  */
-  unsigned int Speed() const;
+   * Gets the speed in KPH. TODO - cast to float instead?
+   * @return  Returns the speed in KPH.
+   */
+  float speed() const;
 
  private:
   // Length of the link in miles
