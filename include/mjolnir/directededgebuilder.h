@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
-#include "geo/util.h"
 #include "baldr/graphid.h"
+#include "baldr/directededge.h"
 
 namespace valhalla{
 namespace mjolnir{
@@ -28,7 +28,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Set the end node of this directed edge.
    * @param  endnode  End node of the directed link.
    */
-  void set_endnode(const GraphId& endnode);
+  void set_endnode(const baldr::GraphId& endnode);
 
   // TODO - methods for access
 
@@ -38,5 +38,8 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   */
   void set_speed(const float speed);
 };
+
+}
+}
 
 #endif  // VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
