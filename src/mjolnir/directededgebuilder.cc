@@ -5,8 +5,7 @@ namespace mjolnir {
 
 // Default constructor
 DirectedEdgeBuilder::DirectedEdgeBuilder()
-    : speed_(0),
-      length_(0) {
+  : DirectedEdge() {
 }
 
 // Sets the length of the edge in kilometers.
