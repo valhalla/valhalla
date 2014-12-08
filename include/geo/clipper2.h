@@ -54,7 +54,8 @@ class Clipper2 {
   float maxy_;
 
   // Clips the polyline/polygon against a single edge
-  int clipAgainstEdge(const ClipEdge bdry, std::vector<Point2>& vin,
+  int clipAgainstEdge(const ClipEdge bdry, bool closed,
+            std::vector<Point2>& vin,
             std::vector<Point2>& vout);
 
   // Finds the intersection of the segment from insidept to outsidept with the
