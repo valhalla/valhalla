@@ -1,42 +1,42 @@
-#ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
-#define VALHALLA_BALDR_DIRECTEDEDGE_H_
+#ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
+#define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
 #include "geo/util.h"
-#include "graphid.h"
+#include "baldr/graphid.h"
 
 namespace valhalla{
-namespace baldr{
+namespace mjolnir{
 
 /**
  * Directed edge within the graph.
  * @author  David W. Nesbitt
  */
-class DirectedEdge {
+class DirectedEdgeBuilder : public baldr::DirectedEdge {
  public:
   /**
    * Constructor
    */
-  DirectedEdge();
+  DirectedEdgeBuilder();
 
   /**
-   * Gets the length of the link in kilometers.
-   * @return  Returns the length in kilometers.
+   * Sets the length of the edge in kilometers.
+   * @param  length  Length of the edge in kilometers.
    */
-  float length() const;
+  void set_length(const float length);
 
   /**
-   * Gets the end node of this directed edge.
-   * @return  Returns the end node.
+   * Set the end node of this directed edge.
+   * @param  endnode  End node of the directed link.
    */
-  GraphId endnode() const;
+  void set_endnode(const GraphId& endnode);
 
   // TODO - methods for access
 
   /**
-   * Gets the speed in KPH. TODO - cast to float instead?
-   * @return  Returns the speed in KPH.
-   */
-  float speed() const;
+   * Sets the speed in KPH.
+   * @param  speed  Speed in KPH.
+  */
+  void set_speed(const float speed);
 
  private:
   // Length of the link in miles
@@ -84,8 +84,4 @@ class DirectedEdge {
 
 };
 
-// TODO - do we derive a writeable class and treat the base class as read only?
-}
-}
-
-#endif  // VALHALLA_BALDR_DIRECTEDEDGE_H_
+#endif  // VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
