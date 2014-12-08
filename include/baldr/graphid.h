@@ -1,12 +1,15 @@
 #ifndef VALHALLA_BALDR_GRAPHID_H_
 #define VALHALLA_BALDR_GRAPHID_H_
 
+#include <cstdint>
+
 namespace valhalla{
 namespace baldr{
 
 /**
- * Identifier of a node or an edge within the graph. Includes a hierarchy
- * level and a unique identifier within the level.
+ * Identifier of a node or an edge within the tiled, hierarchical graph.
+ * Includes the tile Id, hierarchy level and a unique identifier within the
+ * level.
  * @author  David W. Nesbitt
  */
 class GraphId {
@@ -18,10 +21,12 @@ class GraphId {
 
   /**
    * Constructor.
+   * @param  tileid Tile Id.
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level.
    */
-  GraphId(const unsigned int level, const unsigned int id);
+  GraphId(const unsigned int tileid, const unsigned int level,
+              const unsigned int id);
 
   /**
    * Copy constructor.
@@ -30,16 +35,22 @@ class GraphId {
   GraphId(const GraphId& g);
 
   /**
+   * Gets the tile Id.
+   * @return   Returns the tile Id.
+   */
+  unsigned int tileid() const;
+
+  /**
    * Gets the hierarchy level.
    * @return   Returns the level.
    */
-  unsigned int Level() const;
+  unsigned int level() const;
 
   /**
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  unsigned int Id() const;
+  unsigned int id() const;
 
   /**
    * Test if this is a valid graph element. Invalid elements have id == 0.
@@ -49,10 +60,12 @@ class GraphId {
 
   /**
    * Convenience method to set individual graph Id elements.
+   * @param  tileid Tile Id.
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level
    */
-  void Set(const unsigned int level, const unsigned int id);
+  void Set(const unsigned int tileid, const unsigned int level,
+           const unsigned int id);
 
   /**
    * Post increments the id.
@@ -68,8 +81,9 @@ class GraphId {
 
  protected:
   struct Fields {
-    unsigned int id    : 29;
-    unsigned int level : 3;
+    uint64_t tileid : 24;
+    uint64_t level  : 3;
+    uint64_t id     : 36;
   };
   Fields graphid_;
 };
