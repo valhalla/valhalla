@@ -7,8 +7,8 @@
 #include "constants.h"
 #include "point2.h"
 
-namespace valhalla{
-namespace geo{
+namespace valhalla {
+namespace geo {
 
 /**
  * 2D vector class. float x,y components.
@@ -53,7 +53,7 @@ class Vector2 {
    * @param   w  Vector to copy to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator = (const Vector2& w);
+  Vector2& operator =(const Vector2& w);
 
   /**
    * Destructor
@@ -111,14 +111,14 @@ class Vector2 {
    * @param   w  Vector to add to the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator + (const Vector2& w) const;
+  Vector2 operator +(const Vector2& w) const;
 
   /**
    * Adds vector w to the current vector.
    * @param   w  Vector to add to the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator += (const Vector2& w);
+  Vector2& operator +=(const Vector2& w);
 
   /**
    * Creates a new vector that is the current vector minus the
@@ -126,14 +126,14 @@ class Vector2 {
    * @param   w  Vector to subtract from the current vector.
    * @return   Returns the resulting vector.
    */
-  Vector2 operator - (const Vector2& w) const;
+  Vector2 operator -(const Vector2& w) const;
 
   /**
    * Subtracts vector w from the current vector.
    * @param   w  Vector to subtract from the current vector.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator -= (const Vector2& w);
+  Vector2& operator -=(const Vector2& w);
 
   /**
    * Creates a new vector that is the current vector multiplied
@@ -141,14 +141,14 @@ class Vector2 {
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the resulting vector
    */
-  Vector2 operator * (const float scalar) const;
+  Vector2 operator *(const float scalar) const;
 
   /**
    * Multiplies the current vector by a scalar
    * @param   scalar   Scalar to muliply the vector with.
    * @return  Returns the address of the current vector.
    */
-  Vector2& operator *= (const float scalar);
+  Vector2& operator *=(const float scalar);
 
   /**
    * Equality operator.
@@ -156,7 +156,7 @@ class Vector2 {
    * @return  Returns true if vector w equals the current vector,
    *          false otherwise.
    */
-  bool operator == (const Vector2& w) const;
+  bool operator ==(const Vector2& w) const;
 
   /**
    * Computes the dot product of the current vector with the
@@ -248,7 +248,7 @@ class Vector2 {
  * @param   Vector2  Vector to be multiplied with the scalar
  * @return  Returns the resulting vector
  */
-Vector2 operator * (float s, const Vector2 &v);
+Vector2 operator *(float s, const Vector2 &v);
 
 }
 }
