@@ -19,7 +19,7 @@ class DirectedEdge {
   DirectedEdge();
 
   /**
-   * Gets the length of the link in kilometers.
+   * Gets the length of the edge in kilometers.
    * @return  Returns the length in kilometers.
    */
   float length() const;
