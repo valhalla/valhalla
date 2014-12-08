@@ -239,6 +239,19 @@ void TestOpMultiplicationAssignment() {
   TryOpMultiplicationAssignment(v2, -2.0f, Vector2(8.0f, -4.0f));
 }
 
+void TryOpEqualTo(const Vector2& v, const Vector2& expected) {
+  if (!(expected == v))
+    throw runtime_error("OpEqualTo test failed");
+  if (!(v == expected))
+    throw runtime_error("OpEqualTo test failed");
+}
+
+void TestOpEqualTo() {
+  TryOpEqualTo(Vector2(1.0f, 3.0f), Vector2(1.0f, 3.0f));
+  TryOpEqualTo(Vector2(4.0f, -2.0f), Vector2(4.0f, -2.0f));
+  TryOpEqualTo(Vector2(-4.0f, 2.0f), Vector2(-4.0f, 2.0f));
+}
+
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Dot(b);
   if (expected != result)
@@ -418,6 +431,9 @@ int main() {
 
   // Op Multiplication Assignment
   suite.test(TEST_CASE(TestOpMultiplicationAssignment));
+
+  // Op Equal To
+  suite.test(TEST_CASE(TestOpEqualTo));
 
   // Dot Product
   suite.test(TEST_CASE(TestDotProduct));
