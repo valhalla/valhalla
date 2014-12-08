@@ -38,7 +38,7 @@ class DirectedEdge {
    */
   float speed() const;
 
- private:
+ protected:
   // Length of the link in miles
   float length_;
 

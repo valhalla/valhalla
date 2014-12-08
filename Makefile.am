@@ -111,7 +111,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/odin/narrativebuilder.cc \
-	src/mjolnir/directededgebuilder.h
+	src/mjolnir/directededgebuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
