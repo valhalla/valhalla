@@ -144,7 +144,7 @@ void TestSetPoint2() {
 }
 
 void TrySetPoint2Point2(const Point2& from, const Point2& to,
-                         const Vector2& expected) {
+                        const Vector2& expected) {
   Vector2 result;
   result.Set(from, to);
   if (!(expected == result))
@@ -153,9 +153,103 @@ void TrySetPoint2Point2(const Point2& from, const Point2& to,
 
 void TestSetPoint2Point2() {
   TrySetPoint2Point2(Point2(4.0f, 0.0f), Point2(3.0f, 3.0f),
-                      Vector2(-1.0f, 3.0f));
+                     Vector2(-1.0f, 3.0f));
   TrySetPoint2Point2(Point2(4.0f, 2.0f), Point2(4.0f, -2.0f),
-                      Vector2(0.0f, -4.0f));
+                     Vector2(0.0f, -4.0f));
+}
+
+void TryOpAddition(const Vector2& v, const Vector2& w,
+                   const Vector2& expected) {
+  Vector2 result = v + w;
+  if (!(expected == result))
+    throw runtime_error("OpAddition test failed");
+}
+
+void TestOpAddition() {
+  TryOpAddition(Vector2(4.0f, -2.0f), Vector2(3.0f, 3.0f), Vector2(7.0f, 1.0f));
+  TryOpAddition(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f),
+                Vector2(2.0f, 0.0f));
+}
+
+void TryOpAdditionAssignment(Vector2& v, const Vector2& w,
+                             const Vector2& expected) {
+  v += w;
+  if (!(expected == v))
+    throw runtime_error("OpAdditionAssignment test failed");
+}
+
+void TestOpAdditionAssignment() {
+  Vector2 v1 { 4.0f, -2.0f };
+  TryOpAdditionAssignment(v1, Vector2(3.0f, 3.0f), Vector2(7.0f, 1.0f));
+  Vector2 v2 { 4.0f, 2.0f };
+  TryOpAdditionAssignment(v2, Vector2(-2.0f, -2.0f), Vector2(2.0f, 0.0f));
+}
+
+void TryOpSubtraction(const Vector2& v, const Vector2& w,
+                      const Vector2& expected) {
+  Vector2 result = v - w;
+  if (!(expected == result))
+    throw runtime_error("OpSubtraction test failed");
+}
+
+void TestOpSubtraction() {
+  TryOpSubtraction(Vector2(4.0f, -2.0f), Vector2(3.0f, 3.0f),
+                   Vector2(1.0f, -5.0f));
+  TryOpSubtraction(Vector2(4.0f, 2.0f), Vector2(-2.0f, -2.0f),
+                   Vector2(6.0f, 4.0f));
+}
+
+void TryOpSubtractionAssignment(Vector2& v, const Vector2& w,
+                                const Vector2& expected) {
+  v -= w;
+  if (!(expected == v))
+    throw runtime_error("OpSubtractionAssignment test failed");
+}
+
+void TestOpSubtractionAssignment() {
+  Vector2 v1 { 4.0f, -2.0f };
+  TryOpSubtractionAssignment(v1, Vector2(3.0f, 3.0f), Vector2(1.0f, -5.0f));
+  Vector2 v2 { 4.0f, 2.0f };
+  TryOpSubtractionAssignment(v2, Vector2(-2.0f, -2.0f), Vector2(6.0f, 4.0f));
+}
+
+void TryOpMultiplication(const Vector2& v, const float scalar,
+                         const Vector2& expected) {
+  Vector2 result = v * scalar;
+  if (!(expected == result))
+    throw runtime_error("OpMultiplication test failed");
+}
+
+void TestOpMultiplication() {
+  TryOpMultiplication(Vector2(4.0f, -2.0f), 3.0f, Vector2(12.0f, -6.0f));
+  TryOpMultiplication(Vector2(-4.0f, 2.0f), -2.0f, Vector2(8.0f, -4.0f));
+}
+
+void TryOpMultiplicationAssignment(Vector2& v, const float scalar,
+                                   const Vector2& expected) {
+  v *= scalar;
+  if (!(expected == v))
+    throw runtime_error("OpMultiplicationAssignment test failed");
+}
+
+void TestOpMultiplicationAssignment() {
+  Vector2 v1 { 4.0f, -2.0f };
+  TryOpMultiplicationAssignment(v1, 3.0f, Vector2(12.0f, -6.0f));
+  Vector2 v2 { -4.0f, 2.0f };
+  TryOpMultiplicationAssignment(v2, -2.0f, Vector2(8.0f, -4.0f));
+}
+
+void TryOpEqualTo(const Vector2& v, const Vector2& expected) {
+  if (!(expected == v))
+    throw runtime_error("OpEqualTo test failed");
+  if (!(v == expected))
+    throw runtime_error("OpEqualTo test failed");
+}
+
+void TestOpEqualTo() {
+  TryOpEqualTo(Vector2(1.0f, 3.0f), Vector2(1.0f, 3.0f));
+  TryOpEqualTo(Vector2(4.0f, -2.0f), Vector2(4.0f, -2.0f));
+  TryOpEqualTo(Vector2(-4.0f, 2.0f), Vector2(-4.0f, 2.0f));
 }
 
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
@@ -319,6 +413,27 @@ int main() {
 
   // Set Point2, Point2
   suite.test(TEST_CASE(TestSetPoint2Point2));
+
+  // Op Addition
+  suite.test(TEST_CASE(TestOpAddition));
+
+  // Op Addition Assignment
+  suite.test(TEST_CASE(TestOpAdditionAssignment));
+
+  // Op Subtraction
+  suite.test(TEST_CASE(TestOpSubtraction));
+
+  // Op Subtraction Assignment
+  suite.test(TEST_CASE(TestOpSubtractionAssignment));
+
+  // Op Multiplication
+  suite.test(TEST_CASE(TestOpMultiplication));
+
+  // Op Multiplication Assignment
+  suite.test(TEST_CASE(TestOpMultiplicationAssignment));
+
+  // Op Equal To
+  suite.test(TEST_CASE(TestOpEqualTo));
 
   // Dot Product
   suite.test(TEST_CASE(TestDotProduct));
