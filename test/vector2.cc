@@ -213,6 +213,32 @@ void TestOpSubtractionAssignment() {
   TryOpSubtractionAssignment(v2, Vector2(-2.0f, -2.0f), Vector2(6.0f, 4.0f));
 }
 
+void TryOpMultiplication(const Vector2& v, const float scalar,
+                         const Vector2& expected) {
+  Vector2 result = v * scalar;
+  if (!(expected == result))
+    throw runtime_error("OpMultiplication test failed");
+}
+
+void TestOpMultiplication() {
+  TryOpMultiplication(Vector2(4.0f, -2.0f), 3.0f, Vector2(12.0f, -6.0f));
+  TryOpMultiplication(Vector2(-4.0f, 2.0f), -2.0f, Vector2(8.0f, -4.0f));
+}
+
+void TryOpMultiplicationAssignment(Vector2& v, const float scalar,
+                                   const Vector2& expected) {
+  v *= scalar;
+  if (!(expected == v))
+    throw runtime_error("OpMultiplicationAssignment test failed");
+}
+
+void TestOpMultiplicationAssignment() {
+  Vector2 v1 { 4.0f, -2.0f };
+  TryOpMultiplicationAssignment(v1, 3.0f, Vector2(12.0f, -6.0f));
+  Vector2 v2 { -4.0f, 2.0f };
+  TryOpMultiplicationAssignment(v2, -2.0f, Vector2(8.0f, -4.0f));
+}
+
 void TryDotProduct(const Vector2& a, const Vector2& b, float expected) {
   float result = a.Dot(b);
   if (expected != result)
@@ -386,6 +412,12 @@ int main() {
 
   // Op Subtraction Assignment
   suite.test(TEST_CASE(TestOpSubtractionAssignment));
+
+  // Op Multiplication
+  suite.test(TEST_CASE(TestOpMultiplication));
+
+  // Op Multiplication Assignment
+  suite.test(TEST_CASE(TestOpMultiplicationAssignment));
 
   // Dot Product
   suite.test(TEST_CASE(TestDotProduct));
