@@ -5,19 +5,16 @@
 namespace valhalla {
 namespace geo {
 
-PointLL::PointLL() {
-  y_ = 0.0f;
-  x_ = 0.0f;
+PointLL::PointLL()
+    : Point2(0.0f, 0.0f) {
 }
 
-PointLL::PointLL(const float lat, const float lng) {
-  y_ = lat;
-  x_ = lng;
+PointLL::PointLL(const float lat, const float lng)
+    : Point2(lng, lat) {
 }
 
-PointLL::PointLL(const PointLL& ll) {
-  y_ = ll.lat();
-  x_ = ll.lng();
+PointLL::PointLL(const PointLL& ll)
+    : Point2(ll.lng(), ll.lat()) {
 }
 
 float PointLL::lat() const {
