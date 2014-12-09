@@ -4,8 +4,8 @@
 #include "geo/util.h"
 #include "graphid.h"
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
 /**
  * Directed edge within the graph.
@@ -38,12 +38,22 @@ class DirectedEdge {
    */
   float speed() const;
 
+  /**
+   * Offset to the common edge data. The offset is from the start
+   * of the common edge data within a tile.
+   * @return  Returns offset from the start of the edge data within a tile.
+   */
+  unsigned int edgedataoffset() const;
+
  protected:
   // Length of the link in miles
   float length_;
 
   // End node
   GraphId endnode_;
+
+  // Offset to the common edge data within the tile
+  unsigned int edgedataoffset_;
 
   // Legal access to the directed link ((also include reverse direction access).
   // TODO - come up with final set of values!
