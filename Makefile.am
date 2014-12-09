@@ -86,7 +86,8 @@ include_HEADERS = \
 	include/mjolnir/directededgebuilder.h \
 	include/mjolnir/graphtilebuilder.h \
 	include/mjolnir/graphtileheaderbuilder.h \
-	include/mjolnir/nodeinfobuilder.h
+	include/mjolnir/nodeinfobuilder.h \
+	include/mjolnir/edgeinfobuilder.h
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -117,7 +118,8 @@ libvalhalla_la_SOURCES = \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
 	src/mjolnir/graphtileheaderbuilder.cc \
-	src/mjolnir/nodeinfobuilder.cc
+	src/mjolnir/nodeinfobuilder.cc \
+	src/mjolnir/edgeinfobuilder.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
