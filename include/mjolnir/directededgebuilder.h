@@ -4,8 +4,8 @@
 #include "baldr/graphid.h"
 #include "baldr/directededge.h"
 
-namespace valhalla{
-namespace mjolnir{
+namespace valhalla {
+namespace mjolnir {
 
 /**
  * Directed edge within the graph.
@@ -29,6 +29,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  endnode  End node of the directed link.
    */
   void set_endnode(const baldr::GraphId& endnode);
+
+  /**
+   * Set the offset to the common edge data. The offset is from the start
+   * of the common edge data within a tile.
+   * @param  offset  Offset from the start of the edge data within a tile.
+   */
+  void set_edgedataoffset(const unsigned int offset);
 
   // TODO - methods for access
 
