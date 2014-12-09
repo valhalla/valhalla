@@ -50,3 +50,4 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
 }
 
 #endif  // VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
+
