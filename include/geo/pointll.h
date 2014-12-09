@@ -46,6 +46,13 @@ class PointLL : public Point2 {
   float lng() const;
 
   /**
+   * Set the coordinate components to the specified values.
+   * @param   x   x coordinate position.
+   * @param   y   y coordinate position.
+   */
+  void Set(const float x, const float y);
+
+  /**
    * Calculates the distance between two lat/lng's in km. Uses spherical
    * geometry (law of cosines).
    * @param   ll2   Second lat,lng position to calculate distance to.

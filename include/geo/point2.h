@@ -75,7 +75,7 @@ class Point2 {
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  void Set(const float x, const float y);
+  virtual void Set(const float x, const float y);
 
   /**
    * Equality operator.
