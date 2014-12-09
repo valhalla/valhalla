@@ -7,8 +7,8 @@
 #include "nodeinfo.h"
 #include "edgeinfo.h"
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -21,13 +21,29 @@ class GraphTile {
    */
   GraphTile();
 
-  // TODO - method/constructor to read from a file?
+  /**
+   * Constructor given a filename. Reads the graph tile from file
+   * into memory.
+   */
+  GraphTile(const std::string& filename);
 
   /**
-   * Gets the graph tile header.
+   * Destructor
+   */
+  virtual ~GraphTile();
+
+  /**
+   * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
+   * of -1 indicates an error reading the tile data.
+   * or unsuccessful read.
+   */
+  int size() const;
+
+  /**
+   * Gets a pointer to the graph tile header.
    * @return  Returns the header for the graph tile.
    */
-  const GraphTileHeader& header() const;
+  const GraphTileHeader* header() const;
 
   /**
    * Get a pointer to a node.
@@ -48,24 +64,30 @@ class GraphTile {
   EdgeInfo* edgeinfo() const;
 
  protected:
-   // Header information for the tile
-   GraphTileHeader header_;
+  // Size of the tile in bytes
+  int size_;
 
-   // List of nodes. This is a fixed size structure so it can be
-   // indexed directly.
-   NodeInfo* nodes_;
+  // Graph tile memory
+  char* graphtile_;
 
-   // List of directed edges. This is a fixed size structure so it can be
-   // indexed directly.
-   DirectedEdge* directededges_;
+  // Header information for the tile
+  GraphTileHeader* header_;
 
-   // List of edge info structures. Since edgeinfo is not fixed size we
-   // use offsets in directed edges.
-   void* edgeinfo_;
+  // List of nodes. This is a fixed size structure so it can be
+  // indexed directly.
+  NodeInfo* nodes_;
 
-   // Names as sets of null-terminated char arrays. Edge info has offsets
-   // into this array.
-   void* namelist_;
+  // List of directed edges. This is a fixed size structure so it can be
+  // indexed directly.
+  DirectedEdge* directededges_;
+
+  // List of edge info structures. Since edgeinfo is not fixed size we
+  // use offsets in directed edges.
+  void* edgeinfo_;
+
+  // Names as sets of null-terminated char arrays. Edge info has offsets
+  // into this array.
+  char* namelist_;
 };
 
 }
