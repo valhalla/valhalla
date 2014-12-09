@@ -1,24 +1,26 @@
 #include "baldr/edgeinfo.h"
 
-namespace valhalla{
-namespace baldr{
-  EdgeInfo::EdgeInfo() {
-  }
+namespace valhalla {
+namespace baldr {
 
-  const GraphId& EdgeInfo::nodea() const {
-    return nodea_;
-  }
+EdgeInfo::EdgeInfo() {
+}
 
-  const GraphId& EdgeInfo::nodeb() const {
-    return nodeb_;
-  }
+const GraphId& EdgeInfo::nodea() const {
+  return nodea_;
+}
 
-  const std::vector<PointLL>& EdgeInfo::shape() const {
-    return shape_;
-  }
+const GraphId& EdgeInfo::nodeb() const {
+  return nodeb_;
+}
 
-  const std::vector<std::string>& EdgeInfo::nameindexes() const {
-    return nameindexes_;
-  }
+const std::vector<PointLL>& EdgeInfo::shape() const {
+  return shape_;
+}
+
+const std::vector<std::string>& EdgeInfo::nameindexes() const {
+  return nameindexes_;
+}
+
 }
 }
