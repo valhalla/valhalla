@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"
 #include "osmpbfreader.h"
 #include "geo/pointll.h"
@@ -12,11 +13,14 @@
 using namespace CanalTP;  // For OSM pbf reader
 //using namespace std;
 
-namespace valhalla{
-namespace mjolnir{
+namespace valhalla {
+namespace mjolnir {
 
 // Node map
 typedef std::map<uint64_t, OSMNode> node_map_type;
+
+// Mapping from OSM node Id to GraphId
+typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
 
 /**
  * Class used to construct temporary data used to build the initial graph.
@@ -67,18 +71,42 @@ class GraphBuilder {
    */
   void ConstructEdges();
 
+  /**
+   * Remove unused OSM nodes from the map. These are nodes with use count
+   * < 2 - they are converted to shape within an edge with ConstructEdges.
+   */
+  void RemoveUnusedNodes();
+
+  /**
+   * Add the nodes to tiles.
+   * @param  tilesize  Size of tiles in degrees.
+   * @param  level  Hierarchy level.
+   */
+  void TileNodes(const float tilesize, const unsigned int level);
+
+  /**
+   * Build tiles representing the local graph
+   */
+  void BuildLocalTiles(const std::string& outputdir, const float tilesize);
+
  private:
   unsigned int relationcount;
   unsigned int nodecount;
 
   // Map that stores all the nodes read
-  node_map_type nodes;
+  node_map_type nodes_;
 
   // Stores all the nodes of all the ways that are part of the road network
   std::vector<OSMWay> ways_;
 
   // Stores all the edges
   std::vector<Edge> edges_;
+
+  // Map of OSM node Ids to GraphIds
+  node_graphid_map_type node_graphids_;
+
+  // Tiled nodes
+  std::vector<std::vector<uint64_t>> tilednodes_;
 };
 
 }

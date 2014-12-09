@@ -31,6 +31,7 @@ libtool
 include/proto
 src/proto
 valhalla
+pbfgraphbuilder
 *.o
 .deps/
 .dirstamp
