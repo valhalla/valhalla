@@ -10,27 +10,21 @@
 namespace valhalla{
 namespace mjolnir{
 
-//#include "osmpbfreader.h"
-//using namespace CanalTP;  // For OSM pbf reader
-//using namespace std;
-//constexpr static unsigned stxxl_memory = (
-//    (sizeof(std::size_t) == 4) ?
-//        std::numeric_limits<int>::max() : std::numeric_limits<unsigned>::max());
-
 // OSM node
 struct OSMNode {
   geo::PointLL latlng_;
-  unsigned char uses;
+  unsigned char  uses_;
+  std::vector<unsigned int> edges_;
 
   // TODO - add traffic light, bollard, other??
 
   OSMNode() {
     latlng_.Set(0.0f, 0.0f);
-    uses = 0;
+    uses_ = 0;
   }
   OSMNode(const float lat, const float lng) {
     latlng_.Set(lat, lng);
-    uses = 0;
+    uses_ = 0;
   }
 };
 
