@@ -24,46 +24,37 @@ class NodeInfo {
   NodeInfo();
 
   /**
-   * Sets the latitude and longitude.
-   * @param  ll  Lat,lng position of the node.
-   */
-  void SetLatLng(const PointLL& ll);
-
-  /**
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */
-  const PointLL& LatLng() const;
+  const PointLL& latlng() const;
 
   /**
    * Get the GraphId of the first outbound edge from this node.
    * @return  Returns the GraphId of the first outbound edge.
    */
-  GraphId Edge();
+  const GraphId& edge_id() const;
 
   /**
    * Get the number of outbound directed edges.
    * @return  Returns the number of outbound directed edges.
    */
-  unsigned int EdgeCount();
+  unsigned int edge_count() const;
 
  protected:
    // Latitude, longitude position of the node.
    PointLL latlng_;
 
    // GraphId of the first directed edge outbound from this node
-   GraphId edge_;
+   GraphId edge_id_;
 
    // Number of outbound edges
    // TODO - add this to a bit field to compress with other node data.
    // Rather than number of driveable, we can probably sort by driveability
    // to optimized for drving routes - when the first non driveable edge is
    // encountered the successive edges can be skipped
-   unsigned int nedges_;
+   unsigned int edge_count_;
 };
-
-// TODO - do we use the NodeInfo class as a read-only class and create a
-// derived class with Set methods?
 
 }
 }

@@ -1,25 +1,23 @@
 #include "baldr/nodeinfo.h"
 
-namespace valhalla{
-namespace baldr{
-  NodeInfo::NodeInfo():nedges_(0) {
-    latlng_.Set(0.0f, 0.0f);
-  }
+namespace valhalla {
+namespace baldr {
 
-  void NodeInfo::SetLatLng(const PointLL& ll) {
-    latlng_ = ll;
-  }
+NodeInfo::NodeInfo()
+    : edge_count_(0) {
+  latlng_.Set(0.0f, 0.0f);
+}
 
-  const PointLL& NodeInfo::LatLng() const {
-    return latlng_;
-  }
+const PointLL& NodeInfo::latlng() const {
+  return latlng_;
+}
 
-  GraphId NodeInfo::Edge() {
-    return edge_;
-  }
+const GraphId& NodeInfo::edge_id() const {
+  return edge_id_;
+}
 
-  unsigned int NodeInfo::EdgeCount() {
-    return nedges_;
-  }
+unsigned int NodeInfo::edge_count() const {
+  return edge_count_;
+}
 }
 }
