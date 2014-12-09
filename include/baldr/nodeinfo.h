@@ -7,8 +7,8 @@
 
 using namespace valhalla::geo;
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -42,18 +42,18 @@ class NodeInfo {
   unsigned int edge_count() const;
 
  protected:
-   // Latitude, longitude position of the node.
-   PointLL latlng_;
+  // Latitude, longitude position of the node.
+  PointLL latlng_;
 
-   // GraphId of the first directed edge outbound from this node
-   GraphId edge_id_;
+  // GraphId of the first directed edge outbound from this node
+  GraphId edge_id_;
 
-   // Number of outbound edges
-   // TODO - add this to a bit field to compress with other node data.
-   // Rather than number of driveable, we can probably sort by driveability
-   // to optimized for drving routes - when the first non driveable edge is
-   // encountered the successive edges can be skipped
-   unsigned int edge_count_;
+  // Number of outbound edges
+  // TODO - add this to a bit field to compress with other node data.
+  // Rather than number of driveable, we can probably sort by driveability
+  // to optimized for drving routes - when the first non driveable edge is
+  // encountered the successive edges can be skipped
+  unsigned int edge_count_;
 };
 
 }

@@ -19,5 +19,6 @@ const GraphId& NodeInfo::edge_id() const {
 unsigned int NodeInfo::edge_count() const {
   return edge_count_;
 }
+
 }
 }
