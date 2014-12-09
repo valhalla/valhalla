@@ -10,8 +10,8 @@
 
 using namespace valhalla::geo;
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
 /**
  * Edge information not required in shortest path algorithm and is
@@ -21,8 +21,8 @@ namespace baldr{
 class EdgeInfo {
  public:
   /**
-  * Constructor
-  */
+   * Constructor
+   */
   EdgeInfo();
 
   /**
