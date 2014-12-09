@@ -127,19 +127,20 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 # executable valhalla
-bin_PROGRAMS = valhalla pbfgraphbuilder
+bin_PROGRAMS = valhalla 
+#pbfgraphbuilder
 
 valhalla_SOURCES = \
 	src/valhalla.cc
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
-pbfgraphbuilder_SOURCES = \
-	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/graphbuilder.cc
-pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-	-losmpbf -lprotobuf -lz -lpthread libvalhalla.la
+#pbfgraphbuilder_SOURCES = \
+#	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
+#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc
+#pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+#pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+#	-losmpbf -lprotobuf -lz -lpthread libvalhalla.la
 
 # tests
 check_PROGRAMS = \
