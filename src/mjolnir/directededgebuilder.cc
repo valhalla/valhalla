@@ -20,6 +20,11 @@ void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
   endnode_ = endnode;
 }
 
+// Get the offset to the common edge data.
+void DirectedEdgeBuilder::set_edgedataoffset(const unsigned int offset) {
+  edgedataoffset_ = offset;
+}
+
 // TODO - methods for access
 
 // Sets the speed in KPH.

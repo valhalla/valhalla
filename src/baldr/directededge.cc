@@ -6,7 +6,8 @@ namespace baldr {
 // Default constructor
 DirectedEdge::DirectedEdge()
     : speed_(0),
-      length_(0) {
+      length_(0),
+      edgedataoffset_(0) {
 }
 
 // Gets the length of the edge in kilometers.
@@ -17,6 +18,11 @@ float DirectedEdge::length() const {
 // Gets the end node of this directed edge.
 GraphId DirectedEdge::endnode() const {
   return endnode_;
+}
+
+// Get the offset to the common edge data.
+unsigned int DirectedEdge::edgedataoffset() const {
+  return edgedataoffset_;
 }
 
 // TODO - methods for access
