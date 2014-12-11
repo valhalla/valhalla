@@ -32,6 +32,16 @@ AM_CONDITIONAL([HAVE_SQLITE3], [test -n "$SQLITE3_VERSION"])
 AX_BOOST_BASE([1.46], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 
+# check for Lua libraries and headers
+AX_PROG_LUA([5.2],[],[
+    AX_LUA_HEADERS([
+        AX_LUA_LIBS([
+            AC_DEFINE([HAVE_LUA], [1], [Requirements for lua are met])
+            HAVE_LUA=yes
+        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
+    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
+],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
+
 # check pkg-config packaged packages.
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 2.1.10 libcurl >= 7.19.5])
 

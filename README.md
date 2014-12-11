@@ -14,9 +14,9 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 Building
 --------
 
-Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself and has a number of useful dependencies already included for convenience such as: [Boost libraries](http://boost.org/), [Protobuf](https://github.com/google/protobuf/), [cURL](http://curl.haxx.se/), [ZeroMQ](http://zeromq.org/) and [SQLite](http://sqlite.org/). To install on a Debian or Ubuntu system, please first install the prerequisites:
+Valhalla uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself and has a number of useful dependencies already included for convenience such as: [Boost libraries](http://boost.org/), [Protobuf](https://github.com/google/protobuf/), [cURL](http://curl.haxx.se/), [ZeroMQ](http://zeromq.org/), [SQLite](http://sqlite.org/), and [Lua](http://www.lua.org/). To install on a Debian or Ubuntu system, please first install the prerequisites:
 
-    sudo apt-get install libboost-all-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler libsqlite3-dev lcov
+    sudo apt-get install libboost-all-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler libsqlite3-dev lcov lua5.2 liblua5.2-dev
 
 Then you should be able to bootstrap the build system:
 
