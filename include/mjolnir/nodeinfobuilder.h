@@ -29,10 +29,10 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_latlng(const PointLL& ll);
 
   /**
-   * Set the GraphId of the first outbound edge from this node.
-   * @param  edge_id  the GraphId of the first outbound edge.
+   * Set the index within the node's tile of its first outbound edge.
+   * @param  edge_index  the GraphId of the first outbound edge.
    */
-  void set_edge_id(const baldr::GraphId& edge_id);
+  void set_edge_index(const unsigned int edge_index);
 
   /**
    * Set the number of outbound directed edges.

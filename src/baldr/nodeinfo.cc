@@ -12,8 +12,8 @@ const PointLL& NodeInfo::latlng() const {
   return latlng_;
 }
 
-const GraphId& NodeInfo::edge_id() const {
-  return edge_id_;
+unsigned int NodeInfo::edge_index() const {
+  return edge_index_;
 }
 
 unsigned int NodeInfo::edge_count() const {

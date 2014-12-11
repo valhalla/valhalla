@@ -14,9 +14,8 @@ GraphTileBuilder::GraphTileBuilder() {
 
 bool GraphTileBuilder::StoreTileData(const std::string& filename) {
   // Open to the end of the file so we can immediately get size;
-   std::ofstream file(filename, std::ios::in|std::ios::binary|std::ios::ate);
+   std::ofstream file(filename, std::ios::out|std::ios::binary|std::ios::ate);
    if (file.is_open()) {
-
      std::ofstream file(filename,
          std::ios::out | std::ios::binary | std::ios::app);
 
@@ -35,7 +34,14 @@ bool GraphTileBuilder::StoreTileData(const std::string& filename) {
 
      // Write the names
 
+     std::cout << "Write: " << filename << " nodes = " << nodes_.size() <<
+         " directededges = " << directededges_.size() << std::endl;
+
+     file.close();
      return true;
+  }
+  else {
+    std::cout << "Failed to open file " << filename << std::endl;
   }
   return false;
 }
@@ -44,9 +50,6 @@ bool GraphTileBuilder::AddNodeAndEdges(const NodeInfoBuilder& node,
            const std::vector<DirectedEdgeBuilder>& directededges) {
  //          const std::vector<EdgeInfoBuilder>& edges,
 //           const std::vector<std::string>& names) {
-   // Set the index to the first directed edge in the tile
-//     node.set*();
-
    // Add the node to the list
    nodes_.push_back(node);
 
