@@ -10,7 +10,7 @@ PointLL::PointLL()
 }
 
 PointLL::PointLL(const float lat, const float lng)
-    : Point2(lng, lat) {
+    : Point2() {
 }
 
 PointLL::PointLL(const PointLL& ll)
@@ -60,6 +60,14 @@ float PointLL::Distance(const PointLL& ll2) const {
     return acosf(cosb) * kRadEarthKm;
 }
 
+float PointLL::Length(const std::vector<PointLL>& pts) const {
+  float length = 0;
+  for (unsigned int i = 0, n = pts.size(); i < n-1; i++) {
+    length += pts[i].Distance(pts[i+1]);
+  }
+  return length;
+}
+
 float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   // Find the 3 distances between positions
   float a = Distance(ll1);
@@ -95,12 +103,12 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
   // Iterate through the pts
   unsigned int count = pts.size();
   bool beyond_end = true;   // Need to test past the end point?
-  Vector2 v1;               // Segment vector (v1)
-  Vector2 v2;               // Vector from origin to target (v2)
-  PointLL projpt;           // Projected point along v1
-  float dot;                // Dot product of v1 and v2
-  float comp;               // Component of v2 along v1
-  float dist;           // Squared distance from target to closest point on line
+  Vector2 v1;       // Segment vector (v1)
+  Vector2 v2;       // Vector from origin to target (v2)
+  PointLL projpt;   // Projected point along v1
+  float dot;        // Dot product of v1 and v2
+  float comp;       // Component of v2 along v1
+  float dist;       // Squared distance from target to closest point on line
   float mindist = 2147483647.0f;
   const PointLL* p0 = &pts[0];
   const PointLL* p1 = &pts[1];
