@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
 
   // TODO - make bounding box and tilesize configurable (via properties file?)
   // Iterate through edges - tile the end nodes to create connected graph
-  std::string outputdir = "/home/dave/data";
-  graphbuilder.BuildLocalTiles(outputdir, tilesize);
+  std::string outputdir = "/home/dave/data/tiles/";
+  graphbuilder.BuildLocalTiles(outputdir, level);
 
   return 0;
 }

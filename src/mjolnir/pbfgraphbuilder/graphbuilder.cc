@@ -3,6 +3,8 @@
 #include "geo/pointll.h"
 #include "geo/aabbll.h"
 #include "geo/tiles.h"
+#include "geo/polyline2.h"
+#include "mjolnir/graphtilebuilder.h"
 
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
@@ -21,10 +23,11 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
                   const std::vector<uint64_t> &refs) {
   // Do not add ways with < 2 nodes. Log error or add to a problem list
-  if (refs.size() < 2) {
+  // TODO - find out if we do need these, why they exist...
+//  if (refs.size() < 2) {
 //      std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
-    return;
-  }
+//    return;
+//  }
 
   // Add the way if it has a highway tag.
   // There are other tags that correspond to the street network,
@@ -67,7 +70,9 @@ void GraphBuilder::SetNodeUses() {
   }
 }
 
-// Construct edges in the graph
+// Construct edges in the graph.
+// TODO - compare logic to example_routing app. to see why the edge
+// count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
   unsigned int edgeindex = 0;
@@ -119,7 +124,7 @@ void GraphBuilder::RemoveUnusedNodes() {
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
-  std::cout << "Tile nodes..." << std::endl;
+//  std::cout << "Tile nodes..." << std::endl;
   int tileid;
   unsigned int n;
   Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
@@ -136,9 +141,9 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
       std::cout << "Tile error" << std::endl;
     }
 
-    // Get the number of nodes currently in that tile. Add 1 to that
-    // for the Id (Id == 0 is invalid). Set the GraphId for this OSM node.
-    n = tilednodes_[tileid].size() + 1;
+    // Get the number of nodes currently in the tile.
+    // Set the GraphId for this OSM node.
+    n = tilednodes_[tileid].size();
     node_graphids_.insert(std::make_pair(node.first,
                GraphId((unsigned int)tileid, level, n)));
 
@@ -146,11 +151,12 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
     tilednodes_[tileid].push_back(node.first);
 
   }
-  std::cout << "Tiled Nodes" << std::endl;
+//  std::cout << "Done TileNodes" << std::endl;
 }
 
+// Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
-            const float tilesize) {
+            const unsigned int level) {
   // Iterate through the tiles
   unsigned int tileid = 0;
   for (auto tile : tilednodes_) {
@@ -160,13 +166,44 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       continue;
     }
 
-    std::cout << "Build Tile " << tileid << " with " << tile.size() <<
-                   " nodes" << std::endl;
+    GraphTileBuilder graphtile;
 
     // Iterate through the nodes
-    for (auto node : tile) {
+    unsigned int directededgecount = 0;
+    for (auto osmnodeid : tile) {
+      OSMNode& node = nodes_[osmnodeid];
+      NodeInfoBuilder nodebuilder;
+      nodebuilder.set_latlng(node.latlng_);
 
+      // Set the index of the first outbound edge within the tile.
+      nodebuilder.set_edge_index(directededgecount);
+      nodebuilder.set_edge_count(node.edges_.size());
+
+      // Set up directed edges
+      std::vector<DirectedEdgeBuilder> directededges;
+      for (auto edgeindex: node.edges_) {
+        DirectedEdgeBuilder directededge;
+        const Edge& edge = edges_[edgeindex];
+        directededge.set_endnode(node_graphids_[edge.targetnode_]);
+        directededge.set_speed(65.0f);    // KPH
+
+        // Compute length from the latlngs.
+        float length = node.latlng_.Length(edge.latlngs_);
+        directededge.set_length(length);
+
+        // TODO - add other attributes
+
+        // Add to the list
+        directededges.push_back(directededge);
+      }
+
+      // Add information to the tile
+      graphtile.AddNodeAndEdges(nodebuilder, directededges);
     }
+
+    // File name for tile
+    GraphId graphid(tileid, level, 0);
+    graphtile.StoreTileData(outputdir, graphid);
 
     tileid++;
   }

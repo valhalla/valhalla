@@ -87,7 +87,7 @@ class GraphBuilder {
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const std::string& outputdir, const float tilesize);
+  void BuildLocalTiles(const std::string& outputdir, const unsigned int level);
 
  private:
   unsigned int relationcount;

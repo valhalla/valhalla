@@ -22,15 +22,32 @@ class GraphTile {
   GraphTile();
 
   /**
-   * Constructor given a filename. Reads the graph tile from file
+   * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
    */
-  GraphTile(const std::string& filename);
+  GraphTile(const std::string& basedirectory, const GraphId& graphid);
 
   /**
    * Destructor
    */
   virtual ~GraphTile();
+
+  /**
+   * Gets the filename given the graphId
+   * @param  graphid  Graph Id to construct filename.
+   * @param  basedirectory  Base data directory
+   * @return  Returns filename (including directory path relative to tile
+   *          base directory
+   */
+  std::string Filename(const std::string& basedirectory,
+                       const GraphId& graphid) const;
+
+  /**
+   * Gets the directory to a given tile.
+   * @param  graphid  Graph Id to construct file directory.
+   * @return  Returns file directory path relative to tile base directory
+   */
+  std::string FileDirectory(const GraphId& graphid) const;
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
