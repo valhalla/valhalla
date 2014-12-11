@@ -12,13 +12,12 @@ GraphTileBuilder::GraphTileBuilder() {
 
 // Output the tile to file. Stores as binary data.
 
-bool GraphTileBuilder::StoreTileData(const std::string& filename) {
+bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
+             const GraphId& graphid) {
   // Open to the end of the file so we can immediately get size;
-   std::ofstream file(filename, std::ios::out|std::ios::binary|std::ios::ate);
+   std::ofstream file(Filename(basedirectory, graphid),
+           std::ios::out|std::ios::binary|std::ios::ate);
    if (file.is_open()) {
-     std::ofstream file(filename,
-         std::ios::out | std::ios::binary | std::ios::app);
-
      // Write the header
      file.write(reinterpret_cast<const char*>(&header_), sizeof header_);
 
@@ -34,14 +33,14 @@ bool GraphTileBuilder::StoreTileData(const std::string& filename) {
 
      // Write the names
 
-     std::cout << "Write: " << filename << " nodes = " << nodes_.size() <<
+     std::cout << "Write: " << Filename(basedirectory, graphid) << " nodes = " << nodes_.size() <<
          " directededges = " << directededges_.size() << std::endl;
 
      file.close();
      return true;
   }
   else {
-    std::cout << "Failed to open file " << filename << std::endl;
+    std::cout << "Failed to open file " << Filename(basedirectory, graphid) << std::endl;
   }
   return false;
 }

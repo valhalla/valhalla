@@ -6,9 +6,10 @@
 #include <vector>
 #include <map>
 #include "geo/pointll.h"
+#include "baldr/graphid.h"
 
-namespace valhalla{
-namespace mjolnir{
+namespace valhalla {
+namespace mjolnir {
 
 // OSM node
 struct OSMNode {

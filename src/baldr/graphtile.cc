@@ -18,11 +18,12 @@ GraphTile::GraphTile()
       namelist_(nullptr) {
 }
 
-// Constructor given a filename. Reads the graph data into
-// memory.
-GraphTile::GraphTile(const std::string& filename) {
+// Constructor given a filename. Reads the graph data into memory.
+GraphTile::GraphTile(const std::string& basedirectory,
+                     const GraphId& graphid) {
   // Open to the end of the file so we can immediately get size;
-  std::ifstream file(filename, std::ios::in|std::ios::binary|std::ios::ate);
+  std::ifstream file(Filename(basedirectory, graphid),
+          std::ios::in|std::ios::binary|std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
@@ -58,6 +59,23 @@ GraphTile::GraphTile(const std::string& filename) {
 GraphTile::~GraphTile() {
    delete[] graphtile_;
 }
+
+// Gets the filename given the graphId
+std::string GraphTile::Filename(const std::string& basedirectory,
+               const GraphId& graphid) const {
+  return basedirectory + "/" + FileDirectory(graphid) +
+      "/tile" + std::to_string(graphid.tileid()) + ".gph";
+}
+
+ /**
+  * Gets the directory to a given tile.
+  * @param  graphid  Graph Id to construct file directory.
+  * @return  Returns file directory path relative to tile base directory
+  */
+ std::string GraphTile::FileDirectory(const GraphId& graphid) const {
+   return std::to_string(graphid.level());
+ }
+
 
 int GraphTile::size() const {
   return size_;
