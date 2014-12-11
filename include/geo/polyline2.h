@@ -45,6 +45,15 @@ class Polyline2 {
   float Length() const;
 
   /**
+   * Compute the length of the polyline represented by a set of
+   * lat,lng points. Avoids having to copy the points into the
+   * polyline.
+   * @param  pts  List of lat,lng points.
+   * @return  Returns the length in kilometers
+   */
+  float Length(const std::vector<Point2>& pts) const;
+
+  /**
    * Gets the closest point to this polyline from the specified point.
    * @param  pt      Point to find closest point to.
    * @param  closest (OUT) Closest point along the polyline

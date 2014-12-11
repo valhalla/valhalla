@@ -30,10 +30,12 @@ class NodeInfo {
   const PointLL& latlng() const;
 
   /**
-   * Get the GraphId of the first outbound edge from this node.
+   * Get the index of the first outbound edge from this node. Since
+   * all outbound edges are in the same tile/level as the node we
+   * only need an index within the tile.
    * @return  Returns the GraphId of the first outbound edge.
    */
-  const GraphId& edge_id() const;
+  unsigned int edge_index() const;
 
   /**
    * Get the number of outbound directed edges.
@@ -45,8 +47,10 @@ class NodeInfo {
   // Latitude, longitude position of the node.
   PointLL latlng_;
 
-  // GraphId of the first directed edge outbound from this node
-  GraphId edge_id_;
+  // TODO - add attribution and compress
+
+  // Index within the node's tile of its first directed edge outbound
+  unsigned int edge_index_;
 
   // Number of outbound edges
   // TODO - add this to a bit field to compress with other node data.

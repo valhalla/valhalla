@@ -61,14 +61,24 @@ class PointLL : public Point2 {
   float Distance(const PointLL& ll2) const;
 
   /**
-    * Calculates the distance squared between two lat/lng's in km.
-    * Uses spherical geometry. No benefit when using squared distances
-    * over a spherical earth. May want to use DistanceApproximator for
-    * squared distance approximations.
-    * @param   ll2   Second lat,lng position to calculate distance to.
-    * @return  Returns the distance squared in km.
-    */
-   float DistanceSquared(const PointLL& ll2) const;
+   * Calculates the distance squared between two lat/lng's in km.
+   * Uses spherical geometry. No benefit when using squared distances
+   * over a spherical earth. May want to use DistanceApproximator for
+   * squared distance approximations.
+   * @param   ll2   Second lat,lng position to calculate distance to.
+   * @return  Returns the distance squared in km.
+   */
+  float DistanceSquared(const PointLL& ll2) const;
+
+
+  /**
+   * Compute the length of the polyline represented by a set of
+   * lat,lng points. Avoids having to copy the points into the
+   * polyline.
+   * @param  pts  List of lat,lng points.
+   * @return  Returns the length in kilometers
+   */
+  float Length(const std::vector<PointLL>& pts) const;
 
   /**
    * Calculates the curvature using this position and 2 others. Found by

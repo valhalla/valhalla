@@ -12,9 +12,9 @@ void NodeInfoBuilder::set_latlng(const PointLL& ll) {
   latlng_ = ll;
 }
 
-// Set the GraphId of the first outbound edge from this node.
-void NodeInfoBuilder::set_edge_id(const baldr::GraphId& edge_id) {
-  edge_id_ = edge_id;
+// Set the index in the node's tile of its first outbound edge.
+void NodeInfoBuilder::set_edge_index(const unsigned int edge_index) {
+  edge_index_ = edge_index;
 }
 
 // Set the number of outbound directed edges.
