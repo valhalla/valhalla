@@ -51,7 +51,7 @@ message TripPath {
   
   message Node {
     optional uint64 id = 1;           // TODO - OpenLR?
-    optional uint32 shape_index = 7;  // inclusive
+    optional uint32 shape_index = 3;  //
     repeated Edge edge = 2;           // first one is the outbound path edge
   }
   
