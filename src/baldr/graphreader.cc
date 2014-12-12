@@ -34,8 +34,10 @@ GraphTile* GraphReader::GetTileFromCache(const GraphId& graphid) {
 
 // Read a tile object from disk and adds it to the cache.
 GraphTile* GraphReader::ReadTile(const GraphId& graphid) {
+  // Create a GraphTile object. This reads the tile. Check that the
+  // size != -1 (-1 indicates tile not found or other error)
   GraphTile* tile = new GraphTile(datadir_, graphid);
-  if (tile == nullptr) {
+  if (tile->size() == -1) {
     return nullptr;
   }
 
