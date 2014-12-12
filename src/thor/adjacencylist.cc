@@ -7,7 +7,13 @@ namespace thor {
  * Constructor.
  */
 template<class T>
-AdjacencyList<T>::AdjacencyList() {
+AdjacencyList<T>::AdjacencyList()
+    : bucketrange_(0),
+      bucketcount_(0),
+      bucketsize_(0),
+      mincost_(0),
+      maxcost_(0),
+      currentcost_ (0) {
 }
 
 /**
@@ -40,6 +46,20 @@ AdjacencyList<T>::AdjacencyList(const unsigned int mincost,
 
   // Clear the overflow bucket
   overflowbucket_.clear();
+}
+
+// Destructor
+template<class T>
+AdjacencyList<T>::~AdjacencyList() {
+  // Delete all elements in the list - empty the overflow bucket first
+  // for efficiency
+  AdjacencyList<T> elem;
+  while (!overflowbucket_.empty()) {
+    elem = overflowbucket_.pop_front();
+    delete elem;
+  }
+  while ((elem = Remove()) != nullptr)
+    delete elem;
 }
 
 /**
@@ -132,7 +152,7 @@ T* AdjacencyList<T>::Remove() {
 
     currentcost_ += bucketsize_;
   }
-  return 0;
+  return nullptr;
 }
 
 // Returns the bucket given the cost

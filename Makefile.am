@@ -62,6 +62,7 @@ include_HEADERS = \
 	include/baldr/directededge.h \
 	include/baldr/edgeinfo.h \
 	include/baldr/graphid.h \
+	include/baldr/graphreader.h \
 	include/baldr/graphtile.h \
 	include/baldr/graphtileheader.h \
 	include/baldr/nodeinfo.h \
@@ -83,6 +84,7 @@ include_HEADERS = \
 	include/thor/edgecost.h \
 	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
+	include/thor/pathalgorithm.h \
 	include/odin/narrativebuilder.h \
 	include/mjolnir/directededgebuilder.h \
 	include/mjolnir/graphtilebuilder.h \
@@ -94,6 +96,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
+	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
 	src/baldr/nodeinfo.cc \
@@ -115,6 +118,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/edgecost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
+	src/thor/pathalgorithm.cc \
 	src/odin/narrativebuilder.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
