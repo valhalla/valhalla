@@ -32,10 +32,8 @@ class AdjacencyList {
 
   /**
    * Destructor.
-   * TODO - do we need to clear and deallocate lists?
    */
-  ~AdjacencyList() {
-  }
+  virtual ~AdjacencyList();
 
   /**
    * Adds an element to the sorted list. Adds the element to the appropriate
