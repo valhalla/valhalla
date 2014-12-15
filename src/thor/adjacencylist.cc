@@ -55,6 +55,10 @@ void AdjacencyList::Clear() {
     while ((elem = Remove()) != nullptr)
       delete elem;
   }
+
+  // Reset current bucket and cost
+  currentcost_ = mincost_;
+  currentbucket_ = buckets_.begin();
 }
 
 // Add an edge label to the adjacency list. Adds it to the appropriate bucket
