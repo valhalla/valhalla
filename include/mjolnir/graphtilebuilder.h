@@ -26,9 +26,11 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   /**
    * Output the tile to file. Stores as binary data.
-   * @param  filename  File to store data to.
+   * @param  graphid  GraphID to store.
+   * @param  basedirectory  Base data directory
    */
-  bool StoreTileData(const std::string& filename);
+  bool StoreTileData(const std::string& basedirectory,
+                     const baldr::GraphId& graphid);
 
   /**
    * Add a node and its outbound edges.

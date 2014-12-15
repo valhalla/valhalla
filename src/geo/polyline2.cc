@@ -27,6 +27,14 @@ namespace geo{
     return length;
   }
 
+  float Polyline2::Length(const std::vector<Point2>& pts) const {
+    float length = 0;
+    for (unsigned int i = 0, n = pts_.size(); i < n-1; i++) {
+      length += pts_[i].Distance(pts_[i+1]);
+    }
+    return length;
+  }
+
   float Polyline2::ClosestPoint(const Point2& pt, Point2& nearest, int& idx) const {
     return pt.ClosestPoint(pts_, nearest, idx);
   }

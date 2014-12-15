@@ -59,6 +59,7 @@ include_HEADERS = \
 	include/baldr/directededge.h \
 	include/baldr/edgeinfo.h \
 	include/baldr/graphid.h \
+	include/baldr/graphreader.h \
 	include/baldr/graphtile.h \
 	include/baldr/graphtileheader.h \
 	include/baldr/nodeinfo.h \
@@ -80,6 +81,7 @@ include_HEADERS = \
 	include/thor/edgecost.h \
 	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
+	include/thor/pathalgorithm.h \
 	include/odin/narrativebuilder.h \
 	include/mjolnir/directededgebuilder.h \
 	include/mjolnir/graphtilebuilder.h \
@@ -91,6 +93,7 @@ libvalhalla_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
+	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
 	src/baldr/nodeinfo.cc \
@@ -112,6 +115,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/edgecost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
+	src/thor/pathalgorithm.cc \
 	src/odin/narrativebuilder.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -154,7 +158,8 @@ check_PROGRAMS = \
 	test/edgestatus \
 	test/aabbll \
 	test/vector2 \
-	test/polyline2
+	test/polyline2 \
+	test/adjacencylist
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -182,6 +187,9 @@ test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_polyline2_SOURCES = test/polyline2.cc test/test.cc
 test_polyline2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_polyline2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
+test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_adjacencylist_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
