@@ -70,9 +70,17 @@ class GraphTile {
 
   /**
    * Get a pointer to a node.
+   * @param  edge  GraphId of the directed edge.
    * @return  Returns a pointer to the node.
    */
   const DirectedEdge* directededge(const GraphId& edge) const;
+
+  /**
+   * Get a pointer to a node.
+   * @param  idx  Index of the directed edge within the current tile.
+   * @return  Returns a pointer to the node.
+   */
+  const DirectedEdge* directededge(const unsigned int idx) const;
 
   /**
    * Get a pointer to edge info.
