@@ -40,7 +40,7 @@ AdjacencyList::~AdjacencyList() {
 }
 
 // Clear all edge labels from from the adjacency list. Deletes the
-// allocated edge labels.
+// remaining allocated edge labels.
 void AdjacencyList::Clear() {
   // Empty the overflow bucket first for efficiency
   EdgeLabel* elem;
@@ -51,8 +51,10 @@ void AdjacencyList::Clear() {
   }
 
   // Delete edge labels from the low-level buckets
-  while ((elem = Remove()) != nullptr)
-    delete elem;
+  if (currentbucket_ != buckets_.end()) {
+    while ((elem = Remove()) != nullptr)
+      delete elem;
+  }
 }
 
 // Add an edge label to the adjacency list. Adds it to the appropriate bucket
