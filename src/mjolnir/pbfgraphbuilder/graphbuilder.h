@@ -9,6 +9,7 @@
 #include "pbfgraphbuilder.h"
 #include "osmpbfreader.h"
 #include "geo/pointll.h"
+#include "luatagtransform.h"
 
 using namespace CanalTP;  // For OSM pbf reader
 //using namespace std;
@@ -34,6 +35,7 @@ class GraphBuilder {
     // Initialize counts
     relationcount = 0;
     nodecount = 0;
+    lua_.Init();
   }
 
   /**
@@ -104,6 +106,9 @@ class GraphBuilder {
 
   // Map of OSM node Ids to GraphIds
   node_graphid_map_type node_graphids_;
+
+  // Lua Tag Transformation class
+  LuaTagTransform lua_;
 
   // Tiled nodes
   std::vector<std::vector<uint64_t>> tilednodes_;
