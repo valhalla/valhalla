@@ -38,7 +38,7 @@ endif
 
 # proto generation etc
 PROTO_FILES = proto/trippath.proto proto/osmformat.proto proto/fileformat.proto
-BUILT_SOURCES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 src/proto/%.pb.cc: proto/%.proto
