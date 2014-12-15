@@ -13,7 +13,15 @@ namespace valhalla {
 namespace mjolnir {
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
-                   const Tags &/*tags*/) {
+                   const Tags &tags) {
+
+  Tags results = lua_.TransformInLua(false,tags);
+
+  if (results.size() == 0)
+    return;
+
+  //TODO::  Save the tag results to disk.
+
   nodes_.insert(std::make_pair(osmid, OSMNode((float)lat, (float)lng)));
   nodecount++;
 
@@ -24,24 +32,23 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
                   const std::vector<uint64_t> &refs) {
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
-//  if (refs.size() < 2) {
-//      std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
-//    return;
-//  }
-
-  // Add the way if it has a highway tag.
-  // There are other tags that correspond to the street network,
-  // however for simplicity, we don't manage them
-  if (tags.find("highway") != tags.end()) {
-    OSMWay w(osmid);
-    w.nodelist_ = refs;
-
-    // TODO: Read more properties!!!
-
-    ways_.push_back(w);
-//      if (ways.size() % 100000 == 0)
-//        std::cout << ways.size() << " ways" << std::endl;
+  if (refs.size() < 2) {
+      std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
+    return;
   }
+
+  Tags results = lua_.TransformInLua(true,tags);
+
+  if (results.size() == 0)
+    return;
+
+  OSMWay w(osmid);
+  w.nodelist_ = refs;
+
+  //TODO::  Save the tag results to disk.
+
+  ways_.push_back(w);
+
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
