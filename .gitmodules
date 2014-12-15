@@ -1,0 +1,3 @@
+[submodule "OSM-binary"]
+	path = OSM-binary
+	url = https://github.com/scrosby/OSM-binary.git
