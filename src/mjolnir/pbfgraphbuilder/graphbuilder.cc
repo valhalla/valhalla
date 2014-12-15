@@ -35,6 +35,8 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
     // TODO: Read more properties!!!
 
+    Tags results = lua_.TransformWayInLua(tags);
+
     ways_.push_back(w);
 //      if (ways.size() % 100000 == 0)
 //        std::cout << ways.size() << " ways" << std::endl;
