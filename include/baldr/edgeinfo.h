@@ -26,6 +26,11 @@ class EdgeInfo {
   EdgeInfo();
 
   /**
+   * Offset into EdgeInfo collection.
+   */
+  unsigned int offset() const;
+
+  /**
    * Get the reference node (start) of the edge.
    * @return  Returns the GraphId of the reference node of the edge.
    */
@@ -50,7 +55,12 @@ class EdgeInfo {
    */
   const std::vector<std::string>& nameindexes() const;
 
+  // Operator EqualTo based nodea and nodeb.
+  bool operator ==(const EdgeInfo& rhs) const;
+
  protected:
+  unsigned int offset_;
+
   // GraphIds of the 2 end nodes
   GraphId nodea_;
   GraphId nodeb_;

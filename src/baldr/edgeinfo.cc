@@ -3,7 +3,12 @@
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo() {
+EdgeInfo::EdgeInfo()
+    : offset_(0) {
+}
+
+unsigned int EdgeInfo::offset() const {
+  return offset_;
 }
 
 const GraphId& EdgeInfo::nodea() const {
@@ -20,6 +25,11 @@ const std::vector<PointLL>& EdgeInfo::shape() const {
 
 const std::vector<std::string>& EdgeInfo::nameindexes() const {
   return nameindexes_;
+}
+
+bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
+  return ((nodea_ == rhs.nodea_ && nodeb_ == rhs.nodeb_)
+      || (nodea_ == rhs.nodeb_ && nodeb_ == rhs.nodea_));
 }
 
 }
