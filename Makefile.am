@@ -1,10 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = \
-	-Iinclude \
-	@BOOST_CPPFLAGS@
-	@LUA_INCLUDE@
-AM_CXXFLAGS = @COVERAGE_CXXFLAGS@
+AM_CPPFLAGS = -Iinclude @BOOST_CPPFLAGS@
+AM_CXXFLAGS = @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
 
 if HAVE_SQLITE3
 AM_CPPFLAGS += @SQLITE3_CFLAGS@
@@ -90,7 +87,7 @@ include_HEADERS = \
 	include/mjolnir/graphtilebuilder.h \
 	include/mjolnir/graphtileheaderbuilder.h \
 	include/mjolnir/nodeinfobuilder.h \
-	include/mjolnir/edgeinfobuilder.h
+	include/mjolnir/edgeinfobuilder.h 
 libvalhalla_la_SOURCES = \
 	src/valhalla.cc \
 	src/baldr/directededge.cc \
@@ -124,7 +121,7 @@ libvalhalla_la_SOURCES = \
 	src/mjolnir/graphtilebuilder.cc \
 	src/mjolnir/graphtileheaderbuilder.cc \
 	src/mjolnir/nodeinfobuilder.cc \
-	src/mjolnir/edgeinfobuilder.cc
+	src/mjolnir/edgeinfobuilder.cc 
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
@@ -140,12 +137,14 @@ valhalla_SOURCES = \
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
+
 #pbfgraphbuilder_SOURCES = \
 #	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
-#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc
+#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
+#	src/mjolnir/pbfgraphbuilder/luatagtransform.cc 
 #pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 #pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-#	-losmpbf -lprotobuf -lz -lpthread libvalhalla.la
+#	-losmpbf -lprotobuf -lz -lpthread -llua5.2 libvalhalla.la 
 
 # tests
 check_PROGRAMS = \

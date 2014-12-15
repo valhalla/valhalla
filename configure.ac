@@ -36,8 +36,6 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_PROG_LUA([5.2],[],[
     AX_LUA_HEADERS([
         AX_LUA_LIBS([
-            AC_DEFINE([HAVE_LUA], [1], [Requirements for lua are met])
-            HAVE_LUA=yes
         ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
     ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
 ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
