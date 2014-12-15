@@ -129,7 +129,7 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 # executable valhalla
-bin_PROGRAMS = valhalla pbfgraphbuilder
+bin_PROGRAMS = valhalla 
 #pbfgraphbuilder
 
 valhalla_SOURCES = \
