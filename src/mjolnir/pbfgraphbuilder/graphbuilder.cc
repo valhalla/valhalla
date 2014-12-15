@@ -176,7 +176,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       nodebuilder.set_latlng(node.latlng_);
 
       // Set the index of the first outbound edge within the tile.
-      nodebuilder.set_edge_index(directededgecount);
+      nodebuilder.set_edge_index(directededgecount++);
       nodebuilder.set_edge_count(node.edges_.size());
 
       // Set up directed edges
