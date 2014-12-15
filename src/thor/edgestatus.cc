@@ -21,5 +21,6 @@ EdgeStatusType EdgeStatus::Get(const baldr::GraphId& edgeid) const {
   auto p = edgestatus_.find(edgeid);
   return (p == edgestatus_.end()) ? kUnreached : p->second;
 }
+
 }
 }

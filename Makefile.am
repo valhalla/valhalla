@@ -129,7 +129,7 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 # executable valhalla
-bin_PROGRAMS = valhalla 
+bin_PROGRAMS = valhalla adjlistbenchmark
 #pbfgraphbuilder
 
 valhalla_SOURCES = \
@@ -137,6 +137,11 @@ valhalla_SOURCES = \
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
+adjlistbenchmark_SOURCES = \
+	src/thor/adjlistbenchmark/adjlistbenchmark.cc
+adjlistbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+adjlistbenchmark_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+	-lz -lpthread libvalhalla.la
 
 #pbfgraphbuilder_SOURCES = \
 #	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \

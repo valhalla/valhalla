@@ -5,18 +5,18 @@ namespace thor {
 
 // Default constructor
 AdjacencyList::AdjacencyList()
-    : bucketrange_(0),
-      bucketcount_(0),
-      bucketsize_(0),
-      mincost_(0),
-      maxcost_(0),
-      currentcost_(0) {
+    : bucketrange_(0.0f),
+      bucketcount_(0.0f),
+      bucketsize_(0.0f),
+      mincost_(0.0f),
+      maxcost_(0.0f),
+      currentcost_(0.0f) {
 }
 
 // Constructor with bucket sizes and range.
-AdjacencyList::AdjacencyList(const unsigned int mincost,
-                             const unsigned int range,
-                             const unsigned int bucketsize) {
+AdjacencyList::AdjacencyList(const float mincost,
+                             const float range,
+                             const float bucketsize) {
   mincost_ = mincost;
   currentcost_ = mincost_;
   bucketrange_ = range;
@@ -74,7 +74,7 @@ void AdjacencyList::Add(EdgeLabel* edgelabel) {
  * @param   previouscost Previous cost.
  */
 void AdjacencyList::DecreaseCost(EdgeLabel* edgelabel,
-                                 const unsigned int previouscost) {
+                                 const float previouscost) {
   // Get the bucket the edge label currently is in. Protect against
   // previous cost less than current cost
   std::list<EdgeLabel*>& previousbucket =
@@ -82,7 +82,7 @@ void AdjacencyList::DecreaseCost(EdgeLabel* edgelabel,
           Bucket(currentcost_) : Bucket(previouscost);
 
   // If less than current cost add to the front of the current bucket
-  unsigned int cost = edgelabel->sortcost();
+  float cost = edgelabel->sortcost();
   if (cost < currentcost_) {
     // Remove the edge label from the old bucket and push it on the
     // front of the current (so it is the next edge processed)
@@ -148,17 +148,17 @@ EdgeLabel* AdjacencyList::Remove() {
 }
 
 // Returns the bucket given the cost
-std::list<EdgeLabel*>& AdjacencyList::Bucket(const unsigned int cost) {
-  return
-      (cost < maxcost_) ?
-          buckets_[((cost - mincost_) / bucketsize_)] : overflowbucket_;
+std::list<EdgeLabel*>& AdjacencyList::Bucket(const float cost) {
+  return (cost < maxcost_) ?
+      buckets_[(unsigned int)((cost - mincost_) / bucketsize_)] :
+      overflowbucket_;
 }
 
-// Empties the overflow bucket by placing the edgelabels into the
+// Empties the overflow bucket by placing the edge labels into the
 // low level buckets.
 void AdjacencyList::EmptyOverflow() {
   bool found = false;
-  unsigned int cost;
+  float cost;
   EdgeLabel* edgelabel;
   std::vector<EdgeLabel*> tmp;
   while (!found && !overflowbucket_.empty()) {

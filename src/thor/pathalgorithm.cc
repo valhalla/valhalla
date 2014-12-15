@@ -1,3 +1,5 @@
+#include <map>
+#include <algorithm>
 #include "thor/pathalgorithm.h"
 
 using namespace valhalla::baldr;
@@ -40,49 +42,66 @@ void PathAlgorithm::Clear() {
   adjacencylist_->Clear();
 }
 
-void PathAlgorithm::Init(const PointLL& destll, EdgeCost* edgecost) {
+void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
+                EdgeCost* edgecost) {
   // Set the destination and cost factor in the A* heuristic
   astarheuristic_.Init(destll, edgecost->AStarCostFactor());
 
+  // Get the initial cost based on A* heuristic from origin
+  float mincost = astarheuristic_.Get(origll);
+
   // Construct adjacency list, edge status, and done set
-  // TODO - adjust cost range and bucket size
-  unsigned int mincost = 0;
-  unsigned int range = 100000;
-  unsigned int bucketsize = 4;
+  // TODO - adjust cost range and bucket size - perhaps from EdgeCost
+  // virtual methods
+  // Pedestrian - based on distance (km)
+  // Use 2m buckets to a range of 10km (5000 buckets)
+  float bucketsize = 0.002;
+  float range = 10.0f;
   adjacencylist_ = new AdjacencyList(mincost, range, bucketsize);
+
   edgestatus_ = new EdgeStatus();
 }
 
 // Form path.
 // TODO - need to pass in origin and destination directed edges
-bool PathAlgorithm::GetBestPath(GraphReader& graphreader, EdgeCost* edgecost) {
+std::vector<GraphId> PathAlgorithm::GetBestPath(GraphReader& graphreader,
+                     EdgeCost* edgecost) {
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  PointLL destll; // TODO - get from location info
-  Init(destll, edgecost);
+  PointLL origll, destll; // TODO - get from location info
+  Init(origll, destll, edgecost);
 
   // Add initial directed edges to adjacency list
-  std::vector<DirectedEdge> origin_edges;  // TODO (input variable)
-  for (auto origin_edge : origin_edges) {
-    AddOriginEdge(origin_edge, edgecost);
+  std::vector<GraphId> origin_edges;  // TODO (input variable)
+  for (auto origin : origin_edges) {
+    AddOriginEdge(graphreader, origin, edgecost);
   }
 
   // Set up destination(s)
+  std::vector<GraphId> dest_edges;  // TODO (input variable)
+  for (auto dest : dest_edges) {
+    AddDestinationEdge(dest);
+  }
 
   // Find shortest path
   float cost, sortcost;
   GraphId node;
   EdgeLabel* next;
+  EdgeLabel* edgelabel;
+  EdgeLabel* prior_edge_label;
   const NodeInfo* endnode;
   const GraphTile* tile;
   const DirectedEdge* directededge;
+  EdgeStatusType edgestatus;
   GraphId edgeid;
   while (true) {
     // Get next element from adjacency list
     next = adjacencylist_->Remove();
+    RemoveFromAdjMap(next->edgeid());
 
     // Check for completion
-    if (IsComplete()) {
+    if (IsComplete(next->edgeid())) {
       // Form path and return
+      return FormPath(next);
     }
 
     // TODO - do we need to terminate fruitless searches
@@ -99,59 +118,110 @@ bool PathAlgorithm::GetBestPath(GraphReader& graphreader, EdgeCost* edgecost) {
                 i++, directededge++, edgeid++) {
       // Get the current set. Skip this edge if permanently labeled (shortest
       // path already found to this directed edge).
-      EdgeStatusType status = edgestatus_->Get(edgeid);
-      if (status == kPermanent)
+      edgestatus = edgestatus_->Get(edgeid);
+      if (edgestatus == kPermanent)
         continue;
 
-      // Check access
-
+      // TODO - Check access (method of the costing???
       // Turn costs/restrictions...
-
       // Transitions between hierarchy levels...
 
-      // Get cost plus heuristic. TODO - turn costs
+      // Get cost
       cost = next->truecost() + edgecost->Get(directededge);
 
-      if (status == kTemporary) {
+      if (edgestatus == kTemporary) {
         // If cost is less than current cost to this edge then we
-        // update the predecessor information
-        // TODO
-
+        // update the predecessor information and decrement the sort cost by
+        // the difference in the real costs (the A* heuristic doesn't change)
+        prior_edge_label = GetPriorEdgeLabel(next->edgeid());
+        if (cost < prior_edge_label->truecost()) {
+          float prior_sort_cost = prior_edge_label->sortcost();
+          prior_edge_label->Update(next, cost, sortcost);
+          adjacencylist_->DecreaseCost(prior_edge_label, prior_sort_cost);
+        }
         continue;
       }
 
       // Find the sort cost (with A* heuristic) and add this directed
-      // edge to the adjacency list.
+      // edge to the adjacency list. Set the edge status to temporary
+      // (also stores a pointer to edge label)
       sortcost = cost + astarheuristic_.Get(endnode->latlng());
-      EdgeLabel* edgelabel = new EdgeLabel();
-      // TODO - set fields in the edge label.
+      edgelabel = new EdgeLabel(next, edgeid, directededge->endnode(),
+                          cost, sortcost);
       adjacencylist_->Add(edgelabel);
+      adjlistedges_.emplace(edgeid, edgelabel);
+      edgestatus_->Set(edgeid, kTemporary);
     }
   }
-  return true;
+
+  // Failure! Return empty list of edges
+  std::vector<GraphId> empty;
+  return empty;
 }
 
 // Add an edge at the origin to the adjacency list
-void PathAlgorithm::AddOriginEdge(const DirectedEdge& edge, EdgeCost* edgecost) {
-  // Get a new edge label. TODO - do we want any sort of memory pool?
-  EdgeLabel* edgelabel = new EdgeLabel();
-  float cost = edgecost->Get(&edge);
-  edgelabel->SetTrueCost(cost);
+void PathAlgorithm::AddOriginEdge(baldr::GraphReader& graphreader,
+          const GraphId& edgeid, EdgeCost* edgecost) {
+
+  // Get the directed edge
+  GraphTile* tile = graphreader.GetGraphTile(edgeid);
+  const DirectedEdge* edge = tile->directededge(edgeid);
 
   // Add A* heuristic
-  PointLL ll;   // TODO - lat,lng of the end node of the edge
+  PointLL ll;   // TODO - lat,lng of the end node of the edge?
+  float cost = edgecost->Get(edge);
   float sortcost = cost + astarheuristic_.Get(ll);
-  edgelabel->SetSortCost(sortcost);
-  edgelabel->SetEndNode(edge.endnode());
 
-  // TODO - set predecessor to nullptr to indicate origin edge
-  // TODO - do we need sortcost separate from the edgelabel??
-  adjacencylist_->Add(edgelabel);
+  // Add EdgeLabel to the adjacency list. Set the predecessor edge to null
+  // to indicate the origin of the path.
+  adjacencylist_->Add(new EdgeLabel(nullptr, edgeid, edge->endnode(),
+                                    cost, sortcost));
+}
+
+// Add a destination edge
+void PathAlgorithm::AddDestinationEdge(const GraphId& edgeid) {
+  // TODO - add partial distances
+  destinations_.emplace(edgeid, 1.0f);
 }
 
 // Test is the shortest path has been found.
-bool PathAlgorithm::IsComplete() {
-  return false;
+bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
+  // TODO - if destination is along an edge and the edge allows
+  // travel in both directions we need to make sure both directions
+  // are found or some further cost is encountered to rule out the
+  // other direction
+  auto p = destinations_.find(edgeid);
+  return (p == destinations_.end()) ? false : true;
+}
+
+// Form the path from the adjacency list.
+// TODO - support partial distances at origin/destination
+std::vector<baldr::GraphId> PathAlgorithm::FormPath(const EdgeLabel* dest) {
+  // Add the destination edge
+  std::vector<GraphId> edgesonpath;
+  edgesonpath.push_back(dest->edgeid());
+  const EdgeLabel* edgelabel = dest;
+  while ((edgelabel = edgelabel->predecessor()) != nullptr) {
+    edgesonpath.push_back(edgelabel->edgeid());
+  }
+
+  // Reverse the list and return
+  std::reverse(edgesonpath.begin(), edgesonpath.end());
+  return edgesonpath;
+}
+
+// Gets the edge label for an edge that is in the adjacency list.
+EdgeLabel* PathAlgorithm::GetPriorEdgeLabel(const GraphId& edgeid) const {
+  auto p = adjlistedges_.find(edgeid);
+  return (p == adjlistedges_.end()) ? nullptr : p->second;
+}
+
+// Remove the edge label from the map of edges in the adjacency list
+void PathAlgorithm::RemoveFromAdjMap(const GraphId& edgeid) {
+  auto p = adjlistedges_.find(edgeid);
+  if (p != adjlistedges_.end()) {
+    adjlistedges_.erase(p);
+  }
 }
 
 }

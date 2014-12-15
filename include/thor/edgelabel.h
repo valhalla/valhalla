@@ -16,44 +16,114 @@ namespace thor{
  */
 class EdgeLabel {
  public:
+  /**
+   * Default constructor.
+   */
   EdgeLabel();
 
-  // TODO - add methods to construct the label
+  /**
+   * Constructor with values.
+   * @param predecessor Predecessor directed edge in the shortest path.
+   * @param edgeid    GraphId of this directed edge.
+   * @param endnode   End node of the directed edge.
+   * @param cost      True cost to the edge.
+   * @param sortcost  Cost for sorting (includes A* heuristic)
+   */
+  EdgeLabel(const EdgeLabel* predecessor, const baldr::GraphId& edgeid,
+            const baldr::GraphId& endnode, const float cost,
+            const float sortcost);
 
-  // TODO - add methods to update an existing label
+  /**
+   * Destructor.
+   */
+  virtual ~EdgeLabel();
 
+  /**
+   * Update an existing edge label with new predecessor and cost information.
+   * The edge Id and end node remain the same.
+   * @param predecessor Predecessor directeded edge in the shortest path.
+   * @param cost      True cost to the edge.
+   * @param sortcost  Cost for sorting (includes A* heuristic)
+   */
+  void Update(const EdgeLabel* predecessor, const float cost,
+            const float sortcost);
 
-  virtual ~EdgeLabel() {
-  }
+  /**
+   * Get the predecessor edge label.
+   * @return Predecessor edge label.
+   */
+  const EdgeLabel* predecessor() const;
 
+  /**
+   * Set the predecessor edge label.
+   * @param  predecessor  Predecessor edge label.
+   */
+  void SetPredecessor(const EdgeLabel* predecessor);
+
+  /**
+   * Get the GraphId of this directed edge.
+   * @return  Returns the GraphId of this directed edge.
+   */
   const baldr::GraphId& edgeid() const;
 
+  /**
+   * Set the GraphId of this directed edge.
+   * @param  edgeid  GraphId of this directed edge.
+   */
   void SetEdgeId(const baldr::GraphId& edgeid);
 
+  /**
+   * Get the end node of this directed edge. Allows the A* algorithm
+   * to expand the search from this end node, without having to read
+   * the directed edge again.
+   * @return  Returns the GraphId of the end node of this directed edge.
+   */
   const baldr::GraphId& endnode() const;
 
+  /**
+   * Set the end node of this directed edge. Allows the A* algorithm
+   * to expand the search from this end node, without having to read
+   * the directed edge again.
+   * @param endnode  GraphId of the end node of this directed edge.
+   */
   void SetEndNode(const baldr::GraphId& endnode);
 
   /**
-  const EdgeLabel*& predecessor() const;
-
-  void SetPredecessor(const EdgeLabel*& predecessor);
-**/
-  float sortcost() const;
-
-  void SetSortCost(float sortcost);
-
+   * Get the cost from the origin to this directed edge.
+   * @return  Returns the cost (units are based on the costing method).
+   */
   float truecost() const;
 
+  /**
+   * Set the cost from the origin to this directed edge.
+   * @param  truecost  Cost (units are based on the costing method).
+   */
   void SetTrueCost(float truecost);
+
+  /**
+   * Get the sort cost from the origin to this directed edge. The sort
+   * cost includes the A* heuristic.
+   * @return  Returns the sort cost (units are based on the costing method).
+   */
+  float sortcost() const;
+
+  /**
+   * Set the sort cost from the origin to this directed edge. The sort
+   * cost includes the A* heuristic.
+   * @param sortcost  Sort cost (units are based on the costing method).
+   */
+  void SetSortCost(float sortcost);
+
+  /**
+   * Operator < used for sorting.
+   */
+  bool operator < (const EdgeLabel& other) const;
 
  private:
   // Pointer to the predecessor edge and its label information.
-  // TODO - need setter and getter. Should this be const?
-  EdgeLabel* predecessor_;
+  const EdgeLabel* predecessor_;
 
-  // Graph Id of the edge. TODO - do we need the edge ID or can
-  // it be recovered easily?
+  // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
   // GraphId of the end node of the edge. This would allow the expansion
@@ -67,8 +137,8 @@ class EdgeLabel {
   // Sort cost - includes A* heuristic
   float sortcost_;
 
-  // Transit information...trip ID , prior stop ID, time at stop?
-
+  // Transit information...trip ID , prior stop ID, time at stop? This
+  // should probably be part of a derived class
 };
 
 }

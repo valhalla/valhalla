@@ -11,6 +11,9 @@ namespace thor {
 
 /**
  * Adjacency list support. Uses a bucket sort implementation for performance.
+ * An "overflow" bucket is maintained to allow reduced memory use - costs
+ * outside the current bucket "range" get placed into the overflow bucket and
+ * are moved into the low-level buckets as needed.
  * @author  David W. Nesbitt
  */
 class AdjacencyList {
@@ -24,8 +27,8 @@ class AdjacencyList {
    * @param range      Cost (sort cost) range for double buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    */
-  AdjacencyList(const unsigned int mincost, const unsigned int range,
-                const unsigned int bucketsize);
+  AdjacencyList(const float mincost, const float range,
+                const float bucketsize);
 
   /**
    * Destructor.
@@ -54,7 +57,7 @@ class AdjacencyList {
    *                     adjacency list
    * @param   previouscost Previous cost.
    */
-  void DecreaseCost(EdgeLabel* edgelabel, const unsigned int previouscost);
+  void DecreaseCost(EdgeLabel* edgelabel, const float previouscost);
 
   /**
    * Removes the lowest cost edge label from the sorted list.
@@ -63,17 +66,15 @@ class AdjacencyList {
   EdgeLabel* Remove();
 
  private:
-  unsigned int bucketrange_;  // Total range of costs in lower level buckets
-  unsigned int bucketcount_;  // Number of buckets
-  unsigned int bucketsize_;   // Bucket size (range of costs in same bucket)
-  unsigned int mincost_;      // Minimum cost within the low level buckets
-  unsigned int maxcost_;      // Above this goes into overflow bucket.
-  unsigned int currentcost_;
+  float bucketrange_;  // Total range of costs in lower level buckets
+  float bucketcount_;  // Number of buckets
+  float bucketsize_;   // Bucket size (range of costs in same bucket)
+  float mincost_;      // Minimum cost within the low level buckets
+  float maxcost_;      // Above this goes into overflow bucket.
+  float currentcost_;  // Current cost.
 
   // Low level buckets
   std::vector<std::list<EdgeLabel*> > buckets_;
-
-//  typename std::list<EdgeLabel*>::iterator it;
 
   // Current bucket in the list
   std::vector<std::list<EdgeLabel*> >::iterator currentbucket_;
@@ -85,7 +86,7 @@ class AdjacencyList {
   AdjacencyList();
 
   // Returns the bucket given the cost
-  std::list<EdgeLabel*>& Bucket(const unsigned int cost);
+  std::list<EdgeLabel*>& Bucket(const float cost);
 
   // Empties the overflow bucket by placing the edge labels into the
   // low level buckets.
