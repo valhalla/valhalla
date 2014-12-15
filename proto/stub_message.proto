@@ -1,6 +1,0 @@
-package stub.proto;
-
-message stub_message {
-  optional int32 id = 1;
-  optional string note = 2;
-}

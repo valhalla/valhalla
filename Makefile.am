@@ -1,12 +1,10 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Iinclude @BOOST_CPPFLAGS@
-AM_CXXFLAGS = @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
-
+AM_CPPFLAGS = -Iinclude -Iinclude/proto @BOOST_CPPFLAGS@
+AM_CXXFLAGS = -Iinclude -Iinclude/proto @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
 if HAVE_SQLITE3
 AM_CPPFLAGS += @SQLITE3_CFLAGS@
 endif
-
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -38,19 +36,13 @@ clean-gcno:
 clean-local: clean-coverage clean-gcno
 endif
 
-# proto compilation etc
-PROTO_FILES = proto/stub_message.proto proto/trippath.proto
-BUILT_SOURCES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
+# proto generation etc
+PROTO_FILES = proto/trippath.proto proto/osmformat.proto proto/fileformat.proto
+BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-#src/proto/%.pb.cc: include/proto/%.pb.h
-#include/proto/%.pb.h: proto/%.proto
-src/proto/stub_message.pb.cc: include/proto/stub_message.pb.h
-include/proto/stub_message.pb.h: proto/stub_message.proto
-	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
-src/proto/trippath.pb.cc: include/proto/trippath.pb.h
-include/proto/trippath.pb.h: proto/trippath.proto
-	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=src/proto $< && mv src/proto/$(@F) include/proto
+src/proto/%.pb.cc: proto/%.proto
+	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=include/proto $< && mv include/proto/$(@F) src/proto
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla.la
@@ -121,35 +113,28 @@ libvalhalla_la_SOURCES = \
 	src/mjolnir/graphtilebuilder.cc \
 	src/mjolnir/graphtileheaderbuilder.cc \
 	src/mjolnir/nodeinfobuilder.cc \
-	src/mjolnir/edgeinfobuilder.cc 
+	src/mjolnir/edgeinfobuilder.cc \
+	src/proto/fileformat.pb.cc \
+	src/proto/osmformat.pb.cc \
+	src/proto/trippath.pb.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
 if HAVE_SQLITE3
 libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
-# executable valhalla
-bin_PROGRAMS = valhalla adjlistbenchmark
-#pbfgraphbuilder
-
+#distributed executables
+bin_PROGRAMS = valhalla pbfgraphbuilder
 valhalla_SOURCES = \
 	src/valhalla.cc
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
-
-adjlistbenchmark_SOURCES = \
-	src/thor/adjlistbenchmark/adjlistbenchmark.cc
-adjlistbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-adjlistbenchmark_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-	-lz -lpthread libvalhalla.la
-
-#pbfgraphbuilder_SOURCES = \
-#	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
-#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
-#	src/mjolnir/pbfgraphbuilder/luatagtransform.cc 
-#pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-#pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-#	-losmpbf -lprotobuf -lz -lpthread -llua5.2 libvalhalla.la 
+pbfgraphbuilder_SOURCES = \
+	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
+	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
+	src/mjolnir/pbfgraphbuilder/luatagtransform.cc
+pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ -lz libvalhalla.la
 
 # tests
 check_PROGRAMS = \
