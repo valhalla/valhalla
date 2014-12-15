@@ -4,6 +4,8 @@
 #include <vector>
 #include <list>
 
+#include "thor/edgelabel.h"
+
 namespace valhalla {
 namespace thor {
 
@@ -11,20 +13,15 @@ namespace thor {
  * Adjacency list support. Uses a bucket sort implementation for performance.
  * @author  David W. Nesbitt
  */
-template<class T>
 class AdjacencyList {
  public:
   /**
-   * Constructor.
-   */
-  AdjacencyList();
-
-  /**
-   * Constructor given a minimum cost. May be needed if a bucket sort
-   * implementation is used (to save memory).
-   * @param mincost    Minimum cost (based on A* heuristic) in a route. Used
+   * Constructor given a minimum cost, a range of costs held within the
+   * bucket sort, and a bucket size. All costs above mincost + range are
+   * stored in an "overflow" bucket.
+   * @param mincost    Minimum sort cost (based on A* heuristic). Used
    *                   to create the initial range for bucket sorting.
-   * @param range      Cost range for double buckets.
+   * @param range      Cost (sort cost) range for double buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    */
   AdjacencyList(const unsigned int mincost, const unsigned int range,
@@ -36,28 +33,34 @@ class AdjacencyList {
   virtual ~AdjacencyList();
 
   /**
-   * Adds an element to the sorted list. Adds the element to the appropriate
-   * bucket given its cost. If the cost is greater than maxcost_ the element
-   * is placed in the overflow bucket. If the cost is < the current bucket
-   * cost then the element is placed at the front of the current bucket
-   * (this prevents underflow).
-   * @param   element  Element to add to the adjacency list.
-   * @param   cost     Sort cost for this element.
+   * Clear all edge labels from from the adjacency list
    */
-  void Add(T* element, const unsigned int cost);
+  void Clear();
 
   /**
-   * The specified element now has a smaller cost.  Reorders it in the sorted list.
-   * @param   element  Directed link to reorder in the adjacency list
+   * Adds an edge label to the sorted list. Adds to the appropriate
+   * bucket given its sort cost. If the sortcost is greater than maxcost_
+   * the edge label is placed in the overflow bucket. If the sortcost is <
+   * the current bucket cost then the edge label is placed at the front of
+   * the current bucket (this prevents underflow).
+   * @param   edgelabel  Edge label to add to the adjacency list.
+   */
+  void Add(EdgeLabel* edgelabel);
+
+  /**
+   * The specified edge label now has a smaller cost.  Reorders it in the
+   * sorted bucket list.
+   * @param   edgelabel  Edge label (directed edge) to reorder in the
+   *                     adjacency list
    * @param   previouscost Previous cost.
    */
-  void DecreaseCost(T* element, const unsigned int previouscost);
+  void DecreaseCost(EdgeLabel* edgelabel, const unsigned int previouscost);
 
   /**
-   * Removes the lowest cost element from the sorted list.
-   * @return  Pointer to the element with lowest cost.
+   * Removes the lowest cost edge label from the sorted list.
+   * @return  Pointer to the edge label with lowest cost.
    */
-  T* Remove();
+  EdgeLabel* Remove();
 
  private:
   unsigned int bucketrange_;  // Total range of costs in lower level buckets
@@ -68,20 +71,23 @@ class AdjacencyList {
   unsigned int currentcost_;
 
   // Low level buckets
-  std::vector<std::list<T*> > buckets_;
+  std::vector<std::list<EdgeLabel*> > buckets_;
 
-  typename std::list<T*>::iterator it;
+//  typename std::list<EdgeLabel*>::iterator it;
 
   // Current bucket in the list
-  typename std::vector<std::list<T*> >::iterator currentbucket_;
+  std::vector<std::list<EdgeLabel*> >::iterator currentbucket_;
 
   // Overflow bucket
-  std::list<T*> overflowbucket_;
+  std::list<EdgeLabel*> overflowbucket_;
+
+  // Make the default constructor private to force use of one with args
+  AdjacencyList();
 
   // Returns the bucket given the cost
-  typename std::list<T*>::iterator Bucket(const unsigned int cost);
+  std::list<EdgeLabel*>& Bucket(const unsigned int cost);
 
-  // Empties the overflow bucket by placing the elements into the
+  // Empties the overflow bucket by placing the edge labels into the
   // low level buckets.
   void EmptyOverflow();
 };
