@@ -100,7 +100,7 @@ class GraphTile {
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
-  void* edgeinfo_;
+  EdgeInfo* edgeinfo_;
 
   // Names as sets of null-terminated char arrays. Edge info has offsets
   // into this array.
