@@ -3,8 +3,8 @@
 
 #include <cstdint>
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
@@ -26,7 +26,7 @@ class GraphId {
    * @param  id     Unique identifier within the level.
    */
   GraphId(const unsigned int tileid, const unsigned int level,
-              const unsigned int id);
+          const unsigned int id);
 
   /**
    * Copy constructor.
@@ -77,13 +77,16 @@ class GraphId {
    * @param  other  Other graph Id for comparison.
    * @return  Returns true if this GraphId is less than the other.
    */
-  bool operator < (const GraphId& other) const;
+  bool operator <(const GraphId& other) const;
+
+  // Operator EqualTo
+  bool operator ==(const GraphId& rhs) const;
 
  protected:
   struct Fields {
-    uint64_t tileid : 24;
-    uint64_t level  : 3;
-    uint64_t id     : 36;
+    uint64_t tileid :24;
+    uint64_t level :3;
+    uint64_t id :36;
   };
   Fields graphid_;
 };
