@@ -3,31 +3,20 @@
 namespace valhalla {
 namespace thor {
 
-/**
- * Constructor.
- */
-template<class T>
-AdjacencyList<T>::AdjacencyList()
+// Default constructor
+AdjacencyList::AdjacencyList()
     : bucketrange_(0),
       bucketcount_(0),
       bucketsize_(0),
       mincost_(0),
       maxcost_(0),
-      currentcost_ (0) {
+      currentcost_(0) {
 }
 
-/**
- * Constructor given a minimum cost. May be needed if a bucket sort
- * implementation is used (to save memory).
- * @param mincost    Minimum cost (based on A* heuristic) in a route. Used
- *                   to create the initial range for bucket sorting.
- * @param range      Cost range for double buckets.
- * @param bucketsize Bucket size (range of costs within same bucket).
- */
-template<class T>
-AdjacencyList<T>::AdjacencyList(const unsigned int mincost,
-                                const unsigned int range,
-                                const unsigned int bucketsize) {
+// Constructor with bucket sizes and range.
+AdjacencyList::AdjacencyList(const unsigned int mincost,
+                             const unsigned int range,
+                             const unsigned int bucketsize) {
   mincost_ = mincost;
   currentcost_ = mincost_;
   bucketrange_ = range;
@@ -43,135 +32,133 @@ AdjacencyList<T>::AdjacencyList(const unsigned int mincost,
 
   // Set the current bucket to the lowest cost low level bucket
   currentbucket_ = buckets_.begin();
-
-  // Clear the overflow bucket
-  overflowbucket_.clear();
 }
 
 // Destructor
-template<class T>
-AdjacencyList<T>::~AdjacencyList() {
-  // Delete all elements in the list - empty the overflow bucket first
-  // for efficiency
-  AdjacencyList<T> elem;
+AdjacencyList::~AdjacencyList() {
+  Clear();
+}
+
+// Clear all edge labels from from the adjacency list. Deletes the
+// allocated edge labels.
+void AdjacencyList::Clear() {
+  // Empty the overflow bucket first for efficiency
+  EdgeLabel* elem;
   while (!overflowbucket_.empty()) {
-    elem = overflowbucket_.pop_front();
+    elem = overflowbucket_.front();
+    overflowbucket_.pop_front();
     delete elem;
   }
+
+  // Delete edge labels from the low-level buckets
   while ((elem = Remove()) != nullptr)
     delete elem;
 }
 
-/**
- * Adds an element to the sorted list. Adds the element to the appropriate
- * bucket given its cost. If the cost is greater than maxcost_ the element
- * is placed in the overflow bucket. If the cost is < the current bucket
- * cost then the element is placed at the front of the current bucket
- * (this prevents underflow).
- * @param   element  Element to add to the adjacency list.
- * @param   cost     Sort cost for this element.
- */
-template<class T>
-void AdjacencyList<T>::Add(T* element, const unsigned int cost) {
-  if (cost < currentcost_) {
-    currentbucket_->push_front(element);
+// Add an edge label to the adjacency list. Adds it to the appropriate bucket
+// based on its sort cost.
+void AdjacencyList::Add(EdgeLabel* edgelabel) {
+  if (edgelabel->sortcost() < currentcost_) {
+    currentbucket_->push_front(edgelabel);
   } else {
-    Bucket(cost)->push_back(element);
+    Bucket(edgelabel->sortcost()).push_back(edgelabel);
   }
 }
 
 /**
- * The specified element now has a smaller cost.  Reorders it in the sorted list.
- * @param   element  Directed link to reorder in the adjacency list
+ * The specified edge label now has a smaller cost.  Reorders it in
+ * the sorted list.
+ * @param   edgelabel  Directed edge to reorder in the adjacency list
  * @param   previouscost Previous cost.
  */
-template<class T>
-void AdjacencyList<T>::DecreaseCost(T* element,
-                                    const unsigned int previouscost) {
-  // Get the bucket the element currently is in. Protect against
+void AdjacencyList::DecreaseCost(EdgeLabel* edgelabel,
+                                 const unsigned int previouscost) {
+  // Get the bucket the edge label currently is in. Protect against
   // previous cost less than current cost
-  typename std::list<T*>::iterator previousbucket =
+  std::list<EdgeLabel*>& previousbucket =
       (previouscost < currentcost_) ?
           Bucket(currentcost_) : Bucket(previouscost);
 
   // If less than current cost add to the front of the current bucket
-  unsigned int cost = element->SortCost();
+  unsigned int cost = edgelabel->sortcost();
   if (cost < currentcost_) {
-    // Remove the element from the old bucket and push it on the
-    // front of the current (so it is the next link processed)
-    previousbucket->remove(element);
-    currentbucket_->push_front(element);
+    // Remove the edge label from the old bucket and push it on the
+    // front of the current (so it is the next edge processed)
+    previousbucket.remove(edgelabel);
+    currentbucket_->push_front(edgelabel);
     return;
   }
 
   // If the old cost and the new cost are in the same bucket just return
-  std::list<T*>& newBucket = Bucket(cost);
-  if (previousbucket == newBucket)
+  std::list<EdgeLabel*>& newbucket = Bucket(cost);
+  if (previousbucket == newbucket)
     return;
 
-  // Remove the element from the old bucket and add to the new bucket
-  previousbucket->remove(element);
-  newBucket->push_back(element);
+  // Remove the edge label from the old bucket and add to the new bucket
+  previousbucket.remove(edgelabel);
+  newbucket.push_back(edgelabel);
 }
 
 /**
- * Removes the lowest cost element from the sorted list.
- * @return  Pointer to the element with lowest cost.
+ * Removes the lowest cost edge label from the sorted list.
+ * @return  Pointer to the edge label with lowest cost.
  */
-template<class T>
-T* AdjacencyList<T>::Remove() {
-  // If the current bucket is not empty return the element off the front
+EdgeLabel* AdjacencyList::Remove() {
+  // If the current bucket is not empty return the edge label off the front
   if (!currentbucket_->empty()) {
-    return currentbucket_->pop_front();
+    EdgeLabel* edgelabel = currentbucket_->front();
+    currentbucket_->pop_front();
+    return edgelabel;
   }
 
   // If current bucket is empty increment until a non-empty low-level
   // bucket is found. If we get to the end of the regular buckets
-  // we move elements from the overflow buckets into the regular buckets.
-  for (; currentbucket_ != buckets_.end(); currentbucket_++) {
-    // If the current bucket is not empty get the first element off the list
-    if (!currentbucket_->empty())
-      return currentbucket_->pop_front();
-
+  // we move edge labels from the overflow buckets into the regular buckets.
+  for ( ; currentbucket_ != buckets_.end(); currentbucket_++) {
+    // If the current bucket is not empty get the first edge label off the list
+    if (!currentbucket_->empty()) {
+      EdgeLabel* edgelabel = currentbucket_->front();
+      currentbucket_->pop_front();
+      return edgelabel;
+    }
     currentcost_ += bucketsize_;
   }
 
-  // If no elements are in the overflow buckets, there are no more entries
+  // If no edge labels are in the overflow buckets, there are no more entries
   if (overflowbucket_.empty())
-    return 0;
+    return nullptr;
 
-  // No elements in the low level buckets.  Move elements from the
+  // No edge labels in the low level buckets.  Move edge labels from the
   // overflow bucket to the low level buckets. Then find smallest bucket
   // that is not empty
   EmptyOverflow();
   for (currentbucket_ = buckets_.begin(); currentbucket_ != buckets_.end();
       currentbucket_++) {
-    // If the current bucket is not empty get the first element off the list
-    if (!currentbucket_->empty())
-      return currentbucket_->pop_front();
-
+    // If current bucket is not empty get the first edge label off the list
+    if (!currentbucket_->empty()) {
+      EdgeLabel* edgelabel = currentbucket_->front();
+      currentbucket_->pop_front();
+      return edgelabel;
+    }
     currentcost_ += bucketsize_;
   }
   return nullptr;
 }
 
 // Returns the bucket given the cost
-template<class T>
-typename std::list<T*>::iterator AdjacencyList<T>::Bucket(
-    const unsigned int cost) {
+std::list<EdgeLabel*>& AdjacencyList::Bucket(const unsigned int cost) {
   return
       (cost < maxcost_) ?
-          &buckets_[((cost - mincost_) / bucketsize_)] : &overflowbucket_;
+          buckets_[((cost - mincost_) / bucketsize_)] : overflowbucket_;
 }
 
-// Empties the overflow bucket by placing the elements into the
+// Empties the overflow bucket by placing the edgelabels into the
 // low level buckets.
-template<class T>
-void AdjacencyList<T>::EmptyOverflow() {
+void AdjacencyList::EmptyOverflow() {
   bool found = false;
   unsigned int cost;
-  T* element;
-  std::vector<T*> tmp;
+  EdgeLabel* edgelabel;
+  std::vector<EdgeLabel*> tmp;
   while (!found && !overflowbucket_.empty()) {
     // Adjust cost range
     mincost_ += bucketrange_;
@@ -180,22 +167,21 @@ void AdjacencyList<T>::EmptyOverflow() {
 
     tmp.clear();
     while (!overflowbucket_.empty()) {
-      element = overflowbucket_.pop_front();
-      cost = element->SortCost();
+      edgelabel = overflowbucket_.front();
+      overflowbucket_.pop_front();
+      cost = edgelabel->sortcost();
       if (cost < maxcost_) {
-        buckets_[((cost - mincost_) / bucketsize_)].push_back(element);
+        buckets_[((cost - mincost_) / bucketsize_)].push_back(edgelabel);
         found = true;
       } else {
-        tmp.push_back(element);
+        tmp.push_back(edgelabel);
       }
     }
 
-    // Clear overflow and add any elements that lie outside the new range
+    // Clear overflow and add any edge labels that lie outside the new range
     overflowbucket_.clear();
-    if (tmp.size() > 0) {
-      for (auto element : tmp) {
-        overflowbucket_.push_back(*element);
-      }
+    for (auto edgelabel : tmp) {
+      overflowbucket_.push_back(edgelabel);
     }
   }
 }
