@@ -137,16 +137,14 @@ valhalla_SOURCES = \
 valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
-pbfgraphbuilder_SOURCES = \
-	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/lua.cc \
-        src/mjolnir/pbfgraphbuilder/keyvalues.cc \
-        src/mjolnir/pbfgraphbuilder/texttree.cc \
-        src/mjolnir/pbfgraphbuilder/rb.cc
-pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-	-losmpbf -lprotobuf -lz -lpthread -llua5.2 libvalhalla.la 
+
+#pbfgraphbuilder_SOURCES = \
+#	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
+#	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
+#	src/mjolnir/pbfgraphbuilder/luatagtransform.cc 
+#pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+#pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+#	-losmpbf -lprotobuf -lz -lpthread -llua5.2 libvalhalla.la 
 
 # tests
 check_PROGRAMS = \

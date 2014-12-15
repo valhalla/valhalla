@@ -9,7 +9,7 @@
 #include "pbfgraphbuilder.h"
 #include "osmpbfreader.h"
 #include "geo/pointll.h"
-#include "lua.h"
+#include "luatagtransform.h"
 
 using namespace CanalTP;  // For OSM pbf reader
 //using namespace std;
@@ -107,8 +107,8 @@ class GraphBuilder {
   // Map of OSM node Ids to GraphIds
   node_graphid_map_type node_graphids_;
 
-  // Lua helper class
-  Lua lua_;
+  // Lua Tag Transformation class
+  LuaTagTransform lua_;
 
   // Tiled nodes
   std::vector<std::vector<uint64_t>> tilednodes_;
