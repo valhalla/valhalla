@@ -43,10 +43,6 @@ unsigned int GraphId::id() const {
   return graphid_.id;
 }
 
-bool GraphId::IsValid() const {
-  return (graphid_.id > 0);
-}
-
 void GraphId::Set(const unsigned int tileid, const unsigned int level,
                   const unsigned int id) {
   graphid_.tileid = (tileid < kMaxGraphTileId) ? tileid : 0;

@@ -53,12 +53,6 @@ class GraphId {
   unsigned int id() const;
 
   /**
-   * Test if this is a valid graph element. Invalid elements have id == 0.
-   * @return   Returns true if valid, false if not.
-   */
-  bool IsValid() const;
-
-  /**
    * Convenience method to set individual graph Id elements.
    * @param  tileid Tile Id.
    * @param  level  Hierarchy level
