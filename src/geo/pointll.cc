@@ -2,11 +2,15 @@
 #include "geo/distanceapproximator.h"
 #include "geo/vector2.h"
 
+namespace {
+  const float INVALID = 0xBADBADBAD;
+}
+
 namespace valhalla {
 namespace geo {
 
 PointLL::PointLL()
-    : Point2(0.0f, 0.0f) {
+    : Point2(INVALID, INVALID) {
 }
 
 PointLL::PointLL(const float lat, const float lng)
@@ -28,6 +32,17 @@ float PointLL::lng() const {
 void PointLL::Set(const float lat, const float lng) {
   y_ = lat;
   x_ = lng;
+}
+
+bool PointLL::IsValid() const{
+  //is a range check appropriate?
+  //return x_ >= -180 && y >= -90 && x_ < 180 && y_ < 90;
+  return x_ != INVALID && y_ != INVALID;
+}
+
+void PointLL::Invalidate() {
+  x_ = INVALID;
+  y_ = INVALID;
 }
 
 // May want to use DistanceApproximator!
