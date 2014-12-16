@@ -1,0 +1,11 @@
+{
+   "graphbuilder":
+   {
+      "importtype": "db",
+      "host": "localhost",
+      "port": 5432,
+      "username": "postgres",
+      "password": "postgres",
+      "graphoutputdir": "/data/valhalla/data" 
+   }
+}
