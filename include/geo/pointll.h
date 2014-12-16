@@ -53,6 +53,17 @@ class PointLL : public Point2 {
   void Set(const float x, const float y);
 
   /**
+   * Checks for validity of the coordinates
+   * @return Returns the false if lat or lon coordinates are outside of the valid range
+   */
+  bool IsValid() const;
+
+  /**
+   * Sets the coordinates to an invalid state
+   */
+  void Invalidate();
+
+  /**
    * Calculates the distance between two lat/lng's in km. Uses spherical
    * geometry (law of cosines).
    * @param   ll2   Second lat,lng position to calculate distance to.

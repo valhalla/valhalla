@@ -55,6 +55,8 @@ include_HEADERS = \
 	include/baldr/graphtile.h \
 	include/baldr/graphtileheader.h \
 	include/baldr/nodeinfo.h \
+	include/baldr/location.h \
+	include/baldr/pathlocation.h \
 	include/geo/linesegment2.h \
 	include/geo/tiles.h \
 	include/geo/aabbll.h \
@@ -89,6 +91,8 @@ libvalhalla_la_SOURCES = \
 	src/baldr/graphtile.cc \
 	src/baldr/graphtileheader.cc \
 	src/baldr/nodeinfo.cc \
+	src/baldr/location.cc \
+	src/baldr/pathlocation.cc \
 	src/geo/linesegment2.cc \
 	src/geo/tiles.cc \
 	src/geo/aabbll.cc \
@@ -147,7 +151,9 @@ check_PROGRAMS = \
 	test/aabbll \
 	test/vector2 \
 	test/polyline2 \
-	test/adjacencylist
+	test/adjacencylist \
+	test/pointll \
+	test/location
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -178,6 +184,12 @@ test_polyline2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
 test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_adjacencylist_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_pointll_SOURCES = test/pointll.cc test/test.cc
+test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_pointll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_location_SOURCES = test/location.cc test/test.cc
+test_location_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
