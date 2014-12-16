@@ -20,7 +20,7 @@ struct PathLocation {
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
-  PathLocation();
+  PathLocation(const Location& location);
 
   /**
    * Structure to store information about a given location correlated edge
@@ -34,6 +34,9 @@ struct PathLocation {
 
   //list of edges this location appears on within the graph
   std::vector<Edge> edges_;
+
+  //the location object used to correlate to the graph network
+  Location location_;
 
   /**
    * Whether or not this location is on a vertex in the graph (intersection)
