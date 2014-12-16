@@ -79,8 +79,11 @@ class GraphId {
    */
   bool operator <(const GraphId& other) const;
 
-  // Operator EqualTo
+  // Operator EqualTo.
   bool operator ==(const GraphId& rhs) const;
+
+  // Returns the hash code for this object.
+  std::size_t HashCode() const;
 
  protected:
   struct Fields {

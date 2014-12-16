@@ -1,3 +1,5 @@
+#include <functional>
+
 #include "baldr/graphid.h"
 
 namespace {
@@ -70,5 +72,10 @@ bool GraphId::operator ==(const GraphId& rhs) const {
   return (tileid() == rhs.tileid() && level() == rhs.level() && id() == rhs.id());
 }
 
+std::size_t GraphId::HashCode() const {
+  return (std::hash<uint64_t>()(graphid_.tileid)
+      ^ std::hash<uint64_t>()(graphid_.level)
+      ^ std::hash<uint64_t>()(graphid_.id));
+}
 }
 }
