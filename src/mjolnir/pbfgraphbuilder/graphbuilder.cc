@@ -9,6 +9,7 @@
 #include "geo/polyline2.h"
 #include "baldr/graphid.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/edgeinfobuilder.h"
 
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
@@ -178,10 +179,10 @@ struct NodePairHasher {
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
-// Edge info offset
+  // Edge info offset
   size_t edge_info_offset = 0;
 
-// Iterate through the tiles
+  // Iterate through the tiles
   unsigned int tileid = 0;
   for (auto tile : tilednodes_) {
     // Skip empty tiles
@@ -191,6 +192,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     }
 
     GraphTileBuilder graphtile;
+    // TODO - initial map size - use node count*4 ?
     std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
 
     // Iterate through the nodes
@@ -206,10 +208,15 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
+      std::vector<EdgeInfoBuilder> edges;
       for (auto edgeindex : node.edges_) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
-        directededge.set_endnode(node_graphids_[edge.targetnode_]);
+        // Assign nodes
+        auto nodea = node_graphids_[edge.sourcenode_];
+        auto nodeb = node_graphids_[edge.targetnode_];
+
+        directededge.set_endnode(nodeb);
         directededge.set_speed(65.0f);    // KPH
 
         // Compute length from the latlngs.
@@ -219,18 +226,33 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         // TODO - add other attributes
 
         // Check if we need to add edge info
-        auto node_pair = ComputeNodePair(node_graphids_[edge.sourcenode_],
-                                         node_graphids_[edge.targetnode_]);
-        auto existing_edge_offset_kv = edge_offset_map.find(node_pair);
+        auto node_pair = ComputeNodePair(nodea, nodeb);
+        auto existing_edge_offset_item = edge_offset_map.find(node_pair);
 
-        // Add new exit info
-        if (existing_edge_offset_kv == edge_offset_map.end()) {
-          // TODO
+        // Add new edge info
+        if (existing_edge_offset_item == edge_offset_map.end()) {
+          EdgeInfoBuilder edgeinfo;
+          edgeinfo.set_nodea(nodea);
+          edgeinfo.set_nodeb(nodeb);
+          // TODO - shape encode
+          edgeinfo.set_shape(edge.latlngs_);
+          // TODO - names
+
+          // TODO - other attributes
+
+          // Add to the list
+          edges.push_back(edgeinfo);
+
+          // Set edge offset within the corresponding directed edge
+          directededge.set_edgedataoffset(edge_info_offset);
+
+          // Update edge offset for next item
+          edge_info_offset += edgeinfo.SizeOf();
 
         }
         // Update directed edge with existing edge offset
         else {
-          directededge.set_edgedataoffset(existing_edge_offset_kv->second);
+          directededge.set_edgedataoffset(existing_edge_offset_item->second);
         }
 
         // Add to the list
@@ -238,7 +260,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       }
 
       // Add information to the tile
-      graphtile.AddNodeAndEdges(nodebuilder, directededges);
+      graphtile.AddNodeAndEdges(nodebuilder, directededges, edges);
     }
 
     // File name for tile

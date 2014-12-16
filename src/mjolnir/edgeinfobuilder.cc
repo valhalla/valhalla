@@ -27,7 +27,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 
 // Set the indexes to names used by this edge
 void EdgeInfoBuilder::set_nameindexes(
-    const std::vector<std::string>& nameindexes) {
+    const std::vector<uint32_t>& nameindexes) {
   nameindexes_.clear();
   std::copy(nameindexes.begin(), nameindexes.end(), nameindexes_.begin());
 }

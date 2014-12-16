@@ -48,14 +48,15 @@ class EdgeInfo {
    * Get the indexes to names used by this edge
    * @return  Returns a list of name indexes.
    */
-  const std::vector<std::string>& nameindexes() const;
+  const std::vector<uint32_t>& nameindexes() const;
 
   // Operator EqualTo based nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
 
- protected:
-  unsigned int offset_;
+  // Returns the size in bytes of this object.
+  std::size_t SizeOf() const;
 
+ protected:
   // GraphIds of the 2 end nodes
   GraphId nodea_;
   GraphId nodeb_;
@@ -66,7 +67,7 @@ class EdgeInfo {
   // TODO - add edge information
 
   // List of roadname indexes
-  std::vector<std::string> nameindexes_;
+  std::vector<uint32_t> nameindexes_;
 };
 
 }

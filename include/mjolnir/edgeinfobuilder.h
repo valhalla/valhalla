@@ -48,7 +48,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
    */
-  void set_nameindexes(const std::vector<std::string>& nameindexes);
+  void set_nameindexes(const std::vector<uint32_t>& nameindexes);
 
 };
 
