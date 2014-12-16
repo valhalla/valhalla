@@ -1,10 +1,15 @@
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
+
 #include "graphbuilder.h"
 
 #include "geo/pointll.h"
 #include "geo/aabbll.h"
 #include "geo/tiles.h"
 #include "geo/polyline2.h"
+#include "baldr/graphid.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/edgeinfobuilder.h"
 
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
@@ -26,31 +31,31 @@ void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodet
 }
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
-                   const Tags &tags) {
+                                 const Tags &tags) {
 
-  Tags results = lua_.TransformInLua(false,tags);
+  Tags results = lua_.TransformInLua(false, tags);
 
   if (results.size() == 0)
     return;
 
   //TODO::  Save the tag results to disk.
 
-  nodes_.insert(std::make_pair(osmid, OSMNode((float)lat, (float)lng)));
+  nodes_.insert(std::make_pair(osmid, OSMNode((float) lat, (float) lng)));
   nodecount++;
 
 //   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
 }
 
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
-                  const std::vector<uint64_t> &refs) {
+                                const std::vector<uint64_t> &refs) {
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
-      std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
+    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
     return;
   }
 
-  Tags results = lua_.TransformInLua(true,tags);
+  Tags results = lua_.TransformInLua(true, tags);
 
   if (results.size() == 0)
     return;
@@ -65,7 +70,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                       const References & /*refs*/) {
+                                     const References & /*refs*/) {
   relationcount++;
 }
 
@@ -73,7 +78,6 @@ void GraphBuilder::PrintCounts() {
   std::cout << "Read and parsed " << nodecount << " nodes, " << ways_.size()
             << " ways and " << relationcount << " relations" << std::endl;
 }
-
 
 // Once all the ways and nodes are read, we compute how many times a node
 // is used. This allows us to detect intersections (nodes in a graph).
@@ -134,11 +138,11 @@ void GraphBuilder::ConstructEdges() {
 void GraphBuilder::RemoveUnusedNodes() {
   node_map_type::iterator itr = nodes_.begin();
   while (itr != nodes_.end()) {
-      if (itr->second.uses_ < 2) {
-         nodes_.erase(itr++);
-      } else {
-         ++itr;
-      }
+    if (itr->second.uses_ < 2) {
+      nodes_.erase(itr++);
+    } else {
+      ++itr;
+    }
   }
   std::cout << "Removed unused nodes; size = " << nodes_.size() << std::endl;
 }
@@ -164,8 +168,8 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
     // Get the number of nodes currently in the tile.
     // Set the GraphId for this OSM node.
     n = tilednodes_[tileid].size();
-    node_graphids_.insert(std::make_pair(node.first,
-               GraphId((unsigned int)tileid, level, n)));
+    node_graphids_.insert(
+        std::make_pair(node.first, GraphId((unsigned int) tileid, level, n)));
 
     // Add this OSM node to the list of nodes for this tile
     tilednodes_[tileid].push_back(node.first);
@@ -174,9 +178,23 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
 //  std::cout << "Done TileNodes" << std::endl;
 }
 
+namespace {
+struct NodePairHasher {
+  std::size_t operator()(const node_pair& k) const {
+    std::size_t seed = 13;
+    boost::hash_combine(seed, k.first.HashCode());
+    boost::hash_combine(seed, k.second.HashCode());
+    return seed;
+  }
+};
+}
+
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
-            const unsigned int level) {
+                                   const unsigned int level) {
+  // Edge info offset
+  size_t edge_info_offset = 0;
+
   // Iterate through the tiles
   unsigned int tileid = 0;
   for (auto tile : tilednodes_) {
@@ -187,6 +205,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     }
 
     GraphTileBuilder graphtile;
+    // TODO - initial map size - use node count*4 ?
+    std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
 
     // Iterate through the nodes
     unsigned int directededgecount = 0;
@@ -196,15 +216,20 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       nodebuilder.set_latlng(node.latlng_);
 
       // Set the index of the first outbound edge within the tile.
-      nodebuilder.set_edge_index(directededgecount);
+      nodebuilder.set_edge_index(directededgecount++);
       nodebuilder.set_edge_count(node.edges_.size());
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
-      for (auto edgeindex: node.edges_) {
+      std::vector<EdgeInfoBuilder> edges;
+      for (auto edgeindex : node.edges_) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
-        directededge.set_endnode(node_graphids_[edge.targetnode_]);
+        // Assign nodes
+        auto nodea = node_graphids_[edge.sourcenode_];
+        auto nodeb = node_graphids_[edge.targetnode_];
+
+        directededge.set_endnode(nodeb);
         directededge.set_speed(65.0f);    // KPH
 
         // Compute length from the latlngs.
@@ -213,12 +238,42 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // TODO - add other attributes
 
+        // Check if we need to add edge info
+        auto node_pair = ComputeNodePair(nodea, nodeb);
+        auto existing_edge_offset_item = edge_offset_map.find(node_pair);
+
+        // Add new edge info
+        if (existing_edge_offset_item == edge_offset_map.end()) {
+          EdgeInfoBuilder edgeinfo;
+          edgeinfo.set_nodea(nodea);
+          edgeinfo.set_nodeb(nodeb);
+          // TODO - shape encode
+          edgeinfo.set_shape(edge.latlngs_);
+          // TODO - names
+
+          // TODO - other attributes
+
+          // Add to the list
+          edges.push_back(edgeinfo);
+
+          // Set edge offset within the corresponding directed edge
+          directededge.set_edgedataoffset(edge_info_offset);
+
+          // Update edge offset for next item
+          edge_info_offset += edgeinfo.SizeOf();
+
+        }
+        // Update directed edge with existing edge offset
+        else {
+          directededge.set_edgedataoffset(existing_edge_offset_item->second);
+        }
+
         // Add to the list
         directededges.push_back(directededge);
       }
 
       // Add information to the tile
-      graphtile.AddNodeAndEdges(nodebuilder, directededges);
+      graphtile.AddNodeAndEdges(nodebuilder, directededges, edges);
     }
 
     // File name for tile
@@ -227,6 +282,13 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
     tileid++;
   }
+}
+
+node_pair GraphBuilder::ComputeNodePair(const baldr::GraphId& nodea,
+                                        const baldr::GraphId& nodeb) const {
+  if (nodea < nodeb)
+    return std::make_pair(nodea, nodeb);
+  return std::make_pair(nodeb, nodea);
 }
 
 }

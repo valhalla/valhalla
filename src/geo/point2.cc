@@ -22,8 +22,8 @@ Point2::Point2(const Point2& p)
 }
 
 Point2& Point2::operator =(const Point2& p) {
-  x_ = p.x();
-  y_ = p.y();
+  x_ = p.x_;
+  y_ = p.y_;
   return *this;
 }
 
