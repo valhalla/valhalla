@@ -21,11 +21,11 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     file.write(reinterpret_cast<const char*>(&header_), sizeof header_);
 
     // Write the nodes
-    file.write(reinterpret_cast<const char*>(&nodes_[0]),
+    file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
                nodes_builder_.size() * sizeof(NodeInfoBuilder));
 
     // Write the directed edges
-    file.write(reinterpret_cast<const char*>(&directededges_[0]),
+    file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
     // Write the edge data
