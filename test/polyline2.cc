@@ -87,75 +87,55 @@ void TestClosestPoint() {
    TryClosestPoint(pl,end,d);
 }
 
-void TryClip(Polyline2& pl, const AABB2& a) {
-
+void TryClip(Polyline2& pl, const AABB2& a, const unsigned int exp) {
+  // Clip and check vertex count and 1st 2 points
   unsigned int x = pl.Clip(a);
+  if (x != exp)
+    throw runtime_error("Clip test failed: count not correct");
 
-  if (x != 2 )
-    throw runtime_error("Clip #1 test failed.");
-
-  if ((pl.pts().at(0) != Point2(25.0f,25.0f)) || (pl.pts().at(1) != Point2(50.0f,50.0f))) {
-     throw runtime_error("Clip #2 test failed.");
-   }
+  if ((pl.pts().at(0) != Point2(25.0f,25.0f)) ||
+      (pl.pts().at(1) != Point2(50.0f,50.0f))) {
+    throw runtime_error("Clip test failed: clipped points not correct");
+  }
 }
 
 void TestClip() {
-  Point2 a(25.0f, 25.0f);
-  Point2 b(50.0f, 50.0f);
-  Point2 c(25.0f, 75.0f);
-  Point2 d(50.0f, 100.0f);
-
-  std::vector<Point2> pts;
-
-  pts.push_back(a);
-  pts.push_back(b);
-  pts.push_back(c);
-  pts.push_back(d);
-
+  std::vector<Point2> pts = {
+    Point2(25.0f, 25.0f),
+    Point2(50.0f, 50.0f),
+    Point2(25.0f, 75.0f),
+    Point2(50.0f, 100.0f)
+  };
   Polyline2 pl(pts);
+  TryClip(pl, AABB2(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 
-  Point2 minpt(0.0f, 0.0f);
-  Point2 maxpt(75.0f, 50.0f);
-
-  TryClip(pl, AABB2(minpt, maxpt));
-
+  // Test with vertices on edges
+  Polyline2 pl2(pts);
+  TryClip(pl2, AABB2(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
 }
 
 
-void TryClippedPolyline(Polyline2& pl, const AABB2& a) {
-
+void TryClippedPolyline(Polyline2& pl, const AABB2& a, const unsigned int exp) {
   Polyline2 pl2 = pl.ClippedPolyline(a);
-
   unsigned int x = pl2.pts().size();
-
   if (x != 2 )
-    throw runtime_error("ClippedPolyline #1 test failed.");
+    throw runtime_error("ClippedPolyline test failed: count not correct");
 
-  if ((pl2.pts().at(0) != Point2(25.0f,25.0f)) || (pl2.pts().at(1) != Point2(50.0f,50.0f))) {
-     throw runtime_error("ClippedPolyline #2 test failed.");
-   }
+  if ((pl2.pts().at(0) != Point2(25.0f,25.0f)) ||
+      (pl2.pts().at(1) != Point2(50.0f,50.0f))) {
+    throw runtime_error("ClippedPolyline test failed: clipped points not correct");
+  }
 }
 
 void TestClippedPolyline() {
-  Point2 a(25.0f, 25.0f);
-  Point2 b(50.0f, 50.0f);
-  Point2 c(25.0f, 75.0f);
-  Point2 d(50.0f, 100.0f);
-
-  std::vector<Point2> pts;
-
-  pts.push_back(a);
-  pts.push_back(b);
-  pts.push_back(c);
-  pts.push_back(d);
-
+  std::vector<Point2> pts = {
+    Point2(25.0f, 25.0f),
+    Point2(50.0f, 50.0f),
+    Point2(25.0f, 75.0f),
+    Point2(50.0f, 100.0f)
+  };
   Polyline2 pl(pts);
-
-  Point2 minpt(0.0f, 0.0f);
-  Point2 maxpt(75.0f, 50.0f);
-
-  TryClippedPolyline(pl, AABB2(minpt, maxpt));
-
+  TryClippedPolyline(pl, AABB2(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 }
 
 }
