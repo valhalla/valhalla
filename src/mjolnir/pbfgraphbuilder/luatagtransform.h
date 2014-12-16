@@ -30,7 +30,7 @@ class LuaTagTransform {
    */
   ~LuaTagTransform();
 
-  void Init() const;
+  void OpenLib() const;
 
   void SetLuaWayFunc(std::string luawayfunc);
 
@@ -39,6 +39,14 @@ class LuaTagTransform {
   std::string GetLuaWayFunc() const;
 
   std::string GetLuaNodeFunc() const;
+
+  void SetLuaWayScript(std::string luawayscript);
+
+  void SetLuaNodeScript(std::string luanodescript);
+
+  std::string GetLuaWayScript() const;
+
+  std::string GetLuaNodeScript() const;
 
   void CheckLuaFuncExists(const std::string &func_name) const;
 
@@ -50,6 +58,9 @@ class LuaTagTransform {
 
   std::string luanodefunc_;
   std::string luawayfunc_;
+
+  std::string luanodescript_;
+  std::string luawayscript_;
 
 };
 

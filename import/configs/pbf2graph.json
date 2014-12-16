@@ -1,0 +1,12 @@
+{
+   "graphbuilder":
+   {
+      "importtype": "pbf",
+      "pbffiletoread": "/data/valhalla/test/data/liechtenstein-latest.osm.pbf",
+      "graphoutputdir": "/data/valhalla/data",      
+      "nodetagtransformscript": "/data/valhalla/import/osm2pgsql/vertices.lua",
+      "nodetagtransformfunction": "nodes_proc",
+      "waytagtransformscript": "/data/valhalla/import/osm2pgsql/edges.lua",
+      "waytagtransformfunction": "ways_proc"
+   }
+}
