@@ -6,11 +6,69 @@
 #include "geo/polyline2.h"
 #include "mjolnir/graphtilebuilder.h"
 
+// Use open source PBF reader from:
+//     https://github.com/CanalTP/libosmpbfreader
+#include "osmpbfreader.h"
+
+#include <algorithm>
+
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
+
+bool GraphBuilder::TileLevel::operator<(const TileLevel& other) const {
+  return level_ < other.level_;
+}
+
+GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt, const std::string& input_file)
+  :relation_count_(0), node_count_(0), input_file_(input_file){
+
+  //grab out the lua config
+  LuaInit(pt.get<std::string>("tagtransform.node_script"),
+        pt.get<std::string>("tagtransform.node_function"),
+        pt.get<std::string>("tagtransform.way_script"),
+        pt.get<std::string>("tagtransform.way_function"));
+
+  //grab out other config information
+  tile_dir_ = pt.get<std::string>("output.tile_dir");
+
+  //grab out each tile level
+  for(const auto& level : pt.get_child("output.levels")) {
+    TileLevel tl;
+    tl.name_ = level.second.get<std::string>("name");
+    tl.level_ = level.second.get<unsigned char>("level");
+    tl.size_ = level.second.get<float>("size");
+    tile_levels_.emplace_back(tl);
+  }
+
+  //sort the list by the level
+  std::sort(tile_levels_.begin(), tile_levels_.end());
+}
+
+void GraphBuilder::Build() {
+  //parse the pbf
+  CanalTP::read_osm_pbf(input_file_, *this);
+  PrintCounts();
+
+  // Compute node use counts
+  SetNodeUses();
+
+  // Construct edges
+  ConstructEdges();
+
+  // Remove unused node (maybe this can recover memory?)
+  RemoveUnusedNodes();
+
+  // Tile the nodes
+  //TODO: generate more than just the most detailed level
+  const auto& tl = tile_levels_.front();
+  TileNodes(tl.size_, tl.level_);
+
+  // Iterate through edges - tile the end nodes to create connected graph
+  BuildLocalTiles(tile_dir_, tl.size_);
+}
 
 void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
                            std::string waytagtransformscript, std::string waytagtransformfunction)
@@ -36,7 +94,7 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   //TODO::  Save the tag results to disk.
 
   nodes_.insert(std::make_pair(osmid, OSMNode((float)lat, (float)lng)));
-  nodecount++;
+  node_count_++;
 
 //   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
 }
@@ -66,12 +124,12 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                        const References & /*refs*/) {
-  relationcount++;
+  relation_count_++;
 }
 
 void GraphBuilder::PrintCounts() {
-  std::cout << "Read and parsed " << nodecount << " nodes, " << ways_.size()
-            << " ways and " << relationcount << " relations" << std::endl;
+  std::cout << "Read and parsed " << node_count_ << " nodes, " << ways_.size()
+            << " ways and " << relation_count_ << " relations" << std::endl;
 }
 
 
