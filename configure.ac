@@ -29,7 +29,7 @@ AX_LIB_SQLITE3([3.6.16])
 AM_CONDITIONAL([HAVE_SQLITE3], [test -n "$SQLITE3_VERSION"])
 
 # check for boost and make sure we have the program options library
-AX_BOOST_BASE([1.46], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
