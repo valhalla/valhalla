@@ -3,7 +3,7 @@
 namespace valhalla{
 namespace baldr{
 
-  PathLocation::PathLocation():vertex_(false){
+  PathLocation::PathLocation(const Location& location):location_(location), vertex_(false){
   }
 
   bool PathLocation::IsVertex() const {
