@@ -17,8 +17,11 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
   std::ofstream file(Filename(basedirectory, graphid),
                      std::ios::out | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
-    // Write the header
-    file.write(reinterpret_cast<const char*>(&header_), sizeof header_);
+    // Write the header. TODO - add edge info offset and name list offset
+    header_builder_.set_nodecount(nodes_builder_.size());
+    header_builder_.set_directededgecount(directededges_builder_.size());
+    file.write(reinterpret_cast<const char*>(&header_builder_),
+               sizeof header_builder_);
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
@@ -31,7 +34,6 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the edge data
 
     // Write the names
-
     std::cout << "Write: " << Filename(basedirectory, graphid) << " nodes = "
               << nodes_builder_.size() << " directededges = "
               << directededges_builder_.size() << std::endl;
