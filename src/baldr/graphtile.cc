@@ -47,7 +47,7 @@ GraphTile::GraphTile(const std::string& basedirectory,
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
     // Start of edge information and name list
-    edgeinfo_ = (EdgeInfo*)graphtile_ + header_->edgeinfo_offset();
+    edgeinfo_ = graphtile_ + header_->edgeinfo_offset();
     namelist_ = graphtile_ + header_->namelist_offset();
   }
   else {
