@@ -23,18 +23,18 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
 
      // Write the nodes
      file.write(reinterpret_cast<const char*>(&nodes_[0]),
-                nodes_.size() * sizeof(NodeInfoBuilder));
+                nodes_builder_.size() * sizeof(NodeInfoBuilder));
 
      // Write the directed edges
      file.write(reinterpret_cast<const char*>(&directededges_[0]),
-                directededges_.size() * sizeof(DirectedEdgeBuilder));
+                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
      // Write the edge data
 
      // Write the names
 
-     std::cout << "Write: " << Filename(basedirectory, graphid) << " nodes = " << nodes_.size() <<
-         " directededges = " << directededges_.size() << std::endl;
+     std::cout << "Write: " << Filename(basedirectory, graphid) << " nodes = " << nodes_builder_.size() <<
+         " directededges = " << directededges_builder_.size() << std::endl;
 
      file.close();
      return true;
@@ -50,7 +50,7 @@ bool GraphTileBuilder::AddNodeAndEdges(const NodeInfoBuilder& node,
  //          const std::vector<EdgeInfoBuilder>& edges,
 //           const std::vector<std::string>& names) {
    // Add the node to the list
-   nodes_.push_back(node);
+   nodes_builder_.push_back(node);
 
    // For each directed edge need to set its common edge offset
    for (auto directededge : directededges) {
@@ -59,7 +59,7 @@ bool GraphTileBuilder::AddNodeAndEdges(const NodeInfoBuilder& node,
      // If so get its offset
 
      // Add the directed edge to the list
-     directededges_.push_back(directededge);
+     directededges_builder_.push_back(directededge);
   }
   return true;
 }

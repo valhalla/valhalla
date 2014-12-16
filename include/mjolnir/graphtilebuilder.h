@@ -43,23 +43,23 @@ class GraphTileBuilder : public baldr::GraphTile {
 
  protected:
    // Header information for the tile
-   GraphTileHeaderBuilder header_;
+   GraphTileHeaderBuilder header_builder_;
 
    // List of nodes. This is a fixed size structure so it can be
    // indexed directly.
-   std::vector<NodeInfoBuilder> nodes_;
+   std::vector<NodeInfoBuilder> nodes_builder_;
 
    // List of directed edges. This is a fixed size structure so it can be
    // indexed directly.
-   std::vector<DirectedEdgeBuilder> directededges_;
+   std::vector<DirectedEdgeBuilder> directededges_builder_;
 
    // List of edge info structures. Since edgeinfo is not fixed size we
    // use offsets in directed edges.
-   std::vector<char> edgeinfo_;
+   std::vector<char> edgeinfo_builder_;
 
    // Names as sets of null-terminated char arrays. Edge info has offsets
    // into this array.
-   std::vector<std::string> namelist_;
+   std::vector<std::string> namelist_builder_;
 
    // Map of edge IDs vs. offsets
 
