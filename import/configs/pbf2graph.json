@@ -1,12 +1,19 @@
 {
-   "graphbuilder":
-   {
-      "importtype": "pbf",
-      "pbffiletoread": "/data/valhalla/test/data/liechtenstein-latest.osm.pbf",
-      "graphoutputdir": "/data/valhalla/data",      
-      "nodetagtransformscript": "/data/valhalla/import/osm2pgsql/vertices.lua",
-      "nodetagtransformfunction": "nodes_proc",
-      "waytagtransformscript": "/data/valhalla/import/osm2pgsql/edges.lua",
-      "waytagtransformfunction": "ways_proc"
-   }
+  "input": {
+    "type": "protocolbuffer"
+  },
+  "output": {
+    "tile_dir": "/data/valhalla",
+    "levels": [
+      {"name": "local", "level": 2, "size": 0.25},
+      {"name": "arterial", "level": 1, "size": 1},
+      {"name": "highway", "level": 0, "size": 4}
+    ]
+  },
+  "tagtransform": {
+    "node_script": "./import/osm2pgsql/vertices.lua",
+    "node_function": "nodes_proc",
+    "way_script": "./import/osm2pgsql/edges.lua",
+    "way_function": "ways_proc"
+  }
 }

@@ -3,19 +3,23 @@
 
 #include <sstream>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <map>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <utility>
+
 
 #include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"
+
+// Use open source PBF reader from:
+//     https://github.com/CanalTP/libosmpbfreader
 #include "osmpbfreader.h"
 #include "geo/pointll.h"
 #include "luatagtransform.h"
 
-using namespace CanalTP;
-// For OSM pbf reader
-//using namespace std;
 
 namespace valhalla {
 namespace mjolnir {
@@ -36,17 +40,8 @@ class GraphBuilder {
   /**
    * Constructor
    */
-  GraphBuilder() {
-    // Initialize counts
-    relationcount = 0;
-    nodecount = 0;
-  }
+  GraphBuilder(const boost::property_tree::ptree& pt, const std::string& input_file);
 
-  /**
-   * Initialize Lua with the scripts and functions.
-   */
-  void LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
-               std::string waytagtransformscript, std::string waytagtransformfunction);
   /**
    * Callback method for OSMPBFReader. Called when a node is parsed.
    */
@@ -63,7 +58,22 @@ class GraphBuilder {
    * Callback method for OSMPBFReader. Called when a relation is parsed.
    */
   void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                         const References & /*refs*/);
+                         const CanalTP::References & /*refs*/);
+
+  /**
+   * Tell the builder to build the tiles from the provided datasource and configs
+   *
+   */
+  void Build();
+
+ private:
+
+  /**
+   * Initialize Lua with the scripts and functions.
+   */
+  void LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
+               std::string waytagtransformscript, std::string waytagtransformfunction);
+
 
   /**
    * Debug method to print the number of nodes, ways, and relations that
@@ -98,15 +108,22 @@ class GraphBuilder {
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const std::string& outputdir, const unsigned int level);
+  void BuildLocalTiles(const std::string& tiledir, const unsigned int level);
+
 
  protected:
   node_pair ComputeNodePair(const baldr::GraphId& nodea,
                             const baldr::GraphId& nodeb) const;
 
- private:
-  unsigned int relationcount;
-  unsigned int nodecount;
+  struct TileLevel{
+    float size_;
+    unsigned char level_;
+    std::string name_;
+    bool operator<(const TileLevel& other) const;
+  };
+
+  unsigned int relation_count_;
+  unsigned int node_count_;
 
   // Map that stores all the nodes read
   node_map_type nodes_;
@@ -125,6 +142,15 @@ class GraphBuilder {
 
   // Tiled nodes
   std::vector<std::vector<uint64_t>> tilednodes_;
+
+  // Location of the protocol buffer input file
+  std::string input_file_;
+
+  // Location of the generated tiles
+  std::string tile_dir_;
+
+  // List of the tile levels to be created
+  std::vector<TileLevel> tile_levels_;
 
 };
 
