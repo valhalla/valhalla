@@ -134,7 +134,7 @@ pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/luatagtransform.cc
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ -lz libvalhalla.la
+pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ -lz -lboost_filesystem -lboost_system libvalhalla.la
 
 # tests
 check_PROGRAMS = \
