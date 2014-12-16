@@ -54,20 +54,23 @@ class Clipper2 {
   float maxy_;
 
   // Clips the polyline/polygon against a single edge
-  int clipAgainstEdge(const ClipEdge bdry, bool closed,
+  int ClipAgainstEdge(const ClipEdge bdry, bool closed,
             std::vector<Point2>& vin,
             std::vector<Point2>& vout);
 
   // Finds the intersection of the segment from insidept to outsidept with the
   // specified boundary edge.  It finds the intersection using the
   // parametric line equation.
-  Point2 clipIntersection(const ClipEdge bdry, const Point2& insidept,
+  Point2 ClipIntersection(const ClipEdge bdry, const Point2& insidept,
                          const Point2& outsidept);
 
   // Tests if the vertex is inside the rectangular boundary with respect to
   // the specified edge. Returns true if the point is inside the view
   // boundary, false if it is outside.
-  bool inside(const ClipEdge edge, const Point2& v) const;
+  bool Inside(const ClipEdge edge, const Point2& v) const;
+
+  // Adds a vertex to the output vector if not equal to the prior.
+  void Add(const Point2& pt, std::vector<Point2>& vout);
 };
 
 }

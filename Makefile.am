@@ -76,6 +76,7 @@ include_HEADERS = \
 	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
 	include/thor/pathalgorithm.h \
+	include/thor/trippathbuilder.h \
 	include/odin/narrativebuilder.h \
 	include/mjolnir/directededgebuilder.h \
 	include/mjolnir/graphtilebuilder.h \
@@ -112,6 +113,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/thor/pathalgorithm.cc \
+	src/thor/trippathbuilder.cc \
 	src/odin/narrativebuilder.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -138,7 +140,7 @@ pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/luatagtransform.cc
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ -lz libvalhalla.la
+pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_FILESYSTEM_LIB@ -lz libvalhalla.la
 
 # tests
 check_PROGRAMS = \

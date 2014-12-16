@@ -35,9 +35,13 @@ class GraphBuilder {
     // Initialize counts
     relationcount = 0;
     nodecount = 0;
-    lua_.Init();
   }
 
+  /**
+   * Initialize Lua with the scripts and functions.
+   */
+  void LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
+               std::string waytagtransformscript, std::string waytagtransformfunction);
   /**
    * Callback method for OSMPBFReader. Called when a node is parsed.
    */
@@ -112,6 +116,7 @@ class GraphBuilder {
 
   // Tiled nodes
   std::vector<std::vector<uint64_t>> tilednodes_;
+
 };
 
 }
