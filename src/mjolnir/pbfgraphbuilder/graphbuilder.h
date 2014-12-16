@@ -8,15 +8,18 @@
 #include <map>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <utility>
+
 
 #include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"
+
+// Use open source PBF reader from:
+//     https://github.com/CanalTP/libosmpbfreader
 #include "osmpbfreader.h"
 #include "geo/pointll.h"
 #include "luatagtransform.h"
 
-using namespace CanalTP;  // For OSM pbf reader
-//using namespace std;
 
 namespace valhalla {
 namespace mjolnir {
@@ -26,6 +29,8 @@ typedef std::map<uint64_t, OSMNode> node_map_type;
 
 // Mapping from OSM node Id to GraphId
 typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
+
+using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 
 /**
  * Class used to construct temporary data used to build the initial graph.
@@ -53,7 +58,7 @@ class GraphBuilder {
    * Callback method for OSMPBFReader. Called when a relation is parsed.
    */
   void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                          const References & /*refs*/);
+                         const CanalTP::References & /*refs*/);
 
   /**
    * Tell the builder to build the tiles from the provided datasource and configs
@@ -104,6 +109,11 @@ class GraphBuilder {
    * Build tiles representing the local graph
    */
   void BuildLocalTiles(const std::string& tiledir, const unsigned int level);
+
+
+ protected:
+  node_pair ComputeNodePair(const baldr::GraphId& nodea,
+                            const baldr::GraphId& nodeb) const;
 
   struct TileLevel{
     float size_;
