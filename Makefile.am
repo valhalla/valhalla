@@ -74,6 +74,7 @@ include_HEADERS = \
 	include/thor/edgelabel.h \
 	include/thor/edgestatus.h \
 	include/thor/pathalgorithm.h \
+	include/thor/trippathbuilder.h \
 	include/odin/narrativebuilder.h \
 	include/mjolnir/directededgebuilder.h \
 	include/mjolnir/graphtilebuilder.h \
@@ -108,6 +109,7 @@ libvalhalla_la_SOURCES = \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/thor/pathalgorithm.cc \
+	src/thor/trippathbuilder.cc \
 	src/odin/narrativebuilder.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
