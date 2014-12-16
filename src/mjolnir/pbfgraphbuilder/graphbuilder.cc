@@ -12,6 +12,19 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
+                           std::string waytagtransformscript, std::string waytagtransformfunction)
+{
+  lua_.SetLuaNodeScript(nodetagtransformscript);
+  lua_.SetLuaNodeFunc(nodetagtransformfunction);
+
+  lua_.SetLuaWayScript(waytagtransformscript);
+  lua_.SetLuaWayFunc(waytagtransformfunction);
+
+  lua_.OpenLib();
+
+}
+
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                    const Tags &tags) {
 
