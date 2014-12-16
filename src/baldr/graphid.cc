@@ -1,4 +1,5 @@
 #include <functional>
+#include <boost/functional/hash.hpp>
 
 #include "baldr/graphid.h"
 
@@ -73,9 +74,13 @@ bool GraphId::operator ==(const GraphId& rhs) const {
 }
 
 std::size_t GraphId::HashCode() const {
-  return (std::hash<uint64_t>()(graphid_.tileid)
-      ^ std::hash<uint64_t>()(graphid_.level)
-      ^ std::hash<uint64_t>()(graphid_.id));
+  std::size_t seed = 13;
+  boost::hash_combine(seed, graphid_.tileid);
+  boost::hash_combine(seed, graphid_.level);
+  boost::hash_combine(seed, graphid_.id);
+
+  return seed;
 }
+
 }
 }

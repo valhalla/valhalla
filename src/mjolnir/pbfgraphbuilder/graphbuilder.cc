@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 #include "graphbuilder.h"
 
@@ -166,7 +167,10 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
 namespace {
 struct NodePairHasher {
   std::size_t operator()(const node_pair& k) const {
-    return (k.first.HashCode() ^ k.second.HashCode());
+    std::size_t seed = 13;
+    boost::hash_combine(seed, k.first.HashCode());
+    boost::hash_combine(seed, k.second.HashCode());
+    return seed;
   }
 };
 }
