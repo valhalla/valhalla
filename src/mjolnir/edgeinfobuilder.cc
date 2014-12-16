@@ -19,17 +19,22 @@ void EdgeInfoBuilder::set_nodeb(const baldr::GraphId& nodeb) {
   nodeb_ = nodeb;
 }
 
-// Set the shape of the edge.
+// Set the shape of the edge. TODO - move?
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   shape_.clear();
-  std::copy(shape.begin(), shape.end(), shape_.begin());
+  if (!shape.empty()) {
+    shape_.insert(shape_.end(), shape.begin(), shape.end());
+  }
 }
 
-// Set the indexes to names used by this edge
+// Set the indexes to names used by this edge. TODO - move?
 void EdgeInfoBuilder::set_nameindexes(
     const std::vector<uint32_t>& nameindexes) {
   nameindexes_.clear();
-  std::copy(nameindexes.begin(), nameindexes.end(), nameindexes_.begin());
+  if (!nameindexes.empty()) {
+    nameindexes_.insert(nameindexes_.end(), nameindexes.begin(),
+                        nameindexes.end());
+  }
 }
 
 }
