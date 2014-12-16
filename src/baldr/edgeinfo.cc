@@ -3,12 +3,7 @@
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo()
-    : offset_(0) {
-}
-
-unsigned int EdgeInfo::offset() const {
-  return offset_;
+EdgeInfo::EdgeInfo() {
 }
 
 const GraphId& EdgeInfo::nodea() const {

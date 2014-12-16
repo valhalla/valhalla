@@ -6,9 +6,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Constructor
-EdgeInfoBuilder::EdgeInfoBuilder(const unsigned int offset)
-    : EdgeInfo() {
-  offset_ = offset;
+EdgeInfoBuilder::EdgeInfoBuilder() {
 }
 
 // Set the reference node (start) of the edge.

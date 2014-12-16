@@ -26,11 +26,6 @@ class EdgeInfo {
   EdgeInfo();
 
   /**
-   * Offset into EdgeInfo collection.
-   */
-  unsigned int offset() const;
-
-  /**
    * Get the reference node (start) of the edge.
    * @return  Returns the GraphId of the reference node of the edge.
    */

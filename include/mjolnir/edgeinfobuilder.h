@@ -23,7 +23,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   /**
    * Constructor
    */
-  EdgeInfoBuilder(const unsigned int offset);
+  EdgeInfoBuilder();
 
   /**
    * Set the reference node (start) of the edge.
