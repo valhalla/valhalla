@@ -83,7 +83,7 @@ class GraphId {
   struct Fields {
     uint64_t tileid :24;
     uint64_t level :3;
-    uint64_t id :36;
+    uint64_t id :37;
   };
   Fields graphid_;
 };
