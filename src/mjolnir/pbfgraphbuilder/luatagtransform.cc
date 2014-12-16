@@ -13,6 +13,7 @@ LuaTagTransform::LuaTagTransform()
 }
 
 LuaTagTransform::~LuaTagTransform(){
+
   if (luastate_ != NULL) {
 
     lua_close(luastate_);
@@ -20,18 +21,17 @@ LuaTagTransform::~LuaTagTransform(){
   }
 }
 
-void LuaTagTransform::Init() const {
+void LuaTagTransform::OpenLib() const {
 
   luaL_openlibs(luastate_);
 
-  //TODO:add lua script to options.
-  std::string tag_transform_script = "/data/valhalla/import/osm2pgsql/edges.lua";
-  luaL_dofile(luastate_, tag_transform_script.c_str());
-  CheckLuaFuncExists("ways_proc");
+  //check if way script and function exists.
+  luaL_dofile(luastate_, luawayscript_.c_str());
+  CheckLuaFuncExists(luawayfunc_);
 
-  tag_transform_script = "/data/valhalla/import/osm2pgsql/vertices.lua";
-  luaL_dofile(luastate_, tag_transform_script.c_str());
-  CheckLuaFuncExists("nodes_proc");
+  //check if node script and function exists.
+  luaL_dofile(luastate_, luanodescript_.c_str());
+  CheckLuaFuncExists(luanodefunc_);
 }
 
 void LuaTagTransform::SetLuaWayFunc(std::string luawayfunc) {
@@ -50,12 +50,28 @@ std::string LuaTagTransform::GetLuaNodeFunc() const {
   return luanodefunc_;
 }
 
+void LuaTagTransform::SetLuaWayScript(std::string luawayscript) {
+  luawayscript_ = luawayscript;
+}
+
+void LuaTagTransform::SetLuaNodeScript(std::string luanodescript) {
+  luanodescript_ = luanodescript;
+}
+
+std::string LuaTagTransform::GetLuaWayScript() const {
+  return luawayscript_;
+}
+
+std::string LuaTagTransform::GetLuaNodeScript() const {
+  return luanodescript_;
+}
+
 void LuaTagTransform::CheckLuaFuncExists(const std::string &func_name) const {
 
   lua_getglobal(luastate_, func_name.c_str());
 
   if (!lua_isfunction (luastate_, -1)) {
-    throw std::runtime_error((boost::format("Lua script does not contain a function %1%")
+    throw std::runtime_error((boost::format("Lua script does not contain a function %1%.")
     % func_name).str());
   }
   lua_pop(luastate_,1);
@@ -75,9 +91,9 @@ Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
 
   //TODO::add boost options.
   if (isWay)
-    lua_getglobal(luastate_,"ways_proc");
+    lua_getglobal(luastate_,luawayfunc_.c_str());
   else
-    lua_getglobal(luastate_,"nodes_proc");
+    lua_getglobal(luastate_,luanodefunc_.c_str());
 
   lua_newtable(luastate_);    /* key value table */
 
