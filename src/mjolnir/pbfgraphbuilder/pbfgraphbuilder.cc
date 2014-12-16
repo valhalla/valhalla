@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
 
     // TODO - make bounding box and tilesize configurable (via properties file?)
     // Iterate through edges - tile the end nodes to create connected graph
-    graphbuilder.BuildLocalTiles(graphoutputdir, tilesize);
+    graphbuilder.BuildLocalTiles(graphoutputdir, level);
   }
 
   return EXIT_SUCCESS;

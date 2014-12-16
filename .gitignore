@@ -31,6 +31,7 @@ libtool
 include/proto
 src/proto
 valhalla
+pbfgraphbuilder
 *.o
 .deps/
 .dirstamp
@@ -51,6 +52,8 @@ test/aabbll
 test/vector2
 test/polyline2
 test/adjacencylist
+test/pointll
+test/location
 test/*.log
 test/*.trs
 
