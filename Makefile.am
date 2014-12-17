@@ -124,7 +124,7 @@ libvalhalla_la_SOURCES = \
 	src/proto/osmformat.pb.cc \
 	src/proto/trippath.pb.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
+libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@
 if HAVE_SQLITE3
 libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif

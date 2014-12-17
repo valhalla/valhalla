@@ -48,13 +48,12 @@ class LuaTagTransform {
 
   std::string GetLuaNodeScript() const;
 
-  void CheckLuaFuncExists(const std::string &func_name) const;
-
   Tags TransformInLua(bool isWay, const Tags &tags);
 
  protected:
 
-  lua_State *luastate_;
+  lua_State *waystate_;
+  lua_State *nodestate_;
 
   std::string luanodefunc_;
   std::string luawayfunc_;

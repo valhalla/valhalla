@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
   bpo::options_description options(
   "valhalla " VERSION "\n"
   "\n"
-  " Usage: valhalla [options]\n"
+  " Usage: valhalla [options] <protocolbuffer_input_file>\n"
   "\n"
   "valhalla is simply a program that fronts a stubbed out library in the "
   "autotools framework. The purpose of it is to have a standard configuration "
