@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <utility>
+#include <boost/property_tree/ptree.hpp>
 
+#include "geo/tilehierarchy.h"
 
 #include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"
@@ -115,12 +115,6 @@ class GraphBuilder {
   node_pair ComputeNodePair(const baldr::GraphId& nodea,
                             const baldr::GraphId& nodeb) const;
 
-  struct TileLevel{
-    float size_;
-    unsigned char level_;
-    std::string name_;
-    bool operator<(const TileLevel& other) const;
-  };
 
   unsigned int relation_count_;
   unsigned int node_count_;
@@ -146,11 +140,8 @@ class GraphBuilder {
   // Location of the protocol buffer input file
   std::string input_file_;
 
-  // Location of the generated tiles
-  std::string tile_dir_;
-
   // List of the tile levels to be created
-  std::vector<TileLevel> tile_levels_;
+  geo::TileHierarchy tile_hierarchy_;
 
 };
 

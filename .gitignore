@@ -30,7 +30,6 @@ libtool
 # built objects
 include/proto
 src/proto
-valhalla
 pbfgraphbuilder
 *.o
 .deps/
@@ -42,7 +41,6 @@ libvalhalla.la
 # tests
 test-suite.log
 test-driver
-test/valhalla
 test/point2
 test/linesegment2
 test/distanceapproximator
@@ -54,6 +52,7 @@ test/polyline2
 test/adjacencylist
 test/pointll
 test/location
+test/tilehierarchy
 test/graphid
 test/*.log
 test/*.trs
