@@ -58,15 +58,23 @@ void GraphId::operator ++(int) {
 }
 
 // TODO - could this be simplified using unions in the struct?
-bool GraphId::operator <(const GraphId& other) const {
-  if (level() == other.level()) {
-    return id() < other.id();
+bool GraphId::operator <(const GraphId& rhs) const {
+  if (graphid_.tileid < rhs.graphid_.tileid)
+    return true;
+  else if (graphid_.tileid == rhs.graphid_.tileid) {
+    if (graphid_.level < rhs.graphid_.level)
+      return true;
+    else if (graphid_.level == rhs.graphid_.level) {
+      if (graphid_.id < rhs.graphid_.id)
+        return true;
+    }
+    return false;
   }
-  return level() < other.level();
 }
 
 bool GraphId::operator ==(const GraphId& rhs) const {
-  return (tileid() == rhs.tileid() && level() == rhs.level() && id() == rhs.id());
+  return (graphid_.tileid == rhs.graphid_.tileid
+      && graphid_.level == rhs.graphid_.level && graphid_.id == rhs.graphid_.id);
 }
 
 std::size_t GraphId::HashCode() const {

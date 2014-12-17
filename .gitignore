@@ -55,6 +55,7 @@ test/adjacencylist
 test/pointll
 test/location
 test/tilehierarchy
+test/graphid
 test/*.log
 test/*.trs
 

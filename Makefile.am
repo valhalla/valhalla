@@ -151,7 +151,8 @@ check_PROGRAMS = \
 	test/adjacencylist \
 	test/pointll \
 	test/location \
-	test/tilehierarchy
+	test/tilehierarchy \
+	test/graphid
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
@@ -188,6 +189,9 @@ test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
 test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_tilehierarchy_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_graphid_SOURCES = test/graphid.cc test/test.cc
+test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_graphid_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

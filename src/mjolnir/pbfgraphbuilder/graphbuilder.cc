@@ -86,7 +86,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
-    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
+//    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
     return;
   }
 
@@ -97,6 +97,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   OSMWay w(osmid);
   w.nodelist_ = refs;
+//  std::copy(refs.begin(), refs.end(), std::back_inserter(w.nodelist_));
 
   //TODO::  Save the tag results to disk.
 
@@ -136,28 +137,28 @@ void GraphBuilder::SetNodeUses() {
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
   unsigned int edgeindex = 0;
-  uint64_t source, target, current;
+  uint64_t target, current;
   for (auto way : ways_) {
     Edge edge;
     current = way.nodelist_[0];
-    OSMNode& node = nodes_[current];
-    OSMNode& edgestartnode = node;
+    OSMNode& edgestartnode = nodes_[current];
     edge.sourcenode_ = current;
-    edge.latlngs_.push_back(node.latlng_);
-    for (size_t i = 1, n = way.nodelist_.size(); i < n; ++i) {
+    edge.AddLL(edgestartnode.latlng_);
+    for (size_t i = 1, n = way.nodelist_.size(); i < n; i++) {
+      // Add the node lat,lng to the edge shape
       current = way.nodelist_[i];
+      OSMNode& node = nodes_[current];
+      edge.AddLL(node.latlng_);
+
       // If a node is used more than once, it is an intersection, hence it's
       // a node of the road network graph
-      node = nodes_[current];
-      edge.sourcenode_ = current;
-      edge.latlngs_.push_back(node.latlng_);
       if (node.uses_ > 1) {
         edge.targetnode_ = current;
         edges_.push_back(edge);
 
-        // Add the edge index to the target node
-        edgestartnode.edges_.push_back(edgeindex);
-        node.edges_.push_back(edgeindex);
+        // Add the edge index to the start and target node
+        edgestartnode.AddEdge(edgeindex);
+        node.AddEdge(edgeindex);
 
         // Start a new edge
         edge.sourcenode_ = current;
@@ -172,6 +173,7 @@ void GraphBuilder::ConstructEdges() {
 // Iterate through the node map and remove any nodes that are not part of
 // the graph (they have been converted to part of the edge shape)
 void GraphBuilder::RemoveUnusedNodes() {
+  std::cout << "Remove unused nodes" << std::endl;
   node_map_type::iterator itr = nodes_.begin();
   while (itr != nodes_.end()) {
     if (itr->second.uses_ < 2) {
@@ -184,7 +186,7 @@ void GraphBuilder::RemoveUnusedNodes() {
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
-//  std::cout << "Tile nodes..." << std::endl;
+std::cout << "Tile nodes..." << std::endl;
   int tileid;
   unsigned int n;
   Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
@@ -194,6 +196,9 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
   tilednodes_.resize(tilecount);
 
   for (auto node : nodes_) {
+    if (node.second.edges_->size() == 0) {
+      std::cout << "Node with no edges" << std::endl;
+    }
     // Get tile Id
     tileid = tiles.TileId(node.second.latlng_);
     if (tileid < 0) {
@@ -209,9 +214,8 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
 
     // Add this OSM node to the list of nodes for this tile
     tilednodes_[tileid].push_back(node.first);
-
   }
-//  std::cout << "Done TileNodes" << std::endl;
+std::cout << "Done TileNodes" << std::endl;
 }
 
 namespace {
@@ -253,12 +257,14 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
       // Set the index of the first outbound edge within the tile.
       nodebuilder.set_edge_index(directededgecount++);
-      nodebuilder.set_edge_count(node.edges_.size());
+      nodebuilder.set_edge_count(node.edges_->size());
+if (node.edges_->size() == 0)
+  std::cout << "Node has no edges?" << std::endl;
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
       std::vector<EdgeInfoBuilder> edges;
-      for (auto edgeindex : node.edges_) {
+      for (auto edgeindex : *node.edges_) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
         // Assign nodes
@@ -269,7 +275,9 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_speed(65.0f);    // KPH
 
         // Compute length from the latlngs.
-        float length = node.latlng_.Length(edge.latlngs_);
+        float length = node.latlng_.Length(*edge.latlngs_);
+//if (length < 0.001f)
+//  std::cout << "Length = " << length << std::endl;
         directededge.set_length(length);
 
         // TODO - add other attributes
@@ -284,7 +292,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           edgeinfo.set_nodea(nodea);
           edgeinfo.set_nodeb(nodeb);
           // TODO - shape encode
-          edgeinfo.set_shape(edge.latlngs_);
+          edgeinfo.set_shape(*edge.latlngs_);
           // TODO - names
 
           // TODO - other attributes
@@ -306,6 +314,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // Add to the list
         directededges.push_back(directededge);
+        directededgecount++;
       }
 
       // Add information to the tile
