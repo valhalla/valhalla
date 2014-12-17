@@ -46,25 +46,10 @@ class GraphReader {
    */
   GraphTile* ReadTile(const GraphId& graphid);
 
-  struct TileId {
-    unsigned int level_;
-    unsigned int tileid_;
-
-    TileId(const unsigned int level, const unsigned int tileid)
-        : level_(level),
-          tileid_(tileid) {
-    }
-
-    bool operator < (const TileId& other) const {
-      if (level_ == other.level_) {
-        return true;
-      }
-      return tileid_ < other.tileid_;
-    }
-  };
-
  private:
-  std::map<TileId, GraphTile*> tilecache_;
+  std::map<unsigned int, GraphTile*> tilecache_;
+
+  unsigned int GetKey(const unsigned int level, const unsigned int tileid);
 };
 
 }
