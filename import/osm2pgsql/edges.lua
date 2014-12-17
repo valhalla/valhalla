@@ -261,7 +261,7 @@ end
 function ways_proc (kv, nokeys)
   --if there were no tags passed in, ie keyvalues is empty
   if nokeys == 0 then
-    return 1, kv
+    return 1, kv, 0, 0
   end
 
   --does it at least have some interesting tags
