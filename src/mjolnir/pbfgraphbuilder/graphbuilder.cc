@@ -12,6 +12,8 @@
 #include "mjolnir/edgeinfobuilder.h"
 
 #include <algorithm>
+#include <string>
+
 
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
@@ -24,13 +26,13 @@ bool GraphBuilder::TileLevel::operator<(const TileLevel& other) const {
 }
 
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt, const std::string& input_file)
-  :relation_count_(0), node_count_(0), input_file_(input_file){
+:relation_count_(0), node_count_(0), input_file_(input_file){
 
   //grab out the lua config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
-        pt.get<std::string>("tagtransform.node_function"),
-        pt.get<std::string>("tagtransform.way_script"),
-        pt.get<std::string>("tagtransform.way_function"));
+          pt.get<std::string>("tagtransform.node_function"),
+          pt.get<std::string>("tagtransform.way_script"),
+          pt.get<std::string>("tagtransform.way_function"));
 
   //grab out other config information
   tile_dir_ = pt.get<std::string>("output.tile_dir");
@@ -92,12 +94,32 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   if (results.size() == 0)
     return;
 
-  //TODO::  Save the tag results to disk.
-
   nodes_.insert(std::make_pair(osmid, OSMNode((float) lat, (float) lng)));
+
+  OSMNode n = nodes_[osmid];
+
+  for (const auto& tag : results) {
+
+    if ( tag.first == "exit_to" )
+      n.exit_to_ = tag.second;
+    else if ( tag.first == "ref" )
+      n.ref_ = tag.second;
+
+    else if ( tag.first == "gate" )
+      n.gate_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "bollard" )
+      n.bollard_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "modes_mask" )
+      n.modes_mask_ = (unsigned short) std::stoi(tag.second);
+
+    //  if (osmid == 2385249)
+    //    std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+  }
+
   node_count_++;
 
-//   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
+  //   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
 }
 
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
@@ -105,7 +127,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
-//    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
+    //    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
     return;
   }
 
@@ -116,23 +138,86 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   OSMWay w(osmid);
   w.nodelist_ = refs;
-//  std::copy(refs.begin(), refs.end(), std::back_inserter(w.nodelist_));
+  //  std::copy(refs.begin(), refs.end(), std::back_inserter(w.nodelist_));
 
-  //TODO::  Save the tag results to disk.
+  for (const auto& tag : results) {
+
+    if ( tag.first == "functional_road_class" )
+      w.road_class_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "auto_forward" )
+      w.auto_forward_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "bike_forward" )
+      w.bike_forward_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "auto_backward" )
+      w.auto_backward_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "bike_backward" )
+      w.bike_backward_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "pedestrian" )
+      w.pedestrian_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "oneway" )
+      w.oneway_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "roundabout" )
+      w.roundabout_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "ferry" )
+      w.ferry_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "rail" )
+      w.rail_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "name" )
+      w.name_ = tag.second;
+    else if ( tag.first == "name:en" )
+      w.name_en_ = tag.second;
+
+    else if ( tag.first == "maxspeed" )
+      w.maxspeed_ = (unsigned short) std::stoi(tag.second);
+    else if ( tag.first == "minspeed" )
+      w.minspeed_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "ref" )
+      w.ref_ = tag.second;
+    else if ( tag.first == "int_ref" )
+      w.int_ref_ = tag.second;
+
+    else if ( tag.first == "surface" )
+      w.surface_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "lanes" )
+      w.lanes_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "tunnel" )
+      w.tunnel_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "toll" )
+      w.toll_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "bike_network_mask" )
+      w.bike_network_mask_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "bike_national_ref" )
+      w.bike_national_ref_ = tag.second;
+    else if ( tag.first == "bike_regional_ref" )
+      w.bike_regional_ref_ = tag.second;
+    else if ( tag.first == "bike_local_ref" )
+      w.bike_local_ref_ = tag.second;
+
+    // if (osmid == 368034 || osmid == 4781367)
+    //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+  }
 
   ways_.push_back(w);
 
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                       const CanalTP::References & /*refs*/) {
+                                     const CanalTP::References & /*refs*/) {
   relation_count_++;
 
 }
 
 void GraphBuilder::PrintCounts() {
   std::cout << "Read and parsed " << node_count_ << " nodes, " << ways_.size()
-            << " ways and " << relation_count_ << " relations" << std::endl;
+                << " ways and " << relation_count_ << " relations" << std::endl;
 }
 
 // Once all the ways and nodes are read, we compute how many times a node
@@ -205,7 +290,7 @@ void GraphBuilder::RemoveUnusedNodes() {
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
-std::cout << "Tile nodes..." << std::endl;
+  std::cout << "Tile nodes..." << std::endl;
   int tileid;
   unsigned int n;
   Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
@@ -234,7 +319,7 @@ std::cout << "Tile nodes..." << std::endl;
     // Add this OSM node to the list of nodes for this tile
     tilednodes_[tileid].push_back(node.first);
   }
-std::cout << "Done TileNodes" << std::endl;
+  std::cout << "Done TileNodes" << std::endl;
 }
 
 namespace {
@@ -277,8 +362,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       // Set the index of the first outbound edge within the tile.
       nodebuilder.set_edge_index(directededgecount++);
       nodebuilder.set_edge_count(node.edges_->size());
-if (node.edges_->size() == 0)
-  std::cout << "Node has no edges?" << std::endl;
+      if (node.edges_->size() == 0)
+        std::cout << "Node has no edges?" << std::endl;
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
@@ -295,8 +380,8 @@ if (node.edges_->size() == 0)
 
         // Compute length from the latlngs.
         float length = node.latlng_.Length(*edge.latlngs_);
-//if (length < 0.001f)
-//  std::cout << "Length = " << length << std::endl;
+        //if (length < 0.001f)
+        //  std::cout << "Length = " << length << std::endl;
         directededge.set_length(length);
 
         // TODO - add other attributes
