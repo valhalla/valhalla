@@ -62,7 +62,7 @@ class DistanceApproximator
    * @param   ll2  Second point (lat,lng)
    * @return  Returns the approximate distance squared (in km)
    */
-  float DistanceSquared(const PointLL& ll1, const PointLL& ll2) const;
+  static float DistanceSquared(const PointLL& ll1, const PointLL& ll2);
 
   /**
    * Gets the number of kilometers per degree of longitude for a specified
@@ -72,7 +72,7 @@ class DistanceApproximator
    * @param   lat   Latitude in degrees
    * @return  Returns the number of kilometers per degree of longitude
    */
-  float KmPerLngDegree(const float lat) const;
+  static float KmPerLngDegree(const float lat);
 
 private:
    float centerlat_;

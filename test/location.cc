@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::geo;
 
 namespace {
   void test_construction() {
@@ -15,6 +16,9 @@ namespace {
     }
     catch(...) {
     }
+    Location b(PointLL{1,2});
+    if(b.latlng_.y() !=1 || b.latlng_.x() != 2)
+      throw std::runtime_error("Location's latlng object should be set");
   }
 }
 
