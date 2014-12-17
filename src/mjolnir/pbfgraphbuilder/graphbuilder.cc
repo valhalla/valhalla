@@ -12,6 +12,8 @@
 #include "mjolnir/edgeinfobuilder.h"
 
 #include <algorithm>
+#include <string>
+
 
 using namespace valhalla::geo;
 using namespace valhalla::baldr;
@@ -92,9 +94,29 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   if (results.size() == 0)
     return;
 
-  //TODO::  Save the tag results to disk.
-
   nodes_.insert(std::make_pair(osmid, OSMNode((float) lat, (float) lng)));
+
+  OSMNode n = nodes_[osmid];
+
+  for (const auto& tag : results) {
+
+    if ( tag.first == "exit_to" )
+      n.exit_to_ = tag.second;
+    else if ( tag.first == "ref" )
+      n.ref_ = tag.second;
+
+    else if ( tag.first == "gate" )
+      n.gate_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "bollard" )
+      n.bollard_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "modes_mask" )
+      n.modes_mask_ = (unsigned short) std::stoi(tag.second);
+
+  //  if (osmid == 2385249)
+  //    std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+  }
+
   node_count_++;
 
 //   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
@@ -117,7 +139,70 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   OSMWay w(osmid);
   w.nodelist_ = refs;
 
-  //TODO::  Save the tag results to disk.
+  for (const auto& tag : results) {
+
+      if ( tag.first == "functional_road_class" )
+        w.road_class_ = (unsigned short) std::stoi(tag.second);
+
+      else if ( tag.first == "auto_forward" )
+        w.auto_forward_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "bike_forward" )
+        w.bike_forward_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "auto_backward" )
+        w.auto_backward_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "bike_backward" )
+        w.bike_backward_ = (tag.second == "true" ? true : false);
+
+      else if ( tag.first == "pedestrian" )
+        w.pedestrian_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "oneway" )
+        w.oneway_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "roundabout" )
+        w.roundabout_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "ferry" )
+        w.ferry_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "rail" )
+        w.rail_ = (tag.second == "true" ? true : false);
+
+      else if ( tag.first == "name" )
+        w.name_ = tag.second;
+      else if ( tag.first == "name:en" )
+        w.name_en_ = tag.second;
+
+      else if ( tag.first == "maxspeed" )
+        w.maxspeed_ = (unsigned short) std::stoi(tag.second);
+      else if ( tag.first == "minspeed" )
+        w.minspeed_ = (unsigned short) std::stoi(tag.second);
+
+      else if ( tag.first == "ref" )
+        w.ref_ = tag.second;
+      else if ( tag.first == "int_ref" )
+        w.int_ref_ = tag.second;
+
+      else if ( tag.first == "surface" )
+        w.surface_ = (tag.second == "true" ? true : false);
+
+      else if ( tag.first == "lanes" )
+        w.lanes_ = (unsigned short) std::stoi(tag.second);
+
+      else if ( tag.first == "tunnel" )
+        w.tunnel_ = (tag.second == "true" ? true : false);
+      else if ( tag.first == "toll" )
+        w.toll_ = (tag.second == "true" ? true : false);
+
+      else if ( tag.first == "bike_network_mask" )
+        w.bike_network_mask_ = (unsigned short) std::stoi(tag.second);
+
+      else if ( tag.first == "bike_national_ref" )
+        w.bike_national_ref_ = tag.second;
+      else if ( tag.first == "bike_regional_ref" )
+        w.bike_regional_ref_ = tag.second;
+      else if ( tag.first == "bike_local_ref" )
+        w.bike_local_ref_ = tag.second;
+
+     // if (osmid == 368034 || osmid == 4781367)
+     //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+  }
 
   ways_.push_back(w);
 
