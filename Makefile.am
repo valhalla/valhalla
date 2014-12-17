@@ -124,7 +124,7 @@ libvalhalla_la_SOURCES = \
 	src/proto/osmformat.pb.cc \
 	src/proto/trippath.pb.cc
 libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@
+libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@
 if HAVE_SQLITE3
 libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
@@ -155,7 +155,8 @@ check_PROGRAMS = \
 	test/polyline2 \
 	test/adjacencylist \
 	test/pointll \
-	test/location
+	test/location \
+	test/graphid
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -192,6 +193,9 @@ test_pointll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_graphid_SOURCES = test/graphid.cc test/test.cc
+test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_graphid_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

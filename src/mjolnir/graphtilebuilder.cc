@@ -1,5 +1,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
+#include <boost/filesystem/operations.hpp>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -13,9 +15,14 @@ GraphTileBuilder::GraphTileBuilder() {
 
 bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
                                      const GraphId& graphid) {
+  // Get the name of the file
+  boost::filesystem::path filename = Filename(basedirectory, graphid);
+  // Make sure the directory exists on the system
+  if(!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
   // Open to the end of the file so we can immediately get size;
-  std::ofstream file(Filename(basedirectory, graphid),
-                     std::ios::out | std::ios::binary | std::ios::ate);
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Write the header. TODO - add edge info offset and name list offset
     header_builder_.set_nodecount(nodes_builder_.size());
@@ -34,14 +41,14 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the edge data
 
     // Write the names
-    std::cout << "Write: " << Filename(basedirectory, graphid) << " nodes = "
+    std::cout << "Write: " << filename << " nodes = "
               << nodes_builder_.size() << " directededges = "
               << directededges_builder_.size() << std::endl;
 
     file.close();
     return true;
   } else {
-    std::cout << "Failed to open file " << Filename(basedirectory, graphid)
+    std::cout << "Failed to open file " << filename
               << std::endl;
   }
   return false;

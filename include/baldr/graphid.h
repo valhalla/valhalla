@@ -68,10 +68,10 @@ class GraphId {
 
   /**
    * Less than operator for sorting.
-   * @param  other  Other graph Id for comparison.
-   * @return  Returns true if this GraphId is less than the other.
+   * @param  rhs  Right hand side graph Id for comparison.
+   * @return  Returns true if this GraphId is less than the right hand side.
    */
-  bool operator <(const GraphId& other) const;
+  bool operator <(const GraphId& rhs) const;
 
   // Operator EqualTo.
   bool operator ==(const GraphId& rhs) const;
