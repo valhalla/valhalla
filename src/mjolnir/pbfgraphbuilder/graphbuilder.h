@@ -9,7 +9,7 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 
-#include "../../../include/geo/tilehierarchy.h"
+#include "geo/tilehierarchy.h"
 
 #include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"

@@ -33,5 +33,15 @@ TileHierarchy::TileHierarchy(const boost::property_tree::ptree& pt) {
     throw std::runtime_error("Expected 1 or more levels in the tile hierarchy");
 }
 
+TileHierarchy::TileHierarchy(){}
+
+const std::set<TileHierarchy::TileLevel>& TileHierarchy::levels() const {
+  return levels_;
+}
+
+const std::string& TileHierarchy::tile_dir() const{
+  return tile_dir_;
+}
+
 }
 }

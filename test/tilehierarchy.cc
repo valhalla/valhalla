@@ -27,15 +27,15 @@ namespace {
     boost::property_tree::read_json(json, pt);
     TileHierarchy h(pt);
 
-    if(h.tile_dir_ != "/data/valhalla")
+    if(h.tile_dir() != "/data/valhalla")
       throw runtime_error("The tile directory was not correctly parsed");
-    if(h.levels_.size() != 3)
+    if(h.levels().size() != 3)
       throw runtime_error("Incorrect number of hierarchy levels");
-    if((++h.levels_.begin())->name != "arterial")
+    if((++h.levels().begin())->name != "arterial")
       throw runtime_error("Middle hierarchy should be named arterial");
-    if(h.levels_.begin()->level != 0)
+    if(h.levels().begin()->level != 0)
       throw runtime_error("Top hierarchy should have level 0");
-    if(h.levels_.rbegin()->tiles.TileSize() != .25f)
+    if(h.levels().rbegin()->tiles.TileSize() != .25f)
       throw runtime_error("Bottom hierarchy should have tile size of .25f");
   }
 }

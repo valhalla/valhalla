@@ -33,13 +33,27 @@ class TileHierarchy {
     Tiles tiles;
   };
 
+  /**
+   * Get the set of levels in this hierarchy
+   *
+   * @return set of TileLevel objects
+   */
+  const std::set<TileLevel>& levels() const;
+
+  /**
+   * Get the root tile directory where the tiles are stored
+   *
+   * @return string directory
+   */
+  const std::string& tile_dir() const;
+
+ private:
+  explicit TileHierarchy();
+
   // a place to keep each level of the hierarchy
   std::set<TileLevel> levels_;
   // the tiles are stored
   std::string tile_dir_;
-
- private:
-  explicit TileHierarchy();
 };
 
 }
