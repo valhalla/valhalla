@@ -19,14 +19,14 @@ namespace geo{
     return (latkm * latkm + lngkm * lngkm);
   }
 
-  float DistanceApproximator::DistanceSquared(const PointLL& ll1, const PointLL& ll2) const {
+  float DistanceApproximator::DistanceSquared(const PointLL& ll1, const PointLL& ll2) {
     float latkm = (ll1.lat() - ll2.lat()) * kKmPerDegreeLat;
     float lngkm = (ll1.lng() - ll2.lng()) *
                   KmPerLngDegree((ll1.lat() + ll2.lat()) * 0.5);
     return (latkm * latkm + lngkm * lngkm);
   }
 
-  float DistanceApproximator::KmPerLngDegree(const float lat) const {
+  float DistanceApproximator::KmPerLngDegree(const float lat) {
     return cosf(lat * kRadPerDeg) * kKmPerDegreeLat;
   }
 }

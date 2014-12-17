@@ -11,11 +11,11 @@ using namespace valhalla::geo;
 namespace {
 
 void TryKmPerDegreeLongitude(const PointLL& p, const float d2) {
-  DistanceApproximator approx;
-  float d = approx.KmPerLngDegree(p.lat());
+  float d = DistanceApproximator::KmPerLngDegree(p.lat());
   if (fabs(d - d2) > kEpsilon)
     throw runtime_error("KmPerDegreeLongitude test failed");
 }
+
 void TestKmPerDegreeLongitude() {
   TryKmPerDegreeLongitude(PointLL(0.0f, -80.0f), kKmPerDegreeLat);
 }
@@ -38,12 +38,12 @@ void TestDistanceSquaredFromTestPt() {
 
 void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
   // Test if distance is > 2% the spherical distance
-  DistanceApproximator approx;
-  float d = sqrtf(approx.DistanceSquared(a, b));
+  float d = sqrtf(DistanceApproximator::DistanceSquared(a, b));
   //std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   if (fabs(d - d2) / d2 > 0.02f)
     throw runtime_error("DistanceSquared between 2 points test failed");
 }
+
 void TestDistanceSquared() {
   PointLL a(42.0f, -80.0f);
   PointLL b(40.0f, -78.0f);

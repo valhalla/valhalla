@@ -18,6 +18,12 @@ namespace {
     if(ll.IsValid())
       throw std::logic_error("Invalidation produced valid coordinates");
   }
+
+  void test_constructor() {
+    PointLL ll{1,2};
+    if(ll.y() !=1 || ll.x() != 2)
+      throw std::runtime_error("PointLL object should be set");
+  }
 }
 
 int main(void)
@@ -25,6 +31,7 @@ int main(void)
   test::suite suite("pointll");
 
   suite.test(TEST_CASE(test_invalid));
+  suite.test(TEST_CASE(test_constructor));
   //TODO: many more!
 
   return suite.tear_down();

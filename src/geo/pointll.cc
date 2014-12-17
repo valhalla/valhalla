@@ -14,7 +14,7 @@ PointLL::PointLL()
 }
 
 PointLL::PointLL(const float lat, const float lng)
-    : Point2() {
+    : Point2(lng, lat) {
 }
 
 PointLL::PointLL(const PointLL& ll)
