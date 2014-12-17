@@ -5,16 +5,16 @@ namespace valhalla {
 namespace geo {
 
 TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name, const Tiles& tiles)
-  :level_(level), name_(name), tiles_(tiles) {
+  :level(level), name(name), tiles(tiles) {
 }
 
 bool TileHierarchy::TileLevel::operator<(const TileLevel& other) const {
   //if you name it the same and have the same level number they will
   //be considered the same when it comes to sorting
-  if(level_ == other.level_) {
-    return name_ < other.name_;
+  if(level == other.level) {
+    return name < other.name;
   }
-  return level_ < other.level_;
+  return level < other.level;
 }
 
 TileHierarchy::TileHierarchy(const boost::property_tree::ptree& pt) {

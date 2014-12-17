@@ -31,11 +31,11 @@ namespace {
       throw runtime_error("The tile directory was not correctly parsed");
     if(h.levels_.size() != 3)
       throw runtime_error("Incorrect number of hierarchy levels");
-    if((++h.levels_.begin())->name_ != "arterial")
+    if((++h.levels_.begin())->name != "arterial")
       throw runtime_error("Middle hierarchy should be named arterial");
-    if(h.levels_.begin()->level_ != 0)
+    if(h.levels_.begin()->level != 0)
       throw runtime_error("Top hierarchy should have level 0");
-    if(h.levels_.rbegin()->tiles_.TileSize() != .25f)
+    if(h.levels_.rbegin()->tiles.TileSize() != .25f)
       throw runtime_error("Bottom hierarchy should have tile size of .25f");
   }
 }
@@ -45,7 +45,6 @@ int main(void)
   test::suite suite("tilehierarchy");
 
   suite.test(TEST_CASE(test_parse));
-  //suite.test(TEST_CASE(test_failure));
 
   return suite.tear_down();
 }

@@ -13,9 +13,9 @@ namespace geo {
 
 
 /**
- * struct used to get information about a given hierarchy of tiles
+ * class used to get information about a given hierarchy of tiles
  */
-struct TileHierarchy {
+class TileHierarchy {
  public:
   /**
    * Constructor
@@ -28,9 +28,9 @@ struct TileHierarchy {
   struct TileLevel{
     TileLevel(const unsigned char level, const std::string& name, const Tiles& tiles);
     bool operator<(const TileLevel& other) const;
-    unsigned char level_;
-    std::string name_;
-    Tiles tiles_;
+    unsigned char level;
+    std::string name;
+    Tiles tiles;
   };
 
   // a place to keep each level of the hierarchy

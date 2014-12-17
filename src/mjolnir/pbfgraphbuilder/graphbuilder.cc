@@ -46,10 +46,10 @@ void GraphBuilder::Build() {
   // Tile the nodes
   //TODO: generate more than just the most detailed level
   const auto& tl = *tile_hierarchy_.levels_.rbegin();
-  TileNodes(tl.tiles_.TileSize(), tl.level_);
+  TileNodes(tl.tiles.TileSize(), tl.level);
 
   // Iterate through edges - tile the end nodes to create connected graph
-  BuildLocalTiles(tile_hierarchy_.tile_dir_, tl.level_);
+  BuildLocalTiles(tile_hierarchy_.tile_dir_, tl.level);
 }
 
 void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
