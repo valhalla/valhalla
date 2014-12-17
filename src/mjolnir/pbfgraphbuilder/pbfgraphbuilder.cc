@@ -28,7 +28,7 @@ bool ParseArguments(int argc, char *argv[]) {
   bpo::options_description options(
     "pbfgraphbuilder " VERSION "\n"
     "\n"
-    " Usage: pbfgraphbuilder [options]\n"
+    " Usage: pbfgraphbuilder [options] <protocolbuffer_input_file>\n"
     "\n"
     "pbfgraphbuilder is a program that creates the route graph from a osm.pbf "
     "extract or osm2pgsql import.  You should use the lua scripts provided for "

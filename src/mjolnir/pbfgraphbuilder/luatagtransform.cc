@@ -5,33 +5,51 @@
 
 using namespace valhalla::mjolnir;
 
+namespace {
+
+void CheckLuaFuncExists(lua_State* state, const std::string &func_name) {
+
+  lua_getglobal(state, func_name.c_str());
+
+  if (!lua_isfunction (state, -1)) {
+    throw std::runtime_error((boost::format("Lua script does not contain a function %1%.")
+    % func_name).str());
+  }
+  lua_pop(state,1);
+}
+
+}
+
 LuaTagTransform::LuaTagTransform()
 {
   // Create a new lua state
-  luastate_ = luaL_newstate();
+  waystate_ = luaL_newstate();
+  nodestate_ = luaL_newstate();
 
 }
 
 LuaTagTransform::~LuaTagTransform(){
 
-  if (luastate_ != NULL) {
-
-    lua_close(luastate_);
-
+  if (waystate_ != NULL) {
+    lua_close(waystate_);
+  }
+  if (nodestate_ != NULL) {
+    lua_close(nodestate_);
   }
 }
 
 void LuaTagTransform::OpenLib() const {
 
-  luaL_openlibs(luastate_);
+  luaL_openlibs(waystate_);
+  luaL_openlibs(nodestate_);
 
   //check if way script and function exists.
-  luaL_dofile(luastate_, luawayscript_.c_str());
-  CheckLuaFuncExists(luawayfunc_);
+  luaL_dofile(waystate_, luawayscript_.c_str());
+  CheckLuaFuncExists(waystate_, luawayfunc_);
 
   //check if node script and function exists.
-  luaL_dofile(luastate_, luanodescript_.c_str());
-  CheckLuaFuncExists(luanodefunc_);
+  luaL_dofile(nodestate_, luanodescript_.c_str());
+  CheckLuaFuncExists(nodestate_, luanodefunc_);
 }
 
 void LuaTagTransform::SetLuaWayFunc(std::string luawayfunc) {
@@ -66,71 +84,92 @@ std::string LuaTagTransform::GetLuaNodeScript() const {
   return luanodescript_;
 }
 
-void LuaTagTransform::CheckLuaFuncExists(const std::string &func_name) const {
+namespace{
+void stackdump_g(lua_State* l)
+{
+    int i;
+    int top = lua_gettop(l);
 
-  lua_getglobal(luastate_, func_name.c_str());
+    printf("total in stack %d\n",top);
 
-  if (!lua_isfunction (luastate_, -1)) {
-    throw std::runtime_error((boost::format("Lua script does not contain a function %1%.")
-    % func_name).str());
-  }
-  lua_pop(luastate_,1);
+    for (i = 1; i <= top; i++)
+    {  /* repeat for each level */
+        int t = lua_type(l, i);
+        switch (t) {
+            case LUA_TSTRING:  /* strings */
+                printf("string: '%s'\n", lua_tostring(l, i));
+                break;
+            case LUA_TBOOLEAN:  /* booleans */
+                printf("boolean %s\n",lua_toboolean(l, i) ? "true" : "false");
+                break;
+            case LUA_TNUMBER:  /* numbers */
+                printf("number: %g\n", lua_tonumber(l, i));
+                break;
+            default:  /* other values */
+                printf("%s\n", lua_typename(l, t));
+                break;
+        }
+        printf("  ");  /* put a separator */
+    }
+    printf("\n");  /* end the listing */
+}
 }
 
 Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
 
-  Tags result;
+  //grab the proper function out of the lua code
+  lua_State* state;
+  if (isWay){
+    lua_getglobal(waystate_,luawayfunc_.c_str());
+    state = waystate_;
+  }
+  else {
+    lua_getglobal(nodestate_,luanodefunc_.c_str());
+    state = nodestate_;
+  }
 
-  int filter;
+  //set up the lua table (map)
   int count = 0;
-  struct keyval *item;
-  const char * key, * value;
-
-  int polygon = 0;
-  int roads = 0;
-
-  //TODO::add boost options.
-  if (isWay)
-    lua_getglobal(luastate_,luawayfunc_.c_str());
-  else
-    lua_getglobal(luastate_,luanodefunc_.c_str());
-
-  lua_newtable(luastate_);    /* key value table */
-
-  for (auto tag : maptags) {
-    lua_pushstring(luastate_, tag.first.c_str());
-    lua_pushstring(luastate_, tag.second.c_str());
-    lua_rawset(luastate_, -3);
+  lua_newtable(state);
+  for (const auto& tag : maptags) {
+    lua_pushstring(state, tag.first.c_str());
+    lua_pushstring(state, tag.second.c_str());
+    lua_rawset(state, -3);
     count++;
   }
 
-  lua_pushinteger(luastate_, count);
+  //tell lua how many items are in the map
+  lua_pushinteger(state, count);
 
-  if (lua_pcall(luastate_,2,4,0)) {
-    fprintf(stderr, "Failed to execute lua function for basic tag processing: %s\n", lua_tostring(luastate_, -1));
-    /* lua function failed */
+  //call lua
+  if (lua_pcall(state, 2, isWay ? 4 : 2, 0)) {
+    fprintf(stderr, "Failed to execute lua function for basic tag processing: %s\n", lua_tostring(state, -1));
   }
 
-  roads = lua_tointeger(luastate_, -1);
-  lua_pop(luastate_,1);
-  polygon = lua_tointeger(luastate_, -1);
-  lua_pop(luastate_,1);
+  //if we dont care about it we stop looking
+  Tags result;
+  /*if(lua_tonumber(state, 1))
+    return result;*/
 
-  lua_pushnil(luastate_);
-  while (lua_next(luastate_,-2) != 0) {
-    key = lua_tostring(luastate_,-2);
-    value = lua_tostring(luastate_,-1);
+  //osm2pgsql has extra info for roads and polygons which we dont care about
+  if(isWay) {
+    lua_pop(state,1);
+    lua_pop(state,1);
+  }
 
+  //pull out the keys and values into a map
+  lua_pushnil(state);
+  while (lua_next(state,-2) != 0) {
+    const char* key = lua_tostring(state,-2);
+    const char* value = lua_tostring(state,-1);
     result[key] = value;
-
-    lua_pop(luastate_,1);
+    lua_pop(state,1);
   }
 
-  filter = lua_tointeger(luastate_, -2);
-
-  lua_pop(luastate_,2);
+  //pull out an int which if its 1 means we dont care about this way/node
+  int filter = lua_tointeger(state, -2);
+  lua_pop(state,2);
 
   return result;
-
 }
 
