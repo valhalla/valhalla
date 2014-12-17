@@ -146,7 +146,7 @@ Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
     fprintf(stderr, "Failed to execute lua function for basic tag processing: %s\n", lua_tostring(state, -1));
   }
 
-  //if we dont care about it we stop looking
+  //TODO:  if we dont care about it we stop looking.  Look for filter = 1
   Tags result;
   /*if(lua_tonumber(state, 1))
     return result;*/
@@ -169,6 +169,9 @@ Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
   //pull out an int which if its 1 means we dont care about this way/node
   int filter = lua_tointeger(state, -2);
   lua_pop(state,2);
+
+  if (filter)
+    result.clear();
 
   return result;
 }
