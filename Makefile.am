@@ -47,7 +47,6 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla.la
 include_HEADERS = \
-	include/valhalla.h \
 	include/baldr/directededge.h \
 	include/baldr/edgeinfo.h \
 	include/baldr/graphid.h \
@@ -70,6 +69,7 @@ include_HEADERS = \
 	include/geo/util.h \
 	include/geo/distanceapproximator.h \
 	include/geo/ellipse.h \
+	include/geo/tilehierarchy.h \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
@@ -84,7 +84,6 @@ include_HEADERS = \
 	include/mjolnir/nodeinfobuilder.h \
 	include/mjolnir/edgeinfobuilder.h 
 libvalhalla_la_SOURCES = \
-	src/valhalla.cc \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
@@ -107,6 +106,7 @@ libvalhalla_la_SOURCES = \
 	src/geo/util.cc \
 	src/geo/distanceapproximator.cc \
 	src/geo/ellipse.cc \
+	src/geo/tilehierarchy.cc \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
@@ -130,11 +130,7 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 #distributed executables
-bin_PROGRAMS = valhalla pbfgraphbuilder
-valhalla_SOURCES = \
-	src/valhalla.cc
-valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
+bin_PROGRAMS = pbfgraphbuilder
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
@@ -144,7 +140,6 @@ pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@
 
 # tests
 check_PROGRAMS = \
-	test/valhalla \
 	test/point2 \
 	test/distanceapproximator \
 	test/aabb2 \
@@ -155,10 +150,8 @@ check_PROGRAMS = \
 	test/polyline2 \
 	test/adjacencylist \
 	test/pointll \
-	test/location
-test_valhalla_SOURCES = test/valhalla.cc test/test.cc
-test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
+	test/location \
+	test/tilehierarchy
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
@@ -192,6 +185,9 @@ test_pointll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
+test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_tilehierarchy_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

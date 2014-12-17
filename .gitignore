@@ -54,6 +54,7 @@ test/polyline2
 test/adjacencylist
 test/pointll
 test/location
+test/tilehierarchy
 test/*.log
 test/*.trs
 
