@@ -36,7 +36,7 @@ GraphTile::GraphTile(const std::string& basedirectory,
     // Set a pointer to the header (first structure in the binary data).
     char* ptr = graphtile_;
     header_ = (GraphTileHeader*)graphtile_;
-    ptr += sizeof graphtile_;
+    ptr += sizeof(GraphTileHeader);
 
     // Set a pointer to the node list
     nodes_ = (NodeInfo*)ptr;
