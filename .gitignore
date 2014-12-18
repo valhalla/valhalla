@@ -28,16 +28,12 @@ m4/lt~obsolete.m4
 libtool
 
 # built objects
-include/proto
-src/proto
-pbfgraphbuilder
-pathtest
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
-libvalhalla.la
+libvalhalla_midgard.la
 
 # tests
 test-suite.log
@@ -45,17 +41,12 @@ test-driver
 test/point2
 test/linesegment2
 test/distanceapproximator
-test/edgestatus
 test/aabb2
 test/aabbll
 test/vector2
 test/polyline2
-test/adjacencylist
 test/pointll
-test/location
 test/tilehierarchy
-test/graphid
-test/edgeinfobuilder
 test/*.log
 test/*.trs
 
