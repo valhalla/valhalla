@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "midgard/pointll.h"
+#include <valhalla/midgard/pointll.h>
 
 namespace valhalla{
 namespace midgard{

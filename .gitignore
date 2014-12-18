@@ -16,9 +16,9 @@ install-sh
 missing
 depcomp
 Makefile
-include/config.h
-include/config.h.in
-include/stamp-h1
+valhalla/config.h
+valhalla/config.h.in
+valhalla/stamp-h1
 ltmain.sh
 m4/libtool.m4
 m4/ltoptions.m4

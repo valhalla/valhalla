@@ -1,8 +1,6 @@
-#include "midgard/pointll.h"
+#include "valhalla/midgard/pointll.h"
 
 #include "test.h"
-
-#include "config.h"
 
 using namespace std;
 using namespace valhalla::midgard;

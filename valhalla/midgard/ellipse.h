@@ -3,10 +3,10 @@
 
 #include <math.h>
 
-#include "midgard/aabb2.h"
-#include "midgard/linesegment2.h"
-#include "midgard/point2.h"
-#include "midgard/util.h"
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/util.h>
 
 namespace valhalla{
 namespace midgard{

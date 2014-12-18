@@ -4,8 +4,8 @@
 #include <stdarg.h>
 #include <math.h>
 
-#include "midgard/constants.h"
-#include "midgard/point2.h"
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/point2.h>
 
 namespace valhalla {
 namespace midgard {

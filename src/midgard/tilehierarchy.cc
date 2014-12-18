@@ -1,6 +1,6 @@
-#include "midgard/tilehierarchy.h"
+#include "valhalla/midgard/tilehierarchy.h"
 
-#include "midgard/pointll.h"
+#include "valhalla/midgard/pointll.h"
 
 namespace valhalla {
 namespace midgard {

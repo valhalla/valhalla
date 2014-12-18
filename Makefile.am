@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Iinclude @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Iinclude @COVERAGE_CXXFLAGS@ 
+AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
+AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@ 
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -35,21 +35,21 @@ endif
 
 # libvalhalla_midgard compilation etc
 lib_LTLIBRARIES = libvalhalla_midgard.la
-include_HEADERS = \
-	include/midgard/linesegment2.h \
-	include/midgard/tiles.h \
-	include/midgard/aabbll.h \
-	include/midgard/polyline2.h \
-	include/midgard/obb2.h \
-	include/midgard/pointll.h \
-	include/midgard/vector2.h \
-	include/midgard/clipper2.h \
-	include/midgard/aabb2.h \
-	include/midgard/point2.h \
-	include/midgard/util.h \
-	include/midgard/distanceapproximator.h \
-	include/midgard/ellipse.h \
-	include/midgard/tilehierarchy.h 
+nobase_include_HEADERS = \
+	valhalla/midgard/linesegment2.h \
+	valhalla/midgard/tiles.h \
+	valhalla/midgard/aabbll.h \
+	valhalla/midgard/polyline2.h \
+	valhalla/midgard/obb2.h \
+	valhalla/midgard/pointll.h \
+	valhalla/midgard/vector2.h \
+	valhalla/midgard/clipper2.h \
+	valhalla/midgard/aabb2.h \
+	valhalla/midgard/point2.h \
+	valhalla/midgard/util.h \
+	valhalla/midgard/distanceapproximator.h \
+	valhalla/midgard/ellipse.h \
+	valhalla/midgard/tilehierarchy.h 
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \

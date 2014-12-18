@@ -15,6 +15,7 @@ class Vector2;
  * @author David W. Nesbitt
  */
 class Point2 {
+
  public:
   /**
    * Default constructor

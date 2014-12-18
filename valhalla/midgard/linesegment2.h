@@ -4,8 +4,8 @@
 #include <math.h>
 #include <vector>
 
-#include "midgard/point2.h"
-#include "midgard/vector2.h"
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/vector2.h>
 
 namespace valhalla{
 namespace midgard{

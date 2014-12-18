@@ -1,10 +1,9 @@
-#include "midgard/aabbll.h"
+#include "valhalla/midgard/aabbll.h"
 
-#include "midgard/constants.h"
-#include "midgard/point2.h"
+#include "valhalla/midgard/constants.h"
+#include "valhalla/midgard/point2.h"
 #include "test.h"
 
-#include "config.h"
 
 
 using namespace std;

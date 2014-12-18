@@ -1,7 +1,7 @@
-#include "midgard/pointll.h"
+#include "valhalla/midgard/pointll.h"
 
-#include "midgard/distanceapproximator.h"
-#include "midgard/vector2.h"
+#include "valhalla/midgard/distanceapproximator.h"
+#include "valhalla/midgard/vector2.h"
 
 namespace {
   const float INVALID = 0xBADBADBAD;

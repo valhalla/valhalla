@@ -6,7 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "midgard/tiles.h"
+#include <valhalla/midgard/tiles.h>
 
 namespace valhalla {
 namespace midgard {

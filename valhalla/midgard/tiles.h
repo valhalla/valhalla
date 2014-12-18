@@ -5,7 +5,7 @@
 #include <list>
 #include <map>
 
-#include "midgard/aabb2.h"
+#include <valhalla/midgard/aabb2.h>
 
 namespace valhalla{
 namespace midgard{

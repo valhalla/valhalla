@@ -1,6 +1,6 @@
-#include "midgard/distanceapproximator.h"
+#include "valhalla/midgard/distanceapproximator.h"
 
-#include "midgard/constants.h"
+#include "valhalla/midgard/constants.h"
 
 namespace valhalla{
 namespace midgard{
