@@ -21,33 +21,14 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-bool GraphBuilder::TileLevel::operator<(const TileLevel& other) const {
-  return level_ < other.level_;
-}
-
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt, const std::string& input_file)
-:relation_count_(0), node_count_(0), input_file_(input_file){
+  :relation_count_(0), node_count_(0), input_file_(input_file), tile_hierarchy_(pt){
 
   //grab out the lua config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
-          pt.get<std::string>("tagtransform.node_function"),
-          pt.get<std::string>("tagtransform.way_script"),
-          pt.get<std::string>("tagtransform.way_function"));
-
-  //grab out other config information
-  tile_dir_ = pt.get<std::string>("output.tile_dir");
-
-  //grab out each tile level
-  for(const auto& level : pt.get_child("output.levels")) {
-    TileLevel tl;
-    tl.name_ = level.second.get<std::string>("name");
-    tl.level_ = level.second.get<unsigned char>("level");
-    tl.size_ = level.second.get<float>("size");
-    tile_levels_.emplace_back(tl);
-  }
-
-  //sort the list by the level
-  std::sort(tile_levels_.begin(), tile_levels_.end());
+        pt.get<std::string>("tagtransform.node_function"),
+        pt.get<std::string>("tagtransform.way_script"),
+        pt.get<std::string>("tagtransform.way_function"));
 }
 
 void GraphBuilder::Build() {
@@ -66,11 +47,11 @@ void GraphBuilder::Build() {
 
   // Tile the nodes
   //TODO: generate more than just the most detailed level
-  const auto& tl = tile_levels_.back();
-  TileNodes(tl.size_, tl.level_);
+  const auto& tl = *tile_hierarchy_.levels().rbegin();
+  TileNodes(tl.tiles.TileSize(), tl.level);
 
   // Iterate through edges - tile the end nodes to create connected graph
-  BuildLocalTiles(tile_dir_, tl.level_);
+  BuildLocalTiles(tile_hierarchy_.tile_dir(), tl.level);
 }
 
 void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
