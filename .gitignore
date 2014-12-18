@@ -55,6 +55,7 @@ test/adjacencylist
 test/pointll
 test/location
 test/graphid
+test/edgeinfobuilder
 test/*.log
 test/*.trs
 

@@ -156,7 +156,8 @@ check_PROGRAMS = \
 	test/adjacencylist \
 	test/pointll \
 	test/location \
-	test/graphid
+	test/graphid \
+	test/edgeinfobuilder
 test_valhalla_SOURCES = test/valhalla.cc test/test.cc
 test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
@@ -196,6 +197,9 @@ test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
 test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
 test_graphid_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
+test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+test_edgeinfobuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
