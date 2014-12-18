@@ -130,7 +130,12 @@ libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
 endif
 
 #distributed executables
-bin_PROGRAMS = pbfgraphbuilder
+bin_PROGRAMS = pathtest pbfgraphbuilder
+pathtest_SOURCES = \
+	src/thor/pathtest/pathtest.cc
+pathtest_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
+pathtest_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
+        -lz libvalhalla.la
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \

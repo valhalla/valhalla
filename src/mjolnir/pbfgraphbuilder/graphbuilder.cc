@@ -224,29 +224,31 @@ void GraphBuilder::ConstructEdges() {
   unsigned int edgeindex = 0;
   uint64_t target, current;
   for (auto way : ways_) {
-    Edge edge;
+    // TODO - memory use? Delete temporary edges?
+    Edge* edge = new Edge;
     current = way.nodelist_[0];
     OSMNode& edgestartnode = nodes_[current];
-    edge.sourcenode_ = current;
-    edge.AddLL(edgestartnode.latlng_);
+    edge->sourcenode_ = current;
+    edge->AddLL(edgestartnode.latlng_);
     for (size_t i = 1, n = way.nodelist_.size(); i < n; i++) {
       // Add the node lat,lng to the edge shape
       current = way.nodelist_[i];
       OSMNode& node = nodes_[current];
-      edge.AddLL(node.latlng_);
+      edge->AddLL(node.latlng_);
 
       // If a node is used more than once, it is an intersection, hence it's
       // a node of the road network graph
       if (node.uses_ > 1) {
-        edge.targetnode_ = current;
-        edges_.push_back(edge);
+        edge->targetnode_ = current;
+        edges_.push_back(*edge);
 
         // Add the edge index to the start and target node
         edgestartnode.AddEdge(edgeindex);
         node.AddEdge(edgeindex);
 
         // Start a new edge
-        edge.sourcenode_ = current;
+        edge = new Edge;
+        edge->sourcenode_ = current;
         edgestartnode = node;
         edgeindex++;
       }
@@ -341,10 +343,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       nodebuilder.set_latlng(node.latlng_);
 
       // Set the index of the first outbound edge within the tile.
-      nodebuilder.set_edge_index(directededgecount++);
+      nodebuilder.set_edge_index(directededgecount);
       nodebuilder.set_edge_count(node.edges_->size());
-      if (node.edges_->size() == 0)
-        std::cout << "Node has no edges?" << std::endl;
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
@@ -361,8 +361,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // Compute length from the latlngs.
         float length = node.latlng_.Length(*edge.latlngs_);
-        //if (length < 0.001f)
-        //  std::cout << "Length = " << length << std::endl;
         directededge.set_length(length);
 
         // TODO - add other attributes

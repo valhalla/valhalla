@@ -57,22 +57,21 @@ float PointLL::Distance(const PointLL& ll2) const {
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
-  float deltalng = ll2.lng() - lng();
-  float a = lat() * kRadPerDeg;
-  float c = ll2.lat() * kRadPerDeg;
+  double deltalng = (ll2.lng() - lng()) * kRadPerDeg;
+  double a = lat() * kRadPerDeg;
+  double c = ll2.lat() * kRadPerDeg;
 
   // Find the angle subtended in radians (law of cosines)
-  float cosb = (sinf(a) * sinf(c))
-      + (cosf(a) * cosf(c) * cosf(deltalng * kRadPerDeg));
+  double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));
 
   // Angle subtended * radius of earth (portion of the circumference).
   // Protect against cosb being outside -1 to 1 range.
-  if (cosb >= 1.0f)
+  if (cosb >= 1.0)
     return 0.00001f;
-  else if (cosb < -1.0f)
+  else if (cosb < -1.0)
     return kPi * kRadEarthKm;
   else
-    return acosf(cosb) * kRadEarthKm;
+    return (float)(acos(cosb) * kRadEarthKm);
 }
 
 float PointLL::Length(const std::vector<PointLL>& pts) const {

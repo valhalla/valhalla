@@ -78,13 +78,20 @@ class DirectedEdge {
     unsigned int private_        : 1;
     unsigned int unpaved_        : 1;
     unsigned int tunnel_         : 1;
-    unsigned int spare           : 30;
+    unsigned int spare           : 22;
+    unsigned int elevation_      : 4;  // Elevation factor
   };
   Attributes attributes_;
 
-  // TODO - some representation of road class / highway tag importance
+  // Classification and use information
+  struct Classification {
+    unsigned int class_   : 3;     // Road class (importance)
+    unsigned int link_    : 1;     // *link tag - Ramp or turn channel
+    unsigned int use_     : 4;     // Something like "form of way"
+    unsigned int spare_   : 16;
+  };
 
-  // Speed in kilometers. Range 0-250 KPH. Applies to "normal vechicles".
+  // Speed in kilometers. Range 0-250 KPH. Applies to "normal vehicles".
   // Save values above 250 as special cases (closures, construction,
   // etc.)
   // TODO - do we need or does OSM support "truck speed"
@@ -94,7 +101,6 @@ class DirectedEdge {
 
 };
 
-// TODO - do we derive a writeable class and treat the base class as read only?
 }
 }
 

@@ -35,6 +35,12 @@ class GraphId {
   GraphId(const GraphId& g);
 
   /**
+   * Return a single 64 bit value representing the graph id.
+   * @return  Returns the graphId 64-bit value.
+   */
+  uint64_t value() const;
+
+  /**
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
@@ -80,12 +86,15 @@ class GraphId {
   std::size_t HashCode() const;
 
  protected:
-  struct Fields {
-    uint64_t tileid :24;
-    uint64_t level :3;
-    uint64_t id :37;
+  union Id {
+    struct Fields {
+      uint64_t tileid :24;
+      uint64_t level :3;
+      uint64_t id :37;
+    } fields;
+    uint64_t v;
   };
-  Fields graphid_;
+  Id graphid_;
 };
 
 }

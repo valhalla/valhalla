@@ -5,6 +5,7 @@
 #include <map>
 
 #include "baldr/graphreader.h"
+#include "baldr/pathlocation.h"
 #include "thor/adjacencylist.h"
 #include "thor/astarheuristic.h"
 #include "thor/edgecost.h"
@@ -33,8 +34,14 @@ class PathAlgorithm {
    * Form path.
    * TODO - define inputs and outputs!
    */
-  std::vector<baldr::GraphId> GetBestPath(baldr::GraphReader& graphreader,
-                  EdgeCost* edgecost);
+  std::vector<baldr::GraphId> GetBestPath(const baldr::PathLocation& origin,
+          const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+           EdgeCost* edgecost);
+
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  void Clear();
 
  protected:
 
@@ -52,10 +59,10 @@ class PathAlgorithm {
 
   // Map of edges in the adjacency list. Keep this map so we do not have
   // to search to find an entry that is already in the adjacency list
-  std::map<baldr::GraphId, EdgeLabel*> adjlistedges_;
+  std::map<uint64_t, EdgeLabel*> adjlistedges_;
 
   // Destinations
-  std::map<baldr::GraphId, float> destinations_;
+  std::map<uint64_t, float> destinations_;
 
   /**
    * Initialize
@@ -63,25 +70,20 @@ class PathAlgorithm {
   void Init(const PointLL& origll, const PointLL& destll, EdgeCost* edgecost);
 
   /**
-   * Add an edge at the origin to the adjacency list
+   * Add edges at the origin to the adjacency list
    */
-  void AddOriginEdge(baldr::GraphReader& graphreader,
-        const baldr::GraphId& edgeid, EdgeCost* edgecost);
+  void SetOrigin(baldr::GraphReader& graphreader,
+        const baldr::PathLocation& origin, EdgeCost* edgecost);
 
   /**
-   * Add a destination edge.
+   * Set the destination edge(s).
    */
-  void AddDestinationEdge(const baldr::GraphId& edgeid);
+  void SetDestination(const baldr::PathLocation& dest);
 
   /**
    * Test if the shortest path is found.
    */
   bool IsComplete(const baldr::GraphId& edgeid);
-
-  /**
-   * Clear the temporary information generated during path construction.
-   */
-  void Clear();
 
   /**
    * Form the path from the adjacency list.
