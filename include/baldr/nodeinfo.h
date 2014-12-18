@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
-#include "../midgard/pointll.h"
-#include "../midgard/util.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "graphid.h"
 
 using namespace valhalla::midgard;

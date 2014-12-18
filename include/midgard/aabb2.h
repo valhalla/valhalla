@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../midgard/point2.h"
+#include "midgard/point2.h"
 
 namespace valhalla{
 namespace midgard{

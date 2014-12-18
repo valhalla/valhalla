@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-#include "../midgard/pointll.h"
+#include "midgard/pointll.h"
 
 namespace valhalla{
 namespace baldr{

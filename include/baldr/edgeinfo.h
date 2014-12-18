@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include "../midgard/pointll.h"
-#include "../midgard/util.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "graphid.h"
 
 using namespace valhalla::midgard;

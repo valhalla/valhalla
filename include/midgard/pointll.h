@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MIDGARD_POINTLL_H_
 #define VALHALLA_MIDGARD_POINTLL_H_
 
-#include "../midgard/point2.h"
-#include "../midgard/util.h"
+#include "midgard/point2.h"
+#include "midgard/util.h"
 
 namespace valhalla{
 namespace midgard{

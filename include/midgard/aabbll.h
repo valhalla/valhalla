@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MIDGARD_AABBLL_H_
 #define VALHALLA_MIDGARD_AABBLL_H_
 
-#include "../midgard/aabb2.h"
-#include "../midgard/pointll.h"
+#include "midgard/aabb2.h"
+#include "midgard/pointll.h"
 
 namespace valhalla{
 namespace midgard{

@@ -1,9 +1,9 @@
 #ifndef VALHALLA_THOR_ASTARHEURISTIC_H_
 #define VALHALLA_THOR_ASTARHEURISTIC_H_
 
-#include "../midgard/distanceapproximator.h"
-#include "../midgard/pointll.h"
-#include "../midgard/util.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 
 namespace valhalla{
 namespace thor{
