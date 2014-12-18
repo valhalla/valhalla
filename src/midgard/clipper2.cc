@@ -1,7 +1,7 @@
-#include "geo/clipper2.h"
+#include "midgard/clipper2.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 Clipper2::Clipper2()
     : minx_(0),

@@ -56,20 +56,20 @@ include_HEADERS = \
 	include/baldr/nodeinfo.h \
 	include/baldr/location.h \
 	include/baldr/pathlocation.h \
-	include/geo/linesegment2.h \
-	include/geo/tiles.h \
-	include/geo/aabbll.h \
-	include/geo/polyline2.h \
-	include/geo/obb2.h \
-	include/geo/pointll.h \
-	include/geo/vector2.h \
-	include/geo/clipper2.h \
-	include/geo/aabb2.h \
-	include/geo/point2.h \
-	include/geo/util.h \
-	include/geo/distanceapproximator.h \
-	include/geo/ellipse.h \
-	include/geo/tilehierarchy.h \
+	include/midgard/linesegment2.h \
+	include/midgard/tiles.h \
+	include/midgard/aabbll.h \
+	include/midgard/polyline2.h \
+	include/midgard/obb2.h \
+	include/midgard/pointll.h \
+	include/midgard/vector2.h \
+	include/midgard/clipper2.h \
+	include/midgard/aabb2.h \
+	include/midgard/point2.h \
+	include/midgard/util.h \
+	include/midgard/distanceapproximator.h \
+	include/midgard/ellipse.h \
+	include/midgard/tilehierarchy.h \
 	include/thor/adjacencylist.h \
 	include/thor/astarheuristic.h \
 	include/thor/edgecost.h \
@@ -93,20 +93,20 @@ libvalhalla_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
-	src/geo/linesegment2.cc \
-	src/geo/tiles.cc \
-	src/geo/aabbll.cc \
-	src/geo/polyline2.cc \
-	src/geo/obb2.cc \
-	src/geo/pointll.cc \
-	src/geo/vector2.cc \
-	src/geo/clipper2.cc \
-	src/geo/aabb2.cc \
-	src/geo/point2.cc \
-	src/geo/util.cc \
-	src/geo/distanceapproximator.cc \
-	src/geo/ellipse.cc \
-	src/geo/tilehierarchy.cc \
+	src/midgard/linesegment2.cc \
+	src/midgard/tiles.cc \
+	src/midgard/aabbll.cc \
+	src/midgard/polyline2.cc \
+	src/midgard/obb2.cc \
+	src/midgard/pointll.cc \
+	src/midgard/vector2.cc \
+	src/midgard/clipper2.cc \
+	src/midgard/aabb2.cc \
+	src/midgard/point2.cc \
+	src/midgard/util.cc \
+	src/midgard/distanceapproximator.cc \
+	src/midgard/ellipse.cc \
+	src/midgard/tilehierarchy.cc \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \

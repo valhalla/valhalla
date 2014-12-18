@@ -1,15 +1,15 @@
-#ifndef VALHALLA_GEO_ELLIPSE_H_
-#define VALHALLA_GEO_ELLIPSE_H_
+#ifndef VALHALLA_MIDGARD_ELLIPSE_H_
+#define VALHALLA_MIDGARD_ELLIPSE_H_
 
 #include <math.h>
 
-#include "point2.h"
-#include "util.h"
-#include "linesegment2.h"
-#include "aabb2.h"
+#include "../midgard/aabb2.h"
+#include "../midgard/linesegment2.h"
+#include "../midgard/point2.h"
+#include "../midgard/util.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Ellipse
@@ -73,6 +73,6 @@ class Ellipse {
 }
 }
 
-#endif  // VALHALLA_GEO_ELLIPSE_H_
+#endif  // VALHALLA_MIDGARD_ELLIPSE_H_
 
 

@@ -1,7 +1,7 @@
-#include "geo/obb2.h"
+#include "midgard/obb2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
   OBB2::OBB2():extent0_(0),extent1_(0) { }
 
   void OBB2::Set(const Point2& a0, const Point2& a1,

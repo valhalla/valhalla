@@ -1,12 +1,13 @@
+#include "midgard/distanceapproximator.h"
+
+#include "midgard/constants.h"
+#include "midgard/pointll.h"
 #include "test.h"
 
-#include "include/config.h"
-#include "geo/constants.h"
-#include "geo/pointll.h"
-#include "geo/distanceapproximator.h"
+#include "config.h"
 
 using namespace std;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
 

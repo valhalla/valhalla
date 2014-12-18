@@ -1,11 +1,11 @@
-#ifndef VALHALLA_GEO_POINT2_H_
-#define VALHALLA_GEO_POINT2_H_
+#ifndef VALHALLA_MIDGARD_POINT2_H_
+#define VALHALLA_MIDGARD_POINT2_H_
 
 #include <math.h>
 #include <vector>
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 // Forward references
 class Vector2;
@@ -122,8 +122,6 @@ class Point2 {
    */
   Point2 MidPoint(const Point2& p1) const;
 
-  // The following methods are defined in geo.h
-
   /**
    * Add a vector to the current point.
    * @param   v  Vector to add to the current point.
@@ -170,4 +168,4 @@ class Point2 {
 }
 }
 
-#endif  // VALHALLA_GEO_POINT2_H_
+#endif  // VALHALLA_MIDGARD_POINT2_H_

@@ -1,8 +1,8 @@
 #include "test.h"
 
-#include "include/config.h"
-#include "geo/point2.h"
+#include "config.h"
 #include "baldr/graphid.h"
+#include "midgard/point2.h"
 
 using namespace std;
 using namespace valhalla::baldr;

@@ -1,13 +1,13 @@
-#ifndef VALHALLA_GEO_POLYLINE2_H_
-#define VALHALLA_GEO_POLYLINE2_H_
+#ifndef VALHALLA_MIDGARD_POLYLINE2_H_
+#define VALHALLA_MIDGARD_POLYLINE2_H_
 
-#include "point2.h"
-#include "aabb2.h"
-#include "clipper2.h"
-#include "linesegment2.h"
+#include "../midgard/aabb2.h"
+#include "../midgard/clipper2.h"
+#include "../midgard/linesegment2.h"
+#include "../midgard/point2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * 2-D polyline
@@ -100,4 +100,4 @@ protected:
 }
 }
 
-#endif  // VALHALLA_GEO_POLYLINE2_H_
+#endif  // VALHALLA_MIDGARD_POLYLINE2_H_

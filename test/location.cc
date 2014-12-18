@@ -1,11 +1,11 @@
 #include "test.h"
 
-#include "include/config.h"
-#include "include/baldr/location.h"
+#include "config.h"
+#include "baldr/location.h"
 
 using namespace std;
 using namespace valhalla::baldr;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
   void test_construction() {

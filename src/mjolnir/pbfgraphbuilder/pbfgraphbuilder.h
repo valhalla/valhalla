@@ -5,7 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include "geo/pointll.h"
+
+#include "midgard/pointll.h"
 #include "baldr/graphid.h"
 
 namespace valhalla {
@@ -13,7 +14,7 @@ namespace mjolnir {
 
 // OSM node
 struct OSMNode {
-  geo::PointLL latlng_;
+  midgard::PointLL latlng_;
   unsigned int uses_;
   std::vector<unsigned int>* edges_;
 
@@ -137,7 +138,7 @@ struct Edge {
   uint64_t osmwayid_;
   uint64_t sourcenode_;
   uint64_t targetnode_;
-  std::vector<geo::PointLL>* latlngs_;
+  std::vector<midgard::PointLL>* latlngs_;
 
   Edge()
     : osmwayid_(0),
@@ -146,9 +147,9 @@ struct Edge {
       latlngs_(nullptr) {
   }
 
-  void AddLL(const geo::PointLL& ll) {
+  void AddLL(const midgard::PointLL& ll) {
     if (latlngs_ == nullptr) {
-      latlngs_ = new std::vector<geo::PointLL>;
+      latlngs_ = new std::vector<midgard::PointLL>;
     }
     latlngs_->push_back(ll);
   }

@@ -1,11 +1,12 @@
+#include "midgard/vector2.h"
+
+#include "midgard/point2.h"
 #include "test.h"
 
-#include "include/config.h"
-#include "geo/point2.h"
-#include "geo/vector2.h"
+#include "config.h"
 
 using namespace std;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
 

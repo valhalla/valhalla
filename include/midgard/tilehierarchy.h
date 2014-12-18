@@ -1,15 +1,15 @@
-#ifndef VALHALLA_GEO_TILEHIERARCHY_H
-#define VALHALLA_GEO_TILEHIERARCHY_H
+#ifndef VALHALLA_MIDGARD_TILEHIERARCHY_H
+#define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
 #include <set>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "geo/tiles.h"
+#include "../midgard/tiles.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 
 /**
@@ -59,4 +59,4 @@ class TileHierarchy {
 }
 }
 
-#endif  // VALHALLA_GEO_TILEHIERARCHY_H
+#endif  // VALHALLA_MIDGARD_TILEHIERARCHY_H

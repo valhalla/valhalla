@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_NODEINFOBUILDER_H_
 #define VALHALLA_MJOLNIR_NODEINFOBUILDER_H_
 
-#include "geo/pointll.h"
+#include "../midgard/pointll.h"
 #include "baldr/graphid.h"
 #include "baldr/nodeinfo.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace valhalla{
 namespace mjolnir{

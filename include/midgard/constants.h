@@ -1,10 +1,10 @@
-#ifndef VALHALLA_GEO_CONSTANTS_H_
-#define VALHALLA_GEO_CONSTANTS_H_
+#ifndef VALHALLA_MIDGARD_CONSTANTS_H_
+#define VALHALLA_MIDGARD_CONSTANTS_H_
 
 #include <math.h>
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 // Time constants
 constexpr float kSecPerHour = 3600.0f;
@@ -26,5 +26,5 @@ constexpr float kEpsilon   = 0.000001f;
 
 }
 }
-#endif  // VALHALLA_GEO_CONSTANTS_H_
+#endif  // VALHALLA_MIDGARD_CONSTANTS_H_
 

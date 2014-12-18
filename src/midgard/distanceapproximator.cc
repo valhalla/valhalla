@@ -1,8 +1,9 @@
-#include "geo/distanceapproximator.h"
-#include "geo/constants.h"
+#include "midgard/distanceapproximator.h"
+
+#include "midgard/constants.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
   DistanceApproximator::DistanceApproximator():centerlat_(0),centerlng_(0),km_per_lng_degree_(0) { }
 
   DistanceApproximator::~DistanceApproximator() { }

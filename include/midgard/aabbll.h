@@ -1,11 +1,11 @@
-#ifndef VALHALLA_GEO_AABBLL_H_
-#define VALHALLA_GEO_AABBLL_H_
+#ifndef VALHALLA_MIDGARD_AABBLL_H_
+#define VALHALLA_MIDGARD_AABBLL_H_
 
-#include "aabb2.h"
-#include "pointll.h"
+#include "../midgard/aabb2.h"
+#include "../midgard/pointll.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Rectangular latitude, longitude region defined by its bounding box.
@@ -95,5 +95,5 @@ TODO - figure this out (how to use base class?
 }
 }
 
-#endif  // VALHALLA_GEO_AABBLL_H_
+#endif  // VALHALLA_MIDGARD_AABBLL_H_
 

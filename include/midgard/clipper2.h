@@ -1,13 +1,13 @@
-#ifndef VALHALLA_GEO_CLIPPER2_H_
-#define VALHALLA_GEO_CLIPPER2_H_
+#ifndef VALHALLA_MIDGARD_CLIPPER2_H_
+#define VALHALLA_MIDGARD_CLIPPER2_H_
 
 #include <vector>
 
-#include "aabb2.h"
-#include "point2.h"
+#include "../midgard/aabb2.h"
+#include "../midgard/point2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Clipping support. Clips a polygon or polyline to a rectangular
@@ -76,5 +76,5 @@ class Clipper2 {
 }
 }
 
-#endif  // VALHALLA_GEO_CLIPPER2_H_
+#endif  // VALHALLA_MIDGARD_CLIPPER2_H_
 

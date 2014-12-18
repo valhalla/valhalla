@@ -3,19 +3,19 @@
 
 #include "graphbuilder.h"
 
-#include "geo/pointll.h"
-#include "geo/aabbll.h"
-#include "geo/tiles.h"
-#include "geo/polyline2.h"
 #include "baldr/graphid.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 #include <algorithm>
 #include <string>
+#include "midgard/aabbll.h"
+#include "midgard/pointll.h"
+#include "midgard/polyline2.h"
+#include "midgard/tiles.h"
 
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {

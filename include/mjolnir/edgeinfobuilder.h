@@ -4,12 +4,12 @@
 #include <vector>
 #include <string>
 
-#include "geo/util.h"
-#include "geo/pointll.h"
+#include "../midgard/pointll.h"
+#include "../midgard/util.h"
 #include "baldr/graphid.h"
 #include "baldr/edgeinfo.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {

@@ -1,7 +1,7 @@
-#include "geo/aabb2.h"
+#include "midgard/aabb2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
   AABB2::AABB2()
       : minx_(0.0f),
         miny_(0.0f),

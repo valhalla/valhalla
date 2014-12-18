@@ -8,7 +8,7 @@ namespace baldr{
   Location::Location():stoptype_(StopType::BREAK){
   }
 
-  Location::Location(const geo::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
+  Location::Location(const midgard::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
   }
 
   Location::Location(const std::string geojson):stoptype_(StopType::BREAK){

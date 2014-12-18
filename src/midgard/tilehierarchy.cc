@@ -1,8 +1,9 @@
-#include "geo/tilehierarchy.h"
-#include "geo/pointll.h"
+#include "midgard/tilehierarchy.h"
+
+#include "midgard/pointll.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name, const Tiles& tiles)
   :level(level), name(name), tiles(tiles) {

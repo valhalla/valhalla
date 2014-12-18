@@ -1,14 +1,14 @@
-#ifndef VALHALLA_GEO_LINESEGMENT2_H_
-#define VALHALLA_GEO_LINESEGMENT2_H_
+#ifndef VALHALLA_MIDGARD_LINESEGMENT2_H_
+#define VALHALLA_MIDGARD_LINESEGMENT2_H_
 
 #include <math.h>
 #include <vector>
 
-#include "point2.h"
-#include "vector2.h"
+#include "../midgard/point2.h"
+#include "../midgard/vector2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Line segment in 2D
@@ -87,4 +87,4 @@ class LineSegment2 {
 }
 }
 
-#endif  // VALHALLA_GEO_LINESEGMENT2_H_
+#endif  // VALHALLA_MIDGARD_LINESEGMENT2_H_

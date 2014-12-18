@@ -9,15 +9,14 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 
-#include "geo/tilehierarchy.h"
-
+#include "midgard/pointll.h"
+#include "midgard/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "pbfgraphbuilder.h"
 
 // Use open source PBF reader from:
 //     https://github.com/CanalTP/libosmpbfreader
 #include "osmpbfreader.h"
-#include "geo/pointll.h"
 #include "luatagtransform.h"
 
 
@@ -141,7 +140,7 @@ class GraphBuilder {
   std::string input_file_;
 
   // List of the tile levels to be created
-  geo::TileHierarchy tile_hierarchy_;
+  midgard::TileHierarchy tile_hierarchy_;
 
 };
 

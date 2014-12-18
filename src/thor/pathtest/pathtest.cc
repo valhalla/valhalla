@@ -12,7 +12,7 @@
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::thor;
 

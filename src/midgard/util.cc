@@ -1,11 +1,10 @@
-#include "geo/util.h"
-#include "geo/constants.h"
-
+#include "midgard/util.h"
 #include <math.h>
 #include <stdlib.h>
+#include "midgard/constants.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 int GetTime(const float length, const float speed) {
   return (int)(length / (speed * kHourPerSec) + 0.5f);

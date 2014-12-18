@@ -1,13 +1,13 @@
 
-#ifndef VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
-#define VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
+#ifndef VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
+#define VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 
 #include <math.h>
 
-#include "pointll.h"
+#include "../midgard/pointll.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Provides distance approximation in latitude, longitude space. Approximates
@@ -83,5 +83,5 @@ private:
 }
 }
 
-#endif  // VALHALLA_GEO_DISTANCEAPPROXIMATOR_H_
+#endif  // VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 

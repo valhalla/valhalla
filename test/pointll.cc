@@ -1,10 +1,11 @@
+#include "midgard/pointll.h"
+
 #include "test.h"
 
-#include "include/config.h"
-#include "include/geo/pointll.h"
+#include "config.h"
 
 using namespace std;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
   void test_invalid() {

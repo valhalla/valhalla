@@ -1,14 +1,14 @@
 
-#ifndef VALHALLA_GEO_TILES_H_
-#define VALHALLA_GEO_TILES_H_
+#ifndef VALHALLA_MIDGARD_TILES_H_
+#define VALHALLA_MIDGARD_TILES_H_
 
 #include <list>
 #include <map>
 
-#include "aabb2.h"
+#include "../midgard/aabb2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * A class that provides a uniform (square) tiling system for a specified
@@ -220,4 +220,4 @@ class Tiles {
 }
 }
 
-#endif  // VALHALLA_GEO_TILES_H_
+#endif  // VALHALLA_MIDGARD_TILES_H_

@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "include/config.h"
+#include "config.h"
 #include "thor/edgestatus.h"
 
 using namespace std;

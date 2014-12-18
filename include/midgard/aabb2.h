@@ -1,11 +1,12 @@
-#ifndef VALHALLA_GEO_AABB2_H_
-#define VALHALLA_GEO_AABB2_H_
+#ifndef VALHALLA_MIDGARD_AABB2_H_
+#define VALHALLA_MIDGARD_AABB2_H_
 
 #include <vector>
-#include "point2.h"
+
+#include "../midgard/point2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Axis Aligned Bounding Box (2 dimensional)
@@ -163,4 +164,4 @@ class AABB2 {
 }
 }
 
-#endif  // VALHALLA_GEO_AABB2_H_
+#endif  // VALHALLA_MIDGARD_AABB2_H_
