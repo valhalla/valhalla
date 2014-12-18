@@ -54,6 +54,7 @@ test/pointll
 test/location
 test/tilehierarchy
 test/graphid
+test/edgeinfobuilder
 test/*.log
 test/*.trs
 
