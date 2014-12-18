@@ -1,7 +1,7 @@
 #include "test.h"
 
 #include <vector>
-#include "include/config.h"
+#include "config.h"
 #include "thor/edgelabel.h"
 #include "thor/adjacencylist.h"
 

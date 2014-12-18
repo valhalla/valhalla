@@ -4,13 +4,13 @@
 #include <queue>
 #include <boost/program_options.hpp>
 
+#include "midgard/util.h"
 #include "config.h"
 
-#include "geo/util.h"
 #include "thor/edgelabel.h"
 #include "thor/adjacencylist.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;

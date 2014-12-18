@@ -1,11 +1,11 @@
-#ifndef VALHALLA_GEO_POINTLL_H_
-#define VALHALLA_GEO_POINTLL_H_
+#ifndef VALHALLA_MIDGARD_POINTLL_H_
+#define VALHALLA_MIDGARD_POINTLL_H_
 
-#include "point2.h"
-#include "util.h"
+#include "midgard/point2.h"
+#include "midgard/util.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Latitude, Longitude point. Derives from Point2 and allows access methods
@@ -125,4 +125,4 @@ class PointLL : public Point2 {
 }
 }
 
-#endif  // VALHALLA_GEO_POINTLL_H_
+#endif  // VALHALLA_MIDGARD_POINTLL_H_

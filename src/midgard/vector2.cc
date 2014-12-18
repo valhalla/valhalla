@@ -1,7 +1,7 @@
-#include "geo/vector2.h"
+#include "midgard/vector2.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 Vector2::Vector2()
     : x_(0.0f),

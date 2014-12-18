@@ -3,7 +3,8 @@
 
 #include <string>
 #include <cstdint>
-#include "geo/pointll.h"
+
+#include "midgard/pointll.h"
 
 namespace valhalla{
 namespace baldr{
@@ -27,7 +28,7 @@ struct Location {
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
-  Location(const geo::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
+  Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
 
   /**
    * Constructor.
@@ -36,14 +37,14 @@ struct Location {
   Location(const std::string geojson);
 
   //coordinates of the location as used for routing
-  geo::PointLL latlng_;
+  midgard::PointLL latlng_;
   //type of location for routing
   StopType stoptype_;
 
   //TODO: fill these out in constructors and add getters and setters
 /*
   //the spot where the feature is on the map
-  geo::PointLL display_latlng_;
+  midgard::PointLL display_latlng_;
   //name of the location (useful for POIs)
   std::string name_;
   //address of the location, probably should be its own more broken up structure

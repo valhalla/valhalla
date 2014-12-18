@@ -1,7 +1,7 @@
-#include "geo/ellipse.h"
+#include "midgard/ellipse.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
   Ellipse::Ellipse():s(0), c(0) {
     center_.Set(0.0f, 0.0f);
     a = b = 0.0f;

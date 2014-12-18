@@ -1,7 +1,7 @@
-#include "geo/linesegment2.h"
+#include "midgard/linesegment2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
   LineSegment2::LineSegment2() {
     a_.Set(0.0f, 0.0f);

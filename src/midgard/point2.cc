@@ -1,10 +1,12 @@
+#include "midgard/point2.h"
+
 #include <iostream>
-#include "geo/point2.h"
-#include "geo/vector2.h"
-#include "geo/util.h"
+
+#include "midgard/util.h"
+#include "midgard/vector2.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 Point2::Point2()
     : x_(0.0f),

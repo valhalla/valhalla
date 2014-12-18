@@ -1,7 +1,7 @@
-#include "geo/aabbll.h"
+#include "midgard/aabbll.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
   AABBLL::AABBLL() {
     minx_ = 180.0f;      // Longitude
     miny_ = -90.0f;      // Latitude

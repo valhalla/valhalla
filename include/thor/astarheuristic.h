@@ -1,9 +1,9 @@
 #ifndef VALHALLA_THOR_ASTARHEURISTIC_H_
 #define VALHALLA_THOR_ASTARHEURISTIC_H_
 
-#include "geo/util.h"
-#include "geo/pointll.h"
-#include "geo/distanceapproximator.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 
 namespace valhalla{
 namespace thor{
@@ -35,7 +35,7 @@ class AStarHeuristic {
    *                 destination, but keep close to a reasonable true
    *                 cost so that performance is kept high.
    */
-  void Init(const geo::PointLL& ll, const float factor);
+  void Init(const midgard::PointLL& ll, const float factor);
 
   /**
    * Get the A* heuristic given the current lat,lng.
@@ -43,10 +43,10 @@ class AStarHeuristic {
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */
-  float Get(const geo::PointLL& ll);
+  float Get(const midgard::PointLL& ll);
 
  private:
-  geo::DistanceApproximator distapprox_;  // Distance approximation
+  midgard::DistanceApproximator distapprox_;  // Distance approximation
   float costfactor_;                      // Cost factor - ensures the cost
                                           // underestimated the true cost.
 };

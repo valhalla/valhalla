@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-#include "geo/util.h"
+#include "midgard/util.h"
 #include "graphid.h"
 
 namespace valhalla {

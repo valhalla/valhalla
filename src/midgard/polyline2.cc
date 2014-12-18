@@ -1,7 +1,7 @@
-#include "geo/polyline2.h"
+#include "midgard/polyline2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
   Polyline2::Polyline2() { }
 

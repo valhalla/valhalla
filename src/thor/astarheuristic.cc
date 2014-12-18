@@ -1,6 +1,6 @@
 #include "thor/astarheuristic.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace valhalla{
 namespace thor{

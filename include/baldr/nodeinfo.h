@@ -1,11 +1,11 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
-#include "geo/util.h"
-#include "geo/pointll.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 #include "graphid.h"
 
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {

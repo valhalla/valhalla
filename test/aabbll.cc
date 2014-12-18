@@ -1,13 +1,14 @@
+#include "midgard/aabbll.h"
+
+#include "midgard/constants.h"
+#include "midgard/point2.h"
 #include "test.h"
 
-#include "include/config.h"
-#include "geo/point2.h"
-#include "geo/aabbll.h"
-#include "geo/constants.h"
+#include "config.h"
 
 
 using namespace std;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
 

@@ -1,13 +1,14 @@
-#include "geo/pointll.h"
-#include "geo/distanceapproximator.h"
-#include "geo/vector2.h"
+#include "midgard/pointll.h"
+
+#include "midgard/distanceapproximator.h"
+#include "midgard/vector2.h"
 
 namespace {
   const float INVALID = 0xBADBADBAD;
 }
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 PointLL::PointLL()
     : Point2(INVALID, INVALID) {

@@ -1,8 +1,8 @@
-#ifndef VALHALLA_GEO_UTIL_H_
-#define VALHALLA_GEO_UTIL_H_
+#ifndef VALHALLA_MIDGARD_UTIL_H_
+#define VALHALLA_MIDGARD_UTIL_H_
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 // Intersection cases.
 enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
@@ -43,4 +43,4 @@ float sqr(const float a);
 
 }
 }
-#endif  // VALHALLA_GEO_UTIL_H_
+#endif  // VALHALLA_MIDGARD_UTIL_H_

@@ -13,12 +13,12 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "geo/point2.h"
-#include "geo/aabb2.h"
-#include "geo/polyline2.h"
+#include "midgard/point2.h"
+#include "midgard/aabb2.h"
+#include "midgard/polyline2.h"
 
 namespace bpo = boost::program_options;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 boost::filesystem::path config_file_path;
 std::string input_file;

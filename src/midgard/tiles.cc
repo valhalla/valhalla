@@ -1,7 +1,7 @@
-#include "geo/tiles.h"
+#include "midgard/tiles.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 Tiles::Tiles(const AABB2& bounds, const float tilesize) {
   tilebounds_ = bounds;

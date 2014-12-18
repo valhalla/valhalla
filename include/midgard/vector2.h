@@ -1,14 +1,14 @@
-#ifndef VALHALLA_GEO_VECTOR2_H_
-#define VALHALLA_GEO_VECTOR2_H_
+#ifndef VALHALLA_MIDGARD_VECTOR2_H_
+#define VALHALLA_MIDGARD_VECTOR2_H_
 
 #include <stdarg.h>
 #include <math.h>
 
-#include "constants.h"
-#include "point2.h"
+#include "midgard/constants.h"
+#include "midgard/point2.h"
 
 namespace valhalla {
-namespace geo {
+namespace midgard {
 
 /**
  * 2D vector class. float x,y components.
@@ -253,4 +253,4 @@ Vector2 operator *(float s, const Vector2 &v);
 }
 }
 
-#endif  // VALHALLA_GEO_VECTOR2_H_
+#endif  // VALHALLA_MIDGARD_VECTOR2_H_

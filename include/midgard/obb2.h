@@ -1,14 +1,14 @@
-#ifndef VALHALLA_GEO_OBB2_H_
-#define VALHALLA_GEO_OBB2_H_
+#ifndef VALHALLA_MIDGARD_OBB2_H_
+#define VALHALLA_MIDGARD_OBB2_H_
 
 #include <stdarg.h>
 #include <math.h>
 
-#include "point2.h"
-#include "vector2.h"
+#include "midgard/point2.h"
+#include "midgard/vector2.h"
 
 namespace valhalla{
-namespace geo{
+namespace midgard{
 
 /**
  * Oriented bounding box (2-D).
@@ -40,4 +40,4 @@ class OBB2 {
 }
 }
 
-#endif  // VALHALLA_GEO_OBB2_H_
+#endif  // VALHALLA_MIDGARD_OBB2_H_

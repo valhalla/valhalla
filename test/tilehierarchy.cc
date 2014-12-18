@@ -1,13 +1,13 @@
-#include "test.h"
-#include "include/config.h"
+#include "midgard/tilehierarchy.h"
 
-#include "include/geo/tilehierarchy.h"
+#include "test.h"
+#include "config.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 using namespace std;
-using namespace valhalla::geo;
+using namespace valhalla::midgard;
 
 namespace {
   void test_parse() {
