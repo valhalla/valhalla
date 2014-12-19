@@ -30,34 +30,57 @@ class NodeInfo {
   const PointLL& latlng() const;
 
   /**
+   * Get the GraphId of the node on the upward hierarchy that this
+   * node shares. Is an empty GraphId if no connection occurs.
+   * TODO - set a flag?
+   * @return  Returns the GraphId of the upward connection.
+   */
+//  const GraphId& upnode() const;
+
+  /**
    * Get the index of the first outbound edge from this node. Since
    * all outbound edges are in the same tile/level as the node we
    * only need an index within the tile.
    * @return  Returns the GraphId of the first outbound edge.
    */
-  unsigned int edge_index() const;
+  uint32_t edge_index() const;
 
   /**
    * Get the number of outbound directed edges.
    * @return  Returns the number of outbound directed edges.
    */
-  unsigned int edge_count() const;
+  uint32_t edge_count() const;
+
+  /**
+   * Get the best road class of the outbound directed edges.
+   * TODO - should use enum?
+   * @return   Returns road class.
+   */
+  uint32_t bestrc() const;
 
  protected:
   // Latitude, longitude position of the node.
   PointLL latlng_;
 
-  // TODO - add attribution and compress
+  // Upward transition node at the next hierarchy level
+  // TODO - evaluate adding a directed edge instead. Makes the hierarchy
+  // builder more complex (and maybe PathAlgorithm) but would use less
+  // memory.
+//  baldr::GraphId upnode_;
 
-  // Index within the node's tile of its first directed edge outbound
-  unsigned int edge_index_;
-
-  // Number of outbound edges
-  // TODO - add this to a bit field to compress with other node data.
-  // Rather than number of driveable, we can probably sort by driveability
-  // to optimized for drving routes - when the first non driveable edge is
-  // encountered the successive edges can be skipped
-  unsigned int edge_count_;
+  // Node attributes.
+  // TODO - what is the max. number of edges within the tile?
+  // TODO - do we want/need number of driveable? We can probably sort by
+  // driveability to optimize for driving routes - when the first non
+  // driveable edge is encountered the successive edges can be skipped
+  struct NodeAttributes {
+    uint32_t edge_index_  : 18; // Index within the node's tile of its first
+                                // outbound directed edge
+    uint32_t edge_count_   : 5; // Number of outbound edges
+    uint32_t bestrc_       : 1; // Best directed edge road class
+    uint32_t spare         : 8;
+  };
+  NodeAttributes attributes_;
 };
 
 }

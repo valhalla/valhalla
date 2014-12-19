@@ -3,21 +3,35 @@
 namespace valhalla {
 namespace baldr {
 
-NodeInfo::NodeInfo()
-    : edge_count_(0) {
+// Default constructor
+NodeInfo::NodeInfo() {
   latlng_.Set(0.0f, 0.0f);
 }
 
+// Get the latitude, longitude
 const PointLL& NodeInfo::latlng() const {
   return latlng_;
 }
 
-unsigned int NodeInfo::edge_index() const {
-  return edge_index_;
+// Get the GraphId of the node that makes an upward transition
+// TODO - do we want this?
+//const GraphId& NodeInfo::upnode() const {
+//  return upnode_;
+//}
+
+// Get the index in this tile of the first outbound directed edge
+uint32_t NodeInfo::edge_index() const {
+  return attributes_.edge_index_;
 }
 
-unsigned int NodeInfo::edge_count() const {
-  return edge_count_;
+// Get the number of outbound edges from this node.
+uint32_t NodeInfo::edge_count() const {
+  return attributes_.edge_count_;
+}
+
+// Get the best road class of any outbound edges.
+uint32_t NodeInfo::bestrc() const {
+  return attributes_.bestrc_;
 }
 
 }
