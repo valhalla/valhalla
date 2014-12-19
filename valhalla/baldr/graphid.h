@@ -8,13 +8,16 @@ namespace baldr {
 
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
- * Includes the tile Id, hierarchy level and a unique identifier within the
- * level.
+ * Includes the tile Id, hierarchy level, and a unique identifier within
+ * the tile/level.
+ * TODO - currently the Ids are indexes into the node and directed edge
+ * "lists" for the tile/level. May need to create persistent Ids at some
+ * point.
  * @author  David W. Nesbitt
  */
 class GraphId {
  public:
-  /**public:
+  /**
    * Default constructor
    */
   GraphId();
@@ -25,8 +28,8 @@ class GraphId {
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level.
    */
-  GraphId(const unsigned int tileid, const unsigned int level,
-          const unsigned int id);
+  GraphId(const uint32_t tileid, const uint32_t level,
+          const uint64_t id);
 
   /**
    * Copy constructor.
@@ -44,19 +47,19 @@ class GraphId {
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
-  unsigned int tileid() const;
+  uint32_t tileid() const;
 
   /**
    * Gets the hierarchy level.
    * @return   Returns the level.
    */
-  unsigned int level() const;
+  uint32_t level() const;
 
   /**
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  unsigned int id() const;
+  uint64_t id() const;
 
   /**
    * Convenience method to set individual graph Id elements.
@@ -64,8 +67,8 @@ class GraphId {
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level
    */
-  void Set(const unsigned int tileid, const unsigned int level,
-           const unsigned int id);
+  void Set(const uint32_t tileid, const uint32_t level,
+           const uint64_t id);
 
   /**
    * Post increments the id.
