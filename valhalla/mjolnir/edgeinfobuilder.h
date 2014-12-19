@@ -8,8 +8,10 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/exitsign.h>
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -48,7 +50,21 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
    */
-  void set_nameindexes(const std::vector<uint32_t>& nameindexes);
+  void set_name_indexes(const std::vector<uint32_t>& nameindexes);
+
+  // Returns the size in bytes of this object.
+  std::size_t SizeOf() const;
+
+ private:
+
+  // List of roadname indexes
+  std::vector<uint32_t> name_indexes_;
+
+  // Lat,lng shape of the edge
+  std::vector<PointLL> shape_;
+
+  // List of exit signs (type and index)
+  std::vector<ExitSign> exit_signs_;
 
 };
 

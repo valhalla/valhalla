@@ -334,6 +334,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     GraphTileBuilder graphtile;
     // TODO - initial map size - use node count*4 ?
     std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+    std::unordered_map<std::string, uint32_t> text_index_map;
 
     // Iterate through the nodes
     unsigned int directededgecount = 0;
