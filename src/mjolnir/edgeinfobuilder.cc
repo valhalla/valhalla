@@ -28,13 +28,25 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 }
 
 // Set the indexes to names used by this edge. TODO - move?
-void EdgeInfoBuilder::set_nameindexes(
+void EdgeInfoBuilder::set_name_indexes(
     const std::vector<uint32_t>& nameindexes) {
-  nameindexes_.clear();
+  name_indexes_.clear();
   if (!nameindexes.empty()) {
-    nameindexes_.insert(nameindexes_.end(), nameindexes.begin(),
+    name_indexes_.insert(name_indexes_.end(), nameindexes.begin(),
                         nameindexes.end());
   }
+}
+
+std::size_t EdgeInfoBuilder::SizeOf() const {
+  std::size_t size = 0;
+  size += sizeof(GraphId);                           // nodea_
+  size += sizeof(GraphId);                           // nodeb_
+  size += sizeof(std::size_t);                       // shape_ size
+  size += (shape_.size() * sizeof(PointLL));         // shape_
+  size += sizeof(std::size_t);                       // nameindexes_ size
+  size += (name_indexes_.size() * sizeof(uint32_t));  // nameindexes_
+
+  return size;
 }
 
 }

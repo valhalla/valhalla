@@ -22,7 +22,7 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_edgeinfo_offset(const unsigned int edgeinfo_offset);
 
   // Sets the offset to the name list.
-  void set_namelist_offset(const unsigned int namelist_offset);
+  void set_textlist_offset(const unsigned int textlist_offset);
 
 };
 

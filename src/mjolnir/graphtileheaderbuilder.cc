@@ -26,9 +26,9 @@ void GraphTileHeaderBuilder::set_edgeinfo_offset(
 }
 
 // Sets the offset to the name list.
-void GraphTileHeaderBuilder::set_namelist_offset(
-    const unsigned int namelist_offset) {
-  namelist_offset_ = namelist_offset;
+void GraphTileHeaderBuilder::set_textlist_offset(
+    const unsigned int textlist_offset) {
+  textlist_offset_ = textlist_offset;
 }
 
 }
