@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
 AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@ 
+VALHALLA_LDFLAGS =
+VALHALLA_CPPFLAGS =
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -65,8 +67,8 @@ libvalhalla_midgard_la_SOURCES = \
 	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
 	src/midgard/tilehierarchy.cc 
-libvalhalla_midgard_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) 
+libvalhalla_midgard_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 
 # tests
 check_PROGRAMS = \
@@ -80,32 +82,32 @@ check_PROGRAMS = \
 	test/pointll \
 	test/tilehierarchy 
 test_point2_SOURCES = test/point2.cc test/test.cc
-test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
-test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_distanceapproximator_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_aabb2_SOURCES = test/aabb2.cc test/test.cc
-test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabb2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_aabb2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
-test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_linesegment2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_aabbll_SOURCES = test/aabbll.cc test/test.cc
-test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_aabbll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_vector2_SOURCES = test/vector2.cc test/test.cc
-test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_vector2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_polyline2_SOURCES = test/polyline2.cc test/test.cc
-test_polyline2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_polyline2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_polyline2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_polyline2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_pointll_SOURCES = test/pointll.cc test/test.cc
-test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_pointll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_pointll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
-test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_tilehierarchy_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_tilehierarchy_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
