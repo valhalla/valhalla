@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = -I m4
 AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
 AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
 AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@
+VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -55,19 +57,19 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc 
-libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @VALHALLA_MIDGARD_LIB@
+libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
 # tests
 check_PROGRAMS = \
 	test/location \
 	test/graphid 
 test_location_SOURCES = test/location.cc test/test.cc
-test_location_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ libvalhalla_baldr.la
+test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
-test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_graphid_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ libvalhalla_baldr.la
+test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_graphid_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

@@ -9,7 +9,7 @@ AC_DEFUN([CHECK_VALHALLA_MIDGARD],
 			VALHALLA_MIDGARD_LDFLAGS=""
 		else
 			VALHALLA_MIDGARD_CPPFLAGS="-I$withval/include -I$withval"
-			VALHALLA_MIDGARD_LDFLAGS="-L$withval/lib -L$withval/.libs"
+			VALHALLA_MIDGARD_LDFLAGS="-L$withval/lib"
 		fi
 	],
 	[
@@ -28,9 +28,9 @@ AC_DEFUN([CHECK_VALHALLA_MIDGARD],
 
         AC_CACHE_CHECK(whether the valhalla::midgard library is available, ax_cv_valhalla_midgard,
         	[AC_LANG_PUSH([C++])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/midgard/util.h>]],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/midgard/vector2.h>]],
 			[[using namespace valhalla::midgard;
-			FastInvSqrt(7.7f);
+			Vector2(0.0f, 0.0f);
 			return 0;]])],
 			ax_cv_valhalla_midgard=yes, ax_cv_valhalla_midgard=no)
 		AC_LANG_POP([C++])
@@ -39,7 +39,7 @@ AC_DEFUN([CHECK_VALHALLA_MIDGARD],
 	if test "x$ax_cv_valhalla_midgard" = "xyes"; then
 		AC_DEFINE(HAVE_VALHALLA_MIDGARD,,[define if the valhalla::midgard library is available])
 	else
-		AC_MSG_ERROR(Could not link against valhalla_midgard!)
+		AC_MSG_ERROR(Could not find valhalla_midgard!)
 	fi
 
 	AC_CHECK_LIB(valhalla_midgard, exit, [VALHALLA_MIDGARD_LIB="-lvalhalla_midgard"; AC_SUBST(VALHALLA_MIDGARD_LIB) link_midgard="yes"; break], [link_midgard="no"])
