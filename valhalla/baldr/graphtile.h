@@ -1,11 +1,11 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
-#include "graphid.h"
-#include "graphtileheader.h"
-#include "directededge.h"
-#include "nodeinfo.h"
-#include "edgeinfo.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/edgeinfo.h>
 
 namespace valhalla {
 namespace baldr {

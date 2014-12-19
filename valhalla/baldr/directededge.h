@@ -2,7 +2,7 @@
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
 #include <valhalla/midgard/util.h>
-#include "graphid.h"
+#include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
 namespace baldr {

@@ -2,8 +2,8 @@
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
 #include <string>
-#include "baldr/location.h"
-#include "baldr/graphid.h"
+#include <valhalla/baldr/location.h>
+#include <valhalla/baldr/graphid.h>
 
 namespace valhalla{
 namespace baldr{

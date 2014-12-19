@@ -6,7 +6,7 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
-#include "graphid.h"
+#include <valhalla/baldr/graphid.h>
 
 using namespace valhalla::midgard;
 

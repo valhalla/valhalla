@@ -3,8 +3,8 @@
 
 #include <map>
 
-#include "graphid.h"
-#include "graphtile.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
 
 namespace valhalla {
 namespace baldr {
