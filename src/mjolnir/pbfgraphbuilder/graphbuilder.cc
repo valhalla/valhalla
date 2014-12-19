@@ -123,7 +123,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   for (const auto& tag : results) {
 
-    if ( tag.first == "functional_road_class" )
+    if ( tag.first == "road_class" )
       w.road_class_ = (unsigned short) std::stoi(tag.second);
 
     else if ( tag.first == "auto_forward" )
@@ -134,13 +134,21 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.auto_backward_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "bike_backward" )
       w.bike_backward_ = (tag.second == "true" ? true : false);
-
     else if ( tag.first == "pedestrian" )
       w.pedestrian_ = (tag.second == "true" ? true : false);
+
+    else if ( tag.first == "private" )
+      w.private_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "use" )
+      w.use_ = (unsigned short) std::stoi(tag.second);
+    else if ( tag.first == "no_thru_traffic_" )
+      w.no_thru_traffic_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "oneway" )
       w.oneway_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "roundabout" )
       w.roundabout_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "link" )
+      w.link_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "ferry" )
       w.ferry_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "rail" )
@@ -150,11 +158,11 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.name_ = tag.second;
     else if ( tag.first == "name:en" )
       w.name_en_ = tag.second;
+    else if ( tag.first == "alt_name" )
+      w.alt_name_ = tag.second;
 
-    else if ( tag.first == "maxspeed" )
-      w.maxspeed_ = (unsigned short) std::stoi(tag.second);
-    else if ( tag.first == "minspeed" )
-      w.minspeed_ = (unsigned short) std::stoi(tag.second);
+    else if ( tag.first == "speed" )
+      w.speed = (unsigned short) std::stoi(tag.second);
 
     else if ( tag.first == "ref" )
       w.ref_ = tag.second;
@@ -171,10 +179,11 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.tunnel_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "toll" )
       w.toll_ = (tag.second == "true" ? true : false);
+    else if ( tag.first == "bridge" )
+      w.bridge_ = (tag.second == "true" ? true : false);
 
     else if ( tag.first == "bike_network_mask" )
       w.bike_network_mask_ = (unsigned short) std::stoi(tag.second);
-
     else if ( tag.first == "bike_national_ref" )
       w.bike_national_ref_ = tag.second;
     else if ( tag.first == "bike_regional_ref" )
@@ -182,8 +191,18 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if ( tag.first == "bike_local_ref" )
       w.bike_local_ref_ = tag.second;
 
-    // if (osmid == 368034 || osmid == 4781367)
+    else if ( tag.first == "destination" )
+      w.destination_ = tag.second;
+    else if ( tag.first == "destination:ref" )
+      w.destination_ref_ = tag.second;
+    else if ( tag.first == "destination:ref:to" )
+      w.destination_ref_to_ = tag.second;
+    else if ( tag.first == "junction_ref" )
+      w.junction_ref_ = tag.second;
+
+    // if (osmid == 368034)   //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
     //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+
   }
 
   ways_.push_back(w);
@@ -222,6 +241,7 @@ void GraphBuilder::SetNodeUses() {
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
   unsigned int edgeindex = 0;
+  unsigned int wayindex = 0;
   uint64_t target, current;
   for (auto way : ways_) {
     // TODO - memory use? Delete temporary edges?
@@ -230,6 +250,7 @@ void GraphBuilder::ConstructEdges() {
     OSMNode& edgestartnode = nodes_[current];
     edge->sourcenode_ = current;
     edge->AddLL(edgestartnode.latlng_);
+    edge->wayindex_ = wayindex;
     for (size_t i = 1, n = way.nodelist_.size(); i < n; i++) {
       // Add the node lat,lng to the edge shape
       current = way.nodelist_[i];
@@ -250,9 +271,12 @@ void GraphBuilder::ConstructEdges() {
         edge = new Edge;
         edge->sourcenode_ = current;
         edgestartnode = node;
+        edge->wayindex_ = wayindex;
+
         edgeindex++;
       }
     }
+    wayindex++;
   }
   std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
@@ -357,13 +381,60 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         auto nodeb = node_graphids_[edge.targetnode_];
 
         directededge.set_endnode(nodeb);
-        directededge.set_speed(65.0f);    // KPH
 
         // Compute length from the latlngs.
         float length = node.latlng_.Length(*edge.latlngs_);
         directededge.set_length(length);
 
-        // TODO - add other attributes
+        OSMWay &w = ways_[edge.wayindex_];
+
+        directededge.set_class(w.road_class_);
+        directededge.set_use(w.use_);
+        directededge.set_use(w.link_);
+        directededge.set_speed(w.speed);    // KPH
+
+        directededge.set_ferry(w.ferry_);
+        directededge.set_railferry(w.rail_);
+        directededge.set_toll(w.toll_);
+        directededge.set_private(w.private_);
+        directededge.set_unpaved(w.surface_);
+        directededge.set_tunnel(w.tunnel_);
+
+        //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
+      /*  if (w.osmwayid_ == 368034)
+        {
+            std::cout << edge.sourcenode_ << " "
+                << edge.targetnode_ << " "
+                << w.auto_forward_ << " "
+                << w.pedestrian_ << " "
+                << w.bike_forward_ << " "
+                << w.auto_backward_ << " "
+                << w.pedestrian_ << " "
+                << w.bike_backward_ << std::endl;
+
+        }*/
+
+        if (edge.sourcenode_ == osmnodeid) { //forward direction
+
+          directededge.set_caraccess(true, false, w.auto_forward_);
+          directededge.set_pedestrianaccess(true, false, w.pedestrian_);
+          directededge.set_bicycleaccess(true, false, w.bike_forward_);
+
+          directededge.set_caraccess(false, true, w.auto_backward_);
+          directededge.set_pedestrianaccess(false, true, w.pedestrian_);
+          directededge.set_bicycleaccess(false, true, w.bike_backward_);
+
+        } else { //reverse direction.  Must flip in relation to the drawing of the way.
+
+          directededge.set_caraccess(true, false, w.auto_backward_);
+          directededge.set_pedestrianaccess(true, false, w.pedestrian_);
+          directededge.set_bicycleaccess(true, false, w.bike_backward_);
+
+          directededge.set_caraccess(false, true, w.auto_forward_);
+          directededge.set_pedestrianaccess(false, true, w.pedestrian_);
+          directededge.set_bicycleaccess(false, true, w.bike_forward_);
+
+        }
 
         // Check if we need to add edge info
         auto node_pair = ComputeNodePair(nodea, nodeb);
