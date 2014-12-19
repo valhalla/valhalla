@@ -1,4 +1,4 @@
-package valhalla;
+package valhalla.odin;
 
 message TripPath {
 
