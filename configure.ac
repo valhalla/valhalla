@@ -1,14 +1,14 @@
-AC_INIT([valhalla],
+AC_INIT([baldr],
 	[0.0.1],
-	[https://github.com/mapzen/valhalla/issues],
-	[valhalla-0.0.1],
-	[https://github.com/mapzen/valhalla])
+	[https://github.com/valhalla/baldr/issues],
+	[baldr-0.0.1],
+	[https://github.com/valhalla/baldr])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 
 AM_SILENT_RULES([yes])
-AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_HEADERS([valhalla/config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_PROG_CXX
@@ -21,29 +21,11 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# check for protocol buffers compiler and libraries
-REQUIRE_PROTOC
-
-# check for SQLite, which we use for HTTP cache information
-AX_LIB_SQLITE3([3.6.16])
-AM_CONDITIONAL([HAVE_SQLITE3], [test -n "$SQLITE3_VERSION"])
+# require other valhalla dependencies
+CHECK_VALHALLA_MIDGARD
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
-AX_BOOST_PROGRAM_OPTIONS
-AX_BOOST_SYSTEM
-AX_BOOST_FILESYSTEM
-
-# check for Lua libraries and headers
-AX_PROG_LUA([5.2],[],[
-    AX_LUA_HEADERS([
-        AX_LUA_LIBS([
-        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
-    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
-],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
-
-# check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 2.1.10 libcurl >= 7.19.5])
 
 # optionally enable coverage information
 CHECK_COVERAGE

@@ -1,6 +1,5 @@
 #include "test.h"
 
-#include "config.h"
 #include "baldr/location.h"
 
 using namespace std;
