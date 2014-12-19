@@ -49,7 +49,7 @@ class EdgeStatus {
   // TODO - compare performance of unordered_map (or other containers)
   // NOTE - will have lots of insert which can be time consuming in
   // hash maps
-  std::map<baldr::GraphId, EdgeStatusType> edgestatus_;
+  std::map<uint64_t, EdgeStatusType> edgestatus_;
 };
 
 }

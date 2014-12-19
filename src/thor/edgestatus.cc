@@ -14,11 +14,11 @@ void EdgeStatus::Init() {
 
 void EdgeStatus::Set(const baldr::GraphId& edgeid,
                      const EdgeStatusType status) {
-  edgestatus_.emplace(edgeid, status);
+  edgestatus_.emplace(edgeid.value(), status);
 }
 
 EdgeStatusType EdgeStatus::Get(const baldr::GraphId& edgeid) const {
-  auto p = edgestatus_.find(edgeid);
+  auto p = edgestatus_.find(edgeid.value());
   return (p == edgestatus_.end()) ? kUnreached : p->second;
 }
 
