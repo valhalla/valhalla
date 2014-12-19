@@ -8,8 +8,8 @@ AC_DEFUN([CHECK_VALHALLA_MIDGARD],
 			VALHALLA_MIDGARD_CPPFLAGS=""
 			VALHALLA_MIDGARD_LDFLAGS=""
 		else
-			VALHALLA_MIDGARD_CPPFLAGS="-I$withval/include"
-			VALHALLA_MIDGARD_LDFLAGS="-L$withval/lib"
+			VALHALLA_MIDGARD_CPPFLAGS="-I$withval/include -I$withval"
+			VALHALLA_MIDGARD_LDFLAGS="-L$withval/lib -L$withval/.libs"
 		fi
 	],
 	[
