@@ -3,6 +3,7 @@ machine:
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo add-apt-repository -y ppa:chris-lea/zeromq
     - sudo apt-get update -qq
 
   environment:
