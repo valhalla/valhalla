@@ -1,12 +1,11 @@
-#include "midgard/aabb2.h"
+#include "valhalla/midgard/aabb2.h"
 
 #include "test.h"
 
-#include "config.h"
 #include <vector>
 
-#include "midgard/point2.h"
-#include "midgard/vector2.h"
+#include "valhalla/midgard/point2.h"
+#include "valhalla/midgard/vector2.h"
 
 using namespace std;
 using namespace valhalla::midgard;

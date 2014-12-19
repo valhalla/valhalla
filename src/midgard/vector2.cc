@@ -1,4 +1,4 @@
-#include "midgard/vector2.h"
+#include "valhalla/midgard/vector2.h"
 
 namespace valhalla {
 namespace midgard {

@@ -1,4 +1,4 @@
-#include "midgard/polyline2.h"
+#include "valhalla/midgard/polyline2.h"
 
 namespace valhalla{
 namespace midgard{

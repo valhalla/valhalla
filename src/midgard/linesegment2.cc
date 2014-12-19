@@ -1,4 +1,4 @@
-#include "midgard/linesegment2.h"
+#include "valhalla/midgard/linesegment2.h"
 
 namespace valhalla{
 namespace midgard{

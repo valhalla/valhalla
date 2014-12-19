@@ -1,4 +1,4 @@
-#include "midgard/obb2.h"
+#include "valhalla/midgard/obb2.h"
 
 namespace valhalla{
 namespace midgard{

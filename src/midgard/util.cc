@@ -1,7 +1,7 @@
-#include "midgard/util.h"
+#include "valhalla/midgard/util.h"
 #include <math.h>
 #include <stdlib.h>
-#include "midgard/constants.h"
+#include "valhalla/midgard/constants.h"
 
 namespace valhalla{
 namespace midgard{

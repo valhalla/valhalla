@@ -1,7 +1,6 @@
-#include "midgard/tilehierarchy.h"
+#include "valhalla/midgard/tilehierarchy.h"
 
 #include "test.h"
-#include "config.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>

@@ -1,4 +1,5 @@
 #include "test.h"
+#include "config.h"
 
 #include <cstdlib>
 #include <iomanip>
