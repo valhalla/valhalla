@@ -21,13 +21,14 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# require other thor dependencies
+# check for protocol buffers compiler and libraries
+REQUIRE_PROTOC
+
+# require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
 CHECK_VALHALLA_ODIN
-
-# check for protocol buffers compiler and libraries
-REQUIRE_PROTOC
+CHECK_VALHALLA_LOKI
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building thor. Please install libboost-dev.])])
