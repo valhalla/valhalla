@@ -1,7 +1,7 @@
 #ifndef VALHALLA_ODIN_NARRATIVEBUILDER_H_
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
-#include "proto/trippath.pb.h"
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla{
 namespace odin{
