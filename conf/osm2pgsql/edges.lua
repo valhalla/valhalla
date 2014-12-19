@@ -3,33 +3,51 @@
 --postgres
 
 highway = {
-["motorway"] =          {["auto_forward"] = "true",  ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["motorway_link"] =     {["auto_forward"] = "true",  ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["trunk"] =             {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["trunk_link"] =        {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["primary"] =           {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["primary_link"] =      {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["secondary"] =         {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["secondary_link"] =    {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["residential"] =       {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["residential_link"] =  {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["service"] =           {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["tertiary"] =          {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["tertiary_link"] =     {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["road"] =              {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["track"] =             {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["unclassified"] =      {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["undefined"] =         {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["unknown"] =           {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["living_street"] =     {["auto_forward"] = "true",  ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["footway"] =           {["auto_forward"] = "false", ["ped_forward"] = "true",   ["bike_forward"] = "false"},
-["pedestrian"] =        {["auto_forward"] = "false", ["ped_forward"] = "true",   ["bike_forward"] = "false"},
-["steps"] =             {["auto_forward"] = "false", ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["bridleway"] =         {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["construction"] =      {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "false"},
-["cycleway"] =          {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "true"},
-["path"] =              {["auto_forward"] = "false", ["ped_forward"] = "true",   ["bike_forward"] = "true"},
-["bus_guideway"] =      {["auto_forward"] = "false", ["ped_forward"] = "false",  ["bike_forward"] = "false"}
+["motorway"] =          {["auto_forward"] = "true",  ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["motorway_link"] =     {["auto_forward"] = "true",  ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["trunk"] =             {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["trunk_link"] =        {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["primary"] =           {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["primary_link"] =      {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["secondary"] =         {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["secondary_link"] =    {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["residential"] =       {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["residential_link"] =  {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["service"] =           {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["tertiary"] =          {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["tertiary_link"] =     {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["road"] =              {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["track"] =             {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["unclassified"] =      {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["undefined"] =         {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["unknown"] =           {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["living_street"] =     {["auto_forward"] = "true",  ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["footway"] =           {["auto_forward"] = "false", ["pedestrian"] = "true",   ["bike_forward"] = "false"},
+["pedestrian"] =        {["auto_forward"] = "false", ["pedestrian"] = "true",   ["bike_forward"] = "false"},
+["steps"] =             {["auto_forward"] = "false", ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["bridleway"] =         {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["construction"] =      {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "false"},
+["cycleway"] =          {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "true"},
+["path"] =              {["auto_forward"] = "false", ["pedestrian"] = "true",   ["bike_forward"] = "true"},
+["bus_guideway"] =      {["auto_forward"] = "false", ["pedestrian"] = "false",  ["bike_forward"] = "false"}
+}
+
+road_class = {
+["motorway"] = 0, 
+["motorway_link"] = 0,
+["trunk"] = 1,
+["trunk_link"] = 1,
+["primary"] = 2,
+["primary_link"] = 2,
+["secondary"] = 2,
+["secondary_link"] = 2,
+["tertiary"] = 3, 
+["tertiary_link"] = 3, 
+["unclassified"] = 3, 
+["residential"] = 4, 
+["residential_link"] = 4, 
+["service"] = 5, 
+["track"] = 6
 }
 
 access = {
@@ -41,6 +59,23 @@ access = {
 ["permissive"] = "true",
 ["agricultural"] = "false",
 ["customers"] = "true"
+}
+
+private = {
+["private"] = "true"
+}
+
+no_thru_traffic = {
+["destination"] = "true",
+["customers"] = "true"
+}
+
+use = {
+["parking_aisle"] = 2,
+["driveway"] = 3,
+["alley"] = 4,
+["emergency_access"] = 5,
+["drive-through"] = 6
 }
 
 motor_vehicle = {
@@ -89,12 +124,18 @@ oneway = {
 ["1"] = "true"
 }
 
+bridge = {
+["yes"] = "true",
+["no"] = "false",
+["1"] = "true"
+}
+
 surface = {
-["asphalt"] = "true",
-["paved"] = "true",
-["concrete"] = "true",
-["cobblestone"] = "true",
-["cobblestone:flattened"] = "true"
+["asphalt"] = "false",
+["paved"] = "false",
+["concrete"] = "false",
+["cobblestone"] = "false",
+["cobblestone:flattened"] = "false"
 }
 
 --TODO: building_passage is for ped only
@@ -176,8 +217,6 @@ function filter_tags_generic(kv)
     kv["bike_forward"] = bicycle[kv["bicycle"]] or bicycle[kv["cycleway"]] or default_val
   end
 
-  local access = access[kv["access"]]
-
   --service=driveway means all are routable
   if kv["service"] == "driveway" and kv["access"] == nil then
     kv["auto_forward"] = "true"
@@ -211,20 +250,65 @@ function filter_tags_generic(kv)
   end
 
   --set a few flags
+  local road_class = road_class[kv["highway"]]
+
+  if kv["highway"] == nil and ferry then
+    kv["road_class"] = 2 --TODO:  can we weight based on ferry types?
+  elseif kv["highway"] == nil and kv["railway"] then
+    kv["road_class"] = 2 --TODO:  can we weight based on rail types?    
+  elseif road_class == nil then
+    kv["road_class"] = 7
+  end 
+  
+  kv["road_class"] = road_class
+
+  local use = use[kv["service"]]
+
+  if kv["highway"] == "steps" then
+    use = 6 --steps/stairs
+  elseif kv["highway"] == nil then 
+    use = 0
+  elseif kv["highway"] and kv["highway"] == "cycleway" then --cycleway
+    use = 1
+  elseif use == nil and kv["service"] then
+    use = 7 --other
+  else 
+    use = 0 --none
+  end
+
+  kv["use"] = use
+
+  if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
+     kv["link"] = "true"  --do we need to add more?  turnlane?
+  end
+
+  kv["private"] = private[kv["access"]] or "false"
+  kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
   kv["rail"] = tostring(kv["auto_forward"] == "true" and kv["railway"] == rail)
   kv["name"] = kv["name"]
   kv["name:en"] = kv["name:en"]
-  kv["maxspeed"] = normalize_speed(kv["maxspeed"])
-  kv["minspeed"] = normalize_speed(kv["minspeed"])
+  kv["alt_name"] = kv["alt_name"]
+  kv["speed"] = normalize_speed(kv["maxspeed"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
-  kv["surface"] = surface[kv["surface"]] or "false"
+
+  local surface = surface[kv["surface"]]
+
+  if surface then
+     kv["surface"] = "false"  --paved
+  elseif kv["surface"] then 
+     kv["surface"] = "true"  --unpaved
+  else 
+    kv["surface"] = "false"  --default to paved.
+  end 
+  
   lane_count = numeric_prefix(kv["lanes"])
   if lane_count and lane_count > 10 then
     lane_count = nil
   end
   kv["lanes"] = lane_count
+  kv["bridge"] = bridge[kv["bridge"]] or "false"
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
