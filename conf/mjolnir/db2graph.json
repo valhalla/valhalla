@@ -16,9 +16,9 @@
     ]
   },
   "tagtransform": {
-    "node_script": "./import/osm2pgsql/vertices.lua",
+    "node_script": "./config/osm2pgsql/vertices.lua",
     "node_function": "nodes_proc",
-    "way_script": "./import/osm2pgsql/edges.lua",
+    "way_script": "./config/osm2pgsql/edges.lua",
     "way_function": "ways_proc"
   }
 }
