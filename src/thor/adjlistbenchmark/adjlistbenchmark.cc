@@ -4,7 +4,7 @@
 #include <queue>
 #include <boost/program_options.hpp>
 
-#include "midgard/util.h"
+#include <valhalla/midgard/util.h>
 #include "config.h"
 
 #include "thor/edgelabel.h"
