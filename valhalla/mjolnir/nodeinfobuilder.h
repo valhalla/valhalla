@@ -32,14 +32,19 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * Set the index within the node's tile of its first outbound edge.
    * @param  edge_index  the GraphId of the first outbound edge.
    */
-  void set_edge_index(const unsigned int edge_index);
+  void set_edge_index(const uint32_t edge_index);
 
   /**
    * Set the number of outbound directed edges.
    * @param  edge_count  the number of outbound directed edges.
    */
-  void set_edge_count(const unsigned int edge_count);
+  void set_edge_count(const uint32_t edge_count);
 
+  /**
+   * Sets the best road class of the outbound directed edges.
+   * @param  bestrc  Best road class (lowest value).
+   */
+  void set_bestrc(const uint32_t bestrc);
 };
 
 }
