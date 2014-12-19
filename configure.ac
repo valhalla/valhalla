@@ -21,11 +21,11 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# check for boost and make sure we have the program options library
-AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
-
 # require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
+
+# check for boost and make sure we have the program options library
+AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building valhalla. Please install libboost-dev.])])
 
 # optionally enable coverage information
 CHECK_COVERAGE
