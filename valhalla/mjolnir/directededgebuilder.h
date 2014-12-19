@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
-#include "baldr/graphid.h"
-#include "baldr/directededge.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/directededge.h>
 
 namespace valhalla {
 namespace mjolnir {

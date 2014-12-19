@@ -4,12 +4,12 @@
 #include <fstream>
 #include <iostream>
 
-#include "baldr/graphid.h"
-#include "baldr/graphtile.h"
-#include "mjolnir/graphtileheaderbuilder.h"
-#include "mjolnir/nodeinfobuilder.h"
-#include "mjolnir/directededgebuilder.h"
-#include "mjolnir/edgeinfobuilder.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/mjolnir/graphtileheaderbuilder.h>
+#include <valhalla/mjolnir/nodeinfobuilder.h>
+#include <valhalla/mjolnir/directededgebuilder.h>
+#include <valhalla/mjolnir/edgeinfobuilder.h>
 
 namespace valhalla {
 namespace mjolnir {

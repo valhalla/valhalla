@@ -9,9 +9,9 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 
-#include "midgard/pointll.h"
-#include "midgard/tilehierarchy.h"
-#include "baldr/graphid.h"
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tilehierarchy.h>
+#include <valhalla/baldr/graphid.h>
 #include "pbfgraphbuilder.h"
 
 // Use open source PBF reader from:

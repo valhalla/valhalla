@@ -1,7 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEHEADERBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEHEADERBUILDER_H_
 
-#include "baldr/graphtileheader.h"
+#include <valhalla/baldr/graphtileheader.h>
 
 namespace valhalla {
 namespace mjolnir {

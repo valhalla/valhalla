@@ -6,8 +6,8 @@
 #include <vector>
 #include <map>
 
-#include "midgard/pointll.h"
-#include "baldr/graphid.h"
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
 namespace mjolnir {

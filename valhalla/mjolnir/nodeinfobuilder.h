@@ -1,9 +1,9 @@
 #ifndef VALHALLA_MJOLNIR_NODEINFOBUILDER_H_
 #define VALHALLA_MJOLNIR_NODEINFOBUILDER_H_
 
-#include "midgard/pointll.h"
-#include "baldr/graphid.h"
-#include "baldr/nodeinfo.h"
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/nodeinfo.h>
 
 using namespace valhalla::midgard;
 
