@@ -1,0 +1,20 @@
+machine:
+
+  pre:
+    - sudo add-apt-repository -y ppa:boost-latest/ppa
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update -qq
+
+  environment:
+
+
+dependencies:
+
+  pre:
+  - sudo apt-get install -y -qq autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-all-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler libsqlite3-dev lcov lua5.2 liblua5.2-dev 
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+
+test:
+
+  override:
+    - ./autogen.sh && ./configure --enable-coverage && make test -j2
