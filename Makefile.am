@@ -1,10 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_LDFLAGS = @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Iinclude -Iinclude/proto @BOOST_CPPFLAGS@
-AM_CXXFLAGS = -Iinclude -Iinclude/proto @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
-if HAVE_SQLITE3
-AM_CPPFLAGS += @SQLITE3_CFLAGS@
-endif
+AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
+AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
+AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@ @VALHALLA_ODIN_LDFLAGS@ @VALHALLA_ODIN_LIB@
+VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@ @VALHALLA_ODIN_CPPFLAGS@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -36,174 +35,44 @@ clean-gcno:
 clean-local: clean-coverage clean-gcno
 endif
 
-# proto generation etc
-PROTO_FILES = proto/trippath.proto proto/osmformat.proto proto/fileformat.proto
-BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-CLEANFILES = $(patsubst %.proto,include/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-nodist_libvalhalla_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
-src/proto/%.pb.cc: proto/%.proto
-	@echo " PROTOC $<"; mkdir -p src/proto include/proto; @PROTOC_BIN@ -Iproto --cpp_out=include/proto $< && mv include/proto/$(@F) src/proto
-
 # lib valhalla compilation etc
-lib_LTLIBRARIES = libvalhalla.la
+lib_LTLIBRARIES = libvalhalla_thor.la
 include_HEADERS = \
-	include/baldr/directededge.h \
-	include/baldr/edgeinfo.h \
-	include/baldr/graphid.h \
-	include/baldr/graphreader.h \
-	include/baldr/graphtile.h \
-	include/baldr/graphtileheader.h \
-	include/baldr/nodeinfo.h \
-	include/baldr/location.h \
-	include/baldr/pathlocation.h \
-	include/midgard/linesegment2.h \
-	include/midgard/tiles.h \
-	include/midgard/aabbll.h \
-	include/midgard/polyline2.h \
-	include/midgard/obb2.h \
-	include/midgard/pointll.h \
-	include/midgard/vector2.h \
-	include/midgard/clipper2.h \
-	include/midgard/aabb2.h \
-	include/midgard/point2.h \
-	include/midgard/util.h \
-	include/midgard/distanceapproximator.h \
-	include/midgard/ellipse.h \
-	include/midgard/tilehierarchy.h \
-	include/thor/adjacencylist.h \
-	include/thor/astarheuristic.h \
-	include/thor/edgecost.h \
-	include/thor/edgelabel.h \
-	include/thor/edgestatus.h \
-	include/thor/pathalgorithm.h \
-	include/thor/trippathbuilder.h \
-	include/odin/narrativebuilder.h \
-	include/mjolnir/directededgebuilder.h \
-	include/mjolnir/graphtilebuilder.h \
-	include/mjolnir/graphtileheaderbuilder.h \
-	include/mjolnir/nodeinfobuilder.h \
-	include/mjolnir/edgeinfobuilder.h 
-libvalhalla_la_SOURCES = \
-	src/baldr/directededge.cc \
-	src/baldr/edgeinfo.cc \
-	src/baldr/graphid.cc \
-	src/baldr/graphreader.cc \
-	src/baldr/graphtile.cc \
-	src/baldr/graphtileheader.cc \
-	src/baldr/nodeinfo.cc \
-	src/baldr/location.cc \
-	src/baldr/pathlocation.cc \
-	src/midgard/linesegment2.cc \
-	src/midgard/tiles.cc \
-	src/midgard/aabbll.cc \
-	src/midgard/polyline2.cc \
-	src/midgard/obb2.cc \
-	src/midgard/pointll.cc \
-	src/midgard/vector2.cc \
-	src/midgard/clipper2.cc \
-	src/midgard/aabb2.cc \
-	src/midgard/point2.cc \
-	src/midgard/util.cc \
-	src/midgard/distanceapproximator.cc \
-	src/midgard/ellipse.cc \
-	src/midgard/tilehierarchy.cc \
+	valhalla/thor/adjacencylist.h \
+	valhalla/thor/astarheuristic.h \
+	valhalla/thor/edgecost.h \
+	valhalla/thor/edgelabel.h \
+	valhalla/thor/edgestatus.h \
+	valhalla/thor/pathalgorithm.h \
+	valhalla/thor/trippathbuilder.h 
+libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgecost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/thor/pathalgorithm.cc \
-	src/thor/trippathbuilder.cc \
-	src/odin/narrativebuilder.cc \
-	src/mjolnir/directededgebuilder.cc \
-	src/mjolnir/graphtilebuilder.cc \
-	src/mjolnir/graphtileheaderbuilder.cc \
-	src/mjolnir/nodeinfobuilder.cc \
-	src/mjolnir/edgeinfobuilder.cc \
-	src/proto/fileformat.pb.cc \
-	src/proto/osmformat.pb.cc \
-	src/proto/trippath.pb.cc
-libvalhalla_la_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-libvalhalla_la_LIBADD = $(DEPS_LIBS) @PROTOC_LIBS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@
-if HAVE_SQLITE3
-libvalhalla_la_LIBADD += @SQLITE3_LDFLAGS@
-endif
+	src/thor/trippathbuilder.cc 
+libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
 
 #distributed executables
-bin_PROGRAMS = pathtest pbfgraphbuilder
+bin_PROGRAMS = pathtest
 pathtest_SOURCES = \
 	src/thor/pathtest/pathtest.cc
-pathtest_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pathtest_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ \
-        -lz libvalhalla.la
-pbfgraphbuilder_SOURCES = \
-	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/luatagtransform.cc
-pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_FILESYSTEM_LIB@ -lz libvalhalla.la
+pathtest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+pathtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ -lz libvalhalla_thor.la
 
 # tests
 check_PROGRAMS = \
-	test/point2 \
-	test/distanceapproximator \
-	test/aabb2 \
-	test/linesegment2 \
 	test/edgestatus \
-	test/aabbll \
-	test/vector2 \
-	test/polyline2 \
-	test/adjacencylist \
-	test/pointll \
-	test/location \
-	test/tilehierarchy \
-	test/graphid \
-	test/edgeinfobuilder
-test_valhalla_SOURCES = test/valhalla.cc test/test.cc
-test_valhalla_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_valhalla_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@
-test_point2_SOURCES = test/point2.cc test/test.cc
-test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_point2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_distanceapproximator_SOURCES = test/distanceapproximator.cc test/test.cc
-test_distanceapproximator_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_distanceapproximator_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_aabb2_SOURCES = test/aabb2.cc test/test.cc
-test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabb2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
-test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_linesegment2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+	test/adjacencylist 
 test_edgestatus_SOURCES = test/edgestatus.cc test/test.cc
-test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_edgestatus_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_aabbll_SOURCES = test/aabbll.cc test/test.cc
-test_aabbll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_aabbll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_vector2_SOURCES = test/vector2.cc test/test.cc
-test_vector2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_vector2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_polyline2_SOURCES = test/polyline2.cc test/test.cc
-test_polyline2_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_polyline2_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_edgestatus_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_edgestatus_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 test_adjacencylist_SOURCES = test/adjacencylist.cc test/test.cc
-test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_adjacencylist_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_pointll_SOURCES = test/pointll.cc test/test.cc
-test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_pointll_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_location_SOURCES = test/location.cc test/test.cc
-test_location_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_location_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
-test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_tilehierarchy_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_graphid_SOURCES = test/graphid.cc test/test.cc
-test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_graphid_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
-test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
-test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(BOOST_CPPFLAGS)
-test_edgeinfobuilder_LDADD = $(DEPS_LIBS) @BOOST_LDFLAGS@ libvalhalla.la
+test_adjacencylist_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_adjacencylist_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_thor.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

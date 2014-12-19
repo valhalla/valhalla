@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "baldr/graphreader.h"
-#include "baldr/pathlocation.h"
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/pathlocation.h>
 #include "thor/edgecost.h"
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
