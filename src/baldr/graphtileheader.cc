@@ -7,7 +7,7 @@ GraphTileHeader::GraphTileHeader()
     : nodecount_(0),
       directededgecount_(0),
       edgeinfo_offset_(0),
-      namelist_offset_(0) {
+      textlist_offset_(0) {
 }
 
 unsigned int GraphTileHeader::nodecount() const {
@@ -22,8 +22,8 @@ unsigned int GraphTileHeader::edgeinfo_offset() const {
   return edgeinfo_offset_;
 }
 
-unsigned int GraphTileHeader::namelist_offset() const {
-  return namelist_offset_;
+unsigned int GraphTileHeader::textlist_offset() const {
+  return textlist_offset_;
 }
 
 }

@@ -34,10 +34,10 @@ class GraphTileHeader {
   unsigned int edgeinfo_offset() const;
 
   /**
-   * Gets the offset to the name list.
-   * @return  Returns the number of bytes to offset to the name list.
+   * Gets the offset to the text list.
+   * @return  Returns the number of bytes to offset to the text list.
    */
-  unsigned int namelist_offset() const;
+  unsigned int textlist_offset() const;
 
  protected:
   // TODO - need to add some sort of versioning / creation date?
@@ -52,7 +52,7 @@ class GraphTileHeader {
   unsigned int edgeinfo_offset_;
 
   // Offset to name list
-  unsigned int namelist_offset_;
+  unsigned int textlist_offset_;
 };
 
 }

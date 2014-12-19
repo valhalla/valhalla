@@ -110,9 +110,9 @@ class GraphTile {
   // use offsets in directed edges.
   char* edgeinfo_;
 
-  // Names as sets of null-terminated char arrays. Edge info has offsets
-  // into this array.
-  char* namelist_;
+  // Street names and exit names/numbers as sets of null-terminated char arrays.
+  // Edge info has offsets into this array.
+  char* textlist_;
 };
 
 }

@@ -15,7 +15,7 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       edgeinfo_(nullptr),
-      namelist_(nullptr) {
+      textlist_(nullptr) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -48,7 +48,7 @@ GraphTile::GraphTile(const std::string& basedirectory,
 
     // Start of edge information and name list
     edgeinfo_ = graphtile_ + header_->edgeinfo_offset();
-    namelist_ = graphtile_ + header_->namelist_offset();
+    textlist_ = graphtile_ + header_->textlist_offset();
   }
   else {
     // TODO - error. Distinguish between file not found vs. a file read error?

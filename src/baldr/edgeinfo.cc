@@ -4,6 +4,7 @@ namespace valhalla {
 namespace baldr {
 
 EdgeInfo::EdgeInfo() {
+  item_.value = 0;
 }
 
 const GraphId& EdgeInfo::nodea() const {
@@ -14,29 +15,44 @@ const GraphId& EdgeInfo::nodeb() const {
   return nodeb_;
 }
 
-const std::vector<PointLL>& EdgeInfo::shape() const {
-  return shape_;
+const uint32_t EdgeInfo::name_indexes_offset() const {
+  return item_.fields.name_indexes_offset;
 }
 
-const std::vector<uint32_t>& EdgeInfo::nameindexes() const {
-  return nameindexes_;
+const uint32_t EdgeInfo::name_count() const {
+  return item_.fields.name_count;
 }
+
+const uint32_t EdgeInfo::shape_count() const {
+  return item_.fields.shape_count;
+}
+
+const uint32_t EdgeInfo::exit_sign_count() const {
+  return item_.fields.exit_sign_count;
+}
+
+// TODO - implement later
+//const uint32_t EdgeInfo::GetNameIndex(uint8_t index) const {
+//  return *(name_indexes_ + index);
+//}
+//
+//const PointLL* EdgeInfo::GetShapePoint(uint8_t index) const {
+//  char* byte_ptr = static_cast<char*>(this);
+//  byte_ptr += GetShapeOffset();
+//  return (static_cast<PointLL*>(byte_ptr) + index);
+//}
 
 bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
   return ((nodea_ == rhs.nodea_ && nodeb_ == rhs.nodeb_)
       || (nodea_ == rhs.nodeb_ && nodeb_ == rhs.nodea_));
 }
 
-std::size_t EdgeInfo::SizeOf() const {
-  std::size_t size = 0;
-  size += sizeof(GraphId);                           // nodea_
-  size += sizeof(GraphId);                           // nodeb_
-  size += sizeof(std::size_t);                       // shape_ size
-  size += (shape_.size() * sizeof(PointLL));         // shape_
-  size += sizeof(std::size_t);                       // nameindexes_ size
-  size += (nameindexes_.size() * sizeof(uint32_t));  // nameindexes_
+const uint32_t EdgeInfo::GetShapeOffset() const {
+  return (name_indexes_offset() + name_count() * sizeof(uint32_t));
+}
 
-  return size;
+const uint32_t EdgeInfo::GetExitSignsOffset() const {
+  return (GetShapeOffset() + shape_count() * sizeof(PointLL));
 }
 
 }

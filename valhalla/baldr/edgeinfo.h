@@ -7,6 +7,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/exitsign.h>
 
 using namespace valhalla::midgard;
 
@@ -37,6 +38,25 @@ class EdgeInfo {
    */
   const GraphId& nodeb() const;
 
+  // Returns the name index list offset
+  const uint32_t name_indexes_offset() const;
+
+  // Returns the name count
+  const uint32_t name_count() const;
+
+  // Returns the shape count
+  const uint32_t shape_count() const;
+
+  // Returns the exit sign count
+  const uint32_t exit_sign_count() const;
+
+  // TODO - implement later
+//  // Returns the name index at the specified index.
+//  const uint32_t GetNameIndex(uint8_t index) const;
+//
+//  // Returns the shape point at the specified index.
+//  const PointLL* GetShapePoint(uint8_t index) const;
+
   /**
    * Get the shape of the edge.
    * @return  Returns the the list of lat,lng points describing the
@@ -44,30 +64,42 @@ class EdgeInfo {
    */
   const std::vector<PointLL>& shape() const;
 
-  /**
-   * Get the indexes to names used by this edge
-   * @return  Returns a list of name indexes.
-   */
-  const std::vector<uint32_t>& nameindexes() const;
-
   // Operator EqualTo based nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
 
-  // Returns the size in bytes of this object.
-  std::size_t SizeOf() const;
-
  protected:
+  // Computes and returns the offset to the shape points based on the name offsets.
+  const uint32_t GetShapeOffset() const;
+
+  // Computes and returns the offset to the exit signs based on shape and name offsets.
+  const uint32_t GetExitSignsOffset() const;
+
   // GraphIds of the 2 end nodes
   GraphId nodea_;
   GraphId nodeb_;
 
-  // Lat,lng shape of the edge
-  std::vector<PointLL> shape_;
+  union PackedItem {
+    struct Fields {
+      uint32_t name_indexes_offset :8;
+      uint32_t name_count          :4;
+      uint32_t shape_count         :11;
+      uint32_t exit_sign_count     :4;
+      uint32_t spare               :5;
+    } fields;
+    uint32_t value;
+  };
+  PackedItem item_;
 
-  // TODO - add edge information
-
+ private:
   // List of roadname indexes
-  std::vector<uint32_t> nameindexes_;
+  uint32_t* name_indexes_;
+
+  // Lat,lng shape of the edge
+  PointLL* shape_;
+
+  // List of exit signs (type and index)
+  ExitSign* exit_signs_;
+
 };
 
 }
