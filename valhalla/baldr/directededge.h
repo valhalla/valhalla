@@ -90,6 +90,7 @@ class DirectedEdge {
     unsigned int use_     : 4;     // Something like "form of way"
     unsigned int spare_   : 16;
   };
+  Classification classification_;
 
   // Speed in kilometers. Range 0-250 KPH. Applies to "normal vehicles".
   // Save values above 250 as special cases (closures, construction,
