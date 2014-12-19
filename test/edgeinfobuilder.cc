@@ -1,8 +1,7 @@
 #include "test.h"
 
-#include "include/config.h"
-#include "baldr/graphid.h"
-#include "baldr/edgeinfo.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/edgeinfo.h>
 #include "mjolnir/edgeinfobuilder.h"
 
 using namespace std;

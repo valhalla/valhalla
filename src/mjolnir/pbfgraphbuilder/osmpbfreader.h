@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 // this describes the low-level blob storage
-#include "include/proto/fileformat.pb.h"
+#include "proto/fileformat.pb.h"
 // this describes the high-level OSM objects
-#include "include/proto/osmformat.pb.h"
+#include "proto/osmformat.pb.h"
 // the maximum size of a blob header in bytes
 const int max_blob_header_size = 64 * 1024; // 64 kB
 // the maximum size of an uncompressed blob in bytes

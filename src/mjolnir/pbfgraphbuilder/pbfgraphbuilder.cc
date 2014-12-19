@@ -13,9 +13,9 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "midgard/point2.h"
-#include "midgard/aabb2.h"
-#include "midgard/polyline2.h"
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/polyline2.h>
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;

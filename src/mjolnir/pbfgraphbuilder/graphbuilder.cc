@@ -3,16 +3,16 @@
 
 #include "graphbuilder.h"
 
-#include "baldr/graphid.h"
+#include <valhalla/baldr/graphid.h>
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 #include <algorithm>
 #include <string>
-#include "midgard/aabbll.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
-#include "midgard/tiles.h"
+#include <valhalla/midgard/aabbll.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/tiles.h>
 
 
 using namespace valhalla::midgard;
