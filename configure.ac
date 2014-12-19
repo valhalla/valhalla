@@ -21,7 +21,7 @@ AC_LANG_CPLUSPLUS
 # require c++11
 AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 
-# require other odin dependencies
+# require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
 
