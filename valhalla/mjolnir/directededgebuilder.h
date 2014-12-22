@@ -3,6 +3,9 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphconstants.h>
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -133,7 +136,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the road class.
    * @param  roadclass  Road class.
    */
-  void set_class(const unsigned int roadclass);
+  void set_class(const RoadClass roadclass);
 
   /**
    * Sets the link tag.
@@ -145,7 +148,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the use.
    * @param  use        Use.  Something like "form of way."
    */
-  void set_use(const unsigned int  use);
+  void set_use(const Use use);
 
   /**
    * Sets the speed in KPH.

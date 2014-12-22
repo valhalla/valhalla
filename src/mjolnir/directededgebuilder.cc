@@ -119,8 +119,8 @@ void DirectedEdgeBuilder::set_tunnel(const bool tunnel) {
 }
 
 //Sets the road class.
-void DirectedEdgeBuilder::set_class(const unsigned int roadclass) {
-  classification_.class_ = roadclass;
+void DirectedEdgeBuilder::set_class(const RoadClass roadclass) {
+  classification_.class_ = static_cast<unsigned int>(roadclass);
 }
 
 //Sets the link tag.
@@ -129,8 +129,8 @@ void DirectedEdgeBuilder::set_link(const unsigned int link) {
 }
 
 //Sets the use.
-void DirectedEdgeBuilder::set_use(const unsigned int  use) {
-  classification_.use_ = use;
+void DirectedEdgeBuilder::set_use(const Use use) {
+  classification_.use_ = static_cast<unsigned int>(use);
 }
 
 // Sets the speed in KPH.

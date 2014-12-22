@@ -123,8 +123,22 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   for (const auto& tag : results) {
 
-    if ( tag.first == "road_class" )
-      w.road_class_ = (unsigned short) std::stoi(tag.second);
+    if ( tag.first == "road_class" ) {
+
+      RoadClass roadclass = (RoadClass) std::stoi(tag.second);
+
+      switch (roadclass) {
+
+        case RoadClass::kMotorway :  w.road_class_ = RoadClass::kMotorway;
+        case RoadClass::kTrunk :  w.road_class_ = RoadClass::kTrunk;
+        case RoadClass::kPrimary :  w.road_class_ = RoadClass::kPrimary;
+        case RoadClass::kTertiaryUnclassified :  w.road_class_ = RoadClass::kTertiaryUnclassified;
+        case RoadClass::kResidential :  w.road_class_ = RoadClass::kResidential;
+        case RoadClass::kService :  w.road_class_ = RoadClass::kService;
+        case RoadClass::kTrack :  w.road_class_ = RoadClass::kTrack;
+        default :  w.road_class_ = RoadClass::kOther;
+      }
+    }
 
     else if ( tag.first == "auto_forward" )
       w.auto_forward_ = (tag.second == "true" ? true : false);
@@ -139,8 +153,26 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
     else if ( tag.first == "private" )
       w.private_ = (tag.second == "true" ? true : false);
-    else if ( tag.first == "use" )
-      w.use_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "use" ) {
+
+      Use use = (Use) std::stoi(tag.second);
+
+      switch (use) {
+
+        case Use::kNone :  w.use_ = Use::kNone;
+        case Use::kCycleway :  w.use_ = Use::kCycleway;
+        case Use::kParkingAisle :  w.use_ = Use::kParkingAisle;
+        case Use::kDriveway :  w.use_ = Use::kDriveway;
+        case Use::kAlley :  w.use_ = Use::kAlley;
+        case Use::kEmergencyAccess :  w.use_ = Use::kEmergencyAccess;
+        case Use::kDriveThru :  w.use_ = Use::kDriveThru;
+        case Use::kSteps :  w.use_ = Use::kSteps;
+        case Use::kOther :  w.use_ = Use::kOther;
+        default :  w.use_ = Use::kNone;
+      }
+    }
+
     else if ( tag.first == "no_thru_traffic_" )
       w.no_thru_traffic_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "oneway" )
@@ -391,7 +423,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         directededge.set_class(w.road_class_);
         directededge.set_use(w.use_);
-        directededge.set_use(w.link_);
+        directededge.set_link(w.link_);
         directededge.set_speed(w.speed);    // KPH
 
         directededge.set_ferry(w.ferry_);
