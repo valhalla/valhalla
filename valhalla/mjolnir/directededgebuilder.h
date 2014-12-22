@@ -3,6 +3,9 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphconstants.h>
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -35,7 +38,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * of the common edge data within a tile.
    * @param  offset  Offset from the start of the edge data within a tile.
    */
-  void set_edgedataoffset(const unsigned int offset);
+  void set_edgedataoffset(const uint32_t offset);
 
   /**
    * Sets the car access of the edge in each direction.
@@ -133,19 +136,19 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the road class.
    * @param  roadclass  Road class.
    */
-  void set_class(const unsigned int roadclass);
+  void set_class(const RoadClass roadclass);
 
   /**
    * Sets the link tag.
    * @param  link       Link.  Ramp or turn channel.
    */
-  void set_link(const unsigned int link);
+  void set_link(const uint32_t link);
 
   /**
    * Sets the use.
    * @param  use        Use.  Something like "form of way."
    */
-  void set_use(const unsigned int  use);
+  void set_use(const Use use);
 
   /**
    * Sets the speed in KPH.

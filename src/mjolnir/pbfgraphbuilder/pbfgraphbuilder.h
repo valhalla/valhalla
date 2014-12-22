@@ -8,6 +8,9 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+
+using namespace valhalla::baldr;
 
 #include "osmnode.h"
 
@@ -19,7 +22,7 @@ struct OSMWay {
   uint64_t osmwayid_;
   std::vector<uint64_t> nodelist_;
 
-  unsigned short road_class_;
+  RoadClass road_class_;
 
   bool auto_forward_;
   bool bike_forward_;
@@ -28,7 +31,7 @@ struct OSMWay {
   bool pedestrian_;
 
   bool private_;
-  unsigned short use_;
+  Use use_;
   bool no_thru_traffic_;
   bool oneway_;
   bool roundabout_;
@@ -64,7 +67,7 @@ struct OSMWay {
   OSMWay(uint64_t id) {
     osmwayid_ = id;
 
-    road_class_ = 0;
+    road_class_ = RoadClass::kOther;
 
     auto_forward_ = false;
     bike_forward_ = false;
@@ -73,7 +76,7 @@ struct OSMWay {
     pedestrian_ = false;
 
     private_ = false;
-    use_ = 0;
+    use_ = Use::kNone;
     no_thru_traffic_ = false;
     oneway_ = false;
     roundabout_ = false;
