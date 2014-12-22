@@ -14,11 +14,16 @@ checkout:
 
 dependencies:
   override:
+    - sudo apt-get remove --purge -y libboost*
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
     - cd deps; for dep in midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ../; done
 
 test:
+  pre:
+    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local
   override:
-    - ./autogen.sh && [[ ./configure --enable-coverage --with-valhalla-midgard=/usr/local || cat config.log ]] && make test -j2
+    - make test -j2
+  post:
+    - sudo make install
