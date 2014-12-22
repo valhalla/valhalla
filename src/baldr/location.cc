@@ -32,7 +32,7 @@ namespace baldr{
     midgard::PointLL ll(std::stof(parts[0]), std::stof(parts[1]));
 
     //check for info about the stop type
-    if(parts.size() > 2 && parts[2] == "THROUGH")
+    if(parts.size() > 2 && parts[2] == "through")
       return Location(ll, StopType::THROUGH);
     return Location(ll);
   }
