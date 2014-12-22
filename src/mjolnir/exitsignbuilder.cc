@@ -7,8 +7,8 @@ namespace mjolnir {
 
 // Constructor with both elements
 ExitSignBuilder::ExitSignBuilder(const ExitSign::Type& type,
-                                 uint32_t text_index)
-    : ExitSign(type, text_index) {
+                                 uint32_t text_offset)
+    : ExitSign(type, text_offset) {
 }
 
 }

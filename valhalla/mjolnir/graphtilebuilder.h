@@ -59,7 +59,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Names as sets of null-terminated char arrays. Edge info has offsets
   // into this array.
-  std::vector<std::string> namelist_builder_;
+  std::vector<std::string> textlist_builder_;
 
   // Map of edge IDs vs. offsets
 

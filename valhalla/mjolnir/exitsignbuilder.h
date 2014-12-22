@@ -16,7 +16,7 @@ namespace mjolnir {
 class ExitSignBuilder : public baldr::ExitSign {
  public:
   // Constructor with both elements
-  ExitSignBuilder(const ExitSign::Type& type, uint32_t text_index);
+  ExitSignBuilder(const ExitSign::Type& type, uint32_t text_offset);
 
 };
 
