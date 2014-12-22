@@ -15,7 +15,7 @@ dependencies:
 
   pre:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8
-    - sudo apt-get install -y libboost1.54-all-dev libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
+    - sudo apt-get install -y libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 test:
