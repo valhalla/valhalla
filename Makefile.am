@@ -67,7 +67,7 @@ libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPP
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
 
 #distributed executables
-bin_PROGRAMS = pbfgraphbuilder
+bin_PROGRAMS = pbfgraphbuilder hierarchybuilder
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
@@ -75,6 +75,11 @@ pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/osmnode.cc
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+hierarchybuilder_SOURCES = \
+	src/mjolnir/hierarchybuilder/buildhierarchy.cc \
+	src/mjolnir/hierarchybuilder/hierarchybuilder.cc
+hierarchybuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+hierarchybuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
 
 # tests
 check_PROGRAMS = \
