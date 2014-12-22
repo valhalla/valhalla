@@ -4,7 +4,7 @@
 namespace valhalla {
 namespace baldr {
 
-enum class RoadClass : unsigned int {
+enum class RoadClass : uint8_t {
   kMotorway,
   kTrunk,
   kPrimary,
@@ -15,7 +15,7 @@ enum class RoadClass : unsigned int {
   kOther
 };
 
-enum class Use : unsigned int {
+enum class Use : uint8_t {
   kNone,
   kCycleway,
   kParkingAisle,
