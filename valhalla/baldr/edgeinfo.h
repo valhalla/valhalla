@@ -39,7 +39,7 @@ class EdgeInfo {
   const GraphId& nodeb() const;
 
   // Returns the name index list offset
-  const uint32_t name_indexes_offset() const;
+  const uint32_t street_name_offset_list_offset() const;
 
   // Returns the name count
   const uint32_t name_count() const;
@@ -80,7 +80,7 @@ class EdgeInfo {
 
   union PackedItem {
     struct Fields {
-      uint32_t name_indexes_offset :8;
+      uint32_t street_name_offset_list_offset :8;
       uint32_t name_count          :4;
       uint32_t shape_count         :11;
       uint32_t exit_sign_count     :4;
@@ -92,7 +92,7 @@ class EdgeInfo {
 
  private:
   // List of roadname indexes
-  uint32_t* name_indexes_;
+  uint32_t* street_name_offset_list_;
 
   // Lat,lng shape of the edge
   PointLL* shape_;
