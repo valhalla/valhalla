@@ -367,6 +367,12 @@ struct NodePairHasher {
 };
 }
 
+namespace {
+void SetNames() {
+  return;
+}
+}
+
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
@@ -480,6 +486,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           // TODO - shape encode
           edgeinfo.set_shape(*edge.latlngs_);
           // TODO - names
+          SetNames();
 
           // TODO - other attributes
 
