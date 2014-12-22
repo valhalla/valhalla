@@ -146,7 +146,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
 
   /**
    * Sets the number of lanes
-   * @param  lanecount
+   * @param  lanecount  Number of lanes
   */
   void set_lanecount(const uint32_t lanecount);
 
