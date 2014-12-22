@@ -61,6 +61,16 @@ bool DirectedEdge::tunnel() const {
   return attributes_.tunnel;
 }
 
+// Gets the lanes
+uint32_t DirectedEdge::lanes() const {
+  return attributes_.lanecount;
+}
+
+// Gets the bike network mask
+uint32_t DirectedEdge::bikenetwork() const {
+  return attributes_.bikenetwork;
+}
+
 // Get the road class / importance.
 RoadClass DirectedEdge::importance() const {
   return static_cast<RoadClass>(classification_.importance);

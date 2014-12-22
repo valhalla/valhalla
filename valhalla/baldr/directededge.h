@@ -81,9 +81,21 @@ class DirectedEdge {
   bool unpaved() const;
 
   /**
-   * Is this edge unpaved or bad surface?
+   * Is this edge a tunnel?
    */
   bool tunnel() const;
+
+  /**
+   * Get the bike network mask for this directed edge.
+   * @return  Returns the bike network mask for this directed edge.
+   */
+  uint32_t bikenetwork() const;
+
+  /**
+   * Get the number of lanes for this directed edge.
+   * @return  Returns the number of lanes for this directed edge.
+   */
+  uint32_t lanes() const;
 
   /**
    * Get the importance of the road/path
@@ -149,13 +161,13 @@ class DirectedEdge {
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 16;
+    uint32_t spare          : 12;
+    uint32_t bikenetwork    : 4;
     uint32_t lanecount      : 4;
     uint32_t elevation      : 4;  // Elevation factor
   };
   Attributes attributes_;
 
-  // TODO - bike network mask (how many values)?
   // TODO - walkway/path
 
   // TODO - byte alignment / sizing
