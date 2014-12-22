@@ -23,7 +23,7 @@ test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local
   override:
-    - make test -j2
+    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j2
   post:
     - sudo make install
 
