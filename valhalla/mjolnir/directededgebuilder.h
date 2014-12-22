@@ -38,7 +38,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * of the common edge data within a tile.
    * @param  offset  Offset from the start of the edge data within a tile.
    */
-  void set_edgedataoffset(const unsigned int offset);
+  void set_edgedataoffset(const uint32_t offset);
 
   /**
    * Sets the car access of the edge in each direction.
@@ -142,7 +142,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the link tag.
    * @param  link       Link.  Ramp or turn channel.
    */
-  void set_link(const unsigned int link);
+  void set_link(const uint32_t link);
 
   /**
    * Sets the use.
