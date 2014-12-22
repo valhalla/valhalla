@@ -6,6 +6,9 @@
 #include <vector>
 #include <map>
 
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -42,13 +45,14 @@ struct OSMWay {
   std::string name_;
   std::string name_en_;
   std::string alt_name_;
+  std::string official_name_;
 
   unsigned short speed;
 
   std::string ref_;
   std::string int_ref_;
 
-  bool  surface_; //TODO:  Expand out?
+  bool surface_;  //TODO:  Expand out?
   unsigned short lanes_;
   bool tunnel_;
   bool toll_;
@@ -87,6 +91,7 @@ struct OSMWay {
     name_ = "";
     name_en_ = "";
     alt_name_ = "";
+    official_name_ = "";
 
     speed = 0;
 
@@ -94,8 +99,8 @@ struct OSMWay {
     int_ref_ = "";
     surface_ = false;
     lanes_ = 0;
-    tunnel_  = false;
-    toll_  = false;
+    tunnel_ = false;
+    toll_ = false;
     bridge_ = false;
 
     destination_ = "";
@@ -109,6 +114,58 @@ struct OSMWay {
     bike_local_ref_ = "";
   }
 
+  std::vector<std::string> GetTagTokens(std::string tag_value,
+                                        char delim = ';') {
+    std::vector<std::string> tokens;
+    boost::algorithm::split(tokens, tag_value,
+                            std::bind1st(std::equal_to<char>(), delim),
+                            boost::algorithm::token_compress_on);
+    return tokens;
+  }
+
+  std::vector<std::string> GetNames() {
+    std::vector<std::string> names;
+    // Process motorway and trunk refs
+    if (!ref_.empty()
+        && ((road_class_ == RoadClass::kMotorway)
+            || (road_class_ == RoadClass::kTrunk))) {
+      std::vector<std::string> tokens = GetTagTokens(ref_);
+      if (!tokens.empty()) {
+        names.insert(names.end(), tokens.begin(), tokens.end());
+      }
+    }
+
+    // TODO int_ref
+
+    // Process name
+    if (!name_.empty())
+      names.push_back(name_);
+
+    // Process non limited access refs
+    if (!ref_.empty() && (road_class_ != RoadClass::kMotorway)
+        && (road_class_ != RoadClass::kTrunk)) {
+      std::vector<std::string> tokens = GetTagTokens(ref_);
+      if (!tokens.empty()) {
+        names.insert(names.end(), tokens.begin(), tokens.end());
+      }
+    }
+
+    // Process alt_name
+    if (!alt_name_.empty())
+      names.push_back(alt_name_);
+
+    // Process official_name
+    if (!official_name_.empty())
+      names.push_back(official_name_);
+
+    // Process name_en_
+    // TODO: process country specific names
+    if (!name_en_.empty())
+      names.push_back(name_en_);
+
+    return names;
+  }
+
 };
 
 struct Edge {
@@ -119,10 +176,10 @@ struct Edge {
   std::vector<midgard::PointLL>* latlngs_;
 
   Edge()
-    : sourcenode_(0),
-      targetnode_(0),
-      wayindex_(0),
-      latlngs_(nullptr) {
+      : sourcenode_(0),
+        targetnode_(0),
+        wayindex_(0),
+        latlngs_(nullptr) {
   }
 
   void AddLL(const midgard::PointLL& ll) {
@@ -137,5 +194,4 @@ struct Edge {
 }
 
 #endif  // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_H
-
 

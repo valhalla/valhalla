@@ -30,6 +30,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 // Set the indexes to names used by this edge. TODO - move?
 void EdgeInfoBuilder::set_street_name_offset_list(
     const std::vector<uint32_t>& street_name_offset_list) {
+  // TODO - move
   street_name_offset_list_.clear();
   if (!street_name_offset_list.empty()) {
     street_name_offset_list_.insert(street_name_offset_list_.end(),
