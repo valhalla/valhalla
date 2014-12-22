@@ -452,7 +452,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         OSMWay &w = ways_[edge.wayindex_];
 
-        directededge.set_class(w.road_class_);
+        directededge.set_importance(w.road_class_);
         directededge.set_use(w.use_);
         directededge.set_link(w.link_);
         directededge.set_speed(w.speed);    // KPH
@@ -460,7 +460,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_ferry(w.ferry_);
         directededge.set_railferry(w.rail_);
         directededge.set_toll(w.toll_);
-        directededge.set_private(w.private_);
+        directededge.set_dest_only(w.private_);
         directededge.set_unpaved(w.surface_);
         directededge.set_tunnel(w.tunnel_);
 

@@ -115,10 +115,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_toll(const bool toll);
 
   /**
-   * Sets the private flag.
-   * @param  priv     Is private?
+   * Sets the destination only (private) flag.
+   * @param  destonly     Is private (access to destination only)?
    */
-  void set_private(const bool priv);
+  void set_dest_only(const bool destonly);
 
   /**
    * Sets the unpaved flag.
@@ -136,13 +136,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the road class.
    * @param  roadclass  Road class.
    */
-  void set_class(const RoadClass roadclass);
+  void set_importance(const RoadClass roadclass);
 
   /**
    * Sets the link tag.
    * @param  link       Link.  Ramp or turn channel.
    */
-  void set_link(const uint32_t link);
+  void set_link(const uint8_t link);
 
   /**
    * Sets the use.
