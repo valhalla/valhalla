@@ -25,14 +25,14 @@ class ExitSign {
   const ExitSign::Type& type() const;
 
   // Returns the text index
-  const uint32_t text_index() const;
+  const uint32_t text_offset() const;
 
  protected:
   // Constructor
-  ExitSign(const ExitSign::Type& type, uint32_t text_index);
+  ExitSign(const ExitSign::Type& type, uint32_t text_offset);
 
   ExitSign::Type type_;
-  uint32_t text_index_;
+  uint32_t text_offset_;
 };
 
 }
