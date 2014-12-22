@@ -15,8 +15,8 @@ const GraphId& EdgeInfo::nodeb() const {
   return nodeb_;
 }
 
-const uint32_t EdgeInfo::name_indexes_offset() const {
-  return item_.fields.name_indexes_offset;
+const uint32_t EdgeInfo::street_name_offset_list_offset() const {
+  return item_.fields.street_name_offset_list_offset;
 }
 
 const uint32_t EdgeInfo::name_count() const {
@@ -48,7 +48,7 @@ bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
 }
 
 const uint32_t EdgeInfo::GetShapeOffset() const {
-  return (name_indexes_offset() + name_count() * sizeof(uint32_t));
+  return (street_name_offset_list_offset() + name_count() * sizeof(uint32_t));
 }
 
 const uint32_t EdgeInfo::GetExitSignsOffset() const {
