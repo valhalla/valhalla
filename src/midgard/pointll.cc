@@ -189,5 +189,76 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
   return mindist;
 }
 
+// Calculate the heading from the start of a polyline of lat,lng points to a
+// point the specified distance from the start.
+float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
+                           const float dist) {
+  int n = (int)pts.size();
+  if (n < 2) {
+    // TODO error!?
+    return 0.0f;
+  }
+  if (n == 2) {
+    return pts[0].Heading(pts[1]);
+  }
+
+  int i = 0;
+  double d = 0.0;
+  double seglength = 0.0;
+  while (d < dist && i < n-1) {
+    seglength = pts[i].Distance(pts[i+1]);
+    if (d + seglength > dist) {
+      // Set the extrapolated point along the line.
+      float pct = (float)((dist - d) / seglength);
+      PointLL ll(pts[i].lat() + ((pts[i+1].lat() - pts[i].lat()) * pct),
+                 pts[i].lng() + ((pts[i+1].lng() - pts[i].lng()) * pct));
+      return pts[0].Heading(ll);
+    } else {
+      d += seglength;
+      i++;
+    }
+  }
+
+  // Length of polyline must have exceeded the distance. Return heading from
+  // first to last point.
+  return pts[0].Heading(pts[1]);
+}
+
+// Calculate the heading from the end of a polyline of lat,lng points to a
+// point the specified distance from the end.
+float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
+                        const float dist) {
+  int n = (int)pts.size();
+  if (n < 2) {
+    // TODO error!?
+    return 0.0f;
+  }
+  if (n == 2) {
+    return pts[0].Heading(pts[1]);
+  }
+
+  float heading = 0.0f;
+  int i = n - 2;
+  double d = 0.0;
+  double seglength;
+  while (d < dist && i >= 0) {
+    seglength = pts[i].Distance(pts[i+1]);
+    if (d + seglength > dist) {
+      // Set the extrapolated point along the line.
+      float pct = (float)((dist - d) / seglength);
+      PointLL ll(pts[i+1].lat() + ((pts[i].lat() - pts[i+1].lat()) * pct),
+                 pts[i+1].lng() + ((pts[i].lng() - pts[i+1].lng()) * pct));
+      return ll.Heading(pts[n-1]);
+    } else {
+      d += seglength;
+      i--;
+    }
+  }
+
+  // Length of polyline must have exceeded the distance. Return heading from
+  // first to last point.
+  return pts[0].Heading(pts[1]);
+}
+
 }
 }

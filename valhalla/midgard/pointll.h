@@ -118,8 +118,27 @@ class PointLL : public Point2 {
    *                       the closest point.
    * @return   Returns the distance squared of the closest point.
    */
-  inline float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
-            int& idx) const;
+  float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
+                     int& idx) const;
+
+  /**
+   * Calculate the heading from the start of a polyline of lat,lng points to a
+   * point the specified distance from the start.
+   * @param  pts   Polyline - list of lat,lng points.
+   * @param  dist  Distance in kilometers from start to find heading to.
+   */
+  static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
+                             const float dist);
+
+  /**
+   * Calculate the heading from a point a specified length from the end of a
+   * polyline of lat,lng points to the end point of the polyline.
+   * @param  pts   Polyline - list of lat,lng points.
+   * @param  dist  Distance in kilometers from end. A point that distance is
+   *               used to find the heading to the end point.
+   */
+  static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
+                          const float dist);
 };
 
 }
