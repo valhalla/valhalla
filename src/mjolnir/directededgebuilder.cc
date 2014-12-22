@@ -21,7 +21,7 @@ void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
 }
 
 // Get the offset to the common edge data.
-void DirectedEdgeBuilder::set_edgedataoffset(const unsigned int offset) {
+void DirectedEdgeBuilder::set_edgedataoffset(const uint32_t offset) {
   edgedataoffset_ = offset;
 }
 
@@ -119,18 +119,18 @@ void DirectedEdgeBuilder::set_tunnel(const bool tunnel) {
 }
 
 //Sets the road class.
-void DirectedEdgeBuilder::set_class(const unsigned int roadclass) {
-  classification_.class_ = roadclass;
+void DirectedEdgeBuilder::set_class(const RoadClass roadclass) {
+  classification_.class_ = static_cast<uint32_t>(roadclass);
 }
 
 //Sets the link tag.
-void DirectedEdgeBuilder::set_link(const unsigned int link) {
+void DirectedEdgeBuilder::set_link(const uint32_t link) {
   classification_.link_ = link;
 }
 
 //Sets the use.
-void DirectedEdgeBuilder::set_use(const unsigned int  use) {
-  classification_.use_ = use;
+void DirectedEdgeBuilder::set_use(const Use use) {
+  classification_.use_ = static_cast<uint32_t>(use);
 }
 
 // Sets the speed in KPH.

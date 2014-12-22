@@ -8,68 +8,21 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+
+using namespace valhalla::baldr;
+
+#include "osmnode.h"
 
 namespace valhalla {
 namespace mjolnir {
-
-// OSM node
-struct OSMNode {
-  midgard::PointLL latlng_;
-  unsigned int uses_;
-  std::vector<unsigned int>* edges_;
-
-  std::string exit_to_;
-  std::string ref_;
-  bool gate_;
-  bool bollard_;
-  unsigned short modes_mask_;
-
-  OSMNode() {
-    latlng_.Set(0.0f, 0.0f);
-    uses_ = 0;
-    edges_ = nullptr;
-
-    exit_to_ = "";
-    ref_ = "";
-    gate_ = false;
-    bollard_ = false;
-    modes_mask_ = 0;
-
-  }
-  OSMNode(const float lat, const float lng) {
-    latlng_.Set(lat, lng);
-    uses_ = 0;
-    edges_ = nullptr;
-
-    exit_to_ = "";
-    ref_ = "";
-    gate_ = false;
-    bollard_ = false;
-    modes_mask_ = 0;
-  }
-
-  ~OSMNode() {
-    // TODO - get corruption if I leave this in??
-  /*  if (edges_ != nullptr) {
-      edges_->clear();
-      delete edges_;
-    }*/
-  }
-
-  void AddEdge(const unsigned int edgeindex) {
-    if (edges_ == nullptr) {
-      edges_ = new std::vector<unsigned int>;
-    }
-    edges_->push_back(edgeindex);
-  }
-};
 
 // OSM Way
 struct OSMWay {
   uint64_t osmwayid_;
   std::vector<uint64_t> nodelist_;
 
-  unsigned short road_class_;
+  RoadClass road_class_;
 
   bool auto_forward_;
   bool bike_forward_;
@@ -78,7 +31,7 @@ struct OSMWay {
   bool pedestrian_;
 
   bool private_;
-  unsigned short use_;
+  Use use_;
   bool no_thru_traffic_;
   bool oneway_;
   bool roundabout_;
@@ -114,7 +67,7 @@ struct OSMWay {
   OSMWay(uint64_t id) {
     osmwayid_ = id;
 
-    road_class_ = 0;
+    road_class_ = RoadClass::kOther;
 
     auto_forward_ = false;
     bike_forward_ = false;
@@ -123,7 +76,7 @@ struct OSMWay {
     pedestrian_ = false;
 
     private_ = false;
-    use_ = 0;
+    use_ = Use::kNone;
     no_thru_traffic_ = false;
     oneway_ = false;
     roundabout_ = false;

@@ -69,38 +69,33 @@ void GraphBuilder::LuaInit(std::string nodetagtransformscript, std::string nodet
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
-
+  // Get tags
   Tags results = lua_.TransformInLua(false, tags);
-
   if (results.size() == 0)
     return;
 
-  nodes_.insert(std::make_pair(osmid, OSMNode((float) lat, (float) lng)));
-
-  OSMNode n = nodes_[osmid];
-
+  // Create a new node and set its attributes
+  OSMNode n (lat, lng);
   for (const auto& tag : results) {
-
-    if ( tag.first == "exit_to" )
-      n.exit_to_ = tag.second;
-    else if ( tag.first == "ref" )
-      n.ref_ = tag.second;
-
-    else if ( tag.first == "gate" )
-      n.gate_ = (tag.second == "true" ? true : false);
-    else if ( tag.first == "bollard" )
-      n.bollard_ = (tag.second == "true" ? true : false);
-
-    else if ( tag.first == "modes_mask" )
-      n.modes_mask_ = (unsigned short) std::stoi(tag.second);
+    if (tag.first == "exit_to")
+      n.set_exit_to(tag.second);
+    else if (tag.first == "ref")
+      n.set_ref(tag.second);
+    else if (tag.first == "gate")
+      n.set_gate((tag.second == "true" ? true : false));
+    else if (tag.first == "bollard")
+      n.set_bollard((tag.second == "true" ? true : false));
+    else if (tag.first == "modes_mask")
+      n.set_modes_mask(std::stoi(tag.second));
 
     //  if (osmid == 2385249)
     //    std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
   }
 
+  // Add to the node map
+  nodes_.emplace(osmid, n);
   node_count_++;
-
-  //   if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
+  //if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
 }
 
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
@@ -123,8 +118,22 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   for (const auto& tag : results) {
 
-    if ( tag.first == "road_class" )
-      w.road_class_ = (unsigned short) std::stoi(tag.second);
+    if ( tag.first == "road_class" ) {
+
+      RoadClass roadclass = (RoadClass) std::stoi(tag.second);
+
+      switch (roadclass) {
+
+        case RoadClass::kMotorway :  w.road_class_ = RoadClass::kMotorway;
+        case RoadClass::kTrunk :  w.road_class_ = RoadClass::kTrunk;
+        case RoadClass::kPrimary :  w.road_class_ = RoadClass::kPrimary;
+        case RoadClass::kTertiaryUnclassified :  w.road_class_ = RoadClass::kTertiaryUnclassified;
+        case RoadClass::kResidential :  w.road_class_ = RoadClass::kResidential;
+        case RoadClass::kService :  w.road_class_ = RoadClass::kService;
+        case RoadClass::kTrack :  w.road_class_ = RoadClass::kTrack;
+        default :  w.road_class_ = RoadClass::kOther;
+      }
+    }
 
     else if ( tag.first == "auto_forward" )
       w.auto_forward_ = (tag.second == "true" ? true : false);
@@ -139,8 +148,26 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
     else if ( tag.first == "private" )
       w.private_ = (tag.second == "true" ? true : false);
-    else if ( tag.first == "use" )
-      w.use_ = (unsigned short) std::stoi(tag.second);
+
+    else if ( tag.first == "use" ) {
+
+      Use use = (Use) std::stoi(tag.second);
+
+      switch (use) {
+
+        case Use::kNone :  w.use_ = Use::kNone;
+        case Use::kCycleway :  w.use_ = Use::kCycleway;
+        case Use::kParkingAisle :  w.use_ = Use::kParkingAisle;
+        case Use::kDriveway :  w.use_ = Use::kDriveway;
+        case Use::kAlley :  w.use_ = Use::kAlley;
+        case Use::kEmergencyAccess :  w.use_ = Use::kEmergencyAccess;
+        case Use::kDriveThru :  w.use_ = Use::kDriveThru;
+        case Use::kSteps :  w.use_ = Use::kSteps;
+        case Use::kOther :  w.use_ = Use::kOther;
+        default :  w.use_ = Use::kNone;
+      }
+    }
+
     else if ( tag.first == "no_thru_traffic_" )
       w.no_thru_traffic_ = (tag.second == "true" ? true : false);
     else if ( tag.first == "oneway" )
@@ -227,11 +254,11 @@ void GraphBuilder::SetNodeUses() {
   for (auto way : ways_) {
     // Iterate through the nodes that make up the way
     for (auto node : way.nodelist_) {
-      nodes_[node].uses_++;
+      nodes_[node].IncrementUses();
     }
     // make sure that the last node is considered as an extremity
     // TODO - could avoid this by altering ConstructEdges
-    nodes_[way.nodelist_.back()].uses_++;
+    nodes_[way.nodelist_.back()].IncrementUses();
   }
 }
 
@@ -249,17 +276,17 @@ void GraphBuilder::ConstructEdges() {
     current = way.nodelist_[0];
     OSMNode& edgestartnode = nodes_[current];
     edge->sourcenode_ = current;
-    edge->AddLL(edgestartnode.latlng_);
+    edge->AddLL(edgestartnode.latlng());
     edge->wayindex_ = wayindex;
     for (size_t i = 1, n = way.nodelist_.size(); i < n; i++) {
       // Add the node lat,lng to the edge shape
       current = way.nodelist_[i];
       OSMNode& node = nodes_[current];
-      edge->AddLL(node.latlng_);
+      edge->AddLL(node.latlng());
 
       // If a node is used more than once, it is an intersection, hence it's
       // a node of the road network graph
-      if (node.uses_ > 1) {
+      if (node.uses() > 1) {
         edge->targetnode_ = current;
         edges_.push_back(*edge);
 
@@ -287,7 +314,7 @@ void GraphBuilder::RemoveUnusedNodes() {
   std::cout << "Remove unused nodes" << std::endl;
   node_map_type::iterator itr = nodes_.begin();
   while (itr != nodes_.end()) {
-    if (itr->second.uses_ < 2) {
+    if (itr->second.uses() < 2) {
       nodes_.erase(itr++);
     } else {
       ++itr;
@@ -307,11 +334,11 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
   tilednodes_.resize(tilecount);
 
   for (auto node : nodes_) {
-    if (node.second.edges_->size() == 0) {
+    if (node.second.edge_count() == 0) {
       std::cout << "Node with no edges" << std::endl;
     }
     // Get tile Id
-    tileid = tiles.TileId(node.second.latlng_);
+    tileid = tiles.TileId(node.second.latlng());
     if (tileid < 0) {
       // TODO: error!
       std::cout << "Tile error" << std::endl;
@@ -369,16 +396,16 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     for (auto osmnodeid : tile) {
       OSMNode& node = nodes_[osmnodeid];
       NodeInfoBuilder nodebuilder;
-      nodebuilder.set_latlng(node.latlng_);
+      nodebuilder.set_latlng(node.latlng());
 
       // Set the index of the first outbound edge within the tile.
       nodebuilder.set_edge_index(directededgecount);
-      nodebuilder.set_edge_count(node.edges_->size());
+      nodebuilder.set_edge_count(node.edge_count());
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
       std::vector<EdgeInfoBuilder> edges;
-      for (auto edgeindex : *node.edges_) {
+      for (auto edgeindex : node.edges()) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
         // Assign nodes
@@ -388,14 +415,14 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_endnode(nodeb);
 
         // Compute length from the latlngs.
-        float length = node.latlng_.Length(*edge.latlngs_);
+        float length = node.latlng().Length(*edge.latlngs_);
         directededge.set_length(length);
 
         OSMWay &w = ways_[edge.wayindex_];
 
         directededge.set_class(w.road_class_);
         directededge.set_use(w.use_);
-        directededge.set_use(w.link_);
+        directededge.set_link(w.link_);
         directededge.set_speed(w.speed);    // KPH
 
         directededge.set_ferry(w.ferry_);
