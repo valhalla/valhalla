@@ -43,7 +43,7 @@ class DirectedEdge {
    * of the common edge data within a tile.
    * @return  Returns offset from the start of the edge data within a tile.
    */
-  unsigned int edgedataoffset() const;
+  uint32_t edgedataoffset() const;
 
  protected:
   // Length of the link in miles
@@ -53,7 +53,7 @@ class DirectedEdge {
   GraphId endnode_;
 
   // Offset to the common edge data within the tile
-  unsigned int edgedataoffset_;
+  uint32_t edgedataoffset_;
 
   // Legal access to the directed link ((also include reverse direction access).
   // TODO - come up with final set of values!
@@ -72,23 +72,23 @@ class DirectedEdge {
 
   // Attributes. Can be used in edge costing methods to favor or avoid edges.
   struct Attributes {
-    unsigned int ferry_          : 1;
-    unsigned int railferry_      : 1;  // ???
-    unsigned int toll_           : 1;
-    unsigned int private_        : 1;
-    unsigned int unpaved_        : 1;
-    unsigned int tunnel_         : 1;
-    unsigned int spare           : 22;
-    unsigned int elevation_      : 4;  // Elevation factor
+    uint32_t ferry_          : 1;
+    uint32_t railferry_      : 1;  // ???
+    uint32_t toll_           : 1;
+    uint32_t private_        : 1;
+    uint32_t unpaved_        : 1;
+    uint32_t tunnel_         : 1;
+    uint32_t spare           : 22;
+    uint32_t elevation_      : 4;  // Elevation factor
   };
   Attributes attributes_;
 
   // Classification and use information
   struct Classification {
-    unsigned int class_   : 3;     // Road class (importance)
-    unsigned int link_    : 1;     // *link tag - Ramp or turn channel
-    unsigned int use_     : 4;     // Something like "form of way"
-    unsigned int spare_   : 16;
+    uint32_t class_   : 3;     // Road class (importance)
+    uint32_t link_    : 1;     // *link tag - Ramp or turn channel
+    uint32_t use_     : 4;     // Something like "form of way"
+    uint32_t spare_   : 16;
   };
   Classification classification_;
 
