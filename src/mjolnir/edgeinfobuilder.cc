@@ -28,23 +28,24 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 }
 
 // Set the indexes to names used by this edge. TODO - move?
-void EdgeInfoBuilder::set_name_indexes(
-    const std::vector<uint32_t>& nameindexes) {
-  name_indexes_.clear();
-  if (!nameindexes.empty()) {
-    name_indexes_.insert(name_indexes_.end(), nameindexes.begin(),
-                        nameindexes.end());
+void EdgeInfoBuilder::set_street_name_offset_list(
+    const std::vector<uint32_t>& street_name_offset_list) {
+  street_name_offset_list_.clear();
+  if (!street_name_offset_list.empty()) {
+    street_name_offset_list_.insert(street_name_offset_list_.end(),
+                                    street_name_offset_list.begin(),
+                                    street_name_offset_list.end());
   }
 }
 
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = 0;
-  size += sizeof(GraphId);                           // nodea_
-  size += sizeof(GraphId);                           // nodeb_
-  size += sizeof(std::size_t);                       // shape_ size
-  size += (shape_.size() * sizeof(PointLL));         // shape_
-  size += sizeof(std::size_t);                       // nameindexes_ size
-  size += (name_indexes_.size() * sizeof(uint32_t));  // nameindexes_
+  size += sizeof(GraphId);                                      // nodea_
+  size += sizeof(GraphId);                                      // nodeb_
+  size += sizeof(PackedItem);                                   // item_
+  size += (street_name_offset_list_.size() * sizeof(uint32_t)); // street_name_offset_list_
+  size += (shape_.size() * sizeof(PointLL));                    // shape_
+  size += (exit_signs_.size() * sizeof(ExitSign));              // exit_signs_
 
   return size;
 }
