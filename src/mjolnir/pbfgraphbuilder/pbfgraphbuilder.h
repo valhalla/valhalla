@@ -9,60 +9,10 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
 
+#include "osmnode.h"
+
 namespace valhalla {
 namespace mjolnir {
-
-// OSM node
-struct OSMNode {
-  midgard::PointLL latlng_;
-  unsigned int uses_;
-  std::vector<unsigned int>* edges_;
-
-  std::string exit_to_;
-  std::string ref_;
-  bool gate_;
-  bool bollard_;
-  unsigned short modes_mask_;
-
-  OSMNode() {
-    latlng_.Set(0.0f, 0.0f);
-    uses_ = 0;
-    edges_ = nullptr;
-
-    exit_to_ = "";
-    ref_ = "";
-    gate_ = false;
-    bollard_ = false;
-    modes_mask_ = 0;
-
-  }
-  OSMNode(const float lat, const float lng) {
-    latlng_.Set(lat, lng);
-    uses_ = 0;
-    edges_ = nullptr;
-
-    exit_to_ = "";
-    ref_ = "";
-    gate_ = false;
-    bollard_ = false;
-    modes_mask_ = 0;
-  }
-
-  ~OSMNode() {
-    // TODO - get corruption if I leave this in??
-  /*  if (edges_ != nullptr) {
-      edges_->clear();
-      delete edges_;
-    }*/
-  }
-
-  void AddEdge(const unsigned int edgeindex) {
-    if (edges_ == nullptr) {
-      edges_ = new std::vector<unsigned int>;
-    }
-    edges_->push_back(edgeindex);
-  }
-};
 
 // OSM Way
 struct OSMWay {

@@ -69,7 +69,8 @@ bin_PROGRAMS = pbfgraphbuilder
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
-	src/mjolnir/pbfgraphbuilder/luatagtransform.cc
+	src/mjolnir/pbfgraphbuilder/luatagtransform.cc \
+	src/mjolnir/pbfgraphbuilder/osmnode.cc
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
 
