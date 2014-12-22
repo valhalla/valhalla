@@ -1,5 +1,4 @@
 machine:
-
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -7,18 +6,19 @@ machine:
     - sudo rm /etc/apt/sources.list.d/google-chrome.list #workaround for duplicate sources on ubuntu 12.04 circlci machine
     - sudo apt-get update
 
-
-  environment:
-
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init
+    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/midgard.git deps/midgard
 
 dependencies:
-
-  pre:
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8
-    - sudo apt-get install -y libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
+  override:
+    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+    #valhalla dependencies
+    - for dep in deps/midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; done
 
 test:
-
   override:
     - ./autogen.sh && ./configure --enable-coverage && make test -j2
