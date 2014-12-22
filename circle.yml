@@ -18,7 +18,7 @@ dependencies:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev lcov protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make install; done
+    - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
 
 test:
   pre:
