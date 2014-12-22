@@ -17,8 +17,8 @@ dependencies:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libprotobuf-dev libcurl4-openssl-dev libzmq3-dev protobuf-compiler lcov lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - for dep in deps/midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; done
+    - cd deps; for dep in midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ../; done
 
 test:
   override:
-    - ./autogen.sh && ./configure --enable-coverage && make test -j2
+    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local && make test -j2
