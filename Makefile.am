@@ -46,6 +46,7 @@ nobase_include_HEADERS = \
 	valhalla/midgard/pointll.h \
 	valhalla/midgard/vector2.h \
 	valhalla/midgard/clipper2.h \
+	valhalla/midgard/constants.h \
 	valhalla/midgard/aabb2.h \
 	valhalla/midgard/point2.h \
 	valhalla/midgard/util.h \
