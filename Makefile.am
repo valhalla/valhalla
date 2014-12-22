@@ -78,10 +78,14 @@ pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_
 
 # tests
 check_PROGRAMS = \
-	test/edgeinfobuilder
+	test/edgeinfobuilder \
+	test/uniquenames
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
+test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

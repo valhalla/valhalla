@@ -46,9 +46,10 @@ void UniqueNames::Clear() {
   indexes_.clear();
 }
 
-// Get the number of unique names
+// Get the number of unique names. Since a blank name is added as the first
+// unique name we return the size of the map - 1.
 size_t UniqueNames::Size() const {
-  return names_.size();
+  return names_.size() - 1;
 }
 
 }
