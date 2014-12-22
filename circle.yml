@@ -23,3 +23,8 @@ test:
     - make test -j2
   post:
     - sudo make install
+
+general:
+  artifacts:
+    - config.log
+    - test/*.log
