@@ -51,7 +51,8 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphtileheaderbuilder.h \
 	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
-	valhalla/mjolnir/exitsignbuilder.h 
+	valhalla/mjolnir/exitsignbuilder.h \
+	valhalla/mjolnir/uniquenames.h 
 libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -59,6 +60,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
 	src/mjolnir/exitsignbuilder.cc \
+	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc 
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
