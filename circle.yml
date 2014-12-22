@@ -1,0 +1,36 @@
+machine:
+  pre:
+    - sudo add-apt-repository -y ppa:boost-latest/ppa
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo rm /etc/apt/sources.list.d/google-chrome.list #workaround for duplicate sources on ubuntu 12.04 circlci machine
+    - sudo apt-get update
+
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init
+    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/midgard.git deps/midgard
+    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/baldr.git deps/baldr
+    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/loki.git deps/loki
+    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/odin.git deps/odin
+
+dependencies:
+  override:
+    - sudo apt-get remove --purge -y libboost*
+    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov protobuf-compiler libprotobuf-dev
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+    #valhalla dependencies
+    - cd deps; for dep in midgard baldr loki odin; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
+
+test:
+  pre:
+    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local --with-valhalla-loki=/usr/local --with-valhalla-odin=/usr/local
+  override:
+    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j2
+  post:
+    - sudo make install
+
+general:
+  artifacts:
+    - config.log
+    - test/*.log
