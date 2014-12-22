@@ -3,6 +3,7 @@
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {
@@ -30,7 +31,15 @@ class DirectedEdge {
    */
   GraphId endnode() const;
 
-  // TODO - methods for access
+  /**
+   * Get the access modes in the forward direction (bit field).
+   */
+  uint8_t forwardaccess() const;
+
+  /**
+   * Get the access modes in the reverse direction (bit field).
+   */
+  uint8_t reverseaccess() const;
 
   /**
    * Gets the speed in KPH. TODO - cast to float instead?
@@ -45,61 +54,111 @@ class DirectedEdge {
    */
   uint32_t edgedataoffset() const;
 
- protected:
-  // Length of the link in miles
-  float length_;
+  /**
+   * Is this edge part of a ferry?
+   */
+  bool ferry() const;
 
+  /**
+   * Is this edge part of a rail ferry?
+   */
+  bool railferry() const;
+
+  /**
+   * Does this edge have a toll or is it part of a toll road?
+   */
+  bool toll() const;
+
+  /**
+   * Is this edge part of a private or no through road that allows access
+   * only if required to get to a destination?
+   */
+  bool destonly() const;
+
+  /**
+   * Is this edge unpaved or bad surface?
+   */
+  bool unpaved() const;
+
+  /**
+   * Is this edge unpaved or bad surface?
+   */
+  bool tunnel() const;
+
+  /**
+   * Get the importance of the road/path
+   * @return  Returns importance / RoadClass
+   */
+  RoadClass importance() const;
+
+  /**
+   * Get the use of this edge.
+   */
+  Use use() const;
+
+ protected:
   // End node
   GraphId endnode_;
 
   // Offset to the common edge data within the tile
   uint32_t edgedataoffset_;
 
+  // Length of the link in kilometers. TODO - change to meters? perhaps use
+  // 20 or so bits? Would that preclude building routing?
+  float length_;
+
   // Legal access to the directed link ((also include reverse direction access).
   // TODO - come up with final set of values!
-  struct Access {
-    unsigned char car_          : 1;
-    unsigned char taxi_         : 1;
-    unsigned char truck_        : 1;
-    unsigned char pedestrian_   : 1;
-    unsigned char bicycle_      : 1;
-    unsigned char emergency_    : 1;
-    unsigned char horse_        : 1;  // ???
-    unsigned char spare_        : 1;
+  union Access {
+    struct Fields {
+      uint8_t car          : 1;
+      uint8_t pedestrian   : 1;
+      uint8_t bicycle      : 1;
+      uint8_t truck        : 1;
+      uint8_t emergency    : 1;
+      uint8_t taxi         : 1;
+      uint8_t horse        : 1;  // ???
+      uint8_t spare_       : 1;
+    } fields;
+    uint64_t v;
   };
   Access forwardaccess_;
   Access reverseaccess_;
-
-  // Attributes. Can be used in edge costing methods to favor or avoid edges.
-  struct Attributes {
-    uint32_t ferry_          : 1;
-    uint32_t railferry_      : 1;  // ???
-    uint32_t toll_           : 1;
-    uint32_t private_        : 1;
-    uint32_t unpaved_        : 1;
-    uint32_t tunnel_         : 1;
-    uint32_t spare           : 22;
-    uint32_t elevation_      : 4;  // Elevation factor
-  };
-  Attributes attributes_;
-
-  // Classification and use information
-  struct Classification {
-    uint32_t class_   : 3;     // Road class (importance)
-    uint32_t link_    : 1;     // *link tag - Ramp or turn channel
-    uint32_t use_     : 4;     // Something like "form of way"
-    uint32_t spare_   : 16;
-  };
-  Classification classification_;
 
   // Speed in kilometers. Range 0-250 KPH. Applies to "normal vehicles".
   // Save values above 250 as special cases (closures, construction,
   // etc.)
   // TODO - do we need or does OSM support "truck speed"
-  unsigned char speed_;
+  uint8_t speed_;
+
+  // Classification and use information
+  struct Classification {
+    uint8_t importance  : 3;     // Importance of the road/path
+    uint8_t link        : 1;     // *link tag - Ramp or turn channel
+    uint8_t use         : 4;     // Use / form
+  };
+  Classification classification_;
+
+  // Attributes. Can be used in edge costing methods to favor or avoid edges.
+  struct Attributes {
+    uint32_t ferry          : 1;
+    uint32_t railferry      : 1;
+    uint32_t toll           : 1;
+    uint32_t dest_only      : 1;
+    uint32_t unpaved        : 1;
+    uint32_t tunnel         : 1;
+    uint32_t bridge         : 1;
+    uint32_t roundabout     : 1;
+    uint32_t spare          : 16;
+    uint32_t lanecount      : 4;
+    uint32_t elevation      : 4;  // Elevation factor
+  };
+  Attributes attributes_;
+
+  // TODO - bike network mask (how many values)?
+  // TODO - walkway/path
 
   // TODO - byte alignment / sizing
-
 };
 
 }

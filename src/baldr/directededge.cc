@@ -21,11 +21,55 @@ GraphId DirectedEdge::endnode() const {
 }
 
 // Get the offset to the common edge data.
-unsigned int DirectedEdge::edgedataoffset() const {
+uint32_t DirectedEdge::edgedataoffset() const {
   return edgedataoffset_;
 }
 
-// TODO - methods for access
+// Get the access modes in the forward direction (bit field).
+uint8_t DirectedEdge::forwardaccess() const {
+  return forwardaccess_.v;
+}
+
+// Get the access modes in the reverse direction (bit field).
+uint8_t DirectedEdge::reverseaccess() const {
+  return reverseaccess_.v;
+}
+
+// TODO - methods for individual access
+
+bool DirectedEdge::ferry() const {
+  return attributes_.ferry;
+}
+
+bool DirectedEdge::railferry() const {
+  return attributes_.railferry;
+}
+
+bool DirectedEdge::toll() const {
+  return attributes_.toll;
+}
+
+bool DirectedEdge::destonly() const {
+  return attributes_.dest_only;
+}
+
+bool DirectedEdge::unpaved() const {
+  return attributes_.unpaved;
+}
+
+bool DirectedEdge::tunnel() const {
+  return attributes_.tunnel;
+}
+
+// Get the road class / importance.
+RoadClass DirectedEdge::importance() const {
+  return static_cast<RoadClass>(classification_.importance);
+}
+
+// Get the use of this edge.
+Use DirectedEdge::use() const {
+  return static_cast<Use>(classification_.use);
+}
 
 // Gets the speed in KPH.
 float DirectedEdge::speed() const {
