@@ -21,4 +21,4 @@ dependencies:
 
 test:
   override:
-    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local && make test -j2
+    - ./autogen.sh && [[ ./configure --enable-coverage --with-valhalla-midgard=/usr/local || cat config.log ]] && make test -j2
