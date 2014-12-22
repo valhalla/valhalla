@@ -129,14 +129,30 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
       switch (roadclass) {
 
-        case RoadClass::kMotorway :  w.road_class_ = RoadClass::kMotorway;
-        case RoadClass::kTrunk :  w.road_class_ = RoadClass::kTrunk;
-        case RoadClass::kPrimary :  w.road_class_ = RoadClass::kPrimary;
-        case RoadClass::kTertiaryUnclassified :  w.road_class_ = RoadClass::kTertiaryUnclassified;
-        case RoadClass::kResidential :  w.road_class_ = RoadClass::kResidential;
-        case RoadClass::kService :  w.road_class_ = RoadClass::kService;
-        case RoadClass::kTrack :  w.road_class_ = RoadClass::kTrack;
-        default :  w.road_class_ = RoadClass::kOther;
+        case RoadClass::kMotorway :
+          w.road_class_ = RoadClass::kMotorway;
+          break;
+        case RoadClass::kTrunk :
+          w.road_class_ = RoadClass::kTrunk;
+          break;
+        case RoadClass::kPrimary :
+          w.road_class_ = RoadClass::kPrimary;
+          break;
+        case RoadClass::kTertiaryUnclassified :
+          w.road_class_ = RoadClass::kTertiaryUnclassified;
+          break;
+        case RoadClass::kResidential :
+          w.road_class_ = RoadClass::kResidential;
+          break;
+        case RoadClass::kService :
+          w.road_class_ = RoadClass::kService;
+          break;
+        case RoadClass::kTrack :
+          w.road_class_ = RoadClass::kTrack;
+          break;
+        default :
+          w.road_class_ = RoadClass::kOther;
+          break;
       }
     }
 
@@ -160,16 +176,36 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
       switch (use) {
 
-        case Use::kNone :  w.use_ = Use::kNone;
-        case Use::kCycleway :  w.use_ = Use::kCycleway;
-        case Use::kParkingAisle :  w.use_ = Use::kParkingAisle;
-        case Use::kDriveway :  w.use_ = Use::kDriveway;
-        case Use::kAlley :  w.use_ = Use::kAlley;
-        case Use::kEmergencyAccess :  w.use_ = Use::kEmergencyAccess;
-        case Use::kDriveThru :  w.use_ = Use::kDriveThru;
-        case Use::kSteps :  w.use_ = Use::kSteps;
-        case Use::kOther :  w.use_ = Use::kOther;
-        default :  w.use_ = Use::kNone;
+        case Use::kNone :
+          w.use_ = Use::kNone;
+          break;
+        case Use::kCycleway :
+          w.use_ = Use::kCycleway;
+          break;
+        case Use::kParkingAisle :
+          w.use_ = Use::kParkingAisle;
+          break;
+        case Use::kDriveway :
+          w.use_ = Use::kDriveway;
+          break;
+        case Use::kAlley :
+          w.use_ = Use::kAlley;
+          break;
+        case Use::kEmergencyAccess :
+          w.use_ = Use::kEmergencyAccess;
+          break;
+        case Use::kDriveThru :
+          w.use_ = Use::kDriveThru;
+          break;
+        case Use::kSteps :
+          w.use_ = Use::kSteps;
+          break;
+        case Use::kOther :
+          w.use_ = Use::kOther;
+          break;
+        default :
+          w.use_ = Use::kNone;
+          break;
       }
     }
 
