@@ -17,13 +17,17 @@ dependencies:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev lcov
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - cd deps; for dep in midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; find /usr/local/include; cd ../; done
+    - cd deps; for dep in midgard; do cd $dep; ./autogen.sh && ./configure && sudo make install; done
 
 test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local
   override:
-    - cat config.log
     - make test -j2
   post:
     - sudo make install
+
+general:
+  artifacts:
+    - config.log
+    - test/*.log
