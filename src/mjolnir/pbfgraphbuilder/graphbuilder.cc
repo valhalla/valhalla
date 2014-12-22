@@ -77,15 +77,15 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   // Create a new node and set its attributes
   OSMNode n (lat, lng);
   for (const auto& tag : results) {
-    if ( tag.first == "exit_to" )
+    if (tag.first == "exit_to")
       n.set_exit_to(tag.second);
-    else if ( tag.first == "ref" )
+    else if (tag.first == "ref")
       n.set_ref(tag.second);
-    else if ( tag.first == "gate" )
+    else if (tag.first == "gate")
       n.set_gate((tag.second == "true" ? true : false));
-    else if ( tag.first == "bollard" )
+    else if (tag.first == "bollard")
       n.set_bollard((tag.second == "true" ? true : false));
-    else if ( tag.first == "modes_mask" )
+    else if (tag.first == "modes_mask")
       n.set_modes_mask(std::stoi(tag.second));
 
     //  if (osmid == 2385249)
