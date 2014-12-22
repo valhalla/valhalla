@@ -51,7 +51,8 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphtileheaderbuilder.h \
 	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
-	valhalla/mjolnir/exitsignbuilder.h 
+	valhalla/mjolnir/exitsignbuilder.h \
+	valhalla/mjolnir/uniquenames.h 
 libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -59,13 +60,14 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
 	src/mjolnir/exitsignbuilder.cc \
+	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc 
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
 
 #distributed executables
-bin_PROGRAMS = pbfgraphbuilder
+bin_PROGRAMS = pbfgraphbuilder hierarchybuilder
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/pbfgraphbuilder.cc \
 	src/mjolnir/pbfgraphbuilder/graphbuilder.cc \
@@ -73,13 +75,22 @@ pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder/osmnode.cc
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+hierarchybuilder_SOURCES = \
+	src/mjolnir/hierarchybuilder/buildhierarchy.cc \
+	src/mjolnir/hierarchybuilder/hierarchybuilder.cc
+hierarchybuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+hierarchybuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
 
 # tests
 check_PROGRAMS = \
-	test/edgeinfobuilder
+	test/edgeinfobuilder \
+	test/uniquenames
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
+test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
