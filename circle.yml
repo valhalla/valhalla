@@ -2,6 +2,7 @@ machine:
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo add-apt-repository -y ppa:chris-lea/zeromq
     - sudo rm /etc/apt/sources.list.d/google-chrome.list #workaround for duplicate sources on ubuntu 12.04 circlci machine
     - sudo apt-get update
 
@@ -15,7 +16,7 @@ checkout:
 dependencies:
   override:
     - sudo apt-get remove --purge -y libboost*
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov protobuf-compiler libprotobuf-dev
+    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov protobuf-compiler libprotobuf-dev libzmq3-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
     - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
