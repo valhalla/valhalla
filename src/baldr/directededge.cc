@@ -61,6 +61,14 @@ bool DirectedEdge::tunnel() const {
   return attributes_.tunnel;
 }
 
+bool DirectedEdge::bridge() const {
+  return attributes_.bridge;
+}
+
+bool DirectedEdge::roundabout() const {
+  return attributes_.roundabout;
+}
+
 // Gets the lanes
 uint32_t DirectedEdge::lanes() const {
   return attributes_.lanecount;

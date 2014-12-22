@@ -86,6 +86,16 @@ class DirectedEdge {
   bool tunnel() const;
 
   /**
+   * Is this edge a bridge?
+   */
+  bool bridge() const;
+
+  /**
+   * Is this edge a roundabout?
+   */
+  bool roundabout() const;
+
+  /**
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
