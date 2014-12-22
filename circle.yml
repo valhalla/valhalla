@@ -17,5 +17,7 @@ dependencies:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 test:
+  pre:
+    - ./autogen.sh && ./configure --enable-coverage
   override:
-    - ./autogen.sh && ./configure --enable-coverage && make test -j2
+    - make test -j2
