@@ -28,9 +28,6 @@ CHECK_VALHALLA_BALDR
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building loki. Please install libboost-dev.])])
 
-# check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 2.1.10])
-
 # optionally enable coverage information
 CHECK_COVERAGE
 
