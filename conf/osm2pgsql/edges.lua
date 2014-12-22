@@ -265,13 +265,13 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] == "steps" then
-    use = 6 --steps/stairs
+    use = 7 --steps/stairs
   elseif kv["highway"] == nil then 
     use = 0
   elseif kv["highway"] and kv["highway"] == "cycleway" then --cycleway
     use = 1
   elseif use == nil and kv["service"] then
-    use = 7 --other
+    use = 8 --other
   else 
     use = 0 --none
   end
