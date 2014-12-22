@@ -289,6 +289,7 @@ function filter_tags_generic(kv)
   kv["name"] = kv["name"]
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
+  kv["official_name"] = kv["official_name"]
   kv["speed"] = normalize_speed(kv["maxspeed"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
