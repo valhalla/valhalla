@@ -118,6 +118,26 @@ void DirectedEdgeBuilder::set_tunnel(const bool tunnel) {
   attributes_.tunnel = tunnel;
 }
 
+//Sets the bridge flag.
+void DirectedEdgeBuilder::set_bridge(const bool bridge) {
+  attributes_.bridge = bridge;
+}
+
+//Sets the roundabout flag.
+void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
+  attributes_.roundabout = roundabout;
+}
+
+//Sets the number of lanes
+void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
+  attributes_.lanecount = lanecount;
+}
+
+//Sets the bike network mask
+void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
+  attributes_.bikenetwork = bikenetwork;
+}
+
 //Sets the road class.
 void DirectedEdgeBuilder::set_importance(const RoadClass roadclass) {
   classification_.importance = static_cast<uint8_t>(roadclass);
