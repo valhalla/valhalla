@@ -31,10 +31,16 @@ struct Location {
   Location(const midgard::PointLL& latlng, const StopType& stoptype = StopType::BREAK);
 
   /**
-   * Constructor.
+   * conversion.
    * @param  geojson  a geojson representation of the location
    */
-  Location(const std::string geojson);
+  static Location FromGeoJson(const std::string& geojson);
+
+  /**
+   * conversion.
+   * @param  csv  a csv representation of the location
+   */
+  static Location FromCsv(const std::string& csv);
 
   //coordinates of the location as used for routing
   midgard::PointLL latlng_;
