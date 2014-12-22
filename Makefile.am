@@ -47,7 +47,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/graphtileheader.h \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
-	valhalla/baldr/pathlocation.h 
+	valhalla/baldr/pathlocation.h \
+	valhalla/baldr/graphconstants.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
