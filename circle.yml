@@ -23,6 +23,7 @@ test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local
   override:
+    - cat config.log
     - make test -j2
   post:
     - sudo make install
