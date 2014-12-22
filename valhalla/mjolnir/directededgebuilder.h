@@ -133,6 +133,18 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_tunnel(const bool tunnel);
 
   /**
+   * Sets the bridge flag.
+   * @param  bridge   Is bridge?
+   */
+  void set_bridge(const bool bridge);
+
+  /**
+   * Sets the roundabout flag.
+   * @param  roundabout   Is roundabout?
+   */
+  void set_roundabout(const bool roundabout);
+
+  /**
    * Sets the road class.
    * @param  roadclass  Road class.
    */
@@ -155,6 +167,18 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  speed  Speed in KPH.
   */
   void set_speed(const float speed);
+
+  /**
+   * Sets the number of lanes
+   * @param  lanecount
+  */
+  void set_lanecount(const uint32_t lanecount);
+
+  /**
+   * Sets the bike network mask
+   * @param  bikenetwork Bike network mask.
+  */
+  void set_bikenetwork(const uint32_t bikenetwork);
 };
 
 }
