@@ -343,9 +343,6 @@ struct NodePairHasher {
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
-  // Edge info offset
-  size_t edge_info_offset = 0;
-
   // Iterate through the tiles
   unsigned int tileid = 0;
   for (auto tile : tilednodes_) {
@@ -356,9 +353,16 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     }
 
     GraphTileBuilder graphtile;
+
+    // Edge info offset and map
+    size_t edge_info_offset = 0;
     // TODO - initial map size - use node count*4 ?
     std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
-    std::unordered_map<std::string, uint32_t> text_index_map;
+
+    // Text list offset and map
+    size_t text_list_offset = 0;
+    std::unordered_map<std::string, uint32_t> text_offset_map;
+
 
     // Iterate through the nodes
     unsigned int directededgecount = 0;
