@@ -35,6 +35,16 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edgeinfo_size_);
 
+    // TODO - rm later
+    std::cout << ">>>>> header_builder_.nodecount_"
+              << header_builder_.nodecount()
+              << "header_builder_.directededgecount_ = "
+              << header_builder_.directededgecount()
+              << "header_builder_.edgeinfo_offset_ = "
+              << header_builder_.edgeinfo_offset()
+              << "header_builder_.textlist_offset_ = "
+              << header_builder_.textlist_offset() << std::endl;
+
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
                sizeof(GraphTileHeaderBuilder));
@@ -94,6 +104,14 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 
   // Set edgeinfo data size
   edgeinfo_size_ = edgeinfo_size;
+
+  // TODO rm later
+  size_t computed_size = 0;
+  for (const auto& edgeinfo_builder : edgeinfo_builder_) {
+    computed_size += edgeinfo_builder.SizeOf();
+  }
+  std::cout << ">>>>> EDGEINFO computed_size = " << computed_size
+            << "  edgeinfo_size_ = " << edgeinfo_size_ << std::endl;
 }
 
 void GraphTileBuilder::SetTextListAndSize(
@@ -108,11 +126,13 @@ void GraphTileBuilder::SetTextListAndSize(
   textlist_size_ = textlist_size;
 
   // TODO rm later
+  std::cout << "NAME COUNT = " << textlist_builder_.size() << std::endl;
   size_t computed_size = 0;
   for (const auto& name : textlist_builder_) {
     if (name.empty())
       continue;
     computed_size += name.length() + 1;
+    std::cout << "name=" << name << std::endl;
   }
   std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
             << "  textlist_size_ = " << textlist_size_ << std::endl;
