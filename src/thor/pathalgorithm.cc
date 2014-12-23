@@ -77,11 +77,11 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   SetOrigin(graphreader, origin, edgecost);
   SetDestination(dest);
 
-std::cout << "Add dest edge: " << dest.edges_[0].id_.tileid() << "," << dest.edges_[0].id_.id() << std::endl;
-GraphTile* t = graphreader.GetGraphTile(dest.edges_[0].id_);
-const DirectedEdge* d = t->directededge(dest.edges_[0].id_);
-const NodeInfo* en  = t->node(d->endnode());
-std::cout << "   Length = " << d->length() << " EndNode LL = " << en->latlng().lat() << "," << en->latlng().lng() << std::endl;
+  std::cout << "Add dest edge: " << dest.edges_[0].id_.tileid() << "," << dest.edges_[0].id_.id() << std::endl;
+  GraphTile* t = graphreader.GetGraphTile(dest.edges_[0].id_);
+  const DirectedEdge* d = t->directededge(dest.edges_[0].id_);
+  const NodeInfo* en  = t->node(d->endnode());
+  std::cout << "   Length = " << d->length() << " EndNode LL = " << en->latlng().lat() << "," << en->latlng().lng() << std::endl;
 
 
   // Find shortest path
@@ -98,6 +98,12 @@ std::cout << "   Length = " << d->length() << " EndNode LL = " << en->latlng().l
   while (true) {
     // Get next element from adjacency list
     next = adjacencylist_->Remove();
+
+    //TODO: make a class that extends std::exception, with messages and error codes and return
+    //the appropriate one here
+    if(next == nullptr)
+      throw std::runtime_error("No path could be found for input");
+
     RemoveFromAdjMap(next->edgeid());
     edgestatus_->Set(next->edgeid(), kPermanent);
 //std::cout << "Next from adj list: " << next->edgeid().tileid() << "," << next->edgeid().id() <<
@@ -162,7 +168,7 @@ std::cout << "   Length = " << d->length() << " EndNode LL = " << en->latlng().l
 //std::cout << "     Length = " << directededge->length() << " EndNode LL = " << endnode->latlng().lat() << "," << endnode->latlng().lng() << std::endl;
 //std::cout << "     Add to adj list: " << edgeid.tileid() << "," << edgeid.id() << " cost = " << cost << " sortcost = " << sortcost << std::endl;
 
-    edgestatus_->Set(edgeid, kTemporary);
+      edgestatus_->Set(edgeid, kTemporary);
     }
   }
 

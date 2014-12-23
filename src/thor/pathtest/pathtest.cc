@@ -3,6 +3,8 @@
 #include <vector>
 #include <queue>
 #include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "config.h"
 
@@ -21,7 +23,7 @@ namespace bpo = boost::program_options;
 /**
  *
  */
-int PathTest(const std::string& datapath, const PathLocation& origin,
+int PathTest(const std::string& config, const PathLocation& origin,
              const PathLocation& dest) {
   // Use Loki to get location information
   std::clock_t start = std::clock();
@@ -31,7 +33,11 @@ int PathTest(const std::string& datapath, const PathLocation& origin,
 
   start = std::clock();
   PathAlgorithm pathalgorithm;
-  GraphReader graphreader(datapath);
+
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(config.c_str(), pt);
+
+  GraphReader graphreader(pt);
   EdgeCost* edgecost = new EdgeCost;
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, graphreader, edgecost);
@@ -63,19 +69,20 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  std::string echo;
+  std::string origin, destination, config;
 
   options.add_options()
     ("help,h", "Print this help message.")
     ("version,v", "Print the version of this software.")
-    ("origin,o", "Origin lat,lng.")
+    ("origin,o", boost::program_options::value<std::string>(&origin)->required(), "Origin lat,lng.")
+    ("destination,d", boost::program_options::value<std::string>(&destination)->required(), "Destination lat,lng.")
     // positional arguments
-    ("echo", bpo::value<std::string>(&echo), "String for the application to echo back")
+    ("config", bpo::value<std::string>(&config)->required(), "String for the application to echo back")
     ;
 
 
   bpo::positional_options_description pos_options;
-  pos_options.add("echo", 1);
+  pos_options.add("config", 1);
 
   bpo::variables_map vm;
 
@@ -103,7 +110,7 @@ int main(int argc, char *argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : {"echo"}) {
+  for (auto arg : std::vector<std::string>{"origin", "destination", "config"}) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
@@ -111,29 +118,24 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  //echo it back
-  std::cout << echo << "\n";
-
-  // Test path
-  std::string datapath = "/data/valhalla/";
 
   // Origin
-  Location originloc(PointLL(40.042587f, -76.299248f), Location::StopType::BREAK);
-  PathLocation origin(originloc);
+  Location originloc = Location::FromCsv(origin);
+  PathLocation pathOrigin(originloc);
   PathLocation::Edge originedge;
   originedge.dist_ = 0.0f;
   originedge.id_ = GraphId(749214, 2, 23460);
-  origin.edges_.push_back(originedge);
+  pathOrigin.edges_.push_back(originedge);
 
   // Destination
-  Location destloc(PointLL(40.039505f, -76.305596f), Location::StopType::BREAK);
-  PathLocation dest(destloc);
+  Location destloc = Location::FromCsv(destination);
+  PathLocation pathDest(destloc);
   PathLocation::Edge destedge;
   destedge.dist_ = 0.0f;
   destedge.id_ = GraphId(749214, 2, 157);
-  dest.edges_.push_back(destedge);
+  pathDest.edges_.push_back(destedge);
 
-  PathTest(datapath, origin, dest);
+  PathTest(config, pathOrigin, pathDest);
 
   return EXIT_SUCCESS;
 }
