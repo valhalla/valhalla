@@ -4,6 +4,7 @@
 
 #include <list>
 #include <map>
+#include <cstdint>
 
 #include <valhalla/midgard/aabb2.h>
 
@@ -56,7 +57,7 @@ class Tiles {
    * @return  Returns the tile row. Returns -1 if outside the
    *          tile system bounds.
    */
-  int Row(const float y) const;
+  int32_t Row(const float y) const;
 
   /**
    * Gets the "column" based on x.
@@ -64,7 +65,7 @@ class Tiles {
    * @return  Returns the tile column. Returns -1 if outside the
    *          tile system bounds.
    */
-  int Col(const float x) const;
+  int32_t Col(const float x) const;
 
   /**
    * Converts the center of a bounding box to a tile ID.
@@ -72,7 +73,7 @@ class Tiles {
    * @return  Returns the tile ID. If the latitude, longitude is outside
    *          the extent, an error (-1) is returned.
    */
-  int TileId(const Point2& c) const;
+  int32_t TileId(const Point2& c) const;
 
   /**
    * Converts x,y to a tile ID.
@@ -81,26 +82,26 @@ class Tiles {
    * @return  Returns the tile ID. -1 (errors( is returned if the x,y is
    *          outside the bounding box of the tiles.
    */
-  int TileId(const float y, const float x) const;
+  int32_t TileId(const float y, const float x) const;
 
   /**
    * Gets the tile ID given the row ID and column ID.
    */
-  int TileId(const int col, const int row) const;
+  int32_t TileId(const int32_t col, const int32_t row) const;
 
   /**
    * Get the base x,y of a specified tile.
    * @param   tileid   Tile ID.
    * @return  The base x,y of the specified tile.
    */
-  Point2 Base(const int tileid) const;
+  Point2 Base(const int32_t tileid) const;
 
   /**
    * Gets the y,x extent of the specified tile.
    * @param   tileid   Tile ID.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2 TileBounds(const int tileid) const;
+  AABB2 TileBounds(const int32_t tileid) const;
 
   /**
    * Gets the y,x extent of the tile with specified row, column.
@@ -108,14 +109,14 @@ class Tiles {
    * @param   row   Tile row.
    * @return  The latitude, longitude extent of the specified tile.
    */
-  AABB2 TileBounds(const int col, const int row) const;
+  AABB2 TileBounds(const int32_t col, const int32_t row) const;
 
   /**
    * Gets the center of the specified tile.
    * @param   tileid   Tile ID.
    * @return  The center x,y of the specified tile.
    */
-  Point2 Center(const int tileid) const;
+  Point2 Center(const int32_t tileid) const;
 
   /**
    * Returns the new tile given a previous tile and a row, column offset.
@@ -124,8 +125,8 @@ class Tiles {
    * @param   delta_cols    Number of columns to offset (can be negative).
    * @return  Tile ID of the new tile.
    */
-  int GetRelativeTileId(const int initial_tile, const int delta_rows,
-                        const int delta_cols) const;
+  int32_t GetRelativeTileId(const int32_t initial_tile, const int32_t delta_rows,
+                        const int32_t delta_cols) const;
 
    /**
     * Returns the tile offsets (row,column) between the previous tile ID and
@@ -136,34 +137,34 @@ class Tiles {
     * @param   delta_rows    Return: Relative number of rows.
     * @param   delta_cols    Return: Relative number of columns.
     */
-   void TileOffsets(const int initial_tileid, const int newtileid,
-                       int& delta_rows, int& delta_cols) const;
+   void TileOffsets(const int32_t initial_tileid, const int32_t newtileid,
+                       int32_t& delta_rows, int32_t& delta_cols) const;
 
   /**
    * Get the number of tiles in the extent.
    * @return  Number of tiles.
    */
-  unsigned int TileCount() const;
+  uint32_t TileCount() const;
 
   /**
    * Gets the neighboring tileid to the right/east.
    */
-  int RightNeighbor(const int tileid) const;
+  int32_t RightNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the neighboring tileid - west.
    */
-  int LeftNeighbor(const int tileid) const;
+  int32_t LeftNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the neighboring tileid - north.
    */
-  int TopNeighbor(const int tileid) const;
+  int32_t TopNeighbor(const int32_t tileid) const;
 
    /**
     * Gets the neighboring tileid - south.
     */
-   int BottomNeighbor(const int tileid) const;
+   int32_t BottomNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the list of tiles that lie within the specified bounding box.
@@ -173,8 +174,8 @@ class Tiles {
    * @param  boundingbox  Bounding box
    * @param  maxTiles  Maximum number of tiles to find.
    */
-  const std::vector<int>& TileList(const AABB2& boundingbox,
-               const unsigned int maxtiles = 4096);
+  const std::vector<int32_t>& TileList(const AABB2& boundingbox,
+               const uint32_t maxtiles = 4096);
 
  protected:
   // Bounding box of the tiling system.
@@ -184,37 +185,37 @@ class Tiles {
   float tilesize_;
 
   // Number of rows ( y or latitude)
-  int nrows_;
+  int32_t nrows_;
 
   // Number of longitude (x or longitude).
-  int ncolumns_;
+  int32_t ncolumns_;
 
   // Tile list being constructed
-  std::vector<int> tilelist_;
+  std::vector<int32_t> tilelist_;
 
   // List of tiles to check if in view. Use a list: push new entries on the
   // back and pop off the front. The tile search tends to spiral out from
   // the center.
-  std::list<int> checklist_;
+  std::list<int32_t> checklist_;
 
   // Visited tiles
-  std::map<int, int> visitedtiles_;
+  std::map<int32_t, int32_t> visitedtiles_;
 
   // Default constructor (private).  Forces use of the bounding box
   Tiles();
 
   // This function checks neighboring tiles. It adds these tiles to the
   // end of the CheckList if they are not already in there.
-  void addNeighbors(const int tileid);
+  void addNeighbors(const int32_t tileid);
 
   // Returns the next tile from the check list that is inside the bounding
   // box. Adds its neighbors to the check list.
   // Returns the tileId or -1 if no more tiles are inside the bounding box.
-  int NextTile(const AABB2& boundingbox);
+  int32_t NextTile(const AABB2& boundingbox);
 
   // Convenience method to check if the tile has already been considered
   // (added to tile list or check list)
-  bool InList(const int id);
+  bool InList(const int32_t id);
 };
 
 }
