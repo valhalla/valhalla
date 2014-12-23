@@ -31,6 +31,7 @@ libtool
 valhalla/proto
 src/proto
 pbfgraphbuilder
+hierarchybuilder
 *.o
 .deps/
 .dirstamp
@@ -42,6 +43,7 @@ libvalhalla_mjolnir.la
 test-suite.log
 test-driver
 test/edgeinfobuilder
+test/uniquenames
 test/*.log
 test/*.trs
 

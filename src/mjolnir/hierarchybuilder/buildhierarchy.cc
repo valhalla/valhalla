@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   // which the hierarchy is derived. Connections occur only between
   // adjacent levels.
   uint32_t level;  // TODO - argument
-  HierarchyBuilder hierarchybuilder(pt, level);
+  HierarchyBuilder hierarchybuilder(pt);
   hierarchybuilder.Build();
 
   return EXIT_SUCCESS;
