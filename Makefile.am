@@ -40,18 +40,24 @@ lib_LTLIBRARIES = libvalhalla_thor.la
 include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astarheuristic.h \
-	valhalla/thor/edgecost.h \
+	valhalla/thor/autocost.h \
+	valhalla/thor/bicyclecost.h \
+	valhalla/thor/dynamiccost.h \
 	valhalla/thor/edgelabel.h \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/pathalgorithm.h \
+	valhalla/thor/pedestriancost.h \
 	valhalla/thor/trippathbuilder.h 
 libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
-	src/thor/edgecost.cc \
+	src/thor/autocost.cc \
+	src/thor/bicyclecost.cc \
+	src/thor/dynamiccost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
 	src/thor/pathalgorithm.cc \
+	src/thor/pedestriancost.cc \
 	src/thor/trippathbuilder.cc 
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
