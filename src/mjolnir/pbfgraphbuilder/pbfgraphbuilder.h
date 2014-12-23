@@ -47,13 +47,13 @@ struct OSMWay {
   std::string alt_name_;
   std::string official_name_;
 
-  unsigned short speed;
+  float speed;
 
   std::string ref_;
   std::string int_ref_;
 
   bool surface_;  //TODO:  Expand out?
-  unsigned short lanes_;
+  uint32_t lanes_;
   bool tunnel_;
   bool toll_;
   bool bridge_;
@@ -63,7 +63,7 @@ struct OSMWay {
   std::string destination_ref_to_;
   std::string junction_ref_;
 
-  unsigned short bike_network_mask_;
+  uint32_t bike_network_mask_;
   std::string bike_national_ref_;
   std::string bike_regional_ref_;
   std::string bike_local_ref_;
