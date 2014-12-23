@@ -17,6 +17,11 @@ constexpr uint8_t kEmergencyAccess  = 16;
 constexpr uint8_t kTaxiAccess       = 32;
 constexpr uint8_t kHorseAccess      = 64;
 
+// Bike Network constants. Bit constants.
+constexpr uint8_t kNcn = 1;
+constexpr uint8_t kRcn = 2;
+constexpr uint8_t kLcn = 4;
+
 /**
  * Directed edge within the graph.
  * @author  David W. Nesbitt
