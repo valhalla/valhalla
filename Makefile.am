@@ -48,7 +48,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
-	valhalla/baldr/graphconstants.h
+	valhalla/baldr/graphconstants.h \
+	valhalla/baldr/tilehierarchy.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
@@ -59,20 +60,26 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/graphtileheader.cc \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
-	src/baldr/pathlocation.cc 
+	src/baldr/pathlocation.cc \
+	src/baldr/tilehierarchy.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
 # tests
 check_PROGRAMS = \
 	test/location \
-	test/graphid 
+	test/graphid \
+	test/tilehierarchy 
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_graphid_SOURCES = test/graphid.cc test/test.cc
 test_graphid_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_graphid_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_tilehierarchy_SOURCES = test/tilehierarchy.cc test/test.cc
+test_tilehierarchy_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_tilehierarchy_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

@@ -10,9 +10,8 @@ namespace {
 
 void TestCtorDefault() {
   GraphId target;
-  GraphId expected { 0, 0, 0 };
-  if (!(expected == target))
-    throw runtime_error("CtorDefault test failed");
+  if (target.Is_Valid())
+    throw runtime_error("CtorDefault test failed, should be invalid id");
 }
 
 void TryCtorUintUintUint(const unsigned int tileid, const unsigned int level,
@@ -81,6 +80,15 @@ void TestSetUintUintUint() {
   TrySetUintUintUint(5, 1, 50, GraphId(5, 1, 50));
 }
 
+void TestIsValid() {
+  GraphId id(1,2,3);
+  if(!id.Is_Valid())
+    throw runtime_error("Id should have been valid but was not");
+  id = GraphId();
+  if(id.Is_Valid())
+    throw runtime_error("Default constructor should never return valid graphid");
+}
+
 void TryOpPostIncrement(GraphId& gid, const unsigned int expected) {
   gid++;
   if (expected != gid.id())
@@ -146,6 +154,9 @@ int main() {
 
   // Set uint, uint, uint
   suite.test(TEST_CASE(TestSetUintUintUint));
+
+  // Is Valid
+  suite.test(TEST_CASE(TestIsValid));
 
   // Op PostIncrement
   suite.test(TEST_CASE(TestOpPostIncrement));
