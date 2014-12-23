@@ -476,6 +476,9 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_dest_only(w.private_);
         directededge.set_unpaved(w.surface_);
         directededge.set_tunnel(w.tunnel_);
+        directededge.set_roundabout(w.roundabout_);
+        directededge.set_bridge(w.bridge_);
+        directededge.set_bikenetwork(w.bike_network_mask_);
 
         //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
         /*  if (w.osmwayid_ == 368034)
@@ -539,8 +542,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           // TODO - other attributes
 
           // Add to the map
-//          edge_offset_map.insert(
-//              std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
+       //   edge_offset_map.insert(
+       //       std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
 
           // Add to the list
           edges.push_back(edgeinfo);
