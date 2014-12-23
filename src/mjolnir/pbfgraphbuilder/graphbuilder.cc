@@ -232,7 +232,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.official_name_ = tag.second;
 
     else if (tag.first == "speed")
-      w.speed = (unsigned short) std::stoi(tag.second);
+      w.speed = std::stof(tag.second);
 
     else if (tag.first == "ref")
       w.ref_ = tag.second;
@@ -243,7 +243,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.surface_ = (tag.second == "true" ? true : false);
 
     else if (tag.first == "lanes")
-      w.lanes_ = (unsigned short) std::stoi(tag.second);
+      w.lanes_ = std::stoi(tag.second);
 
     else if (tag.first == "tunnel")
       w.tunnel_ = (tag.second == "true" ? true : false);
@@ -253,7 +253,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.bridge_ = (tag.second == "true" ? true : false);
 
     else if (tag.first == "bike_network_mask")
-      w.bike_network_mask_ = (unsigned short) std::stoi(tag.second);
+      w.bike_network_mask_ = std::stoi(tag.second);
     else if (tag.first == "bike_national_ref")
       w.bike_national_ref_ = tag.second;
     else if (tag.first == "bike_regional_ref")
