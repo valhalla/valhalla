@@ -71,6 +71,13 @@ class GraphId {
            const uint64_t id);
 
   /**
+   * Returns true if the id is valid
+   *
+   * @return boolean true if the id is valid
+   */
+  bool Is_Valid() const;
+
+  /**
    * Post increments the id.
    */
   void operator ++(int);

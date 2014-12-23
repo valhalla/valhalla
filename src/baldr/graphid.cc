@@ -1,9 +1,13 @@
 #include <functional>
 #include <boost/functional/hash.hpp>
+#include <limits>
 
 #include "baldr/graphid.h"
 
 namespace {
+// Invalid graphid.
+constexpr uint32_t kInvalidId = std::numeric_limits<uint32_t>::max();
+
 // Maximum number of tiles supported.
 constexpr uint32_t kMaxGraphTileId = 16777215;
 
@@ -19,7 +23,7 @@ namespace baldr {
 
 // Default constructor
 GraphId::GraphId() {
-  graphid_.v = 0;
+  graphid_.v = kInvalidId;
 }
 
 // Constructor with values for each field of the GraphId.
@@ -30,7 +34,7 @@ GraphId::GraphId(const uint32_t tileid, const uint32_t level,
 
 // Copy constructor
 GraphId::GraphId(const GraphId& g) {
-  Set(g.tileid(), g.level(), g.id());
+  graphid_.v = g.graphid_.v;
 }
 
 // Get a 64 bit value of the composite GraphId
@@ -59,6 +63,10 @@ void GraphId::Set(const uint32_t tileid, const uint32_t level,
   graphid_.fields.tileid = (tileid < kMaxGraphTileId) ? tileid : 0;
   graphid_.fields.level = (level < kMaxGraphHierarchy) ? level : 0;
   graphid_.fields.id = (id < kMaxGraphId) ? id : 0;
+}
+
+bool GraphId::Is_Valid() const {
+  return graphid_.v != kInvalidId;
 }
 
 // Post increments the id.
