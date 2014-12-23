@@ -72,7 +72,7 @@ class Tiles {
    * @return  Returns the tile ID. If the latitude, longitude is outside
    *          the extent, an error (-1) is returned.
    */
-  int TileId(const Point2& c);
+  int TileId(const Point2& c) const;
 
   /**
    * Converts x,y to a tile ID.
@@ -81,12 +81,12 @@ class Tiles {
    * @return  Returns the tile ID. -1 (errors( is returned if the x,y is
    *          outside the bounding box of the tiles.
    */
-  int TileId(const float y, const float x);
+  int TileId(const float y, const float x) const;
 
   /**
    * Gets the tile ID given the row ID and column ID.
    */
-  int TileId(const int col, const int row);
+  int TileId(const int col, const int row) const;
 
   /**
    * Get the base x,y of a specified tile.

@@ -46,7 +46,6 @@ test/aabbll
 test/vector2
 test/polyline2
 test/pointll
-test/tilehierarchy
 test/*.log
 test/*.trs
 
