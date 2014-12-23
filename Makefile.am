@@ -41,6 +41,7 @@ include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/autocost.h \
+	valhalla/thor/bicyclecost.h \
 	valhalla/thor/dynamiccost.h \
 	valhalla/thor/edgelabel.h \
 	valhalla/thor/edgestatus.h \
@@ -51,6 +52,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/autocost.cc \
+	src/thor/bicyclecost.cc \
 	src/thor/dynamiccost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
