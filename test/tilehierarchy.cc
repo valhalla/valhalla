@@ -20,7 +20,7 @@ namespace {
         \"levels\": [\
           {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
           {\"name\": \"highway\", \"level\": 0, \"size\": 4},\
-          {\"name\": \"arterial\", \"level\": 1, \"size\": 1}\
+          {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"}\
         ]\
       }\
     }";
@@ -50,6 +50,10 @@ namespace {
     id = h.GetGraphId(PointLL(40.5, -76.5), 2);
     if(id.level() != 2 || id.tileid() != (522 * 1440) + 414 || id.id() != 0)
       throw runtime_error("Expected different graph id for this location");
+    if(h.levels().begin()->second.importance != RoadClass::kOther)
+      throw runtime_error("Importance should be set to other");
+    if((++h.levels().begin())->second.importance != RoadClass::kTrunk)
+      throw runtime_error("Importance should be set to trunk");
   }
 }
 

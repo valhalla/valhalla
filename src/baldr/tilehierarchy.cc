@@ -9,7 +9,7 @@ TileHierarchy::TileLevel::TileLevel(const boost::property_tree::ptree& pt):
   level = pt.get<uint8_t>("level");
   name = pt.get<std::string>("name");
   //if not provided default to everything
-  importance = stringToRoadClass.find(pt.get<std::string>("importance_cuttoff", "Other"))->second;
+  importance = stringToRoadClass.find(pt.get<std::string>("importance_cutoff", "Other"))->second;
 }
 
 TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name, const RoadClass importance, const Tiles& tiles)
