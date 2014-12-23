@@ -48,11 +48,11 @@ int Tiles::Col(const float x) const {
   }
 }
 
-int Tiles::TileId(const Point2& c) {
+int Tiles::TileId(const Point2& c) const {
   return TileId(c.y(), c.x());
 }
 
-int Tiles::TileId(const float y, const float x) {
+int Tiles::TileId(const float y, const float x) const {
   // Return -1 if totally outside the extent.
   if (y < tilebounds_.miny() || x < tilebounds_.minx() ||
       y > tilebounds_.maxy() || x > tilebounds_.maxx())
@@ -62,7 +62,7 @@ int Tiles::TileId(const float y, const float x) {
   return (Row(y) * ncolumns_) + Col(x);
 }
 
-int Tiles::TileId(const int col, const int row) {
+int Tiles::TileId(const int col, const int row) const {
   return (row * ncolumns_) + col;
 }
 
