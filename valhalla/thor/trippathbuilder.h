@@ -6,7 +6,6 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include "thor/edgecost.h"
 
 namespace valhalla {
 namespace thor {
