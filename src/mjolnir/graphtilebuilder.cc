@@ -25,11 +25,19 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
   std::ofstream file(filename.c_str(),
                      std::ios::out | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
-    // Write the header. TODO - add edge info offset and name list offset
+    // Configure the header
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
+    header_builder_.set_edgeinfo_offset(
+        (sizeof(GraphTileHeaderBuilder))
+            + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
+            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)));
+    header_builder_.set_textlist_offset(
+        header_builder_.edgeinfo_offset() + edgeinfo_size_);
+
+    // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
-               sizeof header_builder_);
+               sizeof(GraphTileHeaderBuilder));
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
@@ -49,8 +57,8 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
 
     std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
-              << " edges = " << edgeinfo_builder_.size() << " textlist = "
-              << textlist_builder_.size() << std::endl;
+              << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
+              << textlist_size_ << std::endl;
 
     file.close();
     return true;
@@ -88,15 +96,26 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
   edgeinfo_size_ = edgeinfo_size;
 }
 
-void GraphTileBuilder::SetTextListAndSize(const std::vector<std::string>& textlist,
-                        const std::size_t textlist_size) {
+void GraphTileBuilder::SetTextListAndSize(
+    const std::vector<std::string>& textlist, const std::size_t textlist_size) {
   // TODO move
   if (!textlist.empty()) {
     textlist_builder_.insert(textlist_builder_.end(), textlist.begin(),
                              textlist.end());
-  // Set textlist data size
-    textlist_size_ = textlist_size;
   }
+
+  // Set textlist data size
+  textlist_size_ = textlist_size;
+
+  // TODO rm later
+  size_t computed_size = 0;
+  for (const auto& name : textlist_builder_) {
+    if (name.empty())
+      continue;
+    computed_size += name.length() + 1;
+  }
+  std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
+            << "  textlist_size_ = " << textlist_size_ << std::endl;
 }
 
 }
