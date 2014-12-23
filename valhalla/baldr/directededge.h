@@ -8,6 +8,15 @@
 namespace valhalla {
 namespace baldr {
 
+// Access constants. Bit constants.
+constexpr uint8_t kAutoAccess       = 1;
+constexpr uint8_t kPedestrianAccess = 2;
+constexpr uint8_t kBicycleAccess    = 4;
+constexpr uint8_t kTruckAccess      = 8;
+constexpr uint8_t kEmergencyAccess  = 16;
+constexpr uint8_t kTaxiAccess       = 32;
+constexpr uint8_t kHorseAccess      = 64;
+
 /**
  * Directed edge within the graph.
  * @author  David W. Nesbitt
