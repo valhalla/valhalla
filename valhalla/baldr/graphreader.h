@@ -5,6 +5,8 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -17,17 +19,36 @@ class GraphReader {
  public:
   /**
    * Constructor
+   *
+   * @param ptree  the configuration for the tilehierarchy
    */
-  GraphReader(const std::string& datadirectory);
+  GraphReader(const boost::property_tree::ptree& pt);
+
+  /**
+   * Constructor
+   *
+   * @param tilehierarchy  the tilehierarchy
+   */
+  GraphReader(const TileHierarchy& th);
 
   /**
    * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
    */
   GraphTile* GetGraphTile(const GraphId& graphid);
 
+  /**
+   * Get a pointer to a graph tile object given a PointLL and a Level
+   * @param pointll  the lat,lng that the tile covers
+   * @param level    the hierarchy level to use when getting the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  GraphTile* GetGraphTile(const PointLL& pointll, const unsigned char level);
+
  protected:
-  // Data directory
-  std::string datadir_;
+  // Information about where the tiles are kept
+  TileHierarchy tile_hierarchy_;
 
   /**
    * Get a tile object from cache. Checks if the tile given by the tileid and level
@@ -49,7 +70,8 @@ class GraphReader {
  private:
   std::map<unsigned int, GraphTile*> tilecache_;
 
-  unsigned int GetKey(const unsigned int level, const unsigned int tileid);
+
+  unsigned int GetKey(const unsigned int level, const unsigned int tileid) const;
 };
 
 }

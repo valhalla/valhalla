@@ -7,14 +7,15 @@
 namespace valhalla {
 namespace baldr {
 
-// Default constructor
-GraphReader::GraphReader(const std::string& datadirectory) {
-  datadir_ = datadirectory;
+GraphReader::GraphReader(const boost::property_tree::ptree& pt):tile_hierarchy_(pt) {
+}
+
+GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
 }
 
 // TODO - need a const for tileID bit size
 unsigned int GraphReader::GetKey(const unsigned int level,
-              const unsigned int tileid) {
+              const unsigned int tileid) const {
   return tileid + (level << 24);
 }
 
@@ -30,6 +31,14 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   return ReadTile(graphid);
 }
 
+GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const unsigned char level){
+  GraphId id = tile_hierarchy_.GetGraphId(pointll, level);
+  if(id.Is_Valid())
+    return GetGraphTile(id);
+  else
+    return nullptr;
+}
+
 // Get a tile object from cache. Checks if the tile given by the tileid
 // and level from the graphid is already in the cache.
 GraphTile* GraphReader::GetTileFromCache(const GraphId& graphid) {
@@ -41,7 +50,7 @@ GraphTile* GraphReader::GetTileFromCache(const GraphId& graphid) {
 GraphTile* GraphReader::ReadTile(const GraphId& graphid) {
   // Create a GraphTile object. This reads the tile. Check that the
   // size != -1 (-1 indicates tile not found or other error)
-  GraphTile* tile = new GraphTile(datadir_, graphid);
+  GraphTile* tile = new GraphTile(tile_hierarchy_.tile_dir(), graphid);
   if (tile->size() == -1) {
     return nullptr;
   }
