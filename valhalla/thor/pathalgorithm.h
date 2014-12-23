@@ -8,7 +8,7 @@
 #include <valhalla/baldr/pathlocation.h>
 #include "thor/adjacencylist.h"
 #include "thor/astarheuristic.h"
-#include "thor/edgecost.h"
+#include "thor/dynamiccost.h"
 #include "thor/edgelabel.h"
 #include "thor/edgestatus.h"
 
@@ -36,7 +36,7 @@ class PathAlgorithm {
    */
   std::vector<baldr::GraphId> GetBestPath(const baldr::PathLocation& origin,
           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
-           EdgeCost* edgecost);
+           DynamicCost* costing);
 
   /**
    * Clear the temporary information generated during path construction.
@@ -67,13 +67,14 @@ class PathAlgorithm {
   /**
    * Initialize
    */
-  void Init(const PointLL& origll, const PointLL& destll, EdgeCost* edgecost);
+  void Init(const PointLL& origll, const PointLL& destll,
+            DynamicCost* costing);
 
   /**
    * Add edges at the origin to the adjacency list
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-        const baldr::PathLocation& origin, EdgeCost* edgecost);
+        const baldr::PathLocation& origin, DynamicCost* costing);
 
   /**
    * Set the destination edge(s).

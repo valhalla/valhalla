@@ -8,7 +8,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include "thor/edgecost.h"
+#include "thor/pedestriancost.h"
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 
@@ -32,7 +32,7 @@ int PathTest(const std::string& datapath, const PathLocation& origin,
   start = std::clock();
   PathAlgorithm pathalgorithm;
   GraphReader graphreader(datapath);
-  EdgeCost* edgecost = new EdgeCost;
+  PedestrianCost* edgecost = new PedestrianCost;
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, graphreader, edgecost);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
