@@ -4,8 +4,8 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * Rectangular latitude, longitude region defined by its bounding box.
@@ -27,16 +27,6 @@ class AABBLL : public AABB2 {
    */
   AABBLL(const float minlat, const float minlng,
          const float maxlat, const float maxlng);
-
-  /**
-   * Constructor given a list of lat,lng locations.
-   * @param   pts   List of LatLng locations
-   */
-/**
-TODO - figure this out (how to use base class?
-   AABBLL(const std::vector<PointLL>& pts){
-    Create(pts);
-  } **/
 
   /**
    *  Destructor

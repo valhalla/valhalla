@@ -134,7 +134,7 @@ const std::vector<int>& Tiles::TileList(const AABB2& boundingbox,
   tilelist_.clear();
   visitedtiles_.clear();
 
-  // Get tile at the center of the boundinb box. Return -1 if the center
+  // Get tile at the center of the bounding box. Return -1 if the center
   // of the bounding box is not within the tiling system bounding box.
   // TODO - relax this to check edges of the bounding box?
   int tileid = TileId(boundingbox.Center());
