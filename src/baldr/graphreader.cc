@@ -32,7 +32,11 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
 }
 
 GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const unsigned char level){
-  tile_hierarchy_.GetGraphId(pointll, level);
+  GraphId id = tile_hierarchy_.GetGraphId(pointll, level);
+  if(id.Is_Valid())
+    return GetGraphTile(id);
+  else
+    return nullptr;
 }
 
 // Get a tile object from cache. Checks if the tile given by the tileid
