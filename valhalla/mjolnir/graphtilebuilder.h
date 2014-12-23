@@ -36,10 +36,21 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Add a node and its outbound edges.
    */
-  bool AddNodeAndEdges(const NodeInfoBuilder& node,
-                       const std::vector<DirectedEdgeBuilder>& directededges,
-                       const std::vector<EdgeInfoBuilder>& edges);
-//             const std::vector<std::string>& names);
+  void AddNodeAndDirectedEdges(
+      const NodeInfoBuilder& node,
+      const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Set the edge info and size.
+   */
+  void SetEdgeInfoAndSize(const std::vector<EdgeInfoBuilder>& edges,
+                          const std::size_t edgeinfo_size);
+
+  /**
+   * Set the text list and size.
+   */
+  void SetTextListAndSize(const std::vector<std::string>& textlist,
+                          const std::size_t textlist_size);
 
  protected:
   // Header information for the tile
@@ -57,13 +68,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   // use offsets in directed edges.
   std::vector<EdgeInfoBuilder> edgeinfo_builder_;
 
+  // Size of the edgeinfo data
+  std::size_t edgeinfo_size_;
+
   // Names as sets of null-terminated char arrays. Edge info has offsets
   // into this array.
   std::vector<std::string> textlist_builder_;
 
-  // Map of edge IDs vs. offsets
-
-//   unsigned int StoreEdgeInfo(const EdgeInfoBuilder& edge);
+  // Size of the textlist data
+  std::size_t textlist_size_;
 };
 
 }
