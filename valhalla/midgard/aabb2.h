@@ -5,12 +5,11 @@
 
 #include <valhalla/midgard/point2.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * Axis Aligned Bounding Box (2 dimensional)
- * @author  David W. Nesbitt
  */
 class AABB2 {
  public:
@@ -153,7 +152,7 @@ class AABB2 {
   void Expand(const AABB2& r2);
 
  protected:
-  // Minumum and maximum x,y values (lower right and upper left corners
+  // Minimum and maximum x,y values (lower right and upper left corners
   // of a rectangle / bounding box.
   float minx_;
   float miny_;
