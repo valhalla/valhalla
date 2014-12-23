@@ -10,7 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "valhalla/midgard/pointll.h"
-#include "valhalla/midgard/tilehierarchy.h"
+#include "valhalla/baldr/tilehierarchy.h"
 #include "valhalla/baldr/graphid.h"
 #include "valhalla/baldr/graphreader.h"
 
@@ -36,7 +36,7 @@ class HierarchyBuilder {
   /**
    * Constructor
    */
-  HierarchyBuilder(const boost::property_tree::ptree& pt, const uint32_t level);
+  HierarchyBuilder(const boost::property_tree::ptree& pt);
 
   /**
    * Build the set of hierarchies based on the TileHierarchy configuration
@@ -45,23 +45,12 @@ class HierarchyBuilder {
   bool Build();
 
  protected:
-  // Level that is being built
-  uint32_t level_;
-
-  // Base level / source level that the new hierarchy is constructed
-  // from and connected to.
-  uint32_t baselevel_;
-
-  // Road class cutoff for the new hierarchy
-  uint32_t rcc_;
 
   // Tile hierarchy/level information
-  midgard::TileHierarchy tile_hierarchy_;
-  midgard::TileHierarchy::TileLevel basetiles_;
-  midgard::TileHierarchy::TileLevel newtiles_;
+  baldr::TileHierarchy tile_hierarchy_;
 
   // Graphreader
-  baldr::GraphReader* graphreader_;
+  baldr::GraphReader graphreader_;
 
   // Lists of nodes on the new hierarchy
   std::vector<std::vector<NewNode>> tilednodes_;
@@ -69,16 +58,13 @@ class HierarchyBuilder {
   // Mapping from base level node to new node
   std::map<uint64_t, baldr::GraphId> nodemap_;
 
-  // Get tile hierarchy level information
-  bool GetHierarchyLevels();
-
   // Get the nodes that remain in the new level
-  bool GetNodesInNewLevel();
+  bool GetNodesInNewLevel(const baldr::TileHierarchy::TileLevel& base_level, const baldr::TileHierarchy::TileLevel& new_level);
 
   // Add a node to the new level. Map it back to the node on the base
   // level and create a mapping from the base level to the new node.
   void AddNewNode(baldr::GraphTile* graphtile, const baldr::NodeInfo* nodeinfo,
-                  const baldr::GraphId& priornode);
+                  const baldr::GraphId& priornode, const baldr::TileHierarchy::TileLevel& new_level);
 
   // Check if the new node can be contracted. Use information from
   // the base level.

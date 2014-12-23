@@ -10,7 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/tilehierarchy.h>
+#include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include "pbfgraphbuilder.h"
 
@@ -140,7 +140,7 @@ class GraphBuilder {
   std::string input_file_;
 
   // List of the tile levels to be created
-  midgard::TileHierarchy tile_hierarchy_;
+  TileHierarchy tile_hierarchy_;
 
 };
 
