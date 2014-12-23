@@ -294,9 +294,9 @@ void GraphBuilder::PrintCounts() {
 // is used. This allows us to detect intersections (nodes in a graph).
 void GraphBuilder::SetNodeUses() {
   // Iterate through the ways
-  for (auto way : ways_) {
+  for (const auto& way : ways_) {
     // Iterate through the nodes that make up the way
-    for (auto node : way.nodelist_) {
+    for (const auto& node : way.nodelist_) {
       nodes_[node].IncrementUses();
     }
     // make sure that the last node is considered as an extremity
@@ -532,7 +532,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           std::vector<std::string> names = w.GetNames();
           std::vector<size_t> street_name_offset_list;
 
-          for (auto name : names) {
+          for (const auto& name : names) {
+            if (name.empty()) {
+              continue;
+            }
+
             auto existing_text_offset = text_offset_map.find(name);
             // Add if not found
             if (existing_text_offset == text_offset_map.end()) {
