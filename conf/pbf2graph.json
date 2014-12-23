@@ -6,14 +6,14 @@
     "tile_dir": "/data/valhalla",
     "levels": [
       {"name": "local", "level": 2, "size": 0.25},
-      {"name": "arterial", "level": 1, "size": 1},
-      {"name": "highway", "level": 0, "size": 4}
+      {"name": "arterial", "level": 1, "size": 1, "importance_cutoff": "TertiaryUnclassified"},
+      {"name": "highway", "level": 0, "size": 4, "importance_cutoff": "Trunk"}
     ]
   },
   "tagtransform": {
-    "node_script": "import/osm2pgsql/vertices.lua",
+    "node_script": "conf/osm2pgsql/vertices.lua",
     "node_function": "nodes_proc",
-    "way_script": "import/osm2pgsql/edges.lua",
+    "way_script": "conf/osm2pgsql/edges.lua",
     "way_function": "ways_proc"
   }
 }
