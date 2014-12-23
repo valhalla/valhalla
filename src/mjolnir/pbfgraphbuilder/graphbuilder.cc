@@ -232,7 +232,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.official_name_ = tag.second;
 
     else if (tag.first == "speed")
-      w.speed = (unsigned short) std::stoi(tag.second);
+      w.speed = std::stof(tag.second);
 
     else if (tag.first == "ref")
       w.ref_ = tag.second;
@@ -243,7 +243,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.surface_ = (tag.second == "true" ? true : false);
 
     else if (tag.first == "lanes")
-      w.lanes_ = (unsigned short) std::stoi(tag.second);
+      w.lanes_ = std::stoi(tag.second);
 
     else if (tag.first == "tunnel")
       w.tunnel_ = (tag.second == "true" ? true : false);
@@ -253,7 +253,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.bridge_ = (tag.second == "true" ? true : false);
 
     else if (tag.first == "bike_network_mask")
-      w.bike_network_mask_ = (unsigned short) std::stoi(tag.second);
+      w.bike_network_mask_ = std::stoi(tag.second);
     else if (tag.first == "bike_national_ref")
       w.bike_national_ref_ = tag.second;
     else if (tag.first == "bike_regional_ref")
@@ -476,6 +476,9 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_dest_only(w.private_);
         directededge.set_unpaved(w.surface_);
         directededge.set_tunnel(w.tunnel_);
+        directededge.set_roundabout(w.roundabout_);
+        directededge.set_bridge(w.bridge_);
+        directededge.set_bikenetwork(w.bike_network_mask_);
 
         //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
         /*  if (w.osmwayid_ == 368034)
@@ -539,8 +542,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           // TODO - other attributes
 
           // Add to the map
-//          edge_offset_map.insert(
-//              std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
+       //   edge_offset_map.insert(
+       //       std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
 
           // Add to the list
           edges.push_back(edgeinfo);
