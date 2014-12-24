@@ -15,19 +15,21 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       edgeinfo_(nullptr),
-      textlist_(nullptr) {
+      textlist_(nullptr),
+      id_(){
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& basedirectory,
-                     const GraphId& graphid) {
+GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
+  :id_(graphid.tileid(), graphid.level(), 0) {
+
   // Open to the end of the file so we can immediately get size;
-  std::ifstream file(Filename(basedirectory, graphid),
+  std::ifstream file(Filename(basedirectory, id_),
           std::ios::in|std::ios::binary|std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
-    int filesize = file.tellg();
+    size_t filesize = file.tellg();
     graphtile_ = new char[filesize];
     file.seekg (0, std::ios::beg);
     file.read(graphtile_, filesize);
@@ -35,15 +37,15 @@ GraphTile::GraphTile(const std::string& basedirectory,
 
     // Set a pointer to the header (first structure in the binary data).
     char* ptr = graphtile_;
-    header_ = (GraphTileHeader*)graphtile_;
+    header_ = reinterpret_cast<GraphTileHeader*>(graphtile_);
     ptr += sizeof(GraphTileHeader);
 
     // Set a pointer to the node list
-    nodes_ = (NodeInfo*)ptr;
+    nodes_ = reinterpret_cast<NodeInfo*>(ptr);
     ptr += header_->nodecount() * sizeof(NodeInfo);
 
     // Set a pointer to the directed edge list
-    directededges_ = (DirectedEdge*)ptr;
+    directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
     // Start of edge information and name list
@@ -52,7 +54,7 @@ GraphTile::GraphTile(const std::string& basedirectory,
   }
   else {
     // TODO - error. Distinguish between file not found vs. a file read error?
-    size_ = -1;
+    size_ = 0;
   }
 }
 
@@ -62,7 +64,7 @@ GraphTile::~GraphTile() {
 
 // Gets the filename given the graphId
 std::string GraphTile::Filename(const std::string& basedirectory,
-               const GraphId& graphid) const {
+               const GraphId& graphid) {
   return basedirectory + "/" + FileDirectory(graphid) +
       "/tile" + std::to_string(graphid.tileid()) + ".gph";
 }
@@ -72,31 +74,45 @@ std::string GraphTile::Filename(const std::string& basedirectory,
   * @param  graphid  Graph Id to construct file directory.
   * @return  Returns file directory path relative to tile base directory
   */
- std::string GraphTile::FileDirectory(const GraphId& graphid) const {
+ std::string GraphTile::FileDirectory(const GraphId& graphid) {
    return std::to_string(graphid.level());
  }
 
 
-int GraphTile::size() const {
+ size_t GraphTile::size() const {
   return size_;
 }
+
+ GraphId GraphTile::id() const {
+   return id_;
+ }
 
 const GraphTileHeader* GraphTile::header() const {
   return header_;
 }
 
 const NodeInfo* GraphTile::node(const GraphId& node) const {
-  // TODO - do we want to validate the tile and level - or just assume
-  // the correct tile is called? Validate we are not overflowing the list?
-  return nodes_ + node.id();
+  if(node.id() < header_->nodecount())
+    return &nodes_[node.id()];
+  throw std::runtime_error("GraphTile NodeInfo id out of bounds");
+}
+
+const NodeInfo* GraphTile::node(const size_t idx) const {
+  if(idx < header_->nodecount())
+    return &nodes_[idx];
+  throw std::runtime_error("GraphTile NodeInfo index out of bounds");
 }
 
 const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
-  return directededges_ + edge.id();
+  if(edge.id() < header_->directededgecount())
+    return &directededges_[edge.id()];
+  throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
-const DirectedEdge* GraphTile::directededge(const unsigned int idx) const {
-  return directededges_ + idx;
+const DirectedEdge* GraphTile::directededge(const size_t idx) const {
+  if(idx < header_->directededgecount())
+    return &directededges_[idx];
+  throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
 }
 
 EdgeInfo* GraphTile::edgeinfo() const {
