@@ -1,6 +1,8 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <cstdlib>
+
 namespace valhalla{
 namespace baldr{
 
@@ -19,40 +21,40 @@ class GraphTileHeader {
    * Gets the number of nodes in this tile.
    * @return  Returns the number of nodes.
    */
-  unsigned int nodecount() const;
+  size_t nodecount() const;
 
   /**
    * Gets the number of directed edges in this tile.
    * @return  Returns the number of directed edges.
    */
- unsigned int directededgecount() const;
+ size_t directededgecount() const;
 
   /**
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
-  unsigned int edgeinfo_offset() const;
+  size_t edgeinfo_offset() const;
 
   /**
    * Gets the offset to the text list.
    * @return  Returns the number of bytes to offset to the text list.
    */
-  unsigned int textlist_offset() const;
+  size_t textlist_offset() const;
 
  protected:
   // TODO - need to add some sort of versioning / creation date?
 
   // Number of nodes
-  unsigned int nodecount_;
+  size_t nodecount_;
 
   // Number of directed edges
-  unsigned int directededgecount_;
+  size_t directededgecount_;
 
   // Offset to edge info
-  unsigned int edgeinfo_offset_;
+  size_t edgeinfo_offset_;
 
   // Offset to name list
-  unsigned int textlist_offset_;
+  size_t textlist_offset_;
 };
 
 }

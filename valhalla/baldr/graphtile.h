@@ -39,22 +39,31 @@ class GraphTile {
    * @return  Returns filename (including directory path relative to tile
    *          base directory
    */
-  std::string Filename(const std::string& basedirectory,
-                       const GraphId& graphid) const;
+  static std::string Filename(const std::string& basedirectory,
+                       const GraphId& graphid);
 
   /**
    * Gets the directory to a given tile.
    * @param  graphid  Graph Id to construct file directory.
    * @return  Returns file directory path relative to tile base directory
    */
-  std::string FileDirectory(const GraphId& graphid) const;
+  static std::string FileDirectory(const GraphId& graphid);
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
-   * of -1 indicates an error reading the tile data.
+   * of 0 indicates an error reading the tile data.
    * or unsuccessful read.
+   *
+   * @return size   the size of the tile in bytes
    */
-  int size() const;
+  size_t size() const;
+
+  /**
+   * Gets the id of the graph tile
+   *
+   * @return id     the graph id of the tile (pointing to the first node)
+   */
+  GraphId id() const;
 
   /**
    * Gets a pointer to the graph tile header.
@@ -70,17 +79,24 @@ class GraphTile {
 
   /**
    * Get a pointer to a node.
-   * @param  edge  GraphId of the directed edge.
+   * @param  idx  Index of the node within the current tile.
    * @return  Returns a pointer to the node.
+   */
+  const NodeInfo* node(const size_t idx) const;
+
+  /**
+   * Get a pointer to a edge.
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const;
 
   /**
-   * Get a pointer to a node.
+   * Get a pointer to a edge.
    * @param  idx  Index of the directed edge within the current tile.
-   * @return  Returns a pointer to the node.
+   * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const unsigned int idx) const;
+  const DirectedEdge* directededge(const size_t idx) const;
 
   /**
    * Get a pointer to edge info.
@@ -90,7 +106,7 @@ class GraphTile {
 
  protected:
   // Size of the tile in bytes
-  int size_;
+  size_t size_;
 
   // Graph tile memory
   char* graphtile_;
@@ -113,6 +129,9 @@ class GraphTile {
   // Street names and exit names/numbers as sets of null-terminated char arrays.
   // Edge info has offsets into this array.
   char* textlist_;
+
+  // The id of the tile for convenience
+  const GraphId id_;
 };
 
 }
