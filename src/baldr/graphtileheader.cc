@@ -10,19 +10,19 @@ GraphTileHeader::GraphTileHeader()
       textlist_offset_(0) {
 }
 
-unsigned int GraphTileHeader::nodecount() const {
+size_t GraphTileHeader::nodecount() const {
   return nodecount_;
 }
 
-unsigned int GraphTileHeader::directededgecount() const {
+size_t GraphTileHeader::directededgecount() const {
   return directededgecount_;
 }
 
-unsigned int GraphTileHeader::edgeinfo_offset() const {
+size_t GraphTileHeader::edgeinfo_offset() const {
   return edgeinfo_offset_;
 }
 
-unsigned int GraphTileHeader::textlist_offset() const {
+size_t GraphTileHeader::textlist_offset() const {
   return textlist_offset_;
 }
 
