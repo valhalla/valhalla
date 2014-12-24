@@ -18,10 +18,10 @@ AC_DEFUN([CHECK_VALHALLA_BALDR],
 	])
 
 	CPPFLAGS_SAVED="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $VALHALLA_BALDR_CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $VALHALLA_MIDGARD_CPPFLAGS $VALHALLA_BALDR_CPPFLAGS"
 	export CPPFLAGS
 	LDFLAGS_SAVED="$LDFLAGS"
-	LDFLAGS="$LDFLAGS $VALHALLA_BALDR_LDFLAGS"
+	LDFLAGS="$LDFLAGS $VALHALLA_MIDGARD_CPPFLAGS $VALHALLA_BALDR_LDFLAGS"
 	export LDFLAGS
 
 	AC_REQUIRE([AC_PROG_CC])
@@ -30,8 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_BALDR],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/baldr/graphid.h>]],
 			[[using namespace valhalla::baldr;
-			GraphId(0,0,0);
-			return 0;]])],
+			GraphId(0,0,0);]])],
 			ax_cv_valhalla_baldr=yes, ax_cv_valhalla_baldr=no)
 		AC_LANG_POP([C++])
 	])
