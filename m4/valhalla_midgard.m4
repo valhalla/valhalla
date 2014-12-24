@@ -30,8 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_MIDGARD],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/midgard/vector2.h>]],
 			[[using namespace valhalla::midgard;
-			Vector2(0.0f, 0.0f);
-			return 0;]])],
+			Vector2(0.0f, 0.0f);]])],
 			ax_cv_valhalla_midgard=yes, ax_cv_valhalla_midgard=no)
 		AC_LANG_POP([C++])
 	])
