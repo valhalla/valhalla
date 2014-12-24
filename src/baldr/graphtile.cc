@@ -99,9 +99,8 @@ const DirectedEdge* GraphTile::directededge(const unsigned int idx) const {
   return directededges_ + idx;
 }
 
-EdgeInfo* GraphTile::edgeinfo() const {
-  // TODO - how do we call this - with an offset (from a directed edge?)
-  return nullptr;
+const EdgeInfo* GraphTile::edgeinfo(uint32_t offset) const {
+  return reinterpret_cast<const EdgeInfo*>(edgeinfo_ + offset);
 }
 
 }
