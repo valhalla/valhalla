@@ -31,11 +31,11 @@ const uint32_t EdgeInfo::exit_sign_count() const {
   return item_.fields.exit_sign_count;
 }
 
+const size_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
+  return street_name_offset_list_[index];
+}
+
 // TODO - implement later
-//const uint32_t EdgeInfo::GetNameIndex(uint8_t index) const {
-//  return *(name_indexes_ + index);
-//}
-//
 //const PointLL* EdgeInfo::GetShapePoint(uint8_t index) const {
 //  char* byte_ptr = static_cast<char*>(this);
 //  byte_ptr += GetShapeOffset();
@@ -48,7 +48,7 @@ bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
 }
 
 const uint32_t EdgeInfo::GetShapeOffset() const {
-  return (street_name_offset_list_offset() + name_count() * sizeof(uint32_t));
+  return (street_name_offset_list_offset() + name_count() * sizeof(size_t));
 }
 
 const uint32_t EdgeInfo::GetExitSignsOffset() const {
