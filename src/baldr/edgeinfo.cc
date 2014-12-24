@@ -32,7 +32,7 @@ const uint32_t EdgeInfo::exit_sign_count() const {
 }
 
 const size_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
-  return *(street_name_offset_list_ + index);
+  return street_name_offset_list_[index];
 }
 
 // TODO - implement later
