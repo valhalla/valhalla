@@ -10,6 +10,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/loki/search.h>
 #include "thor/pedestriancost.h"
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
@@ -23,7 +24,7 @@ namespace bpo = boost::program_options;
 /**
  *
  */
-int PathTest(const std::string& config, const PathLocation& origin,
+int PathTest(GraphReader& reader, const PathLocation& origin,
              const PathLocation& dest) {
   // Use Loki to get location information
   std::clock_t start = std::clock();
@@ -33,21 +34,16 @@ int PathTest(const std::string& config, const PathLocation& origin,
 
   start = std::clock();
   PathAlgorithm pathalgorithm;
-
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config.c_str(), pt);
-
-  GraphReader graphreader(pt);
   PedestrianCost* edgecost = new PedestrianCost;
   std::vector<GraphId> pathedges;
-  pathedges = pathalgorithm.GetBestPath(origin, dest, graphreader, edgecost);
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, edgecost);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
   // Form output information based on pathedges
   start = std::clock();
   TripPathBuilder trippath;
-  float length = trippath.Build(graphreader, pathedges);
+  float length = trippath.Build(reader, pathedges);
   std::cout << "Trip length is: " << length << " km" << std::endl;
   std::cout << "TripPathBuilder took " << msecs << " ms" << std::endl;
 
@@ -118,24 +114,21 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  //parse the config
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(config.c_str(), pt);
+  valhalla::baldr::GraphReader reader(pt);
 
   // Origin
   Location originloc = Location::FromCsv(origin);
-  PathLocation pathOrigin(originloc);
-  PathLocation::Edge originedge;
-  originedge.dist_ = 0.0f;
-  originedge.id_ = GraphId(749214, 2, 23460);
-  pathOrigin.edges_.push_back(originedge);
+  PathLocation pathOrigin = valhalla::loki::Search(originloc, reader);
 
   // Destination
   Location destloc = Location::FromCsv(destination);
-  PathLocation pathDest(destloc);
-  PathLocation::Edge destedge;
-  destedge.dist_ = 0.0f;
-  destedge.id_ = GraphId(749214, 2, 157);
-  pathDest.edges_.push_back(destedge);
+  PathLocation pathDest = valhalla::loki::Search(destloc, reader);
 
-  PathTest(config, pathOrigin, pathDest);
+  // Try the route
+  PathTest(reader, pathOrigin, pathDest);
 
   return EXIT_SUCCESS;
 }

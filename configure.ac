@@ -27,8 +27,8 @@ REQUIRE_PROTOC
 # require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
-CHECK_VALHALLA_ODIN
 CHECK_VALHALLA_LOKI
+CHECK_VALHALLA_ODIN
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building thor. Please install libboost-dev.])])
