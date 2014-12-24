@@ -51,9 +51,9 @@ class EdgeInfo {
   const uint32_t exit_sign_count() const;
 
   // TODO - implement later
-//  // Returns the name index at the specified index.
-//  const uint32_t GetNameIndex(uint8_t index) const;
-//
+  // Returns the name index at the specified index.
+  const size_t GetStreetNameOffset(uint8_t index) const;
+
 //  // Returns the shape point at the specified index.
 //  const PointLL* GetShapePoint(uint8_t index) const;
 
@@ -81,10 +81,10 @@ class EdgeInfo {
   union PackedItem {
     struct Fields {
       uint32_t street_name_offset_list_offset :8;
-      uint32_t name_count          :4;
-      uint32_t shape_count         :11;
-      uint32_t exit_sign_count     :4;
-      uint32_t spare               :5;
+      uint32_t name_count                     :4;
+      uint32_t shape_count                    :11;
+      uint32_t exit_sign_count                :4;
+      uint32_t spare                          :5;
     } fields;
     uint32_t value;
   };
@@ -92,7 +92,7 @@ class EdgeInfo {
 
  private:
   // List of roadname indexes
-  uint32_t* street_name_offset_list_;
+  size_t* street_name_offset_list_;
 
   // Lat,lng shape of the edge
   PointLL* shape_;
