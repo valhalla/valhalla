@@ -306,7 +306,7 @@ function filter_tags_generic(kv)
   
   lane_count = numeric_prefix(kv["lanes"])
   if lane_count and lane_count > 10 then
-    lane_count = nil
+    lane_count = 10
   end
   kv["lanes"] = lane_count
   kv["bridge"] = bridge[kv["bridge"]] or "false"
