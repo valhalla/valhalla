@@ -20,6 +20,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+/*
 // OSM Way
 struct OSMWay {
   uint64_t osmwayid_;
@@ -167,7 +168,7 @@ struct OSMWay {
   }
 
 };
-
+*/
 struct Edge {
   uint64_t sourcenode_;
   uint64_t targetnode_;
