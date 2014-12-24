@@ -8,16 +8,12 @@ namespace mjolnir {
 OSMNode::OSMNode() {
   latlng_.Set(0.0f, 0.0f);
   edges_ = nullptr;
-  exit_to_ = "";
-  ref_ = "";
   attributes_.v = 0;
 }
 
 OSMNode::OSMNode(const float lat, const float lng) {
   latlng_.Set(lat, lng);
   edges_ = nullptr;
-  exit_to_ = "";
-  ref_ = "";
   attributes_.v = 0;
 }
 
@@ -57,24 +53,24 @@ uint32_t OSMNode::edge_count() const {
   return edges_->size();
 }
 
-// Set the exit to string
-void OSMNode::set_exit_to(const std::string& exitto) {
-  exit_to_ = exitto;
+// Set the exit to flag
+void OSMNode::set_exit_to(const bool exit_to) {
+  attributes_.fields.exit_to = exit_to;
 }
 
-// Get the exit to string
-const std::string& OSMNode::exit_to() const {
-  return exit_to_;
+// Get the exit to flag
+bool OSMNode::exit_to() const {
+  return attributes_.fields.exit_to;
 }
 
-// Set the ref string
-void OSMNode::set_ref(const std::string& ref) {
-  ref_ = ref;
+// Set the ref flag
+void OSMNode::set_ref(const bool ref) {
+  attributes_.fields.ref = ref;
 }
 
-// Get the ref string
-const std::string& OSMNode::ref() const {
-  return ref_;
+// Get the ref flag
+bool OSMNode::ref() const {
+  return attributes_.fields.ref;
 }
 
 // Increment uses (number of ways that use this node).

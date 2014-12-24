@@ -82,10 +82,18 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   // Create a new node and set its attributes
   OSMNode n(lat, lng);
   for (const auto& tag : results) {
-    if (tag.first == "exit_to")
-      n.set_exit_to(tag.second);
-    else if (tag.first == "ref")
-      n.set_ref(tag.second);
+    if (tag.first == "exit_to") {
+      bool hasTag = (tag.second.length() ? true : false);
+      n.set_exit_to(hasTag);
+      if (hasTag)
+        map_exit_to_[osmid] = tag.second;
+    }
+    else if (tag.first == "ref") {
+      bool hasTag = (tag.second.length() ? true : false);
+      n.set_ref(hasTag);
+      if (hasTag)
+        map_ref_[osmid] = tag.second;
+    }
     else if (tag.first == "gate")
       n.set_gate((tag.second == "true" ? true : false));
     else if (tag.first == "bollard")

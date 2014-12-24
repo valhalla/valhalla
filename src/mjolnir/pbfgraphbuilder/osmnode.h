@@ -51,24 +51,24 @@ class OSMNode {
   const std::vector<uint32_t>& edges() const;
 
   /**
-   * Set the exit to string
+   * Set the exit to flag
    */
-  void set_exit_to(const std::string& exitto);
+  void set_exit_to(const bool exit_to);
 
   /**
-   * Get the exit to string
+   * Get the exit to flag
    */
-  const std::string& exit_to() const;
+  bool exit_to() const;
 
   /**
-   * Set the ref string
+   * Set the ref flag
    */
-  void set_ref(const std::string& ref);
+  void set_ref(const bool ref);
 
   /**
-   * Get the ref string
+   * Get the ref flag
    */
-  const std::string& ref() const;
+  bool ref() const;
 
   /**
    * Increment uses
@@ -113,8 +113,6 @@ class OSMNode {
  private:
   midgard::PointLL latlng_;
   std::vector<uint32_t>* edges_;
-  std::string exit_to_;
-  std::string ref_;
 
   // Node attributes
   union NodeAttributes {
@@ -122,6 +120,8 @@ class OSMNode {
       uint32_t uses       : 8;
       uint32_t gate       : 1;
       uint32_t bollard    : 1;
+      uint32_t exit_to    : 1;
+      uint32_t ref        : 1;
       uint32_t modes_mask : 8;
       uint32_t spare      : 14;
     } fields;
