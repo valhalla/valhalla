@@ -29,7 +29,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 
 // Set the indexes to names used by this edge. TODO - move?
 void EdgeInfoBuilder::set_street_name_offset_list(
-    const std::vector<uint32_t>& street_name_offset_list) {
+    const std::vector<size_t>& street_name_offset_list) {
   // TODO - move
   street_name_offset_list_.clear();
   if (!street_name_offset_list.empty()) {
@@ -44,7 +44,7 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
   size += sizeof(GraphId);                                      // nodea_
   size += sizeof(GraphId);                                      // nodeb_
   size += sizeof(PackedItem);                                   // item_
-  size += (street_name_offset_list_.size() * sizeof(uint32_t)); // street_name_offset_list_
+  size += (street_name_offset_list_.size() * sizeof(size_t));   // street_name_offset_list_
   size += (shape_.size() * sizeof(PointLL));                    // shape_
   size += (exit_signs_.size() * sizeof(ExitSign));              // exit_signs_
 

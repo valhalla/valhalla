@@ -294,9 +294,9 @@ void GraphBuilder::PrintCounts() {
 // is used. This allows us to detect intersections (nodes in a graph).
 void GraphBuilder::SetNodeUses() {
   // Iterate through the ways
-  for (auto way : ways_) {
+  for (const auto& way : ways_) {
     // Iterate through the nodes that make up the way
-    for (auto node : way.nodelist_) {
+    for (const auto& node : way.nodelist_) {
       nodes_[node].IncrementUses();
     }
     // make sure that the last node is considered as an extremity
@@ -426,12 +426,14 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
     // Edge info offset and map
     size_t edge_info_offset = 0;
-    // TODO - initial map size - use node count*4 ?
     std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+
+    // The edgeinfo list
+    std::vector<EdgeInfoBuilder> edgeinfo_list;
 
     // Text list offset and map
     size_t text_list_offset = 0;
-    std::unordered_map<std::string, uint32_t> text_offset_map;
+    std::unordered_map<std::string, size_t> text_offset_map;
 
     // Text list
     std::vector<std::string> text_list;
@@ -449,7 +451,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
-      std::vector<EdgeInfoBuilder> edges;
       for (auto edgeindex : node.edges()) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
@@ -529,24 +530,42 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           edgeinfo.set_shape(*edge.latlngs_);
           // TODO - names
           std::vector<std::string> names = w.GetNames();
+          std::vector<size_t> street_name_offset_list;
 
-          for (auto name : names) {
-            auto existing_text = text_offset_map.find(name);
+          for (const auto& name : names) {
+            if (name.empty()) {
+              continue;
+            }
+
+            auto existing_text_offset = text_offset_map.find(name);
             // Add if not found
-            if (existing_text == text_offset_map.end()) {
-              // TODO
+            if (existing_text_offset == text_offset_map.end()) {
+              // Add name to text list
+              text_list.push_back(name);
+
+              // Add name offset to list
+              street_name_offset_list.push_back(text_list_offset);
+
+              // Add name/offset pair to map
+              text_offset_map.insert(std::make_pair(name, text_list_offset));
+
+              // Update text offset value to length of string plus null terminator
+              text_list_offset += (name.length() + 1);
+            } else {
+              // Add existing offset to list
+              street_name_offset_list.push_back(existing_text_offset->second);
             }
           }
-//          edgeinfo.set_street_name_offset_list(ProcessNames(w, ));
+          edgeinfo.set_street_name_offset_list(street_name_offset_list);
 
           // TODO - other attributes
 
           // Add to the map
-       //   edge_offset_map.insert(
-       //       std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
+          edge_offset_map.insert(
+              std::make_pair(node_pair_item, edge_info_offset));
 
           // Add to the list
-          edges.push_back(edgeinfo);
+          edgeinfo_list.push_back(edgeinfo);
 
           // Set edge offset within the corresponding directed edge
           directededge.set_edgedataoffset(edge_info_offset);
@@ -566,8 +585,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       }
 
       // Add information to the tile
-      graphtile.AddNodeAndEdges(nodebuilder, directededges, edges);
+      graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
     }
+
+    graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
+    graphtile.SetTextListAndSize(text_list, text_list_offset);
 
     // File name for tile
     GraphId graphid(tileid, level, 0);

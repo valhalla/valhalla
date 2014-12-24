@@ -50,7 +50,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
    */
-  void set_street_name_offset_list(const std::vector<uint32_t>& street_name_offset_list);
+  void set_street_name_offset_list(const std::vector<size_t>& street_name_offset_list);
 
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
@@ -58,7 +58,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
  private:
 
   // List of roadname indexes
-  std::vector<uint32_t> street_name_offset_list_;
+  std::vector<size_t> street_name_offset_list_;
 
   // Lat,lng shape of the edge
   std::vector<PointLL> shape_;
