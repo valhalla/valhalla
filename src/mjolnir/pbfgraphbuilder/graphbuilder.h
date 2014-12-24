@@ -13,6 +13,7 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include "pbfgraphbuilder.h"
+#include "osmway.h"
 
 // Use open source PBF reader from:
 //     https://github.com/CanalTP/libosmpbfreader

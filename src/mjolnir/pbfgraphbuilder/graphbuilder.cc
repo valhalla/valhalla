@@ -118,8 +118,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     return;
 
   OSMWay w(osmid);
-  w.nodelist_ = refs;
-  //  std::copy(refs.begin(), refs.end(), std::back_inserter(w.nodelist_));
+  w.set_nodes(refs);
 
   for (const auto& tag : results) {
 
@@ -130,45 +129,45 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       switch (roadclass) {
 
         case RoadClass::kMotorway:
-          w.road_class_ = RoadClass::kMotorway;
+          w.set_road_class(RoadClass::kMotorway);
           break;
         case RoadClass::kTrunk:
-          w.road_class_ = RoadClass::kTrunk;
+          w.set_road_class(RoadClass::kTrunk);
           break;
         case RoadClass::kPrimary:
-          w.road_class_ = RoadClass::kPrimary;
+          w.set_road_class(RoadClass::kPrimary);
           break;
         case RoadClass::kTertiaryUnclassified:
-          w.road_class_ = RoadClass::kTertiaryUnclassified;
+          w.set_road_class(RoadClass::kTertiaryUnclassified);
           break;
         case RoadClass::kResidential:
-          w.road_class_ = RoadClass::kResidential;
+          w.set_road_class(RoadClass::kResidential);
           break;
         case RoadClass::kService:
-          w.road_class_ = RoadClass::kService;
+          w.set_road_class(RoadClass::kService);
           break;
         case RoadClass::kTrack:
-          w.road_class_ = RoadClass::kTrack;
+          w.set_road_class(RoadClass::kTrack);
           break;
         default:
-          w.road_class_ = RoadClass::kOther;
+          w.set_road_class(RoadClass::kOther);
           break;
       }
     }
 
     else if (tag.first == "auto_forward")
-      w.auto_forward_ = (tag.second == "true" ? true : false);
+      w.set_auto_forward(tag.second == "true" ? true : false);
     else if (tag.first == "bike_forward")
-      w.bike_forward_ = (tag.second == "true" ? true : false);
+      w.set_bike_forward(tag.second == "true" ? true : false);
     else if (tag.first == "auto_backward")
-      w.auto_backward_ = (tag.second == "true" ? true : false);
+      w.set_auto_backward(tag.second == "true" ? true : false);
     else if (tag.first == "bike_backward")
-      w.bike_backward_ = (tag.second == "true" ? true : false);
+      w.set_bike_backward(tag.second == "true" ? true : false);
     else if (tag.first == "pedestrian")
-      w.pedestrian_ = (tag.second == "true" ? true : false);
+      w.set_pedestrian(tag.second == "true" ? true : false);
 
     else if (tag.first == "private")
-      w.private_ = (tag.second == "true" ? true : false);
+      w.set_destination_only(tag.second == "true" ? true : false);
 
     else if (tag.first == "use") {
 
@@ -177,98 +176,98 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       switch (use) {
 
         case Use::kNone:
-          w.use_ = Use::kNone;
+          w.set_use(Use::kNone);
           break;
         case Use::kCycleway:
-          w.use_ = Use::kCycleway;
+          w.set_use(Use::kCycleway);
           break;
         case Use::kParkingAisle:
-          w.use_ = Use::kParkingAisle;
+          w.set_use(Use::kParkingAisle);
           break;
         case Use::kDriveway:
-          w.use_ = Use::kDriveway;
+          w.set_use(Use::kDriveway);
           break;
         case Use::kAlley:
-          w.use_ = Use::kAlley;
+          w.set_use(Use::kAlley);
           break;
         case Use::kEmergencyAccess:
-          w.use_ = Use::kEmergencyAccess;
+          w.set_use(Use::kEmergencyAccess);
           break;
         case Use::kDriveThru:
-          w.use_ = Use::kDriveThru;
+          w.set_use(Use::kDriveThru);
           break;
         case Use::kSteps:
-          w.use_ = Use::kSteps;
+          w.set_use(Use::kSteps);
           break;
         case Use::kOther:
-          w.use_ = Use::kOther;
+          w.set_use(Use::kOther);
           break;
         default:
-          w.use_ = Use::kNone;
+          w.set_use(Use::kNone);
           break;
       }
     }
 
     else if (tag.first == "no_thru_traffic_")
-      w.no_thru_traffic_ = (tag.second == "true" ? true : false);
+      w.set_no_thru_traffic(tag.second == "true" ? true : false);
     else if (tag.first == "oneway")
-      w.oneway_ = (tag.second == "true" ? true : false);
+      w.set_oneway(tag.second == "true" ? true : false);
     else if (tag.first == "roundabout")
-      w.roundabout_ = (tag.second == "true" ? true : false);
+      w.set_roundabout(tag.second == "true" ? true : false);
     else if (tag.first == "link")
-      w.link_ = (tag.second == "true" ? true : false);
+      w.set_link(tag.second == "true" ? true : false);
     else if (tag.first == "ferry")
-      w.ferry_ = (tag.second == "true" ? true : false);
+      w.set_ferry(tag.second == "true" ? true : false);
     else if (tag.first == "rail")
-      w.rail_ = (tag.second == "true" ? true : false);
+      w.set_rail(tag.second == "true" ? true : false);
 
     else if (tag.first == "name")
-      w.name_ = tag.second;
+      w.set_name(tag.second);
     else if (tag.first == "name:en")
-      w.name_en_ = tag.second;
+      w.set_name_en(tag.second);
     else if (tag.first == "alt_name")
-      w.alt_name_ = tag.second;
+      w.set_alt_name(tag.second);
     else if (tag.first == "official_name")
-      w.official_name_ = tag.second;
+      w.set_official_name(tag.second);
 
     else if (tag.first == "speed")
-      w.speed = std::stof(tag.second);
+      w.set_speed(std::stof(tag.second));
 
     else if (tag.first == "ref")
-      w.ref_ = tag.second;
+      w.set_ref(tag.second);
     else if (tag.first == "int_ref")
-      w.int_ref_ = tag.second;
+      w.set_int_ref(tag.second);
 
     else if (tag.first == "surface")
-      w.surface_ = (tag.second == "true" ? true : false);
+      w.set_surface(tag.second == "true" ? true : false);
 
     else if (tag.first == "lanes")
-      w.lanes_ = std::stoi(tag.second);
+      w.set_lanes(std::stoi(tag.second));
 
     else if (tag.first == "tunnel")
-      w.tunnel_ = (tag.second == "true" ? true : false);
+      w.set_tunnel(tag.second == "true" ? true : false);
     else if (tag.first == "toll")
-      w.toll_ = (tag.second == "true" ? true : false);
+      w.set_toll(tag.second == "true" ? true : false);
     else if (tag.first == "bridge")
-      w.bridge_ = (tag.second == "true" ? true : false);
+      w.set_bridge(tag.second == "true" ? true : false);
 
     else if (tag.first == "bike_network_mask")
-      w.bike_network_mask_ = std::stoi(tag.second);
+      w.set_bike_network(std::stoi(tag.second));
     else if (tag.first == "bike_national_ref")
-      w.bike_national_ref_ = tag.second;
+      w.set_bike_national_ref(tag.second);
     else if (tag.first == "bike_regional_ref")
-      w.bike_regional_ref_ = tag.second;
+      w.set_bike_regional_ref(tag.second);
     else if (tag.first == "bike_local_ref")
-      w.bike_local_ref_ = tag.second;
+      w.set_bike_local_ref(tag.second);
 
     else if (tag.first == "destination")
-      w.destination_ = tag.second;
+      w.set_destination(tag.second);
     else if (tag.first == "destination:ref")
-      w.destination_ref_ = tag.second;
+      w.set_destination_ref(tag.second);
     else if (tag.first == "destination:ref:to")
-      w.destination_ref_to_ = tag.second;
+      w.set_destination_ref_to(tag.second);
     else if (tag.first == "junction_ref")
-      w.junction_ref_ = tag.second;
+      w.set_junction_ref(tag.second);
 
     // if (osmid == 368034)   //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
     //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
@@ -294,14 +293,14 @@ void GraphBuilder::PrintCounts() {
 // is used. This allows us to detect intersections (nodes in a graph).
 void GraphBuilder::SetNodeUses() {
   // Iterate through the ways
-  for (auto way : ways_) {
+  for (const auto& way : ways_) {
     // Iterate through the nodes that make up the way
-    for (auto node : way.nodelist_) {
+    for (const auto& node : way.nodes()) {
       nodes_[node].IncrementUses();
     }
     // make sure that the last node is considered as an extremity
     // TODO - could avoid this by altering ConstructEdges
-    nodes_[way.nodelist_.back()].IncrementUses();
+    nodes_[way.nodes().back()].IncrementUses();
   }
 }
 
@@ -316,14 +315,14 @@ void GraphBuilder::ConstructEdges() {
   for (auto way : ways_) {
     // TODO - memory use? Delete temporary edges?
     Edge* edge = new Edge;
-    current = way.nodelist_[0];
+    current = way.nodes()[0];
     OSMNode& edgestartnode = nodes_[current];
     edge->sourcenode_ = current;
     edge->AddLL(edgestartnode.latlng());
     edge->wayindex_ = wayindex;
-    for (size_t i = 1, n = way.nodelist_.size(); i < n; i++) {
+    for (size_t i = 1, n = way.node_count(); i < n; i++) {
       // Add the node lat,lng to the edge shape
-      current = way.nodelist_[i];
+      current = way.nodes()[i];
       OSMNode& node = nodes_[current];
       edge->AddLL(node.latlng());
 
@@ -426,12 +425,14 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
     // Edge info offset and map
     size_t edge_info_offset = 0;
-    // TODO - initial map size - use node count*4 ?
     std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+
+    // The edgeinfo list
+    std::vector<EdgeInfoBuilder> edgeinfo_list;
 
     // Text list offset and map
     size_t text_list_offset = 0;
-    std::unordered_map<std::string, uint32_t> text_offset_map;
+    std::unordered_map<std::string, size_t> text_offset_map;
 
     // Text list
     std::vector<std::string> text_list;
@@ -449,7 +450,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
-      std::vector<EdgeInfoBuilder> edges;
       for (auto edgeindex : node.edges()) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
@@ -465,20 +465,20 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         OSMWay &w = ways_[edge.wayindex_];
 
-        directededge.set_importance(w.road_class_);
-        directededge.set_use(w.use_);
-        directededge.set_link(w.link_);
-        directededge.set_speed(w.speed);    // KPH
+        directededge.set_importance(w.road_class());
+        directededge.set_use(w.use());
+        directededge.set_link(w.link());
+        directededge.set_speed(w.speed());    // KPH
 
-        directededge.set_ferry(w.ferry_);
-        directededge.set_railferry(w.rail_);
-        directededge.set_toll(w.toll_);
-        directededge.set_dest_only(w.private_);
-        directededge.set_unpaved(w.surface_);
-        directededge.set_tunnel(w.tunnel_);
-        directededge.set_roundabout(w.roundabout_);
-        directededge.set_bridge(w.bridge_);
-        directededge.set_bikenetwork(w.bike_network_mask_);
+        directededge.set_ferry(w.ferry());
+        directededge.set_railferry(w.rail());
+        directededge.set_toll(w.toll());
+        directededge.set_dest_only(w.destination_only());
+        directededge.set_unpaved(w.surface());
+        directededge.set_tunnel(w.tunnel());
+        directededge.set_roundabout(w.roundabout());
+        directededge.set_bridge(w.bridge());
+        directededge.set_bikenetwork(w.bike_network());
 
         //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
         /*  if (w.osmwayid_ == 368034)
@@ -496,23 +496,23 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         if (edge.sourcenode_ == osmnodeid) {  //forward direction
 
-          directededge.set_caraccess(true, false, w.auto_forward_);
-          directededge.set_pedestrianaccess(true, false, w.pedestrian_);
-          directededge.set_bicycleaccess(true, false, w.bike_forward_);
+          directededge.set_caraccess(true, false, w.auto_forward());
+          directededge.set_pedestrianaccess(true, false, w.pedestrian());
+          directededge.set_bicycleaccess(true, false, w.bike_forward());
 
-          directededge.set_caraccess(false, true, w.auto_backward_);
-          directededge.set_pedestrianaccess(false, true, w.pedestrian_);
-          directededge.set_bicycleaccess(false, true, w.bike_backward_);
+          directededge.set_caraccess(false, true, w.auto_backward());
+          directededge.set_pedestrianaccess(false, true, w.pedestrian());
+          directededge.set_bicycleaccess(false, true, w.bike_backward());
 
         } else {  //reverse direction.  Must flip in relation to the drawing of the way.
 
-          directededge.set_caraccess(true, false, w.auto_backward_);
-          directededge.set_pedestrianaccess(true, false, w.pedestrian_);
-          directededge.set_bicycleaccess(true, false, w.bike_backward_);
+          directededge.set_caraccess(true, false, w.auto_backward());
+          directededge.set_pedestrianaccess(true, false, w.pedestrian());
+          directededge.set_bicycleaccess(true, false, w.bike_backward());
 
-          directededge.set_caraccess(false, true, w.auto_forward_);
-          directededge.set_pedestrianaccess(false, true, w.pedestrian_);
-          directededge.set_bicycleaccess(false, true, w.bike_forward_);
+          directededge.set_caraccess(false, true, w.auto_forward());
+          directededge.set_pedestrianaccess(false, true, w.pedestrian());
+          directededge.set_bicycleaccess(false, true, w.bike_forward());
 
         }
 
@@ -529,24 +529,42 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           edgeinfo.set_shape(*edge.latlngs_);
           // TODO - names
           std::vector<std::string> names = w.GetNames();
+          std::vector<size_t> street_name_offset_list;
 
-          for (auto name : names) {
-            auto existing_text = text_offset_map.find(name);
+          for (const auto& name : names) {
+            if (name.empty()) {
+              continue;
+            }
+
+            auto existing_text_offset = text_offset_map.find(name);
             // Add if not found
-            if (existing_text == text_offset_map.end()) {
-              // TODO
+            if (existing_text_offset == text_offset_map.end()) {
+              // Add name to text list
+              text_list.push_back(name);
+
+              // Add name offset to list
+              street_name_offset_list.push_back(text_list_offset);
+
+              // Add name/offset pair to map
+              text_offset_map.insert(std::make_pair(name, text_list_offset));
+
+              // Update text offset value to length of string plus null terminator
+              text_list_offset += (name.length() + 1);
+            } else {
+              // Add existing offset to list
+              street_name_offset_list.push_back(existing_text_offset->second);
             }
           }
-//          edgeinfo.set_street_name_offset_list(ProcessNames(w, ));
+          edgeinfo.set_street_name_offset_list(street_name_offset_list);
 
           // TODO - other attributes
 
           // Add to the map
-       //   edge_offset_map.insert(
-       //       std::make_pair<node_pair, size_t>(node_pair_item, edge_info_offset));
+          edge_offset_map.insert(
+              std::make_pair(node_pair_item, edge_info_offset));
 
           // Add to the list
-          edges.push_back(edgeinfo);
+          edgeinfo_list.push_back(edgeinfo);
 
           // Set edge offset within the corresponding directed edge
           directededge.set_edgedataoffset(edge_info_offset);
@@ -566,8 +584,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       }
 
       // Add information to the tile
-      graphtile.AddNodeAndEdges(nodebuilder, directededges, edges);
+      graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
     }
+
+    graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
+    graphtile.SetTextListAndSize(text_list, text_list_offset);
 
     // File name for tile
     GraphId graphid(tileid, level, 0);
