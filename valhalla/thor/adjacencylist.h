@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 
-#include "thor/edgelabel.h"
+#include <valhalla/thor/edgelabel.h>
 
 namespace valhalla {
 namespace thor {
