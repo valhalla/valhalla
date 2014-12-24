@@ -60,9 +60,8 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
-// Write the names
-    file.write(reinterpret_cast<const char*>(&textlist_builder_[0]),
-               textlist_size_);
+    // Write the names
+    SerializeTextListToOstream(file);
 
     std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
@@ -140,6 +139,12 @@ void GraphTileBuilder::SetTextListAndSize(
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
   for (EdgeInfoBuilder edgeinfo : edgeinfos_builder_) {
     edgeinfo.SerializeToOstream(out);
+  }
+}
+
+void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
+  for (std::string text : textlist_builder_) {
+    out.write(text.c_str(), (text.length() + 1));
   }
 }
 

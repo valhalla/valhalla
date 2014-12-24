@@ -57,6 +57,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out);
 
+  // Write all textlist items to specified stream
+  void SerializeTextListToOstream(std::ostream& out);
+
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
 
