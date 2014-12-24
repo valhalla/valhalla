@@ -102,7 +102,7 @@ class GraphTile {
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  EdgeInfo* edgeinfo() const;
+  const EdgeInfo* edgeinfo(uint32_t offset) const;
 
  protected:
   // Size of the tile in bytes

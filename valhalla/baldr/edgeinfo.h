@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <ostream>
+#include <iostream>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
@@ -66,6 +68,8 @@ class EdgeInfo {
 
   // Operator EqualTo based nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
+
+  void ToOstream(std::ostream& out = std::cout) const;
 
  protected:
   // Computes and returns the offset to the shape points based on the name offsets.

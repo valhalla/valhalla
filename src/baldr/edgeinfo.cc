@@ -47,6 +47,20 @@ bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
       || (nodea_ == rhs.nodeb_ && nodeb_ == rhs.nodea_));
 }
 
+void EdgeInfo::ToOstream(std::ostream& out) const {
+  out << "street_name_offset_list_offset=" << street_name_offset_list_offset()
+      << "  name_count=" << name_count() << std::endl;
+  for (uint32_t x = 0, n = name_count(); x < n; ++x) {
+    out << "name[" << x << "]=" << street_name_offset_list_[x] << std::endl;
+  }
+  out << "  shape_count=" << shape_count() << "  exit_sign_count="
+      << exit_sign_count() << std::endl;
+
+//      const GraphId& nodea() const;
+//      const GraphId& nodeb() const;
+
+}
+
 const uint32_t EdgeInfo::GetShapeOffset() const {
   return (street_name_offset_list_offset() + name_count() * sizeof(size_t));
 }
