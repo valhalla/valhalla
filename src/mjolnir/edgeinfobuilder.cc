@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <ostream>
+#include <iostream>
 
 #include "mjolnir/edgeinfobuilder.h"
 
@@ -49,6 +51,21 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
   size += (exit_signs_.size() * sizeof(ExitSign));              // exit_signs_
 
   return size;
+}
+
+void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) {
+  for (size_t name_offset : street_name_offset_list_) {
+    std::cout << "name_offset=" << name_offset << std::endl;
+  }
+  out.write(reinterpret_cast<const char*>(&nodea_), sizeof(GraphId));
+  out.write(reinterpret_cast<const char*>(&nodeb_), sizeof(GraphId));
+  out.write(reinterpret_cast<const char*>(&item_), sizeof(PackedItem));
+  out.write(reinterpret_cast<const char*>(&street_name_offset_list_[0]),
+            (street_name_offset_list_.size() * sizeof(size_t)));
+  out.write(reinterpret_cast<const char*>(&shape_[0]),
+            (shape_.size() * sizeof(PointLL)));
+  out.write(reinterpret_cast<const char*>(&exit_signs_[0]),
+            (exit_signs_.size() * sizeof(ExitSign)));
 }
 
 }

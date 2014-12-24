@@ -58,12 +58,10 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
     // Write the edge data
-    file.write(reinterpret_cast<const char*>(&edgeinfo_builder_[0]),
-               edgeinfo_size_);
+    SerializeEdgeInfosToOstream(file);
 
     // Write the names
-    file.write(reinterpret_cast<const char*>(&textlist_builder_[0]),
-               textlist_size_);
+    SerializeTextListToOstream(file);
 
     std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
@@ -98,8 +96,8 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 
   // TODO - change to move?
   if (!edges.empty()) {
-    edgeinfo_builder_.insert(edgeinfo_builder_.end(), edges.begin(),
-                             edges.end());
+    edgeinfos_builder_.insert(edgeinfos_builder_.end(), edges.begin(),
+                              edges.end());
   }
 
   // Set edgeinfo data size
@@ -107,7 +105,7 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 
   // TODO rm later
   size_t computed_size = 0;
-  for (const auto& edgeinfo_builder : edgeinfo_builder_) {
+  for (const auto& edgeinfo_builder : edgeinfos_builder_) {
     computed_size += edgeinfo_builder.SizeOf();
   }
   std::cout << ">>>>> EDGEINFO computed_size = " << computed_size
@@ -136,6 +134,18 @@ void GraphTileBuilder::SetTextListAndSize(
   }
   std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
             << "  textlist_size_ = " << textlist_size_ << std::endl;
+}
+
+void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
+  for (EdgeInfoBuilder edgeinfo : edgeinfos_builder_) {
+    edgeinfo.SerializeToOstream(out);
+  }
+}
+
+void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
+  for (std::string text : textlist_builder_) {
+    out.write(text.c_str(), (text.length() + 1));
+  }
 }
 
 }

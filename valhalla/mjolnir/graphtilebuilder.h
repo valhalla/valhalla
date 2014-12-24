@@ -33,6 +33,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   bool StoreTileData(const std::string& basedirectory,
                      const baldr::GraphId& graphid);
 
+
   /**
    * Add a node and its outbound edges.
    */
@@ -53,6 +54,12 @@ class GraphTileBuilder : public baldr::GraphTile {
                           const std::size_t textlist_size);
 
  protected:
+  // Write all edgeinfo items to specified stream
+  void SerializeEdgeInfosToOstream(std::ostream& out);
+
+  // Write all textlist items to specified stream
+  void SerializeTextListToOstream(std::ostream& out);
+
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
 
@@ -66,7 +73,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
-  std::vector<EdgeInfoBuilder> edgeinfo_builder_;
+  std::vector<EdgeInfoBuilder> edgeinfos_builder_;
 
   // Size of the edgeinfo data
   std::size_t edgeinfo_size_;
