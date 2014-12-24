@@ -55,6 +55,8 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
+  void SerializeToOstream(std::ostream& out);
+
  private:
 
   // List of roadname indexes
