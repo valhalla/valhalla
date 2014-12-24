@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <ostream>
+#include <iostream>
 
 #include "mjolnir/edgeinfobuilder.h"
 
