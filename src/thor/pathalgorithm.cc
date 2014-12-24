@@ -67,15 +67,15 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
              DynamicCost* costing) {
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.location_.latlng_, dest.location_.latlng_, costing);
+  Init(origin.location().latlng_, dest.location().latlng_, costing);
 
   // Initialize the origin and destination locations
   SetOrigin(graphreader, origin, costing);
   SetDestination(dest);
 
-  std::cout << "Add dest edge: " << dest.edges_[0].id_.tileid() << "," << dest.edges_[0].id_.id() << std::endl;
-  GraphTile* t = graphreader.GetGraphTile(dest.edges_[0].id_);
-  const DirectedEdge* d = t->directededge(dest.edges_[0].id_);
+  std::cout << "Add dest edge: " << dest.edges()[0].id.tileid() << "," << dest.edges()[0].id.id() << std::endl;
+  GraphTile* t = graphreader.GetGraphTile(dest.edges()[0].id);
+  const DirectedEdge* d = t->directededge(dest.edges()[0].id);
   const NodeInfo* en  = t->node(d->endnode());
   std::cout << "   Length = " << d->length() << " EndNode LL = " << en->latlng().lat() << "," << en->latlng().lng() << std::endl;
 
@@ -188,12 +188,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
           const PathLocation& origin, DynamicCost* costing) {
   // Get sort heuristic based on distance from origin to destination
-  float heuristic = astarheuristic_.Get(origin.location_.latlng_);
+  float heuristic = astarheuristic_.Get(origin.location().latlng_);
 
   // Iterate through edges and add to adjacency list
-  for (auto edge : origin.edges_) {
+  for (const auto& edge : origin.edges()) {
     // Get the directed edge
-    GraphId edgeid = edge.id_;
+    GraphId edgeid = edge.id;
     GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
@@ -217,8 +217,8 @@ std::cout << "   Length = " << directededge->length() << " EndNode LL = " << end
 // Add a destination edge
 void PathAlgorithm::SetDestination(const PathLocation& dest) {
   // TODO - add partial distances
-  for (auto edge : dest.edges_) {
-    destinations_[edge.id_.value()] = 1.0f;
+  for (const auto& edge : dest.edges()) {
+    destinations_[edge.id.value()] = 1.0f;
   }
 }
 
@@ -228,7 +228,7 @@ bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
   // travel in both directions we need to make sure both directions
   // are found or some further cost is encountered to rule out the
   // other direction
-  auto p = destinations_.find(edgeid.value());
+  const auto& p = destinations_.find(edgeid.value());
   return (p == destinations_.end()) ? false : true;
 }
 
@@ -250,7 +250,7 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const EdgeLabel* dest) {
 
 // Gets the edge label for an edge that is in the adjacency list.
 EdgeLabel* PathAlgorithm::GetPriorEdgeLabel(const GraphId& edgeid) const {
-  auto p = adjlistedges_.find(edgeid.value());
+  const auto& p = adjlistedges_.find(edgeid.value());
   return (p == adjlistedges_.end()) ? nullptr : p->second;
 }
 
