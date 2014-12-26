@@ -42,9 +42,10 @@ void GraphBuilder::Build() {
   preprocess_ = true;
   CanalTP::read_osm_pbf(input_file_, *this);
   std::cout << "Way count = " << ways_.size() << std::endl;
-  std::cout << "Total node count = " << node_count_ << " Ways use "
-            << osmnodeids_.nonempty() << " nodes" << std::endl;
-  std::cout << "NodeId memory use " << osmnodeids_.memory_use() << std::endl;
+// TODO - add later
+//  std::cout << "Total node count = " << node_count_ << " Ways use "
+//            << osmnodeids_.nonempty() << " nodes" << std::endl;
+//  std::cout << "NodeId memory use " << osmnodeids_.memory_use() << std::endl;
 
   // Step 2 - parse nodes and relations
   std::cout << "Parse PBF nodes and relations" << std::endl;
@@ -92,10 +93,12 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Check if it is in the list of nodes used by ways
+/** TODO - add later
   if (!osmnodeids_[osmid]) {
     skippednodes_++;
     return;
   }
+  */
 
   // Get tags
   Tags results = lua_.TransformInLua(false, tags);
@@ -317,14 +320,16 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   }
 
   // Add the way to the list
-  ways_.push_back(w);
+  ways_.emplace_back(w);
 //  if (ways_.size() % 1000000 == 0) std::cout << ways_.size() <<
 //      " ways parsed" << std::endl;
 
+  /** TODO - add later
   // Add list of OSM Node Ids we need
   for (const auto nodeid : refs) {
     osmnodeids_.set(nodeid);
   }
+  */
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
@@ -387,7 +392,7 @@ void GraphBuilder::ConstructEdges() {
         nd.AddEdge(edgeindex);
 
         // Add the edge to the list of edges
-        edges_.push_back(*edge);
+        edges_.emplace_back(*edge);
         edgeindex++;
 
         // Start a new edge if this is not the last node in the way

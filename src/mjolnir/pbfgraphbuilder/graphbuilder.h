@@ -8,7 +8,9 @@
 #include <map>
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
-#include <google/sparsetable>
+
+//TODO- add later
+//#include <google/sparsetable>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
@@ -35,6 +37,7 @@ using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 /**
  * Sparse table of node Ids used in ways we keep.
  */
+/** TODO - add later
 class NodeIDTable {
  public:
   NodeIDTable() {
@@ -61,12 +64,13 @@ class NodeIDTable {
   }
 
   size_t memory_use() const {
-    return (ids_.size() / 8) + (ids_.num_nonempty() * sizeof(bool));
+    return (ids_.size() / 8page-not-found) + (ids_.num_nonempty() * sizeof(bool));
   }
 
  protected:
   google::sparsetable<bool> ids_;
 };
+*/
 
 /**
  * Class used to construct temporary data used to build the initial graph.
@@ -150,7 +154,8 @@ class GraphBuilder {
   bool preprocess_;
 
   // Reference to the set of OSM Node Ids used by ways
-  NodeIDTable osmnodeids_;
+// TOD - add later
+//  NodeIDTable osmnodeids_;
 
   uint32_t skippednodes_;
   uint32_t skippedhighway_;
