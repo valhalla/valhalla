@@ -23,12 +23,13 @@ namespace mjolnir {
 
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : relation_count_(0),
+    : skippednodes_(0),
+      relation_count_(0),
       node_count_(0),
       input_file_(input_file),
       tile_hierarchy_(pt) {
 
-  //grab out the lua config
+  // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
           pt.get<std::string>("tagtransform.node_function"),
           pt.get<std::string>("tagtransform.way_script"),
@@ -36,9 +37,21 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
 }
 
 void GraphBuilder::Build() {
-  //parse the pbf
+  // Parse the pbf ways. Find all node Ids needed.
+  std::cout << "Parse PBF ways to find all OSM Node Ids needed" << std::endl;
+  preprocess_ = true;
   CanalTP::read_osm_pbf(input_file_, *this);
-  PrintCounts();
+  std::cout << "Way count = " << ways_.size() << std::endl;
+  std::cout << "Total node count = " << node_count_ << " Ways use "
+            << osmnodeids_.nonempty() << " nodes" << std::endl;
+  std::cout << "NodeId memory use " << osmnodeids_.memory_use() << std::endl;
+
+  // Step 2 - parse nodes and relations
+  std::cout << "Parse PBF nodes and relations" << std::endl;
+  preprocess_ = false;
+  CanalTP::read_osm_pbf(input_file_, *this);
+  std::cout << relation_count_ << " relations" << std::endl;
+  std::cout << "Skipped " << skippednodes_ << " nodes" << std::endl;
 
   // Compute node use counts
   SetNodeUses();
@@ -58,22 +71,32 @@ void GraphBuilder::Build() {
   BuildLocalTiles(tile_hierarchy_.tile_dir(), tl->second.level);
 }
 
-void GraphBuilder::LuaInit(std::string nodetagtransformscript,
-                           std::string nodetagtransformfunction,
-                           std::string waytagtransformscript,
-                           std::string waytagtransformfunction) {
+// Initialize Lua tag transformations
+void GraphBuilder::LuaInit(const std::string& nodetagtransformscript,
+                           const std::string& nodetagtransformfunction,
+                           const std::string& waytagtransformscript,
+                           const std::string& waytagtransformfunction) {
   lua_.SetLuaNodeScript(nodetagtransformscript);
   lua_.SetLuaNodeFunc(nodetagtransformfunction);
-
   lua_.SetLuaWayScript(waytagtransformscript);
   lua_.SetLuaWayFunc(waytagtransformfunction);
-
   lua_.OpenLib();
-
 }
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
+  // Skip on preprocess step
+  if (preprocess_) {
+    node_count_++;
+    return;
+  }
+
+  // Check if it is in the list of nodes used by ways
+  if (!osmnodeids_[osmid]) {
+    skippednodes_++;
+    return;
+  }
+
   // Get tags
   Tags results = lua_.TransformInLua(false, tags);
   if (results.size() == 0)
@@ -105,14 +128,22 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
     //    std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
   }
 
-  // Add to the node map
+  // Add to the node map;
   nodes_.emplace(osmid, n);
-  node_count_++;
-  //if (nodecount % 10000 == 0) std::cout << nodecount << " nodes" << std::endl;
+
+  size_t nodecount = nodes_.size();
+  if (nodecount % 1000000 == 0) {
+    std::cout << nodecount << " nodes on ways and " << skippednodes_
+              << " skipped" << std::endl;
+  }
 }
 
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
                                 const std::vector<uint64_t> &refs) {
+  // Ways are processed in the first iteration. Skip on 2nd iteration.
+  if (!preprocess_)
+    return;
+
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
@@ -120,14 +151,18 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     return;
   }
 
+  // Transform tags. If no results that means the way does not have tags
+  // suitable for use in routing.
   Tags results = lua_.TransformInLua(true, tags);
-
-  if (results.size() == 0)
+  if (results.size() == 0) {
     return;
+  }
 
+  // Add the node reference list to the way
   OSMWay w(osmid);
   w.set_nodes(refs);
 
+  // Process tags
   for (const auto& tag : results) {
 
     if (tag.first == "road_class") {
@@ -279,22 +314,25 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
     // if (osmid == 368034)   //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
     //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
-
   }
 
+  // Add the way to the list
   ways_.push_back(w);
+//  if (ways_.size() % 1000000 == 0) std::cout << ways_.size() <<
+//      " ways parsed" << std::endl;
 
+  // Add list of OSM Node Ids we need
+  for (const auto nodeid : refs) {
+    osmnodeids_.set(nodeid);
+  }
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                                      const CanalTP::References & /*refs*/) {
+  // Relations are processed in the seconds iteration. Skip on 1st iteration.
+  if (preprocess_)
+    return;
   relation_count_++;
-
-}
-
-void GraphBuilder::PrintCounts() {
-  std::cout << "Read and parsed " << node_count_ << " nodes, " << ways_.size()
-            << " ways and " << relation_count_ << " relations" << std::endl;
 }
 
 // Once all the ways and nodes are read, we compute how many times a node
@@ -306,51 +344,57 @@ void GraphBuilder::SetNodeUses() {
     for (const auto& node : way.nodes()) {
       nodes_[node].IncrementUses();
     }
-    // make sure that the last node is considered as an extremity
-    // TODO - could avoid this by altering ConstructEdges
+
+    // Make sure that the first and last node of the way have use count of
+    // at least 2 (so they will not get removed later).
+    nodes_[way.nodes().front()].IncrementUses();
     nodes_[way.nodes().back()].IncrementUses();
   }
 }
 
 // Construct edges in the graph.
+// TODO - memory use? Delete temporary edges?
 // TODO - compare logic to example_routing app. to see why the edge
 // count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
-  unsigned int edgeindex = 0;
-  unsigned int wayindex = 0;
-  uint64_t target, current;
-  for (auto way : ways_) {
-    // TODO - memory use? Delete temporary edges?
-    Edge* edge = new Edge;
-    current = way.nodes()[0];
-    OSMNode& edgestartnode = nodes_[current];
-    edge->sourcenode_ = current;
-    edge->AddLL(edgestartnode.latlng());
-    edge->wayindex_ = wayindex;
+  uint32_t edgeindex = 0;
+  uint32_t wayindex = 0;
+  uint64_t currentid;
+  for (const auto& way : ways_) {
+    // Start an edge at the first node of the way and add the
+    // edge index to the node
+    currentid = way.nodes()[0];
+    OSMNode& node = nodes_[currentid];
+    Edge* edge = new Edge(currentid, wayindex, node.latlng());
+    node.AddEdge(edgeindex);
+
+    // Iterate through the nodes of the way and add lat,lng to the current
+    // way until a node with > 1 uses is found.
     for (size_t i = 1, n = way.node_count(); i < n; i++) {
-      // Add the node lat,lng to the edge shape
-      current = way.nodes()[i];
-      OSMNode& node = nodes_[current];
-      edge->AddLL(node.latlng());
+      // Add the node lat,lng to the edge shape.
+      // TODO - not sure why I had to use a different OSMNode declaration here?
+      // But if I use node from above I get errors!
+      currentid = way.nodes()[i];
+      OSMNode& nd = nodes_[currentid];
+      edge->AddLL(nd.latlng());
 
-      // If a node is used more than once, it is an intersection, hence it's
-      // a node of the road network graph
-      if (node.uses() > 1) {
-        edge->targetnode_ = current;
+      // If a node is used more than once, it is an intersection or the end
+      // of the way, hence it's a node of the road network graph
+      if (nd.uses() > 1) {
+        // End the current edge and add its edge index to the node
+        edge->targetnode_ = currentid;
+        nd.AddEdge(edgeindex);
+
+        // Add the edge to the list of edges
         edges_.push_back(*edge);
-
-        // Add the edge index to the start and target node
-        edgestartnode.AddEdge(edgeindex);
-        node.AddEdge(edgeindex);
-
-        // Start a new edge
-        edge = new Edge;
-        edge->sourcenode_ = current;
-        edgestartnode = node;
-        edge->wayindex_ = wayindex;
-
         edgeindex++;
+
+        // Start a new edge if this is not the last node in the way
+        if (i < n-1) {
+          edge = new Edge(currentid, wayindex, node.latlng());
+          nd.AddEdge(edgeindex);
+        }
       }
     }
     wayindex++;
@@ -365,28 +409,35 @@ void GraphBuilder::RemoveUnusedNodes() {
   node_map_type::iterator itr = nodes_.begin();
   while (itr != nodes_.end()) {
     if (itr->second.uses() < 2) {
-      nodes_.erase(itr++);
+      node_map_type::iterator to_erase = itr;
+      ++itr;
+      nodes_.erase(to_erase);
     } else {
       ++itr;
     }
   }
-  std::cout << "Removed unused nodes; size = " << nodes_.size() << std::endl;
+  std::cout << "Removed unused nodes; remaining node count = "
+            << nodes_.size() << std::endl;
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
   std::cout << "Tile nodes..." << std::endl;
-  int tileid;
-  unsigned int n;
+  int32_t tileid;
+  size_t n;
   Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
 
   // Get number of tiles and resize the tilednodes vector
   unsigned int tilecount = tiles.TileCount();
   tilednodes_.resize(tilecount);
 
-  for (auto node : nodes_) {
+  // Iterate through all OSM nodes and assign GraphIds
+  for (auto& node : nodes_) {
+    // Skip any nodes that have no edges
     if (node.second.edge_count() == 0) {
-      std::cout << "Node with no edges" << std::endl;
+      //std::cout << "Node with no edges" << std::endl;
+      continue;
     }
+
     // Get tile Id
     tileid = tiles.TileId(node.second.latlng());
     if (tileid < 0) {
@@ -397,8 +448,8 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
     // Get the number of nodes currently in the tile.
     // Set the GraphId for this OSM node.
     n = tilednodes_[tileid].size();
-    node_graphids_.insert(
-        std::make_pair(node.first, GraphId((unsigned int) tileid, level, n)));
+    node.second.set_graphid(GraphId(static_cast<uint32_t>(tileid), level,
+                                    static_cast<uint64_t>(n)));
 
     // Add this OSM node to the list of nodes for this tile
     tilednodes_[tileid].push_back(node.first);
@@ -421,8 +472,8 @@ struct NodePairHasher {
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
   // Iterate through the tiles
-  unsigned int tileid = 0;
-  for (auto tile : tilednodes_) {
+  uint32_t tileid = 0;
+  for (const auto& tile : tilednodes_) {
     // Skip empty tiles
     if (tile.size() == 0) {
       tileid++;
@@ -446,7 +497,8 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     std::vector<std::string> text_list;
 
     // Iterate through the nodes
-    unsigned int directededgecount = 0;
+    uint32_t id = 0;
+    uint32_t directededgecount = 0;
     for (auto osmnodeid : tile) {
       OSMNode& node = nodes_[osmnodeid];
       NodeInfoBuilder nodebuilder;
@@ -461,23 +513,18 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       for (auto edgeindex : node.edges()) {
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
-        // Assign nodes
-        auto nodea = node_graphids_[edge.sourcenode_];
-        auto nodeb = node_graphids_[edge.targetnode_];
-
-        directededge.set_endnode(nodeb);
 
         // Compute length from the latlngs.
         float length = node.latlng().Length(*edge.latlngs_);
         directededge.set_length(length);
 
+        // Get the way information and set attributes
         OSMWay &w = ways_[edge.wayindex_];
 
         directededge.set_importance(w.road_class());
         directededge.set_use(w.use());
         directededge.set_link(w.link());
         directededge.set_speed(w.speed());    // KPH
-
         directededge.set_ferry(w.ferry());
         directededge.set_railferry(w.rail());
         directededge.set_toll(w.toll());
@@ -502,8 +549,20 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
          }*/
 
-        if (edge.sourcenode_ == osmnodeid) {  //forward direction
-
+        // Assign nodes and determine orientation along the edge (forward
+        // or reverse between the 2 nodes)
+        const GraphId& nodea = nodes_[edge.sourcenode_].graphid();
+        if (!nodea.Is_Valid()) {
+          std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
+              " GraphID is not valid" << std::endl;
+        }
+        const GraphId& nodeb = nodes_[edge.targetnode_].graphid();
+        if (!nodeb.Is_Valid()) {
+          std::cout << "Node B: OSMID = " << edge.targetnode_ <<
+            " GraphID is not valid" << std::endl;
+        }
+        if (edge.sourcenode_ == osmnodeid) {
+          // Edge traversed in forward direction
           directededge.set_caraccess(true, false, w.auto_forward());
           directededge.set_pedestrianaccess(true, false, w.pedestrian());
           directededge.set_bicycleaccess(true, false, w.bike_forward());
@@ -512,8 +571,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           directededge.set_pedestrianaccess(false, true, w.pedestrian());
           directededge.set_bicycleaccess(false, true, w.bike_backward());
 
-        } else {  //reverse direction.  Must flip in relation to the drawing of the way.
-
+          // Set end node to the target (end) node
+          directededge.set_endnode(nodeb);
+        } else if (edge.targetnode_ == osmnodeid) {
+          // Reverse direction.  Reverse the access logic and end node
           directededge.set_caraccess(true, false, w.auto_backward());
           directededge.set_pedestrianaccess(true, false, w.pedestrian());
           directededge.set_bicycleaccess(true, false, w.bike_backward());
@@ -522,6 +583,15 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           directededge.set_pedestrianaccess(false, true, w.pedestrian());
           directededge.set_bicycleaccess(false, true, w.bike_forward());
 
+          // Set end node to the source (start) node
+          directededge.set_endnode(nodea);
+        } else {
+          // ERROR!!!
+          std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
+              edgeindex << " Edge nodes " <<
+              edge.sourcenode_ << " and " << edge.targetnode_ <<
+              " do not match the OSM node Id" <<
+              osmnodeid << std::endl;
         }
 
         // Check if we need to add edge info
@@ -593,6 +663,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
       // Add information to the tile
       graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
+      id++;
     }
 
     graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);

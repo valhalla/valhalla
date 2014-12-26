@@ -45,12 +45,6 @@ class OSMWay {
   uint64_t way_id() const;
 
   /**
-   * Add a node to the nodelist.
-   * @param   node  node to add to the list
-   */
-  void AddNode(const uint64_t node);
-
-  /**
    * Set local nodelist.
    * @param   nodes  list of nodes for this way
    */
@@ -489,26 +483,29 @@ class OSMWay {
   std::vector<std::string> GetNames();
 
  private:
-
+  // OSM way Id
   uint64_t osmwayid_;
 
+  // List of OSM node Ids along the way
   std::vector<uint64_t>* nodes_;
 
-  uint8_t speed_;
-
+  // Reference name (highway numbers)
   std::string ref_;
   std::string int_ref_;
 
+  // Names
   std::string name_;
   std::string name_en_;
   std::string alt_name_;
   std::string official_name_;
 
+  // Destination information
   std::string destination_;
   std::string destination_ref_;
   std::string destination_ref_to_;
   std::string junction_ref_;
 
+  // Bike network information
   std::string bike_national_ref_;
   std::string bike_regional_ref_;
   std::string bike_local_ref_;
@@ -516,7 +513,6 @@ class OSMWay {
   // Way attributes
   union WayAttributes {
     struct Fields {
-
       uint32_t auto_forward     :1;
       uint32_t bike_forward     :1;
       uint32_t auto_backward    :1;
@@ -535,7 +531,6 @@ class OSMWay {
       uint32_t bridge           :1;
       uint32_t bikenetwork      :4;
       uint32_t spare            :9;
-
     } fields;
     uint32_t v;
   };
@@ -546,12 +541,13 @@ class OSMWay {
       uint8_t road_class        :3;     // Importance of the road/path
       uint8_t link              :1;     // *link tag - Ramp or turn channel
       uint8_t use               :4;     // Use / form
-
     } fields;
     uint8_t v;
   };
-
   Classification classification_;
+
+  // Speed in kilometers per hour
+  uint8_t speed_;
 };
 
 }

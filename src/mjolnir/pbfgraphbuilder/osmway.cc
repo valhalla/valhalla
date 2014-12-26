@@ -85,16 +85,6 @@ uint64_t OSMWay::way_id() const {
 }
 
 /**
- * Add a node to the nodelist.
- */
-void OSMWay::AddNode(const uint64_t node) {
-  if (nodes_ == nullptr) {
-    nodes_ = new std::vector<uint64_t>;
-  }
-  nodes_->push_back(node);
-}
-
-/**
  * Set the list of nodes for this way.
  */
 void OSMWay::set_nodes(const std::vector<uint64_t> &nodes) {

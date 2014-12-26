@@ -1,19 +1,20 @@
 #include "osmnode.h"
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
 
 OSMNode::OSMNode() {
   latlng_.Set(0.0f, 0.0f);
-  edges_ = nullptr;
+  edges_ = new std::vector<uint32_t>;
   attributes_.v = 0;
 }
 
 OSMNode::OSMNode(const float lat, const float lng) {
   latlng_.Set(lat, lng);
-  edges_ = nullptr;
+  edges_ = new std::vector<uint32_t>;
   attributes_.v = 0;
 }
 
@@ -31,15 +32,22 @@ void OSMNode::set_latlng(const midgard::PointLL& ll) {
 }
 
 // Gets the lat,lng.
-PointLL OSMNode::latlng() const {
+const PointLL& OSMNode::latlng() const {
   return latlng_;
+}
+
+// Set the graph Id
+void OSMNode::set_graphid(const GraphId& graphid) {
+  graphid_ = graphid;
+}
+
+// Get the graph Id of this node (after tiling).
+const baldr::GraphId& OSMNode::graphid() const {
+  return graphid_;
 }
 
 // Add an edge to the list of outbound edges
 void OSMNode::AddEdge(const uint32_t edgeindex) {
-  if (edges_ == nullptr) {
-    edges_ = new std::vector<uint32_t>;
-  }
   edges_->push_back(edgeindex);
 }
 
