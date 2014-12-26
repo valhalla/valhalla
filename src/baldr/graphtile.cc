@@ -51,6 +51,9 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     // Start of edge information and name list
     edgeinfo_ = graphtile_ + header_->edgeinfo_offset();
     textlist_ = graphtile_ + header_->textlist_offset();
+
+    // Set the size to indicate success
+    size_ = filesize;
   }
   else {
     // TODO - error. Distinguish between file not found vs. a file read error?
