@@ -54,9 +54,9 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 }
 
 void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) {
-  for (size_t name_offset : street_name_offset_list_) {
-    std::cout << "name_offset=" << name_offset << std::endl;
-  }
+//  for (size_t name_offset : street_name_offset_list_) {
+//    std::cout << "name_offset=" << name_offset << std::endl;
+//  }
   out.write(reinterpret_cast<const char*>(&nodea_), sizeof(GraphId));
   out.write(reinterpret_cast<const char*>(&nodeb_), sizeof(GraphId));
   out.write(reinterpret_cast<const char*>(&item_), sizeof(PackedItem));

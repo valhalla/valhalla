@@ -9,6 +9,9 @@
 #include <utility>
 #include <boost/property_tree/ptree.hpp>
 
+//TODO- add later
+//#include <google/sparsetable>
+
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
@@ -19,7 +22,6 @@
 //     https://github.com/CanalTP/libosmpbfreader
 #include "osmpbfreader.h"
 #include "luatagtransform.h"
-
 
 namespace valhalla {
 namespace mjolnir {
@@ -33,6 +35,44 @@ typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
 using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 
 /**
+ * Sparse table of node Ids used in ways we keep.
+ */
+/** TODO - add later
+class NodeIDTable {
+ public:
+  NodeIDTable() {
+    ids_.resize(10000000);
+  }
+
+  void set(const uint64_t id) {
+    if (id >= ids_.size()) {
+      ids_.resize(id + 10000000);
+    }
+    ids_[id] = true;
+  }
+
+  const bool operator[](const uint64_t id) const {
+    return ids_[id];
+  }
+
+  uint64_t size() {
+    return ids_.size();
+  }
+
+  size_t nonempty() const {
+    return ids_.num_nonempty();
+  }
+
+  size_t memory_use() const {
+    return (ids_.size() / 8page-not-found) + (ids_.num_nonempty() * sizeof(bool));
+  }
+
+ protected:
+  google::sparsetable<bool> ids_;
+};
+*/
+
+/**
  * Class used to construct temporary data used to build the initial graph.
  */
 class GraphBuilder {
@@ -40,7 +80,8 @@ class GraphBuilder {
   /**
    * Constructor
    */
-  GraphBuilder(const boost::property_tree::ptree& pt, const std::string& input_file);
+  GraphBuilder(const boost::property_tree::ptree& pt,
+               const std::string& input_file);
 
   /**
    * Callback method for OSMPBFReader. Called when a node is parsed.
@@ -71,15 +112,10 @@ class GraphBuilder {
   /**
    * Initialize Lua with the scripts and functions.
    */
-  void LuaInit(std::string nodetagtransformscript, std::string nodetagtransformfunction,
-               std::string waytagtransformscript, std::string waytagtransformfunction);
-
-
-  /**
-   * Debug method to print the number of nodes, ways, and relations that
-   * were read and parsed from the pbf input file.
-   */
-  void PrintCounts();
+  void LuaInit(const std::string& nodetagtransformscript,
+               const std::string& nodetagtransformfunction,
+               const std::string& waytagtransformscript,
+               const std::string& waytagtransformfunction);
 
   /**
    * This method computes how many times a node is used. Nodes with use count
@@ -115,9 +151,16 @@ class GraphBuilder {
   node_pair ComputeNodePair(const baldr::GraphId& nodea,
                             const baldr::GraphId& nodeb) const;
 
+  bool preprocess_;
 
-  unsigned int relation_count_;
-  unsigned int node_count_;
+  // Reference to the set of OSM Node Ids used by ways
+// TOD - add later
+//  NodeIDTable osmnodeids_;
+
+  uint32_t skippednodes_;
+  uint32_t skippedhighway_;
+  uint32_t relation_count_;
+  uint32_t node_count_;
 
   // Map that stores all the nodes read
   node_map_type nodes_;
@@ -127,9 +170,6 @@ class GraphBuilder {
 
   // Stores all the edges
   std::vector<Edge> edges_;
-
-  // Map of OSM node Ids to GraphIds
-  node_graphid_map_type node_graphids_;
 
   // Lua Tag Transformation class
   LuaTagTransform lua_;
@@ -146,7 +186,7 @@ class GraphBuilder {
   // Map that stores all the ref info on a node
   std::unordered_map<uint64_t, std::string> map_ref_;
 
-  // Map that stores all the exit to info on a notd
+  // Map that stores all the exit to info on a node
   std::unordered_map<uint64_t, std::string> map_exit_to_;
 };
 
