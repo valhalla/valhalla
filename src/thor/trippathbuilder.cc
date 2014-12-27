@@ -25,7 +25,7 @@ float TripPathBuilder::Build(GraphReader& graphreader,
   float length = 0.0f;
   const DirectedEdge* directededge;
   const EdgeInfo* edgeinfo;
-  for (auto edge : pathedges) {
+  for (const auto& edge : pathedges) {
     directededge = graphreader.GetGraphTile(edge)->directededge(edge);
     length += directededge->length();
     edgeinfo = graphreader.GetGraphTile(edge)->edgeinfo(directededge->edgedataoffset());
