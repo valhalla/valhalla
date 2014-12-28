@@ -1,5 +1,5 @@
 #include "test.h"
-
+#include <iostream>
 #include <vector>
 #include "config.h"
 #include "thor/edgelabel.h"
@@ -12,39 +12,47 @@ namespace {
 
 void TryAddRemove(const std::vector<unsigned int>& costs,
                   const std::vector<unsigned int>& expectedorder) {
+  uint32_t i = 0;
+  std::vector<EdgeLabel> edgelabels;
   AdjacencyList adjlist(0, 10000, 5);
   for (auto cost : costs) {
-    EdgeLabel* label = new EdgeLabel();
-    label->SetSortCost(cost);
-    adjlist.Add(label);
+    EdgeLabel label;
+    label.SetSortCost(cost);
+    edgelabels.emplace_back(label);
+    adjlist.Add(i, cost);
+    i++;
   }
   for (auto expected : expectedorder) {
-    EdgeLabel* label = adjlist.Remove();
-    if (label->sortcost() != expected)
+    uint32_t labelindex = adjlist.Remove(edgelabels);
+    if (edgelabels[labelindex].sortcost() != expected) {
       throw runtime_error("TryAddRemove: expected order test failed");
-    delete label;
+    }
   }
 }
 
 void TestAddRemove() {
   std::vector<unsigned int> costs = { 67, 325, 25, 466, 1000, 100005, 758, 167,
             258, 16442, 278, 111111000 };
-  std::vector<unsigned int> expectedorder = costs;
+  std::vector<uint32_t> expectedorder = costs;
   std::sort(expectedorder.begin(), expectedorder.end());
   TryAddRemove(costs, expectedorder);
 }
 
 void TryClear(const std::vector<unsigned int>& costs) {
+  uint32_t i = 0;
+  std::vector<EdgeLabel> edgelabels;
   AdjacencyList adjlist(0, 10000, 50);
   for (auto cost : costs) {
-    EdgeLabel* label = new EdgeLabel();
-    label->SetSortCost(cost);
-    adjlist.Add(label);
+    EdgeLabel label;
+    label.SetSortCost(cost);
+    edgelabels.emplace_back(label);
+    adjlist.Add(i, cost);
+    i++;
   }
   adjlist.Clear();
-  EdgeLabel* label = adjlist.Remove();
-  if (label != nullptr)
-    throw runtime_error("TryClear: failed to return nullptr afer Clear");
+  uint32_t idx = adjlist.Remove(edgelabels);
+  if (idx != kInvalidLabel)
+    throw runtime_error("TryClear: failed to return invalid edge index after Clear");
 }
 
 void TestClear() {

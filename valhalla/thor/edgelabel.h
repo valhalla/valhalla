@@ -23,13 +23,14 @@ class EdgeLabel {
 
   /**
    * Constructor with values.
-   * @param predecessor Predecessor directed edge in the shortest path.
+   * @param predecessor Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
    * @param edgeid    GraphId of this directed edge.
    * @param endnode   End node of the directed edge.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    */
-  EdgeLabel(const EdgeLabel* predecessor, const baldr::GraphId& edgeid,
+  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& endnode, const float cost,
             const float sortcost);
 
@@ -39,26 +40,39 @@ class EdgeLabel {
   virtual ~EdgeLabel();
 
   /**
+   * Set values.
+   * @param predecessor Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
+   * @param edgeid    GraphId of this directed edge.
+   * @param endnode   End node of the directed edge.
+   * @param cost      True cost to the edge.
+   * @param sortcost  Cost for sorting (includes A* heuristic)
+   */
+  void Set(const uint32_t predecessor, const baldr::GraphId& edgeid,
+           const baldr::GraphId& endnode, const float cost,
+           const float sortcost);
+
+  /**
    * Update an existing edge label with new predecessor and cost information.
    * The edge Id and end node remain the same.
    * @param predecessor Predecessor directeded edge in the shortest path.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    */
-  void Update(const EdgeLabel* predecessor, const float cost,
+  void Update(const uint32_t predecessor, const float cost,
             const float sortcost);
 
   /**
    * Get the predecessor edge label.
    * @return Predecessor edge label.
    */
-  const EdgeLabel* predecessor() const;
+  uint32_t predecessor() const;
 
   /**
    * Set the predecessor edge label.
-   * @param  predecessor  Predecessor edge label.
+   * @param  predecessor  Index of the predecessor edge label.
    */
-  void SetPredecessor(const EdgeLabel* predecessor);
+  void SetPredecessor(const uint32_t predecessor);
 
   /**
    * Get the GraphId of this directed edge.
@@ -120,8 +134,8 @@ class EdgeLabel {
   bool operator < (const EdgeLabel& other) const;
 
  private:
-  // Pointer to the predecessor edge and its label information.
-  const EdgeLabel* predecessor_;
+  // Index to the predecessor edge label information.
+  uint32_t predecessor_;
 
   // Graph Id of the edge.
   baldr::GraphId edgeid_;

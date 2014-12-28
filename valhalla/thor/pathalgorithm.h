@@ -48,18 +48,19 @@ class PathAlgorithm {
   // A* heuristic
   AStarHeuristic astarheuristic_;
 
+  // List of edge labels
+  uint64_t edgelabel_index_;
+  std::vector<EdgeLabel> edgelabels_;
+
   // Adjacency list
   AdjacencyList* adjacencylist_;
-
-  // Done set
-  std::vector<EdgeLabel*> doneset_;
 
   // Edge status
   EdgeStatus* edgestatus_;
 
   // Map of edges in the adjacency list. Keep this map so we do not have
   // to search to find an entry that is already in the adjacency list
-  std::map<uint64_t, EdgeLabel*> adjlistedges_;
+  std::map<uint64_t, uint32_t> adjlistedges_;
 
   // Destinations
   std::map<uint64_t, float> destinations_;
@@ -90,12 +91,12 @@ class PathAlgorithm {
    * Form the path from the adjacency list.
    * TODO - support partial distances at origin/destination
    */
-  std::vector<baldr::GraphId> FormPath(const EdgeLabel* dest);
+  std::vector<baldr::GraphId> FormPath(const uint32_t dest);
 
   /**
    * Gets the edge label for an edge that is in the adjacency list.
    */
-  EdgeLabel* GetPriorEdgeLabel(const baldr::GraphId& edgeid) const;
+  uint32_t GetPriorEdgeLabel(const baldr::GraphId& edgeid) const;
 
   /*
    * Remove the edge label from the map of edges in the adjacency list
