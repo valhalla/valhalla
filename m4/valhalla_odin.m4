@@ -30,8 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_ODIN],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/proto/trippath.pb.h>]],
 			[[using namespace valhalla::odin;
-			TripPath();
-			return 0;]])],
+			TripPath();]])],
 			ax_cv_valhalla_odin=yes, ax_cv_valhalla_odin=no)
 		AC_LANG_POP([C++])
 	])

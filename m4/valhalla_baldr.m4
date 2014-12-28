@@ -30,8 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_BALDR],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/baldr/graphid.h>]],
 			[[using namespace valhalla::baldr;
-			GraphId(0,0,0);
-			return 0;]])],
+			GraphId(0,0,0);]])],
 			ax_cv_valhalla_baldr=yes, ax_cv_valhalla_baldr=no)
 		AC_LANG_POP([C++])
 	])

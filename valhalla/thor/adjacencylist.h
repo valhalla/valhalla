@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 
-#include "thor/edgelabel.h"
+#include <valhalla/thor/edgelabel.h>
 
 // Constant indicating an invalid label. Used to indicate the adjacency list
 // is empty during a Remove call.

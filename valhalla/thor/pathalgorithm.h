@@ -6,11 +6,11 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
-#include "thor/adjacencylist.h"
-#include "thor/astarheuristic.h"
-#include "thor/dynamiccost.h"
-#include "thor/edgelabel.h"
-#include "thor/edgestatus.h"
+#include <valhalla/thor/adjacencylist.h>
+#include <valhalla/thor/astarheuristic.h>
+#include <valhalla/thor/dynamiccost.h>
+#include <valhalla/thor/edgelabel.h>
+#include <valhalla/thor/edgestatus.h>
 
 namespace valhalla {
 namespace thor {
