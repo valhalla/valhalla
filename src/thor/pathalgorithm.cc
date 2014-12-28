@@ -101,7 +101,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Check for completion
     if (IsComplete(next.edgeid())) {
       // Form path and return
-      std::cout << "Cache Tile Count = " << graphreader.GetNTilesInCache() << std::endl;
+ //     std::cout << "Cache Tile Count = " << graphreader.GetNTilesInCache() << std::endl;
       return FormPath(nextedgelabel);
     }
 
