@@ -1,5 +1,3 @@
-#include <functional>
-#include <boost/functional/hash.hpp>
 #include <limits>
 
 #include "baldr/graphid.h"
@@ -69,6 +67,10 @@ bool GraphId::Is_Valid() const {
   return graphid_.v != kInvalidId;
 }
 
+GraphId GraphId::Tile_Base() const {
+  return GraphId( graphid_.fields.tileid,  graphid_.fields.level, 0);
+}
+
 // Post increments the id.
 void GraphId::operator ++(int) {
   graphid_.fields.id++;
@@ -82,15 +84,6 @@ bool GraphId::operator <(const GraphId& rhs) const {
 // Equality operator
 bool GraphId::operator ==(const GraphId& rhs) const {
   return graphid_.v == rhs.graphid_.v;
-}
-
-std::size_t GraphId::HashCode() const {
-  std::size_t seed = 13;
-  boost::hash_combine(seed, graphid_.fields.tileid);
-  boost::hash_combine(seed, graphid_.fields.level);
-  boost::hash_combine(seed, graphid_.fields.id);
-
-  return seed;
 }
 
 

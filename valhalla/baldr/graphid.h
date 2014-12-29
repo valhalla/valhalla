@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHID_H_
 
 #include <cstdint>
+#include <functional>
 
 namespace valhalla {
 namespace baldr {
@@ -78,6 +79,13 @@ class GraphId {
   bool Is_Valid() const;
 
   /**
+   * Returns a GraphId omitting the id of the of the object within the level
+   *
+   * @return graphid with only tileid and level included
+   */
+  GraphId Tile_Base() const;
+
+  /**
    * Post increments the id.
    */
   void operator ++(int);
@@ -108,6 +116,18 @@ class GraphId {
 };
 
 }
+}
+
+// Extend the standard namespace to know how to hash graphids
+namespace std {
+  template <>
+  struct hash<valhalla::baldr::GraphId>
+  {
+    std::size_t operator()(const valhalla::baldr::GraphId& k) const
+    {
+      return static_cast<size_t>(k.value());
+    }
+  };
 }
 
 #endif // VALHALLA_BALDR_GRAPHID_H_

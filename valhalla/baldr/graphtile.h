@@ -59,7 +59,7 @@ class GraphTile {
   size_t size() const;
 
   /**
-   * Gets the id of the graph tile
+   * Gets the id of the *graph tile
    *
    * @return id     the graph id of the tile (pointing to the first node)
    */

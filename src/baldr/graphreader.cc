@@ -14,12 +14,6 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt):GraphReader(Tile
 GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
 }
 
-// TODO - need a const for tileID bit size
-unsigned int GraphReader::GetKey(const unsigned int level,
-              const unsigned int tileid) const {
-  return tileid + (level << 24);
-}
-
 // Get a pointer to a graph tile object given a GraphId.
 GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
@@ -28,16 +22,20 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return cacheptr;
   }
 
-  // Tile is not in the cache, read it from disk.
-  return ReadTile(graphid);
+  // Create a GraphTile object. This reads the tile. Check that the
+  // size != 0 (0 indicates tile not found or other error)
+  GraphTile tile(tile_hierarchy_.tile_dir(), graphid);
+  if (tile.size() == 0) {
+    return nullptr;
+  }
+
+  // Add to the cache and return the pointer to the GraphTile
+  auto success = tilecache_.emplace(graphid.Tile_Base(), tile);
+  return &success.first->second;
 }
 
 GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
-  GraphId id = tile_hierarchy_.GetGraphId(pointll, level);
-  if(id.Is_Valid())
-    return GetGraphTile(id);
-  else
-    return nullptr;
+  return GetGraphTile(tile_hierarchy_.GetGraphId(pointll, level));
 }
 
 GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
@@ -47,22 +45,8 @@ GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
 // Get a tile object from cache. Checks if the tile given by the tileid
 // and level from the graphid is already in the cache.
 GraphTile* GraphReader::GetTileFromCache(const GraphId& graphid) {
-  auto it = tilecache_.find(GetKey(graphid.level(), graphid.tileid()));
-  return (it == tilecache_.end()) ? nullptr : it->second;
-}
-
-// Read a tile object from disk and adds it to the cache.
-GraphTile* GraphReader::ReadTile(const GraphId& graphid) {
-  // Create a GraphTile object. This reads the tile. Check that the
-  // size != -1 (-1 indicates tile not found or other error)
-  GraphTile* tile = new GraphTile(tile_hierarchy_.tile_dir(), graphid);
-  if (tile->size() == 0) {
-    return nullptr;
-  }
-
-  // Add to the cache and return the pointer to the GraphTile
-  tilecache_[GetKey(graphid.level(), graphid.tileid())] = tile;
-  return tile;
+  auto it = tilecache_.find(graphid.Tile_Base());
+  return (it == tilecache_.end()) ? nullptr : &it->second;
 }
 
 }

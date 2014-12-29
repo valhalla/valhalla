@@ -21,7 +21,11 @@ GraphTile::GraphTile()
 
 // Constructor given a filename. Reads the graph data into memory.
 GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
-  :id_(graphid.tileid(), graphid.level(), 0) {
+  :size_(0), id_(graphid.Tile_Base()) {
+
+  // Don't bother with invalid ids
+  if(!graphid.Is_Valid())
+    return;
 
   // Open to the end of the file so we can immediately get size;
   std::ifstream file(Filename(basedirectory, id_),
@@ -54,10 +58,6 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
 
     // Set the size to indicate success
     size_ = filesize;
-  }
-  else {
-    // TODO - error. Distinguish between file not found vs. a file read error?
-    size_ = 0;
   }
 }
 
