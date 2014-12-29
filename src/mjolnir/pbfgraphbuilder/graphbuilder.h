@@ -7,10 +7,8 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <algorithm>
 #include <boost/property_tree/ptree.hpp>
-
-//TODO- add later
-//#include <google/sparsetable>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
@@ -35,42 +33,52 @@ typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
 using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 
 /**
- * Sparse table of node Ids used in ways we keep.
+ * A method for marking OSM node Ids that are used by ways.
+ * Uses a vector where 1 bit is used for each possible Id.
  */
-/** TODO - add later
-class NodeIDTable {
+class NodeIdTable {
  public:
-  NodeIDTable() {
-    ids_.resize(10000000);
+   /**
+    * Constructor
+    * @param   maxosmid   Maximum OSM Id to support.
+    */
+  NodeIdTable(const uint64_t maxosmid) {
+    maxosmid_ = maxosmid;
+
+    // Create a vector to mark bits. Initialize to 0.
+    bitmarkers_.resize((maxosmid / 64) + 1, 0);
   }
 
+  /**
+   * Destructor
+   */
+  ~NodeIdTable() { }
+
+  /**
+   * Sets the OSM Id as used.
+   * @param   osmid   OSM Id of the node.
+   */
   void set(const uint64_t id) {
-    if (id >= ids_.size()) {
-      ids_.resize(id + 10000000);
+    // Test if the max is exceeded
+    if (id > maxosmid_) {
+      throw std::runtime_error("NodeIDTable - OSM Id exceeds max specified");
     }
-    ids_[id] = true;
+    bitmarkers_[id / 64] |= (1 << (id % 64));
   }
 
-  const bool operator[](const uint64_t id) const {
-    return ids_[id];
+  /**
+   * Test if the OSM Id is used / set in the bitmarker.
+   * @param  id  OSM Id
+   * @return  Returns true if the OSM Id is used. False if not.
+   */
+  const bool IsUsed(const uint64_t id) const {
+    return (bitmarkers_[id / 64] & (1 << (id % 64)));
   }
 
-  uint64_t size() {
-    return ids_.size();
-  }
-
-  size_t nonempty() const {
-    return ids_.num_nonempty();
-  }
-
-  size_t memory_use() const {
-    return (ids_.size() / 8page-not-found) + (ids_.num_nonempty() * sizeof(bool));
-  }
-
- protected:
-  google::sparsetable<bool> ids_;
+ private:
+  uint64_t maxosmid_;
+  std::vector<uint64_t> bitmarkers_;
 };
-*/
 
 /**
  * Class used to construct temporary data used to build the initial graph.
@@ -153,11 +161,7 @@ class GraphBuilder {
 
   bool preprocess_;
 
-  // Reference to the set of OSM Node Ids used by ways
-// TOD - add later
-//  NodeIDTable osmnodeids_;
-
-  uint32_t skippednodes_;
+  uint64_t maxosmid_;
   uint32_t skippedhighway_;
   uint32_t relation_count_;
   uint32_t node_count_;
@@ -173,6 +177,9 @@ class GraphBuilder {
 
   // Lua Tag Transformation class
   LuaTagTransform lua_;
+
+  // Mark the OSM Node Ids used by ways
+  NodeIdTable osmnodeids_;
 
   // Tiled nodes
   std::vector<std::vector<uint64_t>> tilednodes_;
