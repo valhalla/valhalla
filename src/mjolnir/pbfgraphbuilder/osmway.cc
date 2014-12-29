@@ -589,38 +589,34 @@ std::vector<std::string> OSMWay::GetNames() const {
       && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
           || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens = GetTagTokens(ref_);
-    if (!tokens.empty()) {
-      names.insert(names.end(), tokens.begin(), tokens.end());
-    }
+    names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
   // TODO int_ref
 
   // Process name
   if (!name_.empty())
-    names.push_back(name_);
+    names.emplace_back(name_);
 
   // Process non limited access refs
   if (!ref_.empty() && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
       && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens = GetTagTokens(ref_);
-    if (!tokens.empty()) {
-      names.insert(names.end(), tokens.begin(), tokens.end());
-    }
+    names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
   // Process alt_name
   if (!alt_name_.empty())
-    names.push_back(alt_name_);
+    names.emplace_back(alt_name_);
 
   // Process official_name
   if (!official_name_.empty())
-    names.push_back(official_name_);
+    names.emplace_back(official_name_);
 
   // Process name_en_
   // TODO: process country specific names
   if (!name_en_.empty())
-    names.push_back(name_en_);
+    names.emplace_back(name_en_);
 
   return names;
 }

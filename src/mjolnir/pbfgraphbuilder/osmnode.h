@@ -141,7 +141,7 @@ class OSMNode {
   baldr::GraphId graphid_;
 
   // List of edges beginning or ending at the node
-  std::vector<uint32_t>* edges_;
+  std::vector<uint32_t> edges_;
 
   // Node attributes
   union NodeAttributes {
