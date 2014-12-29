@@ -119,7 +119,9 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
 }
 
 const EdgeInfo* GraphTile::edgeinfo(uint32_t offset) const {
-  return reinterpret_cast<const EdgeInfo*>(edgeinfo_ + offset);
+  EdgeInfo* edgeinfo = reinterpret_cast<EdgeInfo*>(edgeinfo_ + offset);
+  edgeinfo->SetPointers();
+  return edgeinfo;
 }
 
 }
