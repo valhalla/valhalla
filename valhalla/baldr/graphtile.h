@@ -7,6 +7,8 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
 
+#include <boost/shared_array.hpp>
+
 namespace valhalla {
 namespace baldr {
 
@@ -59,7 +61,7 @@ class GraphTile {
   size_t size() const;
 
   /**
-   * Gets the id of the graph tile
+   * Gets the id of the *graph tile
    *
    * @return id     the graph id of the tile (pointing to the first node)
    */
@@ -109,7 +111,7 @@ class GraphTile {
   size_t size_;
 
   // Graph tile memory
-  char* graphtile_;
+  boost::shared_array<char> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;

@@ -9,8 +9,7 @@ namespace baldr{
 
 // Default constructor
 GraphTile::GraphTile()
-    : graphtile_(nullptr),
-      size_(0),
+    : size_(0),
       header_(nullptr),
       nodes_(nullptr),
       directededges_(nullptr),
@@ -21,7 +20,11 @@ GraphTile::GraphTile()
 
 // Constructor given a filename. Reads the graph data into memory.
 GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
-  :id_(graphid.tileid(), graphid.level(), 0) {
+  :size_(0), id_(graphid.Tile_Base()) {
+
+  // Don't bother with invalid ids
+  if(!graphid.Is_Valid())
+    return;
 
   // Open to the end of the file so we can immediately get size;
   std::ifstream file(Filename(basedirectory, id_),
@@ -30,14 +33,14 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
     size_t filesize = file.tellg();
-    graphtile_ = new char[filesize];
+    graphtile_.reset(new char[filesize]);
     file.seekg (0, std::ios::beg);
-    file.read(graphtile_, filesize);
+    file.read(graphtile_.get(), filesize);
     file.close();
 
     // Set a pointer to the header (first structure in the binary data).
-    char* ptr = graphtile_;
-    header_ = reinterpret_cast<GraphTileHeader*>(graphtile_);
+    char* ptr = graphtile_.get();
+    header_ = reinterpret_cast<GraphTileHeader*>(ptr);
     ptr += sizeof(GraphTileHeader);
 
     // Set a pointer to the node list
@@ -49,20 +52,15 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
     // Start of edge information and name list
-    edgeinfo_ = graphtile_ + header_->edgeinfo_offset();
-    textlist_ = graphtile_ + header_->textlist_offset();
+    edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
+    textlist_ = graphtile_.get() + header_->textlist_offset();
 
     // Set the size to indicate success
     size_ = filesize;
   }
-  else {
-    // TODO - error. Distinguish between file not found vs. a file read error?
-    size_ = 0;
-  }
 }
 
 GraphTile::~GraphTile() {
-   delete[] graphtile_;
 }
 
 // Gets the filename given the graphId
