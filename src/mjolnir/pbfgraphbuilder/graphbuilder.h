@@ -147,17 +147,15 @@ class GraphBuilder {
    * @param  tilesize  Size of tiles in degrees.
    * @param  level  Hierarchy level.
    */
-  void TileNodes(const float tilesize, const unsigned int level);
+  void TileNodes(const float tilesize, const uint8_t level);
 
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const std::string& tiledir, const unsigned int level) const;
+  void BuildLocalTiles(const uint8_t level) const;
 
 
  protected:
-  node_pair ComputeNodePair(const baldr::GraphId& nodea,
-                            const baldr::GraphId& nodeb) const;
 
   bool preprocess_;
 
@@ -182,7 +180,7 @@ class GraphBuilder {
   NodeIdTable osmnodeids_;
 
   // Tiled nodes
-  std::vector<std::vector<uint64_t>> tilednodes_;
+  std::unordered_map<GraphId, std::vector<uint64_t> > tilednodes_;
 
   // Location of the protocol buffer input file
   std::string input_file_;
