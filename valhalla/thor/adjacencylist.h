@@ -6,6 +6,10 @@
 
 #include <valhalla/thor/edgelabel.h>
 
+// Constant indicating an invalid label. Used to indicate the adjacency list
+// is empty during a Remove call.
+constexpr uint32_t kInvalidLabel = UINT32_MAX;
+
 namespace valhalla {
 namespace thor {
 
@@ -13,7 +17,10 @@ namespace thor {
  * Adjacency list support. Uses a bucket sort implementation for performance.
  * An "overflow" bucket is maintained to allow reduced memory use - costs
  * outside the current bucket "range" get placed into the overflow bucket and
- * are moved into the low-level buckets as needed.
+ * are moved into the low-level buckets as needed. The adjacency list stores
+ * indexes into a list (vector) of label where complete cost and predecessor
+ * information are stored. The adjacency list simply provides a fast sorting
+ *  method.
  * @author  David W. Nesbitt
  */
 class AdjacencyList {
@@ -36,34 +43,40 @@ class AdjacencyList {
   virtual ~AdjacencyList();
 
   /**
-   * Clear all edge labels from from the adjacency list
+   * Clear all labels from from the adjacency list
    */
   void Clear();
 
   /**
-   * Adds an edge label to the sorted list. Adds to the appropriate
-   * bucket given its sort cost. If the sortcost is greater than maxcost_
-   * the edge label is placed in the overflow bucket. If the sortcost is <
-   * the current bucket cost then the edge label is placed at the front of
-   * the current bucket (this prevents underflow).
-   * @param   edgelabel  Edge label to add to the adjacency list.
+   * Adds a label to the sorted list. Adds to the appropriate bucket given
+   * its sort cost. If the sortcost is greater than maxcost_ the label is
+   * placed in the overflow bucket. If the sortcost is < the current bucket
+   * cost then the label is placed at the front of the current bucket (this
+   * prevents underflow).
+   * @param   label     Label to add to the adjacency list.
+   * @param   sortcost  Sort cost for this label.
    */
-  void Add(EdgeLabel* edgelabel);
+  void Add(const uint32_t label, const float sortcost);
 
   /**
-   * The specified edge label now has a smaller cost.  Reorders it in the
+   * The specified label now has a smaller cost.  Reorders it in the
    * sorted bucket list.
-   * @param   edgelabel  Edge label (directed edge) to reorder in the
-   *                     adjacency list
-   * @param   previouscost Previous cost.
+   * @param  label  Label to reorder in the adjacency list
+   * @param  newsortcost  New sort cost.
+   * @param  previouscost Previous sort cost.
    */
-  void DecreaseCost(EdgeLabel* edgelabel, const float previouscost);
+  void DecreaseCost(const uint32_t label,
+                    const float newsortcost,
+                    const float previouscost);
 
   /**
-   * Removes the lowest cost edge label from the sorted list.
-   * @return  Pointer to the edge label with lowest cost.
+   * Removes the lowest cost label from the sorted list.
+   * @param  edgelabels  List of labels (for use when emptying
+   *                         overflow buckets).
+   * @return  Returns the label (index) of the lowest cost label. Returns
+   *             kInvalidLabel if the adjacency list is empty.
    */
-  EdgeLabel* Remove();
+  uint32_t Remove(const std::vector<EdgeLabel>& edgelabels);
 
  private:
   float bucketrange_;  // Total range of costs in lower level buckets
@@ -74,23 +87,26 @@ class AdjacencyList {
   float currentcost_;  // Current cost.
 
   // Low level buckets
-  std::vector<std::list<EdgeLabel*> > buckets_;
+  std::vector<std::list<uint32_t>> buckets_;
 
   // Current bucket in the list
-  std::vector<std::list<EdgeLabel*> >::iterator currentbucket_;
+  std::vector<std::list<uint32_t>>::iterator currentbucket_;
 
   // Overflow bucket
-  std::list<EdgeLabel*> overflowbucket_;
+  std::list<uint32_t> overflowbucket_;
 
   // Make the default constructor private to force use of one with args
   AdjacencyList();
 
   // Returns the bucket given the cost
-  std::list<EdgeLabel*>& Bucket(const float cost);
+  std::list<uint32_t>& Bucket(const float cost);
 
-  // Empties the overflow bucket by placing the edge labels into the
-  // low level buckets.
-  void EmptyOverflow();
+  /**
+   * Empties the overflow bucket by placing the labels into the
+   * low level buckets.
+   * @param  edgelabels  List of all edge labels (required to get costs).
+   */
+  void EmptyOverflow(const std::vector<EdgeLabel>& edgelabels);
 };
 
 }

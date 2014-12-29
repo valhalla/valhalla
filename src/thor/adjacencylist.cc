@@ -39,21 +39,13 @@ AdjacencyList::~AdjacencyList() {
   Clear();
 }
 
-// Clear all edge labels from from the adjacency list. Deletes the
-// remaining allocated edge labels.
+// Clear all label indexes from from the adjacency list.
 void AdjacencyList::Clear() {
-  // Empty the overflow bucket first for efficiency
-  EdgeLabel* elem;
-  while (!overflowbucket_.empty()) {
-    elem = overflowbucket_.front();
-    overflowbucket_.pop_front();
-    delete elem;
-  }
-
-  // Delete edge labels from the low-level buckets
-  if (currentbucket_ != buckets_.end()) {
-    while ((elem = Remove()) != nullptr)
-      delete elem;
+  // Empty the overflow bucket and each bucket
+  overflowbucket_.clear();
+  while (currentbucket_ != buckets_.end()) {
+    currentbucket_->clear();
+    currentbucket_++;
   }
 
   // Reset current bucket and cost
@@ -61,110 +53,101 @@ void AdjacencyList::Clear() {
   currentbucket_ = buckets_.begin();
 }
 
-// Add an edge label to the adjacency list. Adds it to the appropriate bucket
-// based on its sort cost.
-void AdjacencyList::Add(EdgeLabel* edgelabel) {
-  if (edgelabel->sortcost() < currentcost_) {
-    currentbucket_->push_front(edgelabel);
+// Add a label index to the adjacency list. Adds it to the appropriate bucket
+// based on the sort cost.
+void AdjacencyList::Add(const uint32_t label, const float sortcost) {
+  if (sortcost < currentcost_) {
+    currentbucket_->emplace_front(label);
   } else {
-    Bucket(edgelabel->sortcost()).push_back(edgelabel);
+    Bucket(sortcost).emplace_back(label);
   }
 }
 
-/**
- * The specified edge label now has a smaller cost.  Reorders it in
- * the sorted list.
- * @param   edgelabel  Directed edge to reorder in the adjacency list
- * @param   previouscost Previous cost.
- */
-void AdjacencyList::DecreaseCost(EdgeLabel* edgelabel,
+// The specified label now has a smaller cost.  Reorders it in the sorted list
+void AdjacencyList::DecreaseCost(const uint32_t label,
+                                 const float newsortcost,
                                  const float previouscost) {
-  // Get the bucket the edge label currently is in. Protect against
+  // Get the bucket the label index currently is in. Protect against
   // previous cost less than current cost
-  std::list<EdgeLabel*>& previousbucket =
+  std::list<uint32_t>& previousbucket =
       (previouscost < currentcost_) ?
           Bucket(currentcost_) : Bucket(previouscost);
 
   // If less than current cost add to the front of the current bucket
-  float cost = edgelabel->sortcost();
-  if (cost < currentcost_) {
-    // Remove the edge label from the old bucket and push it on the
+  if (newsortcost < currentcost_) {
+    // Remove the label index from the old bucket and push it on the
     // front of the current (so it is the next edge processed)
-    previousbucket.remove(edgelabel);
-    currentbucket_->push_front(edgelabel);
+    previousbucket.remove(label);
+    currentbucket_->emplace_front(label);
     return;
   }
 
   // If the old cost and the new cost are in the same bucket just return
-  std::list<EdgeLabel*>& newbucket = Bucket(cost);
+  std::list<uint32_t>& newbucket = Bucket(newsortcost);
   if (previousbucket == newbucket)
     return;
 
-  // Remove the edge label from the old bucket and add to the new bucket
-  previousbucket.remove(edgelabel);
-  newbucket.push_back(edgelabel);
+  // Remove the label index from the old bucket and add it to the new bucket
+  previousbucket.remove(label);
+  newbucket.emplace_back(label);
 }
 
-/**
- * Removes the lowest cost edge label from the sorted list.
- * @return  Pointer to the edge label with lowest cost.
- */
-EdgeLabel* AdjacencyList::Remove() {
-  // If the current bucket is not empty return the edge label off the front
+// Remove the label with the lowest cost
+uint32_t AdjacencyList::Remove(const std::vector<EdgeLabel>& edgelabels) {
+  // If the current bucket is not empty return the label off the front
   if (!currentbucket_->empty()) {
-    EdgeLabel* edgelabel = currentbucket_->front();
+    uint32_t label = currentbucket_->front();
     currentbucket_->pop_front();
-    return edgelabel;
+    return label;
   }
 
   // If current bucket is empty increment until a non-empty low-level
   // bucket is found. If we get to the end of the regular buckets
-  // we move edge labels from the overflow buckets into the regular buckets.
+  // we move labels from the overflow buckets into the regular buckets.
   for ( ; currentbucket_ != buckets_.end(); currentbucket_++) {
-    // If the current bucket is not empty get the first edge label off the list
+    // If current bucket is not empty get the first label off the list
     if (!currentbucket_->empty()) {
-      EdgeLabel* edgelabel = currentbucket_->front();
+      uint32_t label = currentbucket_->front();
       currentbucket_->pop_front();
-      return edgelabel;
+      return label;
     }
     currentcost_ += bucketsize_;
   }
 
-  // If no edge labels are in the overflow buckets, there are no more entries
+  // Return an invalid label if no labels are in the overflow buckets
   if (overflowbucket_.empty())
-    return nullptr;
+    return kInvalidLabel;
 
-  // No edge labels in the low level buckets.  Move edge labels from the
-  // overflow bucket to the low level buckets. Then find smallest bucket
-  // that is not empty
-  EmptyOverflow();
+  // Move labels from the overflow bucket to the low level buckets. Then find
+  // smallest bucket that is not empty and set it as the currentbucket
+  EmptyOverflow(edgelabels);
   for (currentbucket_ = buckets_.begin(); currentbucket_ != buckets_.end();
       currentbucket_++) {
-    // If current bucket is not empty get the first edge label off the list
+    // If current bucket is not empty return the first label off the list
     if (!currentbucket_->empty()) {
-      EdgeLabel* edgelabel = currentbucket_->front();
+      uint32_t label = currentbucket_->front();
       currentbucket_->pop_front();
-      return edgelabel;
+      return label;
     }
     currentcost_ += bucketsize_;
   }
-  return nullptr;
+  return kInvalidLabel;
 }
 
 // Returns the bucket given the cost
-std::list<EdgeLabel*>& AdjacencyList::Bucket(const float cost) {
+std::list<uint32_t>& AdjacencyList::Bucket(const float cost) {
   return (cost < maxcost_) ?
-      buckets_[(unsigned int)((cost - mincost_) / bucketsize_)] :
+      buckets_[(uint32_t)((cost - mincost_) / bucketsize_)] :
       overflowbucket_;
 }
 
-// Empties the overflow bucket by placing the edge labels into the
+// Empties the overflow bucket by placing the labels into the
 // low level buckets.
-void AdjacencyList::EmptyOverflow() {
+void AdjacencyList::EmptyOverflow(const std::vector<EdgeLabel>& edgelabels) {
   bool found = false;
   float cost;
-  EdgeLabel* edgelabel;
-  std::vector<EdgeLabel*> tmp;
+  uint32_t label;
+  std::vector<uint32_t> tmp;
   while (!found && !overflowbucket_.empty()) {
     // Adjust cost range
     mincost_ += bucketrange_;
@@ -173,21 +156,21 @@ void AdjacencyList::EmptyOverflow() {
 
     tmp.clear();
     while (!overflowbucket_.empty()) {
-      edgelabel = overflowbucket_.front();
+      label = overflowbucket_.front();
       overflowbucket_.pop_front();
-      cost = edgelabel->sortcost();
+      cost = edgelabels[label].sortcost();
       if (cost < maxcost_) {
-        buckets_[((cost - mincost_) / bucketsize_)].push_back(edgelabel);
+        buckets_[((cost - mincost_) / bucketsize_)].emplace_back(label);
         found = true;
       } else {
-        tmp.push_back(edgelabel);
+        tmp.emplace_back(label);
       }
     }
 
-    // Clear overflow and add any edge labels that lie outside the new range
+    // Clear overflow and add any labels that lie outside the new range
     overflowbucket_.clear();
-    for (auto edgelabel : tmp) {
-      overflowbucket_.push_back(edgelabel);
+    for (auto label : tmp) {
+      overflowbucket_.emplace_back(label);
     }
   }
 }

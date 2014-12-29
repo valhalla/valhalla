@@ -26,16 +26,21 @@ namespace bpo = boost::program_options;
  */
 int PathTest(GraphReader& reader, const PathLocation& origin,
              const PathLocation& dest) {
-  // Use Loki to get location information
   std::clock_t start = std::clock();
-
-  unsigned int msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-//  std::cout << "Location Processing took " << msecs << " ms" << std::endl;
-
-  start = std::clock();
   PathAlgorithm pathalgorithm;
   PedestrianCost* edgecost = new PedestrianCost;
+  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "PathAlgorithm Construction took " << msecs << " ms" << std::endl;
+  start = std::clock();
   std::vector<GraphId> pathedges;
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, edgecost);
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
+
+  // Try again to see how much caching improves...
+  pathalgorithm.Clear();
+
+  start = std::clock();
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, edgecost);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
@@ -45,10 +50,12 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
   TripPathBuilder trippath;
   float length = trippath.Build(reader, pathedges);
   std::cout << "Trip length is: " << length << " km" << std::endl;
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "TripPathBuilder took " << msecs << " ms" << std::endl;
 
   start = std::clock();
   pathalgorithm.Clear();
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm Clear took " << msecs << " ms" << std::endl;
   return 0;
 }
@@ -119,6 +126,9 @@ int main(int argc, char *argv[]) {
   boost::property_tree::read_json(config.c_str(), pt);
   valhalla::baldr::GraphReader reader(pt);
 
+  // Use Loki to get location information
+  std::clock_t start = std::clock();
+
   // Origin
   Location originloc = Location::FromCsv(origin);
   PathLocation pathOrigin = valhalla::loki::Search(originloc, reader);
@@ -126,6 +136,9 @@ int main(int argc, char *argv[]) {
   // Destination
   Location destloc = Location::FromCsv(destination);
   PathLocation pathDest = valhalla::loki::Search(destloc, reader);
+
+  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "Location Processing took " << msecs << " ms" << std::endl;
 
   // Try the route
   PathTest(reader, pathOrigin, pathDest);
