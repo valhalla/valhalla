@@ -465,10 +465,12 @@ namespace {
 struct NodePairHasher {
   std::size_t operator()(const node_pair& k) const {
     std::size_t seed = 13;
-    boost::hash_combine(seed, k.first.HashCode());
-    boost::hash_combine(seed, k.second.HashCode());
+    boost::hash_combine(seed, id_hasher(k.first));
+    boost::hash_combine(seed, id_hasher(k.second));
     return seed;
   }
+  //function to hash each id
+  std::hash<valhalla::baldr::GraphId> id_hasher;
 };
 }
 
