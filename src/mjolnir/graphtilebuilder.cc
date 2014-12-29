@@ -7,7 +7,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-GraphTileBuilder::GraphTileBuilder() {
+GraphTileBuilder::GraphTileBuilder():GraphTile(), edgeinfo_size_(0), textlist_size_() {
 
 }
 

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <utility>
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -25,10 +25,10 @@ namespace valhalla {
 namespace mjolnir {
 
 // Node map
-typedef std::map<uint64_t, OSMNode> node_map_type;
+using node_map_type = std::unordered_map<uint64_t, OSMNode>;
 
 // Mapping from OSM node Id to GraphId
-typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
+using node_graphid_map_type = std::unordered_map<uint64_t, baldr::GraphId>;
 
 using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 
@@ -152,7 +152,7 @@ class GraphBuilder {
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const std::string& tiledir, const unsigned int level);
+  void BuildLocalTiles(const std::string& tiledir, const unsigned int level) const;
 
 
  protected:

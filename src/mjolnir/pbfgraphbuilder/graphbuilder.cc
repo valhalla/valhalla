@@ -1,4 +1,3 @@
-#include <unordered_map>
 #include <boost/functional/hash.hpp>
 
 #include "graphbuilder.h"
@@ -472,11 +471,12 @@ struct NodePairHasher {
   //function to hash each id
   std::hash<valhalla::baldr::GraphId> id_hasher;
 };
+
 }
 
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
-                                   const unsigned int level) {
+                                   const unsigned int level) const {
   // Iterate through the tiles
   uint32_t tileid = 0;
   for (const auto& tile : tilednodes_) {
@@ -506,7 +506,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     uint32_t id = 0;
     uint32_t directededgecount = 0;
     for (auto osmnodeid : tile) {
-      OSMNode& node = nodes_[osmnodeid];
+      const OSMNode& node = nodes_.find(osmnodeid)->second; //TODO: check validity?
       NodeInfoBuilder nodebuilder;
       nodebuilder.set_latlng(node.latlng());
 
@@ -557,12 +557,12 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // Assign nodes and determine orientation along the edge (forward
         // or reverse between the 2 nodes)
-        const GraphId& nodea = nodes_[edge.sourcenode_].graphid();
+        const GraphId& nodea = nodes_.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
         if (!nodea.Is_Valid()) {
           std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
               " GraphID is not valid" << std::endl;
         }
-        const GraphId& nodeb = nodes_[edge.targetnode_].graphid();
+        const GraphId& nodeb = nodes_.find(edge.targetnode_)->second.graphid(); //TODO: check validity?
         if (!nodeb.Is_Valid()) {
           std::cout << "Node B: OSMID = " << edge.targetnode_ <<
             " GraphID is not valid" << std::endl;
