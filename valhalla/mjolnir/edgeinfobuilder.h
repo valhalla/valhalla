@@ -40,22 +40,22 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   void set_nodeb(const baldr::GraphId& nodeb);
 
   /**
+   * Set the indexes to names used by this edge
+   * @param  nameindexes  a list of name indexes.
+   */
+  void set_street_name_offset_list(const std::vector<size_t>& street_name_offset_list);
+
+  /**
    * Set the shape of the edge.
    * @param  shape  the the list of lat,lng points describing the
    * *        shape of the edge.
    */
   void set_shape(const std::vector<PointLL>& shape);
 
-  /**
-   * Set the indexes to names used by this edge
-   * @param  nameindexes  a list of name indexes.
-   */
-  void set_street_name_offset_list(const std::vector<size_t>& street_name_offset_list);
-
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
-  void SerializeToOstream(std::ostream& out);
+  void SerializeToOstream(std::ostream& out) const;
 
  private:
 

@@ -520,7 +520,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         const Edge& edge = edges_[edgeindex];
 
         // Compute length from the latlngs.
-        float length = node.latlng().Length(*edge.latlngs_);
+        float length = node.latlng().Length(edge.latlngs_);
         directededge.set_length(length);
 
         // Get the way information and set attributes
@@ -609,7 +609,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           edgeinfo.set_nodea(nodea);
           edgeinfo.set_nodeb(nodeb);
           // TODO - shape encode
-          edgeinfo.set_shape(*edge.latlngs_);
+          edgeinfo.set_shape(edge.latlngs_);
           // TODO - names
           std::vector<std::string> names = w.GetNames();
           std::vector<size_t> street_name_offset_list;

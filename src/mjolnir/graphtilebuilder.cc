@@ -38,11 +38,11 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // TODO - rm later
     std::cout << ">>>>> header_builder_.nodecount_"
               << header_builder_.nodecount()
-              << "header_builder_.directededgecount_ = "
+              << "  header_builder_.directededgecount_ = "
               << header_builder_.directededgecount()
-              << "header_builder_.edgeinfo_offset_ = "
+              << "  header_builder_.edgeinfo_offset_ = "
               << header_builder_.edgeinfo_offset()
-              << "header_builder_.textlist_offset_ = "
+              << "  header_builder_.textlist_offset_ = "
               << header_builder_.textlist_offset() << std::endl;
 
     // Write the header.
@@ -137,13 +137,13 @@ void GraphTileBuilder::SetTextListAndSize(
 }
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
-  for (EdgeInfoBuilder edgeinfo : edgeinfos_builder_) {
+  for (const auto& edgeinfo : edgeinfos_builder_) {
     edgeinfo.SerializeToOstream(out);
   }
 }
 
 void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
-  for (std::string text : textlist_builder_) {
+  for (const auto& text : textlist_builder_) {
     out.write(text.c_str(), (text.length() + 1));
   }
 }
