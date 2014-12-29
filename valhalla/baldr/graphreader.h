@@ -58,15 +58,6 @@ class GraphReader {
   // TODO: make this const
   TileHierarchy tile_hierarchy_;
 
-  /**
-   * Get a tile object from cache. Checks if the tile given by the tileid and level
-   * from the graphid is already in the cache.
-   * @param   graphid   Graph Id.
-   * @return  Returns a pointer to the GraphTile if it is already in the
-   *          cache. Returns nullptr if not in the cache.
-   */
-  GraphTile* GetTileFromCache(const GraphId& graphid);
-
   // The actual cached GraphTile objects
   std::unordered_map<GraphId, GraphTile> tilecache_;
 };
