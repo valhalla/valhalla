@@ -525,7 +525,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_length(length);
 
         // Get the way information and set attributes
-        OSMWay &w = ways_[edge.wayindex_];
+        const OSMWay &w = ways_[edge.wayindex_];
 
         directededge.set_importance(w.road_class());
         directededge.set_use(w.use());
