@@ -74,6 +74,12 @@ uint32_t DirectedEdge::lanes() const {
   return attributes_.lanecount;
 }
 
+// Get the index of the opposing directed edge at the end node of this
+// directed edge.
+uint32_t DirectedEdge::opp_index() const {
+  return attributes_.opp_index;
+}
+
 // Gets the bike network mask
 uint32_t DirectedEdge::bikenetwork() const {
   return attributes_.bikenetwork;

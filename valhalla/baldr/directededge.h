@@ -24,7 +24,6 @@ constexpr uint8_t kLcn = 4;
 
 /**
  * Directed edge within the graph.
- * @author  David W. Nesbitt
  */
 class DirectedEdge {
  public:
@@ -110,6 +109,15 @@ class DirectedEdge {
   bool roundabout() const;
 
   /**
+   * Get the index of the opposing directed edge at the end node of this
+   * directed edge. Can be used to find the start node of this directed edge
+   * and to detect U-turns.
+   * @return  Returns the index of the opposing directed edge at the end node
+   *          of this directed edge.
+   */
+  uint32_t opp_index() const;
+
+  /**
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
@@ -185,7 +193,8 @@ class DirectedEdge {
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 12;
+    uint32_t spare          : 7;
+    uint32_t opp_index      : 5;  // Opposing directed edge index
     uint32_t bikenetwork    : 4;
     uint32_t lanecount      : 4;
     uint32_t elevation      : 4;  // Elevation factor
