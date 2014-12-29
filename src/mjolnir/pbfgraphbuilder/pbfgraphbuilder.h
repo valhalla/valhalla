@@ -23,7 +23,7 @@ namespace mjolnir {
 struct Edge {
   uint64_t sourcenode_;
   uint64_t targetnode_;
-  std::vector<midgard::PointLL>* latlngs_;
+  std::vector<midgard::PointLL> latlngs_;
   uint32_t wayindex_;
 
   // Construct a new edge. Target node and additional lat,lngs will
@@ -33,20 +33,18 @@ struct Edge {
       : sourcenode_(sourcenode),
         targetnode_(0),
         wayindex_(wayindex) {
-    latlngs_ = new std::vector<midgard::PointLL>;
-    latlngs_->push_back(ll);
+    latlngs_.emplace_back(ll);
   }
 
   void AddLL(const midgard::PointLL& ll) {
-    latlngs_->push_back(ll);
+    latlngs_.emplace_back(ll);
   }
 
  private:
   Edge()
       : sourcenode_(0),
         targetnode_(0),
-        wayindex_(0),
-        latlngs_(nullptr) {
+        wayindex_(0){
   }
 };
 

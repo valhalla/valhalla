@@ -42,10 +42,8 @@ void EdgeInfoBuilder::set_street_name_offset_list(
 
 // Set the shape of the edge. TODO - move?
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
-  shape_.clear();
-  if (!shape.empty()) {
-    shape_.insert(shape_.end(), shape.begin(), shape.end());
-  }
+  // Set the shape
+  shape_.assign(shape.begin(), shape.end());
   // Set the shape count
   item_.fields.shape_count = shape_.size();
 }
