@@ -465,10 +465,12 @@ namespace {
 struct NodePairHasher {
   std::size_t operator()(const node_pair& k) const {
     std::size_t seed = 13;
-    boost::hash_combine(seed, k.first.HashCode());
-    boost::hash_combine(seed, k.second.HashCode());
+    boost::hash_combine(seed, id_hasher(k.first));
+    boost::hash_combine(seed, id_hasher(k.second));
     return seed;
   }
+  //function to hash each id
+  std::hash<valhalla::baldr::GraphId> id_hasher;
 };
 }
 
@@ -523,7 +525,7 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         directededge.set_length(length);
 
         // Get the way information and set attributes
-        OSMWay &w = ways_[edge.wayindex_];
+        const OSMWay &w = ways_[edge.wayindex_];
 
         directededge.set_importance(w.road_class());
         directededge.set_use(w.use());
