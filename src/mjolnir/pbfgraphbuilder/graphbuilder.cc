@@ -555,6 +555,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
          }*/
 
+
+          // TODO - if sorting of directed edges occurs after this will need to
+          // remove this code and do elsewhere.
+
         // Assign nodes and determine orientation along the edge (forward
         // or reverse between the 2 nodes)
         const GraphId& nodea = nodes_[edge.sourcenode_].graphid();
@@ -579,6 +583,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
           // Set end node to the target (end) node
           directededge.set_endnode(nodeb);
+
+          // Set the opposing edge offset at the end node of this directed edge.
+          directededge.set_opp_index(GetOpposingIndex(edge.targetnode_,
+                                                      edge.sourcenode_));
         } else if (edge.targetnode_ == osmnodeid) {
           // Reverse direction.  Reverse the access logic and end node
           directededge.set_caraccess(true, false, w.auto_backward());
@@ -591,6 +599,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
           // Set end node to the source (start) node
           directededge.set_endnode(nodea);
+
+          // Set opposing edge index at the end node of this directed edge.
+          directededge.set_opp_index(GetOpposingIndex(edge.sourcenode_,
+                                                      edge.targetnode_));
         } else {
           // ERROR!!!
           std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
@@ -681,6 +693,22 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
     tileid++;
   }
+}
+
+uint32_t GraphBuilder::GetOpposingIndex(const uint64_t endnode,
+                                        const uint64_t startnode) {
+  uint32_t n = 0;
+  for (const auto& edgeindex : nodes_[endnode].edges()) {
+    if ((edges_[edgeindex].sourcenode_ == endnode &&
+         edges_[edgeindex].targetnode_ == startnode) ||
+        (edges_[edgeindex].targetnode_ == endnode &&
+         edges_[edgeindex].sourcenode_ == startnode)) {
+      return n;
+    }
+    n++;
+  }
+  std::cout << "ERROR Opposing directed edge not found!" << std::endl;
+  return 31;
 }
 
 node_pair GraphBuilder::ComputeNodePair(const baldr::GraphId& nodea,

@@ -195,6 +195,12 @@ class GraphBuilder {
 
   // Map that stores all the exit to info on a node
   std::unordered_map<uint64_t, std::string> map_exit_to_;
+
+  /**
+   * Get the index of the opposing directed edge at the end node
+   * of a directed edge.
+   */
+  uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode);
 };
 
 }
