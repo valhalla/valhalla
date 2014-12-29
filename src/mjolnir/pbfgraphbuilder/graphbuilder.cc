@@ -21,13 +21,17 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+// Will throw an error if this is exceeded. Then we can increase.
+const uint64_t kMaxOSMNodeId = 4000000000;
+
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : skippednodes_(0),
+    : maxosmid_(0),
       relation_count_(0),
       node_count_(0),
       input_file_(input_file),
-      tile_hierarchy_(pt) {
+      tile_hierarchy_(pt),
+      osmnodeids_(kMaxOSMNodeId) {
 
   // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
@@ -42,17 +46,15 @@ void GraphBuilder::Build() {
   preprocess_ = true;
   CanalTP::read_osm_pbf(input_file_, *this);
   std::cout << "Way count = " << ways_.size() << std::endl;
-// TODO - add later
-//  std::cout << "Total node count = " << node_count_ << " Ways use "
-//            << osmnodeids_.nonempty() << " nodes" << std::endl;
-//  std::cout << "NodeId memory use " << osmnodeids_.memory_use() << std::endl;
+  std::cout << "Max OSM ID = " << maxosmid_ << std::endl;
 
   // Step 2 - parse nodes and relations
   std::cout << "Parse PBF nodes and relations" << std::endl;
   preprocess_ = false;
   CanalTP::read_osm_pbf(input_file_, *this);
   std::cout << relation_count_ << " relations" << std::endl;
-  std::cout << "Skipped " << skippednodes_ << " nodes" << std::endl;
+  std::cout << "Ways use " << nodes_.size() << " nodes out of  " <<
+        node_count_ << " total nodes" << std::endl;
 
   // Compute node use counts
   SetNodeUses();
@@ -86,6 +88,9 @@ void GraphBuilder::LuaInit(const std::string& nodetagtransformscript,
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
+if (osmid > maxosmid_)
+    maxosmid_ = osmid;
+
   // Skip on preprocess step
   if (preprocess_) {
     node_count_++;
@@ -93,12 +98,9 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Check if it is in the list of nodes used by ways
-/** TODO - add later
-  if (!osmnodeids_[osmid]) {
-    skippednodes_++;
+  if (!osmnodeids_.IsUsed(osmid)) {
     return;
   }
-  */
 
   // Get tags
   Tags results = lua_.TransformInLua(false, tags);
@@ -136,8 +138,7 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
 
   size_t nodecount = nodes_.size();
   if (nodecount % 1000000 == 0) {
-    std::cout << nodecount << " nodes on ways and " << skippednodes_
-              << " skipped" << std::endl;
+    std::cout << "Processed " << nodecount << " nodes on ways" << std::endl;
   }
 }
 
@@ -324,12 +325,10 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 //  if (ways_.size() % 1000000 == 0) std::cout << ways_.size() <<
 //      " ways parsed" << std::endl;
 
-  /** TODO - add later
   // Add list of OSM Node Ids we need
   for (const auto nodeid : refs) {
     osmnodeids_.set(nodeid);
   }
-  */
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
