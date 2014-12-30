@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <ostream>
 
 namespace valhalla {
 namespace baldr {
@@ -110,6 +111,8 @@ class GraphId {
     uint64_t v;
   };
   Id graphid_;
+
+  friend std::ostream& operator<<(std::ostream& os, const valhalla::baldr::GraphId& id);
 };
 
 }
@@ -126,5 +129,6 @@ namespace std {
     }
   };
 }
+
 
 #endif // VALHALLA_BALDR_GRAPHID_H_
