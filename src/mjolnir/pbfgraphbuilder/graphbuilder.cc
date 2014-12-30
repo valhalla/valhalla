@@ -1,4 +1,5 @@
 #include <boost/functional/hash.hpp>
+#include <future>
 
 #include "graphbuilder.h"
 
@@ -9,6 +10,8 @@
 #include <utility>
 #include <algorithm>
 #include <string>
+#include <thread>
+#include <memory>
 #include <valhalla/midgard/aabbll.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -16,6 +19,12 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+
+namespace {
+
+  const size_t kAsyncBatchSize = 64;
+
+}
 
 namespace valhalla {
 namespace mjolnir {
@@ -425,8 +434,6 @@ void GraphBuilder::RemoveUnusedNodes() {
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
   std::cout << "Tile nodes..." << std::endl;
-  int32_t tileid;
-
 
   // Get number of tiles and reserve space for them
   // < 30% of the earth is land and most roads are on land, even less than that even has roads
@@ -471,213 +478,315 @@ node_pair ComputeNodePair(const baldr::GraphId& nodea,
   return std::make_pair(nodeb, nodea);
 }
 
-// builds a single tile
-bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std::unordered_map<uint64_t, OSMNode>& nodes,
-               const std::vector<OSMWay>& ways, const std::vector<Edge>& edges, const std::string& outdir) {
-  GraphTileBuilder graphtile;
+void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
+                    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
+                    const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
+                    const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
+  // A place to keep information about what was done
+  size_t written = 0;
 
-  // Edge info offset and map
-  size_t edge_info_offset = 0;
-  std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+  // For each tile
+  for(; tile_start != tile_end; ++tile_start) {
+    try {
+      GraphTileBuilder graphtile;
 
-  // The edgeinfo list
-  std::vector<EdgeInfoBuilder> edgeinfo_list;
+      // Edge info offset and map
+      size_t edge_info_offset = 0;
+      std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
 
-  // Text list offset and map
-  size_t text_list_offset = 0;
-  std::unordered_map<std::string, size_t> text_offset_map;
+      // The edgeinfo list
+      std::vector<EdgeInfoBuilder> edgeinfo_list;
 
-  // Text list
-  std::vector<std::string> text_list;
+      // Text list offset and map
+      size_t text_list_offset = 0;
+      std::unordered_map<std::string, size_t> text_offset_map;
 
-  // Iterate through the nodes
-  uint32_t id = 0;
-  uint32_t directededgecount = 0;
-  for (const auto& osmnodeid : tile.second) {
-    const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
-    NodeInfoBuilder nodebuilder;
-    nodebuilder.set_latlng(node.latlng());
+      // Text list
+      std::vector<std::string> text_list;
 
-    // Set the index of the first outbound edge within the tile.
-    nodebuilder.set_edge_index(directededgecount);
-    nodebuilder.set_edge_count(node.edge_count());
+      // Iterate through the nodes
+      uint32_t directededgecount = 0;
+      for (const auto& osmnodeid : tile_start->second) {
+        const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
+        NodeInfoBuilder nodebuilder;
+        nodebuilder.set_latlng(node.latlng());
 
-    // Set up directed edges
-    std::vector<DirectedEdgeBuilder> directededges;
-    for (auto edgeindex : node.edges()) {
-      DirectedEdgeBuilder directededge;
-      const Edge& edge = edges[edgeindex];
+        // Set the index of the first outbound edge within the tile.
+        nodebuilder.set_edge_index(directededgecount);
+        nodebuilder.set_edge_count(node.edge_count());
 
-      // Compute length from the latlngs.
-      float length = node.latlng().Length(edge.latlngs_);
-      directededge.set_length(length);
+        // Set up directed edges
+        std::vector<DirectedEdgeBuilder> directededges;
+        directededgecount += node.edge_count();
+        for (auto edgeindex : node.edges()) {
+          DirectedEdgeBuilder directededge;
+          const Edge& edge = edges[edgeindex];
 
-      // Get the way information and set attributes
-      const OSMWay &w = ways[edge.wayindex_];
+          // Compute length from the latlngs.
+          float length = node.latlng().Length(edge.latlngs_);
+          directededge.set_length(length);
 
-      directededge.set_importance(w.road_class());
-      directededge.set_use(w.use());
-      directededge.set_link(w.link());
-      directededge.set_speed(w.speed());    // KPH
-      directededge.set_ferry(w.ferry());
-      directededge.set_railferry(w.rail());
-      directededge.set_toll(w.toll());
-      directededge.set_dest_only(w.destination_only());
-      directededge.set_unpaved(w.surface());
-      directededge.set_tunnel(w.tunnel());
-      directededge.set_roundabout(w.roundabout());
-      directededge.set_bridge(w.bridge());
-      directededge.set_bikenetwork(w.bike_network());
+          // Get the way information and set attributes
+          const OSMWay &w = ways[edge.wayindex_];
 
-      //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
-      /*  if (w.osmwayid_ == 368034)
-       {
-       std::cout << edge.sourcenode_ << " "
-       << edge.targetnode_ << " "
-       << w.auto_forward_ << " "
-       << w.pedestrian_ << " "
-       << w.bike_forward_ << " "
-       << w.auto_backward_ << " "
-       << w.pedestrian_ << " "
-       << w.bike_backward_ << std::endl;
+          directededge.set_importance(w.road_class());
+          directededge.set_use(w.use());
+          directededge.set_link(w.link());
+          directededge.set_speed(w.speed());    // KPH
+          directededge.set_ferry(w.ferry());
+          directededge.set_railferry(w.rail());
+          directededge.set_toll(w.toll());
+          directededge.set_dest_only(w.destination_only());
+          directededge.set_unpaved(w.surface());
+          directededge.set_tunnel(w.tunnel());
+          directededge.set_roundabout(w.roundabout());
+          directededge.set_bridge(w.bridge());
+          directededge.set_bikenetwork(w.bike_network());
 
-       }*/
+          //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
+          /*  if (w.osmwayid_ == 368034)
+           {
+           std::cout << edge.sourcenode_ << " "
+           << edge.targetnode_ << " "
+           << w.auto_forward_ << " "
+           << w.pedestrian_ << " "
+           << w.bike_forward_ << " "
+           << w.auto_backward_ << " "
+           << w.pedestrian_ << " "
+           << w.bike_backward_ << std::endl;
 
-      // Assign nodes and determine orientation along the edge (forward
-      // or reverse between the 2 nodes)
-      const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
-      if (!nodea.Is_Valid()) {
-        std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
-            " GraphID is not valid" << std::endl;
-      }
-      const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid(); //TODO: check validity?
-      if (!nodeb.Is_Valid()) {
-        std::cout << "Node B: OSMID = " << edge.targetnode_ <<
-          " GraphID is not valid" << std::endl;
-      }
-      if (edge.sourcenode_ == osmnodeid) {
-        // Edge traversed in forward direction
-        directededge.set_caraccess(true, false, w.auto_forward());
-        directededge.set_pedestrianaccess(true, false, w.pedestrian());
-        directededge.set_bicycleaccess(true, false, w.bike_forward());
+           }*/
 
-        directededge.set_caraccess(false, true, w.auto_backward());
-        directededge.set_pedestrianaccess(false, true, w.pedestrian());
-        directededge.set_bicycleaccess(false, true, w.bike_backward());
-
-        // Set end node to the target (end) node
-        directededge.set_endnode(nodeb);
-      } else if (edge.targetnode_ == osmnodeid) {
-        // Reverse direction.  Reverse the access logic and end node
-        directededge.set_caraccess(true, false, w.auto_backward());
-        directededge.set_pedestrianaccess(true, false, w.pedestrian());
-        directededge.set_bicycleaccess(true, false, w.bike_backward());
-
-        directededge.set_caraccess(false, true, w.auto_forward());
-        directededge.set_pedestrianaccess(false, true, w.pedestrian());
-        directededge.set_bicycleaccess(false, true, w.bike_forward());
-
-        // Set end node to the source (start) node
-        directededge.set_endnode(nodea);
-      } else {
-        // ERROR!!!
-        std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
-            edgeindex << " Edge nodes " <<
-            edge.sourcenode_ << " and " << edge.targetnode_ <<
-            " do not match the OSM node Id" <<
-            osmnodeid << std::endl;
-      }
-
-      // Check if we need to add edge info
-      auto node_pair_item = ComputeNodePair(nodea, nodeb);
-      auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
-
-      // Add new edge info
-      if (existing_edge_offset_item == edge_offset_map.end()) {
-        EdgeInfoBuilder edgeinfo;
-        edgeinfo.set_nodea(nodea);
-        edgeinfo.set_nodeb(nodeb);
-        // TODO - shape encode
-        edgeinfo.set_shape(edge.latlngs_);
-        // TODO - names
-        std::vector<std::string> names = w.GetNames();
-        std::vector<size_t> street_name_offset_list;
-
-        for (const auto& name : names) {
-          if (name.empty()) {
-            continue;
+          // Assign nodes and determine orientation along the edge (forward
+          // or reverse between the 2 nodes)
+          const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
+          if (!nodea.Is_Valid()) {
+            std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
+                " GraphID is not valid" << std::endl;
           }
+          const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid(); //TODO: check validity?
+          if (!nodeb.Is_Valid()) {
+            std::cout << "Node B: OSMID = " << edge.targetnode_ <<
+              " GraphID is not valid" << std::endl;
+          }
+          if (edge.sourcenode_ == osmnodeid) {
+            // Edge traversed in forward direction
+            directededge.set_caraccess(true, false, w.auto_forward());
+            directededge.set_pedestrianaccess(true, false, w.pedestrian());
+            directededge.set_bicycleaccess(true, false, w.bike_forward());
 
-          auto existing_text_offset = text_offset_map.find(name);
-          // Add if not found
-          if (existing_text_offset == text_offset_map.end()) {
-            // Add name to text list
-            text_list.push_back(name);
+            directededge.set_caraccess(false, true, w.auto_backward());
+            directededge.set_pedestrianaccess(false, true, w.pedestrian());
+            directededge.set_bicycleaccess(false, true, w.bike_backward());
 
-            // Add name offset to list
-            street_name_offset_list.push_back(text_list_offset);
+            // Set end node to the target (end) node
+            directededge.set_endnode(nodeb);
+          } else if (edge.targetnode_ == osmnodeid) {
+            // Reverse direction.  Reverse the access logic and end node
+            directededge.set_caraccess(true, false, w.auto_backward());
+            directededge.set_pedestrianaccess(true, false, w.pedestrian());
+            directededge.set_bicycleaccess(true, false, w.bike_backward());
 
-            // Add name/offset pair to map
-            text_offset_map.insert(std::make_pair(name, text_list_offset));
+            directededge.set_caraccess(false, true, w.auto_forward());
+            directededge.set_pedestrianaccess(false, true, w.pedestrian());
+            directededge.set_bicycleaccess(false, true, w.bike_forward());
 
-            // Update text offset value to length of string plus null terminator
-            text_list_offset += (name.length() + 1);
+            // Set end node to the source (start) node
+            directededge.set_endnode(nodea);
           } else {
-            // Add existing offset to list
-            street_name_offset_list.push_back(existing_text_offset->second);
+            // ERROR!!!
+            std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
+                edgeindex << " Edge nodes " <<
+                edge.sourcenode_ << " and " << edge.targetnode_ <<
+                " do not match the OSM node Id" <<
+                osmnodeid << std::endl;
           }
+
+          // Check if we need to add edge info
+          auto node_pair_item = ComputeNodePair(nodea, nodeb);
+          auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
+
+          // Add new edge info
+          if (existing_edge_offset_item == edge_offset_map.end()) {
+            EdgeInfoBuilder edgeinfo;
+            edgeinfo.set_nodea(nodea);
+            edgeinfo.set_nodeb(nodeb);
+            // TODO - shape encode
+            edgeinfo.set_shape(edge.latlngs_);
+            // TODO - names
+            std::vector<std::string> names = w.GetNames();
+            std::vector<size_t> street_name_offset_list;
+
+            for (const auto& name : names) {
+              if (name.empty()) {
+                continue;
+              }
+
+              auto existing_text_offset = text_offset_map.find(name);
+              // Add if not found
+              if (existing_text_offset == text_offset_map.end()) {
+                // Add name to text list
+                text_list.emplace_back(name);
+
+                // Add name offset to list
+                street_name_offset_list.emplace_back(text_list_offset);
+
+                // Add name/offset pair to map
+                text_offset_map.insert(std::make_pair(name, text_list_offset));
+
+                // Update text offset value to length of string plus null terminator
+                text_list_offset += (name.length() + 1);
+              } else {
+                // Add existing offset to list
+                street_name_offset_list.emplace_back(existing_text_offset->second);
+              }
+            }
+            edgeinfo.set_street_name_offset_list(street_name_offset_list);
+
+            // TODO - other attributes
+
+            // Add to the map
+            edge_offset_map.insert(
+                std::make_pair(node_pair_item, edge_info_offset));
+
+            // Add to the list
+            edgeinfo_list.emplace_back(edgeinfo);
+
+            // Set edge offset within the corresponding directed edge
+            directededge.set_edgedataoffset(edge_info_offset);
+
+            // Update edge offset for next item
+            edge_info_offset += edgeinfo.SizeOf();
+
+          }
+          // Update directed edge with existing edge offset
+          else {
+            directededge.set_edgedataoffset(existing_edge_offset_item->second);
+          }
+
+          // Add to the list
+          directededges.emplace_back(directededge);
         }
-        edgeinfo.set_street_name_offset_list(street_name_offset_list);
 
-        // TODO - other attributes
-
-        // Add to the map
-        edge_offset_map.insert(
-            std::make_pair(node_pair_item, edge_info_offset));
-
-        // Add to the list
-        edgeinfo_list.push_back(edgeinfo);
-
-        // Set edge offset within the corresponding directed edge
-        directededge.set_edgedataoffset(edge_info_offset);
-
-        // Update edge offset for next item
-        edge_info_offset += edgeinfo.SizeOf();
-
-      }
-      // Update directed edge with existing edge offset
-      else {
-        directededge.set_edgedataoffset(existing_edge_offset_item->second);
+        // Add information to the tile
+        graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
       }
 
-      // Add to the list
-      directededges.push_back(directededge);
-      directededgecount++;
+      graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
+      graphtile.SetTextListAndSize(text_list, text_list_offset);
+
+      // Write the actual tile to disk
+      graphtile.StoreTileData(outdir, tile_start->first);
+
+      // Made a tile
+      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_start->first << ": " << graphtile.size() << " bytes" << std::endl;
+      written += graphtile.size();
+    }// Whatever happens in Vagas..
+    catch(std::exception& e) {
+      // ..gets sent back to the main thread
+      result.set_exception(std::current_exception());
+      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_start->first << ": " << e.what() << std::endl;
+      return;
     }
-
-    // Add information to the tile
-    graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
-    id++;
   }
-
-  graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
-  graphtile.SetTextListAndSize(text_list, text_list_offset);
-
-  // File name for tile
-  graphtile.StoreTileData(outdir, tile.first);
-
-  return true;
+  // Let the main thread how this thread faired
+  result.set_value(written);
 }
+
+//TODO: make this an option
+constexpr size_t kThreadCount = 8;
 
 }
 
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
-  // For each tile
-  for (const auto& tile : tilednodes_) {
-    // Build the tile
-    BuildTile(tile, nodes_, ways_, edges_, tile_hierarchy_.tile_dir());
+  // A place to hold worker threads and their results, be they exceptions or otherwise
+  std::vector<std::shared_ptr<std::thread> > threads(kThreadCount);
+  // A place to hold the results of those threads, be they exceptions or otherwise
+  std::vector<std::promise<size_t> > results(kThreadCount);
+  // Divvy up the work
+  size_t floor = tilednodes_.size() / kThreadCount;
+  size_t at_ceiling = tilednodes_.size() - (kThreadCount * floor);
+  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
+  std::cout << tilednodes_.size() << " tiles\n";
+  for (size_t i = 0; i < threads.size(); ++i) {
+    // Figure out how many this thread will work on (either ceiling or floor)
+    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
+    // Where the range begins
+    tile_start = tile_end;
+    // Where the range ends
+    std::advance(tile_end, tile_count);
+    // Make the thread
+    std::shared_ptr<std::thread> thread(
+      new std::thread(BuildTileRange, tile_start, tile_end, nodes_, ways_,
+                      edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
+    );
+    threads[i].swap(thread);
+    std::cout << "thread " << i << " has " << tile_count << std::endl;
   }
+
+  // Join all the threads to wait for them to finish up their work
+  for (auto& thread : threads) {
+    thread->join();
+  }
+
+  // Check all of the outcomes
+  for (auto& result : results) {
+    // If something bad went down this will rethrow it
+    try {
+      auto pass_fail = result.get_future().get();
+      //TODO: print out stats about how many tiles or bytes were written by the thread?
+    }
+    catch(std::exception& e) {
+      //TODO: throw further up the chain?
+    }
+  }
+
+
+  /*// Wait for results to come back from the threads, logging what happened and removing the result
+  auto process_result = [] (std::unordered_map<GraphId, std::future<size_t> >& results) {
+    // For each task
+    for (std::unordered_map<GraphId, std::future<size_t> >::iterator result = results.begin(); result != results.end(); ++result) {
+      try {
+        // Block until the result is ready
+        auto status = result->second.wait_for(std::chrono::microseconds(1));
+        // If it was ready
+        if (status == std::future_status::ready) {
+          size_t bytes = result->second.get();
+          std::cout << "Wrote tile " << result->first << ": " << bytes << " bytes" << std::endl;
+          results.erase(result);
+          break;
+        }
+      }
+      catch (const std::exception& e) {
+        //TODO: log and rethrow
+        std::cout << "Filed tile " << result->first << ": " << e.what() << std::endl;
+        results.erase(result);
+        break;
+      }
+    }
+  };
+
+  // Process each tile asynchronously
+  std::unordered_map<GraphId, std::future<size_t> > results(8);
+  for (const auto& tile : tilednodes_) {
+    // If we can squeeze this task in
+    if(results.size() < kMaxInFlightTasks) {
+      // Build the tile
+      results.emplace(tile.first, std::async(std::launch::async, BuildTile, tile, nodes_, ways_, edges_, tile_hierarchy_.tile_dir()));
+      continue;
+    }
+
+    // If We already have too many in flight wait for some to finish
+    while(results.size() >= kMaxInFlightTasks) {
+      // Try to get some results
+      process_result(results);
+    }
+  }
+
+  // We're done adding tasks but there may be more results
+  while(results.size())
+    process_result(results);*/
 }
 
 
