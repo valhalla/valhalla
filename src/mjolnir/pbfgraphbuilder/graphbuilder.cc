@@ -20,12 +20,6 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-namespace {
-
-  const size_t kAsyncBatchSize = 64;
-
-}
-
 namespace valhalla {
 namespace mjolnir {
 
