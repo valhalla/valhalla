@@ -96,6 +96,8 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   if (osmid > maxosmid_)
     maxosmid_ = osmid;
 
+  node_count_++;
+
   // Check if it is in the list of nodes used by ways
   if (!osmnodeids_.IsUsed(osmid)) {
     return;
