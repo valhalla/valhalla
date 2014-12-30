@@ -1,4 +1,3 @@
-#include <unordered_map>
 #include <boost/functional/hash.hpp>
 
 #include "graphbuilder.h"
@@ -71,7 +70,7 @@ void GraphBuilder::Build() {
   TileNodes(tl->second.tiles.TileSize(), tl->second.level);
 
   // Iterate through edges - tile the end nodes to create connected graph
-  BuildLocalTiles(tile_hierarchy_.tile_dir(), tl->second.level);
+  BuildLocalTiles(tl->second.level);
 }
 
 // Initialize Lua tag transformations
@@ -424,15 +423,15 @@ void GraphBuilder::RemoveUnusedNodes() {
             << nodes_.size() << std::endl;
 }
 
-void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
+void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
   std::cout << "Tile nodes..." << std::endl;
   int32_t tileid;
-  size_t n;
-  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
 
-  // Get number of tiles and resize the tilednodes vector
-  unsigned int tilecount = tiles.TileCount();
-  tilednodes_.resize(tilecount);
+
+  // Get number of tiles and reserve space for them
+  // < 30% of the earth is land and most roads are on land, even less than that even has roads
+  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
+  tilednodes_.reserve(tiles.TileCount() * .3f);
 
   // Iterate through all OSM nodes and assign GraphIds
   for (auto& node : nodes_) {
@@ -442,21 +441,13 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
       continue;
     }
 
-    // Get tile Id
-    tileid = tiles.TileId(node.second.latlng());
-    if (tileid < 0) {
-      // TODO: error!
-      std::cout << "Tile error" << std::endl;
-    }
+    // Put the node into the tile
+    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
+    std::vector<uint64_t>& tile = tilednodes_[id];
+    tile.emplace_back(node.first);
 
-    // Get the number of nodes currently in the tile.
     // Set the GraphId for this OSM node.
-    n = tilednodes_[tileid].size();
-    node.second.set_graphid(GraphId(static_cast<uint32_t>(tileid), level,
-                                    static_cast<uint64_t>(n)));
-
-    // Add this OSM node to the list of nodes for this tile
-    tilednodes_[tileid].push_back(node.first);
+    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile.size() - 1));
   }
   std::cout << "Done TileNodes" << std::endl;
 }
@@ -472,223 +463,223 @@ struct NodePairHasher {
   //function to hash each id
   std::hash<valhalla::baldr::GraphId> id_hasher;
 };
-}
 
-// Build tiles for the local graph hierarchy (basically
-void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
-                                   const unsigned int level) {
-  // Iterate through the tiles
-  uint32_t tileid = 0;
-  for (const auto& tile : tilednodes_) {
-    // Skip empty tiles
-    if (tile.size() == 0) {
-      tileid++;
-      continue;
-    }
-
-    GraphTileBuilder graphtile;
-
-    // Edge info offset and map
-    size_t edge_info_offset = 0;
-    std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
-
-    // The edgeinfo list
-    std::vector<EdgeInfoBuilder> edgeinfo_list;
-
-    // Text list offset and map
-    size_t text_list_offset = 0;
-    std::unordered_map<std::string, size_t> text_offset_map;
-
-    // Text list
-    std::vector<std::string> text_list;
-
-    // Iterate through the nodes
-    uint32_t id = 0;
-    uint32_t directededgecount = 0;
-    for (auto osmnodeid : tile) {
-      OSMNode& node = nodes_[osmnodeid];
-      NodeInfoBuilder nodebuilder;
-      nodebuilder.set_latlng(node.latlng());
-
-      // Set the index of the first outbound edge within the tile.
-      nodebuilder.set_edge_index(directededgecount);
-      nodebuilder.set_edge_count(node.edge_count());
-
-      // Set up directed edges
-      std::vector<DirectedEdgeBuilder> directededges;
-      for (auto edgeindex : node.edges()) {
-        DirectedEdgeBuilder directededge;
-        const Edge& edge = edges_[edgeindex];
-
-        // Compute length from the latlngs.
-        float length = node.latlng().Length(edge.latlngs_);
-        directededge.set_length(length);
-
-        // Get the way information and set attributes
-        const OSMWay &w = ways_[edge.wayindex_];
-
-        directededge.set_importance(w.road_class());
-        directededge.set_use(w.use());
-        directededge.set_link(w.link());
-        directededge.set_speed(w.speed());    // KPH
-        directededge.set_ferry(w.ferry());
-        directededge.set_railferry(w.rail());
-        directededge.set_toll(w.toll());
-        directededge.set_dest_only(w.destination_only());
-        directededge.set_unpaved(w.surface());
-        directededge.set_tunnel(w.tunnel());
-        directededge.set_roundabout(w.roundabout());
-        directededge.set_bridge(w.bridge());
-        directededge.set_bikenetwork(w.bike_network());
-
-        //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
-        /*  if (w.osmwayid_ == 368034)
-         {
-         std::cout << edge.sourcenode_ << " "
-         << edge.targetnode_ << " "
-         << w.auto_forward_ << " "
-         << w.pedestrian_ << " "
-         << w.bike_forward_ << " "
-         << w.auto_backward_ << " "
-         << w.pedestrian_ << " "
-         << w.bike_backward_ << std::endl;
-
-         }*/
-
-        // Assign nodes and determine orientation along the edge (forward
-        // or reverse between the 2 nodes)
-        const GraphId& nodea = nodes_[edge.sourcenode_].graphid();
-        if (!nodea.Is_Valid()) {
-          std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
-              " GraphID is not valid" << std::endl;
-        }
-        const GraphId& nodeb = nodes_[edge.targetnode_].graphid();
-        if (!nodeb.Is_Valid()) {
-          std::cout << "Node B: OSMID = " << edge.targetnode_ <<
-            " GraphID is not valid" << std::endl;
-        }
-        if (edge.sourcenode_ == osmnodeid) {
-          // Edge traversed in forward direction
-          directededge.set_caraccess(true, false, w.auto_forward());
-          directededge.set_pedestrianaccess(true, false, w.pedestrian());
-          directededge.set_bicycleaccess(true, false, w.bike_forward());
-
-          directededge.set_caraccess(false, true, w.auto_backward());
-          directededge.set_pedestrianaccess(false, true, w.pedestrian());
-          directededge.set_bicycleaccess(false, true, w.bike_backward());
-
-          // Set end node to the target (end) node
-          directededge.set_endnode(nodeb);
-        } else if (edge.targetnode_ == osmnodeid) {
-          // Reverse direction.  Reverse the access logic and end node
-          directededge.set_caraccess(true, false, w.auto_backward());
-          directededge.set_pedestrianaccess(true, false, w.pedestrian());
-          directededge.set_bicycleaccess(true, false, w.bike_backward());
-
-          directededge.set_caraccess(false, true, w.auto_forward());
-          directededge.set_pedestrianaccess(false, true, w.pedestrian());
-          directededge.set_bicycleaccess(false, true, w.bike_forward());
-
-          // Set end node to the source (start) node
-          directededge.set_endnode(nodea);
-        } else {
-          // ERROR!!!
-          std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
-              edgeindex << " Edge nodes " <<
-              edge.sourcenode_ << " and " << edge.targetnode_ <<
-              " do not match the OSM node Id" <<
-              osmnodeid << std::endl;
-        }
-
-        // Check if we need to add edge info
-        auto node_pair_item = ComputeNodePair(nodea, nodeb);
-        auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
-
-        // Add new edge info
-        if (existing_edge_offset_item == edge_offset_map.end()) {
-          EdgeInfoBuilder edgeinfo;
-          edgeinfo.set_nodea(nodea);
-          edgeinfo.set_nodeb(nodeb);
-          // TODO - shape encode
-          edgeinfo.set_shape(edge.latlngs_);
-          // TODO - names
-          std::vector<std::string> names = w.GetNames();
-          std::vector<size_t> street_name_offset_list;
-
-          for (const auto& name : names) {
-            if (name.empty()) {
-              continue;
-            }
-
-            auto existing_text_offset = text_offset_map.find(name);
-            // Add if not found
-            if (existing_text_offset == text_offset_map.end()) {
-              // Add name to text list
-              text_list.push_back(name);
-
-              // Add name offset to list
-              street_name_offset_list.push_back(text_list_offset);
-
-              // Add name/offset pair to map
-              text_offset_map.insert(std::make_pair(name, text_list_offset));
-
-              // Update text offset value to length of string plus null terminator
-              text_list_offset += (name.length() + 1);
-            } else {
-              // Add existing offset to list
-              street_name_offset_list.push_back(existing_text_offset->second);
-            }
-          }
-          edgeinfo.set_street_name_offset_list(street_name_offset_list);
-
-          // TODO - other attributes
-
-          // Add to the map
-          edge_offset_map.insert(
-              std::make_pair(node_pair_item, edge_info_offset));
-
-          // Add to the list
-          edgeinfo_list.push_back(edgeinfo);
-
-          // Set edge offset within the corresponding directed edge
-          directededge.set_edgedataoffset(edge_info_offset);
-
-          // Update edge offset for next item
-          edge_info_offset += edgeinfo.SizeOf();
-
-        }
-        // Update directed edge with existing edge offset
-        else {
-          directededge.set_edgedataoffset(existing_edge_offset_item->second);
-        }
-
-        // Add to the list
-        directededges.push_back(directededge);
-        directededgecount++;
-      }
-
-      // Add information to the tile
-      graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
-      id++;
-    }
-
-    graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
-    graphtile.SetTextListAndSize(text_list, text_list_offset);
-
-    // File name for tile
-    GraphId graphid(tileid, level, 0);
-    graphtile.StoreTileData(outputdir, graphid);
-
-    tileid++;
-  }
-}
-
-node_pair GraphBuilder::ComputeNodePair(const baldr::GraphId& nodea,
-                                        const baldr::GraphId& nodeb) const {
+node_pair ComputeNodePair(const baldr::GraphId& nodea,
+                          const baldr::GraphId& nodeb) {
   if (nodea < nodeb)
     return std::make_pair(nodea, nodeb);
   return std::make_pair(nodeb, nodea);
 }
+
+// builds a single tile
+bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std::unordered_map<uint64_t, OSMNode>& nodes,
+               const std::vector<OSMWay>& ways, const std::vector<Edge>& edges, const std::string& outdir) {
+  GraphTileBuilder graphtile;
+
+  // Edge info offset and map
+  size_t edge_info_offset = 0;
+  std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+
+  // The edgeinfo list
+  std::vector<EdgeInfoBuilder> edgeinfo_list;
+
+  // Text list offset and map
+  size_t text_list_offset = 0;
+  std::unordered_map<std::string, size_t> text_offset_map;
+
+  // Text list
+  std::vector<std::string> text_list;
+
+  // Iterate through the nodes
+  uint32_t id = 0;
+  uint32_t directededgecount = 0;
+  for (const auto& osmnodeid : tile.second) {
+    const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
+    NodeInfoBuilder nodebuilder;
+    nodebuilder.set_latlng(node.latlng());
+
+    // Set the index of the first outbound edge within the tile.
+    nodebuilder.set_edge_index(directededgecount);
+    nodebuilder.set_edge_count(node.edge_count());
+
+    // Set up directed edges
+    std::vector<DirectedEdgeBuilder> directededges;
+    for (auto edgeindex : node.edges()) {
+      DirectedEdgeBuilder directededge;
+      const Edge& edge = edges[edgeindex];
+
+      // Compute length from the latlngs.
+      float length = node.latlng().Length(edge.latlngs_);
+      directededge.set_length(length);
+
+      // Get the way information and set attributes
+      const OSMWay &w = ways[edge.wayindex_];
+
+      directededge.set_importance(w.road_class());
+      directededge.set_use(w.use());
+      directededge.set_link(w.link());
+      directededge.set_speed(w.speed());    // KPH
+      directededge.set_ferry(w.ferry());
+      directededge.set_railferry(w.rail());
+      directededge.set_toll(w.toll());
+      directededge.set_dest_only(w.destination_only());
+      directededge.set_unpaved(w.surface());
+      directededge.set_tunnel(w.tunnel());
+      directededge.set_roundabout(w.roundabout());
+      directededge.set_bridge(w.bridge());
+      directededge.set_bikenetwork(w.bike_network());
+
+      //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
+      /*  if (w.osmwayid_ == 368034)
+       {
+       std::cout << edge.sourcenode_ << " "
+       << edge.targetnode_ << " "
+       << w.auto_forward_ << " "
+       << w.pedestrian_ << " "
+       << w.bike_forward_ << " "
+       << w.auto_backward_ << " "
+       << w.pedestrian_ << " "
+       << w.bike_backward_ << std::endl;
+
+       }*/
+
+      // Assign nodes and determine orientation along the edge (forward
+      // or reverse between the 2 nodes)
+      const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
+      if (!nodea.Is_Valid()) {
+        std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
+            " GraphID is not valid" << std::endl;
+      }
+      const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid(); //TODO: check validity?
+      if (!nodeb.Is_Valid()) {
+        std::cout << "Node B: OSMID = " << edge.targetnode_ <<
+          " GraphID is not valid" << std::endl;
+      }
+      if (edge.sourcenode_ == osmnodeid) {
+        // Edge traversed in forward direction
+        directededge.set_caraccess(true, false, w.auto_forward());
+        directededge.set_pedestrianaccess(true, false, w.pedestrian());
+        directededge.set_bicycleaccess(true, false, w.bike_forward());
+
+        directededge.set_caraccess(false, true, w.auto_backward());
+        directededge.set_pedestrianaccess(false, true, w.pedestrian());
+        directededge.set_bicycleaccess(false, true, w.bike_backward());
+
+        // Set end node to the target (end) node
+        directededge.set_endnode(nodeb);
+      } else if (edge.targetnode_ == osmnodeid) {
+        // Reverse direction.  Reverse the access logic and end node
+        directededge.set_caraccess(true, false, w.auto_backward());
+        directededge.set_pedestrianaccess(true, false, w.pedestrian());
+        directededge.set_bicycleaccess(true, false, w.bike_backward());
+
+        directededge.set_caraccess(false, true, w.auto_forward());
+        directededge.set_pedestrianaccess(false, true, w.pedestrian());
+        directededge.set_bicycleaccess(false, true, w.bike_forward());
+
+        // Set end node to the source (start) node
+        directededge.set_endnode(nodea);
+      } else {
+        // ERROR!!!
+        std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
+            edgeindex << " Edge nodes " <<
+            edge.sourcenode_ << " and " << edge.targetnode_ <<
+            " do not match the OSM node Id" <<
+            osmnodeid << std::endl;
+      }
+
+      // Check if we need to add edge info
+      auto node_pair_item = ComputeNodePair(nodea, nodeb);
+      auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
+
+      // Add new edge info
+      if (existing_edge_offset_item == edge_offset_map.end()) {
+        EdgeInfoBuilder edgeinfo;
+        edgeinfo.set_nodea(nodea);
+        edgeinfo.set_nodeb(nodeb);
+        // TODO - shape encode
+        edgeinfo.set_shape(edge.latlngs_);
+        // TODO - names
+        std::vector<std::string> names = w.GetNames();
+        std::vector<size_t> street_name_offset_list;
+
+        for (const auto& name : names) {
+          if (name.empty()) {
+            continue;
+          }
+
+          auto existing_text_offset = text_offset_map.find(name);
+          // Add if not found
+          if (existing_text_offset == text_offset_map.end()) {
+            // Add name to text list
+            text_list.push_back(name);
+
+            // Add name offset to list
+            street_name_offset_list.push_back(text_list_offset);
+
+            // Add name/offset pair to map
+            text_offset_map.insert(std::make_pair(name, text_list_offset));
+
+            // Update text offset value to length of string plus null terminator
+            text_list_offset += (name.length() + 1);
+          } else {
+            // Add existing offset to list
+            street_name_offset_list.push_back(existing_text_offset->second);
+          }
+        }
+        edgeinfo.set_street_name_offset_list(street_name_offset_list);
+
+        // TODO - other attributes
+
+        // Add to the map
+        edge_offset_map.insert(
+            std::make_pair(node_pair_item, edge_info_offset));
+
+        // Add to the list
+        edgeinfo_list.push_back(edgeinfo);
+
+        // Set edge offset within the corresponding directed edge
+        directededge.set_edgedataoffset(edge_info_offset);
+
+        // Update edge offset for next item
+        edge_info_offset += edgeinfo.SizeOf();
+
+      }
+      // Update directed edge with existing edge offset
+      else {
+        directededge.set_edgedataoffset(existing_edge_offset_item->second);
+      }
+
+      // Add to the list
+      directededges.push_back(directededge);
+      directededgecount++;
+    }
+
+    // Add information to the tile
+    graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
+    id++;
+  }
+
+  graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
+  graphtile.SetTextListAndSize(text_list, text_list_offset);
+
+  // File name for tile
+  graphtile.StoreTileData(outdir, tile.first);
+
+  return true;
+}
+
+}
+
+// Build tiles for the local graph hierarchy (basically
+void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
+  // For each tile
+  for (const auto& tile : tilednodes_) {
+    // Build the tile
+    BuildTile(tile, nodes_, ways_, edges_, tile_hierarchy_.tile_dir());
+  }
+}
+
 
 }
 }

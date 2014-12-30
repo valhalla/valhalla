@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <utility>
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -25,10 +25,10 @@ namespace valhalla {
 namespace mjolnir {
 
 // Node map
-typedef std::map<uint64_t, OSMNode> node_map_type;
+using node_map_type = std::unordered_map<uint64_t, OSMNode>;
 
 // Mapping from OSM node Id to GraphId
-typedef std::map<uint64_t, baldr::GraphId> node_graphid_map_type;
+using node_graphid_map_type = std::unordered_map<uint64_t, baldr::GraphId>;
 
 using node_pair = std::pair<const baldr::GraphId&, const baldr::GraphId&>;
 
@@ -147,17 +147,15 @@ class GraphBuilder {
    * @param  tilesize  Size of tiles in degrees.
    * @param  level  Hierarchy level.
    */
-  void TileNodes(const float tilesize, const unsigned int level);
+  void TileNodes(const float tilesize, const uint8_t level);
 
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const std::string& tiledir, const unsigned int level);
+  void BuildLocalTiles(const uint8_t level) const;
 
 
  protected:
-  node_pair ComputeNodePair(const baldr::GraphId& nodea,
-                            const baldr::GraphId& nodeb) const;
 
   bool preprocess_;
 
@@ -182,7 +180,7 @@ class GraphBuilder {
   NodeIdTable osmnodeids_;
 
   // Tiled nodes
-  std::vector<std::vector<uint64_t>> tilednodes_;
+  std::unordered_map<GraphId, std::vector<uint64_t> > tilednodes_;
 
   // Location of the protocol buffer input file
   std::string input_file_;
