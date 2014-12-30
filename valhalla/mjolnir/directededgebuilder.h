@@ -145,6 +145,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_roundabout(const bool roundabout);
 
   /**
+   * Set the index of the opposing directed edge at the end node of this
+   * directed edge.
+   * @param  opp_index  Opposing directed edge index at the end node.
+   * */
+  void set_opp_index(const uint32_t opp_index);
+
+  /**
    * Sets the number of lanes
    * @param  lanecount  Number of lanes
   */
