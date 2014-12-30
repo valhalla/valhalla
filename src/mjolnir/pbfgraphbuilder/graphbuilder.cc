@@ -683,7 +683,7 @@ void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_i
 }
 
 //TODO: make this an option
-constexpr size_t kThreadCount = 8;
+constexpr size_t kThreadCount = 4;
 
 }
 
