@@ -157,8 +157,6 @@ class GraphBuilder {
 
  protected:
 
-  bool preprocess_;
-
   uint64_t maxosmid_;
   uint32_t skippedhighway_;
   uint32_t relation_count_;

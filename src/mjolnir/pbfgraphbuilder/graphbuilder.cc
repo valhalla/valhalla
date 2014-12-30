@@ -51,18 +51,15 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
 void GraphBuilder::Build() {
   // Parse the pbf ways. Find all node Ids needed.
   std::cout << "Parse PBF ways to find all OSM Node Ids needed" << std::endl;
-  preprocess_ = true;
-  CanalTP::read_osm_pbf(input_file_, *this);
+  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::WAYS);
   std::cout << "Way count = " << ways_.size() << std::endl;
-  std::cout << "Max OSM ID = " << maxosmid_ << std::endl;
 
   // Step 2 - parse nodes and relations
   std::cout << "Parse PBF nodes and relations" << std::endl;
-  preprocess_ = false;
-  CanalTP::read_osm_pbf(input_file_, *this);
+  CanalTP::read_osm_pbf(input_file_, *this, static_cast<CanalTP::Interest>(CanalTP::Interest::NODES | CanalTP::Interest::RELATIONS));
+  std::cout << "Max OSM Node ID = " << maxosmid_ << std::endl;
   std::cout << relation_count_ << " relations" << std::endl;
-  std::cout << "Ways use " << nodes_.size() << " nodes out of  " <<
-        node_count_ << " total nodes" << std::endl;
+  std::cout << "Ways use " << nodes_.size() << " nodes out of  " << node_count_ << " total nodes" << std::endl;
 
   // Compute node use counts
   SetNodeUses();
@@ -96,14 +93,8 @@ void GraphBuilder::LuaInit(const std::string& nodetagtransformscript,
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
-if (osmid > maxosmid_)
+  if (osmid > maxosmid_)
     maxosmid_ = osmid;
-
-  // Skip on preprocess step
-  if (preprocess_) {
-    node_count_++;
-    return;
-  }
 
   // Check if it is in the list of nodes used by ways
   if (!osmnodeids_.IsUsed(osmid)) {
@@ -152,10 +143,6 @@ if (osmid > maxosmid_)
 
 void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
                                 const std::vector<uint64_t> &refs) {
-  // Ways are processed in the first iteration. Skip on 2nd iteration.
-  if (!preprocess_)
-    return;
-
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
@@ -341,9 +328,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                                      const CanalTP::References & /*refs*/) {
-  // Relations are processed in the seconds iteration. Skip on 1st iteration.
-  if (preprocess_)
-    return;
   relation_count_++;
 }
 
@@ -482,6 +466,9 @@ void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_i
                     std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                     const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
                     const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
+
+  std::cout << "Thread " << std::this_thread::get_id() << " started" << std::endl;
+
   // A place to keep information about what was done
   size_t written = 0;
 
@@ -717,12 +704,10 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
     // Where the range ends
     std::advance(tile_end, tile_count);
     // Make the thread
-    std::shared_ptr<std::thread> thread(
+    threads[i].reset(
       new std::thread(BuildTileRange, tile_start, tile_end, nodes_, ways_,
                       edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
     );
-    threads[i].swap(thread);
-    std::cout << "thread " << i << " has " << tile_count << std::endl;
   }
 
   // Join all the threads to wait for them to finish up their work

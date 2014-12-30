@@ -48,6 +48,9 @@ const int lonlat_resolution = 1000 * 1000 * 1000;
 
 namespace CanalTP {
 
+// Which callbacks you want to be called
+enum Interest {NODES = 0x01, WAYS = 0x02, RELATIONS = 0x04, ALL = 0x07};
+
 // Represents the key/values of an object
 typedef std::map<std::string, std::string> Tags;
 
@@ -67,7 +70,7 @@ typedef std::vector<Reference> References;
 
 // Main function
 template<typename Visitor>
-void read_osm_pbf(const std::string & filename, Visitor & visitor);
+void read_osm_pbf(const std::string & filename, Visitor & visitor, const Interest interest = Interest::ALL);
 
 struct warn {
     warn() {std::cout << "\033[33m[WARN] ";}
@@ -122,8 +125,8 @@ struct Parser {
         }
     }
 
-    Parser(const std::string & filename, Visitor & visitor)
-        : visitor(visitor), file(filename.c_str(), std::ios::binary ), finished(false)
+    Parser(const std::string & filename, Visitor & visitor, const Interest interest)
+        : visitor(visitor), file(filename.c_str(), std::ios::binary ), interest(interest), finished(false)
     {
         if(!file.is_open())
             fatal() << "Unable to open the file " << filename;
@@ -140,6 +143,7 @@ struct Parser {
 
 private:
     Visitor & visitor;
+    const Interest interest;
     std::ifstream file;
     char* buffer;
     char* unpack_buffer;
@@ -236,76 +240,83 @@ private:
         for(int i = 0, l = primblock.primitivegroup_size(); i < l; i++) {
             OSMPBF::PrimitiveGroup pg = primblock.primitivegroup(i);
 
-            // Simple Nodes
-            for(int i = 0; i < pg.nodes_size(); ++i) {
-                OSMPBF::Node n = pg.nodes(i);
+            if((interest & NODES) == NODES) {
+                // Simple Nodes
+                for(int i = 0; i < pg.nodes_size(); ++i) {
+                    OSMPBF::Node n = pg.nodes(i);
 
-                double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * n.lon())) ;
-                double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * n.lat())) ;
-                visitor.node_callback(n.id(), lon, lat, get_tags(n, primblock));
-            }
+                    double lon = 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * n.lon())) ;
+                    double lat = 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * n.lat())) ;
+                    visitor.node_callback(n.id(), lon, lat, get_tags(n, primblock));
+                }
 
-            // Dense Nodes
-            if(pg.has_dense()) {
-                OSMPBF::DenseNodes dn = pg.dense();
-                uint64_t id = 0;
-                double lon = 0;
-                double lat = 0;
+                // Dense Nodes
+                if(pg.has_dense()) {
+                    OSMPBF::DenseNodes dn = pg.dense();
+                    uint64_t id = 0;
+                    double lon = 0;
+                    double lat = 0;
 
-                int current_kv = 0;
+                    int current_kv = 0;
 
-                for(int i = 0; i < dn.id_size(); ++i) {
-                    id += dn.id(i);
-                    lon +=  0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dn.lon(i)));
-                    lat +=  0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dn.lat(i)));
+                    for(int i = 0; i < dn.id_size(); ++i) {
+                        id += dn.id(i);
+                        lon +=  0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dn.lon(i)));
+                        lat +=  0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dn.lat(i)));
 
-                    Tags tags;
-                    while (current_kv < dn.keys_vals_size() && dn.keys_vals(current_kv) != 0){
-                        uint64_t key = dn.keys_vals(current_kv);
-                        uint64_t val = dn.keys_vals(current_kv + 1);
-                        std::string key_string = primblock.stringtable().s(key);
-                        std::string val_string = primblock.stringtable().s(val);
-                        current_kv += 2;
-                        tags[key_string] = val_string;
+                        Tags tags;
+                        while (current_kv < dn.keys_vals_size() && dn.keys_vals(current_kv) != 0){
+                            uint64_t key = dn.keys_vals(current_kv);
+                            uint64_t val = dn.keys_vals(current_kv + 1);
+                            std::string key_string = primblock.stringtable().s(key);
+                            std::string val_string = primblock.stringtable().s(val);
+                            current_kv += 2;
+                            tags[key_string] = val_string;
+                        }
+                        ++current_kv;
+                        visitor.node_callback(id, lon, lat, tags);
                     }
-                    ++current_kv;
-                    visitor.node_callback(id, lon, lat, tags);
                 }
             }
 
-            for(int i = 0; i < pg.ways_size(); ++i) {
-                OSMPBF::Way w = pg.ways(i);
+            if((interest & WAYS) == WAYS) {
+                for(int i = 0; i < pg.ways_size(); ++i) {
+                    OSMPBF::Way w = pg.ways(i);
 
-                uint64_t ref = 0;
-                std::vector<uint64_t> refs;
-                for(int j = 0; j < w.refs_size(); ++j){
-                    ref += w.refs(j);
-                    refs.push_back(ref);
+                    uint64_t ref = 0;
+                    std::vector<uint64_t> refs;
+                    for(int j = 0; j < w.refs_size(); ++j){
+                        ref += w.refs(j);
+                        refs.push_back(ref);
+                    }
+                    uint64_t id = w.id();
+                    visitor.way_callback(id, get_tags(w, primblock), refs);
                 }
-                uint64_t id = w.id();
-                visitor.way_callback(id, get_tags(w, primblock), refs);
             }
 
+            if((interest & RELATIONS) == RELATIONS) {
+                for(int i=0; i < pg.relations_size(); ++i){
+                    OSMPBF::Relation rel = pg.relations(i);
+                    uint64_t id = 0;
+                    References refs;
 
-            for(int i=0; i < pg.relations_size(); ++i){
-                OSMPBF::Relation rel = pg.relations(i);
-                uint64_t id = 0;
-                References refs;
+                    for(int l = 0; l < rel.memids_size(); ++l){
+                        id += rel.memids(l);
+                        refs.push_back(Reference(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l))));
+                    }
 
-                for(int l = 0; l < rel.memids_size(); ++l){
-                    id += rel.memids(l);
-                    refs.push_back(Reference(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l))));
+                    visitor.relation_callback(rel.id(), get_tags(rel, primblock), refs);
                 }
-
-                visitor.relation_callback(rel.id(), get_tags(rel, primblock), refs);
             }
         }
     }
 };
 
+
+
 template<typename Visitor>
-void read_osm_pbf(const std::string & filename, Visitor & visitor){
-    Parser<Visitor> p(filename, visitor);
+void read_osm_pbf(const std::string & filename, Visitor & visitor, const Interest interest){
+    Parser<Visitor> p(filename, visitor, interest);
     p.parse();
 }
 
