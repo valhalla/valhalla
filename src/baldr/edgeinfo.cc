@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo() {
+EdgeInfo::EdgeInfo():exit_signs_(nullptr), shape_(nullptr), street_name_offset_list_(nullptr) {
   item_.value = 0;
 }
 
