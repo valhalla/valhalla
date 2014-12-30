@@ -471,6 +471,24 @@ node_pair ComputeNodePair(const baldr::GraphId& nodea,
   return std::make_pair(nodeb, nodea);
 }
 
+uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<Edge>& edges) {
+  uint32_t n = 0;
+  auto node = nodes.find(endnode);
+  if(node != nodes.end()) {
+    for (const auto& edgeindex : node->second.edges()) {
+      if ((edges[edgeindex].sourcenode_ == endnode &&
+           edges[edgeindex].targetnode_ == startnode) ||
+          (edges[edgeindex].targetnode_ == endnode &&
+           edges[edgeindex].sourcenode_ == startnode)) {
+        return n;
+      }
+      n++;
+    }
+  }
+  std::cout << "ERROR Opposing directed edge not found!" << std::endl;
+  return 31;
+}
+
 // builds a single tile
 bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std::unordered_map<uint64_t, OSMNode>& nodes,
                const std::vector<OSMWay>& ways, const std::vector<Edge>& edges, const std::string& outdir) {
@@ -543,6 +561,9 @@ bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std
 
        }*/
 
+      // TODO - if sorting of directed edges occurs after this will need to
+      // remove this code and do elsewhere.
+
       // Assign nodes and determine orientation along the edge (forward
       // or reverse between the 2 nodes)
       const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
@@ -567,6 +588,9 @@ bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std
 
         // Set end node to the target (end) node
         directededge.set_endnode(nodeb);
+
+        // Set the opposing edge offset at the end node of this directed edge.
+        directededge.set_opp_index(GetOpposingIndex(edge.targetnode_, edge.sourcenode_, nodes, edges));
       } else if (edge.targetnode_ == osmnodeid) {
         // Reverse direction.  Reverse the access logic and end node
         directededge.set_caraccess(true, false, w.auto_backward());
@@ -579,6 +603,9 @@ bool BuildTile(const std::pair<GraphId, std::vector<uint64_t> >& tile, const std
 
         // Set end node to the source (start) node
         directededge.set_endnode(nodea);
+
+        // Set opposing edge index at the end node of this directed edge.
+        directededge.set_opp_index(GetOpposingIndex(edge.sourcenode_, edge.targetnode_, nodes, edges));
       } else {
         // ERROR!!!
         std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<

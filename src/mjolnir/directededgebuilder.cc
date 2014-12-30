@@ -128,6 +128,12 @@ void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
 }
 
+// Set the index of the opposing directed edge at the end node of this
+// directed edge.
+void DirectedEdgeBuilder::set_opp_index(const uint32_t opp_index) {
+  attributes_.opp_index = opp_index;
+}
+
 //Sets the number of lanes
 void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
   attributes_.lanecount = lanecount;
