@@ -18,7 +18,7 @@ BicycleCost::~BicycleCost() {
 }
 
 // Check if access is allowed on the specified edge.
-bool BicycleCost::Allowed(const baldr::DirectedEdge* edge) {
+bool BicycleCost::Allowed(const baldr::DirectedEdge* edge, const bool uturn) {
   return (edge->forwardaccess() & kBicycleAccess);
 }
 

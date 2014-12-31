@@ -15,7 +15,7 @@ AutoCost::~AutoCost() {
 }
 
 // Check if access is allowed on the specified edge.
-bool AutoCost::Allowed(const baldr::DirectedEdge* edge) {
+bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn) {
   return (edge->forwardaccess() & kAutoAccess);
 }
 
