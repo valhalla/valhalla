@@ -23,9 +23,10 @@ class AutoCost : public DynamicCost {
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
+   * @param uturn Is this a Uturn?
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge);
+  virtual bool Allowed(const baldr::DirectedEdge* edge, const bool uturn);
 
   /**
    * Checks if access is allowed for the provided node. Node access can

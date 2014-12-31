@@ -16,7 +16,11 @@ PedestrianCost::~PedestrianCost() {
 }
 
 // Check if access is allowed on the specified edge.
-bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge) {
+bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
+                             const bool uturn) {
+  if (uturn) {
+    return false;
+  }
   return (edge->forwardaccess() & kPedestrianAccess);
 }
 
