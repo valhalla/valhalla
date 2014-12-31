@@ -44,6 +44,7 @@ test-suite.log
 test-driver
 test/edgeinfobuilder
 test/uniquenames
+test/nodetable
 test/*.log
 test/*.trs
 

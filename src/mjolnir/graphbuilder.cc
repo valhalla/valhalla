@@ -1,11 +1,15 @@
 #include <boost/functional/hash.hpp>
 #include <future>
 
-#include "graphbuilder.h"
+#include "mjolnir/graphbuilder.h"
 
 #include <valhalla/baldr/graphid.h>
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
+
+// Use open source PBF reader from:
+//     https://github.com/CanalTP/libosmpbfreader
+#include "osmpbfreader.h"
 
 #include <utility>
 #include <algorithm>
@@ -17,8 +21,11 @@
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
 
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+
+using node_pair = std::pair<const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
 
 namespace valhalla {
 namespace mjolnir {
@@ -26,14 +33,34 @@ namespace mjolnir {
 // Will throw an error if this is exceeded. Then we can increase.
 const uint64_t kMaxOSMNodeId = 4000000000;
 
+
+NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
+  // Create a vector to mark bits. Initialize to 0.
+  bitmarkers_.resize((maxosmid / 64) + 1, 0);
+}
+
+NodeIdTable::~NodeIdTable() {
+
+}
+
+void NodeIdTable::set(const uint64_t id) {
+  // Test if the max is exceeded
+  if (id > maxosmid_) {
+    throw std::runtime_error("NodeIDTable - OSM Id exceeds max specified");
+  }
+  bitmarkers_[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
+}
+
+const bool NodeIdTable::IsUsed(const uint64_t id) const {
+  return bitmarkers_[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
+}
+
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : maxosmid_(0),
-      relation_count_(0),
-      node_count_(0),
-      input_file_(input_file),
+    : node_count_(0), input_file_(input_file),
       tile_hierarchy_(pt),
-      osmnodeids_(kMaxOSMNodeId) {
+      shape_(kMaxOSMNodeId),
+      intersection_(kMaxOSMNodeId){
 
   // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
@@ -43,29 +70,23 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
 }
 
 void GraphBuilder::Build() {
-  // Parse the pbf ways. Find all node Ids needed.
-  std::cout << "Parse PBF ways to find all OSM Node Ids needed" << std::endl;
+  // Parse the ways and relations. Find all node Ids needed.
+  std::cout << "Parsing ways and relations to mark nodes needed" << std::endl;
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::WAYS);
-  std::cout << "Way count = " << ways_.size() << std::endl;
+  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::RELATIONS);
+  std::cout << "Routable ways " << ways_.size() << std::endl;
 
-  // Step 2 - parse nodes and relations
-  std::cout << "Parse PBF nodes and relations" << std::endl;
-  CanalTP::read_osm_pbf(input_file_, *this, static_cast<CanalTP::Interest>(CanalTP::Interest::NODES | CanalTP::Interest::RELATIONS));
-  std::cout << "Max OSM Node ID = " << maxosmid_ << std::endl;
-  std::cout << relation_count_ << " relations" << std::endl;
-  std::cout << "Ways use " << nodes_.size() << " nodes out of  " << node_count_ << " total nodes" << std::endl;
-
-  // Compute node use counts
-  SetNodeUses();
+  // Run through the nodes
+  std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
+  nodes_.reserve(node_count_);
+  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::NODES);
+  std::cout << "Routable nodes " << nodes_.size() << std::endl;
 
   // Construct edges
   ConstructEdges();
 
-  // Remove unused node (maybe this can recover memory?)
-  RemoveUnusedNodes();
-
   // Tile the nodes
-  //TODO: generate more than just the most detailed level
+  //TODO: generate more than just the most detailed level?
   const auto& tl = tile_hierarchy_.levels().rbegin();
   TileNodes(tl->second.tiles.TileSize(), tl->second.level);
 
@@ -87,13 +108,8 @@ void GraphBuilder::LuaInit(const std::string& nodetagtransformscript,
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
-  if (osmid > maxosmid_)
-    maxosmid_ = osmid;
-
-  node_count_++;
-
   // Check if it is in the list of nodes used by ways
-  if (!osmnodeids_.IsUsed(osmid)) {
+  if (!shape_.IsUsed(osmid)) {
     return;
   }
 
@@ -129,11 +145,10 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Add to the node map;
-  nodes_.emplace(osmid, n);
+  nodes_.emplace(osmid, std::move(n));
 
-  size_t nodecount = nodes_.size();
-  if (nodecount % 1000000 == 0) {
-    std::cout << "Processed " << nodecount << " nodes on ways" << std::endl;
+  if (nodes_.size() % 1000000 == 0) {
+    std::cout << "Processed " << nodes_.size() << " nodes on ways" << std::endl;
   }
 }
 
@@ -142,7 +157,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
-    //    std::cout << "ERROR - way " << osmid << " with < 2 nodes" << std::endl;
     return;
   }
 
@@ -156,6 +170,17 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   // Add the node reference list to the way
   OSMWay w(osmid);
   w.set_nodes(refs);
+
+  // Mark the nodes that we will care about when processing nodes
+  for (const auto ref : refs) {
+    if(shape_.IsUsed(ref))
+      intersection_.set(ref);
+    else
+      ++node_count_;
+    shape_.set(ref);
+  }
+  intersection_.set(refs.front());
+  intersection_.set(refs.back());
 
   // Process tags
   for (const auto& tag : results) {
@@ -312,131 +337,63 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   }
 
   // Add the way to the list
-  ways_.emplace_back(w);
+  ways_.emplace_back(std::move(w));
 //  if (ways_.size() % 1000000 == 0) std::cout << ways_.size() <<
 //      " ways parsed" << std::endl;
-
-  // Add list of OSM Node Ids we need
-  for (const auto nodeid : refs) {
-    osmnodeids_.set(nodeid);
-  }
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                                      const CanalTP::References & /*refs*/) {
-  relation_count_++;
-}
-
-// Once all the ways and nodes are read, we compute how many times a node
-// is used. This allows us to detect intersections (nodes in a graph).
-void GraphBuilder::SetNodeUses() {
-  // Iterate through the ways
-  for (const auto& way : ways_) {
-    // Iterate through the nodes that make up the way
-    for (const auto& node : way.nodes()) {
-      nodes_[node].IncrementUses();
-    }
-
-    // Make sure that the first and last node of the way have use count of
-    // at least 2 (so they will not get removed later).
-    nodes_[way.nodes().front()].IncrementUses();
-    nodes_[way.nodes().back()].IncrementUses();
-  }
+  //TODO:
 }
 
 // Construct edges in the graph.
-// TODO - memory use? Delete temporary edges?
 // TODO - compare logic to example_routing app. to see why the edge
 // count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
-  uint32_t edgeindex = 0;
-  uint32_t wayindex = 0;
-  uint64_t currentid;
-  for (const auto& way : ways_) {
-    // Start an edge at the first node of the way and add the
-    // edge index to the node
-    currentid = way.nodes()[0];
-    OSMNode& node = nodes_[currentid];
-    Edge* edge = new Edge(currentid, wayindex, node.latlng());
-    node.AddEdge(edgeindex);
+    uint32_t edgeindex = 0;
+    uint32_t wayindex = 0;
+    uint64_t currentid;
+    for (const auto& way : ways_) {
+      // Start an edge at the first node of the way and add the
+      // edge index to the node
+      currentid = way.nodes()[0];
+      OSMNode& node = nodes_[currentid];
+      Edge edge(currentid, wayindex, node.latlng());
+      node.AddEdge(edgeindex);
 
-    // Iterate through the nodes of the way and add lat,lng to the current
-    // way until a node with > 1 uses is found.
-    for (size_t i = 1, n = way.node_count(); i < n; i++) {
-      // Add the node lat,lng to the edge shape.
-      // TODO - not sure why I had to use a different OSMNode declaration here?
-      // But if I use node from above I get errors!
-      currentid = way.nodes()[i];
-      OSMNode& nd = nodes_[currentid];
-      edge->AddLL(nd.latlng());
+      // Iterate through the nodes of the way and add lat,lng to the current
+      // way until a node with > 1 uses is found.
+      for (size_t i = 1, n = way.node_count(); i < n; i++) {
+        // Add the node lat,lng to the edge shape.
+        // TODO - not sure why I had to use a different OSMNode declaration here?
+        // But if I use node from above I get errors!
+        currentid = way.nodes()[i];
+        node = nodes_[currentid];
+        edge.AddLL(node.latlng());
 
-      // If a node is used more than once, it is an intersection or the end
-      // of the way, hence it's a node of the road network graph
-      if (nd.uses() > 1) {
-        // End the current edge and add its edge index to the node
-        edge->targetnode_ = currentid;
-        nd.AddEdge(edgeindex);
+        // If a node is an intersection or the end of the way
+        // it's a node of the road network graph
+        if (intersection_.IsUsed(currentid)) {
+          // End the current edge and add its edge index to the node
+          edge.targetnode_ = currentid;
+          node.AddEdge(edgeindex);
 
-        // Add the edge to the list of edges
-        edges_.emplace_back(*edge);
-        edgeindex++;
+          // Add the edge to the list of edges
+          edges_.push_back(edge);
+          edgeindex++;
 
-        // Start a new edge if this is not the last node in the way
-        if (i < n-1) {
-          edge = new Edge(currentid, wayindex, node.latlng());
-          nd.AddEdge(edgeindex);
+          // Start a new edge if this is not the last node in the way
+          if (i < n-1) {
+            edge = Edge(currentid, wayindex, node.latlng());
+            node.AddEdge(edgeindex);
+          }
         }
       }
+      wayindex++;
     }
-    wayindex++;
-  }
-  std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
-}
-
-// Iterate through the node map and remove any nodes that are not part of
-// the graph (they have been converted to part of the edge shape)
-void GraphBuilder::RemoveUnusedNodes() {
-  std::cout << "Remove unused nodes" << std::endl;
-  node_map_type::iterator itr = nodes_.begin();
-  while (itr != nodes_.end()) {
-    if (itr->second.uses() < 2) {
-      node_map_type::iterator to_erase = itr;
-      ++itr;
-      nodes_.erase(to_erase);
-    } else {
-      ++itr;
-    }
-  }
-  std::cout << "Removed unused nodes; remaining node count = "
-            << nodes_.size() << std::endl;
-}
-
-void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
-  std::cout << "Tile nodes..." << std::endl;
-
-  // Get number of tiles and reserve space for them
-  // < 30% of the earth is land and most roads are on land, even less than that even has roads
-  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
-  tilednodes_.reserve(tiles.TileCount() * .3f);
-
-  // Iterate through all OSM nodes and assign GraphIds
-  for (auto& node : nodes_) {
-    // Skip any nodes that have no edges
-    if (node.second.edge_count() == 0) {
-      //std::cout << "Node with no edges" << std::endl;
-      continue;
-    }
-
-    // Put the node into the tile
-    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
-    std::vector<uint64_t>& tile = tilednodes_[id];
-    tile.emplace_back(node.first);
-
-    // Set the GraphId for this OSM node.
-    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile.size() - 1));
-  }
-  std::cout << "Done TileNodes" << std::endl;
+    std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
 
 namespace {
@@ -476,19 +433,26 @@ uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, cons
   return 31;
 }
 
-void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
-                    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
+void BuildTileSet(const std::vector<std::list<uint64_t> >& task,
                     const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
                     const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
 
-  std::cout << "Thread " << std::this_thread::get_id() << " started" << std::endl;
+  std::cout << "Thread " << std::this_thread::get_id() << " started with " << task.size() << " tiles" << std::endl;
 
   // A place to keep information about what was done
   size_t written = 0;
 
-  // For each tile
-  for(; tile_start != tile_end; ++tile_start) {
+  // For each tile in the task
+  for(const auto& tile : task) {
+    // If there aren't any nodes this tile shouldn't exist
+    if(tile.size() == 0)
+      continue;
+
+    // Get the tile id, first node should suffice
+    GraphId tile_id = nodes.find(tile.front())->second.graphid().Tile_Base(); //TODO: check validity?
+
     try {
+      // What actually writes the tile
       GraphTileBuilder graphtile;
 
       // Edge info offset and map
@@ -507,7 +471,7 @@ void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_i
 
       // Iterate through the nodes
       uint32_t directededgecount = 0;
-      for (const auto& osmnodeid : tile_start->second) {
+      for (const auto& osmnodeid : tile) {
         const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
         NodeInfoBuilder nodebuilder;
         nodebuilder.set_latlng(node.latlng());
@@ -686,16 +650,16 @@ void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_i
       graphtile.SetTextListAndSize(text_list, text_list_offset);
 
       // Write the actual tile to disk
-      graphtile.StoreTileData(outdir, tile_start->first);
+      graphtile.StoreTileData(outdir, tile_id);
 
       // Made a tile
-      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_start->first << ": " << graphtile.size() << " bytes" << std::endl;
+      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_id << ": " << graphtile.size() << " bytes" << std::endl;
       written += graphtile.size();
     }// Whatever happens in Vagas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_start->first << ": " << e.what() << std::endl;
+      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_id << ": " << e.what() << std::endl;
       return;
     }
   }
@@ -703,33 +667,71 @@ void BuildTileRange(std::unordered_map<GraphId, std::vector<uint64_t> >::const_i
   result.set_value(written);
 }
 
-//TODO: make this an option
-constexpr size_t kThreadCount = 4;
+}
 
+void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
+  std::cout << "Creating thread tasks" << std::endl;
+
+  // Get number of tiles for the world and guess how much space we'll need
+  // as a maximum. < 30% of the earth is land and most roads are on land, even
+  // less than that even has roads. we'll assume each threads task has an equal
+  // of tiles in it even though some will be one less
+  Tiles world(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
+  // Need to know where the already started tiles are
+  std::unordered_map<GraphId, task_t::iterator> tiles(world.TileCount() * .3f);
+
+  // We need tasks for each thread
+  const size_t thread_count = std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency()));
+  const size_t tiles_per_task = ((world.TileCount() * .3f) / thread_count) + 1;
+  tasks_.resize(thread_count);
+  for(auto& task : tasks_) {
+    task.reserve(tiles_per_task);
+  }
+
+  // Iterate through all OSM nodes and assign GraphIds
+  size_t current_thread = 0;
+  size_t done = 0;
+  for (auto& node : nodes_) {
+    // Skip any nodes that have no edges
+    if (node.second.edge_count() == 0) {
+      //std::cout << "Node with no edges" << std::endl;
+      continue;
+    }
+
+    // Compute the tile id for the node
+    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
+    // Did we already start this tile
+    auto tile_itr = tiles.find(id);
+    task_t::iterator tile;
+    if(tile_itr != tiles.end()) {
+      tile = tile_itr->second;
+      tile->push_back(node.first);
+    }// We need to make this tile
+    else {
+      tasks_[current_thread].emplace_back(tile_t{node.first});
+      tile = tasks_[current_thread].end() - 1;
+      tiles[id] = tile;
+      // Round robin the tiles to the various threads' tasks
+      ++current_thread %= tasks_.size();
+    }
+
+    // Set the GraphId for this OSM node.
+    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile->size() - 1));
+  }
+  std::cout << "Thread tasks created" << std::endl;
 }
 
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(kThreadCount);
+  std::vector<std::shared_ptr<std::thread> > threads(tasks_.size());
   // A place to hold the results of those threads, be they exceptions or otherwise
-  std::vector<std::promise<size_t> > results(kThreadCount);
-  // Divvy up the work
-  size_t floor = tilednodes_.size() / kThreadCount;
-  size_t at_ceiling = tilednodes_.size() - (kThreadCount * floor);
-  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
-  std::cout << tilednodes_.size() << " tiles\n";
+  std::vector<std::promise<size_t> > results(threads.size());
+  // Start the threads
   for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    // Where the range begins
-    tile_start = tile_end;
-    // Where the range ends
-    std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-      new std::thread(BuildTileRange, tile_start, tile_end, nodes_, ways_,
-                      edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
+      new std::thread(BuildTileSet, tasks_[i], nodes_, ways_, edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
     );
   }
 

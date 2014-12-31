@@ -302,7 +302,7 @@ private:
 
                     for(int l = 0; l < rel.memids_size(); ++l){
                         id += rel.memids(l);
-                        refs.push_back(Reference(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l))));
+                        refs.emplace_back(Reference{rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l))});
                     }
 
                     visitor.relation_callback(rel.id(), get_tags(rel, primblock), refs);
