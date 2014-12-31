@@ -352,48 +352,48 @@ void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
 // count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
-    uint32_t edgeindex = 0;
-    uint32_t wayindex = 0;
-    uint64_t currentid;
-    for (const auto& way : ways_) {
-      // Start an edge at the first node of the way and add the
-      // edge index to the node
-      currentid = way.nodes()[0];
-      OSMNode& node = nodes_[currentid];
-      Edge edge(currentid, wayindex, node.latlng());
-      node.AddEdge(edgeindex);
+  uint32_t edgeindex = 0;
+  uint32_t wayindex = 0;
+  uint64_t currentid;
+  for (const auto& way : ways_) {
+    // Start an edge at the first node of the way and add the
+    // edge index to the node
+    currentid = way.nodes()[0];
+    OSMNode& node = nodes_[currentid];
+    Edge edge(currentid, wayindex, node.latlng());
+    node.AddEdge(edgeindex);
 
-      // Iterate through the nodes of the way and add lat,lng to the current
-      // way until a node with > 1 uses is found.
-      for (size_t i = 1, n = way.node_count(); i < n; i++) {
-        // Add the node lat,lng to the edge shape.
-        // TODO - not sure why I had to use a different OSMNode declaration here?
-        // But if I use node from above I get errors!
-        currentid = way.nodes()[i];
-        node = nodes_[currentid];
-        edge.AddLL(node.latlng());
+    // Iterate through the nodes of the way and add lat,lng to the current
+    // way until a node with > 1 uses is found.
+    for (size_t i = 1, n = way.node_count(); i < n; i++) {
+      // Add the node lat,lng to the edge shape.
+      // TODO - not sure why I had to use a different OSMNode declaration here?
+      // But if I use node from above I get errors!
+      currentid = way.nodes()[i];
+      OSMNode& nd = nodes_[currentid];
+      edge.AddLL(nd.latlng());
 
-        // If a node is an intersection or the end of the way
-        // it's a node of the road network graph
-        if (intersection_.IsUsed(currentid)) {
-          // End the current edge and add its edge index to the node
-          edge.targetnode_ = currentid;
-          node.AddEdge(edgeindex);
+      // If a is an intersection or the end of the way
+      // it's a node of the road network graph
+      if (intersection_.IsUsed(currentid)) {
+        // End the current edge and add its edge index to the node
+        edge.targetnode_ = currentid;
+        nd.AddEdge(edgeindex);
 
-          // Add the edge to the list of edges
-          edges_.push_back(edge);
-          edgeindex++;
+        // Add the edge to the list of edges
+        edges_.push_back(edge);
+        edgeindex++;
 
-          // Start a new edge if this is not the last node in the way
-          if (i < n-1) {
-            edge = Edge(currentid, wayindex, node.latlng());
-            node.AddEdge(edgeindex);
-          }
+        // Start a new edge if this is not the last node in the way
+        if (i < n-1) {
+          edge = Edge(currentid, wayindex, node.latlng());
+          nd.AddEdge(edgeindex);
         }
       }
-      wayindex++;
     }
-    std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
+    wayindex++;
+  }
+  std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
 
 namespace {
