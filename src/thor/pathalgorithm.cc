@@ -75,6 +75,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   SetDestination(dest);
 
   // Find shortest path
+  uint32_t uturn_index;
   uint32_t nextedgelabel;
   uint32_t prior_edge_label_index;
   float cost, sortcost, currentcost;
@@ -107,13 +108,17 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // TODO - do we need to terminate fruitless searches
 
-    // Get the end node of the prior directed edge
+    // Get the end node of the prior directed edge.
+    // Set some temp variables here. Looks like const EdgeLabel is not
+    // good inside the loop below (probably because the edgelabel list
+    // is added to?
     node = next.endnode();
     tile = graphreader.GetGraphTile(node);
     if (tile == nullptr)
       continue;
     endnodeinfo = tile->node(node);
     currentcost = next.truecost();
+    uturn_index = next.uturn_index();
 
     // Check access
     if (!costing->Allowed(endnodeinfo)) {
@@ -126,7 +131,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     for (unsigned int i = 0, n = endnodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
       // Check access of the edge
-      if (!costing->Allowed(directededge)) {
+      if (!costing->Allowed(directededge, (i == uturn_index))) {
         continue;
       }
 
@@ -175,7 +180,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Set the edge label values
       edgelabels_.emplace_back(EdgeLabel(nextedgelabel, edgeid,
-               directededge->endnode(), cost, sortcost));
+               directededge->endnode(), cost, sortcost,
+               directededge->opp_index()));
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
@@ -210,7 +216,8 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     edgelabels_.emplace_back(EdgeLabel(kInvalidLabel, edgeid,
-            directededge->endnode(), cost, sortcost));
+            directededge->endnode(), cost, sortcost,
+            directededge->opp_index()));
     adjacencylist_->Add(edgelabel_index_, sortcost);
     edgelabel_index_++;
   }
