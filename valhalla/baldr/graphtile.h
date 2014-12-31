@@ -106,6 +106,16 @@ class GraphTile {
    */
   const EdgeInfo* edgeinfo(uint32_t offset) const;
 
+  /**
+   * Convenience method to get the directed edges originating at a node.
+   * @param  node_index  Node Id within this tile.
+   * @param  count       (OUT) Number of outbound edges
+   * @param  edge_index  (OUT) Index of the first outbound edge.
+   * @return  Returns a pointer to the first outbound directed edge.
+   */
+  const DirectedEdge* GetDirectedEdges(const uint32_t node_index,
+                                       uint32_t& count, uint32_t& edge_index);
+
  protected:
   // Size of the tile in bytes
   size_t size_;

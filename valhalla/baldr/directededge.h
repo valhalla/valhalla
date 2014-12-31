@@ -109,6 +109,14 @@ class DirectedEdge {
   bool roundabout() const;
 
   /**
+   * Edge leads to a "no thru" region where there are no exits other than
+   * the incoming edge. This flag is populated by processing the graph to
+   * identify such edges. This is used to speed pedestrian routing.
+   * @return  Returns true if the edge leads into a no thru region.
+   */
+  bool not_thru() const;
+
+  /**
    * Get the index of the opposing directed edge at the end node of this
    * directed edge. Can be used to find the start node of this directed edge
    * and to detect U-turns.
@@ -193,7 +201,8 @@ class DirectedEdge {
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 7;
+    uint32_t spare          : 6;
+    uint32_t not_thru       : 1;  // Edge leads to "no-through" region
     uint32_t opp_index      : 5;  // Opposing directed edge index
     uint32_t bikenetwork    : 4;
     uint32_t lanecount      : 4;

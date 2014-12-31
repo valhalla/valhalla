@@ -74,6 +74,11 @@ uint32_t DirectedEdge::lanes() const {
   return attributes_.lanecount;
 }
 
+// Does this edge lead into a no-thru region
+bool DirectedEdge::not_thru() const {
+  return attributes_.not_thru;
+}
+
 // Get the index of the opposing directed edge at the end node of this
 // directed edge.
 uint32_t DirectedEdge::opp_index() const {

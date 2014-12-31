@@ -120,5 +120,13 @@ const EdgeInfo* GraphTile::edgeinfo(uint32_t offset) const {
   return reinterpret_cast<const EdgeInfo*>(edgeinfo_ + offset);
 }
 
+const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
+                  uint32_t& count, uint32_t& edge_index) {
+  const NodeInfo* nodeinfo = node(node_index);
+  count = nodeinfo->edge_count();
+  edge_index = nodeinfo->edge_index();
+  return directededge(nodeinfo->edge_index());
+}
+
 }
 }
