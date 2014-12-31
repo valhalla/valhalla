@@ -192,11 +192,9 @@ class GraphBuilder {
   // Map that stores all the exit to info on a node
   std::unordered_map<uint64_t, std::string> map_exit_to_;
 
-  // A Task is a list of tiles which is just a list of node ids
-  // Each tile writing thread gets a task
-  using tile_t = std::list<uint64_t>;
-  using task_t = std::vector<tile_t>;
-  std::vector<task_t> tasks_;
+  // A place to keep each tile's nodes so that various threads can
+  // write various tiles asynchronously
+  std::unordered_map<GraphId, std::vector<uint64_t> > tilednodes_;
 
 
 

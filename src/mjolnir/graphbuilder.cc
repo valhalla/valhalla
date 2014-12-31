@@ -438,24 +438,18 @@ uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, cons
   return 31;
 }
 
-void BuildTileSet(const std::vector<std::list<uint64_t> >& task,
-                    const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
-                    const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
+void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
+                  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
+                  const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
+                  const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
 
-  std::cout << "Thread " << std::this_thread::get_id() << " started with " << task.size() << " tiles" << std::endl;
+  std::cout << "Thread " << std::this_thread::get_id() << " started" << std::endl;
 
   // A place to keep information about what was done
   size_t written = 0;
 
   // For each tile in the task
-  for(const auto& tile : task) {
-    // If there aren't any nodes this tile shouldn't exist
-    if(tile.size() == 0)
-      continue;
-
-    // Get the tile id, first node should suffice
-    GraphId tile_id = nodes.find(tile.front())->second.graphid().Tile_Base(); //TODO: check validity?
-
+  for(; tile_start != tile_end; ++tile_start) {
     try {
       // What actually writes the tile
       GraphTileBuilder graphtile;
@@ -476,7 +470,7 @@ void BuildTileSet(const std::vector<std::list<uint64_t> >& task,
 
       // Iterate through the nodes
       uint32_t directededgecount = 0;
-      for (const auto& osmnodeid : tile) {
+      for (const auto& osmnodeid : tile_start->second) {
         const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
         NodeInfoBuilder nodebuilder;
         nodebuilder.set_latlng(node.latlng());
@@ -655,16 +649,16 @@ void BuildTileSet(const std::vector<std::list<uint64_t> >& task,
       graphtile.SetTextListAndSize(text_list, text_list_offset);
 
       // Write the actual tile to disk
-      graphtile.StoreTileData(outdir, tile_id);
+      graphtile.StoreTileData(outdir, tile_start->first);
 
       // Made a tile
-      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_id << ": " << graphtile.size() << " bytes" << std::endl;
+      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_start->first << ": " << graphtile.size() << " bytes" << std::endl;
       written += graphtile.size();
     }// Whatever happens in Vagas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_id << ": " << e.what() << std::endl;
+      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_start->first << ": " << e.what() << std::endl;
       return;
     }
   }
@@ -675,68 +669,52 @@ void BuildTileSet(const std::vector<std::list<uint64_t> >& task,
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
-  std::cout << "Creating thread tasks" << std::endl;
+  std::cout << "Tiling nodes" << std::endl;
 
-  // Get number of tiles for the world and guess how much space we'll need
-  // as a maximum. < 30% of the earth is land and most roads are on land, even
-  // less than that even has roads. we'll assume each threads task has an equal
-  // of tiles in it even though some will be one less
-  Tiles world(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
-  // Need to know where the already started tiles are
-  std::unordered_map<GraphId, task_t::iterator> tiles(world.TileCount() * .3f);
-
-  // We need tasks for each thread
-  const size_t thread_count = std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency()));
-  const size_t tiles_per_task = ((world.TileCount() * .3f) / thread_count) + 1;
-  tasks_.resize(thread_count);
-  for(auto& task : tasks_) {
-    task.reserve(tiles_per_task);
-  }
-
+  // Get number of tiles and reserve space for them
+  // < 30% of the earth is land and most roads are on land, even less than that even has roads
+  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
+  tilednodes_.reserve(tiles.TileCount() * .3f);
   // Iterate through all OSM nodes and assign GraphIds
-  size_t current_thread = 0;
-  size_t done = 0;
   for (auto& node : nodes_) {
     // Skip any nodes that have no edges
     if (node.second.edge_count() == 0) {
       //std::cout << "Node with no edges" << std::endl;
       continue;
     }
-
-    // Compute the tile id for the node
+    // Put the node into the tile
     GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
-    // Did we already start this tile
-    auto tile_itr = tiles.find(id);
-    task_t::iterator tile;
-    if(tile_itr != tiles.end()) {
-      tile = tile_itr->second;
-      tile->push_back(node.first);
-    }// We need to make this tile
-    else {
-      tasks_[current_thread].emplace_back(tile_t{node.first});
-      tile = tasks_[current_thread].end() - 1;
-      tiles[id] = tile;
-      // Round robin the tiles to the various threads' tasks
-      ++current_thread %= tasks_.size();
-    }
-
+    std::vector<uint64_t>& tile = tilednodes_[id];
+    tile.emplace_back(node.first);
     // Set the GraphId for this OSM node.
-    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile->size() - 1));
+    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile.size() - 1));
   }
-  std::cout << "Thread tasks created" << std::endl;
+
+  std::cout << "Tiled nodes created" << std::endl;
 }
 
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(tasks_.size());
+  std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
   // A place to hold the results of those threads, be they exceptions or otherwise
   std::vector<std::promise<size_t> > results(threads.size());
-  // Start the threads
+  // Divvy up the work
+  size_t floor = tilednodes_.size() / threads.size();
+  size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
+  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
+  std::cout << tilednodes_.size() << " tiles\n";
   for (size_t i = 0; i < threads.size(); ++i) {
+    // Figure out how many this thread will work on (either ceiling or floor)
+    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
+    // Where the range begins
+    tile_start = tile_end;
+    // Where the range ends
+    std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-      new std::thread(BuildTileSet, tasks_[i], nodes_, ways_, edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
+        new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_,
+                        edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
     );
   }
 
