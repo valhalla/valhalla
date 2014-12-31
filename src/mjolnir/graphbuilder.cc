@@ -57,7 +57,7 @@ const bool NodeIdTable::IsUsed(const uint64_t id) const {
 
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : node_count_(0), input_file_(input_file),
+    : node_count_(0), edge_count_(0), input_file_(input_file),
       tile_hierarchy_(pt),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId){
@@ -173,14 +173,18 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   // Mark the nodes that we will care about when processing nodes
   for (const auto ref : refs) {
-    if(shape_.IsUsed(ref))
+    if(shape_.IsUsed(ref)) {
       intersection_.set(ref);
-    else
+      ++edge_count_;
+    }
+    else {
       ++node_count_;
+    }
     shape_.set(ref);
   }
   intersection_.set(refs.front());
   intersection_.set(refs.back());
+  edge_count_ += 2;
 
   // Process tags
   for (const auto& tag : results) {
@@ -355,6 +359,7 @@ void GraphBuilder::ConstructEdges() {
   uint32_t edgeindex = 0;
   uint32_t wayindex = 0;
   uint64_t currentid;
+  edges_.reserve(edge_count_);
   for (const auto& way : ways_) {
     // Start an edge at the first node of the way and add the
     // edge index to the node

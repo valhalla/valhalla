@@ -161,7 +161,7 @@ class GraphBuilder {
 
   //MAIN THREAD STUFF
 
-  size_t node_count_;
+  size_t node_count_, edge_count_;
 
   // Location of the protocol buffer input file
   std::string input_file_;
