@@ -195,11 +195,6 @@ class GraphBuilder {
   // A place to keep each tile's nodes so that various threads can
   // write various tiles asynchronously
   std::unordered_map<GraphId, std::vector<uint64_t> > tilednodes_;
-
-
-
-
-
 };
 
 }

@@ -79,6 +79,7 @@ void GraphBuilder::Build() {
   // Run through the nodes
   std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
   nodes_.reserve(node_count_);
+  //TODO: we know how many knows we expect, stop early once we have that many
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::NODES);
   std::cout << "Routable nodes " << nodes_.size() << std::endl;
 
