@@ -53,8 +53,8 @@ void GraphBuilder::Build() {
   preprocess_ = false;
   CanalTP::read_osm_pbf(input_file_, *this);
   std::cout << relation_count_ << " relations" << std::endl;
-  std::cout << "Ways use " << nodes_.size() << " nodes out of  " <<
-        node_count_ << " total nodes" << std::endl;
+  std::cout << "Ways use " << nodes_.size() << " nodes out of  " << node_count_
+            << " total nodes" << std::endl;
 
   // Compute node use counts
   SetNodeUses();
@@ -88,7 +88,7 @@ void GraphBuilder::LuaInit(const std::string& nodetagtransformscript,
 
 void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
-if (osmid > maxosmid_)
+  if (osmid > maxosmid_)
     maxosmid_ = osmid;
 
   // Skip on preprocess step
@@ -115,14 +115,12 @@ if (osmid > maxosmid_)
       n.set_exit_to(hasTag);
       if (hasTag)
         map_exit_to_[osmid] = tag.second;
-    }
-    else if (tag.first == "ref") {
+    } else if (tag.first == "ref") {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_ref(hasTag);
       if (hasTag)
         map_ref_[osmid] = tag.second;
-    }
-    else if (tag.first == "gate")
+    } else if (tag.first == "gate")
       n.set_gate((tag.second == "true" ? true : false));
     else if (tag.first == "bollard")
       n.set_bollard((tag.second == "true" ? true : false));
@@ -395,7 +393,7 @@ void GraphBuilder::ConstructEdges() {
         edgeindex++;
 
         // Start a new edge if this is not the last node in the way
-        if (i < n-1) {
+        if (i < n - 1) {
           edge = new Edge(currentid, wayindex, node.latlng());
           nd.AddEdge(edgeindex);
         }
@@ -420,8 +418,8 @@ void GraphBuilder::RemoveUnusedNodes() {
       ++itr;
     }
   }
-  std::cout << "Removed unused nodes; remaining node count = "
-            << nodes_.size() << std::endl;
+  std::cout << "Removed unused nodes; remaining node count = " << nodes_.size()
+            << std::endl;
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
@@ -452,8 +450,9 @@ void GraphBuilder::TileNodes(const float tilesize, const unsigned int level) {
     // Get the number of nodes currently in the tile.
     // Set the GraphId for this OSM node.
     n = tilednodes_[tileid].size();
-    node.second.set_graphid(GraphId(static_cast<uint32_t>(tileid), level,
-                                    static_cast<uint64_t>(n)));
+    node.second.set_graphid(
+        GraphId(static_cast<uint32_t>(tileid), level,
+                static_cast<uint64_t>(n)));
 
     // Add this OSM node to the list of nodes for this tile
     tilednodes_[tileid].push_back(node.first);
@@ -477,12 +476,18 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
   // Iterate through the tiles
   uint32_t tileid = 0;
+  // GDG
+  int tile_count = 0;
   for (const auto& tile : tilednodes_) {
     // Skip empty tiles
     if (tile.size() == 0) {
       tileid++;
       continue;
     }
+
+    // GDG - rm later
+    std::cout << __FILE__ << ":" << __LINE__ << " | tile_count=" << ++tile_count
+              << std::endl;
 
     GraphTileBuilder graphtile;
 
@@ -504,6 +509,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     uint32_t id = 0;
     uint32_t directededgecount = 0;
     for (auto osmnodeid : tile) {
+      // GDG - rm later
+      std::cout << __FILE__ << ":" << __LINE__ << " | osmnodeid=" << osmnodeid
+                << std::endl;
+
       OSMNode& node = nodes_[osmnodeid];
       NodeInfoBuilder nodebuilder;
       nodebuilder.set_latlng(node.latlng());
@@ -515,6 +524,10 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
       for (auto edgeindex : node.edges()) {
+        // GDG - rm later
+        std::cout << __FILE__ << ":" << __LINE__ << " | edgeindex=" << edgeindex
+                  << std::endl;
+
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
 
@@ -557,13 +570,13 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         // or reverse between the 2 nodes)
         const GraphId& nodea = nodes_[edge.sourcenode_].graphid();
         if (!nodea.Is_Valid()) {
-          std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
-              " GraphID is not valid" << std::endl;
+          std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_
+                    << " GraphID is not valid" << std::endl;
         }
         const GraphId& nodeb = nodes_[edge.targetnode_].graphid();
         if (!nodeb.Is_Valid()) {
-          std::cout << "Node B: OSMID = " << edge.targetnode_ <<
-            " GraphID is not valid" << std::endl;
+          std::cout << "Node B: OSMID = " << edge.targetnode_
+                    << " GraphID is not valid" << std::endl;
         }
         if (edge.sourcenode_ == osmnodeid) {
           // Edge traversed in forward direction
@@ -591,11 +604,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
           directededge.set_endnode(nodea);
         } else {
           // ERROR!!!
-          std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
-              edgeindex << " Edge nodes " <<
-              edge.sourcenode_ << " and " << edge.targetnode_ <<
-              " do not match the OSM node Id" <<
-              osmnodeid << std::endl;
+          std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = "
+                    << edgeindex << " Edge nodes " << edge.sourcenode_
+                    << " and " << edge.targetnode_
+                    << " do not match the OSM node Id" << osmnodeid
+                    << std::endl;
         }
 
         // Check if we need to add edge info
@@ -604,6 +617,12 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // Add new edge info
         if (existing_edge_offset_item == edge_offset_map.end()) {
+          // GDG - rm later
+          std::cout << __FILE__ << ":" << __LINE__
+                    << " | ADD NEW EDGEINFO | nodea=" << nodea.value()
+                    << " | nodeb=" << nodeb.value() << " | offset="
+                    << edge_info_offset << std::endl;
+
           EdgeInfoBuilder edgeinfo;
           edgeinfo.set_nodea(nodea);
           edgeinfo.set_nodeb(nodeb);
@@ -621,6 +640,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
             auto existing_text_offset = text_offset_map.find(name);
             // Add if not found
             if (existing_text_offset == text_offset_map.end()) {
+              // GDG - rm later
+              std::cout << __FILE__ << ":" << __LINE__
+                        << " | NEW NAME OFFSET name=" << name << " | offset="
+                        << text_list_offset << std::endl;
+
               // Add name to text list
               text_list.push_back(name);
 
@@ -633,6 +657,11 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
               // Update text offset value to length of string plus null terminator
               text_list_offset += (name.length() + 1);
             } else {
+              // GDG - rm later
+              std::cout << __FILE__ << ":" << __LINE__
+                        << " | REUSE NAME OFFSET name=" << name << " | offset="
+                        << existing_text_offset->second << std::endl;
+
               // Add existing offset to list
               street_name_offset_list.push_back(existing_text_offset->second);
             }
@@ -657,6 +686,12 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         }
         // Update directed edge with existing edge offset
         else {
+          // GDG - rm later
+          std::cout << __FILE__ << ":" << __LINE__
+                    << " | REUSE EDGEINFO OFFSET | nodea=" << nodea.value()
+                    << " | nodeb=" << nodeb.value() << " | offset="
+                    << existing_edge_offset_item->second << std::endl;
+
           directededge.set_edgedataoffset(existing_edge_offset_item->second);
         }
 
