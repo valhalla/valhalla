@@ -37,13 +37,14 @@ std::cout << "EdgeLabel index = " << edgelabel_index_ << std::endl;
   // Clear the edge status flags
   if (edgestatus_ != nullptr) {
     delete edgestatus_;
+    edgestatus_ = nullptr;
   }
-  edgestatus_ = nullptr;
 
   // Clear the map of adjacency list edges
   adjlistedges_.clear();
 }
 
+// Initialize prior to finding best path
 void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
                 DynamicCost* costing) {
 std::cout << "Orig LL = " << origll.lat() << "," << origll.lng() << std::endl;
@@ -62,8 +63,7 @@ std::cout << "Dest LL = " << destll.lat() << "," << destll.lng() << std::endl;
   edgestatus_ = new EdgeStatus();
 }
 
-// Form path.
-// TODO - need to pass in origin and destination directed edges
+// Calculate best path.
 std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
              DynamicCost* costing) {
@@ -75,13 +75,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   SetDestination(dest);
 
   // Find shortest path
-  uint32_t uturn_index;
-  uint32_t nextedgelabel;
-  uint32_t prior_edge_label_index;
+  uint32_t uturn_index, nextlabelindex;
+  uint32_t prior_label_index;
   float dist2dest, dist;
   float cost, sortcost, currentcost;
   GraphId node;
-  const NodeInfo* endnodeinfo;
+  const NodeInfo* nodeinfo;
   const GraphTile* tile;
   const DirectedEdge* directededge;
   EdgeStatusType edgestatus;
@@ -90,98 +89,98 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Get next element from adjacency list. Check that it is valid.
     // TODO: make a class that extends std::exception, with messages and
     // error codes and return the appropriate one here
-    nextedgelabel = adjacencylist_->Remove(edgelabels_);
-    if (nextedgelabel == kInvalidLabel) {
+    nextlabelindex = adjacencylist_->Remove(edgelabels_);
+    if (nextlabelindex == kInvalidLabel) {
       std::cout << "Iterations = " << edgelabel_index_ << std::endl;
       throw std::runtime_error("No path could be found for input");
     }
 
-    const EdgeLabel& next = edgelabels_[nextedgelabel];
-    RemoveFromAdjMap(next.edgeid());
-    edgestatus_->Set(next.edgeid(), kPermanent);
+    // Remove label from adjacency list, mark it as done
+    const EdgeLabel& nextlabel = edgelabels_[nextlabelindex];
+    RemoveFromAdjMap(nextlabel.edgeid());
+    edgestatus_->Set(nextlabel.edgeid(), kPermanent);
 
-    // Check for completion
-    if (IsComplete(next.edgeid())) {
-      // Form path and return
-      return FormPath(nextedgelabel);
+    // Check for completion. Form path and return if complete.
+    if (IsComplete(nextlabel.edgeid())) {
+      return FormPath(nextlabelindex);
     }
 
-    // TODO - do we need to terminate fruitless searches
+    // TODO - do we need to terminate fruitless searches?
 
-    // Get the end node of the prior directed edge.
+    // Get the end node of the prior directed edge. Skip if tile not found
+    // (can happen with regional data sets).
+    node = nextlabel.endnode();
+    if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
+      continue;
+    }
+
     // Set some temp variables here. Looks like const EdgeLabel is not
     // good inside the loop below (probably because the edgelabel list
     // is added to?
-    node = next.endnode();
-    tile = graphreader.GetGraphTile(node);
-    if (tile == nullptr)
-      continue;
-    endnodeinfo = tile->node(node);
-    currentcost = next.truecost();
-    uturn_index = next.uturn_index();
-    dist2dest   = next.distance();
+    nodeinfo =    tile->node(node);
+    currentcost = nextlabel.truecost();
+    uturn_index = nextlabel.uturn_index();
+    dist2dest   = nextlabel.distance();
 
-    // Check access
-    if (!costing->Allowed(endnodeinfo)) {
+    // Check access at the node
+    if (!costing->Allowed(nodeinfo)) {
       continue;
     }
 
     // Expand from end node
-    edgeid.Set(node.tileid(), node.level(), endnodeinfo->edge_index());
-    directededge = tile->directededge(endnodeinfo->edge_index());
-    for (unsigned int i = 0, n = endnodeinfo->edge_count(); i < n;
+    edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
+    directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
-      // Check access of the edge
+      // Check access
       if (!costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
         continue;
       }
 
-      // Get the current set. Skip this edge if permanently labeled (shortest
+      // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       edgestatus = edgestatus_->Get(edgeid);
       if (edgestatus == kPermanent) {
         continue;
       }
 
-      // TODO - Check access (method of the costing???
+      // TODO
       // Turn costs/restrictions...
       // Transitions between hierarchy levels...
 
       // Get cost
       cost = currentcost + costing->Get(directededge);
 
+      // Check if already in adjacency list
       if (edgestatus == kTemporary) {
         // If cost is less than current cost to this edge then we
         // update the predecessor information and decrement the sort cost by
         // the difference in the real costs (the A* heuristic doesn't change)
-        prior_edge_label_index = GetPriorEdgeLabel(edgeid);
-        if (prior_edge_label_index != kInvalidLabel) {
-          if (cost < edgelabels_[prior_edge_label_index].truecost()) {
-            float prior_sort_cost = edgelabels_[prior_edge_label_index].sortcost();
+        prior_label_index = GetPriorEdgeLabel(edgeid);
+        if (prior_label_index != kInvalidLabel) {
+          if (cost < edgelabels_[prior_label_index].truecost()) {
+            float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
             float newsortcost = prior_sort_cost -
-                (edgelabels_[prior_edge_label_index].truecost() - cost);
-            edgelabels_[prior_edge_label_index].Update(nextedgelabel, cost,
-                                    newsortcost);
-            adjacencylist_->DecreaseCost(prior_edge_label_index,
-                        newsortcost, prior_sort_cost);
+                    (edgelabels_[prior_label_index].truecost() - cost);
+            edgelabels_[prior_label_index].Update(nextlabelindex, cost,
+                    newsortcost);
+            adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
+                    prior_sort_cost);
           }
         }
         continue;
       }
 
-      // Find the sort cost (with A* heuristic) and add this directed
-      // edge to the adjacency list. Set the edge status to temporary
-      // (also stores a pointer to edge label)
-      tile = graphreader.GetGraphTile(directededge->endnode());
-      if (tile == nullptr) {
+      // Find the sort cost (with A* heuristic) using the lat,lng at the
+      // end node of the directed edge. Skip if tile not found.
+      if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
         continue;
       }
-      endnodeinfo = tile->node(directededge->endnode());
-      dist = astarheuristic_.Get(endnodeinfo->latlng());
+      dist = astarheuristic_.Get(tile->node(directededge->endnode())->latlng());
       sortcost = cost + astarheuristic_.Get(dist);
 
       // Set the edge label values
-      edgelabels_.emplace_back(EdgeLabel(nextedgelabel, edgeid,
+      edgelabels_.emplace_back(EdgeLabel(nextlabelindex, edgeid,
                directededge->endnode(), cost, sortcost, dist,
                directededge->opp_index()));
 
