@@ -476,18 +476,12 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
                                    const unsigned int level) {
   // Iterate through the tiles
   uint32_t tileid = 0;
-  // GDG
-  int tile_count = 0;
   for (const auto& tile : tilednodes_) {
     // Skip empty tiles
     if (tile.size() == 0) {
       tileid++;
       continue;
     }
-
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__ << " | tile_count=" << ++tile_count
-              << std::endl;
 
     GraphTileBuilder graphtile;
 
@@ -509,10 +503,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
     uint32_t id = 0;
     uint32_t directededgecount = 0;
     for (auto osmnodeid : tile) {
-      // GDG - rm later
-      std::cout << __FILE__ << ":" << __LINE__ << " | osmnodeid=" << osmnodeid
-                << std::endl;
-
       OSMNode& node = nodes_[osmnodeid];
       NodeInfoBuilder nodebuilder;
       nodebuilder.set_latlng(node.latlng());
@@ -524,10 +514,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
       // Set up directed edges
       std::vector<DirectedEdgeBuilder> directededges;
       for (auto edgeindex : node.edges()) {
-        // GDG - rm later
-        std::cout << __FILE__ << ":" << __LINE__ << " | edgeindex=" << edgeindex
-                  << std::endl;
-
         DirectedEdgeBuilder directededge;
         const Edge& edge = edges_[edgeindex];
 
@@ -617,12 +603,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
 
         // Add new edge info
         if (existing_edge_offset_item == edge_offset_map.end()) {
-          // GDG - rm later
-          std::cout << __FILE__ << ":" << __LINE__
-                    << " | ADD NEW EDGEINFO | nodea=" << nodea.value()
-                    << " | nodeb=" << nodeb.value() << " | offset="
-                    << edge_info_offset << std::endl;
-
           EdgeInfoBuilder edgeinfo;
           edgeinfo.set_nodea(nodea);
           edgeinfo.set_nodeb(nodeb);
@@ -640,11 +620,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
             auto existing_text_offset = text_offset_map.find(name);
             // Add if not found
             if (existing_text_offset == text_offset_map.end()) {
-              // GDG - rm later
-              std::cout << __FILE__ << ":" << __LINE__
-                        << " | NEW NAME OFFSET name=" << name << " | offset="
-                        << text_list_offset << std::endl;
-
               // Add name to text list
               text_list.push_back(name);
 
@@ -657,11 +632,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
               // Update text offset value to length of string plus null terminator
               text_list_offset += (name.length() + 1);
             } else {
-              // GDG - rm later
-              std::cout << __FILE__ << ":" << __LINE__
-                        << " | REUSE NAME OFFSET name=" << name << " | offset="
-                        << existing_text_offset->second << std::endl;
-
               // Add existing offset to list
               street_name_offset_list.push_back(existing_text_offset->second);
             }
@@ -686,12 +656,6 @@ void GraphBuilder::BuildLocalTiles(const std::string& outputdir,
         }
         // Update directed edge with existing edge offset
         else {
-          // GDG - rm later
-          std::cout << __FILE__ << ":" << __LINE__
-                    << " | REUSE EDGEINFO OFFSET | nodea=" << nodea.value()
-                    << " | nodeb=" << nodeb.value() << " | offset="
-                    << existing_edge_offset_item->second << std::endl;
-
           directededge.set_edgedataoffset(existing_edge_offset_item->second);
         }
 

@@ -47,28 +47,14 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
                sizeof(GraphTileHeaderBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__
-              << " | sizeof(GraphTileHeaderBuilder)="
-              << sizeof(GraphTileHeaderBuilder) << std::endl;
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
                nodes_builder_.size() * sizeof(NodeInfoBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__ << " | sizeof(NodeInfoBuilder)="
-              << sizeof(NodeInfoBuilder) << " | NodeInfoBuilder total="
-              << nodes_builder_.size() * sizeof(NodeInfoBuilder) << std::endl;
 
     // Write the directed edges
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__
-              << " | sizeof(DirectedEdgeBuilder)="
-              << sizeof(DirectedEdgeBuilder) << " | DirectedEdgeBuilder total="
-              << directededges_builder_.size() * sizeof(DirectedEdgeBuilder)
-              << std::endl;
 
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
