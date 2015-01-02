@@ -7,6 +7,8 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
 
+#include <boost/shared_array.hpp>
+
 namespace valhalla {
 namespace baldr {
 
@@ -59,7 +61,7 @@ class GraphTile {
   size_t size() const;
 
   /**
-   * Gets the id of the graph tile
+   * Gets the id of the *graph tile
    *
    * @return id     the graph id of the tile (pointing to the first node)
    */
@@ -104,12 +106,22 @@ class GraphTile {
    */
   const EdgeInfo* edgeinfo(uint32_t offset) const;
 
+  /**
+   * Convenience method to get the directed edges originating at a node.
+   * @param  node_index  Node Id within this tile.
+   * @param  count       (OUT) Number of outbound edges
+   * @param  edge_index  (OUT) Index of the first outbound edge.
+   * @return  Returns a pointer to the first outbound directed edge.
+   */
+  const DirectedEdge* GetDirectedEdges(const uint32_t node_index,
+                                       uint32_t& count, uint32_t& edge_index);
+
  protected:
   // Size of the tile in bytes
   size_t size_;
 
   // Graph tile memory
-  char* graphtile_;
+  boost::shared_array<char> graphtile_;
 
   // Header information for the tile
   GraphTileHeader* header_;
