@@ -45,10 +45,10 @@ bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
 }
 
 void EdgeInfo::ToOstream(std::ostream& out) const {
-  out << "nodea=" << nodea_.value() << "nodea_.tileid=" << nodea_.tileid()
+  out << "nodea=" << nodea_.value() << "  nodea_.tileid=" << nodea_.tileid()
       << "  nodea_.level=" << nodea_.level() << "  nodea_.id=" << nodea_.id()
       << std::endl;
-  out << "nodeb=" << nodeb_.value() << "nodeb_.tileid=" << nodeb_.tileid()
+  out << "nodeb=" << nodeb_.value() << "  nodeb_.tileid=" << nodeb_.tileid()
       << "  nodeb_.level=" << nodeb_.level() << "  nodeb_.id=" << nodeb_.id()
       << std::endl;
   out << "street_name_offset_list_offset=" << street_name_offset_list_offset()
