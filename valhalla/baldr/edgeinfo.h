@@ -52,12 +52,12 @@ class EdgeInfo {
   // Returns the exit sign count
   const uint32_t exit_sign_count() const;
 
-  // TODO - implement later
   // Returns the name index at the specified index.
   const size_t GetStreetNameOffset(uint8_t index) const;
 
-//  // Returns the shape point at the specified index.
-//  const PointLL* GetShapePoint(uint8_t index) const;
+  // Returns the shape point at the specified index.
+  // TODO: replace with vector once it works
+  const PointLL GetShapePoint(uint16_t index) const;
 
   /**
    * Get the shape of the edge.
@@ -70,6 +70,8 @@ class EdgeInfo {
   bool operator ==(const EdgeInfo& rhs) const;
 
   void ToOstream(std::ostream& out = std::cout) const;
+
+  void SetPointers();
 
  protected:
   // Computes and returns the offset to the shape points based on the name offsets.
