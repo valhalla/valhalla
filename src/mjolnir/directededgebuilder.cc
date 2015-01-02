@@ -128,6 +128,11 @@ void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
 }
 
+// Sets the not thru flag.
+void DirectedEdgeBuilder::set_not_thru(const bool not_thru) {
+  attributes_.not_thru = not_thru;
+}
+
 // Set the index of the opposing directed edge at the end node of this
 // directed edge.
 void DirectedEdgeBuilder::set_opp_index(const uint32_t opp_index) {
