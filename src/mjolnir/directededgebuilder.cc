@@ -128,6 +128,12 @@ void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
 }
 
+// Set the forward flag. Tells if this directed edge is stored forward
+// in edgeinfo (true) or reverse (false).
+void DirectedEdgeBuilder::set_forward(const bool forward) {
+  attributes_.forward = forward;
+}
+
 // Sets the not thru flag.
 void DirectedEdgeBuilder::set_not_thru(const bool not_thru) {
   attributes_.not_thru = not_thru;

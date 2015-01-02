@@ -145,6 +145,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_roundabout(const bool roundabout);
 
   /**
+   * Set the forward flag. Tells if this directed edge is stored forward
+   * in edgeinfo (true) or reverse (false).
+   * @param  forward  Forward flag.
+   * */
+  void set_forward(const bool forward);
+
+  /**
    * Set the not_thru flag. If an edge leads to a "no thru" region where
    * there are no exits other than the incoming edge. This flag is populated
    * by processing the graph toidentify such edges.
