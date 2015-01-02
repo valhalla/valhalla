@@ -4,6 +4,7 @@
 #include "mjolnir/graphbuilder.h"
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
 
@@ -16,6 +17,7 @@
 #include <string>
 #include <thread>
 #include <memory>
+#include <unordered_set>
 #include <valhalla/midgard/aabbll.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -29,6 +31,9 @@ using node_pair = std::pair<const valhalla::baldr::GraphId&, const valhalla::bal
 
 namespace valhalla {
 namespace mjolnir {
+
+// Number of tries when determining not thru edges
+constexpr uint32_t kMaxNoThruTries = 256;
 
 // Will throw an error if this is exceeded. Then we can increase.
 const uint64_t kMaxOSMNodeId = 4000000000;
@@ -439,6 +444,63 @@ uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, cons
   return 31;
 }
 
+// Test if this is a "not thru" edge. These are edges that enter a region that
+// has no exit other than the edge entering the region
+bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
+                     const uint32_t startedgeindex,
+                     const std::unordered_map<uint64_t, OSMNode>& nodes,
+                     const std::vector<Edge>& edges) {
+  std::unordered_set<uint64_t> visitedset;
+  std::unordered_set<uint64_t> expandset;
+
+  // Add the end node to the expand and visited sets.
+  expandset.emplace(endnode);
+
+  // Expand edges until exhausted, the maximum number of expansions occur,
+  // or end up back at the starting node. No node can be visited twice.
+  uint32_t n = 0;
+  uint64_t node;
+  uint64_t osmendnode;
+  while (n < kMaxNoThruTries) {
+    // If expand list is exhausted this is "not thru"
+    if (expandset.empty()) {
+      return true;
+    }
+    n++;
+
+    // Get the node off of the expand list and add it to the visited list
+    node = *expandset.begin();
+    expandset.erase(expandset.begin());
+    visitedset.emplace(node);
+
+    // Expand all edges from this node
+    auto nd = nodes.find(endnode);
+    if (nd != nodes.end()) {
+      for (const auto& edgeindex : nd->second.edges()) {
+        if (edgeindex == startedgeindex) {
+          // Do not allow use of the start edge
+          continue;
+        }
+        const Edge& edge = edges[edgeindex];
+        osmendnode = (edge.sourcenode_ == node) ?
+            edge.targetnode_ : edge.sourcenode_;
+
+        // Return false if we have returned back to the start node
+        if (osmendnode == startnode) {
+          return false;
+        }
+
+        // TODO - if edges had the road class we could end search here if a
+        // major rado is encountered
+
+        // Add to the expand set
+        expandset.emplace(osmendnode);
+      }
+    }
+  }
+  return false;
+}
+
 void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
                   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
@@ -551,7 +613,16 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_endnode(nodeb);
 
             // Set the opposing edge offset at the end node of this directed edge.
-            directededge.set_opp_index(GetOpposingIndex(edge.targetnode_, edge.sourcenode_, nodes, edges));
+            directededge.set_opp_index(GetOpposingIndex(edge.targetnode_,
+                             edge.sourcenode_, nodes, edges));
+
+            // Set the not_thru flag. TODO - only do this for
+             if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
+               directededge.set_not_thru(false);
+             } else {
+               directededge.set_not_thru(IsNoThroughEdge(edge.sourcenode_,
+                            edge.targetnode_, edgeindex, nodes, edges));
+             }
           } else if (edge.targetnode_ == osmnodeid) {
             // Reverse direction.  Reverse the access logic and end node
             directededge.set_caraccess(true, false, w.auto_backward());
@@ -566,7 +637,16 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_endnode(nodea);
 
             // Set opposing edge index at the end node of this directed edge.
-            directededge.set_opp_index(GetOpposingIndex(edge.sourcenode_, edge.targetnode_, nodes, edges));
+            directededge.set_opp_index(GetOpposingIndex(edge.sourcenode_,
+                                edge.targetnode_, nodes, edges));
+
+            // Set the not_thru flag
+              if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
+                directededge.set_not_thru(false);
+              } else {
+                directededge.set_not_thru(IsNoThroughEdge(edge.targetnode_,
+                               edge.sourcenode_, edgeindex, nodes, edges));
+              }
           } else {
             // ERROR!!!
             std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
