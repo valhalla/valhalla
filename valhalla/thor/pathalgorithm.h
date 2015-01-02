@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -60,10 +61,10 @@ class PathAlgorithm {
 
   // Map of edges in the adjacency list. Keep this map so we do not have
   // to search to find an entry that is already in the adjacency list
-  std::map<uint64_t, uint32_t> adjlistedges_;
+  std::unordered_map<uint64_t, uint32_t> adjlistedges_;
 
   // Destinations
-  std::map<uint64_t, float> destinations_;
+  std::unordered_map<uint64_t, float> destinations_;
 
   /**
    * Initialize
