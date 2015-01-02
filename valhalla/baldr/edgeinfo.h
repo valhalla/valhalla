@@ -57,7 +57,7 @@ class EdgeInfo {
   const size_t GetStreetNameOffset(uint8_t index) const;
 
   // Returns the shape point at the specified index.
-  const PointLL GetShapePoint(uint8_t index) const;
+  const PointLL GetShapePoint(uint16_t index) const;
 
   /**
    * Get the shape of the edge.
