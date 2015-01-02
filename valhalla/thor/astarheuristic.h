@@ -38,8 +38,23 @@ class AStarHeuristic {
   void Init(const midgard::PointLL& ll, const float factor);
 
   /**
-   * Get the A* heuristic given the current lat,lng.
+   * Get the distance to the destination given the lat,lng.
    * @param  ll  Current latitude, longitude.
+   * @return  Returns the distance to the destination.
+   */
+  float GetDistance(const midgard::PointLL& ll);
+
+  /**
+   * Get the A* heuristic given the dstance to the destination.
+   * @param  distance  Distance (km) to the destination.
+   * @return  Returns an estimate of the cost to the destination.
+   *          For A* shortest path this MUST UNDERESTIMATE the true cost.
+   */
+  float Get(const float distance);
+
+  /**
+   * Get the A* heuristic given the current lat,lng.
+   * @param  ll  Lat,lng
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */
@@ -47,8 +62,8 @@ class AStarHeuristic {
 
  private:
   midgard::DistanceApproximator distapprox_;  // Distance approximation
-  float costfactor_;                      // Cost factor - ensures the cost
-                                          // underestimated the true cost.
+  float costfactor_;    // Cost factor - ensures the cost
+                        // underestimates the true cost.
 };
 
 }
