@@ -21,14 +21,19 @@ TripPathBuilder::~TripPathBuilder() {
 // For now just find the length of the path!
 // TODO - alter the return to be trip path structure.
 float TripPathBuilder::Build(GraphReader& graphreader,
-       const std::vector<GraphId>& pathedges) {
+                             const std::vector<GraphId>& pathedges) {
   float length = 0.0f;
   const DirectedEdge* directededge;
   const EdgeInfo* edgeinfo;
   for (const auto& edge : pathedges) {
     directededge = graphreader.GetGraphTile(edge)->directededge(edge);
     length += directededge->length();
-    edgeinfo = graphreader.GetGraphTile(edge)->edgeinfo(directededge->edgedataoffset());
+    // GDG - rm later
+    std::cout << __FILE__ << ":" << __LINE__ << " | edgedataoffset="
+              << directededge->edgedataoffset() << std::endl;
+
+    edgeinfo = graphreader.GetGraphTile(edge)->edgeinfo(
+        directededge->edgedataoffset());
     // TODO - rm later
     edgeinfo->ToOstream();
   }
