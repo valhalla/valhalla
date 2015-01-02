@@ -1,6 +1,7 @@
 #include "baldr/graphtile.h"
 
 #include <string>
+#include <vector>
 #include <iostream>
 #include <fstream>
 
@@ -54,6 +55,8 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     // Start of edge information and name list
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
     textlist_ = graphtile_.get() + header_->textlist_offset();
+
+    textsize_ = filesize - header_->textlist_offset();
 
     // Set the size to indicate success
     size_ = filesize;
@@ -128,6 +131,26 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();
   return directededge(nodeinfo->edge_index());
+}
+
+// Convenience method to get the names for an edge.
+std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
+                  std::vector<std::string>& names) {
+  // Get each name
+  names.clear();
+  uint32_t offset;
+  const EdgeInfo* edge = edgeinfo(edgeinfo_offset);
+  uint32_t namecount = edge->name_count();
+  for (uint32_t i = 0; i < namecount; i++) {
+    offset = edge->GetStreetNameOffset(i);
+std::cout << i << ":Name Offset = " << offset << " textlist size = " << textsize_ << std::endl;
+    if (offset < textsize_) {
+      names.push_back(textlist_ + offset);
+    } else {
+      std::cout << "ERROR - offset exceeds size of text list" << std::endl;
+    }
+  }
+  return names;
 }
 
 }
