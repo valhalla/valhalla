@@ -109,6 +109,13 @@ class DirectedEdge {
   bool roundabout() const;
 
   /**
+   * Is this directed edge stored forward in edgeinof (true) or
+   * reverse (false).
+   * @return  Returns true if stored forward, false if reverse.
+   */
+  bool forward() const;
+
+  /**
    * Edge leads to a "no thru" region where there are no exits other than
    * the incoming edge. This flag is populated by processing the graph to
    * identify such edges. This is used to speed pedestrian routing.
@@ -201,7 +208,8 @@ class DirectedEdge {
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 6;
+    uint32_t spare          : 5;
+    uint32_t forward        : 1;  // Is the edge info forward or reverse
     uint32_t not_thru       : 1;  // Edge leads to "no-through" region
     uint32_t opp_index      : 5;  // Opposing directed edge index
     uint32_t bikenetwork    : 4;

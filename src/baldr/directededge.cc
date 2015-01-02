@@ -74,6 +74,12 @@ uint32_t DirectedEdge::lanes() const {
   return attributes_.lanecount;
 }
 
+// Is this directed edge stored forward in edgeinof (true) or
+// reverse (false).
+bool DirectedEdge::forward() const {
+  return attributes_.forward;
+}
+
 // Does this edge lead into a no-thru region
 bool DirectedEdge::not_thru() const {
   return attributes_.not_thru;
