@@ -601,6 +601,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           }
           if (edge.sourcenode_ == osmnodeid) {
             // Edge traversed in forward direction
+            directededge.set_forward(true);
             directededge.set_caraccess(true, false, w.auto_forward());
             directededge.set_pedestrianaccess(true, false, w.pedestrian());
             directededge.set_bicycleaccess(true, false, w.bike_forward());
@@ -625,6 +626,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
              }
           } else if (edge.targetnode_ == osmnodeid) {
             // Reverse direction.  Reverse the access logic and end node
+            directededge.set_forward(false);
             directededge.set_caraccess(true, false, w.auto_backward());
             directededge.set_pedestrianaccess(true, false, w.pedestrian());
             directededge.set_bicycleaccess(true, false, w.bike_backward());
