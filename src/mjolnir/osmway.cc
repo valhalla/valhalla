@@ -1,4 +1,4 @@
-#include "osmway.h"
+#include "mjolnir/osmway.h"
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -8,9 +8,7 @@ namespace mjolnir {
 
 OSMWay::OSMWay()
 {
-  osmwayid_ = 0;
-
-  nodes_ = nullptr;
+  osmwayid_ = 0; //shouldnt this be -1 (ie std::numeric_limits<uint64_t>::max())?
 
   ref_ = "";
   int_ref_ = "";
@@ -39,8 +37,6 @@ OSMWay::OSMWay()
 OSMWay::OSMWay(uint64_t id) {
 
   osmwayid_ = id;
-
-  nodes_= nullptr;
 
   ref_ = "";
   int_ref_ = "";
@@ -88,25 +84,21 @@ uint64_t OSMWay::way_id() const {
  * Set the list of nodes for this way.
  */
 void OSMWay::set_nodes(const std::vector<uint64_t> &nodes) {
-  if (nodes_ == nullptr) {
-    nodes_ = new std::vector<uint64_t>;
-  }
-
-  *nodes_ = nodes;
+  nodes_.assign(nodes.begin(), nodes.end());
 }
 
 /**
  * Get the number of nodes for this way.
  */
 uint32_t OSMWay::node_count() const {
-  return nodes_->size();
+  return nodes_.size();
 }
 
 /**
  * Get the list of nodes for this way.
  */
 const std::vector<uint64_t>& OSMWay::nodes() const {
-  return *nodes_;
+  return nodes_;
 }
 
 /**
@@ -126,7 +118,7 @@ float OSMWay::speed() const {
 /**
  * Set the ref.
  */
-void OSMWay::set_ref(const std::string ref) {
+void OSMWay::set_ref(const std::string& ref) {
   ref_ = ref;
 }
 
@@ -140,7 +132,7 @@ std::string OSMWay::ref() const {
 /**
  * Set the int ref.
  */
-void OSMWay::set_int_ref(const std::string int_ref) {
+void OSMWay::set_int_ref(const std::string& int_ref) {
   int_ref_ = int_ref;
 }
 
@@ -154,7 +146,7 @@ std::string OSMWay::int_ref() const {
 /**
  * Set the name.
  */
-void OSMWay::set_name(const std::string name) {
+void OSMWay::set_name(const std::string& name) {
   name_ = name;
 }
 
@@ -168,7 +160,7 @@ std::string OSMWay::name() const {
 /**
  * Set the name:en.
  */
-void OSMWay::set_name_en(const std::string name_en) {
+void OSMWay::set_name_en(const std::string& name_en) {
   name_en_ = name_en;
 }
 
@@ -182,7 +174,7 @@ std::string OSMWay::name_en() const {
 /**
  * Set the alt name.
  */
-void OSMWay::set_alt_name(const std::string alt_name) {
+void OSMWay::set_alt_name(const std::string& alt_name) {
   alt_name_ = alt_name;
 }
 
@@ -196,7 +188,7 @@ std::string OSMWay::alt_name() const {
 /**
  * Set the official name.
  */
-void OSMWay::set_official_name(const std::string official_name) {
+void OSMWay::set_official_name(const std::string& official_name) {
   official_name_ = official_name;
 }
 
@@ -210,7 +202,7 @@ std::string OSMWay::official_name() const {
 /**
  * Set the destination.
  */
-void OSMWay::set_destination(const std::string destination) {
+void OSMWay::set_destination(const std::string& destination) {
   destination_ = destination;
 }
 
@@ -224,7 +216,7 @@ std::string OSMWay::destination() const {
 /**
  * Set the destination_ref.
  */
-void OSMWay::set_destination_ref(const std::string destination_ref) {
+void OSMWay::set_destination_ref(const std::string& destination_ref) {
   destination_ref_ = destination_ref;
 }
 
@@ -238,7 +230,7 @@ std::string OSMWay::destination_ref() const {
 /**
  * Set the destination_ref_to.
  */
-void OSMWay::set_destination_ref_to(const std::string destination_ref_to) {
+void OSMWay::set_destination_ref_to(const std::string& destination_ref_to) {
   destination_ref_to_ = destination_ref_to;
 }
 
@@ -252,7 +244,7 @@ std::string OSMWay::destination_ref_to() const {
 /**
  * Set the junction_ref.
  */
-void OSMWay::set_junction_ref(const std::string junction_ref) {
+void OSMWay::set_junction_ref(const std::string& junction_ref) {
   junction_ref_ = junction_ref;
 }
 
@@ -266,7 +258,7 @@ std::string OSMWay::junction_ref() const {
 /**
  * Set the bike national ref.
  */
-void OSMWay::set_bike_national_ref(const std::string bike_national_ref) {
+void OSMWay::set_bike_national_ref(const std::string& bike_national_ref) {
   bike_national_ref_ = bike_national_ref;
 }
 
@@ -280,7 +272,7 @@ std::string OSMWay::bike_national_ref() const {
 /**
  * Set the bike regional ref.
  */
-void OSMWay::set_bike_regional_ref(const std::string bike_regional_ref) {
+void OSMWay::set_bike_regional_ref(const std::string& bike_regional_ref) {
   bike_regional_ref_ = bike_regional_ref;
 }
 
@@ -294,7 +286,7 @@ std::string OSMWay::bike_regional_ref() const {
 /**
  * Set the bike local ref.
  */
-void OSMWay::set_bike_local_ref(const std::string bike_local_ref) {
+void OSMWay::set_bike_local_ref(const std::string& bike_local_ref) {
   bike_local_ref_ = bike_local_ref;
 }
 
@@ -573,10 +565,11 @@ bool OSMWay::link() const {
   return classification_.fields.link;
 }
 
+namespace {
 /**
  * Splits a tag into a vector of strings.  Delim defaults to ;
  */
-std::vector<std::string> OSMWay::GetTagTokens(std::string tag_value,
+std::vector<std::string> GetTagTokens(const std::string& tag_value,
                                       char delim = ';') {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, tag_value,
@@ -584,49 +577,46 @@ std::vector<std::string> OSMWay::GetTagTokens(std::string tag_value,
                           boost::algorithm::token_compress_on);
   return tokens;
 }
+}
 
 /**
  * Get the names for the edge info based on the road class.
  */
-std::vector<std::string> OSMWay::GetNames() {
+std::vector<std::string> OSMWay::GetNames() const {
   std::vector<std::string> names;
   // Process motorway and trunk refs
   if (!ref_.empty()
       && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
           || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens = GetTagTokens(ref_);
-    if (!tokens.empty()) {
-      names.insert(names.end(), tokens.begin(), tokens.end());
-    }
+    names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
   // TODO int_ref
 
   // Process name
   if (!name_.empty())
-    names.push_back(name_);
+    names.emplace_back(name_);
 
   // Process non limited access refs
   if (!ref_.empty() && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
       && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens = GetTagTokens(ref_);
-    if (!tokens.empty()) {
-      names.insert(names.end(), tokens.begin(), tokens.end());
-    }
+    names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
   // Process alt_name
   if (!alt_name_.empty())
-    names.push_back(alt_name_);
+    names.emplace_back(alt_name_);
 
   // Process official_name
   if (!official_name_.empty())
-    names.push_back(official_name_);
+    names.emplace_back(official_name_);
 
   // Process name_en_
   // TODO: process country specific names
   if (!name_en_.empty())
-    names.push_back(name_en_);
+    names.emplace_back(name_en_);
 
   return names;
 }

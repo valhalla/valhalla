@@ -145,6 +145,21 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_roundabout(const bool roundabout);
 
   /**
+   * Set the not_thru flag. If an edge leads to a "no thru" region where
+   * there are no exits other than the incoming edge. This flag is populated
+   * by processing the graph toidentify such edges.
+   * @param  not_thru True if the edge leads into a no thru region.
+   */
+  void set_not_thru(const bool not_thru);
+
+  /**
+   * Set the index of the opposing directed edge at the end node of this
+   * directed edge.
+   * @param  opp_index  Opposing directed edge index at the end node.
+   * */
+  void set_opp_index(const uint32_t opp_index);
+
+  /**
    * Sets the number of lanes
    * @param  lanecount  Number of lanes
   */

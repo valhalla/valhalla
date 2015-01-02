@@ -90,18 +90,6 @@ class OSMNode {
    */
   bool ref() const;
 
-  /**
-   * Increment uses
-   */
-  void IncrementUses();
-
-  /**
-   * Get the number of uses. Indicates how many ways include this node. Nodes
-   * with use>1 are intersections (or ends of a way) and become nodes in the
-   * graph.
-   * @return  Returns the number of uses of the node.
-   */
-  uint32_t uses() const;
 
   /**
    * Set gate flag.
@@ -141,20 +129,19 @@ class OSMNode {
   baldr::GraphId graphid_;
 
   // List of edges beginning or ending at the node
-  std::vector<uint32_t>* edges_;
+  std::vector<uint32_t> edges_;
 
   // Node attributes
   union NodeAttributes {
     struct Fields {
-      uint32_t uses       : 8;
-      uint32_t gate       : 1;
-      uint32_t bollard    : 1;
-      uint32_t exit_to    : 1;
-      uint32_t ref        : 1;
-      uint32_t modes_mask : 8;
-      uint32_t spare      : 14;
+      uint16_t gate       : 1;
+      uint16_t bollard    : 1;
+      uint16_t exit_to    : 1;
+      uint16_t ref        : 1;
+      uint16_t modes_mask : 8;
+      uint16_t spare      : 4;
     } fields;
-    uint32_t v;
+    uint16_t v;
   };
   NodeAttributes attributes_;
 };

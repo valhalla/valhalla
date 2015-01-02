@@ -1,4 +1,4 @@
-#include "osmnode.h"
+#include "mjolnir/osmnode.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -8,23 +8,16 @@ namespace mjolnir {
 
 OSMNode::OSMNode() {
   latlng_.Set(0.0f, 0.0f);
-  edges_ = new std::vector<uint32_t>;
   attributes_.v = 0;
 }
 
 OSMNode::OSMNode(const float lat, const float lng) {
   latlng_.Set(lat, lng);
-  edges_ = new std::vector<uint32_t>;
   attributes_.v = 0;
 }
 
 OSMNode::~OSMNode() {
-  // TODO - get corruption if I leave this in??
-  /*  if (edges_ != nullptr) {
-  edges_->clear();
-  delete edges_;
-  }*/
-  }
+}
 
 // Sets the lat,lng.
 void OSMNode::set_latlng(const midgard::PointLL& ll) {
@@ -48,17 +41,17 @@ const baldr::GraphId& OSMNode::graphid() const {
 
 // Add an edge to the list of outbound edges
 void OSMNode::AddEdge(const uint32_t edgeindex) {
-  edges_->push_back(edgeindex);
+  edges_.emplace_back(edgeindex);
 }
 
 // Get the list of edges.
 const std::vector<uint32_t>& OSMNode::edges() const {
-  return *edges_;
+  return edges_;
 }
 
 // Get the number of outbound edges.
 uint32_t OSMNode::edge_count() const {
-  return edges_->size();
+  return edges_.size();
 }
 
 // Set the exit to flag
@@ -79,16 +72,6 @@ void OSMNode::set_ref(const bool ref) {
 // Get the ref flag
 bool OSMNode::ref() const {
   return attributes_.fields.ref;
-}
-
-// Increment uses (number of ways that use this node).
-void OSMNode::IncrementUses() {
-  attributes_.fields.uses++;
-}
-
-// Get the number of uses
-uint32_t OSMNode::uses() const {
-  return attributes_.fields.uses;
 }
 
 // Set gate flag.

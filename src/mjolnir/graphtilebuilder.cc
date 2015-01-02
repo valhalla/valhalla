@@ -1,19 +1,20 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <stdexcept>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
 
-GraphTileBuilder::GraphTileBuilder() {
+GraphTileBuilder::GraphTileBuilder():GraphTile(), edgeinfo_size_(0), textlist_size_() {
 
 }
 
 // Output the tile to file. Stores as binary data.
 
-bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
+void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
                                      const GraphId& graphid) {
   // Get the name of the file
   boost::filesystem::path filename = Filename(basedirectory, graphid);
@@ -44,6 +45,7 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
               << header_builder_.edgeinfo_offset()
               << "  header_builder_.textlist_offset_ = "
               << header_builder_.textlist_offset() << std::endl;
+
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
                sizeof(GraphTileHeaderBuilder));
@@ -62,17 +64,16 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the names
     SerializeTextListToOstream(file);
 
-    std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
+    /*std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
               << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
               << textlist_size_ << std::endl;
-
+*/
+    size_ = file.tellp();
     file.close();
-    return true;
   } else {
-    std::cout << "Failed to open file " << filename << std::endl;
+    throw std::runtime_error("Failed to open file " + filename.string());
   }
-  return false;
 }
 
 void GraphTileBuilder::AddNodeAndDirectedEdges(
@@ -93,37 +94,27 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
     const std::vector<EdgeInfoBuilder>& edges,
     const std::size_t edgeinfo_size) {
 
-  // TODO - change to move?
-  if (!edges.empty()) {
-    edgeinfos_builder_.insert(edgeinfos_builder_.end(), edges.begin(),
-                              edges.end());
-  }
-
+  edgeinfos_builder_ = edges;
   // Set edgeinfo data size
   edgeinfo_size_ = edgeinfo_size;
-
+/*
   // TODO rm later
   size_t computed_size = 0;
   for (const auto& edgeinfo_builder : edgeinfos_builder_) {
     computed_size += edgeinfo_builder.SizeOf();
   }
   std::cout << ">>>>> EDGEINFO computed_size = " << computed_size
-            << "  edgeinfo_size_ = " << edgeinfo_size_ << std::endl;
+            << "  edgeinfo_size_ = " << edgeinfo_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SetTextListAndSize(
     const std::vector<std::string>& textlist, const std::size_t textlist_size) {
-  // TODO move
-  if (!textlist.empty()) {
-    textlist_builder_.insert(textlist_builder_.end(), textlist.begin(),
-                             textlist.end());
-  }
-
+  textlist_builder_ = textlist;
   // Set textlist data size
   textlist_size_ = textlist_size;
 
   // TODO rm later
-  std::cout << "NAME COUNT = " << textlist_builder_.size() << std::endl;
+  /*std::cout << "NAME COUNT = " << textlist_builder_.size() << std::endl;
   size_t computed_size = 0;
   for (const auto& name : textlist_builder_) {
     if (name.empty())
@@ -132,7 +123,7 @@ void GraphTileBuilder::SetTextListAndSize(
     std::cout << "name=" << name << std::endl;
   }
   std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
-            << "  textlist_size_ = " << textlist_size_ << std::endl;
+            << "  textlist_size_ = " << textlist_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {

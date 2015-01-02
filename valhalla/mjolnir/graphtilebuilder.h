@@ -30,7 +30,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  graphid  GraphID to store.
    * @param  basedirectory  Base data directory
    */
-  bool StoreTileData(const std::string& basedirectory,
+  void StoreTileData(const std::string& basedirectory,
                      const baldr::GraphId& graphid);
 
 

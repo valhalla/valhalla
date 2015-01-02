@@ -76,7 +76,7 @@ class OSMWay {
    * Sets the ref
    * @param  ref   Reference.
    */
-  void set_ref(const std::string ref);
+  void set_ref(const std::string& ref);
 
   /**
    * Get the ref.
@@ -88,7 +88,7 @@ class OSMWay {
    * Sets the int ret
    * @param  int_ref   International reference.
    */
-  void set_int_ref(const std::string int_ref);
+  void set_int_ref(const std::string& int_ref);
 
   /**
    * Get the int ref.
@@ -100,7 +100,7 @@ class OSMWay {
    * Sets the name
    * @param  name   Name.
    */
-  void set_name(const std::string name);
+  void set_name(const std::string& name);
 
   /**
    * Get the name.
@@ -112,7 +112,7 @@ class OSMWay {
    * Sets the name:en
    * @param  name:en   English name.
    */
-  void set_name_en(const std::string name_en);
+  void set_name_en(const std::string& name_en);
 
   /**
    * Get the name:en.
@@ -124,7 +124,7 @@ class OSMWay {
    * Sets the alt name
    * @param  alt_name   Alt name.
    */
-  void set_alt_name(const std::string alt_name);
+  void set_alt_name(const std::string& alt_name);
 
   /**
    * Get the alt name.
@@ -136,7 +136,7 @@ class OSMWay {
    * Sets the official name
    * @param  official_name   Official name.
    */
-  void set_official_name(const std::string official_name);
+  void set_official_name(const std::string& official_name);
 
   /**
    * Get the official name.
@@ -148,7 +148,7 @@ class OSMWay {
    * Sets the destination.
    * @param  destination   Destination.
    */
-  void set_destination(const std::string destination);
+  void set_destination(const std::string& destination);
 
   /**
    * Get the get_destination.
@@ -160,7 +160,7 @@ class OSMWay {
    * Sets the destination ref.
    * @param  destination_ref   Destination ref.
    */
-  void set_destination_ref(const std::string destination_ref);
+  void set_destination_ref(const std::string& destination_ref);
 
   /**
    * Get the destination_ref.
@@ -172,7 +172,7 @@ class OSMWay {
    * Sets the destination ref to.
    * @param  destination_ref_to   Destination ref to.
    */
-  void set_destination_ref_to(const std::string destination_ref_to);
+  void set_destination_ref_to(const std::string& destination_ref_to);
 
   /**
    * Get the destination ref to.
@@ -184,7 +184,7 @@ class OSMWay {
    * Sets the junction ref.
    * @param  junction_ref   Junction ref.
    */
-  void set_junction_ref(const std::string junction_ref);
+  void set_junction_ref(const std::string& junction_ref);
 
   /**
    * Get the junction ref.
@@ -196,7 +196,7 @@ class OSMWay {
    * Sets the bike national ref.
    * @param  bike_national_ref   Name of the national bike network.
    */
-  void set_bike_national_ref(const std::string bike_national_ref);
+  void set_bike_national_ref(const std::string& bike_national_ref);
 
   /**
    * Get the bike national ref.
@@ -208,7 +208,7 @@ class OSMWay {
    * Sets the bike regional ref.
    * @param  bike_regional_ref   Name of the regional bike network.
    */
-  void set_bike_regional_ref(const std::string bike_regional_ref);
+  void set_bike_regional_ref(const std::string& bike_regional_ref);
 
   /**
    * Get the bike regional ref.
@@ -220,7 +220,7 @@ class OSMWay {
    * Sets the bike local ref.
    * @param  bike_local_ref   Name of the local bike network.
    */
-  void set_bike_local_ref(const std::string bike_local_ref);
+  void set_bike_local_ref(const std::string& bike_local_ref);
 
   /**
    * Get the bike local ref.
@@ -469,25 +469,19 @@ class OSMWay {
    */
   bool link() const;
 
-  /**
-   * Splits a tag into a vector of strings.  Delim defaults to ;
-   * @param  tag_value   Tag value.
-   * @param  delim       Delimiter to look for in the tag_value.  Default ;
-   */
-  std::vector<std::string> GetTagTokens(std::string tag_value, char delim);
 
   /**
    * Get the names for the edge info based on the road class.
    * @return  Returns vector of strings
    */
-  std::vector<std::string> GetNames();
+  std::vector<std::string> GetNames() const;
 
  private:
   // OSM way Id
   uint64_t osmwayid_;
 
   // List of OSM node Ids along the way
-  std::vector<uint64_t>* nodes_;
+  std::vector<uint64_t> nodes_;
 
   // Reference name (highway numbers)
   std::string ref_;
