@@ -18,8 +18,14 @@ BicycleCost::~BicycleCost() {
 }
 
 // Check if access is allowed on the specified edge.
-bool BicycleCost::Allowed(const baldr::DirectedEdge* edge) {
-  return (edge->forwardaccess() & kBicycleAccess);
+bool BicycleCost::Allowed(const baldr::DirectedEdge* edge, const bool uturn,
+                          const float dist2dest) {
+  // Check access. Do not allow entering no-thru edges
+  if (!(edge->forwardaccess() & kBicycleAccess) ||
+       (edge->not_thru() && dist2dest > 5.0)){
+    return false;
+  }
+  return true;
 }
 
 // Check if access is allowed at the specified node.

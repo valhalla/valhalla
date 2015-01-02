@@ -11,18 +11,22 @@ EdgeLabel::EdgeLabel()
     : predecessor_(kInvalidLabel),
       edgeid_(GraphId()),
       truecost_(0.0f),
-      sortcost_(0.0f) {
+      sortcost_(0.0f),
+      uturn_index_(0) {
 }
 
 // Constructor with values.
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const GraphId& endnode, const float cost,
-                     const float sortcost)
+                     const float sortcost, const float dist,
+                     const uint32_t uturn)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(endnode),
       truecost_(cost),
-      sortcost_(sortcost) {
+      sortcost_(sortcost),
+      distance_(dist),
+      uturn_index_(uturn) {
 }
 
 // Destructor
@@ -32,12 +36,15 @@ EdgeLabel::~EdgeLabel() {
 // Set edge label values.
 void EdgeLabel::Set(const uint32_t predecessor, const GraphId& edgeid,
                      const GraphId& endnode, const float cost,
-                     const float sortcost) {
+                     const float sortcost, const float dist,
+                     const uint32_t uturn) {
   predecessor_ = predecessor;
   edgeid_   = edgeid;
   endnode_  = endnode;
   truecost_ = cost;
   sortcost_ = sortcost;
+  distance_ = dist;
+  uturn_index_ = uturn;
 }
 
 // Update predecessor and cost values in the label.
@@ -96,6 +103,24 @@ float EdgeLabel::truecost() const {
 // Set the true cost.
 void EdgeLabel::SetTrueCost(float truecost) {
   truecost_ = truecost;
+}
+
+// Get the distance to the destination.
+float EdgeLabel::distance() const {
+  return distance_;
+}
+
+// Set the distance to the destination.
+void EdgeLabel::SetDistance(const float d) {
+  distance_ = d;
+}
+
+uint32_t EdgeLabel::uturn_index() const {
+  return uturn_index_;
+}
+
+void EdgeLabel::SetUturnIndex(const uint32_t idx) {
+  uturn_index_ = idx;
 }
 
 // Operator for sorting.

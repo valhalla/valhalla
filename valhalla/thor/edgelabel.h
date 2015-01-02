@@ -29,10 +29,13 @@ class EdgeLabel {
    * @param endnode   End node of the directed edge.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
+   * @param dist      Distance (km) to the destination
+   * @param uturn     Index at the end node of the directed edge that
+   *                  represents at u-turn
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::GraphId& endnode, const float cost,
-            const float sortcost);
+            const float sortcost, const float dist, const uint32_t uturn);
 
   /**
    * Destructor.
@@ -47,10 +50,13 @@ class EdgeLabel {
    * @param endnode   End node of the directed edge.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
+   * @param dist      Distance (km) to the destination
+   * @param uturn     Index at the end node of the directed edge that
+   *                  represents at u-turn
    */
   void Set(const uint32_t predecessor, const baldr::GraphId& edgeid,
            const baldr::GraphId& endnode, const float cost,
-           const float sortcost);
+           const float sortcost, const float dist, const uint32_t uturn);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -129,6 +135,30 @@ class EdgeLabel {
   void SetSortCost(float sortcost);
 
   /**
+   * Get the distance to the destination.
+   * @return  Returns the distance in km.
+   */
+  float distance() const;
+
+  /**
+   * Set the distance to the destination.
+   * @param  d  Distance (km).
+   */
+  void SetDistance(const float d);
+
+  /**
+   * Get the index that represents a Uturn.
+   * @return  Returns the Uturn index.
+   */
+  uint32_t uturn_index() const;
+
+  /**
+   * Set the index that represents a Uturn.
+   * @param  idx  Uturn index.
+   */
+  void SetUturnIndex(const uint32_t idx);
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
@@ -140,7 +170,7 @@ class EdgeLabel {
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
-  // GraphId of the end node of the edge. This would allow the expansion
+  // GraphId of the end node of the edge. This allows the expansion
   // to occur by reading the node and not having to re-read the directed
   // edge
   baldr::GraphId endnode_;
@@ -150,6 +180,13 @@ class EdgeLabel {
 
   // Sort cost - includes A* heuristic
   float sortcost_;
+
+  // Distance to the destination
+  float distance_;
+
+  // Index at the end node of the edge that constitutes a U-turn
+  // TODO - combne with other attributes to save space where we can
+  uint32_t uturn_index_;
 
   // Transit information...trip ID , prior stop ID, time at stop? This
   // should probably be part of a derived class
