@@ -1,4 +1,4 @@
-#include "osmway.h"
+#include "mjolnir/osmway.h"
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
