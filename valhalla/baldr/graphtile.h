@@ -116,6 +116,12 @@ class GraphTile {
   const DirectedEdge* GetDirectedEdges(const uint32_t node_index,
                                        uint32_t& count, uint32_t& edge_index);
 
+  /**
+   * Convenience method to get the names for an edge.
+   */
+  std::vector<std::string>& GetNames(const uint32_t edgeinfo_offset,
+                 std::vector<std::string>& names);
+
  protected:
   // Size of the tile in bytes
   size_t size_;
@@ -141,6 +147,9 @@ class GraphTile {
   // Street names and exit names/numbers as sets of null-terminated char arrays.
   // Edge info has offsets into this array.
   char* textlist_;
+
+  // Number of bytes in the text/name list
+  uint32_t textsize_;
 
   // The id of the tile for convenience
   const GraphId id_;
