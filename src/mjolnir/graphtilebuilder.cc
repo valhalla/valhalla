@@ -37,14 +37,14 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
         header_builder_.edgeinfo_offset() + edgeinfo_size_);
 
     // TODO - rm later
-    std::cout << ">>>>> header_builder_.nodecount_"
+    /*std::cout << ">>>>> header_builder_.nodecount_"
               << header_builder_.nodecount()
               << "  header_builder_.directededgecount_ = "
               << header_builder_.directededgecount()
               << "  header_builder_.edgeinfo_offset_ = "
               << header_builder_.edgeinfo_offset()
               << "  header_builder_.textlist_offset_ = "
-              << header_builder_.textlist_offset() << std::endl;
+              << header_builder_.textlist_offset() << std::endl;*/
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
