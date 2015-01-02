@@ -1,7 +1,7 @@
 #ifndef VALHALLA_THOR_EDGESTATUS_H_
 #define VALHALLA_THOR_EDGESTATUS_H_
 
-#include <map>
+#include <unordered_map>
 #include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
@@ -46,10 +46,7 @@ class EdgeStatus {
  private:
   // Map to store the status of GraphIds that have been encountered.
   // Any unreached edges are not added to the map.
-  // TODO - compare performance of unordered_map (or other containers)
-  // NOTE - will have lots of insert which can be time consuming in
-  // hash maps
-  std::map<uint64_t, EdgeStatusType> edgestatus_;
+  std::unordered_map<uint64_t, EdgeStatusType> edgestatus_;
 };
 
 }
