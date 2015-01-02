@@ -1,7 +1,7 @@
 #include <string>
 
 #include "pbfgraphbuilder.h"
-#include "graphbuilder.h"
+#include "mjolnir/graphbuilder.h"
 #include "config.h"
 
 // For OSM pbf reader

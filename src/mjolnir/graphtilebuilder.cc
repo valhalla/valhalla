@@ -1,6 +1,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <stdexcept>
 
 using namespace valhalla::baldr;
 
@@ -13,7 +14,7 @@ GraphTileBuilder::GraphTileBuilder():GraphTile(), edgeinfo_size_(0), textlist_si
 
 // Output the tile to file. Stores as binary data.
 
-bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
+void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
                                      const GraphId& graphid) {
   // Get the name of the file
   boost::filesystem::path filename = Filename(basedirectory, graphid);
@@ -36,14 +37,14 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
         header_builder_.edgeinfo_offset() + edgeinfo_size_);
 
     // TODO - rm later
-    std::cout << ">>>>> header_builder_.nodecount_"
+    /*std::cout << ">>>>> header_builder_.nodecount_"
               << header_builder_.nodecount()
               << "  header_builder_.directededgecount_ = "
               << header_builder_.directededgecount()
               << "  header_builder_.edgeinfo_offset_ = "
               << header_builder_.edgeinfo_offset()
               << "  header_builder_.textlist_offset_ = "
-              << header_builder_.textlist_offset() << std::endl;
+              << header_builder_.textlist_offset() << std::endl;*/
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
@@ -63,17 +64,16 @@ bool GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the names
     SerializeTextListToOstream(file);
 
-    std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
+    /*std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
               << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
               << textlist_size_ << std::endl;
-
+*/
+    size_ = file.tellp();
     file.close();
-    return true;
   } else {
-    std::cout << "Failed to open file " << filename << std::endl;
+    throw std::runtime_error("Failed to open file " + filename.string());
   }
-  return false;
 }
 
 void GraphTileBuilder::AddNodeAndDirectedEdges(

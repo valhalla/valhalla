@@ -1,4 +1,4 @@
-#include "osmnode.h"
+#include "mjolnir/osmnode.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -72,16 +72,6 @@ void OSMNode::set_ref(const bool ref) {
 // Get the ref flag
 bool OSMNode::ref() const {
   return attributes_.fields.ref;
-}
-
-// Increment uses (number of ways that use this node).
-void OSMNode::IncrementUses() {
-  attributes_.fields.uses++;
-}
-
-// Get the number of uses
-uint32_t OSMNode::uses() const {
-  return attributes_.fields.uses;
 }
 
 // Set gate flag.
