@@ -61,9 +61,30 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 }
 
 void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
-  /*for (size_t name_offset : street_name_offset_list_) {
-    std::cout << "name_offset=" << name_offset << std::endl;
-  }*/
+  // TODO - rm later
+  /*std::cout << "------------------------------------------------------"
+            << std::endl;
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+  std::cout << "nodea=" << nodea_.value() << "  nodea_.tileid="
+            << nodea_.tileid() << "  nodea_.level=" << nodea_.level()
+            << "  nodea_.id=" << nodea_.id() << std::endl;
+  std::cout << "nodeb=" << nodeb_.value() << "  nodeb_.tileid=" << nodeb_.tileid() << "  nodeb_.level="
+            << nodeb_.level() << "  nodeb_.id=" << nodeb_.id() << std::endl;
+  std::cout << "item_=" << item_.value << std::endl;
+  std::cout << "street_name_offset_list_offset="
+            << street_name_offset_list_offset() << "  name_count="
+            << street_name_offset_list_.size() << std::endl;
+  for (auto name_offset : street_name_offset_list_) {
+    std::cout << "   name_offset=" << name_offset << std::endl;
+  }
+  std::cout << "shape_count=" << shape_.size() << std::endl;
+  for (const auto& ll : shape_) {
+    std::cout << "   ll=" << ll.lat() << "," << ll.lng() << std::endl;
+  }
+  std::cout << "exit_sign_count=" << exit_signs_.size() << std::endl;
+  std::cout << "======================================================="
+            << std::endl;*/
+
   out.write(reinterpret_cast<const char*>(&nodea_), sizeof(GraphId));
   out.write(reinterpret_cast<const char*>(&nodeb_), sizeof(GraphId));
   out.write(reinterpret_cast<const char*>(&item_), sizeof(PackedItem));
