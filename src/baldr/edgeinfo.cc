@@ -82,17 +82,32 @@ EdgeInfo& EdgeInfo::SetPointers() {
   std::cout << "exit_sign_count=" << exit_sign_count() << std::endl;
   std::cout << "*******************************************" << std::endl;
 
+  // GDG - rm later
+  std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
+
   // Set street_name_offset_list_ pointer
   ptr += street_name_offset_list_offset();
+  // GDG - rm later
+  std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
   street_name_offset_list_ = reinterpret_cast<size_t*>(ptr);
+  // GDG - rm later
+  std::cout << "street_name_offset_list_=" << street_name_offset_list_ << std::endl;
   ptr += (name_count() * sizeof(size_t));
+  // GDG - rm later
+  std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
 
   // Set shape_ pointer
   shape_ = reinterpret_cast<PointLL*>(ptr);
+  // GDG - rm later
+  std::cout << "shape_=" << shape_ << std::endl;
   ptr += (shape_count() * sizeof(PointLL));
+  // GDG - rm later
+  std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
 
   // Set exit_signs_ pointer
   exit_signs_ = reinterpret_cast<ExitSign*>(ptr);
+  // GDG - rm later
+  std::cout << "exit_signs_=" << exit_signs_ << std::endl;
 
   return *this;
 }
