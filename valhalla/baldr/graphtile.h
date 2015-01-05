@@ -104,7 +104,7 @@ class GraphTile {
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  const EdgeInfo* edgeinfo(uint32_t offset) const;
+  const EdgeInfo* edgeinfo(const size_t offset) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -149,7 +149,7 @@ class GraphTile {
   char* textlist_;
 
   // Number of bytes in the text/name list
-  uint32_t textsize_;
+  size_t textsize_;
 
   // The id of the tile for convenience
   const GraphId id_;
