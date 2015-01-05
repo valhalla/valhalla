@@ -27,6 +27,7 @@ const std::unordered_map<std::string, RoadClass> stringToRoadClass =
 enum class Use : uint8_t {
   kNone,
   kCycleway,
+  kFootway,
   kParkingAisle,
   kDriveway,
   kAlley,
