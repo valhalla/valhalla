@@ -179,7 +179,7 @@ class DirectedEdge {
       uint8_t horse        : 1;  // ???
       uint8_t spare_       : 1;
     } fields;
-    uint64_t v;
+    uint8_t v;
   };
   Access forwardaccess_;
   Access reverseaccess_;
