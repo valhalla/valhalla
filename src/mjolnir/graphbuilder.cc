@@ -62,7 +62,7 @@ const bool NodeIdTable::IsUsed(const uint64_t id) const {
 
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : node_count_(0), edge_count_(0), input_file_(input_file),
+    : node_count_(0), edge_count_(0), speed_assignment_count_(0), input_file_(input_file),
       tile_hierarchy_(pt),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId){
@@ -80,6 +80,10 @@ void GraphBuilder::Build() {
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::WAYS);
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::RELATIONS);
   std::cout << "Routable ways " << ways_.size() << std::endl;
+
+  std::cout << "Percentage of ways using speed assignment: " << std::fixed <<
+      std::setprecision(2) <<
+      (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100  << std::endl;
 
   // Run through the nodes
   std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
@@ -192,6 +196,9 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
   intersection_.set(refs.back());
   edge_count_ += 2;
 
+  float default_speed;
+  bool has_speed = false;
+
   // Process tags
   for (const auto& tag : results) {
 
@@ -281,7 +288,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       }
     }
 
-    else if (tag.first == "no_thru_traffic_")
+    else if (tag.first == "no_thru_traffic")
       w.set_no_thru_traffic(tag.second == "true" ? true : false);
     else if (tag.first == "oneway")
       w.set_oneway(tag.second == "true" ? true : false);
@@ -303,8 +310,13 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "official_name")
       w.set_official_name(tag.second);
 
-    else if (tag.first == "speed")
+    else if (tag.first == "speed") {
       w.set_speed(std::stof(tag.second));
+      has_speed = true;
+    }
+
+    else if (tag.first == "default_speed")
+      default_speed = std::stof(tag.second);
 
     else if (tag.first == "ref")
       w.set_ref(tag.second);
@@ -345,6 +357,13 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     // if (osmid == 368034)   //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
     //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
   }
+
+//If no speed has been set by a user, assign a speed based on highway tag.
+  if (!has_speed) {
+    w.set_speed(default_speed);
+    speed_assignment_count_++;
+  }
+
 
   // Add the way to the list
   ways_.emplace_back(std::move(w));
