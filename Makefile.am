@@ -78,7 +78,8 @@ check_PROGRAMS = \
 	test/aabbll \
 	test/vector2 \
 	test/polyline2 \
-	test/pointll
+	test/pointll \
+	test/encode
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
@@ -103,6 +104,10 @@ test_polyline2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalha
 test_pointll_SOURCES = test/pointll.cc test/test.cc
 test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_pointll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_encode_SOURCES = test/encode.cc test/test.cc
+test_encode_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_encode_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

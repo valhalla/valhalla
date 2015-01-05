@@ -1,5 +1,5 @@
 #include "valhalla/midgard/pointll.h"
-
+#include <valhalla/midgard/util.h>
 #include "valhalla/midgard/distanceapproximator.h"
 #include "valhalla/midgard/vector2.h"
 

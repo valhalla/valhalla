@@ -40,7 +40,7 @@ class Point2 {
    * @param   p   Point to assign to this point.
    * @return  Returns the address of this point.
    */
-  Point2& operator = (const Point2& p);
+  virtual Point2& operator = (const Point2& p);
 
   /**
    * Destructor

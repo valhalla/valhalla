@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_POINTLL_H_
 
 #include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla{
 namespace midgard{
