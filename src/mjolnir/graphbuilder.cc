@@ -807,6 +807,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
+  // GDG - switch back when done
   //std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
   std::vector<std::shared_ptr<std::thread> > threads(1);
   // A place to hold the results of those threads, be they exceptions or otherwise
