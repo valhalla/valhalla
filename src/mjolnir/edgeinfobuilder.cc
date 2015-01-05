@@ -48,6 +48,14 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   item_.fields.shape_count = shape_.size();
 }
 
+const size_t EdgeInfoBuilder::GetStreetNameOffset(uint8_t index) const {
+  return street_name_offset_list_[index];
+}
+
+const PointLL EdgeInfoBuilder::GetShapePoint(uint16_t index) const {
+  return shape_[index];
+}
+
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = 0;
   size += sizeof(GraphId);                                     // nodea_
