@@ -50,6 +50,17 @@ road_class = {
 ["track"] = 6
 }
 
+default_speed = {
+[0] = 105,
+[1] = 90,
+[2] = 75,
+[3] = 60,
+[4] = 40,
+[5] = 40,
+[6] = 20,
+[7] = 30
+}
+
 access = {
 ["no"] = "false",
 ["official"] = "false",
@@ -253,14 +264,16 @@ function filter_tags_generic(kv)
   local road_class = road_class[kv["highway"]]
 
   if kv["highway"] == nil and ferry then
-    kv["road_class"] = 2 --TODO:  can we weight based on ferry types?
+    road_class = 2 --TODO:  can we weight based on ferry types?
   elseif kv["highway"] == nil and kv["railway"] then
-    kv["road_class"] = 2 --TODO:  can we weight based on rail types?    
+    road_class = 2 --TODO:  can we weight based on rail types?    
   elseif road_class == nil then
-    kv["road_class"] = 7
+    road_class = 7
   end 
   
   kv["road_class"] = road_class
+
+  kv["default_speed"] = default_speed[kv["road_class"]]
 
   local use = use[kv["service"]]
 
