@@ -41,16 +41,16 @@ class EdgeInfo {
   const GraphId& nodeb() const;
 
   // Returns the name index list offset
-  const uint32_t street_name_offset_list_offset() const;
+  const uint64_t street_name_offset_list_offset() const;
 
   // Returns the name count
-  const uint32_t name_count() const;
+  const uint64_t name_count() const;
 
   // Returns the shape count
-  const uint32_t shape_count() const;
+  const uint64_t shape_count() const;
 
   // Returns the exit sign count
-  const uint32_t exit_sign_count() const;
+  const uint64_t exit_sign_count() const;
 
   // Returns the name index at the specified index.
   const size_t GetStreetNameOffset(uint8_t index) const;
@@ -71,14 +71,14 @@ class EdgeInfo {
 
   void ToOstream(std::ostream& out = std::cout) const;
 
-  void SetPointers();
+  EdgeInfo& SetPointers();
 
  protected:
   // Computes and returns the offset to the shape points based on the name offsets.
-  const uint32_t GetShapeOffset() const;
+  const uint64_t GetShapeOffset() const;
 
   // Computes and returns the offset to the exit signs based on shape and name offsets.
-  const uint32_t GetExitSignsOffset() const;
+  const uint64_t GetExitSignsOffset() const;
 
   // GraphIds of the 2 end nodes
   GraphId nodea_;
@@ -86,13 +86,13 @@ class EdgeInfo {
 
   union PackedItem {
     struct Fields {
-      uint32_t street_name_offset_list_offset :8;
-      uint32_t name_count                     :4;
-      uint32_t shape_count                    :11;
-      uint32_t exit_sign_count                :4;
-      uint32_t spare                          :5;
+      uint64_t street_name_offset_list_offset :8;
+      uint64_t name_count                     :4;
+      uint64_t shape_count                    :11;
+      uint64_t exit_sign_count                :4;
+      uint64_t spare                          :37;
     } fields;
-    uint32_t value;
+    uint64_t value;
   };
   PackedItem item_;
 

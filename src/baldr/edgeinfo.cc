@@ -18,19 +18,19 @@ const GraphId& EdgeInfo::nodeb() const {
   return nodeb_;
 }
 
-const uint32_t EdgeInfo::street_name_offset_list_offset() const {
+const uint64_t EdgeInfo::street_name_offset_list_offset() const {
   return item_.fields.street_name_offset_list_offset;
 }
 
-const uint32_t EdgeInfo::name_count() const {
+const uint64_t EdgeInfo::name_count() const {
   return item_.fields.name_count;
 }
 
-const uint32_t EdgeInfo::shape_count() const {
+const uint64_t EdgeInfo::shape_count() const {
   return item_.fields.shape_count;
 }
 
-const uint32_t EdgeInfo::exit_sign_count() const {
+const uint64_t EdgeInfo::exit_sign_count() const {
   return item_.fields.exit_sign_count;
 }
 
@@ -70,7 +70,7 @@ void EdgeInfo::ToOstream(std::ostream& out) const {
 
 }
 
-void EdgeInfo::SetPointers() {
+EdgeInfo& EdgeInfo::SetPointers() {
   char* ptr = reinterpret_cast<char*>(this);
 
   // GDG - rm later
@@ -93,13 +93,15 @@ void EdgeInfo::SetPointers() {
 
   // Set exit_signs_ pointer
   exit_signs_ = reinterpret_cast<ExitSign*>(ptr);
+
+  return *this;
 }
 
-const uint32_t EdgeInfo::GetShapeOffset() const {
+const uint64_t EdgeInfo::GetShapeOffset() const {
   return (street_name_offset_list_offset() + name_count() * sizeof(size_t));
 }
 
-const uint32_t EdgeInfo::GetExitSignsOffset() const {
+const uint64_t EdgeInfo::GetExitSignsOffset() const {
   return (GetShapeOffset() + shape_count() * sizeof(PointLL));
 }
 
