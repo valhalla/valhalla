@@ -86,8 +86,7 @@ void TryWriteRead(const EdgeInfoBuilder& eibuilder) {
 
   // validate the read in fields to the original EdgeInfoBuilder
 //  EdgeInfo* ei = &((reinterpret_cast<EdgeInfo*>(edgeinfo_ + offset))->SetPointers())
-  EdgeInfo* ei = reinterpret_cast<EdgeInfo*>(memblock);
-  ei->SetPointers();
+  EdgeInfo* ei = new EdgeInfo(memblock);
   ei->ToOstream();
 
   if (!(eibuilder.nodea() == ei->nodea()))
@@ -120,6 +119,8 @@ void TryWriteRead(const EdgeInfoBuilder& eibuilder) {
   }
   // TODO exit sign test
 
+
+  delete ei;
   delete[] memblock;
 }
 

@@ -28,6 +28,11 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   EdgeInfoBuilder();
 
   /**
+   * Destrcutor
+   */
+  virtual ~EdgeInfoBuilder();
+
+  /**
    * Set the reference node (start) of the edge.
    * @param  nodea  the GraphId of the reference node of the edge.
    */
