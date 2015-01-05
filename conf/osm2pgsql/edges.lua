@@ -82,11 +82,11 @@ no_thru_traffic = {
 }
 
 use = {
-["parking_aisle"] = 2,
-["driveway"] = 3,
-["alley"] = 4,
-["emergency_access"] = 5,
-["drive-through"] = 6
+["parking_aisle"] = 3,
+["driveway"] = 4,
+["alley"] = 5,
+["emergency_access"] = 6,
+["drive-through"] = 7
 }
 
 motor_vehicle = {
@@ -281,10 +281,20 @@ function filter_tags_generic(kv)
     use = 7 --steps/stairs
   elseif kv["highway"] == nil then 
     use = 0
-  elseif kv["highway"] and kv["highway"] == "cycleway" then --cycleway
-    use = 1
+  elseif kv["highway"] then
+    --favor bicycles
+    if kv["highway"] == "cycleway" then
+        use = 1
+    elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
+       use = 1
+    --favor pedestrians
+    elseif kv["highway"] == "footway" or kv["highway"] == "pedestrian" then 
+       use = 2
+    elseif kv["pedestrian"] == "true" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
+       use = 2
+    end
   elseif use == nil and kv["service"] then
-    use = 8 --other
+    use = 9 --other
   else 
     use = 0 --none
   end

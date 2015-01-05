@@ -261,6 +261,9 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
         case Use::kCycleway:
           w.set_use(Use::kCycleway);
           break;
+        case Use::kFootway:
+          w.set_use(Use::kFootway);
+          break;
         case Use::kParkingAisle:
           w.set_use(Use::kParkingAisle);
           break;
