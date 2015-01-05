@@ -511,10 +511,17 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
   // A place to keep information about what was done
   size_t written = 0;
 
+  // GDG
+ int tile_count = 0;
+
   // For each tile in the task
   for(; tile_start != tile_end; ++tile_start) {
     try {
-      // What actually writes the tile
+      // GDG - rm later
+      std::cout << __FILE__ << ":" << __LINE__ << " | tile_count=" << ++tile_count
+          << std::endl;
+
+     // What actually writes the tile
       GraphTileBuilder graphtile;
 
       // Edge info offset and map
@@ -546,6 +553,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
         for (auto edgeindex : node.edges()) {
+          // GDG - rm later
+          std::cout << __FILE__ << ":" << __LINE__ << " | edgeindex=" << edgeindex
+              << std::endl;
           DirectedEdgeBuilder directededge;
           const Edge& edge = edges[edgeindex];
 
@@ -664,6 +674,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Add new edge info
           if (existing_edge_offset_item == edge_offset_map.end()) {
+            // GDG - rm later
+            std::cout << __FILE__ << ":" << __LINE__
+                << " | ADD NEW EDGEINFO | nodea=" << nodea.value()
+                << " | nodeb=" << nodeb.value() << " | offset="
+                << edge_info_offset << std::endl;
             EdgeInfoBuilder edgeinfo;
             edgeinfo.set_nodea(nodea);
             edgeinfo.set_nodeb(nodeb);
@@ -681,6 +696,10 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
               auto existing_text_offset = text_offset_map.find(name);
               // Add if not found
               if (existing_text_offset == text_offset_map.end()) {
+                // GDG - rm later
+                std::cout << __FILE__ << ":" << __LINE__
+                    << " | NEW NAME OFFSET name=" << name << " | offset="
+                    << text_list_offset << std::endl;
                 // Add name to text list
                 text_list.emplace_back(name);
 
@@ -693,6 +712,10 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                 // Update text offset value to length of string plus null terminator
                 text_list_offset += (name.length() + 1);
               } else {
+                // GDG - rm later
+                std::cout << __FILE__ << ":" << __LINE__
+                    << " | REUSE NAME OFFSET name=" << name << " | offset="
+                    << existing_text_offset->second << std::endl;
                 // Add existing offset to list
                 street_name_offset_list.emplace_back(existing_text_offset->second);
               }
@@ -717,6 +740,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           }
           // Update directed edge with existing edge offset
           else {
+            // GDG - rm later
+            std::cout << __FILE__ << ":" << __LINE__
+                << " | REUSE EDGEINFO OFFSET | nodea=" << nodea.value()
+                << " | nodeb=" << nodeb.value() << " | offset="
+                << existing_edge_offset_item->second << std::endl;
             directededge.set_edgedataoffset(existing_edge_offset_item->second);
           }
 
@@ -779,7 +807,8 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 // Build tiles for the local graph hierarchy (basically
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
+  //std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
+  std::vector<std::shared_ptr<std::thread> > threads(1);
   // A place to hold the results of those threads, be they exceptions or otherwise
   std::vector<std::promise<size_t> > results(threads.size());
   // Divvy up the work
