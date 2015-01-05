@@ -6,11 +6,6 @@
 #include <stdlib.h>
 #include <sstream>
 
-namespace {
-
-
-}
-
 namespace valhalla{
 namespace midgard{
 
