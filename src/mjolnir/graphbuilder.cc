@@ -397,7 +397,7 @@ void GraphBuilder::ConstructEdges() {
 
         // Start a new edge if this is not the last node in the way
         if (i < n-1) {
-          edge = Edge(currentid, wayindex, node.latlng());
+          edge = Edge(currentid, wayindex, nd.latlng());
           nd.AddEdge(edgeindex);
         }
       }
