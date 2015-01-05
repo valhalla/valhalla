@@ -25,8 +25,17 @@ class EdgeInfo {
  public:
   /**
    * Constructor
+   *
+   * @param pointer to a bit of memory that has the info for this edge
+   *
    */
-  EdgeInfo();
+  EdgeInfo(char* ptr);
+
+  /**
+   * Destructor
+   *
+   */
+  virtual ~EdgeInfo();
 
   /**
    * Get the reference node (start) of the edge.
@@ -71,9 +80,13 @@ class EdgeInfo {
 
   void ToOstream(std::ostream& out = std::cout) const;
 
-  EdgeInfo& SetPointers();
 
  protected:
+  /**
+   * Constructor
+   */
+  EdgeInfo();
+
   // Computes and returns the offset to the shape points based on the name offsets.
   const uint64_t GetShapeOffset() const;
 
@@ -81,8 +94,8 @@ class EdgeInfo {
   const uint64_t GetExitSignsOffset() const;
 
   // GraphIds of the 2 end nodes
-  GraphId nodea_;
-  GraphId nodeb_;
+  GraphId* nodea_;
+  GraphId* nodeb_;
 
   union PackedItem {
     struct Fields {
@@ -94,9 +107,10 @@ class EdgeInfo {
     } fields;
     uint64_t value;
   };
-  PackedItem item_;
+  PackedItem* item_;
 
  private:
+
   // List of roadname indexes
   size_t* street_name_offset_list_;
 

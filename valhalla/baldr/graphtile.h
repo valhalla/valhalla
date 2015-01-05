@@ -8,6 +8,7 @@
 #include <valhalla/baldr/edgeinfo.h>
 
 #include <boost/shared_array.hpp>
+#include <memory>
 
 namespace valhalla {
 namespace baldr {
@@ -104,7 +105,7 @@ class GraphTile {
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  const EdgeInfo* edgeinfo(const size_t offset) const;
+  const std::shared_ptr<EdgeInfo> edgeinfo(const size_t offset) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.

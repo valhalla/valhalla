@@ -119,8 +119,8 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
   throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
 }
 
-const EdgeInfo* GraphTile::edgeinfo(const size_t offset) const {
-  return &((reinterpret_cast<EdgeInfo*>(edgeinfo_ + offset))->SetPointers());
+const std::shared_ptr<EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
+  return std::make_shared<EdgeInfo>(edgeinfo_ + offset);
 }
 
 const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
@@ -138,7 +138,7 @@ std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
   // Get each name
   names.clear();
   uint32_t offset;
-  const EdgeInfo* edge = edgeinfo(edgeinfo_offset);
+  const std::shared_ptr<EdgeInfo> edge = edgeinfo(edgeinfo_offset);
   uint32_t namecount = edge->name_count();
   for (uint32_t i = 0; i < namecount; i++) {
     offset = edge->GetStreetNameOffset(i);
