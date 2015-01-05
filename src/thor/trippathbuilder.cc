@@ -23,16 +23,19 @@ TripPathBuilder::~TripPathBuilder() {
 float TripPathBuilder::Build(GraphReader& graphreader,
                              const std::vector<GraphId>& pathedges) {
   float length = 0.0f;
-  const DirectedEdge* directededge;
-  const EdgeInfo* edgeinfo;
+  std::vector<std::string> names;
   for (const auto& edge : pathedges) {
-    directededge = graphreader.GetGraphTile(edge)->directededge(edge);
+    GraphTile* graphtile = graphreader.GetGraphTile(edge);
+    const DirectedEdge* directededge = graphtile->directededge(edge);
     length += directededge->length();
     // GDG - rm later
     std::cout << __FILE__ << ":" << __LINE__ << " | edgedataoffset="
               << directededge->edgedataoffset() << std::endl;
-
-    edgeinfo = graphreader.GetGraphTile(edge)->edgeinfo(
+    names = graphtile->GetNames(directededge->edgedataoffset(), names);
+    for (auto& name : names) {
+      std::cout << "   name=" << name << std::endl;
+    }
+    const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
         directededge->edgedataoffset());
     // TODO - rm later
     edgeinfo->ToOstream();
