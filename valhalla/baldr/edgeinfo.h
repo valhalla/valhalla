@@ -37,18 +37,6 @@ class EdgeInfo {
    */
   virtual ~EdgeInfo();
 
-  /**
-   * Get the reference node (start) of the edge.
-   * @return  Returns the GraphId of the reference node of the edge.
-   */
-  const GraphId& nodea() const;
-
-  /**
-   * Get the end node of the edge.
-   * @return  Returns the GraphId of the end node of the edge.
-   */
-  const GraphId& nodeb() const;
-
   // Returns the name index list offset
   const uint64_t street_name_offset_list_offset() const;
 
@@ -92,10 +80,6 @@ class EdgeInfo {
 
   // Computes and returns the offset to the exit signs based on shape and name offsets.
   const uint64_t GetExitSignsOffset() const;
-
-  // GraphIds of the 2 end nodes
-  GraphId* nodea_;
-  GraphId* nodeb_;
 
   union PackedItem {
     struct Fields {
