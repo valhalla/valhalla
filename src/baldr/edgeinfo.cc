@@ -84,7 +84,8 @@ void EdgeInfo::ToOstream(std::ostream& out) const {
   out << "street_name_offset_list_offset=" << street_name_offset_list_offset()
       << "  name_count=" << name_count() << std::endl;
   for (uint32_t x = 0, n = name_count(); x < n; ++x) {
-    out << "   name[" << x << "]=" << GetStreetNameOffset(x) << std::endl;
+    out << "   street name offset[" << x << "]=" << GetStreetNameOffset(x)
+        << std::endl;
   }
   out << "shape_count=" << shape_count() << std::endl;
   out << "GetShapeOffset=" << GetShapeOffset() << std::endl;
