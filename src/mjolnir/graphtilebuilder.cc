@@ -105,7 +105,7 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 }
 
 void GraphTileBuilder::SetTextListAndSize(
-    const std::list<std::string>& textlist, const std::size_t textlist_size) {
+    const std::list<std::string>& textlist, const uint32_t textlist_size) {
 
   textlist_builder_ = textlist;
 

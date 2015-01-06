@@ -43,22 +43,10 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   virtual ~EdgeInfoBuilder();
 
   /**
-   * Set the reference node (start) of the edge.
-   * @param  nodea  the GraphId of the reference node of the edge.
-   */
-  void set_nodea(const baldr::GraphId& nodea);
-
-  /**
-   * Set the end node of the edge.
-   * @param  nodeb  the GraphId of the end node of the edge.
-   */
-  void set_nodeb(const baldr::GraphId& nodeb);
-
-  /**
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
    */
-  void set_street_name_offset_list(const std::vector<size_t>& street_name_offset_list);
+  void set_street_name_offset_list(const std::vector<uint32_t>& street_name_offset_list);
 
   /**
    * Set the shape of the edge.
@@ -68,7 +56,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   void set_shape(const std::vector<PointLL>& shape);
 
   // Returns the name index at the specified index.
-  const size_t GetStreetNameOffset(uint8_t index) const;
+  const uint32_t GetStreetNameOffset(uint8_t index) const;
 
   // Returns the shape point at the specified index.
   // TODO: replace with vector once it works
@@ -82,7 +70,7 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
  private:
 
   // List of roadname indexes
-  std::vector<size_t> street_name_offset_list_;
+  std::vector<uint32_t> street_name_offset_list_;
 
   // Lat,lng shape of the edge
   std::vector<PointLL> shape_;
