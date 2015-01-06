@@ -151,7 +151,7 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
     return;
 
   // Create a new node and set its attributes
-  OSMNode n(lat, lng);
+  OSMNode n(lng, lat);
   for (const auto& tag : results) {
     if (tag.first == "exit_to") {
       bool hasTag = (tag.second.length() ? true : false);
