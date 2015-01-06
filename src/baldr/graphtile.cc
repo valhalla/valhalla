@@ -142,6 +142,7 @@ std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
   uint32_t namecount = edge->name_count();
   for (uint32_t i = 0; i < namecount; i++) {
     offset = edge->GetStreetNameOffset(i);
+    // TODO - rm later
     std::cout << i << ":Name Offset = " << offset << " textlist size = "
               << textsize_ << std::endl;
     if (offset < textsize_) {
