@@ -11,8 +11,8 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
-#include "thor/pedestriancost.h"
 #include "thor/pathalgorithm.h"
+#include "thor/costfactory.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla::midgard;
@@ -26,14 +26,21 @@ namespace bpo = boost::program_options;
  */
 int PathTest(GraphReader& reader, const PathLocation& origin,
              const PathLocation& dest) {
+  // Register costing methods
+  CostFactory<DynamicCost> costing;
+  costing.Register("AutoCost", AutoCost::Create());
+  costing.Register("BicycleCost", BicycleCost::Create());
+  costing.Register("PedestrianCost", PedestrianCost::Create());
+
+  DynamicCost* costs = costing.Create("AutoCost");
+
   std::clock_t start = std::clock();
   PathAlgorithm pathalgorithm;
-  PedestrianCost* edgecost = new PedestrianCost;
   uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm Construction took " << msecs << " ms" << std::endl;
   start = std::clock();
   std::vector<GraphId> pathedges;
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, edgecost);
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, costs);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
@@ -41,7 +48,7 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
   pathalgorithm.Clear();
 
   start = std::clock();
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, edgecost);
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, costs);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
@@ -62,7 +69,6 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
 
 // Main method for testing a single path
 int main(int argc, char *argv[]) {
-
   bpo::options_description options(
   "pathtest " VERSION "\n"
   "\n"

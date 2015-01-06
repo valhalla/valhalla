@@ -17,6 +17,10 @@ class AutoCost : public DynamicCost {
 
   virtual ~AutoCost();
 
+  static DynamicCost* Create() {
+    return new AutoCost;
+  }
+
   /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
@@ -50,7 +54,7 @@ class AutoCost : public DynamicCost {
    * @param edge  Pointer to a directed edge.
    * @return  Returns the time in seconds to traverse the edge.
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) = 0;
+  virtual float Seconds(const baldr::DirectedEdge* edge);
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -71,6 +75,9 @@ class AutoCost : public DynamicCost {
    * @return  Returns the unit size for sorting.
    */
   virtual float UnitSize() const;
+
+ protected:
+  float speedfactor_[256];
 };
 
 }

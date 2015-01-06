@@ -176,10 +176,10 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
         continue;
       }
-      dist = astarheuristic_.Get(tile->node(directededge->endnode())->latlng());
+      dist = astarheuristic_.GetDistance(tile->node(
+                directededge->endnode())->latlng());
       sortcost = cost + astarheuristic_.Get(dist);
 
-      // Set the edge label values
       edgelabels_.emplace_back(EdgeLabel(nextlabelindex, edgeid,
                directededge->endnode(), cost, sortcost, dist,
                directededge->opp_index()));
@@ -201,7 +201,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
           const PathLocation& origin, DynamicCost* costing) {
   // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_.Get(origin.location().latlng_);
+  float dist = astarheuristic_.GetDistance(origin.location().latlng_);
   float heuristic = astarheuristic_.Get(dist);
 
   // Iterate through edges and add to adjacency list
