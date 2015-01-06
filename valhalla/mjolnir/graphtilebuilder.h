@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <list>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -44,14 +45,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Set the edge info and size.
    */
-  void SetEdgeInfoAndSize(const std::vector<EdgeInfoBuilder>& edges,
+  void SetEdgeInfoAndSize(const std::list<EdgeInfoBuilder>& edges,
                           const std::size_t edgeinfo_size);
 
   /**
    * Set the text list and size.
    */
-  void SetTextListAndSize(const std::vector<std::string>& textlist,
-                          const std::size_t textlist_size);
+  void SetTextListAndSize(const std::list<std::string>& textlist,
+                          const uint32_t textlist_size);
 
  protected:
   // Write all edgeinfo items to specified stream
@@ -73,17 +74,17 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
-  std::vector<EdgeInfoBuilder> edgeinfos_builder_;
+  std::list<EdgeInfoBuilder> edgeinfos_builder_;
 
   // Size of the edgeinfo data
   std::size_t edgeinfo_size_;
 
   // Names as sets of null-terminated char arrays. Edge info has offsets
   // into this array.
-  std::vector<std::string> textlist_builder_;
+  std::list<std::string> textlist_builder_;
 
   // Size of the textlist data
-  std::size_t textlist_size_;
+  uint32_t textlist_size_;
 };
 
 }

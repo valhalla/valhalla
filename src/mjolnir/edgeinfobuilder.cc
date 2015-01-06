@@ -9,51 +9,63 @@ namespace mjolnir {
 
 // Constructor
 EdgeInfoBuilder::EdgeInfoBuilder() {
+  item_ = new PackedItem();
 }
 
-// Set the reference node (start) of the edge.
-void EdgeInfoBuilder::set_nodea(const baldr::GraphId& nodea) {
-  nodea_ = nodea;
+EdgeInfoBuilder::EdgeInfoBuilder(const EdgeInfoBuilder& other) {
+  item_ = new PackedItem(*(other.item_));
+  street_name_offset_list_ = other.street_name_offset_list_;
+  shape_ = other.shape_;
+  exit_signs_ = other.exit_signs_;
 }
 
-// Set the end node of the edge.
-void EdgeInfoBuilder::set_nodeb(const baldr::GraphId& nodeb) {
-  nodeb_ = nodeb;
-}
-
-// Set the indexes to names used by this edge. TODO - move?
-void EdgeInfoBuilder::set_street_name_offset_list(
-    const std::vector<size_t>& street_name_offset_list) {
-  // TODO - move
-  street_name_offset_list_.clear();
-  if (!street_name_offset_list.empty()) {
-    street_name_offset_list_.insert(street_name_offset_list_.end(),
-                                    street_name_offset_list.begin(),
-                                    street_name_offset_list.end());
+EdgeInfoBuilder& EdgeInfoBuilder::operator=(const EdgeInfoBuilder& rhs) {
+  if (&rhs != this) {
+    item_ = new PackedItem(*(rhs.item_));
+    street_name_offset_list_ = rhs.street_name_offset_list_;
+    shape_ = rhs.shape_;
+    exit_signs_ = rhs.exit_signs_;
   }
+  return *this;
+}
 
-  // Set the street name offset list offset
-  item_.fields.street_name_offset_list_offset = sizeof(GraphId)
-      + sizeof(GraphId) + sizeof(PackedItem);
+EdgeInfoBuilder::~EdgeInfoBuilder() {
+  if (item_) {
+    delete item_;
+    item_ = nullptr;
+  }
+}
+
+// Set the indexes to names used by this edge.
+void EdgeInfoBuilder::set_street_name_offset_list(
+    const std::vector<uint32_t>& street_name_offset_list) {
+  street_name_offset_list_ = street_name_offset_list;
 
   // Set the name count
-  item_.fields.name_count = street_name_offset_list_.size();
+  item_->fields.name_count = street_name_offset_list_.size();
 }
 
 // Set the shape of the edge. TODO - move?
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   // Set the shape
   shape_.assign(shape.begin(), shape.end());
+
   // Set the shape count
-  item_.fields.shape_count = shape_.size();
+  item_->fields.shape_count = shape_.size();
+}
+
+const uint32_t EdgeInfoBuilder::GetStreetNameOffset(uint8_t index) const {
+  return street_name_offset_list_[index];
+}
+
+const PointLL EdgeInfoBuilder::GetShapePoint(uint16_t index) const {
+  return shape_[index];
 }
 
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = 0;
-  size += sizeof(GraphId);                                     // nodea_
-  size += sizeof(GraphId);                                     // nodeb_
   size += sizeof(PackedItem);                                  // item_
-  size += (street_name_offset_list_.size() * sizeof(size_t));  // street_name_offset_list_
+  size += (street_name_offset_list_.size() * sizeof(uint32_t));  // street_name_offset_list_
   size += (shape_.size() * sizeof(PointLL));                   // shape_
   size += (exit_signs_.size() * sizeof(ExitSign));             // exit_signs_
 
@@ -65,15 +77,9 @@ void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
   /*std::cout << "------------------------------------------------------"
             << std::endl;
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-  std::cout << "nodea=" << nodea_.value() << "  nodea_.tileid="
-            << nodea_.tileid() << "  nodea_.level=" << nodea_.level()
-            << "  nodea_.id=" << nodea_.id() << std::endl;
-  std::cout << "nodeb=" << nodeb_.value() << "  nodeb_.tileid=" << nodeb_.tileid() << "  nodeb_.level="
-            << nodeb_.level() << "  nodeb_.id=" << nodeb_.id() << std::endl;
-  std::cout << "item_=" << item_.value << std::endl;
-  std::cout << "street_name_offset_list_offset="
-            << street_name_offset_list_offset() << "  name_count="
-            << street_name_offset_list_.size() << std::endl;
+  std::cout << "EdgeInfoBuilder::SizeOf=" << SizeOf() << std::endl;
+  std::cout << "item_=" << item_->value << std::endl;
+  std::cout << "name_count=" << street_name_offset_list_.size() << std::endl;
   for (auto name_offset : street_name_offset_list_) {
     std::cout << "   name_offset=" << name_offset << std::endl;
   }
@@ -85,11 +91,9 @@ void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
   std::cout << "======================================================="
             << std::endl;*/
 
-  out.write(reinterpret_cast<const char*>(&nodea_), sizeof(GraphId));
-  out.write(reinterpret_cast<const char*>(&nodeb_), sizeof(GraphId));
-  out.write(reinterpret_cast<const char*>(&item_), sizeof(PackedItem));
+  out.write(reinterpret_cast<const char*>(item_), sizeof(PackedItem));
   out.write(reinterpret_cast<const char*>(&street_name_offset_list_[0]),
-            (street_name_offset_list_.size() * sizeof(size_t)));
+            (street_name_offset_list_.size() * sizeof(uint32_t)));
   out.write(reinterpret_cast<const char*>(&shape_[0]),
             (shape_.size() * sizeof(PointLL)));
   out.write(reinterpret_cast<const char*>(&exit_signs_[0]),

@@ -1,5 +1,7 @@
 #include "mjolnir/osmnode.h"
 
+#include <algorithm>
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
@@ -46,6 +48,11 @@ void OSMNode::AddEdge(const uint32_t edgeindex) {
 
 // Get the list of edges.
 const std::vector<uint32_t>& OSMNode::edges() const {
+  return edges_;
+}
+
+// Get the list of edges.
+std::vector<uint32_t>& OSMNode::mutable_edges() {
   return edges_;
 }
 
