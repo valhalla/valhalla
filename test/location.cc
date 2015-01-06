@@ -23,15 +23,15 @@ namespace {
     }
 
     Location csv = Location::FromCsv("1.452,3.45");
-    if(csv.latlng_.y() != std::stof("1.452") || csv.latlng_.x() != std::stof("3.45")|| csv.stoptype_ != Location::StopType::BREAK)
+    if(csv.latlng_.x() != std::stof("1.452") || csv.latlng_.y() != std::stof("3.45")|| csv.stoptype_ != Location::StopType::BREAK)
       throw std::runtime_error("Csv location parsing failed");
 
     csv = Location::FromCsv("1.452,-3.45,through");
-        if(csv.latlng_.y() != std::stof("1.452") || csv.latlng_.x() != std::stof("-3.45") || csv.stoptype_ != Location::StopType::THROUGH)
+        if(csv.latlng_.x() != std::stof("1.452") || csv.latlng_.y() != std::stof("-3.45") || csv.stoptype_ != Location::StopType::THROUGH)
           throw std::runtime_error("Csv location parsing failed");
 
     Location b(PointLL{1,2});
-    if(b.latlng_.y() !=1 || b.latlng_.x() != 2)
+    if(b.latlng_.x() !=1 || b.latlng_.y() != 2)
       throw std::runtime_error("Location's latlng object should be set");
   }
 }
