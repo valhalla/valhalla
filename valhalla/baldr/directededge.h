@@ -58,7 +58,7 @@ class DirectedEdge {
    * Gets the speed in KPH. TODO - cast to float instead?
    * @return  Returns the speed in KPH.
    */
-  float speed() const;
+  uint8_t speed() const;
 
   /**
    * Offset to the common edge data. The offset is from the start
