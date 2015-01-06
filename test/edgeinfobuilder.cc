@@ -136,6 +136,7 @@ void TestWriteRead() {
   shape.push_back(PointLL(40.0433, -76.3002));
   shape.push_back(PointLL(40.043, -76.3036));
   eibuilder.set_shape(shape);
+  // TODO: exit
   TryWriteRead(eibuilder);
 }
 
