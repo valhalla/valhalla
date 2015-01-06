@@ -82,9 +82,23 @@ class PedestrianCost : public DynamicCost {
    */
   void set_walkingspeed(const float speed);
 
+  /**
+   * Set the favor walkway/path weight.
+   * @param  weight  Favor walkway weight.
+   */
+  void set_favorwalkways(const float weight);
+
+  /**
+   * Get the favor walkway/path weight.
+   * @return  Returns the favor walkway weight.
+   */
+  float favorwalkways() const;
+
  private:
   // Walking speed (default to 5.1 km / hour)
   float walkingspeed_;
+  // Favor walkways and paths? (default to 0.95f)
+  float favorwalkways_;
 };
 
 }
