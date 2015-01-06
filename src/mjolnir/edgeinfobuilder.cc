@@ -14,13 +14,34 @@ EdgeInfoBuilder::EdgeInfoBuilder() {
   item_ = new PackedItem();
 }
 
+EdgeInfoBuilder::EdgeInfoBuilder(const EdgeInfoBuilder& other) {
+  nodea_ = new GraphId(*other.nodea_);
+  nodeb_ = new GraphId(*other.nodeb_);
+  item_ = new PackedItem(*other.item_);
+}
+
+EdgeInfoBuilder& EdgeInfoBuilder::operator=(const EdgeInfoBuilder& rhs) {
+  if (&rhs != this) {
+    nodea_ = new GraphId(*rhs.nodea_);
+    nodeb_ = new GraphId(*rhs.nodeb_);
+    item_ = new PackedItem(*rhs.item_);
+  }
+  return *this;
+}
+
 EdgeInfoBuilder::~EdgeInfoBuilder() {
-  if(nodea_)
+  if (nodea_) {
     delete nodea_;
-  if(nodeb_)
+    nodea_ = nullptr;
+  }
+  if (nodeb_) {
     delete nodeb_;
-  if(item_)
+    nodea_ = nullptr;
+  if (item_) {
     delete item_;
+    item_ = nullptr;
+  }
+  }
 }
 
 // Set the reference node (start) of the edge.

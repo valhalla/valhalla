@@ -28,6 +28,16 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   EdgeInfoBuilder();
 
   /**
+   * Copy Constructor
+   */
+  EdgeInfoBuilder(const EdgeInfoBuilder& other);
+
+  /**
+   * Copy Assignment
+   */
+  EdgeInfoBuilder& operator=(const EdgeInfoBuilder& rhs);
+
+  /**
    * Destrcutor
    */
   virtual ~EdgeInfoBuilder();
