@@ -43,18 +43,6 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   virtual ~EdgeInfoBuilder();
 
   /**
-   * Set the reference node (start) of the edge.
-   * @param  nodea  the GraphId of the reference node of the edge.
-   */
-  void set_nodea(const baldr::GraphId& nodea);
-
-  /**
-   * Set the end node of the edge.
-   * @param  nodeb  the GraphId of the end node of the edge.
-   */
-  void set_nodeb(const baldr::GraphId& nodeb);
-
-  /**
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
    */

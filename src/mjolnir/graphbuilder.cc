@@ -689,8 +689,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           if (existing_edge_offset_item == edge_offset_map.end()) {
             edgeinfo_list.emplace_back();
             EdgeInfoBuilder& edgeinfo = edgeinfo_list.back();
-            edgeinfo.set_nodea(nodea);
-            edgeinfo.set_nodeb(nodeb);
             // TODO - shape encode
             edgeinfo.set_shape(edge.latlngs_);
 
