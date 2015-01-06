@@ -77,32 +77,53 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
 
 void GraphBuilder::Build() {
   // Parse the ways and relations. Find all node Ids needed.
+  std::clock_t start = std::clock();
   std::cout << "Parsing ways and relations to mark nodes needed" << std::endl;
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::WAYS);
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::RELATIONS);
   std::cout << "Routable ways " << ways_.size() << std::endl;
+  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "Parsing ways and relations took " << msecs << " ms" << std::endl;
 
   std::cout << "Percentage of ways using speed assignment: " << std::fixed <<
       std::setprecision(2) <<
       (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100  << std::endl;
 
   // Run through the nodes
+  start = std::clock();
   std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
   nodes_.reserve(node_count_);
   //TODO: we know how many knows we expect, stop early once we have that many
   CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::NODES);
   std::cout << "Routable nodes " << nodes_.size() << std::endl;
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "Parsing nodes took " << msecs << " ms" << std::endl;
 
   // Construct edges
+  start = std::clock();
   ConstructEdges();
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "ConstructEdges took " << msecs << " ms" << std::endl;
+
+  // Sort the edge indexes at the nodes (by driveability and importance)
+  start = std::clock();
+  SortEdgesFromNodes();
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "SortEdges took " << msecs << " ms" << std::endl;
 
   // Tile the nodes
   //TODO: generate more than just the most detailed level?
+  start = std::clock();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   TileNodes(tl->second.tiles.TileSize(), tl->second.level);
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "TileNodes took " << msecs << " ms" << std::endl;
 
   // Iterate through edges - tile the end nodes to create connected graph
+  start = std::clock();
   BuildLocalTiles(tl->second.level);
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  std::cout << "BuildLocalTiles took " << msecs << " ms" << std::endl;
 }
 
 // Initialize Lua tag transformations
@@ -150,9 +171,6 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
       n.set_bollard((tag.second == "true" ? true : false));
     else if (tag.first == "modes_mask")
       n.set_modes_mask(std::stoi(tag.second));
-
-    //  if (osmid == 2385249)
-    //    std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
   }
 
   // Add to the node map;
@@ -385,16 +403,24 @@ void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
 // count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
+  bool driveforward, drivereverse;
+  uint32_t importance;
   uint32_t edgeindex = 0;
   uint32_t wayindex = 0;
   uint64_t currentid;
   edges_.reserve(edge_count_);
   for (const auto& way : ways_) {
+    // Get some way attributes needed for the edge
+    driveforward = way.auto_forward();
+    drivereverse = way.auto_backward();
+    importance   = static_cast<uint32_t>(way.road_class());
+
     // Start an edge at the first node of the way and add the
     // edge index to the node
     currentid = way.nodes()[0];
     OSMNode& node = nodes_[currentid];
-    Edge edge(currentid, wayindex, node.latlng());
+    Edge edge(currentid, wayindex, node.latlng(), importance,
+              driveforward, drivereverse);
     node.AddEdge(edgeindex);
 
     // Iterate through the nodes of the way and add lat,lng to the current
@@ -420,7 +446,8 @@ void GraphBuilder::ConstructEdges() {
 
         // Start a new edge if this is not the last node in the way
         if (i < n-1) {
-          edge = Edge(currentid, wayindex, nd.latlng());
+          edge = Edge(currentid, wayindex, nd.latlng(), importance,
+                      driveforward, drivereverse);
           nd.AddEdge(edgeindex);
         }
       }
@@ -428,6 +455,54 @@ void GraphBuilder::ConstructEdges() {
     wayindex++;
   }
   std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
+}
+
+
+class EdgeSorter {
+ public:
+  EdgeSorter(const std::vector<Edge>& edges)
+     : osmnodeid_(0),
+       edges_(edges) {
+  }
+  void SetNodeId(const uint64_t nodeid) {
+    osmnodeid_ = nodeid;
+  }
+  bool operator() (const uint32_t e1index, const uint32_t e2index) const {
+    const Edge& e1 = edges_[e1index];
+    const Edge& e2 = edges_[e2index];
+
+    // Check if edges are forward or reverse
+    bool e1forward = (e1.sourcenode_ == osmnodeid_);
+    bool e2forward = (e2.sourcenode_ == osmnodeid_);
+
+    bool e1drive = ((e1forward && e1.attributes_.fields.driveableforward) ||
+                       (!e1forward && e1.attributes_.fields.driveablereverse));
+    bool e2drive = ((e2forward && e2.attributes_.fields.driveableforward) ||
+                       (!e2forward && e2.attributes_.fields.driveablereverse));
+
+    // If both driveable or both not driveable, compare importance
+    if (e1drive == e2drive) {
+      return e1.attributes_.fields.importance < e2.attributes_.fields.importance;
+    } else if (e1drive && !e2drive) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+ private:
+  uint64_t osmnodeid_;
+  const std::vector<Edge>& edges_;
+};
+
+// Sort edge indexes from each node
+void GraphBuilder::SortEdgesFromNodes() {
+  // Sort the directed edges from the node
+  EdgeSorter sorter(edges_);
+  for (auto& node : nodes_) {
+    sorter.SetNodeId(node.first);
+    std::sort(node.second.mutable_edges().begin(),
+              node.second.mutable_edges().end(), sorter);
+  }
 }
 
 namespace {
@@ -565,7 +640,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         nodebuilder.set_edge_index(directededgecount);
         nodebuilder.set_edge_count(node.edge_count());
 
-        // Set up directed edges
+        // Build directed edges
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
         for (auto edgeindex : node.edges()) {

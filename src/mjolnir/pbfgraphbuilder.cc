@@ -92,6 +92,8 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
   std::string input_type = pt.get<std::string>("input.type");
 
+  std::cout << "Sizeof Edge = " << sizeof(Edge) << std::endl;
+
   //we only support protobuf at present
   if(input_type == "protocolbuffer"){
     // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
