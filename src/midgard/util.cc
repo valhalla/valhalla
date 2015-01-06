@@ -42,69 +42,6 @@ float sqr(const float a) {
   return a * a;
 }
 
-
-
-
-
-namespace  {
-
-int floor1e5(double coordinate)  {
-  return static_cast<int> (floor(coordinate * 1e5));
-}
-
-std::string encodeNumber(int num)  {
-  std::ostringstream encodeString;
-
-  while (num >= 0x20) {
-    int nextValue = (0x20 | (num & 0x1f)) + 63;
-    encodeString << (static_cast<char>(nextValue));
-    num >>= 5;
-  }
-
-  num += 63;
-  encodeString << (static_cast<char>(num));
-
-  return encodeString.str();
-}
-
-std::string encodeSignedNumber(int num)  {
-  int sgn_num = num << 1;
-  if (num < 0) {
-    sgn_num = ~(sgn_num);
-  }
-  return (encodeNumber(sgn_num));
-}
-
-std::string gencode(const std::vector<std::pair<double, double> >& points) {
-  std::ostringstream encodedPoints;
-
-  int plat = 0;
-  int plng = 0;
-
-  size_t n_points = points.size();
-  for (size_t i = 0; i < n_points; i++) {
-
-    std::pair<double, double> point = points[i];
-
-    int late5 = floor1e5(point.second);
-    int lnge5 = floor1e5(point.first);
-
-    int dlat = late5 - plat;
-    int dlng = lnge5 - plng;
-
-    plat = late5;
-    plng = lnge5;
-
-    encodedPoints << encodeSignedNumber(dlat);
-    encodedPoints << encodeSignedNumber(dlng);
-
-  }
-
-  return encodedPoints.str();
-}
-
-}
-
 template<class container_t>
 std::string encode(const container_t& points) {
   //a place to keep the output
