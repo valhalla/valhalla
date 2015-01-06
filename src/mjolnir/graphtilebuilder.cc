@@ -41,40 +41,26 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
         header_builder_.edgeinfo_offset() + edgeinfo_size_);
 
     // TODO - rm later
-    std::cout << ">>>>> header_builder_.nodecount_"
+    /*std::cout << ">>>>> header_builder_.nodecount_"
               << header_builder_.nodecount()
               << "  header_builder_.directededgecount_ = "
               << header_builder_.directededgecount()
               << "  header_builder_.edgeinfo_offset_ = "
               << header_builder_.edgeinfo_offset()
               << "  header_builder_.textlist_offset_ = "
-              << header_builder_.textlist_offset() << std::endl;
+              << header_builder_.textlist_offset() << std::endl;*/
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
                sizeof(GraphTileHeaderBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__
-              << " | sizeof(GraphTileHeaderBuilder)="
-              << sizeof(GraphTileHeaderBuilder) << std::endl;
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
                nodes_builder_.size() * sizeof(NodeInfoBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__ << " | sizeof(NodeInfoBuilder)="
-              << sizeof(NodeInfoBuilder) << " | NodeInfoBuilder total="
-              << nodes_builder_.size() * sizeof(NodeInfoBuilder) << std::endl;
 
     // Write the directed edges
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__
-              << " | sizeof(DirectedEdgeBuilder)="
-              << sizeof(DirectedEdgeBuilder) << " | DirectedEdgeBuilder total="
-              << directededges_builder_.size() * sizeof(DirectedEdgeBuilder)
-              << std::endl;
 
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
@@ -86,9 +72,6 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
               << " directededges = " << directededges_builder_.size()
               << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
               << textlist_size_ << std::endl;
-    // GDG
-    std::cout << "##########################################################"
-              << std::endl << std::endl;
 
     size_ = file.tellp();
     file.close();
@@ -116,35 +99,18 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
     const std::size_t edgeinfo_size) {
 
   edgeinfos_builder_ = edges;
+
   // Set edgeinfo data size
   edgeinfo_size_ = edgeinfo_size;
-  /*
-   // TODO rm later
-   size_t computed_size = 0;
-   for (const auto& edgeinfo_builder : edgeinfos_builder_) {
-   computed_size += edgeinfo_builder.SizeOf();
-   }
-   std::cout << ">>>>> EDGEINFO computed_size = " << computed_size
-   << "  edgeinfo_size_ = " << edgeinfo_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SetTextListAndSize(
     const std::list<std::string>& textlist, const std::size_t textlist_size) {
+
   textlist_builder_ = textlist;
+
   // Set textlist data size
   textlist_size_ = textlist_size;
-
-  // TODO rm later
-  /*std::cout << "NAME COUNT = " << textlist_builder_.size() << std::endl;
-   size_t computed_size = 0;
-   for (const auto& name : textlist_builder_) {
-   if (name.empty())
-   continue;
-   computed_size += name.length() + 1;
-   std::cout << "name=" << name << std::endl;
-   }
-   std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
-   << "  textlist_size_ = " << textlist_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {

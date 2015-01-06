@@ -104,7 +104,7 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 
 void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
   // TODO - rm later
-  std::cout << "------------------------------------------------------"
+  /*std::cout << "------------------------------------------------------"
             << std::endl;
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   std::cout << "EdgeInfoBuilder::SizeOf=" << SizeOf() << std::endl;
@@ -127,7 +127,7 @@ void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
   }
   std::cout << "exit_sign_count=" << exit_signs_.size() << std::endl;
   std::cout << "======================================================="
-            << std::endl;
+            << std::endl;*/
 
   out.write(reinterpret_cast<const char*>(nodea_), sizeof(GraphId));
   out.write(reinterpret_cast<const char*>(nodeb_), sizeof(GraphId));
