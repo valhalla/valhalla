@@ -29,8 +29,6 @@ float TripPathBuilder::Build(GraphReader& graphreader,
     const DirectedEdge* directededge = graphtile->directededge(edge);
     length += directededge->length();
     // TODO - rm later
-    /*std::cout << __FILE__ << ":" << __LINE__ << " | edgedataoffset="
-     << directededge->edgedataoffset() << std::endl;*/
     std::cout << "-------------------------------------------------------"
               << std::endl;
     names = graphtile->GetNames(directededge->edgedataoffset(), names);
@@ -40,7 +38,7 @@ float TripPathBuilder::Build(GraphReader& graphreader,
     const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
         directededge->edgedataoffset());
     // TODO - rm later
-    edgeinfo->ToOstream();
+    //edgeinfo->ToOstream();
   }
   return length;
 }
