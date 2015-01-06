@@ -1,6 +1,8 @@
 #ifndef VALHALLA_MIDGARD_UTIL_H_
 #define VALHALLA_MIDGARD_UTIL_H_
 
+#include <string>
+
 namespace valhalla{
 namespace midgard{
 
@@ -40,6 +42,26 @@ float FastInvSqrt(float x);
 
 // Convenience method.
 float sqr(const float a);
+
+/**
+ * Polyline encode a container of points into a string
+ * Note: newer versions of this algorithm allow one to specify a zoom level
+ * which allows displaying simplified versions of the encoded linestring
+ *
+ * @param points    the list of points to encode
+ * @return string   the encoded container of points
+ */
+template<class container_t>
+std::string encode(const container_t& points);
+
+/**
+ * Polyline decode a string into a container of points
+ *
+ * @param string    the encoded points
+ * @return points   the container of points
+ */
+template<class container_t>
+container_t decode(const std::string& encoded);
 
 }
 }

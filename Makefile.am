@@ -40,7 +40,6 @@ lib_LTLIBRARIES = libvalhalla_midgard.la
 nobase_include_HEADERS = \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
-	valhalla/midgard/aabbll.h \
 	valhalla/midgard/polyline2.h \
 	valhalla/midgard/obb2.h \
 	valhalla/midgard/pointll.h \
@@ -55,7 +54,6 @@ nobase_include_HEADERS = \
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
-	src/midgard/aabbll.cc \
 	src/midgard/polyline2.cc \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
@@ -75,10 +73,10 @@ check_PROGRAMS = \
 	test/distanceapproximator \
 	test/aabb2 \
 	test/linesegment2 \
-	test/aabbll \
 	test/vector2 \
 	test/polyline2 \
-	test/pointll
+	test/pointll \
+	test/encode
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
@@ -103,6 +101,10 @@ test_polyline2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalha
 test_pointll_SOURCES = test/pointll.cc test/test.cc
 test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_pointll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_encode_SOURCES = test/encode.cc test/test.cc
+test_encode_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_encode_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
