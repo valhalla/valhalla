@@ -12,7 +12,7 @@ OSMNode::OSMNode() {
 }
 
 OSMNode::OSMNode(const float lat, const float lng) {
-  latlng_.Set(lat, lng);
+  latlng_.Set(lng, lat);
   attributes_.v = 0;
 }
 

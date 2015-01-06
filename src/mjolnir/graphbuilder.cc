@@ -756,7 +756,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 
   // Get number of tiles and reserve space for them
   // < 30% of the earth is land and most roads are on land, even less than that even has roads
-  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
+  Tiles tiles(AABB2({-180.0f, -90.0f}, {180.0f, 90.0f}), tilesize);
   tilednodes_.reserve(tiles.TileCount() * .3f);
   // Iterate through all OSM nodes and assign GraphIds
   for (auto& node : nodes_) {
