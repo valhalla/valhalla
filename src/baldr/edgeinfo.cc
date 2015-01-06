@@ -31,19 +31,15 @@ EdgeInfo::EdgeInfo()
       exit_signs_(nullptr) {
 }
 
-const uint64_t EdgeInfo::street_name_offset_list_offset() const {
-  return item_->fields.street_name_offset_list_offset;
-}
-
-const uint64_t EdgeInfo::name_count() const {
+const uint32_t EdgeInfo::name_count() const {
   return item_->fields.name_count;
 }
 
-const uint64_t EdgeInfo::shape_count() const {
+const uint32_t EdgeInfo::shape_count() const {
   return item_->fields.shape_count;
 }
 
-const uint64_t EdgeInfo::exit_sign_count() const {
+const uint32_t EdgeInfo::exit_sign_count() const {
   return item_->fields.exit_sign_count;
 }
 
@@ -56,29 +52,17 @@ const PointLL EdgeInfo::GetShapePoint(uint16_t index) const {
 }
 
 void EdgeInfo::ToOstream(std::ostream& out) const {
-  out << "street_name_offset_list_offset=" << street_name_offset_list_offset()
-      << "  name_count=" << name_count() << std::endl;
+  out << "  name_count=" << name_count() << std::endl;
   for (uint32_t x = 0, n = name_count(); x < n; ++x) {
     out << "   street name offset[" << x << "]=" << GetStreetNameOffset(x)
         << std::endl;
   }
   out << "shape_count=" << shape_count() << std::endl;
-  out << "GetShapeOffset=" << GetShapeOffset() << std::endl;
   for (int32_t x = 0, n = shape_count(); x < n; ++x) {
     PointLL ll = GetShapePoint(x);
     out << "   shape[" << x << "]=" << ll.lat() << "," << ll.lng() << std::endl;
   }
   out << "exit_sign_count=" << exit_sign_count() << std::endl;
-  out << "GetExitSignsOffset=" << GetExitSignsOffset() << std::endl;
-
-}
-
-const uint64_t EdgeInfo::GetShapeOffset() const {
-  return (street_name_offset_list_offset() + name_count() * sizeof(size_t));
-}
-
-const uint64_t EdgeInfo::GetExitSignsOffset() const {
-  return (GetShapeOffset() + shape_count() * sizeof(PointLL));
 }
 
 }

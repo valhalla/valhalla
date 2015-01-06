@@ -37,17 +37,14 @@ class EdgeInfo {
    */
   virtual ~EdgeInfo();
 
-  // Returns the name index list offset
-  const uint64_t street_name_offset_list_offset() const;
-
   // Returns the name count
-  const uint64_t name_count() const;
+  const uint32_t name_count() const;
 
   // Returns the shape count
-  const uint64_t shape_count() const;
+  const uint32_t shape_count() const;
 
   // Returns the exit sign count
-  const uint64_t exit_sign_count() const;
+  const uint32_t exit_sign_count() const;
 
   // Returns the name index at the specified index.
   const size_t GetStreetNameOffset(uint8_t index) const;
@@ -75,26 +72,21 @@ class EdgeInfo {
    */
   EdgeInfo();
 
-  // Computes and returns the offset to the shape points based on the name offsets.
-  const uint64_t GetShapeOffset() const;
-
-  // Computes and returns the offset to the exit signs based on shape and name offsets.
-  const uint64_t GetExitSignsOffset() const;
-
+  // Packed items: counts for names, shape, exit signs
   union PackedItem {
     struct Fields {
-      uint64_t street_name_offset_list_offset :8;
-      uint64_t name_count                     :4;
-      uint64_t shape_count                    :11;
-      uint64_t exit_sign_count                :4;
-      uint64_t spare                          :37;
+      uint32_t name_count                     :4;
+      uint32_t shape_count                    :11;
+      uint32_t exit_sign_count                :4;
+      uint32_t spare                          :13;
     } fields;
-    uint64_t value;
+    uint32_t value;
   };
   PackedItem* item_;
 
  private:
 
+  // TODO - should this be smaller?
   // List of roadname indexes
   size_t* street_name_offset_list_;
 
