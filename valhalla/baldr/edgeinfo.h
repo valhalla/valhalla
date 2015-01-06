@@ -47,7 +47,7 @@ class EdgeInfo {
   const uint32_t exit_sign_count() const;
 
   // Returns the name index at the specified index.
-  const size_t GetStreetNameOffset(uint8_t index) const;
+  const uint32_t GetStreetNameOffset(uint8_t index) const;
 
   // Returns the shape point at the specified index.
   // TODO: replace with vector once it works
@@ -86,9 +86,8 @@ class EdgeInfo {
 
  private:
 
-  // TODO - should this be smaller?
   // List of roadname indexes
-  size_t* street_name_offset_list_;
+  uint32_t* street_name_offset_list_;
 
   // Lat,lng shape of the edge
   PointLL* shape_;

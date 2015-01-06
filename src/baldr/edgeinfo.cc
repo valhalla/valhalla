@@ -8,8 +8,8 @@ EdgeInfo::EdgeInfo(char* ptr) {
   ptr += sizeof(PackedItem);
 
   // Set street_name_offset_list_ pointer
-  street_name_offset_list_ = reinterpret_cast<size_t*>(ptr);
-  ptr += (name_count() * sizeof(size_t));
+  street_name_offset_list_ = reinterpret_cast<uint32_t*>(ptr);
+  ptr += (name_count() * sizeof(uint32_t));
 
   // Set shape_ pointer
   shape_ = reinterpret_cast<PointLL*>(ptr);
@@ -43,7 +43,7 @@ const uint32_t EdgeInfo::exit_sign_count() const {
   return item_->fields.exit_sign_count;
 }
 
-const size_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
+const uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
   return street_name_offset_list_[index];
 }
 
