@@ -14,7 +14,7 @@ PointLL::PointLL()
     : Point2(INVALID, INVALID) {
 }
 
-PointLL::PointLL(const float lat, const float lng)
+PointLL::PointLL(float lng, float lat)
     : Point2(lng, lat) {
 }
 
@@ -28,11 +28,6 @@ float PointLL::lat() const {
 
 float PointLL::lng() const {
   return x_;
-}
-
-void PointLL::Set(const float lat, const float lng) {
-  y_ = lat;
-  x_ = lng;
 }
 
 bool PointLL::IsValid() const{
@@ -167,7 +162,7 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
       // The squared distance from this point to the target is then found.
       // TODO - why not:  *p0 + v1 * comp;
       beyond_end = false;
-      projpt.Set(p0->lat() + v1.y() * comp, p0->lng() + v1.x() * comp);
+      projpt.Set(p0->lng() + v1.x() * comp, p0->lat() + v1.y() * comp);
       dist = approx.DistanceSquared(projpt);
       if (dist < mindist) {
         mindist = dist;
@@ -210,8 +205,9 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
     if (d + seglength > dist) {
       // Set the extrapolated point along the line.
       float pct = (float)((dist - d) / seglength);
-      PointLL ll(pts[i].lat() + ((pts[i+1].lat() - pts[i].lat()) * pct),
-                 pts[i].lng() + ((pts[i+1].lng() - pts[i].lng()) * pct));
+      PointLL ll(pts[i].lng() + ((pts[i+1].lng() - pts[i].lng()) * pct),
+                 pts[i].lat() + ((pts[i+1].lat() - pts[i].lat()) * pct)
+                );
       return pts[0].Heading(ll);
     } else {
       d += seglength;
@@ -246,8 +242,9 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
     if (d + seglength > dist) {
       // Set the extrapolated point along the line.
       float pct = (float)((dist - d) / seglength);
-      PointLL ll(pts[i+1].lat() + ((pts[i].lat() - pts[i+1].lat()) * pct),
-                 pts[i+1].lng() + ((pts[i].lng() - pts[i+1].lng()) * pct));
+      PointLL ll(pts[i+1].lng() + ((pts[i].lng() - pts[i+1].lng()) * pct),
+                 pts[i+1].lat() + ((pts[i].lat() - pts[i+1].lat()) * pct)
+                );
       return ll.Heading(pts[n-1]);
     } else {
       d += seglength;

@@ -40,7 +40,6 @@ lib_LTLIBRARIES = libvalhalla_midgard.la
 nobase_include_HEADERS = \
 	valhalla/midgard/linesegment2.h \
 	valhalla/midgard/tiles.h \
-	valhalla/midgard/aabbll.h \
 	valhalla/midgard/polyline2.h \
 	valhalla/midgard/obb2.h \
 	valhalla/midgard/pointll.h \
@@ -55,7 +54,6 @@ nobase_include_HEADERS = \
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
 	src/midgard/tiles.cc \
-	src/midgard/aabbll.cc \
 	src/midgard/polyline2.cc \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
@@ -75,7 +73,6 @@ check_PROGRAMS = \
 	test/distanceapproximator \
 	test/aabb2 \
 	test/linesegment2 \
-	test/aabbll \
 	test/vector2 \
 	test/polyline2 \
 	test/pointll \

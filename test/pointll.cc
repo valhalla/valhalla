@@ -20,7 +20,7 @@ namespace {
 
   void test_constructor() {
     PointLL ll{1,2};
-    if(ll.y() !=1 || ll.x() != 2)
+    if(ll.x() !=1 || ll.y() != 2)
       throw std::runtime_error("PointLL object should be set");
   }
 }

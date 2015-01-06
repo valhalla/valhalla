@@ -1,10 +1,7 @@
 #ifndef VALHALLA_MIDGARD_UTIL_H_
 #define VALHALLA_MIDGARD_UTIL_H_
 
-#include <vector>
 #include <string>
-
-#include <valhalla/midgard/pointll.h>
 
 namespace valhalla{
 namespace midgard{
@@ -54,7 +51,8 @@ float sqr(const float a);
  * @param points    the list of points to encode
  * @return string   the encoded container of points
  */
-std::string encode(const std::vector<PointLL>& points);
+template<class container_t>
+std::string encode(const container_t& points);
 
 /**
  * Polyline decode a string into a container of points
@@ -62,7 +60,8 @@ std::string encode(const std::vector<PointLL>& points);
  * @param string    the encoded points
  * @return points   the container of points
  */
-std::vector<PointLL> decode(const std::string& encoded);
+template<class container_t>
+container_t decode(const std::string& encoded);
 
 }
 }
