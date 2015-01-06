@@ -583,13 +583,13 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
         osmendnode = (edge.sourcenode_ == node) ?
             edge.targetnode_ : edge.sourcenode_;
 
-        // Return false if we have returned back to the start node
-        if (osmendnode == startnode) {
+        // Return false if we have returned back to the start node or we
+        // encounter a tertiary road (or better)
+        if (osmendnode == startnode ||
+            edge.attributes_.fields.importance <=
+            static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
           return false;
         }
-
-        // TODO - if edges had the road class we could end search here if a
-        // major rado is encountered
 
         // Add to the expand set
         expandset.emplace(osmendnode);
