@@ -42,6 +42,7 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
        costs = costing.Create("BicycleCost");
   } else if (routetype == "pedestrian") {
        costs = costing.Create("PedestrianCost");
+       ((PedestrianCost*)costs)->set_favorwalkways(0.50f);//We want to use walkways
   } else return 1;
 
   std::cout << "routetype: " << routetype << std::endl;
