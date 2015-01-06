@@ -18,7 +18,7 @@
 #include <thread>
 #include <memory>
 #include <unordered_set>
-#include <valhalla/midgard/aabbll.h>
+#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
