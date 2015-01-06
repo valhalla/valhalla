@@ -17,6 +17,10 @@ class PedestrianCost : public DynamicCost {
 
   virtual ~PedestrianCost();
 
+  static DynamicCost* Create() {
+    return new PedestrianCost;
+  }
+
   /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
