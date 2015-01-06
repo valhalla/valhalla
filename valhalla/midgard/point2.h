@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <vector>
+#include <utility>
 
 namespace valhalla{
 namespace midgard{
@@ -14,7 +15,7 @@ class Vector2;
  * 2D Point (cartesian). float x,y components.
  * @author David W. Nesbitt
  */
-class Point2 {
+class Point2 : public std::pair<float, float>{
 
  public:
   /**

@@ -16,7 +16,7 @@ void TryKmPerDegreeLongitude(const PointLL& p, const float d2) {
 }
 
 void TestKmPerDegreeLongitude() {
-  TryKmPerDegreeLongitude(PointLL(0.0f, -80.0f), kKmPerDegreeLat);
+  TryKmPerDegreeLongitude(PointLL(-80.0f, 0.0f), kKmPerDegreeLat);
 }
 
 void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const float d2) {
@@ -29,8 +29,8 @@ void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const
     throw runtime_error("DistanceSquared from point test failed");
 }
 void TestDistanceSquaredFromTestPt() {
-  PointLL p1(42.0f, -80.0f);
-  PointLL p2(40.0f, -78.0f);
+  PointLL p1(-80.0f, 42.0f);
+  PointLL p2(-78.0f, 40.0f);
   TryDistanceSquaredFromTestPt(p2, p1, p1.Distance(p2));
   TryDistanceSquaredFromTestPt(p1, p2, p1.Distance(p2));
 }
@@ -44,8 +44,8 @@ void TryDistanceSquared(const PointLL& a, const PointLL& b, const float d2) {
 }
 
 void TestDistanceSquared() {
-  PointLL a(42.0f, -80.0f);
-  PointLL b(40.0f, -78.0f);
+  PointLL a(-80.0f, 42.0f);
+  PointLL b(-78.0f, 40.0f);
   TryDistanceSquaredFromTestPt(a, b, a.Distance(b));
 }
 
