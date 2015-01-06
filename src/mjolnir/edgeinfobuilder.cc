@@ -38,7 +38,7 @@ EdgeInfoBuilder::~EdgeInfoBuilder() {
 
 // Set the indexes to names used by this edge.
 void EdgeInfoBuilder::set_street_name_offset_list(
-    const std::vector<size_t>& street_name_offset_list) {
+    const std::vector<uint32_t>& street_name_offset_list) {
   street_name_offset_list_ = street_name_offset_list;
 
   // Set the name count
@@ -54,7 +54,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   item_->fields.shape_count = shape_.size();
 }
 
-const size_t EdgeInfoBuilder::GetStreetNameOffset(uint8_t index) const {
+const uint32_t EdgeInfoBuilder::GetStreetNameOffset(uint8_t index) const {
   return street_name_offset_list_[index];
 }
 
@@ -65,7 +65,7 @@ const PointLL EdgeInfoBuilder::GetShapePoint(uint16_t index) const {
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = 0;
   size += sizeof(PackedItem);                                  // item_
-  size += (street_name_offset_list_.size() * sizeof(size_t));  // street_name_offset_list_
+  size += (street_name_offset_list_.size() * sizeof(uint32_t));  // street_name_offset_list_
   size += (shape_.size() * sizeof(PointLL));                   // shape_
   size += (exit_signs_.size() * sizeof(ExitSign));             // exit_signs_
 
@@ -93,7 +93,7 @@ void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
 
   out.write(reinterpret_cast<const char*>(item_), sizeof(PackedItem));
   out.write(reinterpret_cast<const char*>(&street_name_offset_list_[0]),
-            (street_name_offset_list_.size() * sizeof(size_t)));
+            (street_name_offset_list_.size() * sizeof(uint32_t)));
   out.write(reinterpret_cast<const char*>(&shape_[0]),
             (shape_.size() * sizeof(PointLL)));
   out.write(reinterpret_cast<const char*>(&exit_signs_[0]),

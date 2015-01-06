@@ -52,7 +52,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Set the text list and size.
    */
   void SetTextListAndSize(const std::list<std::string>& textlist,
-                          const std::size_t textlist_size);
+                          const uint32_t textlist_size);
 
  protected:
   // Write all edgeinfo items to specified stream
@@ -84,7 +84,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::list<std::string> textlist_builder_;
 
   // Size of the textlist data
-  std::size_t textlist_size_;
+  uint32_t textlist_size_;
 };
 
 }

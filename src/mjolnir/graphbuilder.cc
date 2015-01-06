@@ -548,8 +548,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       std::list<EdgeInfoBuilder> edgeinfo_list;
 
       // Text list offset and map
-      size_t text_list_offset = 0;
-      std::unordered_map<std::string, size_t> text_offset_map;
+      uint32_t text_list_offset = 0;
+      std::unordered_map<std::string, uint32_t> text_offset_map;
 
       // Text list
       std::list<std::string> text_list;
@@ -693,7 +693,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             edgeinfo.set_shape(edge.latlngs_);
 
             std::vector<std::string> names = w.GetNames();
-            std::vector<size_t> street_name_offset_list;
+            std::vector<uint32_t> street_name_offset_list;
 
             for (const auto& name : names) {
               if (name.empty()) {
