@@ -19,7 +19,7 @@
 #include <memory>
 #include <list>
 #include <unordered_set>
-#include <valhalla/midgard/aabbll.h>
+#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
@@ -151,7 +151,7 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
     return;
 
   // Create a new node and set its attributes
-  OSMNode n(lat, lng);
+  OSMNode n(lng, lat);
   for (const auto& tag : results) {
     if (tag.first == "exit_to") {
       bool hasTag = (tag.second.length() ? true : false);
@@ -850,7 +850,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 
   // Get number of tiles and reserve space for them
   // < 30% of the earth is land and most roads are on land, even less than that even has roads
-  Tiles tiles(AABBLL(-90.0f, -180.0f, 90.0f, 180.0f), tilesize);
+  Tiles tiles(AABB2({-180.0f, -90.0f}, {180.0f, 90.0f}), tilesize);
   tilednodes_.reserve(tiles.TileCount() * .3f);
   // Iterate through all OSM nodes and assign GraphIds
   for (auto& node : nodes_) {

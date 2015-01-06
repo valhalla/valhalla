@@ -20,9 +20,9 @@ class OSMNode {
   OSMNode();
 
   /**
-   * Constructor given a lat,lng
+   * Constructor given a lng,lat
    */
-  OSMNode(const float lat, const float lng);
+  OSMNode(const float lng, const float lat);
 
   /**
    * Destructor.
