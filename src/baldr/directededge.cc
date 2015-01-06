@@ -35,6 +35,11 @@ uint8_t DirectedEdge::reverseaccess() const {
   return reverseaccess_.v;
 }
 
+// Gets the speed in KPH.
+uint8_t DirectedEdge::speed() const {
+  return speed_;
+}
+
 // TODO - methods for individual access
 
 bool DirectedEdge::ferry() const {
@@ -104,11 +109,6 @@ RoadClass DirectedEdge::importance() const {
 // Get the use of this edge.
 Use DirectedEdge::use() const {
   return static_cast<Use>(classification_.use);
-}
-
-// Gets the speed in KPH.
-float DirectedEdge::speed() const {
-  return static_cast<float>(speed_);
 }
 
 }
