@@ -119,7 +119,6 @@ void TryWriteRead(const EdgeInfoBuilder& eibuilder) {
   }
   // TODO exit sign test
 
-
   delete ei;
   delete[] memblock;
 }
