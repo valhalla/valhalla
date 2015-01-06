@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo(char* ptr){
+EdgeInfo::EdgeInfo(char* ptr) {
   nodea_ = reinterpret_cast<GraphId*>(ptr);
   ptr += sizeof(GraphId);
   nodeb_ = reinterpret_cast<GraphId*>(ptr);
@@ -27,7 +27,8 @@ EdgeInfo::EdgeInfo(char* ptr){
   std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
   street_name_offset_list_ = reinterpret_cast<size_t*>(ptr);
   // GDG - rm later
-  std::cout << "street_name_offset_list_=" << street_name_offset_list_ << std::endl;
+  std::cout << "street_name_offset_list_=" << street_name_offset_list_
+            << std::endl;
   ptr += (name_count() * sizeof(size_t));
   // GDG - rm later
   std::cout << "ptr=" << static_cast<void*>(ptr) << std::endl;
@@ -52,7 +53,9 @@ EdgeInfo::~EdgeInfo() {
 }
 
 EdgeInfo::EdgeInfo()
-    : nodea_(nullptr), nodeb_(nullptr), item_(nullptr),
+    : nodea_(nullptr),
+      nodeb_(nullptr),
+      item_(nullptr),
       street_name_offset_list_(nullptr),
       shape_(nullptr),
       exit_signs_(nullptr) {
@@ -97,11 +100,11 @@ bool EdgeInfo::operator ==(const EdgeInfo& rhs) const {
 
 void EdgeInfo::ToOstream(std::ostream& out) const {
   out << "nodea=" << nodea_->value() << "  nodea_->tileid=" << nodea_->tileid()
-      << "  nodea_->level=" << nodea_->level() << "  nodea_->id=" << nodea_->id()
-      << std::endl;
+      << "  nodea_->level=" << nodea_->level() << "  nodea_->id="
+      << nodea_->id() << std::endl;
   out << "nodeb=" << nodeb_->value() << "  nodeb_->tileid=" << nodeb_->tileid()
-      << "  nodeb_->level=" << nodeb_->level() << "  nodeb_->id=" << nodeb_->id()
-      << std::endl;
+      << "  nodeb_->level=" << nodeb_->level() << "  nodeb_->id="
+      << nodeb_->id() << std::endl;
   out << "street_name_offset_list_offset=" << street_name_offset_list_offset()
       << "  name_count=" << name_count() << std::endl;
   for (uint32_t x = 0, n = name_count(); x < n; ++x) {
