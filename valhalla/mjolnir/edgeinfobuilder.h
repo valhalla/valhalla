@@ -28,6 +28,21 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
   EdgeInfoBuilder();
 
   /**
+   * Copy Constructor
+   */
+  EdgeInfoBuilder(const EdgeInfoBuilder& other);
+
+  /**
+   * Copy Assignment
+   */
+  EdgeInfoBuilder& operator=(const EdgeInfoBuilder& rhs);
+
+  /**
+   * Destrcutor
+   */
+  virtual ~EdgeInfoBuilder();
+
+  /**
    * Set the reference node (start) of the edge.
    * @param  nodea  the GraphId of the reference node of the edge.
    */
@@ -51,6 +66,13 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
    * *        shape of the edge.
    */
   void set_shape(const std::vector<PointLL>& shape);
+
+  // Returns the name index at the specified index.
+  const size_t GetStreetNameOffset(uint8_t index) const;
+
+  // Returns the shape point at the specified index.
+  // TODO: replace with vector once it works
+  const PointLL GetShapePoint(uint16_t index) const;
 
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;

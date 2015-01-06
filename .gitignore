@@ -47,6 +47,7 @@ test/uniquenames
 test/nodetable
 test/*.log
 test/*.trs
+EdgeInfoBuilder_TestWriteRead.gph
 
 # test coverage stuff
 *.gcno

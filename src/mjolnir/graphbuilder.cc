@@ -17,6 +17,7 @@
 #include <string>
 #include <thread>
 #include <memory>
+#include <list>
 #include <unordered_set>
 #include <valhalla/midgard/aabbll.h>
 #include <valhalla/midgard/pointll.h>
@@ -536,7 +537,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
   // For each tile in the task
   for(; tile_start != tile_end; ++tile_start) {
     try {
-      // What actually writes the tile
+     // What actually writes the tile
       GraphTileBuilder graphtile;
 
       // Edge info offset and map
@@ -544,14 +545,14 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
 
       // The edgeinfo list
-      std::vector<EdgeInfoBuilder> edgeinfo_list;
+      std::list<EdgeInfoBuilder> edgeinfo_list;
 
       // Text list offset and map
       size_t text_list_offset = 0;
       std::unordered_map<std::string, size_t> text_offset_map;
 
       // Text list
-      std::vector<std::string> text_list;
+      std::list<std::string> text_list;
 
       // Iterate through the nodes
       uint32_t directededgecount = 0;
@@ -686,12 +687,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Add new edge info
           if (existing_edge_offset_item == edge_offset_map.end()) {
-            EdgeInfoBuilder edgeinfo;
+            edgeinfo_list.emplace_back();
+            EdgeInfoBuilder& edgeinfo = edgeinfo_list.back();
             edgeinfo.set_nodea(nodea);
             edgeinfo.set_nodeb(nodeb);
             // TODO - shape encode
             edgeinfo.set_shape(edge.latlngs_);
-            // TODO - names
+
             std::vector<std::string> names = w.GetNames();
             std::vector<size_t> street_name_offset_list;
 
@@ -726,9 +728,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             // Add to the map
             edge_offset_map.insert(
                 std::make_pair(node_pair_item, edge_info_offset));
-
-            // Add to the list
-            edgeinfo_list.emplace_back(edgeinfo);
 
             // Set edge offset within the corresponding directed edge
             directededge.set_edgedataoffset(edge_info_offset);

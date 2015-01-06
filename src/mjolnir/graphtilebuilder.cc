@@ -2,13 +2,17 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
+#include <list>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
 
-GraphTileBuilder::GraphTileBuilder():GraphTile(), edgeinfo_size_(0), textlist_size_() {
+GraphTileBuilder::GraphTileBuilder()
+    : GraphTile(),
+      edgeinfo_size_(0),
+      textlist_size_(0) {
 
 }
 
@@ -64,11 +68,11 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     // Write the names
     SerializeTextListToOstream(file);
 
-    /*std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
+    std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
               << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
               << textlist_size_ << std::endl;
-*/
+
     size_ = file.tellp();
     file.close();
   } else {
@@ -91,39 +95,22 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
 }
 
 void GraphTileBuilder::SetEdgeInfoAndSize(
-    const std::vector<EdgeInfoBuilder>& edges,
+    const std::list<EdgeInfoBuilder>& edges,
     const std::size_t edgeinfo_size) {
 
   edgeinfos_builder_ = edges;
+
   // Set edgeinfo data size
   edgeinfo_size_ = edgeinfo_size;
-/*
-  // TODO rm later
-  size_t computed_size = 0;
-  for (const auto& edgeinfo_builder : edgeinfos_builder_) {
-    computed_size += edgeinfo_builder.SizeOf();
-  }
-  std::cout << ">>>>> EDGEINFO computed_size = " << computed_size
-            << "  edgeinfo_size_ = " << edgeinfo_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SetTextListAndSize(
-    const std::vector<std::string>& textlist, const std::size_t textlist_size) {
+    const std::list<std::string>& textlist, const std::size_t textlist_size) {
+
   textlist_builder_ = textlist;
+
   // Set textlist data size
   textlist_size_ = textlist_size;
-
-  // TODO rm later
-  /*std::cout << "NAME COUNT = " << textlist_builder_.size() << std::endl;
-  size_t computed_size = 0;
-  for (const auto& name : textlist_builder_) {
-    if (name.empty())
-      continue;
-    computed_size += name.length() + 1;
-    std::cout << "name=" << name << std::endl;
-  }
-  std::cout << ">>>>> TEXTLIST computed_size = " << computed_size
-            << "  textlist_size_ = " << textlist_size_ << std::endl;*/
 }
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
