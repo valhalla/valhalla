@@ -52,7 +52,7 @@ const PointLL EdgeInfo::GetShapePoint(uint16_t index) const {
 }
 
 void EdgeInfo::ToOstream(std::ostream& out) const {
-  out << "  name_count=" << name_count() << std::endl;
+  out << "name_count=" << name_count() << std::endl;
   for (uint32_t x = 0, n = name_count(); x < n; ++x) {
     out << "   street name offset[" << x << "]=" << GetStreetNameOffset(x)
         << std::endl;
@@ -63,6 +63,7 @@ void EdgeInfo::ToOstream(std::ostream& out) const {
     out << "   shape[" << x << "]=" << ll.lat() << "," << ll.lng() << std::endl;
   }
   out << "exit_sign_count=" << exit_sign_count() << std::endl;
+  // TODO - exit info
 }
 
 }
