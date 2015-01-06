@@ -28,9 +28,11 @@ float TripPathBuilder::Build(GraphReader& graphreader,
     GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
     length += directededge->length();
-    // GDG - rm later
-    std::cout << __FILE__ << ":" << __LINE__ << " | edgedataoffset="
-              << directededge->edgedataoffset() << std::endl;
+    // TODO - rm later
+    /*std::cout << __FILE__ << ":" << __LINE__ << " | edgedataoffset="
+     << directededge->edgedataoffset() << std::endl;*/
+    std::cout << "-------------------------------------------------------"
+              << std::endl;
     names = graphtile->GetNames(directededge->edgedataoffset(), names);
     for (auto& name : names) {
       std::cout << "   name=" << name << std::endl;
