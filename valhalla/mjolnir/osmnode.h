@@ -68,7 +68,13 @@ class OSMNode {
    * Get the list of edges.
    * @return  Returns the list of edge indexes used by the node.
    */
-  const std::vector<uint32_t>& edges() const;
+ const std::vector<uint32_t>& edges() const;
+
+ /**
+  * Get a mutable list of edge indexes.
+  * @return  Returns the list of edge indexes used by the node.
+  */
+ std::vector<uint32_t>& mutable_edges();
 
   /**
    * Set the exit to flag

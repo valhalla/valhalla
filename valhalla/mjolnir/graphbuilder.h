@@ -62,32 +62,76 @@ class NodeIdTable {
 };
 
 
-//TODO: comment this data structure
+/**
+ * An edge in the graph. Connects 2 nodes that have 2 or more "uses" - meaning
+ * the node forms an intersection (or is the end of an OSM way). OSM nodes
+ * with less than 2 uses become a shape point (lat,lng) along the edge.
+ */
 struct Edge {
+  // OSM node Id of the source (start) node of the edge
   uint64_t sourcenode_;
+
+  // OSM node Id of the target (end) node of the edge
   uint64_t targetnode_;
-  std::vector<midgard::PointLL> latlngs_;
+
+  // Index into the list of OSM way information
   uint32_t wayindex_;
 
-  // Construct a new edge. Target node and additional lat,lngs will
-  // be filled in later.
+  // Attributes needed to sort the edges
+  // Note - this doesn't change the size of the structure...
+  union Attributes {
+    struct Fields {
+      uint32_t importance       : 3;
+      uint32_t driveableforward : 1;
+      uint32_t driveablereverse : 1;
+      uint32_t spare_           : 27;
+    } fields;
+    uint32_t v;
+  };
+  Attributes attributes_;
+
+  // Shape of the edge (polyline)
+  std::vector<midgard::PointLL> latlngs_;
+
+  /**
+   * Construct a new edge. Target node and additional lat,lngs will
+   * be filled in later.
+   * @param sourcenode   Start node of the edge
+   * @param wayindex     Index into list of OSM ways
+   * @param ll           Lat,lng at the start of the edge.
+   * @param importance   Importance (classification) of the edge
+   * @param driveforward Auto use in the forward direction of the edge
+   * @param drivereverse Auto use in the reverse direction of the edge
+   */
   Edge(const uint64_t sourcenode, const uint32_t wayindex,
-       const midgard::PointLL& ll)
+       const midgard::PointLL& ll, const uint32_t importance,
+       const bool driveforward, const bool drivereverse)
       : sourcenode_(sourcenode),
         targetnode_(0),
         wayindex_(wayindex) {
+    attributes_.fields.importance = importance;
+    attributes_.fields.driveableforward = driveforward;
+    attributes_.fields.driveablereverse = drivereverse;
     latlngs_.emplace_back(ll);
   }
 
+  /**
+   * Add a lat,lng to the shape of the edge.
+   * @param  ll  Lat,lng
+   */
   void AddLL(const midgard::PointLL& ll) {
     latlngs_.emplace_back(ll);
   }
 
  private:
+  /**
+   * Default constructor
+   */
   Edge()
       : sourcenode_(0),
         targetnode_(0),
-        wayindex_(0){
+        wayindex_(0) {
+    attributes_.v = 0;
   }
 };
 
@@ -143,6 +187,11 @@ class GraphBuilder {
    * Construct edges in the graph.
    */
   void ConstructEdges();
+
+  /**
+   * Sort edges from the nodes (by driveability and importance).
+   */
+  void SortEdgesFromNodes();
 
   /**
    * Add the nodes to tiles.
