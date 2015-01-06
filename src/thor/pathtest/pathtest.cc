@@ -25,14 +25,27 @@ namespace bpo = boost::program_options;
  *
  */
 int PathTest(GraphReader& reader, const PathLocation& origin,
-             const PathLocation& dest) {
+             const PathLocation& dest, std::string routetype) {
   // Register costing methods
   CostFactory<DynamicCost> costing;
   costing.Register("AutoCost", AutoCost::Create());
   costing.Register("BicycleCost", BicycleCost::Create());
   costing.Register("PedestrianCost", PedestrianCost::Create());
 
-  DynamicCost* costs = costing.Create("AutoCost");
+  DynamicCost* costs;
+
+  for (auto & c: routetype) c = std::tolower(c);
+
+  if (routetype == "auto") {
+       costs = costing.Create("AutoCost");
+  } else if (routetype == "bicycle") {
+       costs = costing.Create("BicycleCost");
+  } else if (routetype == "pedestrian") {
+       costs = costing.Create("PedestrianCost");
+       ((PedestrianCost*)costs)->set_favorwalkways(0.50f);//We want to use walkways
+  } else return 1;
+
+  std::cout << "routetype: " << routetype << std::endl;
 
   std::clock_t start = std::clock();
   PathAlgorithm pathalgorithm;
@@ -78,13 +91,14 @@ int main(int argc, char *argv[]) {
   "\n"
   "\n");
 
-  std::string origin, destination, config;
+  std::string origin, destination, routetype, config;
 
   options.add_options()
     ("help,h", "Print this help message.")
     ("version,v", "Print the version of this software.")
     ("origin,o", boost::program_options::value<std::string>(&origin)->required(), "Origin lat,lng.")
     ("destination,d", boost::program_options::value<std::string>(&destination)->required(), "Destination lat,lng.")
+    ("route_type,t", boost::program_options::value<std::string>(&routetype)->required(), "Route Type: auto|bicycle|pedestrian")
     // positional arguments
     ("config", bpo::value<std::string>(&config)->required(), "String for the application to echo back")
     ;
@@ -119,7 +133,7 @@ int main(int argc, char *argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : std::vector<std::string>{"origin", "destination", "config"}) {
+  for (auto arg : std::vector<std::string>{"origin", "destination", "route_type", "config"}) {
     if (vm.count(arg) == 0) {
       std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
@@ -147,7 +161,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Location Processing took " << msecs << " ms" << std::endl;
 
   // Try the route
-  PathTest(reader, pathOrigin, pathDest);
+  PathTest(reader, pathOrigin, pathDest, routetype);
 
   return EXIT_SUCCESS;
 }

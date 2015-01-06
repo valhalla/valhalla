@@ -8,7 +8,8 @@ namespace thor {
 // Constructor
 PedestrianCost::PedestrianCost()
     : DynamicCost(),
-      walkingspeed_(5.1f) {
+      walkingspeed_(5.1f),
+      favorwalkways_(0.90f) {
 }
 
 // Destructor
@@ -33,9 +34,14 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) {
 
 // Get the cost to traverse the edge
 float PedestrianCost::Get(const DirectedEdge* edge) {
-  // TODO - slightly favor walkways/paths.
   // TODO - slightly avoid steps?
+
+  // Slightly favor walkways/paths.
+  if (edge->use() == Use::kFootway)
+    return edge->length() * favorwalkways_;
+
   return edge->length();
+
 }
 
 // Returns the time (in seconds) to traverse the edge.
@@ -52,7 +58,10 @@ float PedestrianCost::Seconds(const baldr::DirectedEdge* edge) {
  * estimate is less than the least possible time along roads.
  */
 float PedestrianCost::AStarCostFactor() {
-  // This should be multiplied by the factor used to favor walkways/paths
+  // Multiplied by the factor used to favor walkways/paths if < 1.0f
+  if (favorwalkways_ < 1.0f)
+    return 1.0f * favorwalkways_;
+
   return 1.0f;
 }
 
@@ -64,6 +73,16 @@ float PedestrianCost::UnitSize() const {
 // Set the walking speed
 void PedestrianCost::set_walkingspeed(const float speed) {
   walkingspeed_ = speed;
+}
+
+// Set the walkway/path weight
+void PedestrianCost::set_favorwalkways(const float weight) {
+  favorwalkways_ = weight;
+}
+
+// Get the walkway/path weight
+float PedestrianCost::favorwalkways() const {
+  return favorwalkways_;
 }
 
 }
