@@ -15,16 +15,22 @@ EdgeInfoBuilder::EdgeInfoBuilder() {
 }
 
 EdgeInfoBuilder::EdgeInfoBuilder(const EdgeInfoBuilder& other) {
-  nodea_ = new GraphId(*other.nodea_);
-  nodeb_ = new GraphId(*other.nodeb_);
-  item_ = new PackedItem(*other.item_);
+  nodea_ = new GraphId(*(other.nodea_));
+  nodeb_ = new GraphId(*(other.nodeb_));
+  item_ = new PackedItem(*(other.item_));
+  street_name_offset_list_ = other.street_name_offset_list_;
+  shape_ = other.shape_;
+  exit_signs_ = other.exit_signs_;
 }
 
 EdgeInfoBuilder& EdgeInfoBuilder::operator=(const EdgeInfoBuilder& rhs) {
   if (&rhs != this) {
-    nodea_ = new GraphId(*rhs.nodea_);
-    nodeb_ = new GraphId(*rhs.nodeb_);
-    item_ = new PackedItem(*rhs.item_);
+    nodea_ = new GraphId(*(rhs.nodea_));
+    nodeb_ = new GraphId(*(rhs.nodeb_));
+    item_ = new PackedItem(*(rhs.item_));
+    street_name_offset_list_ = rhs.street_name_offset_list_;
+    shape_ = rhs.shape_;
+    exit_signs_ = rhs.exit_signs_;
   }
   return *this;
 }
@@ -54,16 +60,10 @@ void EdgeInfoBuilder::set_nodeb(const baldr::GraphId& nodeb) {
   *nodeb_ = nodeb;
 }
 
-// Set the indexes to names used by this edge. TODO - move?
+// Set the indexes to names used by this edge.
 void EdgeInfoBuilder::set_street_name_offset_list(
     const std::vector<size_t>& street_name_offset_list) {
-  // TODO - move
-  street_name_offset_list_.clear();
-  if (!street_name_offset_list.empty()) {
-    street_name_offset_list_.insert(street_name_offset_list_.end(),
-                                    street_name_offset_list.begin(),
-                                    street_name_offset_list.end());
-  }
+  street_name_offset_list_ = street_name_offset_list;
 
   // Set the street name offset list offset
   item_->fields.street_name_offset_list_offset = sizeof(GraphId)
@@ -77,6 +77,7 @@ void EdgeInfoBuilder::set_street_name_offset_list(
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   // Set the shape
   shape_.assign(shape.begin(), shape.end());
+
   // Set the shape count
   item_->fields.shape_count = shape_.size();
 }
