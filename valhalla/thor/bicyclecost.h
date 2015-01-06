@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_AUTOCOST_H_
-#define VALHALLA_THOR_AUTOCOST_H_
+#ifndef VALHALLA_THOR_BICYCLECOST_H_
+#define VALHALLA_THOR_BICYCLECOST_H_
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
@@ -16,6 +16,10 @@ class BicycleCost : public DynamicCost {
   BicycleCost();
 
   virtual ~BicycleCost();
+
+  static DynamicCost* Create() {
+    return new BicycleCost;
+  }
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -50,7 +54,7 @@ class BicycleCost : public DynamicCost {
    * @param edge  Pointer to a directed edge.
    * @return  Returns the time in seconds to traverse the edge.
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) = 0;
+  virtual float Seconds(const baldr::DirectedEdge* edge);
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -76,4 +80,4 @@ class BicycleCost : public DynamicCost {
 }
 }
 
-#endif  // VALHALLA_THOR_AUTOCOST_H_
+#endif  // VALHALLA_THOR_BICYCLECOST_H_

@@ -42,6 +42,7 @@ include_HEADERS = \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/autocost.h \
 	valhalla/thor/bicyclecost.h \
+	valhalla/thor/costfactory.h \
 	valhalla/thor/dynamiccost.h \
 	valhalla/thor/edgelabel.h \
 	valhalla/thor/edgestatus.h \
