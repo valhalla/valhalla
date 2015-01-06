@@ -9,7 +9,7 @@ namespace thor {
 PedestrianCost::PedestrianCost()
     : DynamicCost(),
       walkingspeed_(5.1f),
-      favorwalkways_(0.95f) {
+      favorwalkways_(0.90f) {
 }
 
 // Destructor
