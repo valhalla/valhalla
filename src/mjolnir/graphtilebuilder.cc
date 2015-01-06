@@ -2,6 +2,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
+#include <list>
 
 using namespace valhalla::baldr;
 
@@ -111,7 +112,7 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
 }
 
 void GraphTileBuilder::SetEdgeInfoAndSize(
-    const std::vector<EdgeInfoBuilder>& edges,
+    const std::list<EdgeInfoBuilder>& edges,
     const std::size_t edgeinfo_size) {
 
   edgeinfos_builder_ = edges;
@@ -128,7 +129,7 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 }
 
 void GraphTileBuilder::SetTextListAndSize(
-    const std::vector<std::string>& textlist, const std::size_t textlist_size) {
+    const std::list<std::string>& textlist, const std::size_t textlist_size) {
   textlist_builder_ = textlist;
   // Set textlist data size
   textlist_size_ = textlist_size;
