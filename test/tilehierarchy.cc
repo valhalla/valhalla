@@ -47,7 +47,7 @@ namespace {
     if(id.Is_Valid())
       throw runtime_error("GraphId should be invalid as the level doesn't exist");
     //there are 1440 cols and 720 rows, this spot lands on col 414 and row 522
-    id = h.GetGraphId(PointLL(40.5, -76.5), 2);
+    id = h.GetGraphId(PointLL(-76.5, 40.5), 2);
     if(id.level() != 2 || id.tileid() != (522 * 1440) + 414 || id.id() != 0)
       throw runtime_error("Expected different graph id for this location");
     if(h.levels().begin()->second.importance != RoadClass::kOther)

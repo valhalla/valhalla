@@ -5,7 +5,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 TileHierarchy::TileLevel::TileLevel(const boost::property_tree::ptree& pt):
-  tiles(AABB2(PointLL(-90, -180), PointLL(90, 180)), pt.get<float>("size")){
+  tiles({{-180, -90}, {180, 90}}, pt.get<float>("size")){
   level = pt.get<uint8_t>("level");
   name = pt.get<std::string>("name");
   //if not provided default to everything
