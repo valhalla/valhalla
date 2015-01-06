@@ -44,9 +44,6 @@ void TryWriteRead(const EdgeInfoBuilder& eibuilder) {
   EdgeInfo* ei = new EdgeInfo(memblock);
   ei->ToOstream();
 
-  if (!(eibuilder.street_name_offset_list_offset()
-      == ei->street_name_offset_list_offset()))
-    throw runtime_error("WriteRead:street_name_offset_list_offset test failed");
   if (!(eibuilder.name_count() == ei->name_count()))
     throw runtime_error("WriteRead:name_count test failed");
   if (!(eibuilder.shape_count() == ei->shape_count()))

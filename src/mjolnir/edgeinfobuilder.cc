@@ -41,9 +41,6 @@ void EdgeInfoBuilder::set_street_name_offset_list(
     const std::vector<size_t>& street_name_offset_list) {
   street_name_offset_list_ = street_name_offset_list;
 
-  // Set the street name offset list offset
-  item_->fields.street_name_offset_list_offset = sizeof(PackedItem);
-
   // Set the name count
   item_->fields.name_count = street_name_offset_list_.size();
 }
@@ -78,23 +75,21 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 void EdgeInfoBuilder::SerializeToOstream(std::ostream& out) const {
   // TODO - rm later
   /*std::cout << "------------------------------------------------------"
-   << std::endl;
-   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
-   std::cout << "EdgeInfoBuilder::SizeOf=" << SizeOf() << std::endl;
-   std::cout << "item_=" << item_->value << std::endl;
-   std::cout << "street_name_offset_list_offset="
-   << street_name_offset_list_offset() << "  name_count="
-   << street_name_offset_list_.size() << std::endl;
-   for (auto name_offset : street_name_offset_list_) {
-   std::cout << "   name_offset=" << name_offset << std::endl;
-   }
-   std::cout << "shape_count=" << shape_.size() << std::endl;
-   for (const auto& ll : shape_) {
-   std::cout << "   ll=" << ll.lat() << "," << ll.lng() << std::endl;
-   }
-   std::cout << "exit_sign_count=" << exit_signs_.size() << std::endl;
-   std::cout << "======================================================="
-   << std::endl;*/
+            << std::endl;
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+  std::cout << "EdgeInfoBuilder::SizeOf=" << SizeOf() << std::endl;
+  std::cout << "item_=" << item_->value << std::endl;
+  std::cout << "name_count=" << street_name_offset_list_.size() << std::endl;
+  for (auto name_offset : street_name_offset_list_) {
+    std::cout << "   name_offset=" << name_offset << std::endl;
+  }
+  std::cout << "shape_count=" << shape_.size() << std::endl;
+  for (const auto& ll : shape_) {
+    std::cout << "   ll=" << ll.lat() << "," << ll.lng() << std::endl;
+  }
+  std::cout << "exit_sign_count=" << exit_signs_.size() << std::endl;
+  std::cout << "======================================================="
+            << std::endl;*/
 
   out.write(reinterpret_cast<const char*>(item_), sizeof(PackedItem));
   out.write(reinterpret_cast<const char*>(&street_name_offset_list_[0]),
