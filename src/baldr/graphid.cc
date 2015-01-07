@@ -86,7 +86,7 @@ bool GraphId::operator ==(const GraphId& rhs) const {
   return graphid_.v == rhs.graphid_.v;
 }
 
-std::ostream& operator<<(std::ostream& os, const valhalla::baldr::GraphId& id)
+std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
     return os << id.level() << '/' << id.tileid() << '/' << id.id();
 }
