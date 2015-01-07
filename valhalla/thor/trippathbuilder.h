@@ -6,6 +6,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/proto/trippath.pb.h>
 
 namespace valhalla {
 namespace thor {
@@ -30,7 +31,7 @@ class TripPathBuilder {
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
-  float Build(baldr::GraphReader& graphreader,
+  odin::TripPath Build(baldr::GraphReader& graphreader,
          const std::vector<baldr::GraphId>& pathedges);
 };
 
