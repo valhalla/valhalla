@@ -145,12 +145,15 @@ class GraphTile {
   // use offsets in directed edges.
   char* edgeinfo_;
 
+  // Size of the edgeinfo data
+  std::size_t edgeinfo_size_;
+
   // Street names and exit names/numbers as sets of null-terminated char arrays.
   // Edge info has offsets into this array.
   char* textlist_;
 
   // Number of bytes in the text/name list
-  size_t textsize_;
+  size_t textlist_size_;
 
   // The id of the tile for convenience
   const GraphId id_;
