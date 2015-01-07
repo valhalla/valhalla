@@ -2,9 +2,14 @@
 
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/vector2.h"
+
+namespace {
+constexpr float EPSILON = .00002f;
+}
 
 namespace valhalla {
 namespace midgard {
@@ -33,13 +38,10 @@ void Point2::Set(const float x, const float y) {
   second = y;
 }
 
-bool Point2::operator ==(const Point2& p) const {
-  return (first == p.x() && second == p.y());
+bool Point2::ApproximatelyEqual(const Point2& p) const {
+  return std::fabs(first - p.x()) < EPSILON && std::fabs(second - p.y()) < EPSILON;
 }
 
-bool Point2::operator!=(const Point2& p) const {
-  return (first != p.x() || second != p.y());
-}
 
 float Point2::DistanceSquared(const Point2& p) const {
   return sqr(first - p.x()) + sqr(second - p.y());

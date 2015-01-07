@@ -1,7 +1,6 @@
 #ifndef VALHALLA_MIDGARD_POINT2_H_
 #define VALHALLA_MIDGARD_POINT2_H_
 
-#include <math.h>
 #include <vector>
 #include <utility>
 
@@ -61,19 +60,11 @@ class Point2 : public std::pair<float, float>{
   virtual void Set(const float x, const float y);
 
   /**
-   * Equality operator.
+   * Equality approximation.
    * @param   p  Point to compare to the current point.
-   * @return  Returns true if two points are equal, false otherwise.
+   * @return  Returns true if two points are approximately equal, false otherwise.
    */
-  bool operator == (const Point2& p) const;
-
-  /**
-   * Inequality operator.
-   * @param   p  Point to compare to the current point.
-   * @return  Returns true if the supplied point is not equal to the
-   *          point, false otherwise.
-   */
-  bool operator!= (const Point2& p) const;
+  bool ApproximatelyEqual(const Point2& p) const;
 
   /**
    * Get the distance squared from this point to point p.
