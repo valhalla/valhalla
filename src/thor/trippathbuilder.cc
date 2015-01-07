@@ -93,7 +93,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     for (const auto& pt : points) {
       n = trip_shape.size();
 
-      if (!(pt == trip_shape[n-1]))// no dups!
+      if (n == 0 || !(pt == trip_shape[n-1]))// no dups!
           trip_shape.emplace_back(pt);
     }
 
