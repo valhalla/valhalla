@@ -27,13 +27,21 @@ class GraphTileBuilder : public baldr::GraphTile {
   GraphTileBuilder();
 
   /**
+   * Constructor given an existing tile. This is used to read in the tile
+   * data and then add to it (e.g. adding node connections between hierarchy
+   * levels.
+   * @param  basedir  Base directory path
+   * @param  graphid  GraphId used to determine the tileid and level
+   */
+  GraphTileBuilder(const std::string& basedir, const GraphId& graphid);
+
+  /**
    * Output the tile to file. Stores as binary data.
    * @param  graphid  GraphID to store.
    * @param  basedirectory  Base data directory
    */
   void StoreTileData(const std::string& basedirectory,
                      const baldr::GraphId& graphid);
-
 
   /**
    * Add a node and its outbound edges.
@@ -76,15 +84,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // use offsets in directed edges.
   std::list<EdgeInfoBuilder> edgeinfos_builder_;
 
-  // Size of the edgeinfo data
-  std::size_t edgeinfo_size_;
-
   // Names as sets of null-terminated char arrays. Edge info has offsets
   // into this array.
   std::list<std::string> textlist_builder_;
-
-  // Size of the textlist data
-  uint32_t textlist_size_;
 };
 
 }
