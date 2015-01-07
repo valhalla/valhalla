@@ -16,6 +16,7 @@ GraphTile::GraphTile()
       directededges_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
+      textsize_(0),
       id_() {
 }
 
