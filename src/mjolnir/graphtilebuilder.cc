@@ -120,13 +120,13 @@ void GraphTileBuilder::SetTextListAndSize(
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
   for (const auto& edgeinfo : edgeinfos_builder_) {
-    edgeinfo.SerializeToOstream(out);
+    out << edgeinfo;
   }
 }
 
 void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
   for (const auto& text : textlist_builder_) {
-    out.write(text.c_str(), (text.length() + 1));
+    out << text << '\0';
   }
 }
 

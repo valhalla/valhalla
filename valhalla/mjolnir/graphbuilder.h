@@ -104,14 +104,13 @@ struct Edge {
    * @param drivereverse Auto use in the reverse direction of the edge
    */
   Edge(const uint64_t sourcenode, const uint32_t wayindex,
-       const midgard::PointLL& ll, const uint32_t importance,
-       const bool driveforward, const bool drivereverse)
+       const midgard::PointLL& ll, const OSMWay& way)
       : sourcenode_(sourcenode),
         targetnode_(0),
         wayindex_(wayindex) {
-    attributes_.fields.importance = importance;
-    attributes_.fields.driveableforward = driveforward;
-    attributes_.fields.driveablereverse = drivereverse;
+    attributes_.fields.importance = static_cast<uint32_t>(way.road_class());
+    attributes_.fields.driveableforward = way.auto_forward();
+    attributes_.fields.driveablereverse = way.auto_backward();
     latlngs_.emplace_back(ll);
   }
 
