@@ -42,13 +42,47 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     // Add edge to the trip node and set its attributes
     TripPath_Edge* trip_edge = trip_node->add_edge();
-    trip_edge->set_length(directededge->length());
 
     names = graphtile->GetNames(directededge->edgedataoffset(), names);
     for (auto& name : names) {
       trip_edge->add_name(name);
     }
 
+    trip_edge->set_length(directededge->length());
+
+    trip_edge->set_speed(directededge->speed());
+    
+    if (directededge->forward()) { //Edge is in the forward direction.
+
+      if (directededge->forwardaccess() && directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kBoth);
+      else if (directededge->forwardaccess() && !directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kForward);
+      else if (!directededge->forwardaccess() && directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kBackward);
+      else trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kNone);
+
+      //TODO - Add shape.
+
+    } else { //Edge is in the reverse direction.  We must flip everything.
+
+      if (directededge->forwardaccess() && directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kBoth);
+      else if (!directededge->forwardaccess() && directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kForward);
+      else if (directededge->forwardaccess() && !directededge->reverseaccess())
+        trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kBackward);
+      else trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kNone);
+
+      //TODO - Add shape in the reverse direction.
+
+    }
+
+    trip_edge->set_ramp(directededge->link());
+
+    trip_edge->set_toll(directededge->toll());
+
+    
     // TODO - add other connected edges to the node...
 
 /**
