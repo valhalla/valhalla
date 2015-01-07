@@ -3,11 +3,11 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/exitsign.h>
 
 using namespace valhalla::midgard;
@@ -19,29 +19,9 @@ namespace mjolnir {
 /**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
- */
-class EdgeInfoBuilder : public baldr::EdgeInfo {
+  */
+class EdgeInfoBuilder {
  public:
-  /**
-   * Constructor
-   */
-  EdgeInfoBuilder();
-
-  /**
-   * Copy Constructor
-   */
-  EdgeInfoBuilder(const EdgeInfoBuilder& other);
-
-  /**
-   * Copy Assignment
-   */
-  EdgeInfoBuilder& operator=(const EdgeInfoBuilder& rhs);
-
-  /**
-   * Destrcutor
-   */
-  virtual ~EdgeInfoBuilder();
-
   /**
    * Set the indexes to names used by this edge
    * @param  nameindexes  a list of name indexes.
@@ -55,28 +35,21 @@ class EdgeInfoBuilder : public baldr::EdgeInfo {
    */
   void set_shape(const std::vector<PointLL>& shape);
 
-  // Returns the name index at the specified index.
-  const uint32_t GetStreetNameOffset(uint8_t index) const;
-
-  // Returns the shape point at the specified index.
-  // TODO: replace with vector once it works
-  const PointLL GetShapePoint(uint16_t index) const;
-
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
-  void SerializeToOstream(std::ostream& out) const;
-
- private:
+ protected:
 
   // List of roadname indexes
   std::vector<uint32_t> street_name_offset_list_;
 
   // Lat,lng shape of the edge
-  std::vector<PointLL> shape_;
+  std::string encoded_shape_;
 
   // List of exit signs (type and index)
   std::vector<ExitSign> exit_signs_;
+
+  friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 
 };
 
