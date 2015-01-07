@@ -15,22 +15,14 @@ namespace midgard{
 class PointLL : public Point2 {
  public:
   /**
+   * Use the constructors provided by pair
+   */
+  using Point2::Point2;
+
+  /**
    * Default constructor.  Sets latitude and longitude to INVALID.
    */
   PointLL();
-
-  /**
-   * Constructor using a latitude,longitude pair to initialize.
-   * @param   lng    Longitude in degrees
-   * @param   lat    Latitude in degrees
-   */
-  PointLL(const float lng, const float lat);
-
-  /**
-   * Copy constructor.
-   * @param   ll    Latitude, longitude pair to copy.
-   */
-  PointLL(const PointLL& ll);
 
   /**
    * Get the latitude in degrees.

@@ -3,6 +3,8 @@
 #include "valhalla/midgard/distanceapproximator.h"
 #include "valhalla/midgard/vector2.h"
 
+#include <limits>
+
 namespace {
   const float INVALID = 0xBADBADBAD;
 }
@@ -14,31 +16,23 @@ PointLL::PointLL()
     : Point2(INVALID, INVALID) {
 }
 
-PointLL::PointLL(float lng, float lat)
-    : Point2(lng, lat) {
-}
-
-PointLL::PointLL(const PointLL& ll)
-    : Point2(ll.lng(), ll.lat()) {
-}
-
 float PointLL::lat() const {
-  return y_;
+  return second;
 }
 
 float PointLL::lng() const {
-  return x_;
+  return first;
 }
 
 bool PointLL::IsValid() const{
   //is a range check appropriate?
-  //return x_ >= -180 && y >= -90 && x_ < 180 && y_ < 90;
-  return x_ != INVALID && y_ != INVALID;
+  //return first >= -180 && y >= -90 && first < 180 && second < 90;
+  return first != INVALID && second != INVALID;
 }
 
 void PointLL::Invalidate() {
-  x_ = INVALID;
-  y_ = INVALID;
+  first = INVALID;
+  second = INVALID;
 }
 
 // May want to use DistanceApproximator!
@@ -105,13 +99,22 @@ float PointLL::Heading(const PointLL& ll2) const {
 
 float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
                             int& idx) const {
-  // TODO - make sure at least 2 points are in list
+  float mindist = std::numeric_limits<float>::max();
+  // If there are no points we are done
+  if(pts.size() == 0)
+    return mindist;
+  // If there is one point we are done
+  if(pts.size() == 1) {
+    mindist = DistanceSquared(pts.front());
+    closest = pts.front();
+    idx = 0;
+    return mindist;
+  }
 
   DistanceApproximator approx;
   approx.SetTestPoint(*this);
 
   // Iterate through the pts
-  unsigned int count = pts.size();
   bool beyond_end = true;   // Need to test past the end point?
   Vector2 v1;       // Segment vector (v1)
   Vector2 v2;       // Vector from origin to target (v2)
@@ -119,18 +122,18 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
   float dot;        // Dot product of v1 and v2
   float comp;       // Component of v2 along v1
   float dist;       // Squared distance from target to closest point on line
-  float mindist = 2147483647.0f;
-  const PointLL* p0 = &pts[0];
-  const PointLL* p1 = &pts[1];
-  const PointLL* end = &pts[count - 1];
-  for (int index = 0; p1 < end; index++, p0++, p1++) {
+  for (size_t index = 0; index < pts.size() - 1; ++index) {
+    // Get the current segment
+    const PointLL& p0 = pts[index];
+    const PointLL& p1 = pts[index + 1];
+
     // Construct vector v1 - represents the segment.  Skip 0 length segments
-    v1.Set(*p0, *p1);
+    v1.Set(p0, p1);
     if (v1.x() == 0.0f && v1.y() == 0.0f)
       continue;
 
     // Vector v2 from the segment origin to the target point
-    v2.Set(*p0, *this);
+    v2.Set(p0, *this);
 
     // Find the dot product of v1 and v2.  If less than 0 the segment
     // origin is the closest point.  Find the distance and continue
@@ -138,10 +141,10 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
     dot = v1.Dot(v2);
     if (dot <= 0.0f) {
       beyond_end = false;
-      dist = approx.DistanceSquared(*p0);
+      dist = approx.DistanceSquared(p0);
       if (dist < mindist) {
         mindist = dist;
-        closest = *p0;
+        closest = p0;
         idx = index;
       }
       continue;
@@ -162,7 +165,7 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
       // The squared distance from this point to the target is then found.
       // TODO - why not:  *p0 + v1 * comp;
       beyond_end = false;
-      projpt.Set(p0->lng() + v1.x() * comp, p0->lat() + v1.y() * comp);
+      projpt = p0 + v1 * comp;
       dist = approx.DistanceSquared(projpt);
       if (dist < mindist) {
         mindist = dist;
@@ -174,11 +177,11 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
 
   // Test the end point if flag is set - it may be the closest point
   if (beyond_end) {
-    dist = approx.DistanceSquared(pts[count - 1]);
+    dist = approx.DistanceSquared(pts[pts.size() - 1]);
     if (dist < mindist) {
       mindist = dist;
-      closest = *end;
-      idx = (int) (count - 2);
+      closest = pts.back();
+      idx = (int) (pts.size() - 2);
     }
   }
   return mindist;

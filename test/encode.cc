@@ -1,4 +1,5 @@
 #include "valhalla/midgard/util.h"
+#include "valhalla/midgard/pointll.h"
 #include "test.h"
 
 #include <boost/format.hpp>
@@ -62,6 +63,12 @@ void TestSimple() {
    * #then generate a test case with python:
    * python -c "import random; import gpolyencode; x = [ [round(random.random() * 180 - 90, 5), round(random.random() * 360 - 180, 5)] for a in range(0, random.randint(1,100)) ]; p = gpolyencode.GPolyEncoder().encode(x)['points']; print; print 'do_pair(' + str(x).replace('[','{').replace(']','}') + ', \"' + repr(p)[1:-1] + '\");'; print"
    */
+
+  //check an easy case first just to be sure Point2/PointLL is working
+  PointLL a(PointLL(1,2));
+  if(encode<std::vector<PointLL> >({{-76.3002, 40.0433}, {-76.3036, 40.043}}) != "s}ksFhkupM|@dT") {
+    throw std::runtime_error("Encoding of Point2/PointLL vector failed");
+  }
 
   //note we are testing with higher precision to avoid truncation/roundoff errors just to make the test cases easier to generate
   do_pair({{-76.60025, 40.49437}}, "y`dvFp~orM");
