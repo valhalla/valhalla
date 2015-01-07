@@ -1,8 +1,8 @@
 #include "valhalla/midgard/util.h"
+#include "valhalla/midgard/pointll.h"
 #include "test.h"
 
 #include <boost/format.hpp>
-#include <cmath>
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -13,17 +13,14 @@ namespace {
 
 using perc_t = double;
 using container_t = std::vector<std::pair<perc_t, perc_t> >;
-constexpr perc_t EPSILON = .00001;
-
-bool appx_equal(const container_t::value_type& a, const container_t::value_type& b) {
-  return abs(a.first - b.first) > EPSILON || abs(a.second - b.second) > EPSILON;
-}
 
 bool appx_equal(const container_t& a, const container_t& b) {
   if(a.size() != b.size())
     return false;
   for(size_t i = 0; i < a.size(); ++i) {
-    if(!appx_equal(a[i], b[i]))
+    const Point2& x = static_cast<const Point2&>(a[i]);
+    const Point2& y = static_cast<const Point2&>(b[i]);
+    if(!x.ApproximatelyEqual(y))
       return false;
   }
   return true;
@@ -46,7 +43,7 @@ void do_pair(const container_t& points, const std::string& encoded) {
   if(enc_answer != encoded)
     throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded + " Got: " + enc_answer);
   auto dec_answer = decode<container_t>(encoded);
-  if(appx_equal(dec_answer, points))
+  if(!appx_equal(dec_answer, points))
     throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) + " Got: " + to_string(dec_answer));
   //cant run this thorough of a test due to accumulation of error
   /*if(encode<container_t>(decode<container_t>(encoded)) != encoded)
@@ -62,6 +59,12 @@ void TestSimple() {
    * #then generate a test case with python:
    * python -c "import random; import gpolyencode; x = [ [round(random.random() * 180 - 90, 5), round(random.random() * 360 - 180, 5)] for a in range(0, random.randint(1,100)) ]; p = gpolyencode.GPolyEncoder().encode(x)['points']; print; print 'do_pair(' + str(x).replace('[','{').replace(']','}') + ', \"' + repr(p)[1:-1] + '\");'; print"
    */
+
+  //check an easy case first just to be sure Point2/PointLL is working
+  PointLL a(PointLL(1,2));
+  if(encode<std::vector<PointLL> >({{-76.3002, 40.0433}, {-76.3036, 40.043}}) != "s}ksFhkupM|@dT") {
+    throw std::runtime_error("Encoding of Point2/PointLL vector failed");
+  }
 
   //note we are testing with higher precision to avoid truncation/roundoff errors just to make the test cases easier to generate
   do_pair({{-76.60025, 40.49437}}, "y`dvFp~orM");

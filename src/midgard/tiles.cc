@@ -1,4 +1,5 @@
 #include "valhalla/midgard/tiles.h"
+#include <cmath>
 
 namespace valhalla {
 namespace midgard {

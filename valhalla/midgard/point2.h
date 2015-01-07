@@ -1,7 +1,6 @@
 #ifndef VALHALLA_MIDGARD_POINT2_H_
 #define VALHALLA_MIDGARD_POINT2_H_
 
-#include <math.h>
 #include <vector>
 #include <utility>
 
@@ -18,30 +17,11 @@ class Vector2;
 class Point2 : public std::pair<float, float>{
 
  public:
-  /**
-   * Default constructor
-   */
-  Point2();
 
   /**
-   * Constructor with initial values for x,y.
-   * @param   x   x coordinate position.
-   * @param   y   y coordinate position.
+   * Use the constructors provided by pair
    */
-  Point2(const float x, const float y);
-
-  /**
-   * Copy constructor.
-   * @param   p   Point to copy to the new point.
-   */
-  Point2(const Point2& p);
-
-  /**
-   * Assignment operator
-   * @param   p   Point to assign to this point.
-   * @return  Returns the address of this point.
-   */
-  Point2& operator = (const Point2& p);
+  using std::pair<float, float>::pair;
 
   /**
    * Destructor
@@ -80,19 +60,11 @@ class Point2 : public std::pair<float, float>{
   virtual void Set(const float x, const float y);
 
   /**
-   * Equality operator.
+   * Equality approximation.
    * @param   p  Point to compare to the current point.
-   * @return  Returns true if two points are equal, false otherwise.
+   * @return  Returns true if two points are approximately equal, false otherwise.
    */
-  bool operator == (const Point2& p) const;
-
-  /**
-   * Inequality operator.
-   * @param   p  Point to compare to the current point.
-   * @return  Returns true if the supplied point is not equal to the
-   *          point, false otherwise.
-   */
-  bool operator!= (const Point2& p) const;
+  bool ApproximatelyEqual(const Point2& p) const;
 
   /**
    * Get the distance squared from this point to point p.
@@ -160,11 +132,6 @@ class Point2 : public std::pair<float, float>{
             int& idx) const;
 
  protected:
-  float x_;
-  float y_;
-
- private:
-
 };
 
 }
