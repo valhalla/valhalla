@@ -17,6 +17,7 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
@@ -59,7 +60,6 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
 
   // Try again to see how much caching improves...
   pathalgorithm.Clear();
-
   start = std::clock();
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, costs);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
@@ -67,9 +67,11 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
 
   // Form output information based on pathedges
   start = std::clock();
-  TripPathBuilder trippath;
-  float length = trippath.Build(reader, pathedges);
-  std::cout << "Trip length is: " << length << " km" << std::endl;
+  TripPathBuilder trippathbuilder;
+  TripPath trip_path = trippathbuilder.Build(reader, pathedges);
+
+  // TODO - perhaps walk the edges to find total length?
+//  std::cout << "Trip length is: " << trip_path.length << " km" << std::endl;
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "TripPathBuilder took " << msecs << " ms" << std::endl;
 

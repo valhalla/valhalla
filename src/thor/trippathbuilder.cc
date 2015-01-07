@@ -6,6 +6,7 @@
 #include <valhalla/baldr/edgeinfo.h>
 
 using namespace valhalla::baldr;
+using namespace valhalla::odin;
 
 namespace valhalla {
 namespace thor {
@@ -20,14 +21,37 @@ TripPathBuilder::~TripPathBuilder() {
 
 // For now just find the length of the path!
 // TODO - alter the return to be trip path structure.
-float TripPathBuilder::Build(GraphReader& graphreader,
+// TODO - probably need the location information passed in - to
+// add to the TripPath
+TripPath TripPathBuilder::Build(GraphReader& graphreader,
                              const std::vector<GraphId>& pathedges) {
-  float length = 0.0f;
+  // TripPath is a protocol buffer that contains information about the
+  // trip
+  TripPath trip_path;
+
+  // TODO - support multiple legs
+  TripPath_Leg* trip_leg = trip_path.add_leg();
+
   std::vector<std::string> names;
   for (const auto& edge : pathedges) {
     GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
-    length += directededge->length();
+
+    // Add a node. TODO - where do we get its attributes?
+    TripPath_Node* trip_node = trip_leg->add_node();
+
+    // Add edge to the trip node and set its attributes
+    TripPath_Edge* trip_edge = trip_node->add_edge();
+    trip_edge->set_length(directededge->length());
+
+    names = graphtile->GetNames(directededge->edgedataoffset(), names);
+    for (auto& name : names) {
+      trip_edge->add_name(name);
+    }
+
+    // TODO - add other connected edges to the node...
+
+/**
     // TODO - rm later
     std::cout << "-------------------------------------------------------"
               << std::endl;
@@ -39,8 +63,9 @@ float TripPathBuilder::Build(GraphReader& graphreader,
         directededge->edgedataoffset());
     // TODO - rm later
     //edgeinfo->ToOstream();
+*/
   }
-  return length;
+  return trip_path;
 }
 
 }
