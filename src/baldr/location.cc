@@ -28,7 +28,7 @@ namespace baldr{
     if(parts.size() < 2)
       throw std::runtime_error("Bad format for csv formated location");
 
-    //make the lat, lng
+    //make the lng, lat
     midgard::PointLL ll(std::stof(parts[0]), std::stof(parts[1]));
 
     //check for info about the stop type
