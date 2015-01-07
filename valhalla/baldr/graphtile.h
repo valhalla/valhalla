@@ -153,7 +153,7 @@ class GraphTile {
   char* textlist_;
 
   // Number of bytes in the text/name list
-  size_t textlist_size_;
+  std::size_t textlist_size_;
 
   // The id of the tile for convenience
   const GraphId id_;
