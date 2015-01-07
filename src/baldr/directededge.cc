@@ -79,7 +79,7 @@ uint32_t DirectedEdge::lanes() const {
   return attributes_.lanecount;
 }
 
-// Is this directed edge stored forward in edgeinof (true) or
+// Is this directed edge stored forward in edgeinfo (true) or
 // reverse (false).
 bool DirectedEdge::forward() const {
   return attributes_.forward;
@@ -105,6 +105,12 @@ uint32_t DirectedEdge::bikenetwork() const {
 RoadClass DirectedEdge::importance() const {
   return static_cast<RoadClass>(classification_.importance);
 }
+
+// Is this edge a link / ramp?
+bool DirectedEdge::link() const {
+  return classification_.link;
+}
+
 
 // Get the use of this edge.
 Use DirectedEdge::use() const {

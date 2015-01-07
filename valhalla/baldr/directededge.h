@@ -151,6 +151,11 @@ class DirectedEdge {
   RoadClass importance() const;
 
   /**
+   * Is this edge a link/ramp?
+   */
+  bool link() const;
+
+  /**
    * Get the use of this edge.
    */
   Use use() const;
