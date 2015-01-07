@@ -3,7 +3,6 @@
 #include "test.h"
 
 #include <boost/format.hpp>
-#include <cmath>
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -14,17 +13,14 @@ namespace {
 
 using perc_t = double;
 using container_t = std::vector<std::pair<perc_t, perc_t> >;
-constexpr perc_t EPSILON = .00001;
-
-bool appx_equal(const container_t::value_type& a, const container_t::value_type& b) {
-  return abs(a.first - b.first) > EPSILON || abs(a.second - b.second) > EPSILON;
-}
 
 bool appx_equal(const container_t& a, const container_t& b) {
   if(a.size() != b.size())
     return false;
   for(size_t i = 0; i < a.size(); ++i) {
-    if(!appx_equal(a[i], b[i]))
+    const Point2& x = static_cast<const Point2&>(a[i]);
+    const Point2& y = static_cast<const Point2&>(b[i]);
+    if(!x.ApproximatelyEqual(y))
       return false;
   }
   return true;
@@ -47,7 +43,7 @@ void do_pair(const container_t& points, const std::string& encoded) {
   if(enc_answer != encoded)
     throw std::runtime_error("Simple polyline encoding failed. Expected: " + encoded + " Got: " + enc_answer);
   auto dec_answer = decode<container_t>(encoded);
-  if(appx_equal(dec_answer, points))
+  if(!appx_equal(dec_answer, points))
     throw std::runtime_error("Simple polyline decoding failed. Expected: " + to_string(points) + " Got: " + to_string(dec_answer));
   //cant run this thorough of a test due to accumulation of error
   /*if(encode<container_t>(decode<container_t>(encoded)) != encoded)
