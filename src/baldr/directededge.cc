@@ -74,9 +74,29 @@ bool DirectedEdge::roundabout() const {
   return attributes_.roundabout;
 }
 
-// Gets the lanes
-uint32_t DirectedEdge::lanes() const {
+// Gets the lane count
+uint32_t DirectedEdge::lanecount() const {
   return attributes_.lanecount;
+}
+
+// Does this edge represent a transition up one level in the hierarchy.
+bool DirectedEdge::trans_up() const {
+  return attributes_.trans_up;
+}
+
+// Does this edge represent a transition down one level in the hierarchy.
+bool DirectedEdge::trans_down() const {
+  return attributes_.trans_down;
+}
+
+// Does this edge represent a shortcut between 2 nodes?
+bool DirectedEdge::shortcut() const {
+ return attributes_.shortcut;
+}
+
+// Is this edge superseded by a shortcut edge?
+bool DirectedEdge::superseded() const {
+  return attributes_.superseded;
 }
 
 // Is this directed edge stored forward in edgeinfo (true) or
