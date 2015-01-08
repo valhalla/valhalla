@@ -45,16 +45,6 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edgeinfo_size_);
 
-    // TODO - rm later
-    /*std::cout << ">>>>> header_builder_.nodecount_"
-              << header_builder_.nodecount()
-              << "  header_builder_.directededgecount_ = "
-              << header_builder_.directededgecount()
-              << "  header_builder_.edgeinfo_offset_ = "
-              << header_builder_.edgeinfo_offset()
-              << "  header_builder_.textlist_offset_ = "
-              << header_builder_.textlist_offset() << std::endl;*/
-
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
                sizeof(GraphTileHeaderBuilder));
@@ -77,6 +67,46 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
               << " directededges = " << directededges_builder_.size()
               << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
               << textlist_size_ << std::endl;
+
+    size_ = file.tellp();
+    file.close();
+  } else {
+    throw std::runtime_error("Failed to open file " + filename.string());
+  }
+}
+
+// Update a graph tile with new header, nodes, and directed edges. This
+// is used to add directed edges connecting two hierarchy levels
+void GraphTileBuilder::Update(const std::string& basedirectory,
+                const GraphTileHeaderBuilder& hdr,
+                const std::vector<NodeInfoBuilder>& nodes,
+                const std::vector<DirectedEdgeBuilder> directededges) {
+  // Get the name of the file
+  boost::filesystem::path filename = Filename(basedirectory, id_);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open to the end of the file so we can immediately get size;
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::ate);
+  if (file.is_open()) {
+    // Write the updated header.
+    file.write(reinterpret_cast<const char*>(&hdr),
+               sizeof(GraphTileHeaderBuilder));
+
+    // Write the updated nodes
+    file.write(reinterpret_cast<const char*>(&nodes[0]),
+               nodes.size() * sizeof(NodeInfoBuilder));
+
+    // Write the updated directed edges
+    file.write(reinterpret_cast<const char*>(&directededges[0]),
+               directededges.size() * sizeof(DirectedEdgeBuilder));
+
+    // Write the existing edgeinfo and textlist
+    file.write(edgeinfo_, edgeinfo_size_);
+    file.write(textlist_, textlist_size_);
 
     size_ = file.tellp();
     file.close();
@@ -110,7 +140,8 @@ void GraphTileBuilder::SetEdgeInfoAndSize(
 }
 
 void GraphTileBuilder::SetTextListAndSize(
-    const std::list<std::string>& textlist, const uint32_t textlist_size) {
+    const std::list<std::string>& textlist,
+    const std::size_t textlist_size) {
 
   textlist_builder_ = textlist;
 
@@ -128,6 +159,20 @@ void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
   for (const auto& text : textlist_builder_) {
     out << text << '\0';
   }
+}
+
+// Gets a non-const node (builder) from existing tile data.
+NodeInfoBuilder& GraphTileBuilder::node(const size_t idx) {
+ if (idx < header_->nodecount())
+   return static_cast<NodeInfoBuilder&>(nodes_[idx]);
+ throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
+}
+
+// Gets a non-const node (builder) from existing tile data.
+DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
+  if (idx < header_->directededgecount())
+    return static_cast<DirectedEdgeBuilder&>(directededges_[idx]);
+  throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 }

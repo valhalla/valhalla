@@ -631,6 +631,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         nodebuilder.set_edge_index(directededgecount);
         nodebuilder.set_edge_count(node.edge_count());
 
+        // Track the best classification/importance or edge
+        RoadClass bestrc = RoadClass::kOther;
+
         // Build directed edges
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
@@ -659,6 +662,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_roundabout(w.roundabout());
           directededge.set_bridge(w.bridge());
           directededge.set_bikenetwork(w.bike_network());
+
+          // Check if more important
+          if (w.road_class() < bestrc) {
+            bestrc = w.road_class();
+          }
 
           //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
           /*  if (w.osmwayid_ == 368034)
@@ -803,6 +811,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_edgedataoffset(existing_edge_offset_item->second);
           }
         }
+
+        // Update the best classification used by directed edges
+        nodebuilder.set_bestrc(bestrc);
 
         // Add information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
