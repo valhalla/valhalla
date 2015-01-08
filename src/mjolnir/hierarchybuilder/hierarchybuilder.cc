@@ -63,14 +63,16 @@ bool HierarchyBuilder::GetNodesInNewLevel(
     if (!graphreader_.DoesTileExist(GraphId(tileid, baselevel, 0))) {
       continue;
     }
-std::cout << "Tile exists..." << tileid << " add nodes with class <= "
-    << static_cast<uint32_t>(new_level.importance) << std::endl;
+
     // Get the graphtile
     graphtile = graphreader_.GetGraphTile(GraphId(tileid, baselevel, 0));
     if (graphtile == nullptr) {
       // No tile - common case, just continue
       continue;
     }
+
+std::cout << "Tile exists..." << tileid << " add nodes with class <= "
+        << static_cast<uint32_t>(new_level.importance) << std::endl;
 
     // Iterate through the nodes
     uint32_t nodecount = graphtile->header()->nodecount();
@@ -190,8 +192,9 @@ void HierarchyBuilder::AddConnectionsToBaseTile(const uint32_t basetileid,
                                    connections.size());
 
 std::cout << "Add " << connections.size() << " connections to " <<
-                  basetileid << " Current nodecount = " <<
-                  existinghdr->nodecount() << std::endl;
+                  basetileid << " Current nodecount= " <<
+                  existinghdr->nodecount() << " Current directed edge count= "
+                  << existinghdr->directededgecount() << std::endl;
 
   // Added size (add to edge info and text list offsets)
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
@@ -214,12 +217,14 @@ std::cout << "Add " << connections.size() << " connections to " <<
             std::move(tilebuilder.directededge(idx++)));
     }
 
+    // Update the edge index by n (# of new edges have been added)
+    node.set_edge_index(node.edge_index() + n);
+
     // If a connection exists at this node, add it as well as a connection
     // directed edge (upward connection is last edge in list).
     if (id == nextconnectionid) {
-      // Add 1 to the edge count and increase edge index by n-1
+      // Add 1 to the edge count from this node
       node.set_edge_count(node.edge_count() + 1);
-      node.set_edge_index(node.edge_index() + n - 1);
 
       // Append a new directed edge that forms the connection.
       // TODO - do we need to set all access to true?
@@ -235,6 +240,9 @@ std::cout << "Add " << connections.size() << " connections to " <<
     // Add the node to the list
     nodes.emplace_back(std::move(node));
   }
+
+std::cout << "New: NodeCount= " << nodes.size() << " DirectedEdges= "
+    << directededges.size() << std::endl;
 
   // Write the new file
   tilebuilder.Update(basedir, hdrbuilder, nodes, directededges);
