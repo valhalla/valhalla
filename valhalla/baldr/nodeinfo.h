@@ -24,18 +24,15 @@ class NodeInfo {
   NodeInfo();
 
   /**
+   * Virtual destructor.
+   */
+  virtual ~NodeInfo();
+
+  /**
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */
   const PointLL& latlng() const;
-
-  /**
-   * Get the GraphId of the node on the upward hierarchy that this
-   * node shares. Is an empty GraphId if no connection occurs.
-   * TODO - set a flag?
-   * @return  Returns the GraphId of the upward connection.
-   */
-//  const GraphId& upnode() const;
 
   /**
    * Get the index of the first outbound edge from this node. Since

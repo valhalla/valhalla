@@ -8,16 +8,14 @@ NodeInfo::NodeInfo() {
   latlng_.Set(0.0f, 0.0f);
 }
 
+// Destructor.
+NodeInfo::~NodeInfo() {
+}
+
 // Get the latitude, longitude
 const PointLL& NodeInfo::latlng() const {
   return latlng_;
 }
-
-// Get the GraphId of the node that makes an upward transition
-// TODO - do we want this?
-//const GraphId& NodeInfo::upnode() const {
-//  return upnode_;
-//}
 
 // Get the index in this tile of the first outbound directed edge
 uint32_t NodeInfo::edge_index() const {

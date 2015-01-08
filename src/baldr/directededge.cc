@@ -10,6 +10,10 @@ DirectedEdge::DirectedEdge()
       edgedataoffset_(0) {
 }
 
+// Destructor.
+DirectedEdge::~DirectedEdge() {
+}
+
 // Gets the length of the edge in kilometers.
 float DirectedEdge::length() const {
   return length_;

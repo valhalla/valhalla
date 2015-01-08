@@ -33,6 +33,11 @@ class DirectedEdge {
   DirectedEdge();
 
   /**
+   * Virtual destructor.
+   */
+  virtual ~DirectedEdge();
+
+  /**
    * Gets the length of the edge in kilometers.
    * @return  Returns the length in kilometers.
    */
