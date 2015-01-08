@@ -3,6 +3,7 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/nodeinfo.h>
 
 using namespace valhalla::midgard;
@@ -44,7 +45,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * Sets the best road class of the outbound directed edges.
    * @param  bestrc  Best road class (lowest value).
    */
-  void set_bestrc(const uint32_t bestrc);
+  void set_bestrc(const baldr::RoadClass bestrc);
 };
 
 }

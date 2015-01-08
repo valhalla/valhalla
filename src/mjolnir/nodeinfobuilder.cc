@@ -1,5 +1,7 @@
 #include "mjolnir/nodeinfobuilder.h"
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -22,8 +24,8 @@ void NodeInfoBuilder::set_edge_count(const uint32_t edge_count) {
   attributes_.edge_count_ = edge_count;
 }
 
-void NodeInfoBuilder::set_bestrc(const uint32_t bestrc) {
-   attributes_.bestrc_= bestrc;
+void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
+   attributes_.bestrc_= static_cast<uint32_t>(bestrc);
 }
 
 }
