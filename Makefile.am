@@ -42,7 +42,7 @@ nobase_include_HEADERS = \
 libvalhalla_loki_la_SOURCES = \
 	src/loki/search.cc 
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
+libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
 # tests
 #check_PROGRAMS = \
