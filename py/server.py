@@ -11,9 +11,9 @@ sample url looks like this:
 
 http://localhost:8080/car/viaroute?z=17&output=json&instructions=true&loc=40.657912,-73.914450&loc=40.040501,-76.306271
 
-http://osrm.test.mapzen.com/car/locate?loc=40.657912,-73.914450
+http://localhost:8080/car/locate?loc=40.657912,-73.914450
 
-http://osrm.test.mapzen.com/car/nearest?loc=40.657912,-73.914450
+http://localhost:8080/car/nearest?loc=40.657912,-73.914450
 '''
 
 #mapping mapzen osrm profiles to our internal costing algorithms
