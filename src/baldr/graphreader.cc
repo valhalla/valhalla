@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+//#include <boost/filesystem/operations.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -16,8 +17,9 @@ GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-  return std::ifstream(GraphTile::Filename(
-        tile_hierarchy_.tile_dir(), graphid)).good();
+//  return boost::filesystem::exists(boost::filesystem::path(
+//      GraphTile::Filename(tile_hierarchy_.tile_dir(), graphid)));
+  return true;  // TODO! do we need this?
 }
 
 // Get a pointer to a graph tile object given a GraphId.
