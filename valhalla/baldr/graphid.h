@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <ostream>
+#include <iostream>
 
 namespace valhalla {
 namespace baldr {
@@ -112,7 +112,7 @@ class GraphId {
   };
   Id graphid_;
 
-  friend std::ostream& operator<<(std::ostream& os, const valhalla::baldr::GraphId& id);
+  friend std::ostream& operator<<(std::ostream& os, const GraphId& id);
 };
 
 }

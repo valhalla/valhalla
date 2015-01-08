@@ -16,6 +16,8 @@ GraphTile::GraphTile()
       directededges_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
+      edgeinfo_size_(0),
+      textlist_size_(0),
       id_() {
 }
 
@@ -53,14 +55,19 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-    // Start of edge information and name list
+    // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
-    textlist_ = graphtile_.get() + header_->textlist_offset();
+    edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
 
-    textsize_ = filesize - header_->textlist_offset();
+    // Start of text list and its size
+    // TODO - need to adjust the size once Exits are added
+    textlist_ = graphtile_.get() + header_->textlist_offset();
+    textlist_size_ = filesize - header_->textlist_offset();
 
     // Set the size to indicate success
     size_ = filesize;
+  } else {
+    std::cout << "Tile for " << Filename(basedirectory, id_) << " not found" << std::endl;
   }
 }
 
@@ -142,7 +149,7 @@ std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
   uint32_t namecount = edge->name_count();
   for (uint32_t i = 0; i < namecount; i++) {
     offset = edge->GetStreetNameOffset(i);
-    if (offset < textsize_) {
+    if (offset < textlist_size_) {
       names.push_back(textlist_ + offset);
     } else {
       std::cout << "ERROR - offset exceeds size of text list" << std::endl;

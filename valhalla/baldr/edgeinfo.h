@@ -27,7 +27,6 @@ class EdgeInfo {
    * Constructor
    *
    * @param pointer to a bit of memory that has the info for this edge
-   *
    */
   EdgeInfo(char* ptr);
 
@@ -41,17 +40,13 @@ class EdgeInfo {
   const uint32_t name_count() const;
 
   // Returns the shape count
-  const uint32_t shape_count() const;
+  const uint32_t encoded_shape_size() const;
 
   // Returns the exit sign count
   const uint32_t exit_sign_count() const;
 
   // Returns the name index at the specified index.
   const uint32_t GetStreetNameOffset(uint8_t index) const;
-
-  // Returns the shape point at the specified index.
-  // TODO: replace with vector once it works
-  const PointLL GetShapePoint(uint16_t index) const;
 
   /**
    * Get the shape of the edge.
@@ -60,10 +55,19 @@ class EdgeInfo {
    */
   const std::vector<PointLL>& shape() const;
 
-  // Operator EqualTo based nodea and nodeb.
+  // Operator EqualTo based on nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
 
-  void ToOstream(std::ostream& out = std::cout) const;
+  // Packed items: counts for names, shape, exit signs
+  union PackedItem {
+    struct Fields {
+      uint32_t name_count                     :4;
+      uint32_t encoded_shape_size             :11;
+      uint32_t exit_sign_count                :4;
+      uint32_t spare                          :13;
+    } fields;
+    uint32_t value;
+  };
 
 
  protected:
@@ -72,28 +76,22 @@ class EdgeInfo {
    */
   EdgeInfo();
 
-  // Packed items: counts for names, shape, exit signs
-  union PackedItem {
-    struct Fields {
-      uint32_t name_count                     :4;
-      uint32_t shape_count                    :11;
-      uint32_t exit_sign_count                :4;
-      uint32_t spare                          :13;
-    } fields;
-    uint32_t value;
-  };
-  PackedItem* item_;
-
  private:
+
+  // Where we keep the statistics about how large the vectors below are
+  PackedItem* item_;
 
   // List of roadname indexes
   uint32_t* street_name_offset_list_;
 
-  // Lat,lng shape of the edge
-  PointLL* shape_;
+  // The encoded shape of the edge
+  mutable char* encoded_shape_;
 
   // List of exit signs (type and index)
   ExitSign* exit_signs_;
+
+  // Lng, lat shape of the edge
+  mutable std::vector<PointLL> shape_;
 
 };
 
