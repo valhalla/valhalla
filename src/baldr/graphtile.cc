@@ -67,7 +67,7 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     // Set the size to indicate success
     size_ = filesize;
   } else {
-    std::cout << "Tile for " << Filename(basedirectory, id_) << " not found" << std::endl;
+//    std::cout << "Tile for " << Filename(basedirectory, id_) << " not found" << std::endl;
   }
 }
 

@@ -28,8 +28,8 @@ uint32_t NodeInfo::edge_count() const {
 }
 
 // Get the best road class of any outbound edges.
-uint32_t NodeInfo::bestrc() const {
-  return attributes_.bestrc_;
+RoadClass NodeInfo::bestrc() const {
+  return static_cast<RoadClass>(attributes_.bestrc_);
 }
 
 }
