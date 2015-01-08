@@ -37,7 +37,7 @@ endif
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_thor.la
-include_HEADERS = \
+nobase_include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/autocost.h \
