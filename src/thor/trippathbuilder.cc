@@ -59,7 +59,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
         directededge->edgedataoffset());
 
-    std::vector<PointLL> points = edgeinfo->shape();
+    bool is_reverse = false;
 
     if (directededge->forward()) { //Edge is in the forward direction.
 
@@ -82,20 +82,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       else trip_edge->set_driveability(TripPath_Driveability::TripPath_Driveability_kNone);
 
       //Add shape in the reverse direction.
-      std::reverse(points.begin(), points.end());
-
+      is_reverse = true;
     }
 
     trip_edge->set_begin_shape_index(trip_shape.size());
 
-    unsigned int n = 0;
-
-    for (const auto& pt : points) {
-      n = trip_shape.size();
-
-      if (n == 0 || !(pt == trip_shape[n-1]))// no dups!
-          trip_shape.emplace_back(pt);
-    }
+    if(is_reverse)
+      trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() + (trip_shape.size() ? 1 : 0), edgeinfo->shape().rend());
+    else
+      trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() + (trip_shape.size() ? 1 : 0), edgeinfo->shape().end());
 
     trip_edge->set_end_shape_index(trip_shape.size());
 
@@ -103,9 +98,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     trip_edge->set_toll(directededge->toll());
 
-    trip_edge->set_begin_heading(PointLL::HeadingAlongPolyline(points,30));
+    trip_edge->set_begin_heading(PointLL::HeadingAlongPolyline(edgeinfo->shape(),30));
 
-    trip_edge->set_end_heading(PointLL::HeadingAtEndOfPolyline(points,30));
+    trip_edge->set_end_heading(PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),30));
     
   }
 
