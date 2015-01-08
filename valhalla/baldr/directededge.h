@@ -109,6 +109,44 @@ class DirectedEdge {
   bool roundabout() const;
 
   /**
+   * Does this edge represent a transition up one level in the hierarchy.
+   * Transition edges move between nodes in different levels of the
+   * hierarchy but have no length or other attribution. An upward transition
+   * is a transition from a minor road hierarchy (local) to more major
+   * (arterial).
+   * @return  Returns true if the edge is a transition from a lower level
+   *          to a higher (false if not).
+   */
+  bool trans_up() const;
+
+  /**
+   * Does this edge represent a transition down one level in the hierarchy.
+   * Transition edges move between nodes in different levels of the
+   * hierarchy but have no length or other attribution. An downward transition
+   * is a transition from a major road hierarchy (highway) to more minor
+   * (arterial).
+   * @return  Returns true if the edge is a transition from an upper level
+   *          to a lower (false if not).
+   */
+  bool trans_down() const;
+
+  /**
+   * Does this edge represent a shortcut between 2 nodes? Shortcuts bypass
+   * nodes that only connect to lower levels in the hierarchy (other than the
+   * 1-2 higher level edges that superseded by the shortcut).
+   * @return  Returns true if this edge is a shortcut edge, false if not.
+   */
+  bool shortcut() const;
+
+  /**
+   * Is this edge superseded by a shortcut edge? Superseded edges can be
+   * skipped unless downward transitions are allowed.
+   * @return  Returns true if this edge is part of a shortcut edge, false
+   *          if not.
+   */
+  bool superseded() const;
+
+  /**
    * Is this directed edge stored forward in edgeinof (true) or
    * reverse (false).
    * @return  Returns true if stored forward, false if reverse.
@@ -142,7 +180,7 @@ class DirectedEdge {
    * Get the number of lanes for this directed edge.
    * @return  Returns the number of lanes for this directed edge.
    */
-  uint32_t lanes() const;
+  uint32_t lanecount() const;
 
   /**
    * Get the importance of the road/path
@@ -213,7 +251,12 @@ class DirectedEdge {
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 5;
+    uint32_t spare          : 1;
+    uint32_t trans_up       : 1;  // Edge represents a transition up one
+                                  // level in the hierarchy
+    uint32_t trans_down     : 1;  // Transition down one level
+    uint32_t shortcut       : 1;  // Shortcut edge
+    uint32_t superseded     : 1;  // Edge is superseded by a shortcut
     uint32_t forward        : 1;  // Is the edge info forward or reverse
     uint32_t not_thru       : 1;  // Edge leads to "no-through" region
     uint32_t opp_index      : 5;  // Opposing directed edge index
@@ -223,9 +266,8 @@ class DirectedEdge {
   };
   Attributes attributes_;
 
-  // TODO - walkway/path
-
-  // TODO - byte alignment / sizing
+  // TODO - turn restrictions, costs,
+  //        byte alignment / sizing
 };
 
 }
