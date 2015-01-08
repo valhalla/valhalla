@@ -105,7 +105,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     trip_edge->set_begin_heading(PointLL::HeadingAlongPolyline(points,30));
 
-    trip_edge->set_begin_heading(PointLL::HeadingAtEndOfPolyline(points,30));
+    trip_edge->set_end_heading(PointLL::HeadingAtEndOfPolyline(points,30));
     
   }
 
