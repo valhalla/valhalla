@@ -83,10 +83,8 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
-  // Takes the level to build. Uses the next hierarchy as the base from
-  // which the hierarchy is derived. Connections occur only between
-  // adjacent levels.
-  uint32_t level;  // TODO - argument
+  // Builds additional hierarchies based on the config file. Connections
+  // (directed edges) are formed between nodes at adjacent levels.
   HierarchyBuilder hierarchybuilder(pt);
   hierarchybuilder.Build();
 

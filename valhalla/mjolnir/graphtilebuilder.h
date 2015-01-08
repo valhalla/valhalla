@@ -44,6 +44,19 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
+   * Update a graph tile with new header, nodes, and directed edges. This
+   * is used to add directed edges connecting two hierarchy levels.
+   * @param  basedirectory  Base data directory
+   * @param  hdr            Update header
+   * @param  nodes          Update list of nodes
+   * @param  directededges  Updated list of edges.
+   */
+  void Update(const std::string& basedirectory,
+              const GraphTileHeaderBuilder& hdr,
+              const std::vector<NodeInfoBuilder>& nodes,
+              const std::vector<DirectedEdgeBuilder> directededges);
+
+  /**
    * Add a node and its outbound edges.
    */
   void AddNodeAndDirectedEdges(
@@ -60,7 +73,19 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Set the text list and size.
    */
   void SetTextListAndSize(const std::list<std::string>& textlist,
-                          const uint32_t textlist_size);
+                          const std::size_t textlist_size);
+
+  /**
+   * Gets a builder for a node from an existing tile.
+   * @param  idx  Index of the node within the tile.
+   */
+  NodeInfoBuilder& node(const size_t idx);
+
+  /**
+   * Gets a builder for a directed edge from existing tile data.
+   * @param  idx  Index of the directed edge within the tile.
+   */
+  DirectedEdgeBuilder& directededge(const size_t idx);
 
  protected:
   // Write all edgeinfo items to specified stream
