@@ -55,13 +55,11 @@ message TripPath {
     repeated Edge edge = 2;           // first one is the outbound path edge
   }
   
-  message Leg {
-    repeated Node node = 1;
-  }
-
-  repeated Location location = 1;
-  repeated Leg leg = 2;
-  optional string shape = 3;
+  optional uint64 trip_id = 1;
+  optional uint32 leg_id = 2;
+  repeated Location location = 3;
+  repeated Node node = 4;
+  optional string shape = 5;
 
 }
 
