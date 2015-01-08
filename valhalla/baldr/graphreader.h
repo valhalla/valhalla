@@ -32,6 +32,12 @@ class GraphReader {
   GraphReader(const TileHierarchy& th);
 
   /**
+   * Test if tile exists
+   * @param  graphid  GraphId of the tile to test (tile id and level).
+   */
+  bool DoesTileExist(const GraphId& graphid) const;
+
+  /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
