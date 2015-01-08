@@ -28,7 +28,7 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-using node_pair = std::pair<const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
+using edge_tuple = std::tuple<const uint32_t, const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
 
 namespace valhalla {
 namespace mjolnir {
@@ -496,22 +496,23 @@ void GraphBuilder::SortEdgesFromNodes() {
 }
 
 namespace {
-struct NodePairHasher {
-  std::size_t operator()(const node_pair& k) const {
+struct EdgeTupleHasher {
+  std::size_t operator()(const edge_tuple& k) const {
     std::size_t seed = 13;
-    boost::hash_combine(seed, id_hasher(k.first));
-    boost::hash_combine(seed, id_hasher(k.second));
+    boost::hash_combine(seed, index_hasher(std::get<0>(k)));
+    boost::hash_combine(seed, id_hasher(std::get<1>(k)));
+    boost::hash_combine(seed, id_hasher(std::get<2>(k)));
     return seed;
   }
   //function to hash each id
+  std::hash<uint32_t> index_hasher;
   std::hash<valhalla::baldr::GraphId> id_hasher;
 };
 
-node_pair ComputeNodePair(const baldr::GraphId& nodea,
-                          const baldr::GraphId& nodeb) {
+edge_tuple EdgeTuple(const uint32_t edgeindex, const baldr::GraphId& nodea, const baldr::GraphId& nodeb) {
   if (nodea < nodeb)
-    return std::make_pair(nodea, nodeb);
-  return std::make_pair(nodeb, nodea);
+    return std::make_tuple(edgeindex, nodea, nodeb);
+  return std::make_tuple(edgeindex, nodeb, nodea);
 }
 
 uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<Edge>& edges) {
@@ -607,7 +608,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
       // Edge info offset and map
       size_t edge_info_offset = 0;
-      std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+      std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
 
       // The edgeinfo list
       std::list<EdgeInfoBuilder> edgeinfo_list;
@@ -747,9 +748,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                 osmnodeid << std::endl;
           }
 
-          // If we haven't yet added edge info for this node pair
-          auto node_pair_item = ComputeNodePair(nodea, nodeb);
-          auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
+          // If we haven't yet added edge info for this edge tuple
+          auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+          auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
           if (existing_edge_offset_item == edge_offset_map.end()) {
             edgeinfo_list.emplace_back();
             EdgeInfoBuilder& edgeinfo = edgeinfo_list.back();
@@ -790,7 +791,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             // TODO - other attributes
 
             // Add to the map
-            edge_offset_map.emplace(node_pair_item, edge_info_offset);
+            edge_offset_map.emplace(edge_tuple_item, edge_info_offset);
 
             // Set edge offset within the corresponding directed edge
             directededge.set_edgedataoffset(edge_info_offset);
