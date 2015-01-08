@@ -10,10 +10,15 @@ namespace valhalla {
 namespace mjolnir {
 
 GraphTileBuilder::GraphTileBuilder()
-    : GraphTile(),
-      edgeinfo_size_(0),
-      textlist_size_(0) {
+    : GraphTile() {
+}
 
+// Constructor given an existing tile. This is used to read in the tile
+// data and then add to it (e.g. adding node connections between hierarchy
+// levels.
+GraphTileBuilder::GraphTileBuilder(const std::string& basedir,
+                                   const GraphId& graphid)
+    : GraphTile(basedir, graphid) {
 }
 
 // Output the tile to file. Stores as binary data.
@@ -115,13 +120,13 @@ void GraphTileBuilder::SetTextListAndSize(
 
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
   for (const auto& edgeinfo : edgeinfos_builder_) {
-    edgeinfo.SerializeToOstream(out);
+    out << edgeinfo;
   }
 }
 
 void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
   for (const auto& text : textlist_builder_) {
-    out.write(text.c_str(), (text.length() + 1));
+    out << text << '\0';
   }
 }
 

@@ -28,7 +28,7 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-using node_pair = std::pair<const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
+using edge_tuple = std::tuple<const uint32_t, const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
 
 namespace valhalla {
 namespace mjolnir {
@@ -403,41 +403,33 @@ void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
 // count differs.
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
-  bool driveforward, drivereverse;
-  uint32_t importance;
   uint32_t edgeindex = 0;
-  uint32_t wayindex = 0;
-  uint64_t currentid;
+  uint64_t nodeid;
   edges_.reserve(edge_count_);
-  for (const auto& way : ways_) {
+  for (uint32_t wayindex = 0; wayindex < static_cast<uint32_t>(ways_.size()); wayindex++) {
     // Get some way attributes needed for the edge
-    driveforward = way.auto_forward();
-    drivereverse = way.auto_backward();
-    importance   = static_cast<uint32_t>(way.road_class());
+    const auto& way = ways_[wayindex];
 
     // Start an edge at the first node of the way and add the
     // edge index to the node
-    currentid = way.nodes()[0];
-    OSMNode& node = nodes_[currentid];
-    Edge edge(currentid, wayindex, node.latlng(), importance,
-              driveforward, drivereverse);
+    nodeid = way.nodes()[0];
+    OSMNode& node = nodes_[nodeid];
+    Edge edge(nodeid, wayindex, node.latlng(), way);
     node.AddEdge(edgeindex);
 
     // Iterate through the nodes of the way and add lat,lng to the current
     // way until a node with > 1 uses is found.
     for (size_t i = 1, n = way.node_count(); i < n; i++) {
       // Add the node lat,lng to the edge shape.
-      // TODO - not sure why I had to use a different OSMNode declaration here?
-      // But if I use node from above I get errors!
-      currentid = way.nodes()[i];
-      OSMNode& nd = nodes_[currentid];
+      nodeid = way.nodes()[i];
+      OSMNode& nd = nodes_[nodeid];
       edge.AddLL(nd.latlng());
 
       // If a is an intersection or the end of the way
       // it's a node of the road network graph
-      if (intersection_.IsUsed(currentid)) {
+      if (intersection_.IsUsed(nodeid)) {
         // End the current edge and add its edge index to the node
-        edge.targetnode_ = currentid;
+        edge.targetnode_ = nodeid;
         nd.AddEdge(edgeindex);
 
         // Add the edge to the list of edges
@@ -445,14 +437,12 @@ void GraphBuilder::ConstructEdges() {
         edgeindex++;
 
         // Start a new edge if this is not the last node in the way
-        if (i < n-1) {
-          edge = Edge(currentid, wayindex, nd.latlng(), importance,
-                      driveforward, drivereverse);
+        if (i < n - 1) {
+          edge = Edge(nodeid, wayindex, nd.latlng(), way);
           nd.AddEdge(edgeindex);
         }
       }
     }
-    wayindex++;
   }
   std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
@@ -506,22 +496,23 @@ void GraphBuilder::SortEdgesFromNodes() {
 }
 
 namespace {
-struct NodePairHasher {
-  std::size_t operator()(const node_pair& k) const {
+struct EdgeTupleHasher {
+  std::size_t operator()(const edge_tuple& k) const {
     std::size_t seed = 13;
-    boost::hash_combine(seed, id_hasher(k.first));
-    boost::hash_combine(seed, id_hasher(k.second));
+    boost::hash_combine(seed, index_hasher(std::get<0>(k)));
+    boost::hash_combine(seed, id_hasher(std::get<1>(k)));
+    boost::hash_combine(seed, id_hasher(std::get<2>(k)));
     return seed;
   }
   //function to hash each id
+  std::hash<uint32_t> index_hasher;
   std::hash<valhalla::baldr::GraphId> id_hasher;
 };
 
-node_pair ComputeNodePair(const baldr::GraphId& nodea,
-                          const baldr::GraphId& nodeb) {
+edge_tuple EdgeTuple(const uint32_t edgeindex, const baldr::GraphId& nodea, const baldr::GraphId& nodeb) {
   if (nodea < nodeb)
-    return std::make_pair(nodea, nodeb);
-  return std::make_pair(nodeb, nodea);
+    return std::make_tuple(edgeindex, nodea, nodeb);
+  return std::make_tuple(edgeindex, nodeb, nodea);
 }
 
 uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<Edge>& edges) {
@@ -617,7 +608,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
       // Edge info offset and map
       size_t edge_info_offset = 0;
-      std::unordered_map<node_pair, size_t, NodePairHasher> edge_offset_map;
+      std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
 
       // The edgeinfo list
       std::list<EdgeInfoBuilder> edgeinfo_list;
@@ -644,7 +635,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
         for (auto edgeindex : node.edges()) {
-          DirectedEdgeBuilder directededge;
+          directededges.emplace_back();
+          DirectedEdgeBuilder& directededge = directededges.back();
           const Edge& edge = edges[edgeindex];
 
           // Compute length from the latlngs.
@@ -756,27 +748,26 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                 osmnodeid << std::endl;
           }
 
-          // Check if we need to add edge info
-          auto node_pair_item = ComputeNodePair(nodea, nodeb);
-          auto existing_edge_offset_item = edge_offset_map.find(node_pair_item);
-
-          // Add new edge info
+          // If we haven't yet added edge info for this edge tuple
+          auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+          auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
           if (existing_edge_offset_item == edge_offset_map.end()) {
             edgeinfo_list.emplace_back();
             EdgeInfoBuilder& edgeinfo = edgeinfo_list.back();
-            // TODO - shape encode
             edgeinfo.set_shape(edge.latlngs_);
 
+            // Put each name's index into the chunk of bytes containing all the names in the tile
             std::vector<std::string> names = w.GetNames();
             std::vector<uint32_t> street_name_offset_list;
-
+            street_name_offset_list.reserve(names.size());
             for (const auto& name : names) {
+              // Skip blank names
               if (name.empty()) {
                 continue;
               }
 
+              // If nothing already used this name
               auto existing_text_offset = text_offset_map.find(name);
-              // Add if not found
               if (existing_text_offset == text_offset_map.end()) {
                 // Add name to text list
                 text_list.emplace_back(name);
@@ -785,11 +776,12 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                 street_name_offset_list.emplace_back(text_list_offset);
 
                 // Add name/offset pair to map
-                text_offset_map.insert(std::make_pair(name, text_list_offset));
+                text_offset_map.emplace(name, text_list_offset);
 
                 // Update text offset value to length of string plus null terminator
                 text_list_offset += (name.length() + 1);
-              } else {
+              } // Something was already using this name
+              else {
                 // Add existing offset to list
                 street_name_offset_list.emplace_back(existing_text_offset->second);
               }
@@ -799,23 +791,17 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             // TODO - other attributes
 
             // Add to the map
-            edge_offset_map.insert(
-                std::make_pair(node_pair_item, edge_info_offset));
+            edge_offset_map.emplace(edge_tuple_item, edge_info_offset);
 
             // Set edge offset within the corresponding directed edge
             directededge.set_edgedataoffset(edge_info_offset);
 
             // Update edge offset for next item
             edge_info_offset += edgeinfo.SizeOf();
-
-          }
-          // Update directed edge with existing edge offset
+          }// Already had this edge so we just need to update the directed edge to reference this info
           else {
             directededge.set_edgedataoffset(existing_edge_offset_item->second);
           }
-
-          // Add to the list
-          directededges.emplace_back(directededge);
         }
 
         // Add information to the tile

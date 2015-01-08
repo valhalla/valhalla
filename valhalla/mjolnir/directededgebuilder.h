@@ -145,6 +145,44 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_roundabout(const bool roundabout);
 
   /**
+   * Set the flag for whether this edge represents a transition up one level
+   * in the hierarchy. Transition edges move between nodes in different levels
+   * of the hierarchy but have no length or other attribution. An upward
+   * transition is a transition from a minor road hierarchy (local) to more
+   * major (arterial).
+   * @param  trans_up  True if the edge is a transition from a lower level
+   *          to a higher (false if not).
+   */
+  void set_trans_up(const bool trans_up);
+
+   /**
+    * Set the flag for whether this edge represents a transition down one level
+    * in the hierarchy. Transition edges move between nodes in different levels
+    * of the hierarchy but have no length or other attribution. A downward
+    * transition is a transition from a major road hierarchy (highway) to more
+    * minor (arterial).
+    * @param   trans_down  True if the edge is a transition from an upper level
+    *          to a lower (false if not).
+    */
+   void set_trans_down(const bool trans_down);
+
+  /**
+   * Set the flag for whether this edge represents a shortcut between 2 nodes.
+   * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
+   * (other than the 1-2 higher level edges that superseded by the shortcut).
+   * @param  shortcut  True if this edge is a shortcut edge, false if not.
+   */
+  void set_shortcut(const bool shortcut);
+
+  /**
+   * Set the flag for whether this edge is superseded by a shortcut edge.
+   * Superseded edges can be skipped unless downward transitions are allowed.
+   * @param  superseded True if this edge is part of a shortcut edge, false
+  *          if not.
+  */
+  void set_superseded(const bool superseded);
+
+  /**
    * Set the forward flag. Tells if this directed edge is stored forward
    * in edgeinfo (true) or reverse (false).
    * @param  forward  Forward flag.
