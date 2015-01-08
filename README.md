@@ -14,7 +14,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 Build Status
 ------------
 
-[![Circle CI](https://circleci.com/gh/valhalla/loki.svg?style=svg)](https://circleci.com/gh/valhalla/loki)
+[![Circle CI](https://circleci.com/gh/valhalla/tyr.svg?style=svg)](https://circleci.com/gh/valhalla/tyr)
 
 Building
 --------

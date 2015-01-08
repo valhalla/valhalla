@@ -9,8 +9,7 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/midgard.git deps/midgard
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/baldr.git deps/baldr
+    - for dep in midgard baldr loki odin thor; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git; done
 
 dependencies:
   override:
@@ -18,11 +17,11 @@ dependencies:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev lcov
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
+    - cd deps; for dep in midgard baldr loki odin thor; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
 
 test:
   pre:
-    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local
+    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local --with-valhalla-loki=/usr/local --with-valhalla-odin=/usr/local --with-valhalla-thor=/usr/local
   override:
     - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j2
   post:
