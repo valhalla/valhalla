@@ -8,10 +8,15 @@ namespace odin{
 
 class NarrativeBuilder {
  public:
-  NarrativeBuilder(TripPath& tripPath);
+  NarrativeBuilder(TripPath& trip_path);
+
+  void Build();
 
  protected:
   TripPath& trip_path_;
+
+  // TODO - temps for initial end to end test
+
 };
 
 }
