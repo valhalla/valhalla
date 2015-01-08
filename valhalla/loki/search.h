@@ -1,5 +1,5 @@
-#ifndef VALHALLA_LOKI_NARRATIVEBUILDER_H_
-#define VALHALLA_LOKI_NARRATIVEBUILDER_H_
+#ifndef VALHALLA_LOKI_SEARCH_H_
+#define VALHALLA_LOKI_SEARCH_H_
 
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -32,4 +32,4 @@ baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& 
 }
 }
 
-#endif  // VALHALLA_LOKI_NARRATIVEBUILDER_H_
+#endif  // VALHALLA_LOKI_SEARCH_H_
