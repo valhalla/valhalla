@@ -4,8 +4,10 @@
 #include "thor/trippathbuilder.h"
 
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/midgard/pointll.h>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::odin;
 
 namespace valhalla {
@@ -28,6 +30,8 @@ void TripPathBuilder::Build(
   // TripPath is a protocol buffer that contains information about the
   // trip
 
+  std::vector<PointLL> trip_shape;
+
   std::vector<std::string> names;
   for (const auto& edge : pathedges) {
     GraphTile* graphtile = graphreader.GetGraphTile(edge);
@@ -40,7 +44,7 @@ void TripPathBuilder::Build(
     TripPath_Edge* trip_edge = trip_node->add_edge();
 
     names = graphtile->GetNames(directededge->edgedataoffset(), names);
-    for (auto& name : names) {
+    for (const auto& name : names) {
       trip_edge->add_name(name);
     }
 
@@ -48,7 +52,12 @@ void TripPathBuilder::Build(
 
     trip_edge->set_speed(directededge->speed());
 
-    if (directededge->forward()) {  //Edge is in the forward direction.
+    const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
+        directededge->edgedataoffset());
+
+    bool is_reverse = false;
+
+    if (directededge->forward()) { //Edge is in the forward direction.
 
       if (directededge->forwardaccess() && directededge->reverseaccess())
         trip_edge->set_driveability(
@@ -63,9 +72,7 @@ void TripPathBuilder::Build(
         trip_edge->set_driveability(
             TripPath_Driveability::TripPath_Driveability_kNone);
 
-      //TODO - Add shape.
-
-    } else {  //Edge is in the reverse direction.  We must flip everything.
+    } else { //Edge is in the reverse direction.  We must flip everything.
 
       if (directededge->forwardaccess() && directededge->reverseaccess())
         trip_edge->set_driveability(
@@ -80,30 +87,37 @@ void TripPathBuilder::Build(
         trip_edge->set_driveability(
             TripPath_Driveability::TripPath_Driveability_kNone);
 
-      //TODO - Add shape in the reverse direction.
-
+      //Add shape in the reverse direction.
+      is_reverse = true;
     }
+
+    trip_edge->set_begin_shape_index(trip_shape.size());
+
+    if(is_reverse)
+      trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() + (trip_shape.size() ? 1 : 0), edgeinfo->shape().rend());
+    else
+      trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() + (trip_shape.size() ? 1 : 0), edgeinfo->shape().end());
+
+    trip_edge->set_end_shape_index(trip_shape.size());
 
     trip_edge->set_ramp(directededge->link());
 
     trip_edge->set_toll(directededge->toll());
 
-    // TODO - add other connected edges to the node...
+    trip_edge->set_begin_heading(PointLL::HeadingAlongPolyline(edgeinfo->shape(),30));
 
-    /**
-     // TODO - rm later
-     std::cout << "-------------------------------------------------------"
-     << std::endl;
-     names = graphtile->GetNames(directededge->edgedataoffset(), names);
-     for (auto& name : names) {
-     std::cout << "   name=" << name << std::endl;
-     }
-     const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
-     directededge->edgedataoffset());
-     // TODO - rm later
-     //edgeinfo->ToOstream();
-     */
+    trip_edge->set_end_heading(PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),30));
+    
   }
+
+  //encode shape and add to trip path.
+  std::string encoded_shape_;
+
+  if (trip_shape.size())
+    encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
+
+  trip_path.set_shape(encoded_shape_);
+
 }
 
 }
