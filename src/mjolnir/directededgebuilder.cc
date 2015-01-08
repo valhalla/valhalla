@@ -128,6 +128,28 @@ void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
 }
 
+// Set the flag for whether this edge represents a transition up one level
+// in the hierarchy.
+void DirectedEdgeBuilder::set_trans_up(const bool trans_up) {
+  attributes_.trans_up = trans_up;
+}
+
+// Set the flag for whether this edge represents a transition down one level
+// in the hierarchy.
+void DirectedEdgeBuilder::set_trans_down(const bool trans_down) {
+  attributes_.trans_down = trans_down;
+}
+
+// Set the flag for whether this edge represents a shortcut between 2 nodes.
+void DirectedEdgeBuilder::set_shortcut(const bool shortcut) {
+  attributes_.shortcut = shortcut;
+}
+
+// Set the flag for whether this edge is superseded by a shortcut edge.
+void DirectedEdgeBuilder::set_superseded(const bool superseded) {
+  attributes_.superseded = superseded;
+}
+
 // Set the forward flag. Tells if this directed edge is stored forward
 // in edgeinfo (true) or reverse (false).
 void DirectedEdgeBuilder::set_forward(const bool forward) {
