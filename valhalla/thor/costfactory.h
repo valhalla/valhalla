@@ -4,10 +4,9 @@
 #include <map>
 #include <memory>
 
-// Include derived cost methods?
-#include "thor/autocost.h"
-#include "thor/bicyclecost.h"
-#include "thor/pedestriancost.h"
+#include <valhalla/thor/autocost.h>
+#include <valhalla/thor/bicyclecost.h>
+#include <valhalla/thor/pedestriancost.h>
 
 namespace valhalla {
 namespace thor {
