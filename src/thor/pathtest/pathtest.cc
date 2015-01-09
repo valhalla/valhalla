@@ -26,9 +26,8 @@ namespace bpo = boost::program_options;
 /**
  * TODO: add locations to TripPath
  */
-int PathTest(GraphReader& reader, const PathLocation& origin,
-             const PathLocation& dest, std::string routetype,
-             TripPath& trip_path) {
+TripPath PathTest(GraphReader& reader, const PathLocation& origin,
+             const PathLocation& dest, std::string routetype) {
   // Register costing methods
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -54,9 +53,7 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
 
   // Form output information based on pathedges
   start = std::clock();
-  TripPathBuilder trippathbuilder;
-
-  trippathbuilder.Build(reader, pathedges, trip_path);
+  TripPath trip_path = TripPathBuilder::Build(reader, pathedges);
 
   // TODO - perhaps walk the edges to find total length?
 //  std::cout << "Trip length is: " << trip_path.length << " km" << std::endl;
@@ -67,7 +64,7 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
   pathalgorithm.Clear();
   msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm Clear took " << msecs << " ms" << std::endl;
-  return 0;
+  return trip_path;
 }
 
 void NarrativeTest(TripPath& trip_path) {
@@ -160,11 +157,10 @@ int main(int argc, char *argv[]) {
   uint32_t msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
   std::cout << "Location Processing took " << msecs << " ms" << std::endl;
 
-  TripPath trip_path;
   // TODO - set locations
 
   // Try the route
-  PathTest(reader, pathOrigin, pathDest, routetype, trip_path);
+  TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
 
   // Try the the narrative
   NarrativeTest(trip_path);

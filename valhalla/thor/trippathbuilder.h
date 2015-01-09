@@ -30,8 +30,8 @@ class TripPathBuilder {
    * Format the trip path output given the edges on the path.
    * For now just return length. TODO - modify to return trip path.
    */
-  void Build(baldr::GraphReader& graphreader,
-             const std::vector<baldr::GraphId>& pathedges, odin::TripPath& trip_path);
+  static odin::TripPath Build(baldr::GraphReader& graphreader,
+             const std::vector<baldr::GraphId>& pathedges);
 };
 
 }
