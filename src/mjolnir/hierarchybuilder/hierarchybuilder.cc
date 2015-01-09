@@ -40,6 +40,9 @@ bool HierarchyBuilder::Build() {
               << " Base Level is " << base_level->second.name << std::endl;
     GetNodesInNewLevel(base_level->second, new_level->second);
 
+    // Form tiles in new level
+    FormTilesInNewLevel(base_level->second, new_level->second);
+
     // Form connections (directed edges) in the base level tiles to
     // the new level
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second);
@@ -130,6 +133,81 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
   // If n == 2 we need to check attributes and names to see if we can create a
   // shortcut through this node
   return false;
+}
+
+void HierarchyBuilder::FormTilesInNewLevel(
+      const TileHierarchy::TileLevel& base_level,
+      const TileHierarchy::TileLevel& new_level) {
+  // Iterate through tiled nodes in the new level
+  uint32_t tileid = 0;
+  uint32_t edgecount = 0;
+  uint32_t edgeindex = 0;
+  uint8_t level = new_level.level;
+  std::string basedir = tile_hierarchy_.tile_dir();
+  for (const auto& newtile : tilednodes_) {
+    // Skip if no new nodes
+    if (newtile.size() == 0) {
+      tileid++;
+      continue;
+    }
+
+    // Create GraphTileBuilder for the new tile
+    GraphTileBuilder tilebuilder(basedir, GraphId(tileid, level, 0));
+
+    // Iterate through the NewNodes in the tile at the new level
+    edgeindex = 0;
+    std::vector<NodeInfoBuilder> nodes;
+    std::vector<DirectedEdgeBuilder> directededges;
+    for (const auto& newnode : newtile) {
+      // Get the node in the base level
+      GraphTile* tile = graphreader_.GetGraphTile(newnode.basenode);
+
+      // Copy node information
+      NodeInfoBuilder node;
+      const NodeInfo* oldnodeinfo = tile->node(newnode.basenode.id());
+      node.set_latlng(oldnodeinfo->latlng());
+      node.set_edge_index(edgeindex);
+      node.set_bestrc(oldnodeinfo->bestrc());
+
+      // Get remaining directed edges for this node
+      // TODO - add shortcut edges first
+      edgecount = 0;
+
+      // Iterate through directed edges of the base node
+      const DirectedEdge* directededge = tile->directededge(
+              oldnodeinfo->edge_index());
+      for (uint32_t i = 0, n = oldnodeinfo->edge_count(); i < n;
+                      i++, directededge++) {
+        // Store the directed edge if less than the road class cutoff
+        if (directededge->importance() <= new_level.importance) {
+          // Copy the directed edge information and update end node,
+          // edge data offset, and opp_index
+          DirectedEdgeBuilder newedge;
+//          newedge = *directededge;
+//          newedge.set_endnode(newendnode);
+          newedge.set_opp_index(0);  // TODO
+
+          // Need to create edge data...
+          newedge.set_edgedataoffset(0);   // TODO!!!
+
+          directededges.emplace_back(std::move(newedge));
+          edgecount++;
+        }
+      }
+
+      // Add the downward transition edge
+      DirectedEdgeBuilder downwardedge;
+      directededges.emplace_back(std::move(downwardedge));
+      edgecount++;
+
+      // Set the edge count for the new node
+      node.set_edge_count(edgecount);
+      nodes.emplace_back(std::move(node));
+    }
+
+    // Increment tileid
+    tileid++;
+  }
 }
 
 void HierarchyBuilder::ConnectBaseLevelToNewLevel(
