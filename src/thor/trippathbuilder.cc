@@ -24,11 +24,9 @@ TripPathBuilder::~TripPathBuilder() {
 // For now just find the length of the path!
 // TODO - probably need the location information passed in - to
 // add to the TripPath
-void TripPathBuilder::Build(
-    GraphReader& graphreader, const std::vector<GraphId>& pathedges,
-    TripPath& trip_path) {
-  // TripPath is a protocol buffer that contains information about the
-  // trip
+TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<GraphId>& pathedges) {
+  // TripPath is a protocol buffer that contains information about the trip
+  TripPath trip_path;
 
   std::vector<PointLL> trip_shape;
 
@@ -118,6 +116,8 @@ void TripPathBuilder::Build(
 
   trip_path.set_shape(encoded_shape_);
 
+  //hand it back
+  return trip_path;
 }
 
 }
