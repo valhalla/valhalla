@@ -87,8 +87,10 @@ BicycleCost::~BicycleCost() {
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge, const bool uturn,
                           const float dist2dest) const {
-  // Check access. Do not allow entering no-thru edges
-  if (!(edge->forwardaccess() & kBicycleAccess) ||
+  // Do not allow upward transitions (always stay at local level)
+  // Check access. Also do not allow Uturns or entering no-thru edges
+  // TODO - may want to revisit allowing transitions?
+  if (edge->trans_up() || !(edge->forwardaccess() & kBicycleAccess) ||
        (edge->not_thru() && dist2dest > 5.0)){
     return false;
   }
