@@ -7,10 +7,10 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Create an autocost heuristic
+ * Create an autocost
  *
  */
-cost_ptr_t CreateAutoHeuristic(/*pt::ptree const& config*/);
+cost_ptr_t CreateAutoCost(/*pt::ptree const& config*/);
 
 }
 }

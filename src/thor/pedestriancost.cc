@@ -145,7 +145,7 @@ float PedestrianCost::UnitSize() const {
   return 0.005f;
 }
 
-cost_ptr_t CreatePedestrianHeuristic(/*pt::ptree const& config*/){
+cost_ptr_t CreatePedestrianCost(/*pt::ptree const& config*/){
   return std::make_shared<PedestrianCost>();
 }
 

@@ -7,10 +7,10 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Create an bicyclecost heuristic
+ * Create a bicyclecost
  *
  */
-cost_ptr_t CreateBicycleHeuristic(/*pt::ptree const& config*/);
+cost_ptr_t CreateBicycleCost(/*pt::ptree const& config*/);
 
 }
 }

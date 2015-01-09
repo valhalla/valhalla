@@ -130,7 +130,7 @@ float BicycleCost::UnitSize() const {
   return 2.0f;
 }
 
-cost_ptr_t CreateBicycleHeuristic(/*pt::ptree const& config*/){
+cost_ptr_t CreateBicycleCost(/*pt::ptree const& config*/){
   return std::make_shared<BicycleCost>();
 }
 

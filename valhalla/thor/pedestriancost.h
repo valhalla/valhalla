@@ -9,10 +9,10 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Create an pedestriancost heuristic
+ * Create a pedestriancost
  *
  */
-cost_ptr_t CreatePedestrianHeuristic(/*pt::ptree const& config*/);
+cost_ptr_t CreatePedestrianCost(/*pt::ptree const& config*/);
 
 }
 }

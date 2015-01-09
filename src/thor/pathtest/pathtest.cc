@@ -31,9 +31,9 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
              TripPath& trip_path) {
   // Register costing methods
   CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoHeuristic);
-  factory.Register("bicycle", CreateBicycleHeuristic);
-  factory.Register("pedestrian", CreatePedestrianHeuristic);
+  factory.Register("auto", CreateAutoCost);
+  factory.Register("bicycle", CreateBicycleCost);
+  factory.Register("pedestrian", CreatePedestrianCost);
 
   for (auto & c : routetype)
     c = std::tolower(c);

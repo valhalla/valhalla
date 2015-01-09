@@ -15,12 +15,12 @@ namespace thor {
 /**
 * Generic factory class for creating objects based on type name.
 */
-template <class heuristic_t>
+template <class cost_t>
 class CostFactory {
  public:
-  typedef std::shared_ptr<heuristic_t> heuristic_ptr_t;
-  //TODO: might want to have some configurable params to each heuristic type
-  typedef heuristic_ptr_t (*factory_function_t)(/*pt::ptree const& config*/);
+  typedef std::shared_ptr<cost_t> cost_ptr_t;
+  //TODO: might want to have some configurable params to each cost type
+  typedef cost_ptr_t (*factory_function_t)(/*pt::ptree const& config*/);
 
   /**
    * Constructor
@@ -30,27 +30,27 @@ class CostFactory {
   }
 
   /**
-   * Register the callback to create this type of heuristic
+   * Register the callback to create this type of cost
    *
-   * @param name       the name of the heuristic that the function creates
-   * @param function   the function pointer to call to actually create the heuristic object
+   * @param name       the name of the cost that the function creates
+   * @param function   the function pointer to call to actually create the cost object
    */
   void Register(const std::string& name, factory_function_t function) {
     factory_funcs_.emplace(name, function);
   }
 
   /**
-   * Make a heuristic from its name
+   * Make a cost from its name
    *
-   * @param name    the name of the heuristic to create
-   * TODO: add configuration for the heuristic options
+   * @param name    the name of the cost to create
+   * TODO: add configuration for the cost options
    */
-  heuristic_ptr_t Create(const std::string& name/*, pt::ptree const& config*/) const {
+  cost_ptr_t Create(const std::string& name/*, pt::ptree const& config*/) const {
     auto itr = factory_funcs_.find(name);
     if (itr == factory_funcs_.end()) {
-      throw std::runtime_error("Unrecognized heuristic name: " + name);
+      throw std::runtime_error("Unrecognized cost name: " + name);
     }
-    //create the heuristic using the function pointer
+    //create the cost using the function pointer
     return itr->second();
   }
 

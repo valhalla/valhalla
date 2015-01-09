@@ -139,7 +139,7 @@ float AutoCost::UnitSize() const {
   return 1.0f;
 }
 
-cost_ptr_t CreateAutoHeuristic(/*pt::ptree const& config*/) {
+cost_ptr_t CreateAutoCost(/*pt::ptree const& config*/) {
   return std::make_shared<AutoCost>();
 }
 
