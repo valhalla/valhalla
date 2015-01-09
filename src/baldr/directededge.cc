@@ -5,9 +5,12 @@ namespace baldr {
 
 // Default constructor
 DirectedEdge::DirectedEdge()
-    : speed_(0),
+    : edgedataoffset_(0),
       length_(0),
-      edgedataoffset_(0) {
+      forwardaccess_{},
+      reverseaccess_{},
+      speed_(0),
+      attributes_{} {
 }
 
 // Destructor.
