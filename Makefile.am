@@ -38,9 +38,16 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_tyr.la
 nobase_include_HEADERS = \
-	valhalla/tyr/route_handler.h 
+	valhalla/tyr/handler.h \
+	valhalla/tyr/route_handler.h \
+	valhalla/tyr/locate_handler.h \
+	valhalla/tyr/nearest_handler.h
+
 libvalhalla_tyr_la_SOURCES = \
-	src/tyr/route_handler.cc 
+	src/tyr/handler.cc \
+	src/tyr/route_handler.cc \
+	src/tyr/locate_handler.cc \
+	src/tyr/nearest_handler.cc
 libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
 libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ -l$(BOOST_PYTHON_LIB) @PYTHON_LDFLAGS@
 

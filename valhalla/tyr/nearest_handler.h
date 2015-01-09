@@ -1,6 +1,8 @@
 #ifndef VALHALLA_TYR_NEAREST_HANDLER_H_
 #define VALHALLA_TYR_NEAREST_HANDLER_H_
 
+#include <valhalla/tyr/handler.h>
+
 namespace valhalla{
 namespace tyr{
 
