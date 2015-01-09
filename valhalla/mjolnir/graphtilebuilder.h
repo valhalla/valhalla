@@ -1,9 +1,17 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
+#include <boost/functional/hash.hpp>
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <utility>
+#include <algorithm>
+#include <string>
+#include <memory>
+#include <list>
+#include <unordered_set>
+#include <unordered_map>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -14,6 +22,9 @@
 
 namespace valhalla {
 namespace mjolnir {
+
+using edge_tuple = std::tuple<const uint32_t,
+    const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -64,16 +75,12 @@ class GraphTileBuilder : public baldr::GraphTile {
       const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
-   * Set the edge info and size.
+   * Add edge info to the tile.
    */
-  void SetEdgeInfoAndSize(const std::list<EdgeInfoBuilder>& edges,
-                          const std::size_t edgeinfo_size);
-
-  /**
-   * Set the text list and size.
-   */
-  void SetTextListAndSize(const std::list<std::string>& textlist,
-                          const std::size_t textlist_size);
+  uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+                       const baldr::GraphId& nodeb,
+                       const std::vector<PointLL>& lls,
+                       const std::vector<std::string>& names);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -88,6 +95,29 @@ class GraphTileBuilder : public baldr::GraphTile {
   DirectedEdgeBuilder& directededge(const size_t idx);
 
  protected:
+
+  struct EdgeTupleHasher {
+    std::size_t operator()(const edge_tuple& k) const {
+      std::size_t seed = 13;
+      boost::hash_combine(seed, index_hasher(std::get<0>(k)));
+      boost::hash_combine(seed, id_hasher(std::get<1>(k)));
+      boost::hash_combine(seed, id_hasher(std::get<2>(k)));
+      return seed;
+    }
+    //function to hash each id
+    std::hash<uint32_t> index_hasher;
+    std::hash<valhalla::baldr::GraphId> id_hasher;
+  };
+
+  // Edge tuple for sharing edges that have common nodes and edgeindex
+  edge_tuple EdgeTuple(const uint32_t edgeindex,
+                       const valhalla::baldr::GraphId& nodea,
+                       const valhalla::baldr::GraphId& nodeb) {
+    if (nodea < nodeb)
+      return std::make_tuple(edgeindex, nodea, nodeb);
+    return std::make_tuple(edgeindex, nodeb, nodea);
+  }
+
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out);
 
@@ -105,13 +135,19 @@ class GraphTileBuilder : public baldr::GraphTile {
   // indexed directly.
   std::vector<DirectedEdgeBuilder> directededges_builder_;
 
-  // List of edge info structures. Since edgeinfo is not fixed size we
-  // use offsets in directed edges.
-  std::list<EdgeInfoBuilder> edgeinfos_builder_;
+  // Edge info offset and map
+  size_t edge_info_offset_ = 0;
+  std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
 
-  // Names as sets of null-terminated char arrays. Edge info has offsets
-  // into this array.
-  std::list<std::string> textlist_builder_;
+  // The edgeinfo list
+  std::list<EdgeInfoBuilder> edgeinfo_list_;
+
+   // Text list offset and map
+   uint32_t text_list_offset_ = 0;
+   std::unordered_map<std::string, uint32_t> text_offset_map;
+
+   // Text list. List of names used within this tile
+   std::list<std::string> textlistbuilder_;
 };
 
 }
