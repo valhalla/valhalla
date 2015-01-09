@@ -4,7 +4,6 @@ import sys
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from cgi import parse_qs, escape
-from json import dumps
 
 '''
 sample url looks like this:
@@ -17,7 +16,7 @@ http://localhost:8080/car/nearest?loc=40.657912,-73.914450
 '''
 
 #mapping mapzen osrm profiles to our internal costing algorithms
-costing_heuristics = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
+costing_methods = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
 actions = {'locate': str, 'nearest': str, 'viaroute': str}
@@ -42,19 +41,22 @@ class TyrHandler(SimpleHTTPRequestHandler):
         raise
     except:
       raise Exception('Try a url with 3 components: profile/action?querystring')
-    #path has the costing heuristic and action in it
+    #path has the costing method and action in it
     action = actions[escape(split[1])]
     if action is None:
       raise Exception('Try a valid action: ' + str([k for k in actions]))
-    costing_heuristic = costing_heuristics[escape(split[0])]
-    if costing_heuristic is None:
-      raise Exception('Try a valid costing heuristic: ' + str([k for k in costing_heuristics]))
+    costing_method = costing_methods[escape(split[0])]
+    if costing_method is None:
+      raise Exception('Try a valid costing method: ' + str([k for k in costing_methods]))
     #parse the bits of the query out
     params = parse_qs(split[2])
-    #throw costing heuristic in
-    params['costing_heuristic'] = costing_heuristic
+    #throw costing method in
+    params['costing_method'] = costing_method
+    #throw in path to config file
+    params['config'] = 'conf/pbf2graph.json'
     #do the action
-    result = action(dumps(params))
+    #just send the dict over to c++ and use it directly
+    result = action(params)
     #hand it back
     return result
 

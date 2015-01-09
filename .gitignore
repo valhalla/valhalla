@@ -33,7 +33,8 @@ libtool
 .dirstamp
 *.lo
 .libs/
-libvalhalla_loki.la
+libvalhalla_tyr.la
+tyr_service.la
 
 # tests
 test-suite.log
@@ -41,6 +42,7 @@ test-driver
 #test/search
 test/*.log
 test/*.trs
+test/handlers
 
 # test coverage stuff
 *.gcno
