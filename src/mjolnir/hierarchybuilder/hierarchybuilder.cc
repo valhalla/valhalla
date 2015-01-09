@@ -347,6 +347,7 @@ std::cout << "Add " << connections.size() << " connections to " <<
       // TODO - do we need to set all access to true?
       DirectedEdgeBuilder edgeconnection;
       edgeconnection.set_trans_up(true);
+      edgeconnection.set_endnode(connections[n].newnode);
       directededges.emplace_back(std::move(edgeconnection));
 
       // Increment n and get the next base node Id that connects
