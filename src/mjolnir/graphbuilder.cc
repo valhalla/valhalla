@@ -1,12 +1,6 @@
-#include <boost/functional/hash.hpp>
 #include <future>
 
 #include "mjolnir/graphbuilder.h"
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphconstants.h>
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/edgeinfobuilder.h"
 
 // Use open source PBF reader from:
 //     https://github.com/CanalTP/libosmpbfreader
@@ -17,18 +11,18 @@
 #include <string>
 #include <thread>
 #include <memory>
-#include <list>
-#include <unordered_set>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
-
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/edgeinfobuilder.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-
-using edge_tuple = std::tuple<const uint32_t, const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
 
 namespace valhalla {
 namespace mjolnir {
@@ -39,16 +33,17 @@ constexpr uint32_t kMaxNoThruTries = 256;
 // Will throw an error if this is exceeded. Then we can increase.
 const uint64_t kMaxOSMNodeId = 4000000000;
 
-
+// Constructor to create table of OSM Node IDs being used
 NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
   // Create a vector to mark bits. Initialize to 0.
   bitmarkers_.resize((maxosmid / 64) + 1, 0);
 }
 
+// Destructor for NodeId table
 NodeIdTable::~NodeIdTable() {
-
 }
 
+// Set an OSM Id within the node table
 void NodeIdTable::set(const uint64_t id) {
   // Test if the max is exceeded
   if (id > maxosmid_) {
@@ -57,16 +52,21 @@ void NodeIdTable::set(const uint64_t id) {
   bitmarkers_[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
 }
 
+// Check if an OSM Id is used (in the Node table)
 const bool NodeIdTable::IsUsed(const uint64_t id) const {
   return bitmarkers_[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
 }
 
+// Construct GraphBuilder based on properties file and input PBF extract
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
                            const std::string& input_file)
-    : node_count_(0), edge_count_(0), speed_assignment_count_(0), input_file_(input_file),
+    : node_count_(0),
+      edge_count_(0),
+      speed_assignment_count_(0),
+      input_file_(input_file),
       tile_hierarchy_(pt),
       shape_(kMaxOSMNodeId),
-      intersection_(kMaxOSMNodeId){
+      intersection_(kMaxOSMNodeId) {
 
   // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
@@ -75,6 +75,7 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
           pt.get<std::string>("tagtransform.way_function"));
 }
 
+// Build the graph from the input
 void GraphBuilder::Build() {
   // Parse the ways and relations. Find all node Ids needed.
   std::clock_t start = std::clock();
@@ -495,27 +496,9 @@ void GraphBuilder::SortEdgesFromNodes() {
   }
 }
 
-namespace {
-struct EdgeTupleHasher {
-  std::size_t operator()(const edge_tuple& k) const {
-    std::size_t seed = 13;
-    boost::hash_combine(seed, index_hasher(std::get<0>(k)));
-    boost::hash_combine(seed, id_hasher(std::get<1>(k)));
-    boost::hash_combine(seed, id_hasher(std::get<2>(k)));
-    return seed;
-  }
-  //function to hash each id
-  std::hash<uint32_t> index_hasher;
-  std::hash<valhalla::baldr::GraphId> id_hasher;
-};
-
-edge_tuple EdgeTuple(const uint32_t edgeindex, const baldr::GraphId& nodea, const baldr::GraphId& nodeb) {
-  if (nodea < nodeb)
-    return std::make_tuple(edgeindex, nodea, nodeb);
-  return std::make_tuple(edgeindex, nodeb, nodea);
-}
-
-uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode, const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<Edge>& edges) {
+uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode,
+                          const std::unordered_map<uint64_t, OSMNode>& nodes,
+                          const std::vector<Edge>& edges) {
   uint32_t n = 0;
   auto node = nodes.find(endnode);
   if(node != nodes.end()) {
@@ -605,20 +588,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
     try {
      // What actually writes the tile
       GraphTileBuilder graphtile;
-
-      // Edge info offset and map
-      size_t edge_info_offset = 0;
-      std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
-
-      // The edgeinfo list
-      std::list<EdgeInfoBuilder> edgeinfo_list;
-
-      // Text list offset and map
-      uint32_t text_list_offset = 0;
-      std::unordered_map<std::string, uint32_t> text_offset_map;
-
-      // Text list
-      std::list<std::string> text_list;
 
       // Iterate through the nodes
       uint32_t directededgecount = 0;
@@ -756,71 +725,18 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                 osmnodeid << std::endl;
           }
 
-          // If we haven't yet added edge info for this edge tuple
-          auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
-          auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
-          if (existing_edge_offset_item == edge_offset_map.end()) {
-            edgeinfo_list.emplace_back();
-            EdgeInfoBuilder& edgeinfo = edgeinfo_list.back();
-            edgeinfo.set_shape(edge.latlngs_);
-
-            // Put each name's index into the chunk of bytes containing all the names in the tile
-            std::vector<std::string> names = w.GetNames();
-            std::vector<uint32_t> street_name_offset_list;
-            street_name_offset_list.reserve(names.size());
-            for (const auto& name : names) {
-              // Skip blank names
-              if (name.empty()) {
-                continue;
-              }
-
-              // If nothing already used this name
-              auto existing_text_offset = text_offset_map.find(name);
-              if (existing_text_offset == text_offset_map.end()) {
-                // Add name to text list
-                text_list.emplace_back(name);
-
-                // Add name offset to list
-                street_name_offset_list.emplace_back(text_list_offset);
-
-                // Add name/offset pair to map
-                text_offset_map.emplace(name, text_list_offset);
-
-                // Update text offset value to length of string plus null terminator
-                text_list_offset += (name.length() + 1);
-              } // Something was already using this name
-              else {
-                // Add existing offset to list
-                street_name_offset_list.emplace_back(existing_text_offset->second);
-              }
-            }
-            edgeinfo.set_street_name_offset_list(street_name_offset_list);
-
-            // TODO - other attributes
-
-            // Add to the map
-            edge_offset_map.emplace(edge_tuple_item, edge_info_offset);
-
-            // Set edge offset within the corresponding directed edge
-            directededge.set_edgedataoffset(edge_info_offset);
-
-            // Update edge offset for next item
-            edge_info_offset += edgeinfo.SizeOf();
-          }// Already had this edge so we just need to update the directed edge to reference this info
-          else {
-            directededge.set_edgedataoffset(existing_edge_offset_item->second);
-          }
+          // Add edge info to the tile and set the offset in the directed edge
+          uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
+               nodea, nodeb, edge.latlngs_, w.GetNames());
+          directededge.set_edgedataoffset(edge_info_offset);
         }
 
         // Update the best classification used by directed edges
         nodebuilder.set_bestrc(bestrc);
 
-        // Add information to the tile
+        // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
       }
-
-      graphtile.SetEdgeInfoAndSize(edgeinfo_list, edge_info_offset);
-      graphtile.SetTextListAndSize(text_list, text_list_offset);
 
       // Write the actual tile to disk
       graphtile.StoreTileData(outdir, tile_start->first);
@@ -838,8 +754,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
   }
   // Let the main thread how this thread faired
   result.set_value(written);
-}
-
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {

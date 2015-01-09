@@ -9,6 +9,7 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+// Constructor
 GraphTileBuilder::GraphTileBuilder()
     : GraphTile() {
 }
@@ -22,7 +23,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& basedir,
 }
 
 // Output the tile to file. Stores as binary data.
-
 void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
                                      const GraphId& graphid) {
   // Get the name of the file
@@ -43,7 +43,7 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)));
     header_builder_.set_textlist_offset(
-        header_builder_.edgeinfo_offset() + edgeinfo_size_);
+        header_builder_.edgeinfo_offset() + edge_info_offset_);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
@@ -65,8 +65,8 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
 
     std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
               << " directededges = " << directededges_builder_.size()
-              << " edgeinfo size = " << edgeinfo_size_ << " textlist size = "
-              << textlist_size_ << std::endl;
+              << " edgeinfo size = " << edge_info_offset_
+              <<  " textlist size = " << text_list_offset_ << std::endl;
 
     size_ = file.tellp();
     file.close();
@@ -129,34 +129,81 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
 
 }
 
-void GraphTileBuilder::SetEdgeInfoAndSize(
-    const std::list<EdgeInfoBuilder>& edges,
-    const std::size_t edgeinfo_size) {
+uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
+             const GraphId& nodea, const baldr::GraphId& nodeb,
+             const std::vector<PointLL>& lls,
+             const std::vector<std::string>& names) {
+  // If we haven't yet added edge info for this edge tuple
+  auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+  auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
+  if (existing_edge_offset_item == edge_offset_map.end()) {
+    // Add a new EdgeInfo to the list and get a reference to it
+    edgeinfo_list_.emplace_back();
+    EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+    edgeinfo.set_shape(lls);
 
-  edgeinfos_builder_ = edges;
+    // Put each name's index into the chunk of bytes containing all the names
+    // in the tile
+    std::vector<uint32_t> street_name_offset_list;
+    street_name_offset_list.reserve(names.size());
+    for (const auto& name : names) {
+      // Skip blank names
+      if (name.empty()) {
+        continue;
+      }
 
-  // Set edgeinfo data size
-  edgeinfo_size_ = edgeinfo_size;
+      // If nothing already used this name
+      auto existing_text_offset = text_offset_map.find(name);
+      if (existing_text_offset == text_offset_map.end()) {
+        // Add name to text list
+        textlistbuilder_.emplace_back(name);
+
+        // Add name offset to list
+        street_name_offset_list.emplace_back(text_list_offset_);
+
+        // Add name/offset pair to map
+        text_offset_map.emplace(name, text_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        text_list_offset_ += (name.length() + 1);
+      } // Something was already using this name
+      else {
+        // Add existing offset to list
+        street_name_offset_list.emplace_back(existing_text_offset->second);
+      }
+    }
+    edgeinfo.set_street_name_offset_list(street_name_offset_list);
+
+    // TODO - other attributes
+
+    // Add to the map
+    edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);
+
+    // Set current edge offset
+    uint32_t current_edge_offset = edge_info_offset_;
+
+    // Update edge offset for next item
+    edge_info_offset_ += edgeinfo.SizeOf();
+
+    // Return the offset to this edge info
+    return current_edge_offset;
+  }
+  else {
+    // Already have this edge - return the offset
+    return existing_edge_offset_item->second;
+  }
 }
 
-void GraphTileBuilder::SetTextListAndSize(
-    const std::list<std::string>& textlist,
-    const std::size_t textlist_size) {
-
-  textlist_builder_ = textlist;
-
-  // Set textlist data size
-  textlist_size_ = textlist_size;
-}
-
+// Serialize the edge info list
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
-  for (const auto& edgeinfo : edgeinfos_builder_) {
+  for (const auto& edgeinfo : edgeinfo_list_) {
     out << edgeinfo;
   }
 }
 
+// Serialize the text list
 void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
-  for (const auto& text : textlist_builder_) {
+  for (const auto& text : textlistbuilder_) {
     out << text << '\0';
   }
 }

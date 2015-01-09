@@ -108,6 +108,12 @@ class HierarchyBuilder {
                    const baldr::GraphId& basenode) const;
 
   /**
+   * Form tiles in the new level
+   */
+  void FormTilesInNewLevel(const baldr::TileHierarchy::TileLevel& base_level,
+                           const baldr::TileHierarchy::TileLevel& new_level);
+
+  /**
    * Connect nodes in the base level to new nodes at the new level. This
    * inserts directed edges from the base node to the new node.
    */
