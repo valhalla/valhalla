@@ -15,10 +15,12 @@ namespace thor {
 /**
 * Generic factory class for creating objects based on type name.
 */
-template <typename T>
+template <class cost_t>
 class CostFactory {
  public:
-  typedef std::map<std::string, DynamicCost*> func_map_t;
+  typedef std::shared_ptr<cost_t> cost_ptr_t;
+  //TODO: might want to have some configurable params to each cost type
+  typedef cost_ptr_t (*factory_function_t)(/*pt::ptree const& config*/);
 
   /**
    * Constructor
@@ -28,23 +30,32 @@ class CostFactory {
   }
 
   /**
-   * Register
+   * Register the callback to create this type of cost
+   *
+   * @param name       the name of the cost that the function creates
+   * @param function   the function pointer to call to actually create the cost object
    */
-  CostFactory& Register(const std::string& type, DynamicCost* obj) {
-    factory_funcs_.insert(std::make_pair(type, obj));
-    return (*this);
+  void Register(const std::string& name, factory_function_t function) {
+    factory_funcs_.emplace(name, function);
   }
 
-  DynamicCost* Create(const std::string& type) const {
-    auto itr = factory_funcs_.find(type);
+  /**
+   * Make a cost from its name
+   *
+   * @param name    the name of the cost to create
+   * TODO: add configuration for the cost options
+   */
+  cost_ptr_t Create(const std::string& name/*, pt::ptree const& config*/) const {
+    auto itr = factory_funcs_.find(name);
     if (itr == factory_funcs_.end()) {
-      throw std::runtime_error("Unrecognized type: " + type);
+      throw std::runtime_error("Unrecognized cost name: " + name);
     }
-    return itr->second;
+    //create the cost using the function pointer
+    return itr->second();
   }
 
  private:
-  func_map_t factory_funcs_;
+  std::map<std::string, factory_function_t> factory_funcs_;
 };
 
 }

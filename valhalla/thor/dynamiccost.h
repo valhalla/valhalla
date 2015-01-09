@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <memory>
 
 namespace valhalla {
 namespace thor {
@@ -18,7 +19,7 @@ class DynamicCost {
  public:
   DynamicCost();
 
-  virtual ~DynamicCost() = 0;
+  virtual ~DynamicCost();
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -31,7 +32,7 @@ class DynamicCost {
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge, const bool uturn,
-                       const float dist2dest) = 0;
+                       const float dist2dest) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -39,21 +40,21 @@ class DynamicCost {
    * @param  edge  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::NodeInfo* node) = 0;
+  virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 
   /**
    * Get the cost given a directed edge.
    * @param edge  Pointer to a directed edge.
    * @return  Returns the cost to traverse the edge.
    */
-  virtual float Get(const baldr::DirectedEdge* edge) = 0;
+  virtual float Get(const baldr::DirectedEdge* edge) const = 0;
 
   /**
    * Returns the time (in seconds) to traverse the edge.
    * @param edge  Pointer to a directed edge.
    * @return  Returns the time in seconds to traverse the edge.
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) = 0;
+  virtual float Seconds(const baldr::DirectedEdge* edge) const = 0;
 
 
   /**
@@ -64,7 +65,7 @@ class DynamicCost {
    * assume the maximum speed is used to the destination such that the time
    * estimate is less than the least possible time along roads.
    */
-  virtual float AStarCostFactor() = 0;
+  virtual float AStarCostFactor() const = 0;
 
   /**
    * Get the general unit size that can be considered as equal for sorting
@@ -76,6 +77,8 @@ class DynamicCost {
    */
   virtual float UnitSize() const = 0;
 };
+
+typedef std::shared_ptr<DynamicCost> cost_ptr_t;
 
 }
 }

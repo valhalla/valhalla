@@ -37,7 +37,7 @@ class PathAlgorithm {
    */
   std::vector<baldr::GraphId> GetBestPath(const baldr::PathLocation& origin,
           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
-           DynamicCost* costing);
+          std::shared_ptr<DynamicCost> costing);
 
   /**
    * Clear the temporary information generated during path construction.
@@ -70,13 +70,13 @@ class PathAlgorithm {
    * Initialize
    */
   void Init(const PointLL& origll, const PointLL& destll,
-            DynamicCost* costing);
+      const std::shared_ptr<DynamicCost>& costing);
 
   /**
    * Add edges at the origin to the adjacency list
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-        const baldr::PathLocation& origin, DynamicCost* costing);
+        const baldr::PathLocation& origin, const std::shared_ptr<DynamicCost>& costing);
 
   /**
    * Set the destination edge(s).

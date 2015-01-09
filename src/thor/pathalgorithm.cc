@@ -46,7 +46,7 @@ std::cout << "EdgeLabel index = " << edgelabel_index_ << std::endl;
 
 // Initialize prior to finding best path
 void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
-                DynamicCost* costing) {
+    const std::shared_ptr<DynamicCost>& costing) {
 std::cout << "Orig LL = " << origll.lat() << "," << origll.lng() << std::endl;
 std::cout << "Dest LL = " << destll.lat() << "," << destll.lng() << std::endl;
   // Set the destination and cost factor in the A* heuristic
@@ -66,7 +66,7 @@ std::cout << "Dest LL = " << destll.lat() << "," << destll.lng() << std::endl;
 // Calculate best path.
 std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
-             DynamicCost* costing) {
+             std::shared_ptr<DynamicCost> costing) {
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.location().latlng_, dest.location().latlng_, costing);
 
@@ -199,7 +199,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
 // Add an edge at the origin to the adjacency list
 void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
-          const PathLocation& origin, DynamicCost* costing) {
+          const PathLocation& origin, const std::shared_ptr<DynamicCost>& costing) {
   // Get sort heuristic based on distance from origin to destination
   float dist = astarheuristic_.GetDistance(origin.location().latlng_);
   float heuristic = astarheuristic_.Get(dist);

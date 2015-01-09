@@ -30,25 +30,14 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
              const PathLocation& dest, std::string routetype,
              TripPath& trip_path) {
   // Register costing methods
-  CostFactory<DynamicCost> costing;
-  costing.Register("AutoCost", AutoCost::Create());
-  costing.Register("BicycleCost", BicycleCost::Create());
-  costing.Register("PedestrianCost", PedestrianCost::Create());
-
-  DynamicCost* costs;
+  CostFactory<DynamicCost> factory;
+  factory.Register("auto", CreateAutoCost);
+  factory.Register("bicycle", CreateBicycleCost);
+  factory.Register("pedestrian", CreatePedestrianCost);
 
   for (auto & c : routetype)
     c = std::tolower(c);
-
-  if (routetype == "auto") {
-    costs = costing.Create("AutoCost");
-  } else if (routetype == "bicycle") {
-    costs = costing.Create("BicycleCost");
-  } else if (routetype == "pedestrian") {
-    costs = costing.Create("PedestrianCost");
-    ((PedestrianCost*) costs)->set_favorwalkways(0.50f);  //We want to use walkways
-  } else
-    return 1;
+  std::shared_ptr<DynamicCost> cost = factory.Create(routetype);
 
   std::cout << "routetype: " << routetype << std::endl;
 
@@ -59,15 +48,8 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
             << std::endl;
   start = std::clock();
   std::vector<GraphId> pathedges;
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, costs);
-  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
-
-  // Try again to see how much caching improves...
-  pathalgorithm.Clear();
-  start = std::clock();
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, costs);
-  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
   // Form output information based on pathedges
