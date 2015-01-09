@@ -52,13 +52,6 @@ int PathTest(GraphReader& reader, const PathLocation& origin,
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
-  // Try again to see how much caching improves...
-  pathalgorithm.Clear();
-  start = std::clock();
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
-
   // Form output information based on pathedges
   start = std::clock();
   TripPathBuilder trippathbuilder;
