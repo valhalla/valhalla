@@ -9,9 +9,23 @@
 
 
 BOOST_PYTHON_MODULE(tyr_service) {
+
+  boost::python::class_<valhalla::tyr::LocateHandler,
+      boost::shared_ptr<valhalla::tyr::LocateHandler>,
+      boost::noncopyable>("LocateHandler", boost::python::init<const boost::python::dict&>())
+    .def("Action", &valhalla::tyr::LocateHandler::Action)
+  ;
+
+  boost::python::class_<valhalla::tyr::NearestHandler,
+      boost::shared_ptr<valhalla::tyr::NearestHandler>,
+      boost::noncopyable>("NearestHandler", boost::python::init<const boost::python::dict&>())
+    .def("Action", &valhalla::tyr::NearestHandler::Action)
+  ;
+
   boost::python::class_<valhalla::tyr::RouteHandler,
       boost::shared_ptr<valhalla::tyr::RouteHandler>,
       boost::noncopyable>("RouteHandler", boost::python::init<const boost::python::dict&>())
     .def("Action", &valhalla::tyr::RouteHandler::Action)
   ;
+
 }

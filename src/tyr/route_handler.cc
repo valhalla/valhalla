@@ -50,6 +50,10 @@ RouteHandler::RouteHandler(const boost::python::dict& dict_request) : Handler(di
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
 
+RouteHandler::~RouteHandler() {
+
+}
+
 std::string RouteHandler::Action() {
   //where to
   valhalla::baldr::PathLocation origin = valhalla::loki::Search(locations_[0], *reader_);

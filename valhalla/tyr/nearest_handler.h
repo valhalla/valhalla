@@ -9,9 +9,17 @@ namespace tyr{
 class NearestHandler : public Handler {
  public:
   /**
-   * We use all the same constructors etc as our parent
+   * Parses json request data to be used as options for the action
+   *
+   * @param dict  the request data
+   * @return a handler object ready to act
    */
-  using Handler::Handler;
+  NearestHandler(const boost::python::dict& dict_request);
+
+  /**
+   * Don't expose the default constructor
+   */
+  NearestHandler() = delete;
 
   /**
    * Destructor
