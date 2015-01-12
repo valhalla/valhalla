@@ -96,8 +96,23 @@ AutoCost::~AutoCost() {
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
                        const float dist2dest) const {
-  // Do not allow Uturns or entering no-thru edges. TODO - evaluate later!
-  if (uturn || (edge->not_thru() && dist2dest > 5.0)) {
+  // TODO - test and add options for hierarchy transitions
+  // Allow upward transitions except when close to the destination
+  if (edge->trans_up()) {
+    return dist2dest > 10.0f;
+  }
+
+  // Allow downward transitions only when near the destination
+  if (edge->trans_down()) {
+    return dist2dest < 50.0f;
+  }
+
+  // Do not allow Uturns or entering no-thru edges.
+  // TODO - evaluate later!
+  // TODO - until the opp_index is set in the new hierarchies do not test
+  // for uturn!
+//  if (uturn || (edge->not_thru() && dist2dest > 5.0))
+  if ((edge->not_thru() && dist2dest > 5.0)) {
     return false;
   }
   return (edge->forwardaccess() & kAutoAccess);
