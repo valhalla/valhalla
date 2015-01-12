@@ -26,10 +26,10 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 }
 
-void DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
+TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
   // TODO - temps for initial end to end test
-  std::vector<std::vector<std::string>> maneuver_names_;
-  std::vector<float> maneuver_distance_;
+  std::vector<std::vector<std::string>> maneuver_names;
+  std::vector<float> maneuver_distance;
 
   for (const auto& node : trip_path.node()) {
     // Get outbound edges from node
@@ -42,31 +42,34 @@ void DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
     for (const auto name : names) {
       new_names.push_back(name);
     }
-    if (maneuver_names_.empty()) {
-      maneuver_names_.push_back(new_names);
-      maneuver_distance_.push_back(0.0f);
+    if (maneuver_names.empty()) {
+      maneuver_names.push_back(new_names);
+      maneuver_distance.push_back(0.0f);
     }
 
-    if (maneuver_names_.back() == new_names) {
-      maneuver_distance_.back() += edge.length();
+    if (maneuver_names.back() == new_names) {
+      maneuver_distance.back() += edge.length();
     } else {
-      maneuver_names_.push_back(new_names);
-      maneuver_distance_.push_back(edge.length());
+      maneuver_names.push_back(new_names);
+      maneuver_distance.push_back(edge.length());
     }
   }
 
-  float totalDistance = 0.0f;
-  for (size_t i = 0, n = maneuver_names_.size(); i < n; i++) {
-    std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Take " << GetStreetName(maneuver_names_[i]) << " for "
-        << maneuver_distance_[i] << " km" << std::endl;
-    totalDistance += maneuver_distance_[i];
+  TripDirections trip_directions;
+  for (size_t i = 0, n = maneuver_names.size(); i < n; i++) {
+    auto* maneuver = trip_directions.add_maneuver();
+    maneuver->set_type(TripDirections_Type_kContinue);
+    maneuver->set_length(maneuver_distance[i]);
+    maneuver->set_text_instruction("Take " + GetStreetName(maneuver_names[i]));
+    for (const auto& name : maneuver_names[i]) {
+      maneuver->add_street_name(name);
+    }
   }
-    std::cout << "==============================================" << std::endl;
-    std::cout << "Total distance: " << totalDistance << " km" << std::endl;
+
+  return trip_directions;
 }
 
-void DirectionsBuilder::Build(const TripPath& trip_path) {
+TripDirections DirectionsBuilder::Build(const TripPath& trip_path) {
   // Create maneuvers
   // TODO
 
@@ -77,7 +80,8 @@ void DirectionsBuilder::Build(const TripPath& trip_path) {
   // TODO
 
   // Return trip directions
-  // TODO
+  TripDirections trip_directions;
+  return trip_directions;
 }
 
 }

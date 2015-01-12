@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 
 namespace valhalla{
 namespace odin{
@@ -12,9 +13,9 @@ class DirectionsBuilder {
  public:
   DirectionsBuilder();
 
-  void BuildSimple(const TripPath& trip_path);
+  TripDirections BuildSimple(const TripPath& trip_path);
 
-  void Build(const TripPath& trip_path);
+  TripDirections Build(const TripPath& trip_path);
 
  protected:
 
