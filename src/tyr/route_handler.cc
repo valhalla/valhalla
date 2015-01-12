@@ -40,7 +40,7 @@ RouteHandler::RouteHandler(const boost::python::dict& dict_request) : Handler(di
   factory.Register("pedestrian", valhalla::thor::CreatePedestrianCost);
   //get the costing method
   std::string costing_method = boost::python::extract<std::string>(boost::python::str(dict_request["costing_method"]));
-  valhalla::thor::cost_ptr_t cost_ = factory.Create(costing_method);
+  cost_ = factory.Create(costing_method);
   //get the config for the graph reader
   boost::property_tree::ptree pt;
   std::string config_file = boost::python::extract<std::string>(boost::python::str(dict_request["config"]));

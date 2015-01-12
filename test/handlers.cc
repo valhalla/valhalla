@@ -6,8 +6,10 @@
 #include <boost/python/dict.hpp>
 #include <boost/python/str.hpp>
 #include <boost/python/list.hpp>
+#include <boost/python/extract.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <Python.h>
 
 namespace {
 
@@ -61,17 +63,21 @@ boost::python::dict make_request(const std::string& loc1, const std::string& loc
     }*/
 
   namespace bp = boost::python;
-  bp::dict dict;
+  bp::dict request;
   bp::list loc;
-  loc.append(bp::str(loc1));
-  loc.append(bp::str(loc2));
-  bp::setitem(dict, bp::str("loc"), loc);
-  bp::setitem(dict, bp::str("costing_method"), bp::str(request_type));
-  bp::setitem(dict, bp::str("output"), bp::list(bp::str("json")));
-  bp::setitem(dict, bp::str("z"), bp::list(bp::str("17")));
-  bp::setitem(dict, bp::str("config"), bp::str(config_file));
-  bp::setitem(dict, bp::str("instructions"), bp::list(bp::str("true")));
-  return dict;
+  loc.append(loc1);
+  loc.append(loc2);
+  request["loc"] = loc;
+  request["costing_method"] = request_type.c_str();
+  bp::list output;  output.append("json");
+  request["output"] = output;
+  bp::list z; z.append("17");
+  request["z"] = z;
+  request["config"] = config_file.c_str();
+  bp::list instructions; instructions.append("true");
+  request["instructions"] = instructions;
+  std::string x = boost::python::extract<std::string>(boost::python::str(request));
+  return request;
 }
 
 void TestRouteHanlder() {
@@ -83,7 +89,8 @@ void TestRouteHanlder() {
 
   //make the input
   boost::python::dict dict =
-    make_request("40.657912,-73.914450", "40.040501,-76.306271", "auto", "test/test_config");
+    make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto", "test/test_config");
+  std::string x = boost::python::extract<std::string>(boost::python::str(dict));
 
   //run the route
   valhalla::tyr::RouteHandler handler(dict);
@@ -92,15 +99,16 @@ void TestRouteHanlder() {
 
 }
 
-
 int main() {
   test::suite suite("handlers");
 
+  Py_Initialize();
   suite.test(TEST_CASE(TestRouteHanlder));
 
   //suite.test(TEST_CASE(TestNearestHanlder));
 
   //suite.test(TEST_CASE(TestLocateHanlder));
+  Py_Finalize();
 
   return suite.tear_down();
 }
