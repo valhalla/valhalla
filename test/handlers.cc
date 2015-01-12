@@ -6,7 +6,6 @@
 #include <boost/python/dict.hpp>
 #include <boost/python/str.hpp>
 #include <boost/python/list.hpp>
-#include <boost/python/extract.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <Python.h>
@@ -90,7 +89,6 @@ void TestRouteHanlder() {
   //make the input
   boost::python::dict dict =
     make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto", "test/test_config");
-  std::string x = boost::python::extract<std::string>(boost::python::str(dict));
 
   //run the route
   valhalla::tyr::RouteHandler handler(dict);

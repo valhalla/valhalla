@@ -4,6 +4,7 @@ import sys
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from cgi import parse_qs, escape
+import tyr_service
 
 '''
 sample url looks like this:
@@ -19,7 +20,7 @@ http://localhost:8080/car/nearest?loc=40.657912,-73.914450
 costing_methods = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
-actions = {'locate': str, 'nearest': str, 'viaroute': str}
+actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler}
 
 #custom handler for getting routes
 class TyrHandler(SimpleHTTPRequestHandler):
@@ -56,7 +57,7 @@ class TyrHandler(SimpleHTTPRequestHandler):
     params['config'] = 'conf/pbf2graph.json'
     #do the action
     #just send the dict over to c++ and use it directly
-    result = action(params)
+    result = action(params).Action()
     #hand it back
     return result
 
