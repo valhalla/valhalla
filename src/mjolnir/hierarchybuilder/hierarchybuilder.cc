@@ -13,8 +13,13 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+// TODO - preprocess ramps to lower their importance. This would improve
+// the ability to create shortcut edges along highways...
+
 HierarchyBuilder::HierarchyBuilder(const boost::property_tree::ptree& pt)
-    : tile_hierarchy_(pt),
+    : contractcount_(0),
+      nodecounts_{},
+      tile_hierarchy_(pt),
       graphreader_(tile_hierarchy_) {
 
   // Make sure there are at least 2 levels!
@@ -31,14 +36,35 @@ bool HierarchyBuilder::Build() {
   new_level++;
   for ( ; new_level != tile_hierarchy_.levels().rend();
             base_level++, ++new_level) {
-
-    // Size the vector for new tiles
-    tilednodes_.resize(new_level->second.tiles.TileCount());
-
-    // Build the next level
     std::cout << " Build Hierarchy Level " << new_level->second.name
               << " Base Level is " << base_level->second.name << std::endl;
+
+    // Clear the node map
+    nodemap_.clear();
+
+    // Size the vector for new tiles. Clear any nodes from these tiles
+    tilednodes_.resize(new_level->second.tiles.TileCount());
+    for (auto& tile : tilednodes_) {
+      tile.clear();
+    }
+
+    // Debug counts
+    contractcount_ = 0;
+     for (uint32_t i = 0; i < 16; i++)
+       nodecounts_[i] = 0;
+
+    // Get the nodes that exist in the new level
     GetNodesInNewLevel(base_level->second, new_level->second);
+    std::cout << "Can contract " << contractcount_ << " nodes"
+              << " Out of " << nodemap_.size() << " nodes" << std::endl;
+
+    // Debug counts
+    for (uint32_t i = 0; i < 16; i++) {
+      if (nodecounts_[i] > 0) {
+        std::cout << " Nodes with " << i << " edges: " <<
+            nodecounts_[i] << std::endl;
+      }
+    }
 
     // Form tiles in new level
     FormTilesInNewLevel(base_level->second, new_level->second);
@@ -46,10 +72,7 @@ bool HierarchyBuilder::Build() {
     // Form connections (directed edges) in the base level tiles to
     // the new level
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second);
-
-    // Iterate through tiles in the new level. Form connections from
   }
-
   return true;
 }
 
@@ -74,8 +97,8 @@ bool HierarchyBuilder::GetNodesInNewLevel(
       continue;
     }
 
-std::cout << "Tile exists..." << tileid << " add nodes with class <= "
-        << static_cast<uint32_t>(new_level.importance) << std::endl;
+    //std::cout << "Tile exists..." << tileid << " add nodes with class <= "
+    //    << static_cast<uint32_t>(new_level.importance) << std::endl;
 
     // Iterate through the nodes
     uint32_t nodecount = graphtile->header()->nodecount();
@@ -103,7 +126,8 @@ void HierarchyBuilder::AddNewNode(GraphTile* graphtile,
   // to new tiles (could be no overlap of bounds)
   uint32_t tileid = new_level.tiles.TileId(nodeinfo->latlng());
   uint32_t nodeid = tilednodes_[tileid].size();
-  bool contract = false; // CanContract(graphtile, nodeinfo, basenode); // TODO
+  bool contract = CanContract(graphtile, nodeinfo, basenode,
+                              new_level.importance);
   tilednodes_[tileid].push_back(NewNode(basenode, contract));
 
   // Create mapping from base level node to new node
@@ -111,20 +135,28 @@ void HierarchyBuilder::AddNewNode(GraphTile* graphtile,
   nodemap_[basenode.value()] = newnode;
 }
 
+// Test if the node is eligible to be contracted (part of a shortcut) in
+// the new level.
 bool HierarchyBuilder::CanContract(GraphTile* graphtile,
                                    const NodeInfo* nodeinfo,
-                                   const GraphId& node) const {
-  // Get the number of directed edges  on this hierarchy
-  std::vector<DirectedEdge*> edges;
+                                   const GraphId& node,
+                                   const RoadClass rcc)  {
+  // Get the number of directed edges on this hierarchy
+  std::vector<GraphId> edges;
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  const DirectedEdge* directededge = graphtile->directededge(nodeinfo->edge_index());
-  for (unsigned int i = 0, n = nodeinfo->edge_count(); i < n;
+  const DirectedEdge* directededge = graphtile->directededge(
+                nodeinfo->edge_index());
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
               i++, directededge++, edgeid++) {
-    // TODO - need access methods for DirectedEdge attributes!
-//    if (directededge->roadclass() <= rcc_) {
-//      edges.push_back(directededge);
-//    }
+    // Do not count any transition edges or shortcut edges
+    if (directededge->importance() <= rcc &&
+        !directededge->trans_down() && !directededge->shortcut()) {
+      edges.push_back(edgeid);
+    }
   }
+
+  // Keep count of # of nodes with each edge count
+  nodecounts_[edges.size()]++;
 
   // If n is not equal to 2 we cannot contract
   if (edges.size() != 2)
@@ -132,7 +164,59 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
 
   // If n == 2 we need to check attributes and names to see if we can create a
   // shortcut through this node
-  return false;
+  const DirectedEdge* edge1 = graphtile->directededge(edges[0]);
+  const DirectedEdge* edge2 = graphtile->directededge(edges[1]);
+
+  // Make sure access matches. Need to consider opposite direction for one of
+  // the edges since both edges are outbound from the node.
+  if (edge1->forwardaccess() != edge2->reverseaccess() ||
+      edge1->reverseaccess() != edge2->forwardaccess()) {
+    return false;
+  }
+
+  // Classification, link, and use must also match
+  if (edge1->importance() != edge2->importance() ||
+      edge1->link() != edge2->link() ||
+      edge1->use() != edge2->use()) {
+    return false;
+  }
+
+  //  Attributes must match
+  if (edge1->speed()      != edge2->speed() ||
+      edge1->ferry()      != edge2->ferry() ||
+      edge1->railferry()  != edge2->railferry() ||
+      edge1->toll()       != edge2->toll() ||
+      edge1->destonly()   != edge2->destonly() ||
+      edge1->unpaved()    != edge2->unpaved() ||
+      edge1->tunnel()     != edge2->tunnel() ||
+      edge1->bridge()     != edge2->bridge() ||
+      edge1->roundabout() != edge2->roundabout()) {
+    return false;
+  }
+
+  // Names must match (TODO - can near matches contract?)
+  std::vector<std::string> edge1names;
+  graphtile->GetNames(edge1->edgedataoffset(), edge1names);
+  std::vector<std::string> edge2names;
+  graphtile->GetNames(edge2->edgedataoffset(), edge2names);
+  if (edge1names.size() != edge2names.size()) {
+    return false;
+  }
+  for (const auto& name1 : edge1names) {
+    bool found = false;
+    for (const auto& name2 : edge2names) {
+      if (name1 == name2) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return false;
+    }
+  }
+
+  contractcount_++;
+  return true;
 }
 
 void HierarchyBuilder::FormTilesInNewLevel(
@@ -189,6 +273,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
                 oldnodeinfo->edge_index());
       for (uint32_t i = 0, n = oldnodeinfo->edge_count(); i < n;
                       i++, directededge++) {
+
         // Store the directed edge if less than the road class cutoff
         if (directededge->importance() <= new_level.importance) {
           // Copy the directed edge information and update end node,
@@ -230,13 +315,14 @@ void HierarchyBuilder::FormTilesInNewLevel(
       edgecount++;
 
       // Set the edge count for the new node
-      node.set_edge_count(edgecount);;
+      node.set_edge_count(edgecount);
 
       // Add node and directed edge information to the tile
       tilebuilder.AddNodeAndDirectedEdges(node, directededges);
 
-      // Increment node Id
+      // Increment node Id and edgeindex
       nodeid++;
+      edgeindex += edgecount;
     }
 
     // Store the new tile
@@ -358,9 +444,6 @@ std::cout << "Add " << connections.size() << " connections to " <<
     // Add the node to the list
     nodes.emplace_back(std::move(node));
   }
-
-std::cout << "New: NodeCount= " << nodes.size() << " DirectedEdges= "
-    << directededges.size() << std::endl;
 
   // Write the new file
   tilebuilder.Update(basedir, hdrbuilder, nodes, directededges);
