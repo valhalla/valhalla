@@ -12,6 +12,8 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/odin/directionsbuilder.h>
+#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 #include "thor/pathalgorithm.h"
 #include "thor/costfactory.h"
 #include "thor/trippathbuilder.h"
@@ -67,10 +69,22 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   return trip_path;
 }
 
-void DirectionsTest(TripPath& trip_path) {
+TripDirections DirectionsTest(const TripPath& trip_path) {
   DirectionsBuilder directions;
-  directions.BuildSimple(trip_path);
+  TripDirections trip_directions = directions.BuildSimple(trip_path);
+  float totalDistance = 0.0f;
+  for (const auto& maneuver : trip_directions.maneuver()) {
+    std::cout << "----------------------------------------------" << std::endl;
+    std::cout << maneuver.text_instruction() << " for " << maneuver.length()
+              << " km" << std::endl;
+    totalDistance += maneuver.length();
+  }
+  std::cout << "==============================================" << std::endl;
+  std::cout << "Total distance: " << totalDistance << " km" << std::endl;
+
+  return trip_directions;
 }
+
 // Main method for testing a single path
 int main(int argc, char *argv[]) {
   bpo::options_description options("pathtest " VERSION "\n"
@@ -163,7 +177,7 @@ int main(int argc, char *argv[]) {
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
 
   // Try the the directions
-  DirectionsTest(trip_path);
+  TripDirections trip_directions = DirectionsTest(trip_path);
 
   return EXIT_SUCCESS;
 }
