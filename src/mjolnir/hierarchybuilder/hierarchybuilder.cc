@@ -66,11 +66,13 @@ bool HierarchyBuilder::Build() {
       }
     }
 
-    // Form tiles in new level
+    // Form all tiles in new level
     FormTilesInNewLevel(base_level->second, new_level->second);
 
     // Form connections (directed edges) in the base level tiles to
-    // the new level
+    // the new level. Note that the new tiles are created before adding
+    // connections to base tiles. That way all access to old tiles is
+    // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second);
   }
   return true;
@@ -359,11 +361,8 @@ void HierarchyBuilder::ConnectBaseLevelToNewLevel(
       // Add to the map of connections
       connections[newnode.basenode.tileid()].emplace_back(
             NodeConnection(newnode.basenode, newnode_id));
+      id++;
     }
-
-    // TODO - need to create new tile before adding connections to
-    // base tile. That way all access to old tile is complete and we
-    // can build/update  base tile
 
     // Iterate through each base tile and add connections
     for (auto& basetile : connections) {
@@ -394,7 +393,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(const uint32_t basetileid,
   hdrbuilder.set_directededgecount(existinghdr->directededgecount() +
                                    connections.size());
 
-std::cout << "Add " << connections.size() << " connections to " <<
+  std::cout << "Add " << connections.size() << " connections to " <<
                   basetileid << " Current nodecount= " <<
                   existinghdr->nodecount() << " Current directed edge count= "
                   << existinghdr->directededgecount() << std::endl;
