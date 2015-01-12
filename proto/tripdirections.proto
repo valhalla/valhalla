@@ -1,0 +1,56 @@
+package valhalla.odin;
+
+message TripDirections {
+  
+  enum CardinalDirection {
+    kNorth = 0;
+    kNorthEast = 1;
+    kEast = 2;
+    kSouthEast = 3;
+    kSouth = 4;
+    kSouthWest = 5;
+    kWest = 6;
+    kNorthWest = 7;
+  }
+  
+  // TODO - add others later
+  enum Type {
+    kNone = 0;
+    kStartRight = 1;
+    kStart = 2;
+    kStartLeft = 3;
+    kDestinationRight = 4;
+    kDestination = 5;
+    kDestinationLeft = 6;
+    kBecomes = 7;
+    kContinue = 8;
+    kSlightRight = 9;
+    kRight = 10;
+    kSharpRight = 11;
+    kUturnRight = 12;
+    kUturnLeft = 13;
+    kSharpLeft = 14;
+    kLeft = 15;
+    kSlightLeft = 16;
+  }
+  
+  // TODO: add in other attributes
+  message Maneuver {
+    optional Type type = 1;                                  // Maneuver type
+    optional string text_instruction = 2;                    // instruction text
+    repeated string street_name = 3;                         // street names
+    optional float length = 4;                               // km (TODO: based on type)
+    optional uint32 time = 5;                                // seconds
+    optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
+    optional uint32 begin_heading = 7;                       // 0-360 
+    optional uint32 begin_shape_index = 8;                   // inclusive index
+    optional uint32 end_shape_index = 9;                     // inclusive index
+    optional bool portions_toll = 10;                        // has portions toll
+    optional bool portions_unpaved = 11;                     // has portions unpaved
+  }
+  
+  optional uint64 trip_id = 1;
+  optional uint32 leg_id = 2;
+  repeated Maneuver maneuver = 3;
+}
+

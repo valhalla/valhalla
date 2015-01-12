@@ -36,7 +36,9 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto generation etc
-PROTO_FILES = proto/trippath.proto
+PROTO_FILES = \
+	proto/trippath.proto \
+	proto/tripdirections.proto
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
@@ -46,11 +48,17 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_odin.la
 nobase_include_HEADERS = \
+	valhalla/odin/directionsbuilder.h \
+	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrativebuilder.h \
-	valhalla/proto/trippath.pb.h 
+	valhalla/proto/trippath.pb.h \
+	valhalla/proto/tripdirections.pb.h 
 libvalhalla_odin_la_SOURCES = \
+	src/odin/directionsbuilder.cc \
+	src/odin/maneuversbuilder.cc \
 	src/odin/narrativebuilder.cc \
-	src/proto/trippath.pb.cc
+	src/proto/trippath.pb.cc \
+	src/proto/tripdirections.pb.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @PROTOC_LIBS@
 
