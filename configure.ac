@@ -25,6 +25,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
 CHECK_VALHALLA_LOKI
+CHECK_VALHALLA_MJOLNIR
 CHECK_VALHALLA_ODIN
 CHECK_VALHALLA_THOR
 
@@ -34,6 +35,14 @@ AM_PATH_PYTHON
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tyr. Please install libboost-dev.])])
 AX_BOOST_PYTHON( , , [AC_MSG_ERROR([cannot find Boost Python libraries, which are are required for building tyr. Please install libboost-python-dev.])])
+
+# check for Lua libraries and headers
+AX_PROG_LUA([5.2],[],[
+    AX_LUA_HEADERS([
+        AX_LUA_LIBS([
+        ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
+    ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
+],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
 # optionally enable coverage information
 CHECK_COVERAGE
