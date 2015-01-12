@@ -11,7 +11,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
-#include <valhalla/odin/narrativebuilder.h>
+#include <valhalla/odin/directionsbuilder.h>
 #include "thor/pathalgorithm.h"
 #include "thor/costfactory.h"
 #include "thor/trippathbuilder.h"
@@ -67,9 +67,9 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   return trip_path;
 }
 
-void NarrativeTest(TripPath& trip_path) {
-  NarrativeBuilder nb(trip_path);
-  nb.Build();
+void DirectionsTest(TripPath& trip_path) {
+  DirectionsBuilder directions;
+  directions.BuildSimple(trip_path);
 }
 // Main method for testing a single path
 int main(int argc, char *argv[]) {
@@ -162,8 +162,8 @@ int main(int argc, char *argv[]) {
   // Try the route
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
 
-  // Try the the narrative
-  NarrativeTest(trip_path);
+  // Try the the directions
+  DirectionsTest(trip_path);
 
   return EXIT_SUCCESS;
 }
