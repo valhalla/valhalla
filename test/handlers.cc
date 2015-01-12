@@ -75,7 +75,6 @@ boost::python::dict make_request(const std::string& loc1, const std::string& loc
   request["config"] = config_file.c_str();
   bp::list instructions; instructions.append("true");
   request["instructions"] = instructions;
-  std::string x = boost::python::extract<std::string>(boost::python::str(request));
   return request;
 }
 
