@@ -12,6 +12,7 @@
 #include "valhalla/midgard/pointll.h"
 #include "valhalla/baldr/tilehierarchy.h"
 #include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphconstants.h"
 #include "valhalla/baldr/graphreader.h"
 
 namespace valhalla {
@@ -61,6 +62,8 @@ class HierarchyBuilder {
   bool Build();
 
  protected:
+  uint32_t contractcount_;
+  uint32_t nodecounts_[16];
 
   // Tile hierarchy/level information
   baldr::TileHierarchy tile_hierarchy_;
@@ -105,7 +108,8 @@ class HierarchyBuilder {
    */
   bool CanContract(baldr::GraphTile* graphtile,
                    const baldr::NodeInfo* nodeinfo,
-                   const baldr::GraphId& basenode) const;
+                   const baldr::GraphId& basenode,
+                   const baldr::RoadClass rcc);
 
   /**
    * Form tiles in the new level
