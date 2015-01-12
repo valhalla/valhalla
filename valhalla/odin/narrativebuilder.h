@@ -17,11 +17,6 @@ class NarrativeBuilder {
  protected:
   TripPath& trip_path_;
 
-  // TODO - temps for initial end to end test
-  std::vector<std::vector<std::string>> maneuver_names_;
-  std::vector<float> maneuver_distance_;
-
-
 };
 
 }
