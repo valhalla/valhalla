@@ -227,6 +227,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
   // Iterate through tiled nodes in the new level
   uint32_t tileid = 0;
   uint32_t nodeid = 0;
+  uint32_t edgeid = 0;
   uint32_t edgecount = 0;
   uint32_t edgeindex = 0;
   uint32_t edge_info_offset;
@@ -292,11 +293,13 @@ void HierarchyBuilder::FormTilesInNewLevel(
           newedge.set_opp_index(0);
 
           // Get edge info, shape, and names from the old tile and add
-          // to the new
+          // to the new. Use a value based on length to protect against
+          // edges that have same end nodes but different lengths
           tile->GetNames(directededge->edgedataoffset(), names);
           const std::shared_ptr<EdgeInfo> edgeinfo =
                 tile->edgeinfo(directededge->edgedataoffset());
-          edge_info_offset = tilebuilder.AddEdgeInfo(0, nodea,
+          edgeid = static_cast<uint32_t>(directededge->length() * 100.0f);
+          edge_info_offset = tilebuilder.AddEdgeInfo(edgeid, nodea,
                  nodeb, edgeinfo->shape(), names);
           newedge.set_edgedataoffset(edge_info_offset);
 
