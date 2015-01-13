@@ -1,7 +1,9 @@
 #include "tyr/route_handler.h"
 
 #include <stdexcept>
+#include <ostream>
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/tripdirections.pb.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/python/str.hpp>
@@ -16,12 +18,285 @@
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/thor/trippathbuilder.h>
-#include <valhalla/odin/narrativebuilder.h>
+#include <valhalla/odin/directionsbuilder.h>
+#include <boost/variant.hpp>
+#include <unordered_set>
+#include <unordered_map>
+#include <cinttypes>
 
 namespace {
+//base class so we can use pointers to refer to whichever
+class json_object {
+ public:
+  virtual ~json_object(){};
+ protected:
+  //write yourself into a stream and return it
+  virtual std::ostream& serialize(std::ostream& ostream) const = 0;
+  //write the json object
+  friend std::ostream& operator<<(std::ostream& stream, const json_object& json);
+};
 
-std::string serialize(const valhalla::odin::TripPath& trip_path) {
-  return "blah";
+//slightly less annoying to type
+using json_object_ptr = std::shared_ptr<json_object>;
+
+//use normal stream operator to write these things
+std::ostream& operator<<(std::ostream& stream, const json_object& json){
+  return json.serialize(stream);
+}
+
+//how we serialize the different primitives to string
+class ostream_visitor : public boost::static_visitor<std::ostream&>
+{
+ public:
+  ostream_visitor(std::ostream& o):ostream_(o){}
+
+  std::ostream& operator()(const std::string& value) const {
+    return ostream_ << '"' << value << '"';
+  }
+
+  std::ostream& operator()(uint64_t value) const {
+    return ostream_ << value;
+  }
+
+  std::ostream& operator()(int64_t value) const {
+    return ostream_ << value;
+  }
+
+  std::ostream& operator()(long double value) const {
+    return ostream_ << value;
+  }
+
+  std::ostream& operator()(bool value) const {
+    return ostream_ << (value ? "true" : "false");
+  }
+
+  std::ostream& operator()(nullptr_t value) const {
+    return ostream_ << "null";
+  }
+
+  std::ostream& operator()(const json_object_ptr& value) const {
+    return ostream_ << *value;
+  }
+ private:
+  std::ostream& ostream_;
+};
+
+//a variant of all the possible values to go with keys in json
+using json_type = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, json_object_ptr>;
+
+//the map value type in json
+class json_map:public json_object, public std::unordered_map<std::string, json_type> {
+ public:
+  //just specialize unoredered_map
+  using std::unordered_map<std::string, json_type>::unordered_map;
+  //and be able to spit out text
+  virtual std::ostream& serialize(std::ostream& ostream) const {
+    ostream << '{';
+    bool seprator = false;
+    for(const auto& key_value : *this) {
+      if(seprator)
+        ostream << ',';
+      seprator = true;
+      ostream << '"' << key_value.first << "\":";
+      boost::apply_visitor(ostream_visitor(ostream), key_value.second);
+    }
+    ostream << '}';
+    return ostream;
+  }
+ protected:
+};
+
+//the array value type in json
+class json_array:public json_object, public std::vector<json_type> {
+ public:
+  //just specialize vector
+  using std::vector<json_type>::vector;
+ protected:
+  //and be able to spit out text
+  virtual std::ostream& serialize(std::ostream& ostream) const {
+    ostream << '[';
+    bool seprator = false;
+    for(const auto& element : *this) {
+      if(seprator)
+        ostream << ',';
+      seprator = true;
+      boost::apply_visitor(ostream_visitor(ostream), element);
+    }
+    ostream << ']';
+    return ostream;
+  }
+};
+
+/*
+OSRM output looks like this:
+{
+    "hint_data": {
+        "locations": [
+            "_____38_SADaFQQAKwEAABEAAAAAAAAAdgAAAFfLwga4tW0C4P6W-wAARAA",
+            "fzhIAP____8wFAQA1AAAAC8BAAAAAAAAAAAAAP____9Uu20CGAiX-wAAAAA"
+        ],
+        "checksum": 2875622111
+    },
+    "route_name": [ "West 26th Street", "Madison Avenue" ],
+    "via_indices": [ 0, 9 ],
+    "found_alternative": false,
+    "route_summary": {
+        "end_point": "West 29th Street",
+        "start_point": "West 26th Street",
+        "total_time": 145,
+        "total_distance": 878
+    },
+    "via_points": [ [ 40.744377, -73.990433 ], [40.745811, -73.988075 ] ],
+    "route_instructions": [
+        [ "10", "West 26th Street", 216, 0, 52, "215m", "SE", 118 ],
+        [ "1", "East 26th Street", 153, 2, 29, "153m", "SE", 120 ],
+        [ "7", "Madison Avenue", 237, 3, 25, "236m", "NE", 29 ],
+        [ "7", "East 29th Street", 155, 6, 29, "154m", "NW", 299 ],
+        [ "1", "West 29th Street", 118, 7, 21, "117m", "NW", 299 ],
+        [ "15", "", 0, 8, 0, "0m", "N", 0 ]
+    ],
+    "route_geometry": "ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA",
+    "status_message": "Found route between points",
+    "status": 0
+}
+*/
+
+json_object_ptr route_name(const valhalla::odin::TripDirections& trip_directions){
+  json_array* route_name = new json_array{};
+  if(trip_directions.maneuver_size() > 0) {
+    if(trip_directions.maneuver(0).street_name_size() > 0) {
+      route_name->push_back(trip_directions.maneuver(0).street_name(0));
+    }
+    if(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name_size() > 0) {
+      route_name->push_back(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
+    }
+  }
+  return json_object_ptr(route_name);
+}
+
+json_object_ptr via_indices(const valhalla::odin::TripDirections& trip_directions){
+  json_array* via_indices = new json_array{};
+  if(trip_directions.maneuver_size() > 0) {
+    via_indices->push_back(static_cast<uint64_t>(0));
+    via_indices->push_back(static_cast<uint64_t>(trip_directions.maneuver_size() - 1));
+  }
+  return json_object_ptr(via_indices);
+}
+
+json_object_ptr route_summary(const valhalla::odin::TripDirections& trip_directions){
+  json_map* route_summary = new json_map{};
+  if(trip_directions.maneuver_size() > 0) {
+    if(trip_directions.maneuver(0).street_name_size() > 0)
+      route_summary->emplace("start_point", trip_directions.maneuver(0).street_name(0));
+    else
+      route_summary->emplace("start_point", std::string(""));
+    if(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name_size() > 0)
+      route_summary->emplace("end_point", trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
+    else
+      route_summary->emplace("end_point", std::string(""));
+  }
+  uint64_t seconds = 0, meters = 0;
+  for(const auto& maneuver : trip_directions.maneuver()) {
+    meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
+    seconds + static_cast<uint64_t>(maneuver.time());
+  }
+  route_summary->emplace("total_time", seconds);
+  route_summary->emplace("total_distance", meters);
+  return json_object_ptr(route_summary);
+}
+
+json_object_ptr via_points(const valhalla::odin::TripPath& trip_path){
+  json_array* via_points = new json_array{};
+  for(const auto& location : trip_path.location()) {
+    via_points->emplace_back(json_object_ptr(new json_array {(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
+  }
+  return json_object_ptr(via_points);
+}
+
+const std::unordered_map<unsigned int, std::string> maneuver_type = {
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kNone),            "0" },//NoTurn = 0,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kContinue),        "1" },//GoStraight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSlightRight),     "2" },//TurnSlightRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kRight),           "3" },//TurnRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSharpRight),      "4" },//TurnSharpRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kUturnLeft),       "5" },//UTurn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kUturnRight),      "5" },//UTurn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSharpLeft),       "6" },//TurnSharpLeft,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kLeft),            "7" },//TurnLeft,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSlightLeft),      "8" },//TurnSlightLeft,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "9" },//ReachViaLocation,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kContinue),        "10" },//HeadOn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kBecomes),         "10" },//HeadOn,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "11" },//EnterRoundAbout,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "12" },//LeaveRoundAbout,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "13" },//StayOnRoundAbout,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStart),           "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStartRight),      "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStartLeft),       "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestination),     "15" },//ReachedYourDestination,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestinationRight),"15" },//ReachedYourDestination,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestinationLeft), "15" },//ReachedYourDestination,
+    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 16 },//EnterAgainstAllowedDirection,
+    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 17 },//LeaveAgainstAllowedDirection
+};
+
+json_object_ptr route_instructions(const valhalla::odin::TripDirections& trip_directions){
+  json_array* route_instructions = new json_array{};
+  for(const auto& maneuver : trip_directions.maneuver()) {
+    //if we dont know the type of maneuver then skip it
+    auto maneuver_text = maneuver_type.find(static_cast<unsigned int>(maneuver.type()));
+    if(maneuver_text == maneuver_type.end())
+      continue;
+
+    //length
+    std::ostringstream length;
+    length << static_cast<uint64_t>(maneuver.length()*1000.f) << "m";
+
+    //json
+    route_instructions->emplace_back(json_object_ptr(new json_array{
+      maneuver_text->second, //maneuver type
+      (maneuver.street_name_size() ? maneuver.street_name(0) : std::string("")), //street name
+      static_cast<uint64_t>(maneuver.length() * 1000.f), //length in meters
+      static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
+      static_cast<uint64_t>(maneuver.time()), //time in seconds
+      length.str(), //length as a string with a unit suffix
+      std::string(""), //TODO: heading as one of: N S E W NW NE SW SE
+      static_cast<uint64_t>(maneuver.begin_heading())
+    }));
+  }
+  return json_object_ptr(route_instructions);
+}
+
+std::string serialize(const valhalla::odin::TripPath& trip_path,
+  const valhalla::odin::TripDirections& trip_directions) {
+
+  //TODO: worry about multipoint routes
+  using namespace std;
+
+  //build up the json object
+  json_map json
+  {
+    {"hint_data", json_object_ptr(new json_map
+      {
+        {"locations", json_object_ptr(new json_array { string(""), string("") })}, //TODO: are these internal ids?
+        {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
+      })
+    },
+    {"route_name", route_name(trip_directions)}, //TODO: list of all of the streets or just the via points?
+    {"via_indices", via_indices(trip_directions)}, //maneuver index
+    {"found_alternative", static_cast<bool>(false)}, //no alt route support
+    {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
+    {"via_points", via_points(trip_path)}, //array of lat,lng pairs
+    {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
+    {"route_geometry", trip_path.shape()}, //polyline encoded shape
+    {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+    {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
+  };
+
+  //serialize it
+  ostringstream stream;
+  stream << json;
+  return stream.str();
 }
 
 }
@@ -69,11 +344,11 @@ std::string RouteHandler::Action() {
   path_algorithm.Clear();
 
   //get some annotated instructions
-  valhalla::odin::NarrativeBuilder narrative_builder(trip_path);
-  narrative_builder.Build();
+  valhalla::odin::DirectionsBuilder directions_builder;
+  valhalla::odin::TripDirections trip_directions = directions_builder.BuildSimple(trip_path);
 
   //make some json
-  return serialize(trip_path);
+  return serialize(trip_path, trip_directions);
 }
 
 
