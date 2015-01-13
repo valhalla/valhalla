@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
 
   #setup the server
-  server_address = ('10.0.1.129', port)
+  server_address = ('0.0.0.0', port)
   TyrHandler.protocol_version = 'HTTP/1.0'
   httpd = BaseHTTPServer.HTTPServer(server_address, TyrHandler)
 
