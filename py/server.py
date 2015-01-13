@@ -23,7 +23,7 @@ costing_methods = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
 actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler}
 
 #custom handler for getting routes
-class TyrHandler(SimpleHTTPRequestHandler):
+class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
   #parse the request because we dont get this for free!
   def parse_path(self):
@@ -69,7 +69,6 @@ class TyrHandler(SimpleHTTPRequestHandler):
 
     #hand it back
     self.wfile.write(response.encode('utf-8'))
-    self.wfile.flush()
 
   #send a fail
   def fail(self, error):
@@ -83,7 +82,6 @@ class TyrHandler(SimpleHTTPRequestHandler):
 
     #hand it back
     self.wfile.write(str(error).encode('utf-8'))
-    self.wfile.flush()
 
   #handle the request
   def do_GET(self):
@@ -102,17 +100,13 @@ if __name__ == '__main__':
   else:
     port = 8002
 
+
+  #setup the server
+  server_address = ('10.0.1.129', port)
+  TyrHandler.protocol_version = 'HTTP/1.0'
+  httpd = BaseHTTPServer.HTTPServer(server_address, TyrHandler)
+
   try:
-    #setup the server
-    server_address = ('10.0.1.129', port)
-    TyrHandler.protocol_version = 'HTTP/1.1'
-    httpd = BaseHTTPServer.HTTPServer(server_address, TyrHandler)
-
-    #open the socket and serve
-    sa = httpd.socket.getsockname()
-    print 'Serving HTTP on', sa[0], 'port', sa[1], '...'
-
     httpd.serve_forever()
-  except Exception as e:
-    print str(e)
-    sys.exit(1)
+  except KeyboardInterrupt:
+    httpd.server_close()
