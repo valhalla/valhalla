@@ -19,6 +19,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/odin/directionsbuilder.h>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "tyr/json.h"
 
@@ -58,6 +59,7 @@ OSRM output looks like this:
     "status": 0
 }
 */
+using namespace valhalla::tyr;
 
 json_object_ptr route_name(const valhalla::odin::TripDirections& trip_directions){
   json_array* route_name = new json_array{};
@@ -109,6 +111,13 @@ json_object_ptr via_points(const valhalla::odin::TripPath& trip_path){
     via_points->emplace_back(json_object_ptr(new json_array {(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
   }
   return json_object_ptr(via_points);
+}
+
+std::string escape(const std::string& unescaped) {
+  //these replacements are only useful for polyline encoded shape right now
+  std::string escaped = boost::replace_all_copy(unescaped, "\\", "\\\\");
+  boost::replace_all(escaped, "\"", "\\\"");
+  return escaped;
 }
 
 const std::unordered_map<unsigned int, std::string> maneuver_type = {
@@ -186,7 +195,7 @@ std::string serialize(const valhalla::odin::TripPath& trip_path,
     {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
     {"via_points", via_points(trip_path)}, //array of lat,lng pairs
     {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
-    {"route_geometry", trip_path.shape()}, //polyline encoded shape
+    {"route_geometry", escape(trip_path.shape())}, //polyline encoded shape
     {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
     {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
   };

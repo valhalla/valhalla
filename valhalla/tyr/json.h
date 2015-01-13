@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
+namespace valhalla {
+namespace tyr {
+
 //base class so we can use pointers to refer to whichever
 class json_object {
  public:
@@ -108,3 +111,7 @@ class json_array:public json_object, public std::vector<json_type> {
     return ostream;
   }
 };
+
+
+}
+}

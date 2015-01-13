@@ -25,10 +25,6 @@ actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHa
 #custom handler for getting routes
 class TyrHandler(SimpleHTTPRequestHandler):
 
-  #get a new request
-  def __init__(self,req,client_addr,server):
-    SimpleHTTPRequestHandler.__init__(self,req,client_addr,server)
-
   #parse the request because we dont get this for free!
   def parse_path(self):
     if len(self.path) > 1024:
@@ -91,11 +87,9 @@ class TyrHandler(SimpleHTTPRequestHandler):
 
   #handle the request
   def do_GET(self):
-
     #get out the bits we care about
     try:
       request = self.parse_path()
-      #TODO: run the route
       self.succeed(request)
     except Exception as e:
       self.fail(str(e))
@@ -110,7 +104,7 @@ if __name__ == '__main__':
 
   try:
     #setup the server
-    server_address = ('127.0.0.1', port)
+    server_address = ('10.0.1.129', port)
     TyrHandler.protocol_version = 'HTTP/1.1'
     httpd = BaseHTTPServer.HTTPServer(server_address, TyrHandler)
 
