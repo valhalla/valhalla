@@ -74,8 +74,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   SetOrigin(graphreader, origin, costing);
   SetDestination(dest);
 
+  // Counts of transitions to upper levels (TEST - TODO better design!)
+  uint32_t upto1count = 0;
+  uint32_t upto0count = 0;
+
   // Find shortest path
-  uint32_t uturn_index, nextlabelindex;
+  uint32_t uturn_index, next_label_index;
   uint32_t prior_label_index;
   float dist2dest, dist;
   float cost, sortcost, currentcost;
@@ -89,38 +93,60 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Get next element from adjacency list. Check that it is valid.
     // TODO: make a class that extends std::exception, with messages and
     // error codes and return the appropriate one here
-    nextlabelindex = adjacencylist_->Remove(edgelabels_);
-    if (nextlabelindex == kInvalidLabel) {
+    next_label_index = adjacencylist_->Remove(edgelabels_);
+    if (next_label_index == kInvalidLabel) {
       std::cout << "Iterations = " << edgelabel_index_ << std::endl;
       throw std::runtime_error("No path could be found for input");
     }
 
     // Remove label from adjacency list, mark it as done
-    const EdgeLabel& nextlabel = edgelabels_[nextlabelindex];
+    const EdgeLabel& nextlabel = edgelabels_[next_label_index];
     RemoveFromAdjMap(nextlabel.edgeid());
     edgestatus_->Set(nextlabel.edgeid(), kPermanent);
 
     // Check for completion. Form path and return if complete.
     if (IsComplete(nextlabel.edgeid())) {
-      return FormPath(nextlabelindex);
+      return FormPath(next_label_index);
     }
 
     // TODO - do we need to terminate fruitless searches?
 
-    // Get the end node of the prior directed edge. Skip if tile not found
-    // (can happen with regional data sets).
-    node = nextlabel.endnode();
+    // Get the end node of the prior directed edge and the current distance
+    // to the destination.
+    node      = nextlabel.endnode();
+    dist2dest = nextlabel.distance();
+
+    // Do not expand based on hierarchy level?
+    // TODO - come up with rule sets/options/config
+    if (nextlabel.trans_up()) {
+      if (node.level() == 0) {
+        upto0count++;
+      } else if (node.level() == 1) {
+        upto1count++;
+      }
+    }
+
+    // Stop expanding the local level once 50 transitions have been made
+    if (dist2dest > 10.0f && node.level() == 2 && upto1count > 50) {
+      continue;
+    }
+
+    // Stop expanding arterial level once 250 transitions have been made
+    if (dist2dest > 50.0f && node.level() == 1 && upto0count > 250) {
+      continue;
+    }
+
+    // Skip if tile not found (can happen with regional data sets).
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
 
-    // Set some temp variables here. Looks like const EdgeLabel is not
-    // good inside the loop below (probably because the edgelabel list
-    // is added to?
+    // Set temp variables here. EdgeLabel is not good inside the loop
+    // below since the edgelabel list is modified
     nodeinfo =    tile->node(node);
     currentcost = nextlabel.truecost();
     uturn_index = nextlabel.uturn_index();
-    dist2dest   = nextlabel.distance();
+
 
     // Check access at the node
     if (!costing->Allowed(nodeinfo)) {
@@ -162,7 +188,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
             float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
             float newsortcost = prior_sort_cost -
                     (edgelabels_[prior_label_index].truecost() - cost);
-            edgelabels_[prior_label_index].Update(nextlabelindex, cost,
+            // TODO - do we need to update trans_up/trans_down?
+            edgelabels_[prior_label_index].Update(next_label_index, cost,
                     newsortcost);
             adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
                     prior_sort_cost);
@@ -180,9 +207,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
                 directededge->endnode())->latlng());
       sortcost = cost + astarheuristic_.Get(dist);
 
-      edgelabels_.emplace_back(EdgeLabel(nextlabelindex, edgeid,
-               directededge->endnode(), cost, sortcost, dist,
-               directededge->opp_index()));
+      // Add edge label
+      edgelabels_.emplace_back(EdgeLabel(next_label_index, edgeid,
+               directededge, cost, sortcost, dist));
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
@@ -218,8 +245,7 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     edgelabels_.emplace_back(EdgeLabel(kInvalidLabel, edgeid,
-            directededge->endnode(), cost, sortcost, dist,
-            directededge->opp_index()));
+            directededge, cost, sortcost, dist));
     adjacencylist_->Add(edgelabel_index_, sortcost);
     edgelabel_index_++;
   }
@@ -252,7 +278,11 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest) {
   uint32_t edgelabel_index = dest;
   while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) !=
               kInvalidLabel) {
-    edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
+    // Do not add the transition edges
+    if (!edgelabels_[edgelabel_index].trans_up() &&
+        !edgelabels_[edgelabel_index].trans_down()) {
+      edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
+    }
   }
 
   // Reverse the list and return
