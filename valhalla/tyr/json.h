@@ -7,8 +7,6 @@
 #include <unordered_map>
 #include <vector>
 
-
-
 //base class so we can use pointers to refer to whichever
 class json_object {
  public:
