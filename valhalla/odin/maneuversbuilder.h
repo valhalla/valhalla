@@ -5,17 +5,19 @@
 
 #include <valhalla/proto/trippath.pb.h>
 
+#include "odin/enhancedtrippath.h"
+
 namespace valhalla{
 namespace odin{
 
 class ManeuversBuilder {
  public:
-  ManeuversBuilder(TripPath& trip_path);
+  ManeuversBuilder(EnhancedTripPath* trip_path);
 
   void Build();
 
  protected:
-  TripPath& trip_path_;
+  EnhancedTripPath* trip_path_;
 
 };
 

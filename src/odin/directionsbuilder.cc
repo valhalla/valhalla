@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "odin/directionsbuilder.h"
+#include "odin/maneuversbuilder.h"
+#include "odin/enhancedtrippath.h"
 
 namespace valhalla {
 namespace odin {
@@ -26,7 +28,7 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 }
 
-TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
+TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
   // TODO - temps for initial end to end test
   std::vector<std::vector<std::string>> maneuver_names;
   std::vector<float> maneuver_distance;
@@ -69,12 +71,17 @@ TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
   return trip_directions;
 }
 
-TripDirections DirectionsBuilder::Build(const TripPath& trip_path) {
-  // Create maneuvers
-  // TODO
+TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
+  std::cout << __FILE__ << ":" << __LINE__ << " | trip_path.node_size()="
+            << trip_path.node_size() << std::endl;
+//  EnhancedTripPath* etp = (EnhancedTripPath*)&trip_path;
+  EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
+  std::cout << __FILE__ << ":" << __LINE__ << " | etp->node_size()="
+            << etp->node_size() << std::endl;
 
-  // Combine maneuvers
-  // TODO
+  // Create maneuvers
+  ManeuversBuilder maneuversBuilder(etp);
+  maneuversBuilder.Build();
 
   // Create the narrative
   // TODO
