@@ -175,8 +175,8 @@ json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& tri
   return route_instructions;
 }
 
-std::string serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions) {
+void serialize(const valhalla::odin::TripPath& trip_path,
+  const valhalla::odin::TripDirections& trip_directions, std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -202,9 +202,7 @@ std::string serialize(const valhalla::odin::TripPath& trip_path,
   });
 
   //serialize it
-  ostringstream stream;
   stream << *json;
-  return stream.str();
 }
 
 }
@@ -256,7 +254,13 @@ std::string RouteHandler::Action() {
   valhalla::odin::TripDirections trip_directions = directions_builder.BuildSimple(trip_path);
 
   //make some json
-  return serialize(trip_path, trip_directions);
+  std::ostringstream stream;
+  if(jsonp_)
+    stream << *jsonp_ << '(';
+  serialize(trip_path, trip_directions, stream);
+  if(jsonp_)
+    stream << ')';
+  return stream.str();
 }
 
 

@@ -26,7 +26,7 @@ actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHa
 class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
   #parse the request because we dont get this for free!
-  def parse_path(self):
+  def handle_request(self):
     if len(self.path) > 1024:
       raise Exception('DOS someone else jerkface')
     #split the query from the path
@@ -55,15 +55,18 @@ class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     #just send the dict over to c++ and use it directly
     result = action(params).Action()
     #hand it back
-    return result
+    return result, True if len(params.get('jsonp', [])) > 0 and len(params['jsonp'][0]) else False
 
   #send a success
-  def succeed(self, response):
+  def succeed(self, response, jsonp):
     self.send_response(200)
 
     #set some basic info
     self.send_header('Access-Control-Allow-Origin','*')
-    self.send_header('Content-type', 'application/json;charset=utf-8')
+    if jsonp:
+      self.send_header('Content-type', 'text/plain;charset=utf-8')
+    else:
+      self.send_header('Content-type', 'application/json;charset=utf-8')
     self.send_header('Content-length', len(response))
     self.end_headers()
 
@@ -76,7 +79,7 @@ class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     #set some basic info
     self.send_header('Access-Control-Allow-Origin','*')
-    self.send_header('Content-type', 'application/json;charset=utf-8')
+    self.send_header('Content-type', 'text/plain;charset=utf-8')
     self.send_header('Content-length', len(error))
     self.end_headers()
 
@@ -87,8 +90,8 @@ class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   def do_GET(self):
     #get out the bits we care about
     try:
-      request = self.parse_path()
-      self.succeed(request)
+      response, jsonp = self.handle_request()
+      self.succeed(response, jsonp)
     except Exception as e:
       self.fail(str(e))
 
