@@ -33,3 +33,5 @@ general:
   artifacts:
     - config.log
     - test/*.log
+    - Makefile
+    - valhalla/config.h
