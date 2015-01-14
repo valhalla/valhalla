@@ -91,7 +91,7 @@ void TestRouteHanlder() {
 
   //run the route
   valhalla::tyr::RouteHandler handler(dict);
-  std::cout << handler.Action();
+  /*std::cout << handler.Action();*/
 }
 
 }
