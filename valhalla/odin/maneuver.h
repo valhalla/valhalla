@@ -35,17 +35,17 @@ class Maneuver {
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
 
-  uint32_t begin_node_index() const;
-  void set_begin_node_index(uint32_t beginNodeIndex);
-
-  uint32_t begin_shape_index() const;
-  void set_begin_shape_index(uint32_t beginShapeIndex);
-
   uint32_t end_heading() const;
   void set_end_heading(uint32_t endHeading);
 
+  uint32_t begin_node_index() const;
+  void set_begin_node_index(uint32_t beginNodeIndex);
+
   uint32_t end_node_index() const;
   void set_end_node_index(uint32_t endNodeIndex);
+
+  uint32_t begin_shape_index() const;
+  void set_begin_shape_index(uint32_t beginShapeIndex);
 
   uint32_t end_shape_index() const;
   void set_end_shape_index(uint32_t endShapeIndex);
