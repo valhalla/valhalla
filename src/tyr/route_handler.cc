@@ -203,7 +203,7 @@ std::string serialize(const valhalla::odin::TripPath& trip_path,
 
   //serialize it
   ostringstream stream;
-  stream << json;
+  stream << *json;
   return stream.str();
 }
 
