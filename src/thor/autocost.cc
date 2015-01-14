@@ -104,7 +104,10 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
 
   // Allow downward transitions only when near the destination
   if (edge->trans_down()) {
-    return dist2dest < 50.0f;
+    if (edge->endnode().level() == 1)
+      return dist2dest < 50.0f;
+    else
+      return dist2dest < 10.0f;
   }
 
   // Do not allow Uturns or entering no-thru edges.
