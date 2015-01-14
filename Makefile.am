@@ -53,14 +53,20 @@ nobase_include_HEADERS = \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrativebuilder.h \
-	valhalla/odin/enhancedtrippath.h
+	valhalla/odin/enhancedtrippath.h \
+	valhalla/odin/maneuver.h \
+	valhalla/odin/streetname.h \
+	valhalla/odin/streetnames.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
 	src/odin/narrativebuilder.cc \
-	src/odin/enhancedtrippath.cc
+	src/odin/enhancedtrippath.cc \
+	src/odin/maneuver.cc \
+	src/odin/streetname.cc \
+	src/odin/streetnames.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @PROTOC_LIBS@
 
