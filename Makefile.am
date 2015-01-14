@@ -67,8 +67,7 @@ check_PROGRAMS = \
 test_handlers_SOURCES = test/handlers.cc test/test.cc
 test_handlers_CXXFLAGS = @LUA_INCLUDE@
 test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-test_handlers_LDADD = $(DEPS_LIBS) @LUA_LIB@ libvalhalla_tyr.la
-test_handlers_LDFLAGS = $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB) 
+test_handlers_LDADD = $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ $(DEPS_LIBS) @LUA_LIB@ $(BOOST_PYTHON_LIB) libvalhalla_tyr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

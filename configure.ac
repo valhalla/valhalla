@@ -34,7 +34,7 @@ AM_PATH_PYTHON
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tyr. Please install libboost-dev.])])
-AX_BOOST_PYTHON( , , [AC_MSG_ERROR([cannot find Boost Python libraries, which are are required for building tyr. Please install libboost-python-dev.])])
+AX_BOOST_PYTHON
 
 # check for Lua libraries and headers
 AX_PROG_LUA([5.2],[],[
