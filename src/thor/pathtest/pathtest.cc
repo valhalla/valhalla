@@ -69,7 +69,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   return trip_path;
 }
 
-TripDirections DirectionsTest(const TripPath& trip_path) {
+TripDirections DirectionsTest(TripPath& trip_path) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.BuildSimple(trip_path);
   float totalDistance = 0.0f;
@@ -82,6 +82,12 @@ TripDirections DirectionsTest(const TripPath& trip_path) {
   std::cout << "==============================================" << std::endl;
   std::cout << "Total distance: " << totalDistance << " km" << std::endl;
 
+  return trip_directions;
+}
+
+TripDirections DirectionsTest2(TripPath& trip_path) {
+  DirectionsBuilder directions;
+  TripDirections trip_directions = directions.Build(trip_path);
   return trip_directions;
 }
 
@@ -178,6 +184,7 @@ int main(int argc, char *argv[]) {
 
   // Try the the directions
   TripDirections trip_directions = DirectionsTest(trip_path);
+  TripDirections trip_directions2 = DirectionsTest2(trip_path);
 
   return EXIT_SUCCESS;
 }
