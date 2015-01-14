@@ -118,9 +118,23 @@ class GraphTile {
                                        uint32_t& count, uint32_t& edge_index);
 
   /**
-   * Convenience method to get the names for an edge.
+   * Convenience method to get the names for an edge given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @param  names            (OUT) Vector to hold list of names
+   * @return  Returns an address to the list of names.
    */
   std::vector<std::string>& GetNames(const uint32_t edgeinfo_offset,
+                 std::vector<std::string>& names);
+
+  /**
+   * Convenience method to get the names for an edge given an edgeinfo
+   * shared pointer.
+   * @param  edge  Shared pointer to the edge information.
+   * @param  names (OUT) Vector to hold list of names
+   * @return  Returns an address to the list of names.
+   */
+  std::vector<std::string>& GetNames(const std::shared_ptr<EdgeInfo>& edge,
                  std::vector<std::string>& names);
 
  protected:
