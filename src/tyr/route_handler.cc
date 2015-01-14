@@ -60,9 +60,10 @@ OSRM output looks like this:
 }
 */
 using namespace valhalla::tyr;
+using namespace std;
 
-json_object_ptr route_name(const valhalla::odin::TripDirections& trip_directions){
-  json_array* route_name = new json_array{};
+json::JsonObjectPtr route_name(const valhalla::odin::TripDirections& trip_directions){
+  auto route_name = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0) {
       route_name->push_back(trip_directions.maneuver(0).street_name(0));
@@ -71,29 +72,29 @@ json_object_ptr route_name(const valhalla::odin::TripDirections& trip_directions
       route_name->push_back(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
     }
   }
-  return json_object_ptr(route_name);
+  return route_name;
 }
 
-json_object_ptr via_indices(const valhalla::odin::TripDirections& trip_directions){
-  json_array* via_indices = new json_array{};
+json::JsonObjectPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
+  auto via_indices = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     via_indices->push_back(static_cast<uint64_t>(0));
     via_indices->push_back(static_cast<uint64_t>(trip_directions.maneuver_size() - 1));
   }
-  return json_object_ptr(via_indices);
+  return via_indices;
 }
 
-json_object_ptr route_summary(const valhalla::odin::TripDirections& trip_directions){
-  json_map* route_summary = new json_map{};
+json::JsonObjectPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
+  auto route_summary = json::map({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0)
       route_summary->emplace("start_point", trip_directions.maneuver(0).street_name(0));
     else
-      route_summary->emplace("start_point", std::string(""));
+      route_summary->emplace("start_point", string(""));
     if(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name_size() > 0)
       route_summary->emplace("end_point", trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
     else
-      route_summary->emplace("end_point", std::string(""));
+      route_summary->emplace("end_point", string(""));
   }
   uint64_t seconds = 0, meters = 0;
   for(const auto& maneuver : trip_directions.maneuver()) {
@@ -102,15 +103,15 @@ json_object_ptr route_summary(const valhalla::odin::TripDirections& trip_directi
   }
   route_summary->emplace("total_time", seconds);
   route_summary->emplace("total_distance", meters);
-  return json_object_ptr(route_summary);
+  return route_summary;
 }
 
-json_object_ptr via_points(const valhalla::odin::TripPath& trip_path){
-  json_array* via_points = new json_array{};
+json::JsonObjectPtr via_points(const valhalla::odin::TripPath& trip_path){
+  auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
-    via_points->emplace_back(json_object_ptr(new json_array {(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
+    via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
   }
-  return json_object_ptr(via_points);
+  return via_points;
 }
 
 std::string escape(const std::string& unescaped) {
@@ -147,8 +148,8 @@ const std::unordered_map<unsigned int, std::string> maneuver_type = {
     //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 17 },//LeaveAgainstAllowedDirection
 };
 
-json_object_ptr route_instructions(const valhalla::odin::TripDirections& trip_directions){
-  json_array* route_instructions = new json_array{};
+json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
+  auto route_instructions = json::array({});
   for(const auto& maneuver : trip_directions.maneuver()) {
     //if we dont know the type of maneuver then skip it
     auto maneuver_text = maneuver_type.find(static_cast<unsigned int>(maneuver.type()));
@@ -160,32 +161,32 @@ json_object_ptr route_instructions(const valhalla::odin::TripDirections& trip_di
     length << static_cast<uint64_t>(maneuver.length()*1000.f) << "m";
 
     //json
-    route_instructions->emplace_back(json_object_ptr(new json_array{
+    route_instructions->emplace_back(json::array({
       maneuver_text->second, //maneuver type
-      (maneuver.street_name_size() ? maneuver.street_name(0) : std::string("")), //street name
+      (maneuver.street_name_size() ? maneuver.street_name(0) : string("")), //street name
       static_cast<uint64_t>(maneuver.length() * 1000.f), //length in meters
       static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
       static_cast<uint64_t>(maneuver.time()), //time in seconds
       length.str(), //length as a string with a unit suffix
-      std::string(""), //TODO: heading as one of: N S E W NW NE SW SE
+      string(""), //TODO: heading as one of: N S E W NW NE SW SE
       static_cast<uint64_t>(maneuver.begin_heading())
     }));
   }
-  return json_object_ptr(route_instructions);
+  return route_instructions;
 }
 
 std::string serialize(const valhalla::odin::TripPath& trip_path,
   const valhalla::odin::TripDirections& trip_directions) {
 
   //TODO: worry about multipoint routes
-  using namespace std;
+
 
   //build up the json object
-  json_map json
-  {
-    {"hint_data", json_object_ptr(new json_map
-      {
-        {"locations", json_object_ptr(new json_array { string(""), string("") })}, //TODO: are these internal ids?
+  auto json = json::map
+  ({
+    {"hint_data", json::map
+      ({
+        {"locations", json::array({ string(""), string("") })}, //TODO: are these internal ids?
         {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
       })
     },
@@ -198,7 +199,7 @@ std::string serialize(const valhalla::odin::TripPath& trip_path,
     {"route_geometry", escape(trip_path.shape())}, //polyline encoded shape
     {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
     {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
-  };
+  });
 
   //serialize it
   ostringstream stream;

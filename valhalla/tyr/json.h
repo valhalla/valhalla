@@ -9,31 +9,32 @@
 
 namespace valhalla {
 namespace tyr {
+namespace json {
 
 //base class so we can use pointers to refer to whichever
-class json_object {
+class JsonObject {
  public:
-  virtual ~json_object(){};
+  virtual ~JsonObject(){};
  protected:
   //write yourself into a stream and return it
-  virtual std::ostream& serialize(std::ostream& ostream) const = 0;
+  virtual std::ostream& Serialize(std::ostream& ostream) const = 0;
   //write the json object
-  friend std::ostream& operator<<(std::ostream& stream, const json_object& json);
+  friend std::ostream& operator<<(std::ostream& stream, const JsonObject& json);
 };
 
 //slightly less annoying to type
-using json_object_ptr = std::shared_ptr<json_object>;
+using JsonObjectPtr = std::shared_ptr<JsonObject>;
 
 //use normal stream operator to write these things
-std::ostream& operator<<(std::ostream& stream, const json_object& json){
-  return json.serialize(stream);
+std::ostream& operator<<(std::ostream& stream, const JsonObject& json){
+  return json.Serialize(stream);
 }
 
 //how we serialize the different primitives to string
-class ostream_visitor : public boost::static_visitor<std::ostream&>
+class OstreamVisitor : public boost::static_visitor<std::ostream&>
 {
  public:
-  ostream_visitor(std::ostream& o):ostream_(o){}
+  OstreamVisitor(std::ostream& o):ostream_(o){}
 
   std::ostream& operator()(const std::string& value) const {
     return ostream_ << '"' << value << '"';
@@ -59,7 +60,7 @@ class ostream_visitor : public boost::static_visitor<std::ostream&>
     return ostream_ << "null";
   }
 
-  std::ostream& operator()(const json_object_ptr& value) const {
+  std::ostream& operator()(const JsonObjectPtr& value) const {
     return ostream_ << *value;
   }
  private:
@@ -67,15 +68,15 @@ class ostream_visitor : public boost::static_visitor<std::ostream&>
 };
 
 //a variant of all the possible values to go with keys in json
-using json_type = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, json_object_ptr>;
+using JsonType = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, JsonObjectPtr>;
 
 //the map value type in json
-class json_map:public json_object, public std::unordered_map<std::string, json_type> {
+class JsonMap:public JsonObject, public std::unordered_map<std::string, JsonType> {
  public:
   //just specialize unoredered_map
-  using std::unordered_map<std::string, json_type>::unordered_map;
+  using std::unordered_map<std::string, JsonType>::unordered_map;
   //and be able to spit out text
-  virtual std::ostream& serialize(std::ostream& ostream) const {
+  virtual std::ostream& Serialize(std::ostream& ostream) const {
     ostream << '{';
     bool seprator = false;
     for(const auto& key_value : *this) {
@@ -83,7 +84,7 @@ class json_map:public json_object, public std::unordered_map<std::string, json_t
         ostream << ',';
       seprator = true;
       ostream << '"' << key_value.first << "\":";
-      boost::apply_visitor(ostream_visitor(ostream), key_value.second);
+      boost::apply_visitor(OstreamVisitor(ostream), key_value.second);
     }
     ostream << '}';
     return ostream;
@@ -92,26 +93,38 @@ class json_map:public json_object, public std::unordered_map<std::string, json_t
 };
 
 //the array value type in json
-class json_array:public json_object, public std::vector<json_type> {
+class JsonArray:public JsonObject, public std::vector<JsonType> {
  public:
   //just specialize vector
-  using std::vector<json_type>::vector;
+  using std::vector<JsonType>::vector;
  protected:
   //and be able to spit out text
-  virtual std::ostream& serialize(std::ostream& ostream) const {
+  virtual std::ostream& Serialize(std::ostream& ostream) const {
     ostream << '[';
     bool seprator = false;
     for(const auto& element : *this) {
       if(seprator)
         ostream << ',';
       seprator = true;
-      boost::apply_visitor(ostream_visitor(ostream), element);
+      boost::apply_visitor(OstreamVisitor(ostream), element);
     }
     ostream << ']';
     return ostream;
   }
 };
 
+//slightly less annoying to type
+using JsonMapPtr = std::shared_ptr<JsonMap>;
+using JsonArrayPtr = std::shared_ptr<JsonArray>;
 
+JsonMapPtr map(std::initializer_list<JsonMap::value_type> list) {
+  return JsonMapPtr(new JsonMap(list));
+}
+
+JsonArrayPtr array(std::initializer_list<JsonArray::value_type> list) {
+  return JsonArrayPtr(new JsonArray(list));
+}
+
+}
 }
 }
