@@ -122,30 +122,30 @@ std::string escape(const std::string& unescaped) {
 }
 
 const std::unordered_map<unsigned int, std::string> maneuver_type = {
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kNone),            "0" },//NoTurn = 0,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kContinue),        "1" },//GoStraight,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSlightRight),     "2" },//TurnSlightRight,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kRight),           "3" },//TurnRight,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSharpRight),      "4" },//TurnSharpRight,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kUturnLeft),       "5" },//UTurn,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kUturnRight),      "5" },//UTurn,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSharpLeft),       "6" },//TurnSharpLeft,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kLeft),            "7" },//TurnLeft,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kSlightLeft),      "8" },//TurnSlightLeft,
-    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "9" },//ReachViaLocation,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kContinue),        "10" },//HeadOn,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kBecomes),         "10" },//HeadOn,
-    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "11" },//EnterRoundAbout,
-    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "12" },//LeaveRoundAbout,
-    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Type_k),              "13" },//StayOnRoundAbout,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStart),           "14" },//StartAtEndOfStreet,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStartRight),      "14" },//StartAtEndOfStreet,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kStartLeft),       "14" },//StartAtEndOfStreet,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestination),     "15" },//ReachedYourDestination,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestinationRight),"15" },//ReachedYourDestination,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kDestinationLeft), "15" },//ReachedYourDestination,
-    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 16 },//EnterAgainstAllowedDirection,
-    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 17 },//LeaveAgainstAllowedDirection
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),            "0" },//NoTurn = 0,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),        "1" },//GoStraight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightRight),     "2" },//TurnSlightRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kRight),           "3" },//TurnRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpRight),      "4" },//TurnSharpRight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft),       "5" },//UTurn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnRight),      "5" },//UTurn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft),       "6" },//TurnSharpLeft,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kLeft),            "7" },//TurnLeft,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft),      "8" },//TurnSlightLeft,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "9" },//ReachViaLocation,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),        "10" },//HeadOn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),         "10" },//HeadOn,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "11" },//EnterRoundAbout,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "12" },//LeaveRoundAbout,
+    //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "13" },//StayOnRoundAbout,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),           "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),      "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),       "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestination),     "15" },//ReachedYourDestination,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight),"15" },//ReachedYourDestination,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft), "15" },//ReachedYourDestination,
+    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Maneuver_Type_k), 16 },//EnterAgainstAllowedDirection,
+    //{ static_cast<unsigned int>valhalla::odin::TripDirections_Maneuver_Type_k), 17 },//LeaveAgainstAllowedDirection
 };
 
 json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
@@ -168,7 +168,7 @@ json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& tri
       static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
       static_cast<uint64_t>(maneuver.time()), //time in seconds
       length.str(), //length as a string with a unit suffix
-      string(""), //TODO: heading as one of: N S E W NW NE SW SE
+      string(""), //TODO: TripDirections_Maneuver_CardinalDirection as one of: N S E W NW NE SW SE
       static_cast<uint64_t>(maneuver.begin_heading())
     }));
   }
