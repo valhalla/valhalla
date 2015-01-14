@@ -60,7 +60,7 @@ TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
   TripDirections trip_directions;
   for (size_t i = 0, n = maneuver_names.size(); i < n; i++) {
     auto* maneuver = trip_directions.add_maneuver();
-    maneuver->set_type(TripDirections_Type_kContinue);
+    maneuver->set_type(TripDirections_Maneuver_Type_kContinue);
     maneuver->set_length(maneuver_distance[i]);
     maneuver->set_text_instruction("Take " + GetStreetName(maneuver_names[i]));
     for (const auto& name : maneuver_names[i]) {
@@ -72,10 +72,11 @@ TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
 }
 
 TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
+  //GDG
   std::cout << __FILE__ << ":" << __LINE__ << " | trip_path.node_size()="
             << trip_path.node_size() << std::endl;
-//  EnhancedTripPath* etp = (EnhancedTripPath*)&trip_path;
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
+  //GDG
   std::cout << __FILE__ << ":" << __LINE__ << " | etp->node_size()="
             << etp->node_size() << std::endl;
 
