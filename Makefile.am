@@ -50,7 +50,7 @@ libvalhalla_tyr_la_SOURCES = \
 	src/tyr/locate_handler.cc \
 	src/tyr/nearest_handler.cc
 libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) -l$(BOOST_PYTHON_LIB)
+libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(BOOST_PYTHON_LIB)
 libvalhalla_tyr_la_LDFLAGS = $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@
 
 # python bindings
@@ -58,7 +58,7 @@ pyexec_LTLIBRARIES = tyr_service.la
 tyr_service_la_SOURCES = \
 src/tyr/service_handlers_python.cc
 tyr_service_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-tyr_service_la_LIBADD = $(DEPS_LIBS) -l$(BOOST_PYTHON_LIB) libvalhalla_tyr.la
+tyr_service_la_LIBADD = $(DEPS_LIBS) $(BOOST_PYTHON_LIB) libvalhalla_tyr.la
 tyr_service_la_LDFLAGS = $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -module -shared
 
 # tests
@@ -67,7 +67,8 @@ check_PROGRAMS = \
 test_handlers_SOURCES = test/handlers.cc test/test.cc
 test_handlers_CXXFLAGS = @LUA_INCLUDE@
 test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-test_handlers_LDADD = $(DEPS_LIBS) @LUA_LIB@ libvalhalla_tyr.la
+test_handlers_LDADD = $(DEPS_LIBS) -l$(BOOST_PYTHON_LIB) @LUA_LIB@ libvalhalla_tyr.la
+test_handler_LDFLAGS = $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ 
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
