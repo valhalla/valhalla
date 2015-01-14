@@ -48,17 +48,19 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_odin.la
 nobase_include_HEADERS = \
+	valhalla/proto/trippath.pb.h \
+	valhalla/proto/tripdirections.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrativebuilder.h \
-	valhalla/proto/trippath.pb.h \
-	valhalla/proto/tripdirections.pb.h 
+	valhalla/odin/enhancedtrippath.h
 libvalhalla_odin_la_SOURCES = \
+	src/proto/trippath.pb.cc \
+	src/proto/tripdirections.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
 	src/odin/narrativebuilder.cc \
-	src/proto/trippath.pb.cc \
-	src/proto/tripdirections.pb.cc
+	src/odin/enhancedtrippath.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @PROTOC_LIBS@
 
