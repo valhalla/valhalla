@@ -22,6 +22,15 @@ namespace {
         return "\03";
     }
   };
+  template <class numeric_t>
+  size_t digits(numeric_t number) {
+    size_t digits = (number < 0 ? 1 : 0);
+    while (static_cast<long long int>(number)) {
+        number /= 10;
+        digits++;
+    }
+    return digits;
+  }
 }
 
 namespace valhalla {
@@ -113,7 +122,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
 
   //figure out how many digits
   //TODO: dont convert it to a string to get the length there are faster ways..
-  size_t max_length = std::to_string(max_id).length();
+  size_t max_length = digits<uint32_t>(max_id);
   size_t remainder = max_length % 3;
   if(remainder)
     max_length += 3 - remainder;
