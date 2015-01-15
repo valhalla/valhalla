@@ -99,16 +99,19 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
   // TODO - test and add options for hierarchy transitions
   // Allow upward transitions except when close to the destination
   if (edge->trans_up()) {
-    return dist2dest > 10.0f;
+    return (edge->endnode().level() == 0) ?
+          dist2dest > 50.0f : dist2dest > 10.0f;
   }
 
   // Allow downward transitions only when near the destination
   if (edge->trans_down()) {
-    if (edge->endnode().level() == 1)
-      return dist2dest < 50.0f;
-    else
-      return dist2dest < 10.0f;
+    return (edge->endnode().level() == 1) ?
+          dist2dest < 50.0f : dist2dest < 10.0f;
   }
+
+  // Skip shortcut edges when near the destination
+  if (edge->shortcut() && dist2dest < 10.0f)
+    return false;
 
   // Do not allow Uturns or entering no-thru edges.
   // TODO - evaluate later!

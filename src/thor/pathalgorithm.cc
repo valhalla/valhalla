@@ -154,10 +154,17 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     }
 
     // Expand from end node
+    bool shortcuttaken = false;
     edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
     directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
+      // TEST. TODO place logic in costing class?
+      // Shortcut edges are 1st edges from a node.
+      if (shortcuttaken && directededge->superseded()) {
+        continue;
+      }
+
       // Check access
       if (!costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
         continue;
@@ -176,6 +183,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Get cost
       cost = currentcost + costing->Get(directededge);
+
+      // TODO - should this stay here?
+      shortcuttaken = directededge->shortcut();
 
       // Check if already in adjacency list
       if (edgestatus == kTemporary) {
@@ -278,11 +288,7 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest) {
   uint32_t edgelabel_index = dest;
   while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) !=
               kInvalidLabel) {
-    // Do not add the transition edges
-    if (!edgelabels_[edgelabel_index].trans_up() &&
-        !edgelabels_[edgelabel_index].trans_down()) {
-      edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
-    }
+    edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
   }
 
   // Reverse the list and return
