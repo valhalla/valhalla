@@ -41,6 +41,7 @@ test-driver
 test/location
 test/graphid
 test/tilehierarchy
+test/graphtile
 test/*.log
 test/*.trs
 

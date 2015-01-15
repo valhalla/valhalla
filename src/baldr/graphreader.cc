@@ -30,12 +30,12 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
     return &cached->second;
 
   // It wasn't in cache so create a GraphTile object. This reads the tile from disk
-  GraphTile tile(tile_hierarchy_.tile_dir(), graphid);
+  GraphTile tile(tile_hierarchy_, graphid);
   // Need to check that the tile could be loaded, if it has no size it wasn't loaded
   if(tile.size() == 0)
     return nullptr;
   // Keep a copy in the cache and return it
-  auto inserted = tilecache_.emplace(graphid.Tile_Base(), tile);
+  auto inserted = tilecache_.emplace(graphid.Tile_Base(), std::move(tile));
   return &inserted.first->second;
 }
 

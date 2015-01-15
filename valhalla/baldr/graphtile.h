@@ -6,6 +6,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/tilehierarchy.h>
 
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -28,7 +29,7 @@ class GraphTile {
    * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
    */
-  GraphTile(const std::string& basedirectory, const GraphId& graphid);
+  GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid);
 
   /**
    * Destructor
@@ -36,21 +37,12 @@ class GraphTile {
   virtual ~GraphTile();
 
   /**
-   * Gets the filename given the graphId
+   * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
-   * @param  basedirectory  Base data directory
-   * @return  Returns filename (including directory path relative to tile
-   *          base directory
+   * @param  hierarchy The tile hierarchy structure to get info about how many tiles can exist at this level
+   * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string Filename(const std::string& basedirectory,
-                       const GraphId& graphid);
-
-  /**
-   * Gets the directory to a given tile.
-   * @param  graphid  Graph Id to construct file directory.
-   * @return  Returns file directory path relative to tile base directory
-   */
-  static std::string FileDirectory(const GraphId& graphid);
+  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy);
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
@@ -105,7 +97,7 @@ class GraphTile {
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  const std::shared_ptr<EdgeInfo> edgeinfo(const size_t offset) const;
+  std::unique_ptr<const EdgeInfo> edgeinfo(const size_t offset) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -124,8 +116,7 @@ class GraphTile {
    * @param  names            (OUT) Vector to hold list of names
    * @return  Returns an address to the list of names.
    */
-  std::vector<std::string>& GetNames(const uint32_t edgeinfo_offset,
-                 std::vector<std::string>& names);
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset);
 
   /**
    * Convenience method to get the names for an edge given an edgeinfo
@@ -134,14 +125,14 @@ class GraphTile {
    * @param  names (OUT) Vector to hold list of names
    * @return  Returns an address to the list of names.
    */
-  std::vector<std::string>& GetNames(const std::shared_ptr<EdgeInfo>& edge,
-                 std::vector<std::string>& names);
+  std::vector<std::string> GetNames(const std::unique_ptr<const EdgeInfo>& edge);
 
  protected:
   // Size of the tile in bytes
   size_t size_;
 
-  // Graph tile memory
+  // Graph tile memory, this must be shared so that we can put it into cache
+  // Aparently you can std::move a non-copyable
   boost::shared_array<char> graphtile_;
 
   // Header information for the tile

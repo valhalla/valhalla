@@ -1,9 +1,37 @@
 #include "baldr/graphtile.h"
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <locale>
+#include <iomanip>
+#include <cmath>
+
+namespace {
+  struct dir_facet : public std::numpunct<char> {
+   protected:
+    virtual char do_thousands_sep() const {
+        return '/';
+    }
+
+    virtual std::string do_grouping() const {
+        return "\03";
+    }
+  };
+  template <class numeric_t>
+  size_t digits(numeric_t number) {
+    size_t digits = (number < 0 ? 1 : 0);
+    while (static_cast<long long int>(number)) {
+        number /= 10;
+        digits++;
+    }
+    return digits;
+  }
+}
 
 namespace valhalla {
 namespace baldr {
@@ -22,7 +50,7 @@ GraphTile::GraphTile()
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
+GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     : size_(0),
       id_(graphid.Tile_Base()) {
 
@@ -31,7 +59,7 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::ifstream file(Filename(basedirectory, id_),
+  std::ifstream file(hierarchy.tile_dir() + "/" + FileSuffix(id_, hierarchy),
                      std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -74,20 +102,46 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
 GraphTile::~GraphTile() {
 }
 
-// Gets the filename given the graphId
-std::string GraphTile::Filename(const std::string& basedirectory,
-                                const GraphId& graphid) {
-  return basedirectory + "/" + FileDirectory(graphid) + "/tile"
-      + std::to_string(graphid.tileid()) + ".gph";
-}
+std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy) {
+  /*
+  if you have a graphid where level == 8 and tileid == 24134109851
+  you should get: 8/024/134/109/851.gph
+  since the number of levels is likely to be very small this limits
+  the total number of objects in any one directory to 1000, which is an
+  empirically derived good choice for mechanical harddrives
+  this should be fine for s3 (even though it breaks the rule of most
+  unique part of filename first) because there will be just so few
+  objects in general in practice
+  */
 
-/**
- * Gets the directory to a given tile.
- * @param  graphid  Graph Id to construct file directory.
- * @return  Returns file directory path relative to tile base directory
- */
-std::string GraphTile::FileDirectory(const GraphId& graphid) {
-  return std::to_string(graphid.level());
+  //figure the largest id for this level
+  auto level = hierarchy.levels().find(graphid.level());
+  if(level == hierarchy.levels().end())
+    throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+  uint32_t max_id = Tiles::MaxTileId(AABB2(PointLL(-180, -90), PointLL(180, 90)), level->second.tiles.TileSize());
+
+  //figure out how many digits
+  //TODO: dont convert it to a string to get the length there are faster ways..
+  size_t max_length = digits<uint32_t>(max_id);
+  size_t remainder = max_length % 3;
+  if(remainder)
+    max_length += 3 - remainder;
+
+  //make a locale to use as a formatter for numbers
+  std::locale dir_locale(std::locale("C"), new dir_facet());
+  std::ostringstream stream;
+  stream.imbue(dir_locale);
+
+  //if it starts with a zero the pow trick doesn't work
+  if(graphid.level() == 0) {
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+    std::string suffix = stream.str();
+    suffix[0] = '0';
+    return suffix;
+  }
+  //it was something else
+  stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+  return stream.str();
 }
 
 size_t GraphTile::size() const {
@@ -128,8 +182,8 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
   throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
 }
 
-const std::shared_ptr<EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
-  return std::make_shared<EdgeInfo>(edgeinfo_ + offset);
+std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
+  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset));
 }
 
 // Get the directed edges outbound from the specified node index.
@@ -144,22 +198,17 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
 
 // Convenience method to get the names for an edge given the offset to the
 // edge info
-std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
-                                              std::vector<std::string>& names) {
-  const std::shared_ptr<EdgeInfo> edge = edgeinfo(edgeinfo_offset);
-  return GetNames(edgeinfo(edgeinfo_offset), names);
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) {
+  return GetNames(edgeinfo(edgeinfo_offset));
 }
 
 // Convenience method to get the names for an edge given an edgeinfo shared
 // pointer.
-std::vector<std::string>& GraphTile::GetNames(
-            const std::shared_ptr<EdgeInfo>& edge,
-            std::vector<std::string>& names) {
-  // Clear the list of names and get each name
-  names.clear();
-  uint32_t offset;
-  for (uint32_t i = 0, n = edge->name_count(); i < n; i++) {
-    offset = edge->GetStreetNameOffset(i);
+std::vector<std::string> GraphTile::GetNames(const std::unique_ptr<const EdgeInfo>& edge) {
+  // Get each name
+  std::vector<std::string> names;
+  for (uint32_t i = 0; i < edge->name_count(); i++) {
+    uint32_t offset = edge->GetStreetNameOffset(i);
     if (offset < textlist_size_) {
       names.push_back(textlist_ + offset);
     } else {
