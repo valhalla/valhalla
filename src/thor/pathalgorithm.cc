@@ -288,11 +288,7 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest) {
   uint32_t edgelabel_index = dest;
   while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) !=
               kInvalidLabel) {
-    // Do not add the transition edges
-    if (!edgelabels_[edgelabel_index].trans_up() &&
-        !edgelabels_[edgelabel_index].trans_down()) {
-      edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
-    }
+    edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
   }
 
   // Reverse the list and return
