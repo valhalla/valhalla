@@ -16,7 +16,6 @@ namespace mjolnir {
 HierarchyBuilder::HierarchyBuilder(const boost::property_tree::ptree& pt)
     : contractcount_(0),
       shortcutcount_(0),
-      nodecounts_{},
       tile_hierarchy_(pt),
       graphreader_(tile_hierarchy_) {
 
@@ -37,9 +36,10 @@ bool HierarchyBuilder::Build() {
     std::cout << " Build Hierarchy Level " << new_level->second.name
               << " Base Level is " << base_level->second.name << std::endl;
 
-    // Clear the node map and map of superseded edges
+    // Clear the node map, contraction node map, and map of superseded edges
     nodemap_.clear();
     supersededmap_.clear();
+    contractions_.clear();
 
     // Size the vector for new tiles. Clear any nodes from these tiles
     tilednodes_.resize(new_level->second.tiles.TileCount());
@@ -47,26 +47,14 @@ bool HierarchyBuilder::Build() {
       tile.clear();
     }
 
-    // Debug counts
-    contractcount_ = 0;
-     for (uint32_t i = 0; i < 16; i++)
-       nodecounts_[i] = 0;
-
     // Get the nodes that exist in the new level
+    contractcount_ = 0;
+    shortcutcount_ = 0;
     GetNodesInNewLevel(base_level->second, new_level->second);
     std::cout << "Can contract " << contractcount_ << " nodes"
               << " Out of " << nodemap_.size() << " nodes" << std::endl;
 
-    // Debug counts
-    for (uint32_t i = 0; i < 16; i++) {
-      if (nodecounts_[i] > 0) {
-        std::cout << " Nodes with " << i << " edges: " <<
-            nodecounts_[i] << std::endl;
-      }
-    }
-
     // Form all tiles in new level
-    shortcutcount_ = 0;
     FormTilesInNewLevel(base_level->second, new_level->second);
     std::cout << "Created " << shortcutcount_ << " shortcuts" << std::endl;
 
@@ -80,85 +68,134 @@ bool HierarchyBuilder::Build() {
 }
 
 // Get the nodes that remain in the new level
-bool HierarchyBuilder::GetNodesInNewLevel(
+void HierarchyBuilder::GetNodesInNewLevel(
         const TileHierarchy::TileLevel& base_level,
         const TileHierarchy::TileLevel& new_level) {
   // Iterate through all tiles in the lower level
   // TODO - can be concurrent if we divide by rows for example
   uint32_t ntiles = base_level.tiles.TileCount();
   uint32_t baselevel = (uint32_t)base_level.level;
-  GraphTile* graphtile = nullptr;
+  GraphTile* tile = nullptr;
   for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
     if (!graphreader_.DoesTileExist(GraphId(tileid, baselevel, 0))) {
       continue;
     }
 
-    // Get the graphtile
-    graphtile = graphreader_.GetGraphTile(GraphId(tileid, baselevel, 0));
-    if (graphtile == nullptr) {
+    // Get the graph tile
+    tile = graphreader_.GetGraphTile(GraphId(tileid, baselevel, 0));
+    if (tile == nullptr) {
       // No tile - common case, just continue
       continue;
     }
 
-    // Iterate through the nodes
-    uint32_t nodecount = graphtile->header()->nodecount();
+    // Iterate through the nodes. Add nodes to the new level when
+    // best road class <= the new level classification cutoff
+    uint32_t nodecount = tile->header()->nodecount();
     GraphId basenode(tileid, baselevel, 0);
-    const NodeInfo* nodeinfo = graphtile->node(basenode);
+    const NodeInfo* nodeinfo = tile->node(basenode);
     for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, basenode++) {
-      // Skip any nodes with best road class > road class cutoff. They
-      // will not be included in the new level
-      if (nodeinfo->bestrc() > new_level.importance)
-        continue;
-
-      // This node remains on the new level. Test if it can be contracted
-      // (for adding shortcut edges). Add the node to the new tile
-      // and add the mapping from base level node to the new node
-      uint32_t tileid = new_level.tiles.TileId(nodeinfo->latlng());
-      uint32_t nodeid = tilednodes_[tileid].size();
-      bool contract = CanContract(graphtile, nodeinfo, basenode,
-                                  new_level.importance);
-      tilednodes_[tileid].push_back(NewNode(basenode, contract));
-      nodemap_[basenode.value()] =  GraphId(tileid, new_level.level, nodeid);
+      if (nodeinfo->bestrc() <= new_level.importance) {
+        // Test this node to see if it can be contracted (for adding shortcut
+        // edges). Add the node to the new tile and add the mapping from base
+        // level node to the new node
+        uint32_t tileid = new_level.tiles.TileId(nodeinfo->latlng());
+        GraphId newnode(tileid, new_level.level, tilednodes_[tileid].size());
+        bool contract = CanContract(tile, nodeinfo, basenode, newnode,
+                                    new_level.importance);
+        tilednodes_[tileid].emplace_back(NewNode(basenode, contract));
+        nodemap_[basenode.value()] = newnode;
+      }
     }
   }
-  return true;
 }
 
 // Test if the node is eligible to be contracted (part of a shortcut) in
 // the new level.
-bool HierarchyBuilder::CanContract(GraphTile* graphtile,
+bool HierarchyBuilder::CanContract(GraphTile* tile,
                                    const NodeInfo* nodeinfo,
-                                   const GraphId& node,
+                                   const GraphId& basenode,
+                                   const GraphId& newnode,
                                    const RoadClass rcc)  {
-  // TODO - should we consider contracting due to driveability? That is
-  // allow contraction at nodes where only 2 driveable outbound edges exist?
-  // This would allow contraction at "entrance" nodes on highways
+  // Return false if only 1 edge
+  if (nodeinfo->edge_count() < 2) {
+    return false;
+  }
+bool logit = (newnode == GraphId(46540, 1, 303));
 
-  // Get the number of directed edges on this hierarchy
+  // Get list of valid edges from the base level that remain at this level.
+  // Exclude transition edges and shortcut edges on the base level.
   std::vector<GraphId> edges;
-  GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
-  const DirectedEdge* directededge = graphtile->directededge(
-                nodeinfo->edge_index());
-  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-              i++, directededge++, edgeid++) {
-    // Do not count any transition edges or shortcut edges
+  GraphId edgeid(basenode.tileid(), basenode.level(), nodeinfo->edge_index());
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
+    const DirectedEdge* directededge = tile->directededge(edgeid);
     if (directededge->importance() <= rcc &&
         !directededge->trans_down() && !directededge->shortcut()) {
       edges.push_back(edgeid);
     }
   }
 
-  // Keep count of # of nodes with each edge count
-  nodecounts_[edges.size()]++;
+  // Get pairs of matching edges. If more than 1 pair exists then
+  // we cannot contract this node.
+  uint32_t n = edges.size();
+  bool matchfound = false;
+  std::pair<uint32_t, uint32_t> match;
+  for (uint32_t i = 0; i < n-1; i++) {
+    for (uint32_t j = i+1; j < n; j++) {
+      const DirectedEdge* edge1 = tile->directededge(edges[i]);
+      const DirectedEdge* edge2 = tile->directededge(edges[j]);
+      if (EdgesMatch(tile, edge1, edge2)) {
+        if (matchfound) {
+          // More than 1 match exists - return false
+          return false;
+        }
+        // Save the match
+        match = std::make_pair(i, j);
+        matchfound = true;
+      }
+    }
+  }
 
-  // If n is not equal to 2 we cannot contract
-  if (edges.size() != 2)
+  // Return false if no matches exist
+  if (!matchfound) {
     return false;
+  }
 
-  // If n == 2 we need to check attributes and names to see if we can create a
-  // shortcut through this node
-  const DirectedEdge* edge1 = graphtile->directededge(edges[0]);
-  const DirectedEdge* edge2 = graphtile->directededge(edges[1]);
+  // Exactly one pair of edges match. Check if any other remaining edges
+  // are driveable outbound from the node. If so this cannot be contracted.
+  for (uint32_t i = 0; i < n; i++) {
+    if (i != match.first && i != match.second) {
+      if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
+        return false;
+    }
+  }
+
+  // Mark the 2 edges entering the node (opposing) and 2 edges exiting
+  // (the directed edges) the node as "superseded"
+  const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
+  const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
+  GraphId oppedge1 = GetOpposingEdge(basenode, edge1);
+  GraphId oppedge2 = GetOpposingEdge(basenode, edge2);
+  supersededmap_[edges[match.first].value()]  = true;
+  supersededmap_[edges[match.second].value()] = true;
+  supersededmap_[oppedge1.value()] = true;
+  supersededmap_[oppedge2.value()] = true;
+
+  // Store the pairs of base edges entering and exiting this node
+  EdgePairs edgepairs;
+  edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
+  edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
+  contractions_[newnode.value()] = edgepairs;
+
+  contractcount_++;
+  return true;
+}
+
+bool HierarchyBuilder::EdgesMatch(GraphTile* tile,
+            const DirectedEdge* edge1, const DirectedEdge* edge2) {
+  // Check if edges end at same node.
+  if (edge1->endnode() == edge2->endnode()) {
+    return false;
+  }
 
   // Make sure access matches. Need to consider opposite direction for one of
   // the edges since both edges are outbound from the node.
@@ -167,7 +204,9 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
     return false;
   }
 
-  // Importance (class), link, use, and attributes must also match
+  // Importance (class), link, use, and attributes must also match.
+  // NOTE: might want "better" bridge attribution. Seems most overpass
+  // bridges get marked as a bridge and lead to less shortcuts
   if (edge1->importance() != edge2->importance() ||
       edge1->link()       != edge2->link() ||
       edge1->use()        != edge2->use() ||
@@ -177,8 +216,8 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
       edge1->toll()       != edge2->toll() ||
       edge1->destonly()   != edge2->destonly() ||
       edge1->unpaved()    != edge2->unpaved() ||
-      edge1->tunnel()     != edge2->tunnel() ||
-      edge1->bridge()     != edge2->bridge() ||
+//      edge1->tunnel()     != edge2->tunnel() ||
+//      edge1->bridge()     != edge2->bridge() ||
       edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
@@ -186,8 +225,8 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
   // Names must match
   // TODO - this allows matches in any order. Do we need to maintain order?
   // TODO - should allow near matches?
-  std::vector<std::string> edge1names = graphtile->GetNames(edge1->edgedataoffset());
-  std::vector<std::string> edge2names = graphtile->GetNames(edge2->edgedataoffset());
+  std::vector<std::string> edge1names = tile->GetNames(edge1->edgedataoffset());
+  std::vector<std::string> edge2names = tile->GetNames(edge2->edgedataoffset());
   if (edge1names.size() != edge2names.size()) {
     return false;
   }
@@ -203,17 +242,6 @@ bool HierarchyBuilder::CanContract(GraphTile* graphtile,
       return false;
     }
   }
-
-  // Mark the 2 edges entering the node and 2 edges exiting the node
-  // as "superseded"
-  GraphId oppedge0 = GetOpposingEdge(node, edge1);
-  GraphId oppedge1 = GetOpposingEdge(node, edge2);
-  supersededmap_[edges[0].value()] = true;
-  supersededmap_[edges[1].value()] = true;
-  supersededmap_[oppedge0.value()] = true;
-  supersededmap_[oppedge1.value()] = true;
-
-  contractcount_++;
   return true;
 }
 
@@ -281,30 +309,28 @@ void HierarchyBuilder::FormTilesInNewLevel(
       // Copy node information
       nodea.Set(tileid, level, nodeid);
       NodeInfoBuilder node;
-      const NodeInfo* oldnodeinfo = tile->node(newnode.basenode.id());
-      node.set_latlng(oldnodeinfo->latlng());
+      const NodeInfo* baseni = tile->node(newnode.basenode.id());
+      node.set_latlng(baseni->latlng());
       node.set_edge_index(edgeindex);
-      node.set_bestrc(oldnodeinfo->bestrc());
+      node.set_bestrc(baseni->bestrc());
 
       // Add shortcut edges first. If node is not contracted then there
       // may be shortcuts. Set the edgecount from this node.
       edgecount = 0;
       std::vector<DirectedEdgeBuilder> directededges;
       if (!newnode.contract) {
-        edgecount = AddShortcutEdges(newnode, nodea, oldnodeinfo, tile,
+        edgecount = AddShortcutEdges(newnode, nodea, baseni, tile,
                       rcc, tilebuilder, directededges);
       }
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
       GraphId oldedgeid(newnode.basenode.tileid(), newnode.basenode.level(),
-                        oldnodeinfo->edge_index());
-      const DirectedEdge* directededge = tile->directededge(
-                        oldnodeinfo->edge_index());
-      for (uint32_t i = 0, n = oldnodeinfo->edge_count(); i < n;
-                      i++, directededge++, oldedgeid++) {
+                        baseni->edge_index());
+      for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, oldedgeid++) {
         // Store the directed edge if less than the road class cutoff and
         // it is not a transition edge or shortcut in the base level
+        const DirectedEdge* directededge = tile->directededge(oldedgeid);
         if (directededge->importance() <= rcc &&
            !directededge->trans_down() && !directededge->shortcut()) {
           // Copy the directed edge information and update end node,
@@ -373,57 +399,88 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
 // Add shortcut edges (if they should exist) from the specified node
 uint32_t HierarchyBuilder::AddShortcutEdges(const NewNode& newnode,
-              const GraphId& nodea, const NodeInfo* oldnodeinfo,
+              const GraphId& nodea, const NodeInfo* baseni,
               GraphTile* tile, const RoadClass rcc,
               GraphTileBuilder& tilebuilder,
               std::vector<DirectedEdgeBuilder>& directededges) {
   // Iterate through directed edges of the base node
-  uint32_t edgeid;
-  uint32_t edge_info_offset;
+  // Only create driveable shortcuts (auto)
   uint32_t edgecount = 0;
-  float length = 0.0f;
-
-  std::vector<PointLL> shape;
-  const DirectedEdge* directededge = tile->directededge(
-                    oldnodeinfo->edge_index());
-  const DirectedEdge* connectededge;
-  for (uint32_t i = 0, n = oldnodeinfo->edge_count(); i < n;
-              i++, directededge++) {
-    // Skip if >  road class cutoff or a transition edge or shortcut in
+  GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(),
+                          baseni->edge_index());
+  for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
+    // Skip if > road class cutoff or a transition edge or shortcut in
     // the base level. Note that only downward transitions exist at this
-    // point (upward transitions are created later)
+    // point (upward transitions are created later).
+    // TODO - do we need to maintain "reverse" shortcuts - that is ones
+    // not driveable forward but driveable reverse. To be consistent we
+    // need to (and to support backwards graph progression).
+    const DirectedEdge* directededge = tile->directededge(base_edge_id);
     if (directededge->importance() > rcc ||
         directededge->trans_down() || directededge->shortcut()) {
       continue;
     }
 
-    // Get the end node and check if it is set for contraction
-    GraphId priornode = newnode.basenode;
+    // Get the end node and check if it is set for contraction and the edge
+    // is set as a matching, entering edge of the contracted node. Cases like
+    // entrance ramps can lead to a contracted node
+    uint32_t count = 0;
+    GraphId basenode = newnode.basenode;
     GraphId nodeb = nodemap_[directededge->endnode().value()];
-    if (tilednodes_[nodeb.tileid()][nodeb.id()].contract) {
+    if (tilednodes_[nodeb.tileid()][nodeb.id()].contract &&
+        IsEnteringEdgeOfContractedNode(nodeb, base_edge_id)) {
+
       // Form a shortcut edge.
       DirectedEdge oldedge = *directededge;
       DirectedEdgeBuilder newedge =
                     static_cast<DirectedEdgeBuilder&>(oldedge);
-      length = newedge.length();
+      float length = newedge.length();
 
       // Get the shape for this edge
       std::unique_ptr<const EdgeInfo> edgeinfo =
               tile->edgeinfo(directededge->edgedataoffset());
-      shape = edgeinfo->shape();
+      std::vector<PointLL> shape = edgeinfo->shape();
 
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(directededge->edgedataoffset());
 
-      // Follow until the end is not contracted
-      while ((connectededge = GetConnectedEdge(nodeb, priornode,
-                          rcc)) != nullptr) {
-        length += ConnectEdges(priornode, connectededge, shape);
+      // Connect while the node is marked as contracted. Use the edge pair
+      // mapping
+      GraphId next_edge_id = base_edge_id;
+      while (tilednodes_[nodeb.tileid()][nodeb.id()].contract) {
+        // Get base node and the contracted node
+        basenode = tilednodes_[nodeb.tileid()][nodeb.id()].basenode;
+        auto edgepairs = contractions_.find(nodeb.value());
+        if (edgepairs == contractions_.end()) {
+          std::cout << "No edge pairs found for contracted node" << std::endl;
+          break;
+        } else {
+          // Oldedge should match one of the 2 first (inbound) edges in the
+          // pair. Choose the matching outgoing (second) edge.
+          if (edgepairs->second.edge1.first == next_edge_id) {
+            next_edge_id = edgepairs->second.edge1.second;
+          } else if (edgepairs->second.edge2.first  == next_edge_id) {
+            next_edge_id = edgepairs->second.edge2.second;
+          } else {
+            // Break out of loop. This case can happen when a shortcut edge
+            // enters another shortcut edge (but is not driveable in reverse
+            // direction from the node).
+            //std::cout << "Edge " << next_edge_id << " does not match any in the node " <<
+            //    nodeb << " EdgePairs" << std::endl;
+            break;
+          }
+        }
+
+        // Connect the matching outbound directed edge (updates the next
+        // end node in the new level).
+        length += ConnectEdges(basenode, next_edge_id, shape, nodeb);
+
+        count++;
       }
 
       // Add the edge info
-      edgeid = static_cast<uint32_t>(length * 100.0f);
-      edge_info_offset = tilebuilder.AddEdgeInfo(edgeid, nodea,
+      uint32_t edgeid = static_cast<uint32_t>(length * 100.0f);
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(edgeid, nodea,
                   nodeb, shape, names);
       newedge.set_edgedataoffset(edge_info_offset);
 
@@ -445,51 +502,16 @@ uint32_t HierarchyBuilder::AddShortcutEdges(const NewNode& newnode,
   return edgecount;
 }
 
-// Get the connected edge at the contracted node. Returns false if no
-// connected node is found (finalizes the shortcut).
-const DirectedEdge* HierarchyBuilder::GetConnectedEdge(GraphId& nodeb,
-           GraphId& priornode, RoadClass rcc) {
-  // Get the node in the base level
-  GraphId basenode = tilednodes_[nodeb.tileid()][nodeb.id()].basenode;
-  GraphTile* tile = graphreader_.GetGraphTile(basenode);
-  const NodeInfo* oldnodeinfo = tile->node(basenode.id());
-
-  // Iterate through directed edges. Contracted nodes should only have
-  // 2 directed edges in the new level.
-  GraphId endnode;
-  const DirectedEdge* directededge = tile->directededge(
-              oldnodeinfo->edge_index());
-  for (uint32_t i = 0, n = oldnodeinfo->edge_count(); i < n;
-              i++, directededge++) {
-    // Skip if > road class cutoff, a shortcut edge, or transition edge,
-    // or this edge goes back to the prior node
-    // (i.e., Uturn)
-    if (directededge->importance() > rcc ||
-        directededge->shortcut() || directededge->trans_up() ||
-        directededge->trans_down() ||
-        directededge->endnode() == priornode) {
-      continue;
-    }
-
-    // Get the end node and check if it is set for contraction
-    endnode = nodemap_[directededge->endnode().value()];
-    if (tilednodes_[endnode.tileid()][endnode.id()].contract) {
-      // Update the priornode and the new end node and return
-      // this directed edge
-      priornode = basenode;
-      nodeb     = endnode;
-      return directededge;
-    }
-  }
-  return nullptr;
-}
-
-// Connect 2 edges shape
+// Connect 2 edges shape and update the next end node in the new level
 float HierarchyBuilder::ConnectEdges(const GraphId& basenode,
-                   const DirectedEdge* directededge,
-                   std::vector<PointLL>& shape) {
-  // Get the shape for this edge
+                   const GraphId& edgeid,
+                   std::vector<PointLL>& shape,
+                   GraphId& nodeb) {
+  // Get the tile and directed edge
   GraphTile* tile = graphreader_.GetGraphTile(basenode);
+  const DirectedEdge* directededge = tile->directededge(edgeid);
+
+  // Get the shape for this edge
   std::unique_ptr<const EdgeInfo> edgeinfo =
           tile->edgeinfo(directededge->edgedataoffset());
   std::vector<PointLL> edgeshape = edgeinfo->shape();
@@ -502,8 +524,21 @@ float HierarchyBuilder::ConnectEdges(const GraphId& basenode,
     shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
   }
 
-  // Return the length
+  // Update the end node and return the length
+  nodeb = nodemap_[directededge->endnode().value()];
   return directededge->length();
+}
+
+bool HierarchyBuilder::IsEnteringEdgeOfContractedNode(const GraphId& node,
+                                                      const GraphId& edge) {
+  auto edgepairs = contractions_.find(node.value());
+  if (edgepairs == contractions_.end()) {
+    std::cout << "No edge pairs found for contracted node" << std::endl;
+    return false;
+  } else {
+    return (edgepairs->second.edge1.first == edge ||
+            edgepairs->second.edge2.first == edge);
+  }
 }
 
 // Connect nodes in the base level tiles to the new nodes in the new
