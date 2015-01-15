@@ -4,15 +4,15 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
 
-namespace valhalla{
-namespace thor{
+namespace valhalla {
+namespace thor {
 
 /**
  * Labeling information for shortest path algorithm. Contains cost,
  * predecessor, current time, and assorted information required during
  * construction of the shortest path (stored in AdjacencyList) and for
- * reconstructing the path upon completion (from the list of permanently
- * labeled elements).
+ * reconstructing the path upon completion (the EdgeLabel list forms
+ * the list of permanently labeled elements - aka the Done set).
  */
 class EdgeLabel {
  public:
@@ -25,38 +25,20 @@ class EdgeLabel {
    * Constructor with values.
    * @param predecessor Index into the edge label list for the predecessor
    *                       directed edge in the shortest path.
-   * @param edgeid    GraphId of this directed edge.
+   * @param edgeid    Directed edge.
    * @param endnode   End node of the directed edge.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    * @param dist      Distance (km) to the destination
-   * @param uturn     Index at the end node of the directed edge that
-   *                  represents at u-turn
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::GraphId& endnode, const float cost,
-            const float sortcost, const float dist, const uint32_t uturn);
+            const baldr::DirectedEdge* edge, const float cost,
+            const float sortcost, const float dist);
 
   /**
    * Destructor.
    */
   virtual ~EdgeLabel();
-
-  /**
-   * Set values.
-   * @param predecessor Index into the edge label list for the predecessor
-   *                       directed edge in the shortest path.
-   * @param edgeid    GraphId of this directed edge.
-   * @param endnode   End node of the directed edge.
-   * @param cost      True cost to the edge.
-   * @param sortcost  Cost for sorting (includes A* heuristic)
-   * @param dist      Distance (km) to the destination
-   * @param uturn     Index at the end node of the directed edge that
-   *                  represents at u-turn
-   */
-  void Set(const uint32_t predecessor, const baldr::GraphId& edgeid,
-           const baldr::GraphId& endnode, const float cost,
-           const float sortcost, const float dist, const uint32_t uturn);
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -75,22 +57,10 @@ class EdgeLabel {
   uint32_t predecessor() const;
 
   /**
-   * Set the predecessor edge label.
-   * @param  predecessor  Index of the predecessor edge label.
-   */
-  void SetPredecessor(const uint32_t predecessor);
-
-  /**
    * Get the GraphId of this directed edge.
    * @return  Returns the GraphId of this directed edge.
    */
   const baldr::GraphId& edgeid() const;
-
-  /**
-   * Set the GraphId of this directed edge.
-   * @param  edgeid  GraphId of this directed edge.
-   */
-  void SetEdgeId(const baldr::GraphId& edgeid);
 
   /**
    * Get the end node of this directed edge. Allows the A* algorithm
@@ -101,24 +71,10 @@ class EdgeLabel {
   const baldr::GraphId& endnode() const;
 
   /**
-   * Set the end node of this directed edge. Allows the A* algorithm
-   * to expand the search from this end node, without having to read
-   * the directed edge again.
-   * @param endnode  GraphId of the end node of this directed edge.
-   */
-  void SetEndNode(const baldr::GraphId& endnode);
-
-  /**
    * Get the cost from the origin to this directed edge.
    * @return  Returns the cost (units are based on the costing method).
    */
   float truecost() const;
-
-  /**
-   * Set the cost from the origin to this directed edge.
-   * @param  truecost  Cost (units are based on the costing method).
-   */
-  void SetTrueCost(float truecost);
 
   /**
    * Get the sort cost from the origin to this directed edge. The sort
@@ -130,7 +86,7 @@ class EdgeLabel {
   /**
    * Set the sort cost from the origin to this directed edge. The sort
    * cost includes the A* heuristic.
-   * @param sortcost  Sort cost (units are based on the costing method).
+   * @param sortcost Sort cost (units are based on the costing method).
    */
   void SetSortCost(float sortcost);
 
@@ -141,22 +97,23 @@ class EdgeLabel {
   float distance() const;
 
   /**
-   * Set the distance to the destination.
-   * @param  d  Distance (km).
-   */
-  void SetDistance(const float d);
-
-  /**
    * Get the index that represents a Uturn.
    * @return  Returns the Uturn index.
    */
   uint32_t uturn_index() const;
 
   /**
-   * Set the index that represents a Uturn.
-   * @param  idx  Uturn index.
+   * Get the transition up flag.
+   * @return  Returns true if the prior edge was a transition up, false if not.
    */
-  void SetUturnIndex(const uint32_t idx);
+  bool trans_up() const;
+
+  /**
+   * Get the transition down flag.
+   * @return  Returns true if the prior edge was a transition down,
+   *          false if not.
+   */
+  bool trans_down() const;
 
   /**
    * Operator < used for sorting.
@@ -184,12 +141,22 @@ class EdgeLabel {
   // Distance to the destination
   float distance_;
 
-  // Index at the end node of the edge that constitutes a U-turn
-  // TODO - combne with other attributes to save space where we can
-  uint32_t uturn_index_;
+  /**
+   * Attributes to carry along with the edge label.
+   * uturn_index: Index at the end node of the edge that constitutes a U-turn
+   * trans_up:    Was the prior edge a transition up to a higher level
+   * trans_down:  Was the prior edge a transition down to a lower level
+   */
+  struct Attributes {
+    uint32_t uturn_index  : 5;
+    uint32_t trans_up     : 1;
+    uint32_t trans_down   : 1;
+    uint32_t spare        : 25;
+  };
+  Attributes attributes_;
 
   // Transit information...trip ID , prior stop ID, time at stop? This
-  // should probably be part of a derived class
+  // could be be part of a derived class used only in multimodal routes?
 };
 
 }
