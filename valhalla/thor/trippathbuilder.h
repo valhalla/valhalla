@@ -8,6 +8,10 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/trippath.pb.h>
 
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+using namespace valhalla::odin;
+
 namespace valhalla {
 namespace thor {
 
@@ -32,6 +36,9 @@ class TripPathBuilder {
    */
   static odin::TripPath Build(baldr::GraphReader& graphreader,
              const std::vector<baldr::GraphId>& pathedges);
+
+  static odin::TripPath_Edge* AddTripEdge(const DirectedEdge* directededge,TripPath_Node* trip_node,
+                                          const GraphTile* graphtile);
 };
 
 }
