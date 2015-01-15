@@ -225,10 +225,8 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile,
   // Names must match
   // TODO - this allows matches in any order. Do we need to maintain order?
   // TODO - should allow near matches?
-  std::vector<std::string> edge1names;
-  tile->GetNames(edge1->edgedataoffset(), edge1names);
-  std::vector<std::string> edge2names;
-  tile->GetNames(edge2->edgedataoffset(), edge2names);
+  std::vector<std::string> edge1names = tile->GetNames(edge1->edgedataoffset());
+  std::vector<std::string> edge2names = tile->GetNames(edge2->edgedataoffset());
   if (edge1names.size() != edge2names.size()) {
     return false;
   }
@@ -290,8 +288,6 @@ void HierarchyBuilder::FormTilesInNewLevel(
   uint32_t edge_info_offset;
   uint8_t level = new_level.level;
   RoadClass rcc = new_level.importance;
-  std::vector<std::string> names;
-  std::string basedir = tile_hierarchy_.tile_dir();
   for (const auto& newtile : tilednodes_) {
     // Skip if no new nodes
     if (newtile.size() == 0) {
@@ -300,7 +296,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
     }
 
     // Create GraphTileBuilder for the new tile
-    GraphTileBuilder tilebuilder(basedir, GraphId(tileid, level, 0));
+    GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0));
 
     // Iterate through the NewNodes in the tile at the new level
     nodeid = 0;
@@ -353,9 +349,9 @@ void HierarchyBuilder::FormTilesInNewLevel(
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use a value based on length to protect against
           // edges that have same end nodes but different lengths
-          const std::shared_ptr<EdgeInfo> edgeinfo =
+          std::unique_ptr<const EdgeInfo> edgeinfo =
                 tile->edgeinfo(directededge->edgedataoffset());
-          tile->GetNames(edgeinfo, names);
+          std::vector<std::string> names = tile->GetNames(directededge->edgedataoffset());
           edgeid = static_cast<uint32_t>(directededge->length() * 100.0f);
           edge_info_offset = tilebuilder.AddEdgeInfo(edgeid, nodea,
                  nodeb, edgeinfo->shape(), names);
@@ -394,7 +390,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
     }
 
     // Store the new tile
-    tilebuilder.StoreTileData(basedir, GraphId(tileid, level, 0));
+    tilebuilder.StoreTileData(tile_hierarchy_, GraphId(tileid, level, 0));
 
     // Increment tileid
     tileid++;
@@ -441,13 +437,12 @@ uint32_t HierarchyBuilder::AddShortcutEdges(const NewNode& newnode,
       float length = newedge.length();
 
       // Get the shape for this edge
-      const std::shared_ptr<EdgeInfo> edgeinfo =
+      std::unique_ptr<const EdgeInfo> edgeinfo =
               tile->edgeinfo(directededge->edgedataoffset());
       std::vector<PointLL> shape = edgeinfo->shape();
 
       // Get names - they apply over all edges of the shortcut
-      std::vector<std::string> names;
-      tile->GetNames(edgeinfo, names);
+      std::vector<std::string> names = tile->GetNames(directededge->edgedataoffset());
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -517,7 +512,7 @@ float HierarchyBuilder::ConnectEdges(const GraphId& basenode,
   const DirectedEdge* directededge = tile->directededge(edgeid);
 
   // Get the shape for this edge
-  const std::shared_ptr<EdgeInfo> edgeinfo =
+  std::unique_ptr<const EdgeInfo> edgeinfo =
           tile->edgeinfo(directededge->edgedataoffset());
   std::vector<PointLL> edgeshape = edgeinfo->shape();
   bool forward = (edgeshape.front() == shape.back());
@@ -585,9 +580,8 @@ void HierarchyBuilder::ConnectBaseLevelToNewLevel(
 void HierarchyBuilder::AddConnectionsToBaseTile(const uint32_t basetileid,
       const std::vector<NodeConnection>& connections) {
   // Read in existing tile
-  std::string basedir = tile_hierarchy_.tile_dir();
   uint8_t baselevel = connections[0].basenode.level();
-  GraphTileBuilder tilebuilder(basedir, GraphId(basetileid, baselevel, 0));
+  GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(basetileid, baselevel, 0));
 
   // Get the header information and update counts and offsets. No new nodes
   // are added. Directed edge count is increased by size of the connection
@@ -644,7 +638,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(const uint32_t basetileid,
   }
 
   // Write the new file
-  tilebuilder.Update(basedir, hdrbuilder, nodes, directededges);
+  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
 }
 
 }

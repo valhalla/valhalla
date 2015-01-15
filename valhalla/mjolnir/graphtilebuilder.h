@@ -19,6 +19,7 @@
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/baldr/tilehierarchy.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -44,25 +45,25 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  basedir  Base directory path
    * @param  graphid  GraphId used to determine the tileid and level
    */
-  GraphTileBuilder(const std::string& basedir, const GraphId& graphid);
+  GraphTileBuilder(const baldr::TileHierarchy& hierarchy, const GraphId& graphid);
 
   /**
    * Output the tile to file. Stores as binary data.
    * @param  graphid  GraphID to store.
-   * @param  basedirectory  Base data directory
+   * @param  hierarchy  Gives info about number of tiles per level
    */
-  void StoreTileData(const std::string& basedirectory,
+  void StoreTileData(const baldr::TileHierarchy& hierarchy,
                      const baldr::GraphId& graphid);
 
   /**
    * Update a graph tile with new header, nodes, and directed edges. This
    * is used to add directed edges connecting two hierarchy levels.
-   * @param  basedirectory  Base data directory
+   * @param  hierarchy      How the tiles are setup on disk
    * @param  hdr            Update header
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
    */
-  void Update(const std::string& basedirectory,
+  void Update(const baldr::TileHierarchy& hierarchy,
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder> directededges);

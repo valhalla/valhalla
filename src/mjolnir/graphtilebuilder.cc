@@ -17,16 +17,16 @@ GraphTileBuilder::GraphTileBuilder()
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
 // levels.
-GraphTileBuilder::GraphTileBuilder(const std::string& basedir,
+GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid)
-    : GraphTile(basedir, graphid) {
+    : GraphTile(hierarchy, graphid) {
 }
 
 // Output the tile to file. Stores as binary data.
-void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
+void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                                      const GraphId& graphid) {
   // Get the name of the file
-  boost::filesystem::path filename = Filename(basedirectory, graphid);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(graphid, hierarchy);
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
@@ -77,12 +77,12 @@ void GraphTileBuilder::StoreTileData(const std::string& basedirectory,
 
 // Update a graph tile with new header, nodes, and directed edges. This
 // is used to add directed edges connecting two hierarchy levels
-void GraphTileBuilder::Update(const std::string& basedirectory,
+void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder> directededges) {
   // Get the name of the file
-  boost::filesystem::path filename = Filename(basedirectory, id_);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(id_, hierarchy);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
