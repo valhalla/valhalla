@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <unordered_map>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 namespace valhalla {
 namespace tyr {
@@ -37,7 +39,27 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   OstreamVisitor(std::ostream& o):ostream_(o){}
 
   std::ostream& operator()(const std::string& value) const {
-    return ostream_ << '"' << value << '"';
+    ostream_ << '"';
+    //TODO: this may need to get more complicated
+    for (const auto& c : value) {
+      switch (c) {
+        case '\\': ostream_ << "\\\\"; break;
+        case '"': ostream_ << "\\\""; break;
+        case '/': ostream_ << "\\/"; break;
+        case '\b': ostream_ << "\\b"; break;
+        case '\f': ostream_ << "\\f"; break;
+        case '\n': ostream_ << "\\n"; break;
+        case '\r': ostream_ << "\\r"; break;
+        case '\t': ostream_ << "\\t"; break;
+        default:
+          if(c >= 0 && c < 32)
+            ostream_ << "\\u" << std::hex << std::uppercase << std::setfill('0') << std::setw(4) << static_cast<int>(c);
+          else
+            ostream_ << c;
+          break;
+      }
+    }
+    return ostream_ << '"';
   }
 
   std::ostream& operator()(uint64_t value) const {

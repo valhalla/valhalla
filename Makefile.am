@@ -62,10 +62,14 @@ tyr_service_la_LDFLAGS = @COVERAGE_LDFLAGS@ -module -shared
 
 # tests
 check_PROGRAMS = \
-	test/handlers 
+	test/handlers \
+	test/json
 test_handlers_SOURCES = test/handlers.cc test/test.cc
 test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
 test_handlers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB) libvalhalla_tyr.la
+test_json_SOURCES = test/json.cc test/test.cc
+test_json_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_tyr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

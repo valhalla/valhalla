@@ -114,13 +114,6 @@ json::JsonObjectPtr via_points(const valhalla::odin::TripPath& trip_path){
   return via_points;
 }
 
-std::string escape(const std::string& unescaped) {
-  //these replacements are only useful for polyline encoded shape right now
-  std::string escaped = boost::replace_all_copy(unescaped, "\\", "\\\\");
-  boost::replace_all(escaped, "\"", "\\\"");
-  return escaped;
-}
-
 const std::unordered_map<unsigned int, std::string> maneuver_type = {
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kNone),            "0" },//NoTurn = 0,
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Type_kContinue),        "1" },//GoStraight,
@@ -196,7 +189,7 @@ void serialize(const valhalla::odin::TripPath& trip_path,
     {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
     {"via_points", via_points(trip_path)}, //array of lat,lng pairs
     {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
-    {"route_geometry", escape(trip_path.shape())}, //polyline encoded shape
+    {"route_geometry", trip_path.shape()}, //polyline encoded shape
     {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
     {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
   });
