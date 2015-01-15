@@ -102,7 +102,7 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
 GraphTile::~GraphTile() {
 }
 
-std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& heirarchy) {
+std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851
   you should get: 8/024/134/109/851.gph
@@ -115,8 +115,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   */
 
   //figure the largest id for this level
-  auto level = heirarchy.levels().find(graphid.level());
-  if(level == heirarchy.levels().end())
+  auto level = hierarchy.levels().find(graphid.level());
+  if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
   uint32_t max_id = Tiles::MaxTileId(AABB2(PointLL(-180, -90), PointLL(180, 90)), level->second.tiles.TileSize());
 
@@ -194,15 +194,12 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
 }
 
 // Convenience method to get the names for an edge.
-std::vector<std::string>& GraphTile::GetNames(const uint32_t edgeinfo_offset,
-                                              std::vector<std::string>& names) {
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) {
   // Get each name
-  names.clear();
-  uint32_t offset;
+  std::vector<std::string> names;
   const std::shared_ptr<EdgeInfo> edge = edgeinfo(edgeinfo_offset);
-  uint32_t namecount = edge->name_count();
-  for (uint32_t i = 0; i < namecount; i++) {
-    offset = edge->GetStreetNameOffset(i);
+  for (uint32_t i = 0; i < edge->name_count(); i++) {
+    uint32_t offset = edge->GetStreetNameOffset(i);
     if (offset < textlist_size_) {
       names.push_back(textlist_ + offset);
     } else {

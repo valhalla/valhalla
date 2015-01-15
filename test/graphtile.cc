@@ -36,7 +36,7 @@ void TestFileSuffix() {
   if(GraphTile::FileSuffix(GraphId(64799, 1, 0), h) != "1/064/799.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 
-  if(GraphTile::FileSuffix(GraphId(4049, 0, 0), h) != "0/004/049.gph")
+  if(GraphTile::FileSuffix(GraphId(49, 0, 0), h) != "0/000/049.gph")
     throw std::runtime_error("Unexpected graphtile suffix");
 }
 

@@ -39,10 +39,10 @@ class GraphTile {
   /**
    * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
-   * @param  heirarchy The tile hierarchy structure to get info about how many tiles can exist at this level
+   * @param  hierarchy The tile hierarchy structure to get info about how many tiles can exist at this level
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& heirarchy);
+  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy);
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
@@ -112,8 +112,7 @@ class GraphTile {
   /**
    * Convenience method to get the names for an edge.
    */
-  std::vector<std::string>& GetNames(const uint32_t edgeinfo_offset,
-                 std::vector<std::string>& names);
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset);
 
  protected:
   // Size of the tile in bytes
