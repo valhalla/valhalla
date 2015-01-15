@@ -46,6 +46,13 @@ struct NewNode {
   }
 };
 
+// Simple structure to hold the 2 pair of directed edges at a node.
+// First edge in the pair is incoming and second is outgoing
+struct EdgePairs {
+  std::pair<GraphId, GraphId> edge1;
+  std::pair<GraphId, GraphId> edge2;
+};
+
 /**
  * Class used to construct temporary data used to build the initial graph.
  */
@@ -66,7 +73,6 @@ class HierarchyBuilder {
   // Debug information
   uint32_t contractcount_;
   uint32_t shortcutcount_;
-  uint32_t nodecounts_[16];
 
   // Tile hierarchy/level information
   baldr::TileHierarchy tile_hierarchy_;
@@ -83,28 +89,43 @@ class HierarchyBuilder {
   // Mapping superseded edges
   std::unordered_map<uint64_t, bool> supersededmap_;
 
+  // Map of base edges forming potential shortcuts
+  std::unordered_map<uint64_t, EdgePairs> contractions_;
+
   /**
    * Get the nodes that remain in the new level in the hierarchy. Adds to
    * tiled lists of nodes (tilednodes_).
    * @param  base_level  Base level tile information
    * @param  new_level   Tile information for the new level.
    */
-  bool GetNodesInNewLevel(const baldr::TileHierarchy::TileLevel& base_level,
+  void GetNodesInNewLevel(const baldr::TileHierarchy::TileLevel& base_level,
                           const baldr::TileHierarchy::TileLevel& new_level);
 
   /**
    * Check if the new node can be contracted to create a shortcut edge.
    * Uses information from the base level to compare attributes and names.
-   * @param  graphtile  Tile access in the base level tile.
+   * @param  tile       Tile access in the base level tile.
    * @param  nodeinfo   Node information in the base tile.
    * @param  basenode   GraphId of the node in the base level.
+   * @param  newnode    GraphId of the node in the new level.
    * @param  rcc        Road class (importance) cutoff.
    * @return  Returns true if the node can be contracted, false if not.
    */
-  bool CanContract(baldr::GraphTile* graphtile,
+  bool CanContract(baldr::GraphTile* tile,
                    const baldr::NodeInfo* nodeinfo,
                    const baldr::GraphId& basenode,
+                   const baldr::GraphId& newnode,
                    const baldr::RoadClass rcc);
+
+  /**
+   * Test if edges match (names, access, etc.)/
+   * @param  tile   Tile access in the base level tile.
+   * @param  edge1  1st directed edge.
+   * @param  edge2  2nd directed edge.
+   * @return  Returns true if the edges "match", false if not.
+   */
+  bool EdgesMatch(GraphTile* tile, const baldr::DirectedEdge* edge1,
+                  const baldr::DirectedEdge* edge2);
 
   /**
    * Get the opposing edge for the specified edge. It is the edge outbound
@@ -143,17 +164,18 @@ class HierarchyBuilder {
                             std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
-   * Gets the connected edge at the contracted node.
-   */
-  const baldr::DirectedEdge* GetConnectedEdge(baldr::GraphId& nodeb,
-                   baldr::GraphId& priornode, baldr::RoadClass rcc);
-
-  /**
    * Connect edges on the shortcut. Appends shape.
    */
   float ConnectEdges(const baldr::GraphId& basenode,
-                     const baldr::DirectedEdge* directededge,
-                     std::vector<midgard::PointLL>& shape);
+                     const baldr::GraphId& edgeid,
+                     std::vector<midgard::PointLL>& shape,
+                     baldr::GraphId& nodeb);
+
+  /*
+   * Check if the edge is an entering matched edge of a contracted node.
+   */
+  bool IsEnteringEdgeOfContractedNode(const baldr::GraphId& node,
+                                      const baldr::GraphId& edge);
 
   /**
    * Connect nodes in the base level to new nodes at the new level. This
