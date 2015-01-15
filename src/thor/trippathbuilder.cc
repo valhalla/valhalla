@@ -32,7 +32,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
   uint32_t shortcutcount = 0;
 
   std::vector<PointLL> trip_shape;
-  std::vector<std::string> names;
   for (const auto& edge : pathedges) {
     GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
