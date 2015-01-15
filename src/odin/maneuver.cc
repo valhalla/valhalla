@@ -25,8 +25,16 @@ const StreetNames& Maneuver::street_names() const {
   return street_names_;
 }
 
-void Maneuver::set_street_names(const StreetNames& streetNames) {
-  street_names_ = streetNames;
+void Maneuver::set_street_names(const StreetNames& street_names) {
+  street_names_ = street_names;
+}
+
+const StreetNames& Maneuver::begin_street_names() const {
+  return begin_street_names_;
+}
+
+void Maneuver::set_begin_street_names(const StreetNames& begin_street_names) {
+  begin_street_names_ = begin_street_names;
 }
 
 const std::string& Maneuver::instruction() const {
@@ -58,8 +66,8 @@ TripDirections_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() c
 }
 
 void Maneuver::set_begin_cardinal_direction(
-    TripDirections_Maneuver_CardinalDirection beginCardinalDirection) {
-  begin_cardinal_direction_ = beginCardinalDirection;
+    TripDirections_Maneuver_CardinalDirection begin_cardinal_direction) {
+  begin_cardinal_direction_ = begin_cardinal_direction;
 }
 
 uint32_t Maneuver::begin_heading() const {
@@ -108,6 +116,14 @@ uint32_t Maneuver::end_shape_index() const {
 
 void Maneuver::set_end_shape_index(uint32_t endShapeIndex) {
   end_shape_index_ = endShapeIndex;
+}
+
+bool Maneuver::ramp() const {
+  return ramp_;
+}
+
+void Maneuver::set_ramp(bool ramp) {
+  ramp_ = ramp;
 }
 
 bool Maneuver::portions_toll() const {

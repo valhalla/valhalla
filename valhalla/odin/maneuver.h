@@ -18,7 +18,10 @@ class Maneuver {
   void set_type(const TripDirections_Maneuver_Type& type);
 
   const StreetNames& street_names() const;
-  void set_street_names(const StreetNames& streetNames);
+  void set_street_names(const StreetNames& street_names);
+
+  const StreetNames& begin_street_names() const;
+  void set_begin_street_names(const StreetNames& begin_street_names);
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
@@ -31,7 +34,7 @@ class Maneuver {
 
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void set_begin_cardinal_direction(
-      TripDirections_Maneuver_CardinalDirection beginCardinalDirection);
+      TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
 
@@ -50,6 +53,9 @@ class Maneuver {
   uint32_t end_shape_index() const;
   void set_end_shape_index(uint32_t endShapeIndex);
 
+  bool ramp() const;
+  void set_ramp(bool ramp);
+
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
 
@@ -59,6 +65,7 @@ class Maneuver {
  protected:
   TripDirections_Maneuver_Type type_;
   StreetNames street_names_;
+  StreetNames begin_street_names_;
   std::string instruction_;
   float distance_;
   uint32_t time_;
@@ -69,6 +76,7 @@ class Maneuver {
   uint32_t end_node_index_;
   uint32_t begin_shape_index_;
   uint32_t end_shape_index_;
+  bool ramp_;
   bool portions_toll_;
   bool portions_unpaved_;
 
