@@ -576,7 +576,7 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
 void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
                   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
-                  const std::vector<Edge>& edges, const std::string& outdir,  std::promise<size_t>& result) {
+                  const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy,  std::promise<size_t>& result) {
 
   std::cout << "Thread " << std::this_thread::get_id() << " started" << std::endl;
 
@@ -739,7 +739,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       }
 
       // Write the actual tile to disk
-      graphtile.StoreTileData(outdir, tile_start->first);
+      graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
       std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_start->first << ": " << graphtile.size() << " bytes" << std::endl;
@@ -801,8 +801,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
     std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-        new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_,
-                        edges_, tile_hierarchy_.tile_dir(), std::ref(results[i]))
+      new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_, edges_, tile_hierarchy_, std::ref(results[i]))
     );
   }
 
