@@ -1,9 +1,28 @@
 #include "baldr/graphtile.h"
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <locale>
+#include <iomanip>
+#include <cmath>
+
+namespace {
+  struct dir_facet : public std::numpunct<char> {
+   protected:
+    virtual char do_thousands_sep() const {
+        return '/';
+    }
+
+    virtual std::string do_grouping() const {
+        return "\03";
+    }
+  };
+}
 
 namespace valhalla {
 namespace baldr {
@@ -22,7 +41,7 @@ GraphTile::GraphTile()
 }
 
 // Constructor given a filename. Reads the graph data into memory.
-GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
+GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     : size_(0),
       id_(graphid.Tile_Base()) {
 
@@ -31,7 +50,7 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::ifstream file(Filename(basedirectory, id_),
+  std::ifstream file(hierarchy.tile_dir() + "/" + FileSuffix(id_, hierarchy),
                      std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -74,20 +93,46 @@ GraphTile::GraphTile(const std::string& basedirectory, const GraphId& graphid)
 GraphTile::~GraphTile() {
 }
 
-// Gets the filename given the graphId
-std::string GraphTile::Filename(const std::string& basedirectory,
-                                const GraphId& graphid) {
-  return basedirectory + "/" + FileDirectory(graphid) + "/tile"
-      + std::to_string(graphid.tileid()) + ".gph";
-}
+std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& heirarchy) {
+  /*
+  if you have a graphid where level == 8 and tileid == 24134109851
+  you should get: 8/024/134/109/851.gph
+  since the number of levels is likely to be very small this limits
+  the total number of objects in any one directory to 1000, which is an
+  empirically derived good choice for mechanical harddrives
+  this should be fine for s3 (even though it breaks the rule of most
+  unique part of filename first) because there will be just so few
+  objects in general in practice
+  */
 
-/**
- * Gets the directory to a given tile.
- * @param  graphid  Graph Id to construct file directory.
- * @return  Returns file directory path relative to tile base directory
- */
-std::string GraphTile::FileDirectory(const GraphId& graphid) {
-  return std::to_string(graphid.level());
+  //figure the largest id for this level
+  auto level = heirarchy.levels().find(graphid.level());
+  if(level == heirarchy.levels().end())
+    throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+  uint32_t max_id = Tiles::MaxTileId(AABB2(PointLL(-180, -90), PointLL(180, 90)), level->second.tiles.TileSize());
+
+  //figure out how many digits
+  //TODO: dont convert it to a string to get the length there are faster ways..
+  size_t max_length = std::to_string(max_id).length();
+  size_t remainder = max_length % 3;
+  if(remainder)
+    max_length += 3 - remainder;
+
+  //make a locale to use as a formatter for numbers
+  std::locale dir_locale(std::locale("C"), new dir_facet());
+  std::ostringstream stream;
+  stream.imbue(dir_locale);
+
+  //if it starts with a zero the pow trick doesn't work
+  if(graphid.level() == 0) {
+    stream << static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+    std::string suffix = stream.str();
+    suffix[0] = '0';
+    return suffix;
+  }
+  //it was something else
+  stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
+  return stream.str();
 }
 
 size_t GraphTile::size() const {

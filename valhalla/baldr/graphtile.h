@@ -6,6 +6,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/tilehierarchy.h>
 
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -28,7 +29,7 @@ class GraphTile {
    * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
    */
-  GraphTile(const std::string& basedirectory, const GraphId& graphid);
+  GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid);
 
   /**
    * Destructor
@@ -36,21 +37,12 @@ class GraphTile {
   virtual ~GraphTile();
 
   /**
-   * Gets the filename given the graphId
+   * Gets the directory like filename suffix given the graphId
    * @param  graphid  Graph Id to construct filename.
-   * @param  basedirectory  Base data directory
-   * @return  Returns filename (including directory path relative to tile
-   *          base directory
+   * @param  heirarchy The tile hierarchy structure to get info about how many tiles can exist at this level
+   * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
-  static std::string Filename(const std::string& basedirectory,
-                       const GraphId& graphid);
-
-  /**
-   * Gets the directory to a given tile.
-   * @param  graphid  Graph Id to construct file directory.
-   * @return  Returns file directory path relative to tile base directory
-   */
-  static std::string FileDirectory(const GraphId& graphid);
+  static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& heirarchy);
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
