@@ -168,22 +168,25 @@ const NodeInfo* GraphTile::node(const size_t idx) const {
   throw std::runtime_error("GraphTile NodeInfo index out of bounds");
 }
 
+// Get the directed edge given a GraphId
 const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
   if (edge.id() < header_->directededgecount())
     return &directededges_[edge.id()];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Get the directed edge at the specified index.
 const DirectedEdge* GraphTile::directededge(const size_t idx) const {
   if (idx < header_->directededgecount())
     return &directededges_[idx];
   throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
 }
 
-const std::shared_ptr<EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
-  return std::make_shared<EdgeInfo>(edgeinfo_ + offset);
+std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
+  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset));
 }
 
+// Get the directed edges outbound from the specified node index.
 const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
                                                 uint32_t& count,
                                                 uint32_t& edge_index) {
@@ -193,17 +196,23 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
   return directededge(nodeinfo->edge_index());
 }
 
-// Convenience method to get the names for an edge.
+// Convenience method to get the names for an edge given the offset to the
+// edge info
 std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) {
+  return GetNames(edgeinfo(edgeinfo_offset));
+}
+
+// Convenience method to get the names for an edge given an edgeinfo shared
+// pointer.
+std::vector<std::string> GraphTile::GetNames(const std::unique_ptr<const EdgeInfo>& edge) {
   // Get each name
   std::vector<std::string> names;
-  const std::shared_ptr<EdgeInfo> edge = edgeinfo(edgeinfo_offset);
   for (uint32_t i = 0; i < edge->name_count(); i++) {
     uint32_t offset = edge->GetStreetNameOffset(i);
     if (offset < textlist_size_) {
       names.push_back(textlist_ + offset);
     } else {
-      std::cout << "ERROR - offset exceeds size of text list" << std::endl;
+      throw std::runtime_error("GetNames: offset exceeds size of text list");
     }
   }
   return names;

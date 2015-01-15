@@ -97,7 +97,7 @@ class GraphTile {
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  const std::shared_ptr<EdgeInfo> edgeinfo(const size_t offset) const;
+  std::unique_ptr<const EdgeInfo> edgeinfo(const size_t offset) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.
@@ -110,15 +110,29 @@ class GraphTile {
                                        uint32_t& count, uint32_t& edge_index);
 
   /**
-   * Convenience method to get the names for an edge.
+   * Convenience method to get the names for an edge given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @param  names            (OUT) Vector to hold list of names
+   * @return  Returns an address to the list of names.
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset);
+
+  /**
+   * Convenience method to get the names for an edge given an edgeinfo
+   * shared pointer.
+   * @param  edge  Shared pointer to the edge information.
+   * @param  names (OUT) Vector to hold list of names
+   * @return  Returns an address to the list of names.
+   */
+  std::vector<std::string> GetNames(const std::unique_ptr<const EdgeInfo>& edge);
 
  protected:
   // Size of the tile in bytes
   size_t size_;
 
-  // Graph tile memory
+  // Graph tile memory, this must be shared so that we can put it into cache
+  // Aparently you can std::move a non-copyable
   boost::shared_array<char> graphtile_;
 
   // Header information for the tile

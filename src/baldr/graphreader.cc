@@ -35,7 +35,7 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   if(tile.size() == 0)
     return nullptr;
   // Keep a copy in the cache and return it
-  auto inserted = tilecache_.emplace(graphid.Tile_Base(), tile);
+  auto inserted = tilecache_.emplace(graphid.Tile_Base(), std::move(tile));
   return &inserted.first->second;
 }
 
