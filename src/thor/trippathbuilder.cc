@@ -41,7 +41,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
     // Add edge to the trip node and set its attributes
     TripPath_Edge* trip_edge = trip_node->add_edge();
 
-    names = graphtile->GetNames(directededge->edgedataoffset(), names);
+    std::vector<std::string> names = graphtile->GetNames(directededge->edgedataoffset());
     for (const auto& name : names) {
       trip_edge->add_name(name);
     }
@@ -50,8 +50,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
 
     trip_edge->set_speed(directededge->speed());
 
-    const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
-        directededge->edgedataoffset());
+    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(directededge->edgedataoffset());
 
     bool is_reverse = false;
 
