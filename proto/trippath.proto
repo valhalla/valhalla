@@ -43,10 +43,11 @@ message TripPath {
     optional uint32 end_shape_index = 8;    // exclusive
     optional Driveability driveability = 9; // 
     optional bool ramp = 10;                //
-    optional bool toll = 11;                // ferry,etc
-    optional bool internal_link = 12;       // TODO - keep?
-    repeated Exit exit = 13;
-    optional uint32 end_node_index = 14;
+    optional bool toll = 11;                //
+    optional bool unpaved = 12;             // ferry, etc.
+    optional bool internal_link = 13;       // TODO - keep?
+    repeated Exit exit = 14;
+    optional uint32 end_node_index = 16;
   }
   
   message Node {
