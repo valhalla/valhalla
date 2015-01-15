@@ -17,11 +17,13 @@ class EnhancedTripPath : public TripPath {
 
   TripPath_Edge* GetNextEdge(const int nodeIndex, int delta = 1);
 
-  bool IsValidNodeIndex(int nodeIndex);
+  bool IsValidNodeIndex(int nodeIndex) const;
 
-  bool IsFirstNodeIndex(int nodeIndex);
+  bool IsFirstNodeIndex(int nodeIndex) const;
 
-  bool IsLastNodeIndex(int nodeIndex);
+  bool IsLastNodeIndex(int nodeIndex) const;
+
+  int GetLastNodeIndex() const;
 
  protected:
   EnhancedTripPath();

@@ -29,22 +29,26 @@ TripPath_Edge* EnhancedTripPath::GetNextEdge(const int nodeIndex, int delta) {
     return nullptr;
 }
 
-bool EnhancedTripPath::IsValidNodeIndex(int nodeIndex) {
+bool EnhancedTripPath::IsValidNodeIndex(int nodeIndex) const {
   if ((nodeIndex >= 0) && (nodeIndex < node_size()))
     return true;
   return false;
 }
 
-bool EnhancedTripPath::IsFirstNodeIndex(int nodeIndex) {
+bool EnhancedTripPath::IsFirstNodeIndex(int nodeIndex) const {
   if (nodeIndex == 0)
     return true;
   return false;
 }
 
-bool EnhancedTripPath::IsLastNodeIndex(int nodeIndex) {
+bool EnhancedTripPath::IsLastNodeIndex(int nodeIndex) const {
   if (IsValidNodeIndex(nodeIndex) && (nodeIndex == (node_size() - 1)))
     return true;
   return false;
+}
+
+int EnhancedTripPath::GetLastNodeIndex() const {
+  return (node_size() - 1);
 }
 
 }
