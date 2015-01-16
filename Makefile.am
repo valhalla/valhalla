@@ -45,11 +45,11 @@ libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLA
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
 # tests
-#check_PROGRAMS = \
-#	test/search 
-#test_search_SOURCES = test/search.cc test/test.cc
-#test_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-#test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
+check_PROGRAMS = \
+	test/search 
+test_search_SOURCES = test/search.cc test/test.cc
+test_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_loki.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
