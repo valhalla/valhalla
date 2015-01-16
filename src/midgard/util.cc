@@ -17,6 +17,10 @@ int GetTime(const float length, const float speed) {
   return (int)(length / (speed * kHourPerSec) + 0.5f);
 }
 
+uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
+  return (((to_heading - from_heading) + 360) % 360) ;
+}
+
 // TODO - do we really need these?
 /*float degrees_to_radians(const float d) {
   return d * kDegPerRad;
