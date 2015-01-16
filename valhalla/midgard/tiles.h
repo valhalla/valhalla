@@ -90,6 +90,15 @@ class Tiles {
   int32_t TileId(const int32_t col, const int32_t row) const;
 
   /**
+   * Gets a maximum tileid given a bounds and a tile size
+   *
+   * @param bound       the region for which to compute the maximum tile id
+   * @param tile_size   the size of a tile within the region
+   * @return the highest tile number within the region
+   */
+  static uint32_t MaxTileId(const AABB2& bounds, const float tile_size);
+
+  /**
    * Get the base x,y of a specified tile.
    * @param   tileid   Tile ID.
    * @return  The base x,y of the specified tile.

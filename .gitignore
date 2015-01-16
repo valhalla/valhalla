@@ -46,6 +46,7 @@ test/vector2
 test/polyline2
 test/pointll
 test/encode
+test/tiles
 test/*.log
 test/*.trs
 
