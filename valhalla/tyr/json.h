@@ -13,24 +13,33 @@ namespace valhalla {
 namespace tyr {
 namespace json {
 
-//base class so we can use pointers to refer to whichever
-class JsonObject {
+//forward declare a little bit
+class Jmap;
+using MapPtr = std::shared_ptr<Jmap>;
+class Jarray;
+using ArrayPtr = std::shared_ptr<Jarray>;
+
+//a variant of all the possible values to go with keys in json
+using Value = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, MapPtr, ArrayPtr>;
+
+//the map value type in json
+class Jmap : public std::unordered_map<std::string, Value> {
  public:
-  virtual ~JsonObject(){};
- protected:
-  //write yourself into a stream and return it
-  virtual std::ostream& Serialize(std::ostream& ostream) const = 0;
-  //write the json object
-  friend std::ostream& operator<<(std::ostream& stream, const JsonObject& json);
+  //just specialize unoredered_map
+  using std::unordered_map<std::string, Value>::unordered_map;
+  //and be able to spit out text
+  friend std::ostream& operator<<(std::ostream& stream, const Jmap& json);
 };
 
-//slightly less annoying to type
-using JsonObjectPtr = std::shared_ptr<JsonObject>;
-
-//use normal stream operator to write these things
-std::ostream& operator<<(std::ostream& stream, const JsonObject& json){
-  return json.Serialize(stream);
-}
+//the array value type in json
+class Jarray : public std::vector<Value> {
+ public:
+  //just specialize vector
+  using std::vector<Value>::vector;
+ protected:
+  //and be able to spit out text
+  friend std::ostream& operator<<(std::ostream& stream, const Jarray& json);
+};
 
 //how we serialize the different primitives to string
 class OstreamVisitor : public boost::static_visitor<std::ostream&>
@@ -43,108 +52,68 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
     //TODO: this may need to get more complicated
     for (const auto& c : value) {
       switch (c) {
-        case '\\': ostream_ << "\\\\"; break;
-        case '"': ostream_ << "\\\""; break;
-        case '/': ostream_ << "\\/"; break;
-        case '\b': ostream_ << "\\b"; break;
-        case '\f': ostream_ << "\\f"; break;
-        case '\n': ostream_ << "\\n"; break;
-        case '\r': ostream_ << "\\r"; break;
-        case '\t': ostream_ << "\\t"; break;
-        default:
-          if(c >= 0 && c < 32)
-            ostream_ << "\\u" << std::hex << std::uppercase << std::setfill('0') << std::setw(4) << static_cast<int>(c);
-          else
-            ostream_ << c;
-          break;
+      case '\\': ostream_ << "\\\\"; break;
+      case '"': ostream_ << "\\\""; break;
+      case '/': ostream_ << "\\/"; break;
+      case '\b': ostream_ << "\\b"; break;
+      case '\f': ostream_ << "\\f"; break;
+      case '\n': ostream_ << "\\n"; break;
+      case '\r': ostream_ << "\\r"; break;
+      case '\t': ostream_ << "\\t"; break;
+      default:
+        if(c >= 0 && c < 32)
+          ostream_ << "\\u" << std::hex << std::uppercase << std::setfill('0') << std::setw(4) << static_cast<int>(c);
+        else
+          ostream_ << c;
+        break;
       }
     }
     return ostream_ << '"';
   }
-
-  std::ostream& operator()(uint64_t value) const {
-    return ostream_ << value;
-  }
-
-  std::ostream& operator()(int64_t value) const {
-    return ostream_ << value;
-  }
-
-  std::ostream& operator()(long double value) const {
-    return ostream_ << value;
-  }
-
-  std::ostream& operator()(bool value) const {
-    return ostream_ << (value ? "true" : "false");
-  }
-
-  std::ostream& operator()(nullptr_t value) const {
-    return ostream_ << "null";
-  }
-
-  std::ostream& operator()(const JsonObjectPtr& value) const {
-    return ostream_ << *value;
-  }
+  std::ostream& operator()(uint64_t value) const { return ostream_ << value; }
+  std::ostream& operator()(int64_t value) const { return ostream_ << value; }
+  std::ostream& operator()(long double value) const { return ostream_ << value; }
+  std::ostream& operator()(bool value) const { return ostream_ << (value ? "true" : "false"); }
+  std::ostream& operator()(nullptr_t value) const { return ostream_ << "null"; }
+  std::ostream& operator()(const MapPtr& value) const { return ostream_ << *value; }
+  std::ostream& operator()(const ArrayPtr& value) const { return ostream_ << *value; }
  private:
   std::ostream& ostream_;
 };
 
-//a variant of all the possible values to go with keys in json
-using JsonType = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, JsonObjectPtr>;
-
-//the map value type in json
-class JsonMap:public JsonObject, public std::unordered_map<std::string, JsonType> {
- public:
-  //just specialize unoredered_map
-  using std::unordered_map<std::string, JsonType>::unordered_map;
-  //and be able to spit out text
-  virtual std::ostream& Serialize(std::ostream& ostream) const {
-    ostream << '{';
-    bool seprator = false;
-    for(const auto& key_value : *this) {
-      if(seprator)
-        ostream << ',';
-      seprator = true;
-      ostream << '"' << key_value.first << "\":";
-      boost::apply_visitor(OstreamVisitor(ostream), key_value.second);
-    }
-    ostream << '}';
-    return ostream;
+std::ostream& operator<<(std::ostream& stream, const Jmap& json){
+  stream << '{';
+  bool seprator = false;
+  for(const auto& key_value : json) {
+    if(seprator)
+      stream << ',';
+    seprator = true;
+    stream << '"' << key_value.first << "\":";
+    boost::apply_visitor(OstreamVisitor(stream), key_value.second);
   }
- protected:
-};
-
-//the array value type in json
-class JsonArray:public JsonObject, public std::vector<JsonType> {
- public:
-  //just specialize vector
-  using std::vector<JsonType>::vector;
- protected:
-  //and be able to spit out text
-  virtual std::ostream& Serialize(std::ostream& ostream) const {
-    ostream << '[';
-    bool seprator = false;
-    for(const auto& element : *this) {
-      if(seprator)
-        ostream << ',';
-      seprator = true;
-      boost::apply_visitor(OstreamVisitor(ostream), element);
-    }
-    ostream << ']';
-    return ostream;
-  }
-};
-
-//slightly less annoying to type
-using JsonMapPtr = std::shared_ptr<JsonMap>;
-using JsonArrayPtr = std::shared_ptr<JsonArray>;
-
-JsonMapPtr map(std::initializer_list<JsonMap::value_type> list) {
-  return JsonMapPtr(new JsonMap(list));
+  stream << '}';
+  return stream;
 }
 
-JsonArrayPtr array(std::initializer_list<JsonArray::value_type> list) {
-  return JsonArrayPtr(new JsonArray(list));
+std::ostream& operator<<(std::ostream& stream, const Jarray& json){
+  stream << '[';
+  bool seprator = false;
+  for(const auto& element : json) {
+    if(seprator)
+      stream << ',';
+    seprator = true;
+    boost::apply_visitor(OstreamVisitor(stream), element);
+  }
+  stream << ']';
+  return stream;
+}
+
+MapPtr map(std::initializer_list<Jmap::value_type> list) {
+  return MapPtr(new Jmap(list));
+}
+
+ArrayPtr array(std::initializer_list<Jarray::value_type> list) {
+  return ArrayPtr(new Jarray(list));
 }
 
 }

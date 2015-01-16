@@ -62,7 +62,7 @@ OSRM output looks like this:
 using namespace valhalla::tyr;
 using namespace std;
 
-json::JsonObjectPtr route_name(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr route_name(const valhalla::odin::TripDirections& trip_directions){
   auto route_name = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0) {
@@ -75,7 +75,7 @@ json::JsonObjectPtr route_name(const valhalla::odin::TripDirections& trip_direct
   return route_name;
 }
 
-json::JsonObjectPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
   auto via_indices = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     via_indices->push_back(static_cast<uint64_t>(0));
@@ -84,7 +84,7 @@ json::JsonObjectPtr via_indices(const valhalla::odin::TripDirections& trip_direc
   return via_indices;
 }
 
-json::JsonObjectPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
+json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
   auto route_summary = json::map({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0)
@@ -106,7 +106,7 @@ json::JsonObjectPtr route_summary(const valhalla::odin::TripDirections& trip_dir
   return route_summary;
 }
 
-json::JsonObjectPtr via_points(const valhalla::odin::TripPath& trip_path){
+json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
   auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
     via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
@@ -141,7 +141,7 @@ const std::unordered_map<unsigned int, std::string> maneuver_type = {
     //{ static_cast<unsigned int>valhalla::odin::TripDirections_Type_k), 17 },//LeaveAgainstAllowedDirection
 };
 
-json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
   auto route_instructions = json::array({});
   for(const auto& maneuver : trip_directions.maneuver()) {
     //if we dont know the type of maneuver then skip it
