@@ -12,39 +12,27 @@ EdgeLabel::EdgeLabel()
       edgeid_(GraphId()),
       truecost_(0.0f),
       sortcost_(0.0f),
-      uturn_index_(0) {
+      distance_(0.0f),
+      attributes_{} {
 }
 
 // Constructor with values.
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
-                     const GraphId& endnode, const float cost,
-                     const float sortcost, const float dist,
-                     const uint32_t uturn)
+                     const DirectedEdge* edge, const float cost,
+                     const float sortcost, const float dist)
     : predecessor_(predecessor),
       edgeid_(edgeid),
-      endnode_(endnode),
       truecost_(cost),
       sortcost_(sortcost),
-      distance_(dist),
-      uturn_index_(uturn) {
+      distance_(dist) {
+  endnode_                = edge->endnode();
+  attributes_.uturn_index = edge->opp_index();
+  attributes_.trans_up    = edge->trans_up();
+  attributes_.trans_down  = edge->trans_down();
 }
 
 // Destructor
 EdgeLabel::~EdgeLabel() {
-}
-
-// Set edge label values.
-void EdgeLabel::Set(const uint32_t predecessor, const GraphId& edgeid,
-                     const GraphId& endnode, const float cost,
-                     const float sortcost, const float dist,
-                     const uint32_t uturn) {
-  predecessor_ = predecessor;
-  edgeid_   = edgeid;
-  endnode_  = endnode;
-  truecost_ = cost;
-  sortcost_ = sortcost;
-  distance_ = dist;
-  uturn_index_ = uturn;
 }
 
 // Update predecessor and cost values in the label.
@@ -60,29 +48,14 @@ uint32_t EdgeLabel::predecessor() const {
   return predecessor_;
 }
 
-// Set the predecessor edge label index.
-void EdgeLabel::SetPredecessor(const uint32_t predecessor) {
-  predecessor_ = predecessor;
-}
-
 // Get the GraphId of this edge.
 const baldr::GraphId& EdgeLabel::edgeid() const {
   return edgeid_;
 }
 
-// Set the GraphId of this edge
-void EdgeLabel::SetEdgeId(const baldr::GraphId& edgeid) {
-  edgeid_ = edgeid;
-}
-
 // Get the end node of the predecessor edge.
 const baldr::GraphId& EdgeLabel::endnode() const {
   return endnode_;
-}
-
-// Set the end node of the predecessor edge.
-void EdgeLabel::SetEndNode(const baldr::GraphId& endnode) {
-  endnode_ = endnode;
 }
 
 // Get the sort cost.
@@ -92,7 +65,7 @@ float EdgeLabel::sortcost() const {
 
 // Set the sort cost
 void EdgeLabel::SetSortCost(float sortcost) {
-  sortcost_ = sortcost;
+sortcost_ = sortcost;
 }
 
 // Get the true cost.
@@ -100,27 +73,24 @@ float EdgeLabel::truecost() const {
   return truecost_;
 }
 
-// Set the true cost.
-void EdgeLabel::SetTrueCost(float truecost) {
-  truecost_ = truecost;
-}
-
 // Get the distance to the destination.
 float EdgeLabel::distance() const {
   return distance_;
 }
 
-// Set the distance to the destination.
-void EdgeLabel::SetDistance(const float d) {
-  distance_ = d;
-}
-
+// Get the Uturn index
 uint32_t EdgeLabel::uturn_index() const {
-  return uturn_index_;
+  return attributes_.uturn_index;
 }
 
-void EdgeLabel::SetUturnIndex(const uint32_t idx) {
-  uturn_index_ = idx;
+// Get the transition up flag.
+bool EdgeLabel::trans_up() const {
+  return attributes_.trans_up;
+}
+
+// Get the transition down flag.
+bool EdgeLabel::trans_down() const {
+  return attributes_.trans_down;
 }
 
 // Operator for sorting.
