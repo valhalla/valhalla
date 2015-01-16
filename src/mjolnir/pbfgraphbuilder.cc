@@ -2,6 +2,7 @@
 
 #include "pbfgraphbuilder.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/hierarchybuilder.h"
 #include "config.h"
 
 // For OSM pbf reader
@@ -81,6 +82,16 @@ bool ParseArguments(int argc, char *argv[]) {
   return false;
 }
 
+/**
+ * Build local graph from protocol buffer input.
+ */
+void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
+               const std::string& input_file) {
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the GraphConstructor class
+  GraphBuilder graphbuilder(pt, input_file);
+  graphbuilder.Build();
+}
 
 int main(int argc, char** argv) {
 
@@ -94,10 +105,7 @@ int main(int argc, char** argv) {
 
   //we only support protobuf at present
   if(input_type == "protocolbuffer"){
-    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-    // relations are defined within the GraphConstructor class
-    GraphBuilder graphbuilder(pt, input_file);
-    graphbuilder.Build();
+    BuildLocalGraphFromPBF(pt, input_file);
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
@@ -111,6 +119,11 @@ int main(int argc, char** argv) {
     else
       return false;  //unknown value;
   }*/
+
+  // Builds additional hierarchies based on the config file. Connections
+  // (directed edges) are formed between nodes at adjacent levels.
+  HierarchyBuilder hierarchybuilder(pt);
+  hierarchybuilder.Build();
 
   return EXIT_SUCCESS;
 }
