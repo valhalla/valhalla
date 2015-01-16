@@ -49,7 +49,7 @@ void TestDuplicateEdgeInfo() {
 }
 
 int main() {
-  test::suite suite("edgeinfobuilder");
+  test::suite suite("graphtilebuilder");
 
   // Write to file and read into EdgeInfo
   suite.test(TEST_CASE(TestDuplicateEdgeInfo));
