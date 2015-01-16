@@ -18,6 +18,7 @@ namespace baldr{
 class PathLocation : public Location {
  public:
   using Location::Location;
+  PathLocation(const Location& location);
 
   /**
    * Structure to store information about a given location correlated edge

@@ -6,6 +6,10 @@ namespace baldr{
   PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist): id(id), dist(dist) {
   }
 
+  PathLocation::PathLocation(const Location& location):Location(location) {
+    node_ = false;
+  }
+
   bool PathLocation::IsNode() const {
     return node_;
   }
