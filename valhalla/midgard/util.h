@@ -14,6 +14,8 @@ enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
  */
 int GetTime(const float length, const float speed);
 
+uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading);
+
 /**
  * Degrees to radians conversion
  * @param   d   Angle in degrees.
