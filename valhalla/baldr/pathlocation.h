@@ -15,12 +15,9 @@ namespace baldr{
  *
  * @author  Kevin Kreiser
  */
-class PathLocation {
+class PathLocation : public Location {
  public:
-  /**
-   * Constructor.
-   * @param  latlng  the polar coordinates of the location
-   */
+  using Location::Location;
   PathLocation(const Location& location);
 
   /**
@@ -40,11 +37,11 @@ class PathLocation {
    */
   const std::vector<PathEdge>& edges() const;
 
-  /**
-   * Get the location associated with path location
-   * @return location
+  /*
+   * Get the vertex associated with this location
+   * @return vertex
    */
-  const Location& location() const;
+  const midgard::PointLL& vertex() const;
 
   /**
    * Whether or not this location is on a vertex in the graph (intersection)
@@ -60,9 +57,20 @@ class PathLocation {
    * @param id      the graphid of the edge
    * @param dist    the distance along the provided edge where the location was correlated
    */
-  void Correlate(const GraphId& id, const float dist);
+  void CorrelateEdge(const GraphId& id, const float dist);
 
- private:
+  /**
+   * @return true if the point has been correlated to the route network, false otherwise
+   */
+  bool IsCorrelated() const;
+
+  /**
+   * Set the route network correlation point for this location
+   * @param point the correlation point
+   */
+  void CorrelateVertex(const midgard::PointLL& correlated);
+
+ protected:
   //whether or not this location is on a vertex in the graph (intersection)
   //note: this implies all distances on edges are either 0's or 1's
   bool node_;
@@ -70,9 +78,12 @@ class PathLocation {
   //list of edges this location appears on within the graph
   std::vector<PathEdge> edges_;
 
-  //the location object used to correlate to the graph network
-  Location location_;
+  //correlated point in the graph (along an edge or at a vertex)
+  midgard::PointLL vertex_;
 
+  //a confidence interval of how good the correlation is
+  //proportional to the distance between the input point and the correlated one
+  //float correlation_quality_;
 };
 
 }

@@ -9,16 +9,11 @@
 namespace valhalla{
 namespace baldr{
 
-  Location::Location():stoptype_(StopType::BREAK){
-  }
-
   Location::Location(const midgard::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
   }
 
   Location Location::FromGeoJson(const std::string& geojson){
-    Location location;
     throw std::runtime_error("Location serialization from geojson is not yet implemented");
-    return location;
   }
 
   Location Location::FromCsv(const std::string& csv) {
