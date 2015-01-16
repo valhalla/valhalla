@@ -38,7 +38,7 @@ class TripPathBuilder {
              const std::vector<baldr::GraphId>& pathedges);
 
   static odin::TripPath_Edge* AddTripEdge(const DirectedEdge* directededge,TripPath_Node* trip_node,
-                                          const GraphTile* graphtile);
+                                          GraphTile* graphtile);
 };
 
 }

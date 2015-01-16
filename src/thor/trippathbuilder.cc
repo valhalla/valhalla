@@ -27,7 +27,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
   uint32_t shortcutcount = 0;
 
   const NodeInfo* nodeinfo = nullptr;
-  const GraphTile* endNodeTile = nullptr;
+  GraphTile* endNodeTile = nullptr;
 
   std::vector<PointLL> trip_shape;
 
@@ -60,8 +60,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
     addedEdgeInfo.emplace_back(directededge->edgedataoffset());
 
     // Print out the node lat,lng
-    GraphTile* tile = graphreader.GetGraphTile(directededge->endnode());
-    const NodeInfo* nodeinfo = tile->node(directededge->endnode());
+    // GraphTile* tile = graphreader.GetGraphTile(directededge->endnode());
+    //const NodeInfo* nodeinfo = tile->node(directededge->endnode());
 
     // Test whether edge is traversed forward or reverse and set driveability
     bool is_reverse = false;
@@ -69,8 +69,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
       is_reverse = true;
     }
 
-    const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
-        directededge->edgedataoffset());
+    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
+       directededge->edgedataoffset());
 
     // Add shape and set shape indexes
     trip_edge->set_begin_shape_index(trip_shape.size());
@@ -85,7 +85,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
 
     // Add connected edges. Do this after the first trip edge is added
     //
-    //Our path is from 1 to 2 to 3 to ...
+    //Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
     //Each letter represents the edge info.
     //So at node 2, we will store the edge info for D first and then
     //the edge info for B, C, E, F, and G (order not important.)  We need to make sure
@@ -171,7 +171,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
 }
 
 TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge, TripPath_Node* trip_node,
-                                            const GraphTile* graphtile) {
+                                            GraphTile* graphtile) {
 
   // Add edge to the trip node and set its attributes
   TripPath_Edge* trip_edge = trip_node->add_edge();
