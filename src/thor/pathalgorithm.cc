@@ -153,20 +153,17 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       continue;
     }
 
-    // Expand from end node
-    bool shortcuttaken = false;
+    // Expand from end node. Identify if this node has shortcut edges
+    // (they occur first so just check the first directed edge).
     edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
     directededge = tile->directededge(nodeinfo->edge_index());
+    bool has_shortcuts = directededge->shortcut();
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
-      // TEST. TODO place logic in costing class?
-      // Shortcut edges are 1st edges from a node.
-      if (shortcuttaken && directededge->superseded()) {
-        continue;
-      }
-
-      // Check access
-      if (!costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
+      // Skip any superseded edges if edges include shortcuts. Also skip
+      // if no access is allowed to this edge (based on costing method)
+      if ((has_shortcuts && directededge->superseded()) ||
+          !costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
         continue;
       }
 
@@ -183,9 +180,6 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Get cost
       cost = currentcost + costing->Get(directededge);
-
-      // TODO - should this stay here?
-      shortcuttaken = directededge->shortcut();
 
       // Check if already in adjacency list
       if (edgestatus == kTemporary) {
