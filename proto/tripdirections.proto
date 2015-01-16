@@ -2,40 +2,40 @@ package valhalla.odin;
 
 message TripDirections {
   
-  enum CardinalDirection {
-    kNorth = 0;
-    kNorthEast = 1;
-    kEast = 2;
-    kSouthEast = 3;
-    kSouth = 4;
-    kSouthWest = 5;
-    kWest = 6;
-    kNorthWest = 7;
-  }
-  
-  // TODO - add others later
-  enum Type {
-    kNone = 0;
-    kStartRight = 1;
-    kStart = 2;
-    kStartLeft = 3;
-    kDestinationRight = 4;
-    kDestination = 5;
-    kDestinationLeft = 6;
-    kBecomes = 7;
-    kContinue = 8;
-    kSlightRight = 9;
-    kRight = 10;
-    kSharpRight = 11;
-    kUturnRight = 12;
-    kUturnLeft = 13;
-    kSharpLeft = 14;
-    kLeft = 15;
-    kSlightLeft = 16;
-  }
-  
   // TODO: add in other attributes
   message Maneuver {
+    enum CardinalDirection {
+      kNorth = 0;
+      kNorthEast = 1;
+      kEast = 2;
+      kSouthEast = 3;
+      kSouth = 4;
+      kSouthWest = 5;
+      kWest = 6;
+      kNorthWest = 7;
+    }
+  
+    // TODO - add others later
+    enum Type {
+      kNone = 0;
+      kStartRight = 1;
+      kStart = 2;
+      kStartLeft = 3;
+      kDestinationRight = 4;
+      kDestination = 5;
+      kDestinationLeft = 6;
+      kBecomes = 7;
+      kContinue = 8;
+      kSlightRight = 9;
+      kRight = 10;
+      kSharpRight = 11;
+      kUturnRight = 12;
+      kUturnLeft = 13;
+      kSharpLeft = 14;
+      kLeft = 15;
+      kSlightLeft = 16;
+    }
+  
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // instruction text
     repeated string street_name = 3;                         // street names

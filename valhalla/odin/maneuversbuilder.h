@@ -1,21 +1,42 @@
 #ifndef VALHALLA_ODIN_MANEUVERSBUILDER_H_
 #define VALHALLA_ODIN_MANEUVERSBUILDER_H_
 
-#include <vector>
+#include <list>
 
 #include <valhalla/proto/trippath.pb.h>
 
-namespace valhalla{
-namespace odin{
+#include "odin/enhancedtrippath.h"
+#include "odin/maneuver.h"
+
+namespace valhalla {
+namespace odin {
 
 class ManeuversBuilder {
  public:
-  ManeuversBuilder(TripPath& trip_path);
+  ManeuversBuilder(EnhancedTripPath* trip_path);
 
-  void Build();
+  std::list<Maneuver> Build();
 
  protected:
-  TripPath& trip_path_;
+  std::list<Maneuver> Produce();
+
+  void Combine(std::list<Maneuver>& maneuvers);
+
+  void CreateDestinationManeuver(Maneuver& maneuver);
+
+  void CreateStartManeuver(Maneuver& maneuver);
+
+  void InitializeManeuver(Maneuver& maneuver, int nodeIndex);
+
+  void UpdateManeuver(Maneuver& maneuver, int nodeIndex);
+
+  void FinalizeManeuver(Maneuver& maneuver, int nodeIndex);
+
+  void SetManeuverType(Maneuver& maneuver, int nodeIndex);
+
+  bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int nodeIndex);
+
+  EnhancedTripPath* trip_path_;
 
 };
 

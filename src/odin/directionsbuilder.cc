@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "odin/directionsbuilder.h"
+#include "odin/maneuversbuilder.h"
+#include "odin/enhancedtrippath.h"
 
 namespace valhalla {
 namespace odin {
@@ -26,7 +28,7 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 }
 
-TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
+TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
   // TODO - temps for initial end to end test
   std::vector<std::vector<std::string>> maneuver_names;
   std::vector<float> maneuver_distance;
@@ -39,7 +41,7 @@ TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
     // Get the names on path edge
     const auto& names = edge.name();
     std::vector<std::string> new_names;
-    for (const auto name : names) {
+    for (const auto& name : names) {
       new_names.push_back(name);
     }
     if (maneuver_names.empty()) {
@@ -58,7 +60,7 @@ TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
   TripDirections trip_directions;
   for (size_t i = 0, n = maneuver_names.size(); i < n; i++) {
     auto* maneuver = trip_directions.add_maneuver();
-    maneuver->set_type(TripDirections_Type_kContinue);
+    maneuver->set_type(TripDirections_Maneuver_Type_kContinue);
     maneuver->set_length(maneuver_distance[i]);
     maneuver->set_text_instruction("Take " + GetStreetName(maneuver_names[i]));
     for (const auto& name : maneuver_names[i]) {
@@ -69,12 +71,19 @@ TripDirections DirectionsBuilder::BuildSimple(const TripPath& trip_path) {
   return trip_directions;
 }
 
-TripDirections DirectionsBuilder::Build(const TripPath& trip_path) {
-  // Create maneuvers
-  // TODO
+TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
+  EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
-  // Combine maneuvers
-  // TODO
+  // Create maneuvers
+  ManeuversBuilder maneuversBuilder(etp);
+  auto maneuvers = maneuversBuilder.Build();
+
+  // GDG
+  std::cout << __FILE__ << ":" << __LINE__ << " | Build" << std::endl;
+  for (auto& maneuver : maneuvers) {
+    std::cout << "----------------------------------" << std::endl;
+    std::cout << maneuver.ToString() << std::endl;
+  }
 
   // Create the narrative
   // TODO
