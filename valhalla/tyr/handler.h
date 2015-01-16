@@ -2,6 +2,7 @@
 #define VALHALLA_TYR_HANDLER_H_
 
 #include <boost/python/dict.hpp>
+#include <boost/optional.hpp>
 #include <string>
 #include <valhalla/baldr/location.h>
 
@@ -36,6 +37,7 @@ class Handler {
  protected:
 
   std::vector<baldr::Location> locations_;
+  boost::optional<std::string> jsonp_;
 
 };
 

@@ -62,7 +62,7 @@ OSRM output looks like this:
 using namespace valhalla::tyr;
 using namespace std;
 
-json::JsonObjectPtr route_name(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr route_name(const valhalla::odin::TripDirections& trip_directions){
   auto route_name = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0) {
@@ -75,7 +75,7 @@ json::JsonObjectPtr route_name(const valhalla::odin::TripDirections& trip_direct
   return route_name;
 }
 
-json::JsonObjectPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
   auto via_indices = json::array({});
   if(trip_directions.maneuver_size() > 0) {
     via_indices->push_back(static_cast<uint64_t>(0));
@@ -84,7 +84,7 @@ json::JsonObjectPtr via_indices(const valhalla::odin::TripDirections& trip_direc
   return via_indices;
 }
 
-json::JsonObjectPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
+json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
   auto route_summary = json::map({});
   if(trip_directions.maneuver_size() > 0) {
     if(trip_directions.maneuver(0).street_name_size() > 0)
@@ -106,19 +106,12 @@ json::JsonObjectPtr route_summary(const valhalla::odin::TripDirections& trip_dir
   return route_summary;
 }
 
-json::JsonObjectPtr via_points(const valhalla::odin::TripPath& trip_path){
+json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
   auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
     via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
   }
   return via_points;
-}
-
-std::string escape(const std::string& unescaped) {
-  //these replacements are only useful for polyline encoded shape right now
-  std::string escaped = boost::replace_all_copy(unescaped, "\\", "\\\\");
-  boost::replace_all(escaped, "\"", "\\\"");
-  return escaped;
 }
 
 const std::unordered_map<unsigned int, std::string> maneuver_type = {
@@ -148,7 +141,7 @@ const std::unordered_map<unsigned int, std::string> maneuver_type = {
     //{ static_cast<unsigned int>valhalla::odin::TripDirections_Maneuver_Type_k), 17 },//LeaveAgainstAllowedDirection
 };
 
-json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
   auto route_instructions = json::array({});
   for(const auto& maneuver : trip_directions.maneuver()) {
     //if we dont know the type of maneuver then skip it
@@ -175,8 +168,8 @@ json::JsonObjectPtr route_instructions(const valhalla::odin::TripDirections& tri
   return route_instructions;
 }
 
-std::string serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions) {
+void serialize(const valhalla::odin::TripPath& trip_path,
+  const valhalla::odin::TripDirections& trip_directions, std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -196,15 +189,13 @@ std::string serialize(const valhalla::odin::TripPath& trip_path,
     {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
     {"via_points", via_points(trip_path)}, //array of lat,lng pairs
     {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
-    {"route_geometry", escape(trip_path.shape())}, //polyline encoded shape
+    {"route_geometry", trip_path.shape()}, //polyline encoded shape
     {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
     {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
   });
 
   //serialize it
-  ostringstream stream;
   stream << *json;
-  return stream.str();
 }
 
 }
@@ -256,7 +247,13 @@ std::string RouteHandler::Action() {
   valhalla::odin::TripDirections trip_directions = directions_builder.BuildSimple(trip_path);
 
   //make some json
-  return serialize(trip_path, trip_directions);
+  std::ostringstream stream;
+  if(jsonp_)
+    stream << *jsonp_ << '(';
+  serialize(trip_path, trip_directions, stream);
+  if(jsonp_)
+    stream << ')';
+  return stream.str();
 }
 
 

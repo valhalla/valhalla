@@ -1,5 +1,5 @@
 #include "test.h"
-#include "valhalla/tyr/route_handler.h"
+#include "tyr/route_handler.h"
 #include <valhalla/mjolnir/graphbuilder.h>
 
 #include <fstream>
