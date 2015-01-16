@@ -45,6 +45,7 @@ test-driver
 test/edgeinfobuilder
 test/uniquenames
 test/nodetable
+test/graphtilebuilder
 test/*.log
 test/*.trs
 EdgeInfoBuilder_TestWriteRead.gph

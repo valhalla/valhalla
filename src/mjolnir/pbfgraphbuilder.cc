@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 #include "pbfgraphbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -22,7 +23,7 @@ namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
 boost::filesystem::path config_file_path;
-std::string input_file;
+std::vector<std::string> input_files;
 
 bool ParseArguments(int argc, char *argv[]) {
 
@@ -45,10 +46,10 @@ bool ParseArguments(int argc, char *argv[]) {
         boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
         "Path to the json configuration file.")
       // positional arguments
-      ("input_file", boost::program_options::value<std::string>(&input_file));
+      ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
-  pos_options.add("input_file", 1);
+  pos_options.add("input_files", 16);
 
   bpo::variables_map vm;
   try {
@@ -86,10 +87,11 @@ bool ParseArguments(int argc, char *argv[]) {
  * Build local graph from protocol buffer input.
  */
 void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
-               const std::string& input_file) {
+               const std::vector<std::string>& input_files) {
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the GraphConstructor class
-  GraphBuilder graphbuilder(pt, input_file);
+  GraphBuilder graphbuilder(pt);
+  graphbuilder.Load(input_files);
   graphbuilder.Build();
 }
 
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
 
   //we only support protobuf at present
   if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt, input_file);
+    BuildLocalGraphFromPBF(pt, input_files);
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")

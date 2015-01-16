@@ -58,12 +58,10 @@ const bool NodeIdTable::IsUsed(const uint64_t id) const {
 }
 
 // Construct GraphBuilder based on properties file and input PBF extract
-GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
-                           const std::string& input_file)
+GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
     : node_count_(0),
       edge_count_(0),
       speed_assignment_count_(0),
-      input_file_(input_file),
       tile_hierarchy_(pt),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId) {
@@ -75,35 +73,41 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt,
           pt.get<std::string>("tagtransform.way_function"));
 }
 
-// Build the graph from the input
-void GraphBuilder::Build() {
-  // Parse the ways and relations. Find all node Ids needed.
-  std::clock_t start = std::clock();
-  std::cout << "Parsing ways and relations to mark nodes needed" << std::endl;
-  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::WAYS);
-  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::RELATIONS);
-  std::cout << "Routable ways " << ways_.size() << std::endl;
-  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "Parsing ways and relations took " << msecs << " ms" << std::endl;
+void GraphBuilder::Load(const std::vector<std::string>& input_files) {
+  for(const auto& input_file : input_files) {
+    // Parse the ways and relations. Find all node Ids needed.
+    std::clock_t start = std::clock();
+    std::cout << "Parsing ways and relations to mark nodes needed" << std::endl;
+    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
+    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
+    std::cout << "Routable ways " << ways_.size() << std::endl;
+    uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+    std::cout << "Parsing ways and relations took " << msecs << " ms" << std::endl;
+  }
 
   std::cout << "Percentage of ways using speed assignment: " << std::fixed <<
       std::setprecision(2) <<
       (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100  << std::endl;
 
-  // Run through the nodes
-  start = std::clock();
-  std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
-  nodes_.reserve(node_count_);
-  //TODO: we know how many knows we expect, stop early once we have that many
-  CanalTP::read_osm_pbf(input_file_, *this, CanalTP::Interest::NODES);
-  std::cout << "Routable nodes " << nodes_.size() << std::endl;
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "Parsing nodes took " << msecs << " ms" << std::endl;
+  for(const auto& input_file : input_files) {
+    // Run through the nodes
+    std::clock_t start = std::clock();
+    std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
+    nodes_.reserve(node_count_);
+    //TODO: we know how many knows we expect, stop early once we have that many
+    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
+    std::cout << "Routable nodes " << nodes_.size() << std::endl;
+    uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+    std::cout << "Parsing nodes took " << msecs << " ms" << std::endl;
+  }
+}
 
+// Build the graph from the input
+void GraphBuilder::Build() {
   // Construct edges
-  start = std::clock();
+  std::clock_t start = std::clock();
   ConstructEdges();
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   std::cout << "ConstructEdges took " << msecs << " ms" << std::endl;
 
   // Sort the edge indexes at the nodes (by driveability and importance)
@@ -420,7 +424,7 @@ void GraphBuilder::ConstructEdges() {
 
     // Iterate through the nodes of the way and add lat,lng to the current
     // way until a node with > 1 uses is found.
-    for (size_t i = 1, n = way.node_count(); i < n; i++) {
+    for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
       nodeid = way.nodes()[i];
       OSMNode& nd = nodes_[nodeid];
@@ -434,11 +438,11 @@ void GraphBuilder::ConstructEdges() {
         nd.AddEdge(edgeindex);
 
         // Add the edge to the list of edges
-        edges_.push_back(edge);
+        edges_.emplace_back(std::move(edge));
         edgeindex++;
 
         // Start a new edge if this is not the last node in the way
-        if (i < n - 1) {
+        if (i < way.node_count() - 1) {
           edge = Edge(nodeid, wayindex, nd.latlng(), way);
           nd.AddEdge(edgeindex);
         }
@@ -447,7 +451,6 @@ void GraphBuilder::ConstructEdges() {
   }
   std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
-
 
 class EdgeSorter {
  public:
