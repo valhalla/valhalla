@@ -45,6 +45,7 @@ test/*.trs
 test/test_config
 test/tiles
 test/handlers
+test/json
 
 # test coverage stuff
 *.gcno
