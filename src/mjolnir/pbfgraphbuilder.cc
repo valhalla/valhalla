@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 #include "pbfgraphbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -22,7 +23,7 @@ namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
 boost::filesystem::path config_file_path;
-std::string input_file;
+std::vector<std::string> input_files;
 
 bool ParseArguments(int argc, char *argv[]) {
 
@@ -45,10 +46,10 @@ bool ParseArguments(int argc, char *argv[]) {
         boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
         "Path to the json configuration file.")
       // positional arguments
-      ("input_file", boost::program_options::value<std::string>(&input_file));
+      ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
-  pos_options.add("input_file", 1);
+  pos_options.add("input_files", 16);
 
   bpo::variables_map vm;
   try {
@@ -103,22 +104,26 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
   std::string input_type = pt.get<std::string>("input.type");
 
-  //we only support protobuf at present
-  if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt, input_file);
-  }/*else if("postgres"){
-    //TODO
-    if (v.first == "host")
-      host = v.second.get_value<std::string>();
-    else if (v.first == "port")
-      port = v.second.get_value<unsigned int>();
-    else if (v.first == "username")
-      username = v.second.get_value<std::string>();
-    else if (v.first == "password")
-      password = v.second.get_value<std::string>();
-    else
-      return false;  //unknown value;
-  }*/
+  //for each file we want to load
+  for(const auto& input_file : input_files) {
+
+    //we only support protobuf at present
+    if(input_type == "protocolbuffer"){
+      BuildLocalGraphFromPBF(pt, input_file);
+    }/*else if("postgres"){
+      //TODO
+      if (v.first == "host")
+        host = v.second.get_value<std::string>();
+      else if (v.first == "port")
+        port = v.second.get_value<unsigned int>();
+      else if (v.first == "username")
+        username = v.second.get_value<std::string>();
+      else if (v.first == "password")
+        password = v.second.get_value<std::string>();
+      else
+        return false;  //unknown value;
+    }*/
+  }
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
