@@ -71,7 +71,7 @@ class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self.end_headers()
 
     #hand it back
-    self.wfile.write(response.encode('utf-8'))
+    self.wfile.write(response)
 
   #send a fail
   def fail(self, error):
@@ -84,7 +84,7 @@ class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     self.end_headers()
 
     #hand it back
-    self.wfile.write(str(error).encode('utf-8'))
+    self.wfile.write(str(error))
 
   #handle the request
   def do_GET(self):
