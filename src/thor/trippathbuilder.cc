@@ -53,6 +53,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
 
     TripPath_Node* trip_node = trip_path.add_node();
 
+    //TODO:  Remove after we fix the directed edge bug.
+    //std::cout << "Main Edge:" << directededge->edgedataoffset() << std::endl;
+
     // Add edge to the trip node and set its attributes
     TripPath_Edge* trip_edge = AddTripEdge(directededge, trip_node, graphtile);
 
@@ -65,7 +68,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
 
     // Test whether edge is traversed forward or reverse and set driveability
     bool is_reverse = false;
-    if (directededge->forward()) { //Edge is in the forward direction.
+    if (!directededge->forward()) { //Edge is in the forward direction.
       is_reverse = true;
     }
 
@@ -112,6 +115,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
       for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                   i++, connectededge++, edgeid++) {
 
+        //TODO:  Remove after we fix the directed edge bug.
+        //std::cout << "connected Edge:" << connectededge->edgedataoffset() << std::endl;
+
         // Skip the edge on the path and the incoming edge. Skip any transition
         // edge. TODO - Skip the opposing incoming edge (based on the prior edge)
         if (edgeid == edge || connectededge->trans_up() ||
@@ -121,6 +127,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
         }
 
         addedEdgeInfo.emplace_back(connectededge->edgedataoffset());
+
+        //TODO:  Remove after we fix the directed edge bug.
+        //std::cout << "ADDED:" << connectededge->edgedataoffset() << std::endl;
 
         AddTripEdge(connectededge, trip_node, endNodeTile);
 
@@ -185,6 +194,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge, Tr
    std::vector<std::string> names = graphtile->GetNames(edgeinfo);
 
   for (const auto& name : names) {
+
+    //TODO:  Remove after we fix the directed edge bug.
+    //std::cout << "Names:" << name << std::endl << std::endl;
+
     trip_edge->add_name(name);
   }
 
