@@ -5,19 +5,21 @@
 namespace valhalla {
 namespace odin {
 
-StreetNames::StreetNames() {
+StreetNames::StreetNames()
+    : std::list<StreetName>() {
 }
 
-const std::list<StreetName>& StreetNames::names() const {
-  return names_;
-}
-
-bool StreetNames::empty() const {
-  return names_.empty();
-}
-
-void StreetNames::push_back(const StreetName& street_name) {
-  names_.push_back(street_name);
+std::string StreetNames::ToString() const {
+  std::string name_string;
+  if (empty())
+    name_string = "unnamed";
+  for (auto& street_name : *this) {
+    if (!name_string.empty()) {
+      name_string += "/";
+    }
+    name_string += street_name.name();
+  }
+  return name_string;
 }
 
 }

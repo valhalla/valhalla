@@ -8,20 +8,15 @@
 namespace valhalla{
 namespace odin{
 
-class StreetNames {
+class StreetNames : public std::list<StreetName> {
  public:
   StreetNames();
 
-  const std::list<StreetName>& names() const;
-
-  bool empty() const;
-
-  void push_back(const StreetName& street_name);
+  std::string ToString() const;
 
   // TODO - add more functionality later
 
  protected:
-  std::list<StreetName> names_;
 
 };
 
