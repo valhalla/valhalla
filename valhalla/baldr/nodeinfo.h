@@ -11,6 +11,9 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
+constexpr uint32_t kMaxTileEdgeCount = 4194303;   // 2^22 directed edges
+constexpr uint32_t kMaxEdgesPerNode  = 31;        // Maximum edges per node
+
 /**
  * Information held for each node within the graph. The graph uses a forward
  * star structure: nodes point to the first outbound directed edge and each
@@ -64,11 +67,11 @@ class NodeInfo {
   // driveability to optimize for driving routes - when the first non
   // driveable edge is encountered the successive edges can be skipped
   struct NodeAttributes {
-    uint32_t edge_index_  : 18; // Index within the node's tile of its first
+    uint32_t edge_index_  : 22; // Index within the node's tile of its first
                                 // outbound directed edge
     uint32_t edge_count_   : 5; // Number of outbound edges
     uint32_t bestrc_       : 3; // Best directed edge road class
-    uint32_t spare         : 6;
+    uint32_t spare_        : 2; // Spare
   };
   NodeAttributes attributes_;
 };
