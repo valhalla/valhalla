@@ -16,11 +16,18 @@ void NodeInfoBuilder::set_latlng(const PointLL& ll) {
 
 // Set the index in the node's tile of its first outbound edge.
 void NodeInfoBuilder::set_edge_index(const uint32_t edge_index) {
+  if (edge_index > kMaxTileEdgeCount) {
+    throw std::runtime_error("NodeInfoBuilder: edge index exceeds max");
+  }
   attributes_.edge_index_ = edge_index;
 }
 
 // Set the number of outbound directed edges.
 void NodeInfoBuilder::set_edge_count(const uint32_t edge_count) {
+  if (edge_count > kMaxEdgesPerNode) {
+    // TODO - thro an error or just log it and set count to max?
+    throw std::runtime_error("NodeInfoBuilder: edge count exceeds max");
+  }
   attributes_.edge_count_ = edge_count;
 }
 

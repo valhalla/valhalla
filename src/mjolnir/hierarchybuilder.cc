@@ -1,4 +1,4 @@
-#include "hierarchybuilder.h"
+#include "mjolnir/hierarchybuilder.h"
 #include "config.h"
 
 #include <ostream>
@@ -77,14 +77,9 @@ void HierarchyBuilder::GetNodesInNewLevel(
   uint32_t baselevel = (uint32_t)base_level.level;
   GraphTile* tile = nullptr;
   for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
-    if (!graphreader_.DoesTileExist(GraphId(tileid, baselevel, 0))) {
-      continue;
-    }
-
-    // Get the graph tile
+    // Get the graph tile. Skip if no tile exists (common case)
     tile = graphreader_.GetGraphTile(GraphId(tileid, baselevel, 0));
     if (tile == nullptr) {
-      // No tile - common case, just continue
       continue;
     }
 
@@ -120,7 +115,6 @@ bool HierarchyBuilder::CanContract(GraphTile* tile,
   if (nodeinfo->edge_count() < 2) {
     return false;
   }
-bool logit = (newnode == GraphId(46540, 1, 303));
 
   // Get list of valid edges from the base level that remain at this level.
   // Exclude transition edges and shortcut edges on the base level.
@@ -261,11 +255,19 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
               i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
-        directededge->length() == edge->length()) {
+        fabs(directededge->length() - edge->length()) < 0.0001f) {
       return edgeid;
     }
   }
   std::cout << "Opposing directed edge not found!" << std::endl;
+  std::cout << "Length = " << edge->length() << " EndNode " << edge->endnode() <<
+      " Shortcut " << edge->shortcut() << " transition down " << edge->trans_down() <<
+      std::endl;
+  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+                i++, directededge++, edgeid++) {
+    std::cout << "    Length = " << directededge->length() << " Endnode: " <<
+        directededge->endnode() << std::endl;
+  }
   return GraphId(0,0,0);
 }
 
@@ -283,7 +285,6 @@ void HierarchyBuilder::FormTilesInNewLevel(
   uint32_t tileid = 0;
   uint32_t nodeid = 0;
   uint32_t edgeid = 0;
-  uint32_t edgecount = 0;
   uint32_t edgeindex = 0;
   uint32_t edge_info_offset;
   uint8_t level = new_level.level;
@@ -295,8 +296,8 @@ void HierarchyBuilder::FormTilesInNewLevel(
       continue;
     }
 
-    // Create GraphTileBuilder for the new tile
-    GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0));
+    // Create new GraphTileBuilder for the new tile
+    GraphTileBuilder tilebuilder;
 
     // Iterate through the NewNodes in the tile at the new level
     nodeid = 0;
@@ -316,11 +317,10 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
       // Add shortcut edges first. If node is not contracted then there
       // may be shortcuts. Set the edgecount from this node.
-      edgecount = 0;
       std::vector<DirectedEdgeBuilder> directededges;
       if (!newnode.contract) {
-        edgecount = AddShortcutEdges(newnode, nodea, baseni, tile,
-                      rcc, tilebuilder, directededges);
+        AddShortcutEdges(newnode, nodea, baseni, tile, rcc,
+                         tilebuilder, directededges);
       }
 
       // Iterate through directed edges of the base node to get remaining
@@ -357,17 +357,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
                  nodeb, edgeinfo->shape(), names);
           newedge.set_edgedataoffset(edge_info_offset);
 
-          // Add superseded flag if this edge was included in a shortcut
-          if (IsSuperseded(oldedgeid)) {
-            newedge.set_superseded(true);
-          } else {
-            // Unset the superseded flag (may have been set on prior level)
-            newedge.set_superseded(false);
-          }
+          // Set the superseded flag
+          newedge.set_superseded(IsSuperseded(oldedgeid));
 
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
-          edgecount++;
         }
       }
 
@@ -376,17 +370,16 @@ void HierarchyBuilder::FormTilesInNewLevel(
       downwardedge.set_endnode(newnode.basenode);
       downwardedge.set_trans_down(true);
       directededges.emplace_back(std::move(downwardedge));
-      edgecount++;
 
       // Set the edge count for the new node
-      node.set_edge_count(edgecount);
+      node.set_edge_count(directededges.size());
 
       // Add node and directed edge information to the tile
       tilebuilder.AddNodeAndDirectedEdges(node, directededges);
 
       // Increment node Id and edgeindex
       nodeid++;
-      edgeindex += edgecount;
+      edgeindex += directededges.size();
     }
 
     // Store the new tile
@@ -424,7 +417,6 @@ uint32_t HierarchyBuilder::AddShortcutEdges(const NewNode& newnode,
     // Get the end node and check if it is set for contraction and the edge
     // is set as a matching, entering edge of the contracted node. Cases like
     // entrance ramps can lead to a contracted node
-    uint32_t count = 0;
     GraphId basenode = newnode.basenode;
     GraphId nodeb = nodemap_[directededge->endnode().value()];
     if (tilednodes_[nodeb.tileid()][nodeb.id()].contract &&
@@ -474,8 +466,6 @@ uint32_t HierarchyBuilder::AddShortcutEdges(const NewNode& newnode,
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level).
         length += ConnectEdges(basenode, next_edge_id, shape, nodeb);
-
-        count++;
       }
 
       // Add the edge info
