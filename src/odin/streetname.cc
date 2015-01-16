@@ -13,5 +13,9 @@ const std::string& StreetName::name() const {
   return name_;
 }
 
+bool StreetName::operator ==(const StreetName& rhs) const {
+  return (name_ == rhs.name_);
+}
+
 }
 }

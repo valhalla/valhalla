@@ -12,6 +12,8 @@ class StreetName {
 
   const std::string& name() const;
 
+  bool operator ==(const StreetName& rhs) const;
+
   // TODO - add more functionality later
 
  protected:
