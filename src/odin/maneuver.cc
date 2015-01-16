@@ -17,12 +17,26 @@ Maneuver::Maneuver()
       end_node_index_(0),
       begin_shape_index_(0),
       end_shape_index_(0),
+      ramp_(false),
       portions_toll_(false),
       portions_unpaved_(false) {
 }
 
+const TripDirections_Maneuver_Type& Maneuver::type() const {
+  return type_;
+}
+
+void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
+  type_ = type;
+}
+
+
 const StreetNames& Maneuver::street_names() const {
   return street_names_;
+}
+
+StreetNames* Maneuver::mutable_street_names() {
+  return &street_names_;
 }
 
 void Maneuver::set_street_names(const StreetNames& street_names) {
@@ -140,6 +154,19 @@ bool Maneuver::portions_unpaved() const {
 
 void Maneuver::set_portions_unpaved(bool portionsUnpaved) {
   portions_unpaved_ = portionsUnpaved;
+}
+
+std::string Maneuver::ToString() const {
+   std::string man_str;
+
+   man_str += "type_=" + std::to_string(type_);
+   man_str += " | street_names_=" + street_names_.ToString();
+   man_str += " | distance_=" + std::to_string(distance_);
+   // TODO - others
+   //man_str += " | TBD=";
+   //man_str += TBD;
+
+   return man_str;
 }
 
 }

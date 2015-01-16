@@ -18,6 +18,7 @@ class Maneuver {
   void set_type(const TripDirections_Maneuver_Type& type);
 
   const StreetNames& street_names() const;
+  StreetNames* mutable_street_names();
   void set_street_names(const StreetNames& street_names);
 
   const StreetNames& begin_street_names() const;
@@ -61,6 +62,8 @@ class Maneuver {
 
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
+
+  std::string ToString() const;
 
  protected:
   TripDirections_Maneuver_Type type_;
