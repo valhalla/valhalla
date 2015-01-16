@@ -142,8 +142,12 @@ class GraphBuilder {
   /**
    * Constructor
    */
-  GraphBuilder(const boost::property_tree::ptree& pt,
-               const std::string& input_file);
+  GraphBuilder(const boost::property_tree::ptree& pt);
+
+  /**
+   * Loads a given input file
+   */
+   void Load(const std::vector<std::string>& input_file);
 
   //TODO: put these callbacks inside of an pimpl or just rewrite
   //the bits of canalTP that we care about
@@ -210,9 +214,6 @@ class GraphBuilder {
   //MAIN THREAD STUFF
 
   size_t node_count_, edge_count_, speed_assignment_count_;
-
-  // Location of the protocol buffer input file
-  std::string input_file_;
 
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;

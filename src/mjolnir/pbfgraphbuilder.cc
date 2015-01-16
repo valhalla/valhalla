@@ -87,10 +87,11 @@ bool ParseArguments(int argc, char *argv[]) {
  * Build local graph from protocol buffer input.
  */
 void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
-               const std::string& input_file) {
+               const std::vector<std::string>& input_files) {
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the GraphConstructor class
-  GraphBuilder graphbuilder(pt, input_file);
+  GraphBuilder graphbuilder(pt);
+  graphbuilder.Load(input_files);
   graphbuilder.Build();
 }
 
@@ -104,26 +105,22 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
   std::string input_type = pt.get<std::string>("input.type");
 
-  //for each file we want to load
-  for(const auto& input_file : input_files) {
-
-    //we only support protobuf at present
-    if(input_type == "protocolbuffer"){
-      BuildLocalGraphFromPBF(pt, input_file);
-    }/*else if("postgres"){
-      //TODO
-      if (v.first == "host")
-        host = v.second.get_value<std::string>();
-      else if (v.first == "port")
-        port = v.second.get_value<unsigned int>();
-      else if (v.first == "username")
-        username = v.second.get_value<std::string>();
-      else if (v.first == "password")
-        password = v.second.get_value<std::string>();
-      else
-        return false;  //unknown value;
-    }*/
-  }
+  //we only support protobuf at present
+  if(input_type == "protocolbuffer"){
+    BuildLocalGraphFromPBF(pt, input_files);
+  }/*else if("postgres"){
+    //TODO
+    if (v.first == "host")
+      host = v.second.get_value<std::string>();
+    else if (v.first == "port")
+      port = v.second.get_value<unsigned int>();
+    else if (v.first == "username")
+      username = v.second.get_value<std::string>();
+    else if (v.first == "password")
+      password = v.second.get_value<std::string>();
+    else
+      return false;  //unknown value;
+  }*/
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
