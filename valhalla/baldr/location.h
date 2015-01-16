@@ -25,6 +25,11 @@ struct Location {
   enum class StopType : bool { BREAK, THROUGH };
 
   /**
+   * You have to initialize the location with something
+   */
+  Location() = delete;
+
+  /**
    * Constructor.
    * @param  latlng  the polar coordinates of the location
    */
@@ -42,7 +47,8 @@ struct Location {
    */
   static Location FromCsv(const std::string& csv);
 
-  //coordinates of the location as used for routing
+
+  //coordinates of the location as used for searching the graph
   midgard::PointLL latlng_;
   //type of location for routing
   StopType stoptype_;
@@ -59,11 +65,8 @@ struct Location {
   std::uint64_t wayid_;
 */
 
- private:
-  /**
-   * Default constructor
-   */
-  explicit Location();
+ protected:
+
 };
 
 }
