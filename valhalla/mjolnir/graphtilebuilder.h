@@ -24,8 +24,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-using edge_tuple = std::tuple<const uint32_t,
-    const valhalla::baldr::GraphId&, const valhalla::baldr::GraphId&>;
+using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -111,12 +110,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   };
 
   // Edge tuple for sharing edges that have common nodes and edgeindex
-  edge_tuple EdgeTuple(const uint32_t edgeindex,
+  static edge_tuple EdgeTuple(const uint32_t edgeindex,
                        const valhalla::baldr::GraphId& nodea,
                        const valhalla::baldr::GraphId& nodeb) {
-    if (nodea < nodeb)
-      return std::make_tuple(edgeindex, nodea, nodeb);
-    return std::make_tuple(edgeindex, nodeb, nodea);
+    return (nodea < nodeb) ? std::make_tuple(edgeindex, nodea, nodeb):
+        std::make_tuple(edgeindex, nodeb, nodea);
   }
 
   // Write all edgeinfo items to specified stream

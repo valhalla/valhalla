@@ -420,7 +420,7 @@ void GraphBuilder::ConstructEdges() {
 
     // Iterate through the nodes of the way and add lat,lng to the current
     // way until a node with > 1 uses is found.
-    for (size_t i = 1, n = way.node_count(); i < n; i++) {
+    for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
       nodeid = way.nodes()[i];
       OSMNode& nd = nodes_[nodeid];
@@ -434,11 +434,11 @@ void GraphBuilder::ConstructEdges() {
         nd.AddEdge(edgeindex);
 
         // Add the edge to the list of edges
-        edges_.push_back(edge);
+        edges_.emplace_back(std::move(edge));
         edgeindex++;
 
         // Start a new edge if this is not the last node in the way
-        if (i < n - 1) {
+        if (i < way.node_count() - 1) {
           edge = Edge(nodeid, wayindex, nd.latlng(), way);
           nd.AddEdge(edgeindex);
         }
@@ -447,7 +447,6 @@ void GraphBuilder::ConstructEdges() {
   }
   std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
 }
-
 
 class EdgeSorter {
  public:
