@@ -27,7 +27,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
   uint32_t shortcutcount = 0;
 
   const NodeInfo* nodeinfo = nullptr;
-  GraphTile* endNodeTile = nullptr;
+
+  // TODO - use later for node info.
+  //GraphTile* endNodeTile = nullptr;
 
   std::vector<PointLL> trip_shape;
 
@@ -131,14 +133,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
         //TODO:  Remove after we fix the directed edge bug.
         //std::cout << "ADDED:" << connectededge->edgedataoffset() << std::endl;
 
-        AddTripEdge(connectededge, trip_node, endNodeTile);
+        AddTripEdge(connectededge, trip_node, graphtile);
 
       }
     }
 
+    // TODO - use later for node info.
     // Get the end node (begin node of the next edge)
-    endNodeTile = graphreader.GetGraphTile(directededge->endnode());
-    nodeinfo = endNodeTile->node(directededge->endnode());
+    //endNodeTile = graphreader.GetGraphTile(directededge->endnode());
+    nodeinfo = graphtile->node(directededge->endnode());
 
  /** DEBUG
     // TODO - remove or create debug output...
