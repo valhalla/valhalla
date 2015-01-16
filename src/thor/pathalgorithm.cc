@@ -68,7 +68,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
              std::shared_ptr<DynamicCost> costing) {
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.location().latlng_, dest.location().latlng_, costing);
+  Init(origin.vertex(), dest.vertex(), costing);
 
   // Initialize the origin and destination locations
   SetOrigin(graphreader, origin, costing);
@@ -232,7 +232,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
           const PathLocation& origin, const std::shared_ptr<DynamicCost>& costing) {
   // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_.GetDistance(origin.location().latlng_);
+  float dist = astarheuristic_.GetDistance(origin.vertex());
   float heuristic = astarheuristic_.Get(dist);
 
   // Iterate through edges and add to adjacency list
