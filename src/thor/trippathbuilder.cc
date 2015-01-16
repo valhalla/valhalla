@@ -59,27 +59,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
     std::vector<uint32_t> addedEdgeInfo;
     addedEdgeInfo.emplace_back(directededge->edgedataoffset());
 
-    // Add a node. TODO - where do we get its attributes?
-    TripPath_Node* trip_node = trip_path.add_node();
-
     // Print out the node lat,lng
     GraphTile* tile = graphreader.GetGraphTile(directededge->endnode());
     const NodeInfo* nodeinfo = tile->node(directededge->endnode());
-
-    // Add edge to the trip node and set its attributes
-    TripPath_Edge* trip_edge = trip_node->add_edge();
-
-    // Get the edgeinfo and list of names
-    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
-        directededge->edgedataoffset());
-    std::vector<std::string> names = graphtile->GetNames(edgeinfo);
-    for (const auto& name : names) {
-      trip_edge->add_name(name);
-    }
-
-    // Set speed and length
-    trip_edge->set_length(directededge->length());
-    trip_edge->set_speed(directededge->speed());
 
     // Test whether edge is traversed forward or reverse and set driveability
     bool is_reverse = false;
@@ -195,13 +177,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge, Tr
   TripPath_Edge* trip_edge = trip_node->add_edge();
 
   // Get the edgeinfo and list of names
-  const std::shared_ptr<EdgeInfo> edgeinfo = graphtile->edgeinfo(
-      directededge->edgedataoffset());
+  std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
+     directededge->edgedataoffset());
+   std::vector<std::string> names = graphtile->GetNames(edgeinfo);
 
-  std::vector<uint32_t> addedEdgeInfo;
-  addedEdgeInfo.emplace_back(directededge->edgedataoffset());
-
-  std::vector<std::string> names = graphtile->GetNames(edgeinfo);
   for (const auto& name : names) {
     trip_edge->add_name(name);
   }
