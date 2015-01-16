@@ -41,6 +41,7 @@ test-driver
 #test/search
 test/*.log
 test/*.trs
+test/search
 
 # test coverage stuff
 *.gcno

@@ -31,12 +31,13 @@ PathLocation NodeSearch(const Location& location, GraphReader& reader) {
 
   //now that we have a node we can pass back all the edges leaving it
   PathLocation correlated(location);
+  correlated.CorrelateVertex(closest->latlng());
   for(size_t edge_index = 0; edge_index < closest->edge_count(); ++edge_index) {
     //const DirectedEdge* edge = tile->directededge(edge_index);
     GraphId id(tile->id());
     id.Set(id.tileid(), id.level(), closest->edge_index() + edge_index);
     //TODO: is there something we can do to set distance along as either 0 or 1 depending on direction?
-    correlated.Correlate(id, 0);
+    correlated.CorrelateEdge(id, 0);
   }
 
   //if we found nothing that is no good..
