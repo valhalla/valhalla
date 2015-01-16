@@ -41,7 +41,7 @@ TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
     // Get the names on path edge
     const auto& names = edge.name();
     std::vector<std::string> new_names;
-    for (const auto name : names) {
+    for (const auto& name : names) {
       new_names.push_back(name);
     }
     if (maneuver_names.empty()) {
@@ -72,17 +72,18 @@ TripDirections DirectionsBuilder::BuildSimple(TripPath& trip_path) {
 }
 
 TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
-  //GDG
-  std::cout << __FILE__ << ":" << __LINE__ << " | trip_path.node_size()="
-            << trip_path.node_size() << std::endl;
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
-  //GDG
-  std::cout << __FILE__ << ":" << __LINE__ << " | etp->node_size()="
-            << etp->node_size() << std::endl;
 
   // Create maneuvers
   ManeuversBuilder maneuversBuilder(etp);
-  maneuversBuilder.Build();
+  auto maneuvers = maneuversBuilder.Build();
+
+  // GDG
+  std::cout << __FILE__ << ":" << __LINE__ << " | Build" << std::endl;
+  for (auto& maneuver : maneuvers) {
+    std::cout << "----------------------------------" << std::endl;
+    std::cout << maneuver.ToString() << std::endl;
+  }
 
   // Create the narrative
   // TODO
