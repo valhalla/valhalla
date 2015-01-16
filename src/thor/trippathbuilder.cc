@@ -102,26 +102,29 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader, const std::vector<Grap
     //            ||  \\
     //            (1)  (X)
 
-    GraphId edgeid = GraphId(edge.tileid(), edge.level(),
-                             nodeinfo->edge_index());
-    const DirectedEdge* connectededge = graphtile->directededge(
-                nodeinfo->edge_index());
+    if (nodeinfo != nullptr) {
 
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                i++, connectededge++, edgeid++) {
+      GraphId edgeid = GraphId(edge.tileid(), edge.level(),
+                               nodeinfo->edge_index());
+      const DirectedEdge* connectededge = graphtile->directededge(
+                  nodeinfo->edge_index());
 
-      // Skip the edge on the path and the incoming edge. Skip any transition
-      // edge. TODO - Skip the opposing incoming edge (based on the prior edge)
-      if (edgeid == edge || connectededge->trans_up() ||
-          connectededge->trans_down() || (addedEdgeInfo.end() !=
-          std::find(addedEdgeInfo.begin(),addedEdgeInfo.end(),connectededge->edgedataoffset()))){
-        continue;
+      for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+                  i++, connectededge++, edgeid++) {
+
+        // Skip the edge on the path and the incoming edge. Skip any transition
+        // edge. TODO - Skip the opposing incoming edge (based on the prior edge)
+        if (edgeid == edge || connectededge->trans_up() ||
+            connectededge->trans_down() || (addedEdgeInfo.end() !=
+            std::find(addedEdgeInfo.begin(),addedEdgeInfo.end(),connectededge->edgedataoffset()))){
+          continue;
+        }
+
+        addedEdgeInfo.emplace_back(connectededge->edgedataoffset());
+
+        AddTripEdge(connectededge, trip_node, endNodeTile);
+
       }
-
-      addedEdgeInfo.emplace_back(connectededge->edgedataoffset());
-
-      AddTripEdge(connectededge, trip_node, endNodeTile);
-
     }
 
     // Get the end node (begin node of the next edge)
