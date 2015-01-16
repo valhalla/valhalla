@@ -33,6 +33,9 @@ class Maneuver {
   uint32_t time() const;
   void set_time(uint32_t time);
 
+  uint32_t turn_degree() const;
+  void set_turn_degree(uint32_t turn_degree);
+
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void set_begin_cardinal_direction(
       TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
@@ -72,6 +75,7 @@ class Maneuver {
   std::string instruction_;
   float distance_;
   uint32_t time_;
+  uint32_t turn_degree_;
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;

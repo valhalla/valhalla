@@ -75,6 +75,14 @@ void Maneuver::set_time(uint32_t time) {
   time_ = time;
 }
 
+uint32_t Maneuver::turn_degree() const {
+  return turn_degree_;
+}
+
+void Maneuver::set_turn_degree(uint32_t turn_degree) {
+  turn_degree_ = turn_degree;
+}
+
 TripDirections_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
   return begin_cardinal_direction_;
 }
