@@ -1,7 +1,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <valhalla/midgard/util.h>
+
 #include "odin/maneuversbuilder.h"
+
+using namespace valhalla::midgard;
+
 
 namespace valhalla {
 namespace odin {
@@ -111,12 +116,11 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
 void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   int nodeIndex = 0;
 
-  FinalizeManeuver(maneuver, nodeIndex);
-
   // Set the start maneuver type
   // TODO - side of street
   maneuver.set_type(TripDirections_Maneuver_Type_kStart);
 
+  FinalizeManeuver(maneuver, nodeIndex);
 }
 
 void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int nodeIndex) {
@@ -146,7 +150,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
   if (maneuver.street_names().empty()) {
     auto* names = maneuver.mutable_street_names();
     for (const auto& name : prevEdge->name()) {
-      names->emplace_back(StreetName(name));
+      names->emplace_back(name);
     }
   } else {
     // TODO
@@ -156,7 +160,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
   maneuver.set_distance(maneuver.distance() + prevEdge->length());
 
   // Time
-  // TODO
+  maneuver.set_time(
+      maneuver.time() + GetTime(prevEdge->length(), prevEdge->speed()));
 
   // Ramp
   if (prevEdge->ramp()) {
@@ -177,6 +182,13 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
 
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int nodeIndex) {
   auto* currEdge = trip_path_->GetCurrEdge(nodeIndex);
+
+  // if possible, set the turn degree
+  auto* prevEdge = trip_path_->GetPrevEdge(nodeIndex);
+  if (prevEdge) {
+    maneuver.set_turn_degree(
+        GetTurnDegree(prevEdge->end_heading(), currEdge->begin_heading()));
+  }
 
   // Set the maneuver type
   SetManeuverType(maneuver, nodeIndex);
@@ -200,8 +212,35 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int nodeIndex) {
 }
 
 void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int nodeIndex) {
-  // TODO - fix it
-  maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+  // If the type is already set then just return
+  if (maneuver.type() != TripDirections_Maneuver_Type_kNone) {
+    return;
+  }
+
+  // TODO - iterate and expand
+
+  uint32_t turn_degree = maneuver.turn_degree();
+  if ((turn_degree > 349) || (turn_degree < 11)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+  }
+  else if ((turn_degree > 10) && (turn_degree < 45)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+  }
+  else if ((turn_degree > 44) && (turn_degree < 136)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRight);
+  }
+  else if ((turn_degree > 135) && (turn_degree < 181)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kSharpRight);
+  }
+  else if ((turn_degree > 180) && (turn_degree < 225)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kSharpLeft);
+  }
+  else if ((turn_degree > 224) && (turn_degree < 316)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kLeft);
+  }
+  else if ((turn_degree > 315) && (turn_degree < 350)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+  }
 }
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
