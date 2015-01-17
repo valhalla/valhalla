@@ -3,11 +3,16 @@
 
 #include <string>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 // Intersection cases.
-enum IntersectCase { kWithin, kContains, kOutside, kIntersects };
+enum IntersectCase {
+  kWithin,
+  kContains,
+  kOutside,
+  kIntersects
+};
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
@@ -22,14 +27,12 @@ uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading);
  * @return  Returns the angle in radians.
  */
 //float degrees_to_radians(const float d);
-
 /**
  * Radians to degrees conversion
  * @param   r   Angle in radians.
  * @return   Returns the angle in degrees.
  */
 //float radians_to_degrees(const float r);
-
 /**
  * Get a random number between 0 and 1
  */

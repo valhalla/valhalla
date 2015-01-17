@@ -3,43 +3,42 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/point2.h>
 
-
 #include <cmath>
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
 #include <utility>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 int GetTime(const float length, const float speed) {
   return (int)(length / (speed * kHourPerSec) + 0.5f);
 }
 
 uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
-  return (((to_heading - from_heading) + 360) % 360) ;
+  return (((to_heading - from_heading) + 360) % 360);
 }
 
 // TODO - do we really need these?
 /*float degrees_to_radians(const float d) {
-  return d * kDegPerRad;
-}
-float radians_to_degrees(const float r) {
-  return r * kRadPerDeg;
-}*/
+ return d * kDegPerRad;
+ }
+ float radians_to_degrees(const float r) {
+ return r * kRadPerDeg;
+ }*/
 
 float rand01() {
   return (float)rand() / (float)RAND_MAX;
 }
 
 float FastInvSqrt(float x) {
-   float xhalf = 0.5f * x;
-   int i = *(int*)&x;            // get bits for floating value
-   i = 0x5f3759df - (i>>1);      // give initial guess y0
-   x = *(float*)&i;              // convert bits back to float
-   return x*(1.5f - xhalf*x*x);  // newton step
-   // x *= 1.5f - xhalf*x*x;     // repeating step increases accuracy
+  float xhalf = 0.5f * x;
+  int i = *(int*)&x;                 // get bits for floating value
+  i = 0x5f3759df - (i >> 1);         // give initial guess y0
+  x = *(float*)&i;                   // convert bits back to float
+  return x * (1.5f - xhalf * x * x); // newton step
+  // x *= 1.5f - xhalf*x*x;          // repeating step increases accuracy
 }
 
 float sqr(const float a) {
@@ -72,7 +71,7 @@ std::string encode(const container_t& points) {
   //this is an offset encoding so we remember the last point we saw
   int last_lon = 0, last_lat = 0;
   //for each point
-  for(const auto& p : points) {
+  for (const auto& p : points) {
     //shift the decimal point 5 places to the right and truncate
     int lon = static_cast<int>(floor(p.first * 1e5));
     int lat = static_cast<int>(floor(p.second * 1e5));
@@ -100,17 +99,17 @@ container_t decode(const std::string& encoded) {
   //handy lambda to turn a few bytes of an encoded string into an integer
   auto deserialize = [&encoded, &i](const int previous) {
     //grab each 5 bits and mask it in where it belongs using the shift
-    int byte, shift = 0, result = 0;
-    do {
-      //TODO: could use a check here for out of bounds
-      //which could happen on improper polyline string data
-      byte = static_cast<int>(encoded[i++]) - 63;
-      result |= (byte & 0x1f) << shift;
-      shift += 5;
-    } while (byte >= 0x20);
-    //undo the left shift from above or the bit flipping and add to previous since its an offset
-    return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
-  };
+      int byte, shift = 0, result = 0;
+      do {
+        //TODO: could use a check here for out of bounds
+        //which could happen on improper polyline string data
+        byte = static_cast<int>(encoded[i++]) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      }while (byte >= 0x20);
+      //undo the left shift from above or the bit flipping and add to previous since its an offset
+      return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
+    };
 
   //make sure to go over all the characters
   int last_lon = 0, last_lat = 0;
@@ -119,7 +118,8 @@ container_t decode(const std::string& encoded) {
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
     //shift the decimal point 5 places to the left
-    output.emplace_back(static_cast<float>(lon) / 1e5, static_cast<float>(lat) / 1e5);
+    output.emplace_back(static_cast<float>(lon) / 1e5,
+                        static_cast<float>(lat) / 1e5);
     //remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
@@ -131,12 +131,16 @@ container_t decode(const std::string& encoded) {
 //projects that depend on this library aren't limited in the instantiations made here
 template std::string encode<std::vector<PointLL> >(const std::vector<PointLL>&);
 template std::string encode<std::vector<Point2> >(const std::vector<Point2>&);
-template std::string encode<std::vector<std::pair<float, float> > >(const std::vector<std::pair<float, float> >&);
-template std::string encode<std::vector<std::pair<double, double> > >(const std::vector<std::pair<double, double> >&);
+template std::string encode<std::vector<std::pair<float, float> > >(
+    const std::vector<std::pair<float, float> >&);
+template std::string encode<std::vector<std::pair<double, double> > >(
+    const std::vector<std::pair<double, double> >&);
 template std::vector<PointLL> decode<std::vector<PointLL> >(const std::string&);
 template std::vector<Point2> decode<std::vector<Point2> >(const std::string&);
-template std::vector<std::pair<float, float> > decode<std::vector<std::pair<float, float> > >(const std::string&);
-template std::vector<std::pair<double, double> > decode<std::vector<std::pair<double, double> > >(const std::string&);
+template std::vector<std::pair<float, float> > decode<
+    std::vector<std::pair<float, float> > >(const std::string&);
+template std::vector<std::pair<double, double> > decode<
+    std::vector<std::pair<double, double> > >(const std::string&);
 
 }
 }
