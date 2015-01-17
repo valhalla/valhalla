@@ -47,6 +47,9 @@ test/polyline2
 test/pointll
 test/encode
 test/tiles
+test/aabbll
+test/tilehierarchy
+test/util
 test/*.log
 test/*.trs
 
