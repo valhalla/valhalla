@@ -188,7 +188,7 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
 }
 
 // Calculate the heading from the start of a polyline of lat,lng points to a
-// point the specified distance from the start.
+// point at the specified distance from the start.
 float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
                                     const float dist) {
   int n = (int) pts.size();
@@ -222,8 +222,8 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
   return pts[0].Heading(pts[1]);
 }
 
-// Calculate the heading from the end of a polyline of lat,lng points to a
-// point the specified distance from the end.
+// Calculate the heading from a point at a specified distance from the end
+// of a polyline of lat,lng points to the end point of the polyline.
 float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
                                       const float dist) {
   int n = (int) pts.size();
