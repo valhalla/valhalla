@@ -6,7 +6,7 @@
 #include <limits>
 
 namespace {
-  const float INVALID = 0xBADBADBAD;
+const float INVALID = 0xBADBADBAD;
 }
 
 namespace valhalla {
@@ -24,7 +24,7 @@ float PointLL::lng() const {
   return first;
 }
 
-bool PointLL::IsValid() const{
+bool PointLL::IsValid() const {
   //is a range check appropriate?
   //return first >= -180 && y >= -90 && first < 180 && second < 90;
   return first != INVALID && second != INVALID;
@@ -66,8 +66,8 @@ float PointLL::Distance(const PointLL& ll2) const {
 
 float PointLL::Length(const std::vector<PointLL>& pts) const {
   float length = 0;
-  for (unsigned int i = 0, n = pts.size(); i < n-1; i++) {
-    length += pts[i].Distance(pts[i+1]);
+  for (unsigned int i = 0, n = pts.size(); i < n - 1; i++) {
+    length += pts[i].Distance(pts[i + 1]);
   }
   return length;
 }
@@ -101,10 +101,10 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
                             int& idx) const {
   float mindist = std::numeric_limits<float>::max();
   // If there are no points we are done
-  if(pts.size() == 0)
+  if (pts.size() == 0)
     return mindist;
   // If there is one point we are done
-  if(pts.size() == 1) {
+  if (pts.size() == 1) {
     mindist = DistanceSquared(pts.front());
     closest = pts.front();
     idx = 0;
@@ -188,10 +188,10 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
 }
 
 // Calculate the heading from the start of a polyline of lat,lng points to a
-// point the specified distance from the start.
+// point at the specified distance from the start.
 float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                           const float dist) {
-  int n = (int)pts.size();
+                                    const float dist) {
+  int n = (int) pts.size();
   if (n < 2) {
     // TODO error!?
     return 0.0f;
@@ -203,14 +203,13 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
   int i = 0;
   double d = 0.0;
   double seglength = 0.0;
-  while (d < dist && i < n-1) {
-    seglength = pts[i].Distance(pts[i+1]);
+  while (d < dist && i < n - 1) {
+    seglength = pts[i].Distance(pts[i + 1]);
     if (d + seglength > dist) {
       // Set the extrapolated point along the line.
-      float pct = (float)((dist - d) / seglength);
-      PointLL ll(pts[i].lng() + ((pts[i+1].lng() - pts[i].lng()) * pct),
-                 pts[i].lat() + ((pts[i+1].lat() - pts[i].lat()) * pct)
-                );
+      float pct = (float) ((dist - d) / seglength);
+      PointLL ll(pts[i].lng() + ((pts[i + 1].lng() - pts[i].lng()) * pct),
+                 pts[i].lat() + ((pts[i + 1].lat() - pts[i].lat()) * pct));
       return pts[0].Heading(ll);
     } else {
       d += seglength;
@@ -223,11 +222,11 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
   return pts[0].Heading(pts[1]);
 }
 
-// Calculate the heading from the end of a polyline of lat,lng points to a
-// point the specified distance from the end.
+// Calculate the heading from a point at a specified distance from the end
+// of a polyline of lat,lng points to the end point of the polyline.
 float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                        const float dist) {
-  int n = (int)pts.size();
+                                      const float dist) {
+  int n = (int) pts.size();
   if (n < 2) {
     // TODO error!?
     return 0.0f;
@@ -241,14 +240,13 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
   double d = 0.0;
   double seglength;
   while (d < dist && i >= 0) {
-    seglength = pts[i].Distance(pts[i+1]);
+    seglength = pts[i].Distance(pts[i + 1]);
     if (d + seglength > dist) {
       // Set the extrapolated point along the line.
-      float pct = (float)((dist - d) / seglength);
-      PointLL ll(pts[i+1].lng() + ((pts[i].lng() - pts[i+1].lng()) * pct),
-                 pts[i+1].lat() + ((pts[i].lat() - pts[i+1].lat()) * pct)
-                );
-      return ll.Heading(pts[n-1]);
+      float pct = (float) ((dist - d) / seglength);
+      PointLL ll(pts[i + 1].lng() + ((pts[i].lng() - pts[i + 1].lng()) * pct),
+                 pts[i + 1].lat() + ((pts[i].lat() - pts[i + 1].lat()) * pct));
+      return ll.Heading(pts[n - 1]);
     } else {
       d += seglength;
       i--;

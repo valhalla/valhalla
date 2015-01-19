@@ -3,8 +3,8 @@
 
 #include <valhalla/midgard/point2.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * Latitude, Longitude point. Derives from Point2 and allows access methods
@@ -65,7 +65,6 @@ class PointLL : public Point2 {
    */
   float DistanceSquared(const PointLL& ll2) const;
 
-
   /**
    * Compute the length of the polyline represented by a set of
    * lat,lng points. Avoids having to copy the points into the
@@ -107,22 +106,22 @@ class PointLL : public Point2 {
 
   /**
    * Calculate the heading from the start of a polyline of lat,lng points to a
-   * point the specified distance from the start.
+   * point at the specified distance from the start.
    * @param  pts   Polyline - list of lat,lng points.
    * @param  dist  Distance in kilometers from start to find heading to.
    */
   static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
-                             const float dist);
+                                    const float dist);
 
   /**
-   * Calculate the heading from a point a specified length from the end of a
-   * polyline of lat,lng points to the end point of the polyline.
+   * Calculate the heading from a point at a specified distance from the end
+   * of a polyline of lat,lng points to the end point of the polyline.
    * @param  pts   Polyline - list of lat,lng points.
    * @param  dist  Distance in kilometers from end. A point that distance is
    *               used to find the heading to the end point.
    */
   static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
-                          const float dist);
+                                      const float dist);
 };
 
 }
