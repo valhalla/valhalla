@@ -618,9 +618,11 @@ void HierarchyBuilder::AddConnectionsToBaseTile(const uint32_t basetileid,
       edgeconnection.set_endnode(connections[n].newnode);
       directededges.emplace_back(std::move(edgeconnection));
 
-      // Increment n and get the next base node Id that connects
+      // Increment n and get the next base node Id that connects. Set next
+      // connection id to 0 if we are at the end of the list
       n++;
-      nextconnectionid = connections[n].basenode.id();
+      nextconnectionid = (n >= connections.size()) ?
+            0 : connections[n].basenode.id();
     }
 
     // Add the node to the list
