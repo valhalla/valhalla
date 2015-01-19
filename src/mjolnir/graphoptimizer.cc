@@ -55,12 +55,14 @@ bool GraphOptimizer::Optimize() {
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
                                   nodeinfo.edge_index() + j);
 
-           // Set the opposing edge index
-         /*  if (directededge.shortcut()) {
-             // || directededge.trans_up() || directededge.trans_down()) {
+          // Set the opposing edge index
+          // NOTE: shortcut edges do not always have opposing shortcuts
+          // may need to fix this!
+          if (directededge.shortcut()) {
             directededge.set_opp_index(31);
-          } else {*/
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
+          } else {
+            directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
+          }
           directededges.emplace_back(std::move(directededge));
         }
 
