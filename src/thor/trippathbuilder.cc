@@ -27,7 +27,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                 const std::vector<GraphId>& pathedges) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
-std::cout << "Build trip path" << std::endl;
+
   // TODO - what about the first node? Probably should pass it in?
   uint32_t shortcutcount = 0;
   const NodeInfo* nodeinfo = nullptr;
