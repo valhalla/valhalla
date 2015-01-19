@@ -1,7 +1,6 @@
 #include "test.h"
 #include "valhalla/midgard/util.h"
 
-
 using namespace std;
 using namespace valhalla::midgard;
 
@@ -37,6 +36,13 @@ void TestGetTurnDegree() {
     throw std::runtime_error("Invalid turn degree");
 }
 
+void TestGetTime() {
+  if (GetTime(100, 100) != 3600)
+    throw std::runtime_error("Invalid time");
+  if (GetTime(5, 20) != 900)
+    throw std::runtime_error("Invalid time");
+}
+
 }
 
 int main() {
@@ -44,6 +50,9 @@ int main() {
 
   // GetTurnDegree
   suite.test(TEST_CASE(TestGetTurnDegree));
+
+  // GetTime
+  suite.test(TEST_CASE(TestGetTime));
 
   return suite.tear_down();
 }

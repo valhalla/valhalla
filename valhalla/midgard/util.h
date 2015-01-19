@@ -16,9 +16,20 @@ enum IntersectCase {
 
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
+ * @param  length  distance in km.
+ * @param  speed  in km per hour.
+ * @return the computed time in seconds.
  */
 int GetTime(const float length, const float speed);
 
+/**
+ * Computes the turn degree based on the specified "from heading" and
+ * "to heading"
+ * @param  from_heading  heading at the end of the "from" edge.
+ * @param  to_heading  heading at the begin of the "to" edge.
+ * @return the computed turn degree. For example, if one would make a perfect
+ *         right turn - the returned value would be 90.
+ */
 uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading);
 
 /**
