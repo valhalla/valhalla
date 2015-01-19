@@ -41,7 +41,7 @@ libvalhalla_odin.la
 # tests
 test-suite.log
 test-driver
-#test/narrativebuilder
+test/maneuversbuilder
 test/*.log
 test/*.trs
 
