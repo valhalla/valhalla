@@ -74,11 +74,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             directededge->edgedataoffset());
     trip_edge->set_begin_shape_index(trip_shape.size());
     if (directededge->forward()) {
-      trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() +
-              (trip_shape.size() ? 1 : 0), edgeinfo->shape().rend());
-    } else {
       trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() +
               (trip_shape.size() ? 1 : 0), edgeinfo->shape().end());
+    } else {
+      trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() +
+                    (trip_shape.size() ? 1 : 0), edgeinfo->shape().rend());
     }
     trip_edge->set_end_shape_index(trip_shape.size());
 
