@@ -27,7 +27,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                 const std::vector<GraphId>& pathedges) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
-
+std::cout << "Build trip path" << std::endl;
   // TODO - what about the first node? Probably should pass it in?
   uint32_t shortcutcount = 0;
   const NodeInfo* nodeinfo = nullptr;
@@ -40,12 +40,20 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     const DirectedEdge* directededge = graphtile->directededge(edge);
 
     // Skip transition edges
-    if (directededge->trans_up()) {
-//      std::cout << "Transition up!" << std::endl;
-      continue;
-    }
-    if (directededge->trans_down()) {
-//      std::cout << "Transition down" << std::endl;
+    if (directededge->trans_up() || directededge->trans_down()) {
+      // TODO - remove debug stuff later.
+      if (directededge->trans_up()) {
+        std::cout << "Transition up!" << std::endl;
+      } else {
+        std::cout << "Transition down" << std::endl;
+      }
+      // Get the end node (needed for connected edges at next iteration).
+      GraphId endnode = directededge->endnode();
+      nodeinfo = graphreader.GetGraphTile(endnode)->node(
+                      directededge->endnode());
+      // TODO - how do we find the opposing edge to the incoming edge
+      // on the prior level?
+      prior_opp_index = kMaxEdgesPerNode + 1;
       continue;
     }
 
@@ -92,7 +100,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //          A || \\ G
     //            ||  \\
     //            (1)  (X)
-
     if (nodeinfo != nullptr) {
       // Get the first edge from the node
       uint32_t edgeid = nodeinfo->edge_index();
