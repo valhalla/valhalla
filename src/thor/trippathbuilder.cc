@@ -89,11 +89,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
       trip_edge->set_begin_heading(
           fmod((PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                            kKmOffsetForHeading) + 180),360));
+                                            kKmOffsetForHeading) + 180.0f),360));
 
       trip_edge->set_end_heading(
           fmod((PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                            kKmOffsetForHeading) + 180),360));
+                                            kKmOffsetForHeading) + 180.0f),360));
 
     }
     trip_edge->set_end_shape_index(trip_shape.size());
