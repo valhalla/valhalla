@@ -54,6 +54,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/exitsignbuilder.h \
 	valhalla/mjolnir/uniquenames.h \
 	valhalla/mjolnir/graphbuilder.h \
+	valhalla/mjolnir/graphoptimizer.h \
 	valhalla/mjolnir/hierarchybuilder.h \
 	valhalla/mjolnir/luatagtransform.h \
 	valhalla/mjolnir/osmnode.h \
@@ -69,6 +70,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc \
 	src/mjolnir/graphbuilder.cc \
+	src/mjolnir/graphoptimizer.cc \
 	src/mjolnir/hierarchybuilder.cc \
         src/mjolnir/luatagtransform.cc \
         src/mjolnir/osmnode.cc \
