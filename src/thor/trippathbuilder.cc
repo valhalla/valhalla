@@ -77,24 +77,31 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() +
               (trip_shape.size() ? 1 : 0), edgeinfo->shape().end());
 
-      trip_edge->set_begin_heading(PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                  kKmOffsetForHeading));
-      trip_edge->set_end_heading(PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                  kKmOffsetForHeading));
+      trip_edge->set_begin_heading(
+          std::round(
+              PointLL::HeadingAlongPolyline(edgeinfo->shape(), kKmOffsetForHeading)));
+      trip_edge->set_end_heading(
+          std::round(
+              PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kKmOffsetForHeading)));
 
     } else {
 
-      trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() +
-                    (trip_shape.size() ? 1 : 0), edgeinfo->shape().rend());
+      trip_shape.insert(
+          trip_shape.end(),
+          edgeinfo->shape().rbegin() + (trip_shape.size() ? 1 : 0),
+          edgeinfo->shape().rend());
 
       trip_edge->set_begin_heading(
-          fmod((PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                            kKmOffsetForHeading) + 180.0f),360));
+          std::round(
+              fmod(
+                  (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
+                                                   kKmOffsetForHeading) + 180.0f), 360)));
 
       trip_edge->set_end_heading(
-          fmod((PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                            kKmOffsetForHeading) + 180.0f),360));
-
+          std::round(
+              fmod(
+                  (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
+                                                 kKmOffsetForHeading) + 180.0f), 360)));
     }
     trip_edge->set_end_shape_index(trip_shape.size());
 
