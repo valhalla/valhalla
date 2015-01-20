@@ -128,7 +128,24 @@ bike_reverse = {
 ["opposite_track"] = "true"
 }
 
+shared = {
+["shared_lane"] = 1,
+["share_busway"] = 1,
+["shared"] = 1
+}
+
+dedicated = {
+["opposite_track"] = 2,
+["track"] = 2
+}
+
+separated = {
+["opposite_lane"] = 3,
+["lane"] = 3
+}
+
 oneway = {
+["no"] = "false",
 ["-1"] = "false",
 ["yes"] = "true",
 ["true"] = "true",
@@ -139,14 +156,6 @@ bridge = {
 ["yes"] = "true",
 ["no"] = "false",
 ["1"] = "true"
-}
-
-surface = {
-["asphalt"] = "false",
-["paved"] = "false",
-["concrete"] = "false",
-["cobblestone"] = "false",
-["cobblestone:flattened"] = "false"
 }
 
 --TODO: building_passage is for ped only
@@ -236,7 +245,12 @@ function filter_tags_generic(kv)
   end
 
   --check the oneway-ness and traversability against the direction of the geom
-  kv["bike_backward"] = bike_reverse[kv["cycleway"]] or "false"
+  kv["bike_backward"] = bike_reverse[kv["cycleway"]] or bike_reverse[kv["cycleway:left"]] or bike_reverse[kv["cycleway:right"]] or "false"
+
+  if kv["bike_backward"] == "true" then
+    oneway_bike = oneway[kv["oneway:bicycle"]]
+  end
+
   local oneway_norm = oneway[kv["oneway"]]
   if kv["junction"] == "roundabout" then
     oneway_norm = "true"
@@ -247,12 +261,26 @@ function filter_tags_generic(kv)
   kv["oneway"] = oneway_norm
   if oneway_norm == "true" then
     kv["auto_backward"] = "false"
-    kv["bike_backward"] = "false"
+    if kv["bike_backward"] then 
+      if (oneway_bike == nil or oneway_bike == "true") then --bike only in reverse on a bike path.
+        kv["bike_forward"] = "false"
+      elseif oneway_bike == "false" then --bike in both directions on a bike path.
+        kv["bike_forward"] = "true"
+      end
+    end
   elseif oneway_norm == nil then
     kv["auto_backward"] = kv["auto_forward"]
     if kv["bike_backward"] == "false" then
       kv["bike_backward"] = kv["bike_forward"]
     end
+  end
+
+  --Bike forward / backward overrides.
+  if ((shared[kv["cycleway:both"]] or separated[kv["cycleway:both"]] or dedicated[kv["cycleway:both"]]) or
+      ((shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]]) and 
+       (shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]]))) then
+    kv["bike_forward"] = "true"
+    kv["bike_backward"] = "true"
   end
 
   --if none of the modes were set we are done looking at this junker
@@ -301,6 +329,18 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
+  local cycle_lane = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or 0
+
+  if cycle_lane == 0 then
+    cycle_lane = shared[kv["cycleway:right"]] or separated[kv["cycleway:right"]] or dedicated[kv["cycleway:right"]] or 0
+
+    if cycle_lane == 0 then
+      cycle_lane = shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]] or 0
+    end
+  end
+
+  kv["cycle_lane"] = cycle_lane
+
   if kv["highway"] and string.find(kv["highway"], "_link") then --*_link 
      kv["link"] = "true"  --do we need to add more?  turnlane?
   end
@@ -316,17 +356,8 @@ function filter_tags_generic(kv)
   kv["speed"] = normalize_speed(kv["maxspeed"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
+  kv["surface"] = kv["surface"]
 
-  local surface = surface[kv["surface"]]
-
-  if surface then
-     kv["surface"] = "false"  --paved
-  elseif kv["surface"] then 
-     kv["surface"] = "true"  --unpaved
-  else 
-    kv["surface"] = "false"  --default to paved.
-  end 
-  
   lane_count = numeric_prefix(kv["lanes"])
   if lane_count and lane_count > 10 then
     lane_count = 10
