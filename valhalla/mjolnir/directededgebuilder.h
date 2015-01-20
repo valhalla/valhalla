@@ -22,12 +22,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   DirectedEdgeBuilder();
 
   /**
-   * Sets the length of the edge in kilometers.
-   * @param  length  Length of the edge in kilometers.
-   */
-  void set_length(const float length);
-
-  /**
    * Set the end node of this directed edge.
    * @param  endnode  End node of the directed link.
    */
@@ -39,6 +33,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  offset  Offset from the start of the edge data within a tile.
    */
   void set_edgedataoffset(const uint32_t offset);
+
+  /**
+   * Sets the length of the edge in meters.
+   * @param  length  Length of the edge in meters.
+   */
+  void set_length(const uint32_t length);
 
   /**
    * Sets the car access of the edge in each direction.

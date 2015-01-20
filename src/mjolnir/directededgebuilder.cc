@@ -5,14 +5,11 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+// TODO - validation of incoming data!
+
 // Default constructor
 DirectedEdgeBuilder::DirectedEdgeBuilder()
   : DirectedEdge() {
-}
-
-// Sets the length of the edge in kilometers.
-void DirectedEdgeBuilder::set_length(const float length) {
-  length_ = length;
 }
 
 // Sets the end node of this directed edge.
@@ -23,6 +20,16 @@ void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
 // Get the offset to the common edge data.
 void DirectedEdgeBuilder::set_edgedataoffset(const uint32_t offset) {
   edgedataoffset_ = offset;
+}
+
+// Sets the length of the edge in meters.
+void DirectedEdgeBuilder::set_length(const uint32_t length) {
+  if (length > kMaxEdgeLength) {
+    std::cout << "Exceeding max. edge length: " << length << std::endl;
+    geoattributes_.length = kMaxEdgeLength;
+  } else {
+    geoattributes_.length = length;
+  }
 }
 
 // Sets the car access of the edge in each direction.

@@ -166,10 +166,10 @@ class HierarchyBuilder {
   /**
    * Connect edges on the shortcut. Appends shape.
    */
-  float ConnectEdges(const baldr::GraphId& basenode,
-                     const baldr::GraphId& edgeid,
-                     std::vector<midgard::PointLL>& shape,
-                     baldr::GraphId& nodeb);
+  uint32_t ConnectEdges(const baldr::GraphId& basenode,
+                        const baldr::GraphId& edgeid,
+                        std::vector<midgard::PointLL>& shape,
+                        baldr::GraphId& nodeb);
 
   /*
    * Check if the edge is an entering matched edge of a contracted node.
