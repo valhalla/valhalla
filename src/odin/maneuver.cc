@@ -9,6 +9,7 @@ Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone),
       distance_(0.0f),
       time_(0),
+      turn_degree_(0),
       begin_cardinal_direction_(
           TripDirections_Maneuver_CardinalDirection_kNorth),
       begin_heading_(0),
