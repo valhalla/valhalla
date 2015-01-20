@@ -614,9 +614,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           DirectedEdgeBuilder& directededge = directededges.back();
           const Edge& edge = edges[edgeindex];
 
-          // Compute length from the latlngs.
+          // Compute length from the latlngs and convert to nearest meters
           float length = node.latlng().Length(edge.latlngs_);
-          directededge.set_length(length);
+          directededge.set_length(static_cast<uint32_t>(length + 0.5f));
 
           // Get the way information and set attributes
           const OSMWay &w = ways[edge.wayindex_];
