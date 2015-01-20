@@ -29,7 +29,7 @@ namespace bpo = boost::program_options;
  * TODO: add locations to TripPath
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-             const PathLocation& dest, std::string routetype) {
+                  const PathLocation& dest, std::string routetype) {
   // Register costing methods
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -50,7 +50,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   start = std::clock();
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
   std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
 
   // Form output information based on pathedges
@@ -71,23 +71,18 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
 
 TripDirections DirectionsTest(TripPath& trip_path) {
   DirectionsBuilder directions;
-  TripDirections trip_directions = directions.BuildSimple(trip_path);
+  TripDirections trip_directions = directions.Build(trip_path);
   float totalDistance = 0.0f;
+  int m = 1;
   for (const auto& maneuver : trip_directions.maneuver()) {
     std::cout << "----------------------------------------------" << std::endl;
-    std::cout << maneuver.text_instruction() << " for " << maneuver.length()
-              << " km" << std::endl;
+    std::cout << m++ << ": " << maneuver.text_instruction() << " | "
+              << maneuver.length() << " km" << std::endl;
     totalDistance += maneuver.length();
   }
   std::cout << "==============================================" << std::endl;
   std::cout << "Total distance: " << totalDistance << " km" << std::endl;
 
-  return trip_directions;
-}
-
-TripDirections DirectionsTest2(TripPath& trip_path) {
-  DirectionsBuilder directions;
-  TripDirections trip_directions = directions.Build(trip_path);
   return trip_directions;
 }
 
@@ -184,7 +179,6 @@ int main(int argc, char *argv[]) {
 
   // Try the the directions
   TripDirections trip_directions = DirectionsTest(trip_path);
-  TripDirections trip_directions2 = DirectionsTest2(trip_path);
 
   return EXIT_SUCCESS;
 }
