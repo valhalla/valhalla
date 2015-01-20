@@ -18,11 +18,11 @@ message TripPath {
     optional string country = 8;    
   }
   
-  message Exit {                  // TODO - exit vs sign
-    optional string name = 1;
-    optional string number = 2;
-    repeated string branch = 3;
-    repeated string toward = 4;
+  message Exit {                 // TODO - exit vs sign
+    optional string number = 1;  // 67B
+    repeated string branch = 2;  // I 95 N
+    repeated string toward = 3;  // New York
+    optional string name = 4;    // Not used much
   }
   
   enum Driveability {
@@ -33,21 +33,26 @@ message TripPath {
   }
   
   message Edge {
-    optional uint64 id = 1;                 // TODO - OpenLR?
-    repeated string name = 2;               // street names TODO - other info? shields?
-    optional float length = 3;              // km
-    optional float speed = 4;               // km/h
-    optional uint32 begin_heading = 5;      // 0-360 
-    optional uint32 end_heading = 6;        // 0-360
-    optional uint32 begin_shape_index = 7;  // inclusive
-    optional uint32 end_shape_index = 8;    // exclusive
-    optional Driveability driveability = 9; // 
-    optional bool ramp = 10;                //
-    optional bool toll = 11;                //
-    optional bool unpaved = 12;             // ferry, etc.
-    optional bool internal_link = 13;       // TODO - keep?
-    repeated Exit exit = 14;
-    optional uint32 end_node_index = 16;
+    repeated string name = 1;               // street names
+    optional float length = 2;              // km
+    optional float speed = 3;               // km/h
+    optional uint32 begin_heading = 4;      // 0-359
+    optional uint32 end_heading = 5;        // 0-359
+    optional uint32 begin_shape_index = 6;  // inclusive
+    optional uint32 end_shape_index = 7;    // inclusive
+    optional Driveability driveability = 8;
+    optional bool ramp = 9;
+    optional bool turn_lane = 10;
+    optional bool ferry = 11;
+    optional bool railferry = 12;
+    optional bool toll = 13;
+    optional bool unpaved = 14;
+    optional bool tunnel = 15;
+    optional bool bridge = 16;
+    optional bool roundabout = 17;
+    optional bool internal_link = 18;
+    optional uint32 end_node_index = 19;
+    repeated Exit exit = 20;
   }
   
   message Node {
