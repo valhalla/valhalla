@@ -38,6 +38,7 @@ libvalhalla_midgard.la
 # tests
 test-suite.log
 test-driver
+test/thread_file_log_test.log
 test/point2
 test/linesegment2
 test/distanceapproximator
@@ -50,6 +51,7 @@ test/tiles
 test/aabbll
 test/tilehierarchy
 test/util
+test/logging
 test/*.log
 test/*.trs
 
