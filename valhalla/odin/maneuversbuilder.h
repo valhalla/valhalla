@@ -36,6 +36,9 @@ class ManeuversBuilder {
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver);
 
+  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
+      uint32_t heading);
+
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int nodeIndex);
 
   EnhancedTripPath* trip_path_;
