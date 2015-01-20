@@ -160,7 +160,7 @@ class FileLogger : public Logger {
     file_name = config.substr(++pos);
     
     //if we specify an interval
-    reopen_interval = std::chrono::seconds(10);
+    reopen_interval = std::chrono::seconds(300);
     pos = file_name.find_first_of(',', pos);
     if(pos != std::string::npos && pos != config.length() - 1)
     {
