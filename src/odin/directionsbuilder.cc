@@ -1,8 +1,9 @@
 #include <iostream>
 
+#include "odin/enhancedtrippath.h"
 #include "odin/directionsbuilder.h"
 #include "odin/maneuversbuilder.h"
-#include "odin/enhancedtrippath.h"
+#include "odin/narrativebuilder.h"
 
 namespace valhalla {
 namespace odin {
@@ -78,15 +79,17 @@ TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
   ManeuversBuilder maneuversBuilder(etp);
   auto maneuvers = maneuversBuilder.Build();
 
+  // Create the narrative
+  // TODO - factory
+  NarrativeBuilder::Build(maneuvers);
+
   // GDG
   std::cout << __FILE__ << ":" << __LINE__ << " | Build" << std::endl;
   for (auto& maneuver : maneuvers) {
     std::cout << "----------------------------------" << std::endl;
     std::cout << maneuver.ToString() << std::endl;
+    std::cout << maneuver.instruction() << std::endl;
   }
-
-  // Create the narrative
-  // TODO - factory
 
   // Return trip directions
   return PopulateTripDirections(maneuvers);
