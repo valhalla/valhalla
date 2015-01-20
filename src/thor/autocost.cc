@@ -85,7 +85,7 @@ AutoCost::AutoCost()
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
   for (uint32_t s = 1; s < 255; s++) {
-    speedfactor_[s] = kSecPerHour / static_cast<float>(s);
+    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
 }
 
@@ -100,25 +100,25 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
   // Allow upward transitions except when close to the destination
   if (edge->trans_up()) {
     return (edge->endnode().level() == 0) ?
-          dist2dest > 50.0f : dist2dest > 10.0f;
+          dist2dest > 50000.0f : dist2dest > 10000.0f;
   }
 
   // Allow downward transitions only when near the destination
   if (edge->trans_down()) {
     return (edge->endnode().level() == 1) ?
-          dist2dest < 50.0f : dist2dest < 10.0f;
+          dist2dest < 50000.0f : dist2dest < 10000.0f;
   }
 
   // Skip shortcut edges when near the destination
-  if (edge->shortcut() && dist2dest < 10.0f)
+  if (edge->shortcut() && dist2dest < 10000.0f)
     return false;
 
   // Do not allow Uturns or entering no-thru edges.
   // TODO - evaluate later!
   // TODO - until the opp_index is set in the new hierarchies do not test
   // for uturn!
-//  if (uturn || (edge->not_thru() && dist2dest > 5.0))
-  if ((edge->not_thru() && dist2dest > 5.0)) {
+//  if (uturn || (edge->not_thru() && dist2dest > 5000.0))
+  if ((edge->not_thru() && dist2dest > 5000.0)) {
     return false;
   }
   return (edge->forwardaccess() & kAutoAccess);
