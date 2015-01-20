@@ -46,6 +46,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
     // GDG
+    /*
     auto* prevEdge = trip_path_->GetPrevEdge(i);
     auto* currEdge = trip_path_->GetCurrEdge(i);
     auto* nextEdge = trip_path_->GetNextEdge(i);
@@ -71,6 +72,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     else
       std::cout << "  | nextEdge=NONE" << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
+    */
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
       UpdateManeuver(maneuvers.front(), i);
@@ -187,10 +189,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int nodeIndex) {
   if (prevEdge) {
     maneuver.set_turn_degree(
         GetTurnDegree(prevEdge->end_heading(), currEdge->begin_heading()));
-    // GDG
-    std::cout << "FROM_HEADING=" << prevEdge->end_heading() << "  | TO_HEADING="
-              << currEdge->begin_heading() << "  | TURN_DEGREE="
-              << maneuver.turn_degree() << std::endl;
   }
 
   // Set the maneuver type
