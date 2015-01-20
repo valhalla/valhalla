@@ -121,12 +121,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_dest_only(const bool destonly);
 
   /**
-   * Sets the unpaved flag.
-   * @param  unpaved  Is unpaved?
-   */
-  void set_unpaved(const bool unpaved);
-
-  /**
    * Sets the tunnel flag.
    * @param  tunnel   Is tunnel?
    */
@@ -143,6 +137,18 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  roundabout   Is roundabout?
    */
   void set_roundabout(const bool roundabout);
+
+  /**
+   * Sets the surface.
+   * @param  surface   Smoothness.
+   */
+  void set_surface(const Surface surface);
+
+  /**
+    * Sets the cycle lane.
+    * @param  cyclelane   Type of cycle lane.
+    */
+  void set_cyclelane(const CycleLane cyclelane);
 
   /**
    * Set the flag for whether this edge represents a transition up one level

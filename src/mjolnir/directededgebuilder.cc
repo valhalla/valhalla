@@ -115,11 +115,6 @@ void DirectedEdgeBuilder::set_dest_only(const bool destonly) {
   attributes_.dest_only = destonly;
 }
 
-//Sets the unpaved flag.
-void DirectedEdgeBuilder::set_unpaved(const bool unpaved) {
-  attributes_.unpaved = unpaved;
-}
-
 //Sets the tunnel flag.
 void DirectedEdgeBuilder::set_tunnel(const bool tunnel) {
   attributes_.tunnel = tunnel;
@@ -133,6 +128,16 @@ void DirectedEdgeBuilder::set_bridge(const bool bridge) {
 //Sets the roundabout flag.
 void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
+}
+
+//Sets the surface.
+void DirectedEdgeBuilder::set_surface(const Surface surface) {
+  attributes_.surface = static_cast<uint8_t>(surface);
+}
+
+//Sets the cycle lane.
+void DirectedEdgeBuilder::set_cyclelane(const CycleLane cyclelane) {
+  attributes_.cycle_lane = static_cast<uint8_t>(cyclelane);
 }
 
 // Set the flag for whether this edge represents a transition up one level

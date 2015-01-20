@@ -350,8 +350,67 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "int_ref")
       w.set_int_ref(tag.second);
 
-    else if (tag.first == "surface")
-      w.set_surface(tag.second == "true" ? true : false);
+    //TODO     if surface = Unpaved and Highway = path then surface = kPath
+    //         if track the surface = dirt?
+    else if (tag.first == "surface") {
+      if (tag.second.find("paved") != std::string::npos
+          || tag.second.find("asphalt") != std::string::npos
+          || tag.second.find("concrete") != std::string::npos)
+        w.set_surface(Surface::kPavedSmooth);
+
+      else if (tag.second.find("tartan") != std::string::npos
+          || tag.second.find("pavingstone") != std::string::npos
+          || tag.second.find("paving_stones") != std::string::npos)
+        w.set_surface(Surface::kPaved);
+
+      else if (tag.second.find("cobblestone") != std::string::npos
+          || tag.second.find("bricks") != std::string::npos)
+        w.set_surface(Surface::kPavedRough);
+
+      else if (tag.second.find("compacted") != std::string::npos)
+        w.set_surface(Surface::kCompacted);
+
+      else if (tag.second.find("dirt") != std::string::npos
+          || tag.second.find("natural") != std::string::npos
+          || tag.second.find("earth") != std::string::npos
+          || tag.second.find("ground") != std::string::npos
+          || tag.second.find("mud") != std::string::npos)
+        w.set_surface(Surface::kDirt);
+
+      else if (tag.second.find("gravel") != std::string::npos
+          || tag.second.find("pebblestone") != std::string::npos
+          || tag.second.find("sand") != std::string::npos
+          || tag.second.find("wood") != std::string::npos
+          || tag.second.find("unpaved") != std::string::npos)
+        w.set_surface(Surface::kGravel);
+
+      //else TODO.  Based on Highway type.
+
+    }
+
+    else if (tag.first == "cycle_lane") {
+
+      CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
+
+      switch (cyclelane) {
+        case CycleLane::kNone:
+          w.set_cyclelane(CycleLane::kNone);
+          break;
+        case CycleLane::kDedicated:
+          w.set_cyclelane(CycleLane::kDedicated);
+          break;
+        case CycleLane::kSeparated:
+          w.set_cyclelane(CycleLane::kSeparated);
+          break;
+        case CycleLane::kShared:
+          w.set_cyclelane(CycleLane::kShared);
+          break;
+        default:
+          w.set_use(Use::kNone);
+          break;
+      }
+
+    }
 
     else if (tag.first == "lanes")
       w.set_lanes(std::stoi(tag.second));
@@ -629,7 +688,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_railferry(w.rail());
           directededge.set_toll(w.toll());
           directededge.set_dest_only(w.destination_only());
-          directededge.set_unpaved(w.surface());
+          directededge.set_surface(w.surface());
+          directededge.set_cyclelane(w.cyclelane());
           directededge.set_tunnel(w.tunnel());
           directededge.set_roundabout(w.roundabout());
           directededge.set_bridge(w.bridge());
