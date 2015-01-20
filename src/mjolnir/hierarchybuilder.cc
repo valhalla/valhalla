@@ -505,7 +505,7 @@ float HierarchyBuilder::ConnectEdges(const GraphId& basenode,
   std::unique_ptr<const EdgeInfo> edgeinfo =
           tile->edgeinfo(directededge->edgedataoffset());
   std::vector<PointLL> edgeshape = edgeinfo->shape();
-  bool forward = (edgeshape.front() == shape.back());
+  bool forward = (edgeshape.front().ApproximatelyEqual(shape.back()));
 
   // Append the shape
   if (forward) {
