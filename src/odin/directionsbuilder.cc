@@ -83,14 +83,6 @@ TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
   // TODO - factory
   NarrativeBuilder::Build(maneuvers);
 
-  // GDG
-  std::cout << __FILE__ << ":" << __LINE__ << " | Build" << std::endl;
-  for (auto& maneuver : maneuvers) {
-    std::cout << "----------------------------------" << std::endl;
-    std::cout << maneuver.ToString() << std::endl;
-    std::cout << maneuver.instruction() << std::endl;
-  }
-
   // Return trip directions
   return PopulateTripDirections(maneuvers);
 }
