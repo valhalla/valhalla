@@ -82,15 +82,16 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder> directededges) {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(id_, hierarchy);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
+            GraphTile::FileSuffix(id_, hierarchy);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
 
-  // Open to the end of the file so we can immediately get size;
+  // Open file. Truncate so we replace the contents.
   std::ofstream file(filename.c_str(),
-                     std::ios::out | std::ios::binary | std::ios::ate);
+                     std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the updated header.
     file.write(reinterpret_cast<const char*>(&hdr),

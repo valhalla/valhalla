@@ -4,6 +4,7 @@
 #include "pbfgraphbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/graphoptimizer.h"
 #include "config.h"
 
 // For OSM pbf reader
@@ -126,6 +127,11 @@ int main(int argc, char** argv) {
   // (directed edges) are formed between nodes at adjacent levels.
   HierarchyBuilder hierarchybuilder(pt);
   hierarchybuilder.Build();
+
+  // Optimize the graph to add information that cannot be added until
+  // full graph is formed.
+  GraphOptimizer graphoptimizer(pt);
+  graphoptimizer.Optimize();
 
   return EXIT_SUCCESS;
 }
