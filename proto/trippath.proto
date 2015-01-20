@@ -42,7 +42,7 @@ message TripPath {
     optional uint32 end_shape_index = 7;    // inclusive
     optional Driveability driveability = 8;
     optional bool ramp = 9;
-    optional bool turn_lane = 10;
+    optional bool turn_channel = 10;
     optional bool ferry = 11;
     optional bool railferry = 12;
     optional bool toll = 13;
