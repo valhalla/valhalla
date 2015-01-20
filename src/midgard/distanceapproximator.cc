@@ -1,34 +1,46 @@
 #include "valhalla/midgard/distanceapproximator.h"
-
 #include "valhalla/midgard/constants.h"
 
-namespace valhalla{
-namespace midgard{
-  DistanceApproximator::DistanceApproximator():centerlat_(0),centerlng_(0),km_per_lng_degree_(0) { }
+namespace valhalla {
+namespace midgard {
 
-  DistanceApproximator::~DistanceApproximator() { }
+// Constructor
+DistanceApproximator::DistanceApproximator()
+    : centerlat_(0.0f),
+      centerlng_(0.0f),
+      m_per_lng_degree_(0.0f) { }
 
-  void DistanceApproximator::SetTestPoint(const PointLL& ll) {
-    centerlat_ = ll.lat();
-    centerlng_ = ll.lng();
-    km_per_lng_degree_  = KmPerLngDegree(centerlat_);
-  }
+// Destructor
+DistanceApproximator::~DistanceApproximator() {
+}
 
-  float DistanceApproximator::DistanceSquared(const PointLL& ll) const {
-    float latkm = (ll.lat() - centerlat_) * kKmPerDegreeLat;
-    float lngkm = (ll.lng() - centerlng_) * km_per_lng_degree_;
-    return (latkm * latkm + lngkm * lngkm);
-  }
+// Set the test point (lat,lng) used for future distance methods
+void DistanceApproximator::SetTestPoint(const PointLL& ll) {
+  centerlat_ = ll.lat();
+  centerlng_ = ll.lng();
+  m_per_lng_degree_  = MetersPerLngDegree(centerlat_);
+}
 
-  float DistanceApproximator::DistanceSquared(const PointLL& ll1, const PointLL& ll2) {
-    float latkm = (ll1.lat() - ll2.lat()) * kKmPerDegreeLat;
-    float lngkm = (ll1.lng() - ll2.lng()) *
-                  KmPerLngDegree((ll1.lat() + ll2.lat()) * 0.5);
-    return (latkm * latkm + lngkm * lngkm);
-  }
+// Distance squared (meters) from the test point
+float DistanceApproximator::DistanceSquared(const PointLL& ll) const {
+  float latm = (ll.lat() - centerlat_) * kMetersPerDegreeLat;
+  float lngm = (ll.lng() - centerlng_) * m_per_lng_degree_;
+  return (latm * latm + lngm * lngm);
+}
 
-  float DistanceApproximator::KmPerLngDegree(const float lat) {
-    return cosf(lat * kRadPerDeg) * kKmPerDegreeLat;
-  }
+// Distance squared (meters) between 2 lat,lngs
+float DistanceApproximator::DistanceSquared(const PointLL& ll1,
+                                            const PointLL& ll2) {
+  float latm = (ll1.lat() - ll2.lat()) * kMetersPerDegreeLat;
+  float lngm = (ll1.lng() - ll2.lng()) *
+                MetersPerLngDegree((ll1.lat() + ll2.lat()) * 0.5f);
+  return (latm * latm + lngm * lngm);
+}
+
+// Approximate meters per degree of longitude at the specified latitude
+float DistanceApproximator::MetersPerLngDegree(const float lat) {
+  return cosf(lat * kRadPerDeg) * kMetersPerDegreeLat;
+}
+
 }
 }

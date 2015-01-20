@@ -10,7 +10,6 @@ namespace midgard {
  * Latitude, Longitude point. Derives from Point2 and allows access methods
  * using lat,lng naming. Extends functionality to add heading, distance based
  * on spherical geometry.
- * @author  David W. Nesbitt
  */
 class PointLL : public Point2 {
  public:
@@ -38,7 +37,8 @@ class PointLL : public Point2 {
 
   /**
    * Checks for validity of the coordinates
-   * @return Returns the false if lat or lon coordinates are outside of the valid range
+   * @return  Returns the false if lat or lon coordinates are outside of
+   *          the valid range
    */
   bool IsValid() const;
 
@@ -48,20 +48,20 @@ class PointLL : public Point2 {
   void Invalidate();
 
   /**
-   * Calculates the distance between two lat/lng's in km. Uses spherical
+   * Calculates the distance between two lat/lng's in meters. Uses spherical
    * geometry (law of cosines).
    * @param   ll2   Second lat,lng position to calculate distance to.
-   * @return  Returns the distance in km.
+   * @return  Returns the distance in meters.
    */
   float Distance(const PointLL& ll2) const;
 
   /**
-   * Calculates the distance squared between two lat/lng's in km.
+   * Calculates the distance squared between two lat/lng's in meters.
    * Uses spherical geometry. No benefit when using squared distances
    * over a spherical earth. May want to use DistanceApproximator for
    * squared distance approximations.
    * @param   ll2   Second lat,lng position to calculate distance to.
-   * @return  Returns the distance squared in km.
+   * @return  Returns the distance squared in meters.
    */
   float DistanceSquared(const PointLL& ll2) const;
 
@@ -70,7 +70,7 @@ class PointLL : public Point2 {
    * lat,lng points. Avoids having to copy the points into the
    * polyline.
    * @param  pts  List of lat,lng points.
-   * @return  Returns the length in kilometers
+   * @return  Returns the length in meters
    */
   float Length(const std::vector<PointLL>& pts) const;
 
@@ -79,7 +79,7 @@ class PointLL : public Point2 {
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lat,lng position
    * @param   ll2   Third lat,lng position
-   * @return  Returns the curvature in km.
+   * @return  Returns the curvature in meters.
    */
   float Curvature(const PointLL& ll1, const PointLL& ll2) const;
 
@@ -99,7 +99,7 @@ class PointLL : public Point2 {
    * @param  closest (OUT) Closest point along the polyline
    * @param  idx     (OUT) Index of the segment of the polyline which contains
    *                       the closest point.
-   * @return   Returns the distance squared of the closest point.
+   * @return   Returns the distance squared (meters) of the closest point.
    */
   float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
                      int& idx) const;
@@ -108,7 +108,7 @@ class PointLL : public Point2 {
    * Calculate the heading from the start of a polyline of lat,lng points to a
    * point at the specified distance from the start.
    * @param  pts   Polyline - list of lat,lng points.
-   * @param  dist  Distance in kilometers from start to find heading to.
+   * @param  dist  Distance in meters from start to find heading to.
    */
   static float HeadingAlongPolyline(const std::vector<PointLL>& pts,
                                     const float dist);
@@ -117,7 +117,7 @@ class PointLL : public Point2 {
    * Calculate the heading from a point at a specified distance from the end
    * of a polyline of lat,lng points to the end point of the polyline.
    * @param  pts   Polyline - list of lat,lng points.
-   * @param  dist  Distance in kilometers from end. A point that distance is
+   * @param  dist  Distance in meters from end. A point that distance is
    *               used to find the heading to the end point.
    */
   static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,

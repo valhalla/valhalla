@@ -49,7 +49,7 @@ class Polyline2 {
    * lat,lng points. Avoids having to copy the points into the
    * polyline.
    * @param  pts  List of lat,lng points.
-   * @return  Returns the length in kilometers
+   * @return  Returns the length in meters.
    */
   float Length(const std::vector<Point2>& pts) const;
 

@@ -59,9 +59,9 @@ float PointLL::Distance(const PointLL& ll2) const {
   if (cosb >= 1.0)
     return 0.00001f;
   else if (cosb < -1.0)
-    return kPi * kRadEarthKm;
+    return kPi * kRadEarthMeters;
   else
-    return (float)(acos(cosb) * kRadEarthKm);
+    return (float)(acos(cosb) * kRadEarthMeters);
 }
 
 float PointLL::Length(const std::vector<PointLL>& pts) const {

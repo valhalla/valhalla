@@ -28,16 +28,16 @@ void test_constructor() {
 void TestHeadingAlongPolyline() {
   if (((int)(PointLL::HeadingAlongPolyline( {
     { -73.986392, 40.755800 },
-    { -73.986438, 40.755819 } }, 0.03f) + 0.5f)) != 303)
+    { -73.986438, 40.755819 } }, 30.0f) + 0.5f)) != 303)
     throw std::runtime_error("Invalid polyline begin heading");
   if (((int)(PointLL::HeadingAlongPolyline( {
     { -73.986438, 40.755819 },
-    { -73.986484, 40.755681 } }, 0.03f) + 0.5f)) != 194)
+    { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
     throw std::runtime_error("Invalid polyline begin heading");
   if (((int)(PointLL::HeadingAlongPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
-    { -73.986617, 40.755254 } }, 0.03f) + 0.5f)) != 299)
+    { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 299)
     throw std::runtime_error("Invalid polyline begin heading");
 
   // TODO - test larger distance
@@ -51,16 +51,16 @@ void TestHeadingAlongPolyline() {
 void TestHeadingAtEndOfPolyline() {
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.986392, 40.755800 },
-    { -73.986438, 40.755819 } }, 0.03f) + 0.5f)) != 303)
+    { -73.986438, 40.755819 } }, 30.0f) + 0.5f)) != 303)
     throw std::runtime_error("Invalid polyline end heading");
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.986438, 40.755819 },
-    { -73.986484, 40.755681 } }, 0.03f) + 0.5f)) != 194)
+    { -73.986484, 40.755681 } }, 30.0f) + 0.5f)) != 194)
     throw std::runtime_error("Invalid polyline end heading");
   if (((int)(PointLL::HeadingAtEndOfPolyline( {
     { -73.985777, 40.755539 },
     { -73.986440, 40.755820 },
-    { -73.986617, 40.755254 } }, 0.03f) + 0.5f)) != 194)
+    { -73.986617, 40.755254 } }, 30.0f) + 0.5f)) != 194)
     throw std::runtime_error("Invalid polyline end heading");
 
   // TODO - test larger distance
