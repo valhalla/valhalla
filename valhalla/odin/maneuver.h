@@ -4,8 +4,7 @@
 #include <string>
 
 #include <valhalla/proto/tripdirections.pb.h>
-
-#include "odin/streetnames.h"
+#include <valhalla/odin/streetnames.h>
 
 namespace valhalla {
 namespace odin {
