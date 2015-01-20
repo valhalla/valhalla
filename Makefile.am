@@ -70,6 +70,7 @@ libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 
 # tests
 check_PROGRAMS = \
+	test/logging \
 	test/point2 \
 	test/distanceapproximator \
 	test/aabb2 \
@@ -110,6 +111,10 @@ test_tiles_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_
 test_util_SOURCES = test/util.cc test/test.cc
 test_util_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_util_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
+test_logging_SOURCES = test/logging.cc test/test.cc
+test_logging_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ -DLOGGING_DEBUG
+test_logging_LDFLAGS = -pthread
+test_logging_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_midgard.la
 
 
 TESTS = $(check_PROGRAMS)
