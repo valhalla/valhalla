@@ -66,7 +66,7 @@ bool DirectedEdge::destonly() const {
 }
 
 bool DirectedEdge::unpaved() const {
-  return attributes_.unpaved;
+  return false;  //TODO Fix.
 }
 
 bool DirectedEdge::tunnel() const {
@@ -79,6 +79,16 @@ bool DirectedEdge::bridge() const {
 
 bool DirectedEdge::roundabout() const {
   return attributes_.roundabout;
+}
+
+// Get the smoothness of this edge.
+Surface DirectedEdge::surface() const {
+  return static_cast<Surface>(attributes_.surface);
+}
+
+// Get the cycle lane of this edge.
+CycleLane DirectedEdge::cyclelane() const {
+  return static_cast<CycleLane>(attributes_.cycle_lane);
 }
 
 // Gets the lane count
@@ -137,7 +147,6 @@ RoadClass DirectedEdge::importance() const {
 bool DirectedEdge::link() const {
   return classification_.link;
 }
-
 
 // Get the use of this edge.
 Use DirectedEdge::use() const {
