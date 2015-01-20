@@ -64,7 +64,8 @@ libvalhalla_midgard_la_SOURCES = \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
 	src/midgard/distanceapproximator.cc \
-	src/midgard/ellipse.cc
+	src/midgard/ellipse.cc \
+	src/midgard/logging.cc
 libvalhalla_midgard_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 

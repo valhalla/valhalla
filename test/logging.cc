@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <iterator>
+#include <sstream>
 
 using namespace valhalla::midgard;
 
