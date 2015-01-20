@@ -9,8 +9,8 @@
 namespace valhalla {
 namespace thor {
 
-// Kilometers offset from start/end of shape for finding heading
-constexpr float kKmOffsetForHeading = 0.03f;
+// Meters offset from start/end of shape for finding heading
+constexpr float kMetersOffsetForHeading =30.0f;
 
 // Default constructor
 TripPathBuilder::TripPathBuilder() {
@@ -79,10 +79,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
       trip_edge->set_begin_heading(
           std::round(
-              PointLL::HeadingAlongPolyline(edgeinfo->shape(), kKmOffsetForHeading)));
+              PointLL::HeadingAlongPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
       trip_edge->set_end_heading(
           std::round(
-              PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kKmOffsetForHeading)));
+              PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
 
     } else {
 
@@ -95,13 +95,13 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
           std::round(
               fmod(
                   (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                                                   kKmOffsetForHeading) + 180.0f), 360)));
+                               kMetersOffsetForHeading) + 180.0f), 360)));
 
       trip_edge->set_end_heading(
           std::round(
               fmod(
                   (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                                                 kKmOffsetForHeading) + 180.0f), 360)));
+                               kMetersOffsetForHeading) + 180.0f), 360)));
     }
     trip_edge->set_end_shape_index(trip_shape.size());
 
@@ -179,7 +179,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   }
 
   // Set speed and length
-  trip_edge->set_length(directededge->length());
+  trip_edge->set_length(directededge->length() * 0.001f);  // Convert to km
   trip_edge->set_speed(directededge->speed());
 
   // Test whether edge is traversed forward or reverse and set driveability

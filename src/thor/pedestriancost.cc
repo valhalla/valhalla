@@ -72,7 +72,8 @@ class PedestrianCost : public DynamicCost {
  private:
   // Walking speed (default to 5.1 km / hour)
   float walkingspeed_;
-  // Favor walkways and paths? (default to 0.95f)
+
+  // Favor walkways and paths? (default to 0.9f)
   float favorwalkways_;
 };
 
@@ -80,11 +81,8 @@ class PedestrianCost : public DynamicCost {
 PedestrianCost::PedestrianCost()
     : DynamicCost(),
       walkingspeed_(5.1f),
-      favorwalkways_(0.90f) {
-
+      favorwalkways_(0.9f) {
   //TODO: load up stuff from ptree config
-  //We want to use walkways
-  favorwalkways_ = .5f;
 }
 
 // Destructor
@@ -122,7 +120,8 @@ float PedestrianCost::Get(const DirectedEdge* edge) const {
 
 // Returns the time (in seconds) to traverse the edge.
 float PedestrianCost::Seconds(const baldr::DirectedEdge* edge) const {
-  return edge->length() / walkingspeed_;
+  // meters * 3600 sec/hr / 1000 m/km)
+  return (edge->length() * 3.6f) / walkingspeed_;
 }
 
 /**
@@ -134,16 +133,13 @@ float PedestrianCost::Seconds(const baldr::DirectedEdge* edge) const {
  * estimate is less than the least possible time along roads.
  */
 float PedestrianCost::AStarCostFactor() const {
-  // Multiplied by the factor used to favor walkways/paths if < 1.0f
-  if (favorwalkways_ < 1.0f)
-    return 1.0f * favorwalkways_;
-
-  return 1.0f;
+  // Use the factor to favor walkways/paths if < 1.0f
+  return (favorwalkways_ < 1.0f) ? favorwalkways_ : 1.0f;
 }
 
 float PedestrianCost::UnitSize() const {
-  // Consider anything within 5 m to be same cost
-  return 0.005f;
+  // Consider anything within 2 m to be same cost
+  return 2.0f;
 }
 
 cost_ptr_t CreatePedestrianCost(/*pt::ptree const& config*/){

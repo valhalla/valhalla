@@ -29,7 +29,7 @@ class EdgeLabel {
    * @param endnode   End node of the directed edge.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
-   * @param dist      Distance (km) to the destination
+   * @param dist      Distance meters to the destination
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const float cost,
@@ -92,7 +92,7 @@ class EdgeLabel {
 
   /**
    * Get the distance to the destination.
-   * @return  Returns the distance in km.
+   * @return  Returns the distance in meters.
    */
   float distance() const;
 

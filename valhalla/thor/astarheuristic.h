@@ -46,7 +46,7 @@ class AStarHeuristic {
 
   /**
    * Get the A* heuristic given the dstance to the destination.
-   * @param  distance  Distance (km) to the destination.
+   * @param  distance  Distance (meters) to the destination.
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */
