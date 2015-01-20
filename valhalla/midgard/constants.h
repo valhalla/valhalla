@@ -11,10 +11,10 @@ constexpr float kSecPerHour = 3600.0f;
 constexpr float kHourPerSec = 1.0f / 3600.0f;
 
 // Distance constants
-constexpr float kMilePerKm      = 1.609344f;
-constexpr float kKmPerMile      = 1.0f / kMilePerKm;
-constexpr float kRadEarthKm     = 6378.160187;
-constexpr float kKmPerDegreeLat = 110.567f;
+constexpr float kMilePerKm          = 1.609344f;
+constexpr float kKmPerMile          = 1.0f / kMilePerKm;
+constexpr float kRadEarthMeters     = 6378160.187;
+constexpr float kMetersPerDegreeLat = 110567.0f;
 
 // Angular measures
 constexpr float kPi        = 3.14159265f;
