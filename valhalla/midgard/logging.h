@@ -15,18 +15,6 @@ namespace midgard {
 
 namespace logging {
 
-//turn a string into a T
-template <class T>
-T atoT(const std::string& input)
-{
-  std::istringstream stream(input);
-  T output;
-  stream >> std::ws >> output >> std::ws;
-  if(!stream.eof())
-    throw std::runtime_error("Couldn't convert string to integral type");
-  return output;
-}
-
 //returns formated to: 'year/mo/dy hr:mn:sc.xxxxxx'
 std::string TimeStamp() {
   //get the time
@@ -148,7 +136,7 @@ class FileLogger : public Logger {
     if(interval != config.end())
     {
       try {        
-        reopen_interval = std::chrono::seconds(atoT<int>(interval->second));
+        reopen_interval = std::chrono::seconds(std::stoul(interval->second));
       }
       catch(...) {
         throw std::runtime_error(interval->second + " is not a valid reopen interval");
@@ -211,16 +199,76 @@ static void Configure(const LoggingConfig& config) {
 }
 
 //convenience macros stand out when reading code
-#ifndef LOGGING_DEBUG 
-#define LOG_TRACE(x)
-#define LOG_DEBUG(x)
-#else
-#define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE);
-#define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG);
+//default to seeing INFO and up if nothing was specified
+#ifndef LOGGING_LEVEL_ERROR
+  #ifndef LOGGING_LEVEL_WARN
+    #ifndef LOGGING_LEVEL_INFO
+      #ifndef LOGGING_LEVEL_DEBUG
+        #ifndef LOGGING_LEVEL_TRACE
+          #define LOGGING_LEVEL_INFO
+        #endif
+      #endif
+    #endif
+  #endif
 #endif
-#define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO);
-#define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN);
-#define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR);
+//mark all the stuff we should see
+#ifndef LOGGING_LEVEL_ERROR
+  #define LOGGING_LEVEL_ERROR
+  #ifndef LOGGING_LEVEL_WARN
+    #define LOGGING_LEVEL_WARN
+    #ifndef LOGGING_LEVEL_INFO
+      #define LOGGING_LEVEL_INFO
+      #ifndef LOGGING_LEVEL_DEBUG
+        #define LOGGING_LEVEL_DEBUG
+        #ifndef LOGGING_LEVEL_TRACE
+          #define LOGGING_LEVEL_TRACE
+        #endif
+      #endif
+    #endif
+  #endif
+#endif
+//no logging output
+#ifdef LOGGING_LEVEL_NONE
+  #define LOG_ERROR(x)
+  #define LOG_WARN(x)
+  #define LOG_INFO(x)
+  #define LOG_DEBUG(x)
+  #define LOG_TRACE(x)
+//all logging output
+#elif defined(LOGGING_LEVEL_ALL)
+  #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR);
+  #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN);
+  #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO);
+  #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG);
+  #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE);
+//some level and up
+#else
+  #ifdef LOGGING_LEVEL_ERROR
+    #define LOG_ERROR(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::ERROR);
+  #else
+    #define LOG_ERROR(x)
+  #endif
+  #ifdef LOGGING_LEVEL_WARN
+    #define LOG_WARN(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::WARN);
+  #else
+    #define LOG_WARN(x)
+  #endif
+  #ifdef LOGGING_LEVEL_INFO
+    #define LOG_INFO(x)  ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::INFO);
+  #else
+    #define LOG_INFO(x);
+  #endif
+  #ifdef LOGGING_LEVEL_DEBUG
+    #define LOG_DEBUG(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::DEBUG);
+  #else
+    #define LOG_DEBUG(x)
+  #endif
+  #ifdef LOGGING_LEVEL_TRACE
+    #define LOG_TRACE(x) ::valhalla::midgard::logging::GetLogger().Log(x, ::valhalla::midgard::logging::LogLevel::TRACE);
+  #else
+    #define LOG_TRACE(x)
+  #endif
+#endif
 
 }
 
