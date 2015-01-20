@@ -5,17 +5,33 @@
 
 #include <valhalla/proto/trippath.pb.h>
 
-namespace valhalla{
-namespace odin{
+#include "odin/maneuver.h"
+
+namespace valhalla {
+namespace odin {
 
 class NarrativeBuilder {
  public:
-  NarrativeBuilder(TripPath& trip_path);
 
-  void Build();
+  static void Build(std::list<Maneuver>& maneuvers);
 
  protected:
-  TripPath& trip_path_;
+  NarrativeBuilder();
+
+  static void FormStartInstruction(Maneuver& maneuver);
+
+  static void FormDestinationInstruction(Maneuver& maneuver);
+
+  static void FormContinueInstruction(Maneuver& maneuver);
+
+  static void FormTurnInstruction(Maneuver& maneuver);
+
+  static void FormUturnInstruction(Maneuver& maneuver);
+
+  static std::string FormCardinalDirection(
+      TripDirections_Maneuver_CardinalDirection cardinal_direction);
+
+  static std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
 
 };
 

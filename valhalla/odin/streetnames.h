@@ -3,7 +3,7 @@
 
 #include <list>
 
-#include "odin/streetname.h"
+#include <valhalla/odin/streetname.h>
 
 namespace valhalla{
 namespace odin{

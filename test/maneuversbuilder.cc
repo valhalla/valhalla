@@ -22,6 +22,11 @@ class ManeuversBuilderTest : public ManeuversBuilder {
     ManeuversBuilder::SetSimpleDirectionalManeuverType(maneuver);
   }
 
+  TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
+      uint32_t heading) {
+    return ManeuversBuilder::DetermineCardinalDirection(heading);
+
+  }
 };
 
 void TrySetSimpleDirectionalManeuverType(
@@ -101,6 +106,96 @@ void TestSetSimpleDirectionalManeuverType() {
 
 }
 
+void TryDetermineCardinalDirection(
+    uint32_t heading, TripDirections_Maneuver_CardinalDirection expected) {
+  ManeuversBuilderTest mbTest;
+  if (mbTest.DetermineCardinalDirection(heading) != expected)
+    throw std::runtime_error("Incorrect cardinal direction");
+}
+
+void TestDetermineCardinalDirection() {
+  // North lower bound
+  TryDetermineCardinalDirection(
+      337, TripDirections_Maneuver_CardinalDirection_kNorth);
+  // North middle
+  TryDetermineCardinalDirection(
+      0, TripDirections_Maneuver_CardinalDirection_kNorth);
+  // North upper bound
+  TryDetermineCardinalDirection(
+      23, TripDirections_Maneuver_CardinalDirection_kNorth);
+
+  // Northeast lower bound
+  TryDetermineCardinalDirection(
+      24, TripDirections_Maneuver_CardinalDirection_kNorthEast);
+  // Northeast middle
+  TryDetermineCardinalDirection(
+      45, TripDirections_Maneuver_CardinalDirection_kNorthEast);
+  // Northeast upper bound
+  TryDetermineCardinalDirection(
+      66, TripDirections_Maneuver_CardinalDirection_kNorthEast);
+
+  // East lower bound
+  TryDetermineCardinalDirection(
+      67, TripDirections_Maneuver_CardinalDirection_kEast);
+  // East middle
+  TryDetermineCardinalDirection(
+      90, TripDirections_Maneuver_CardinalDirection_kEast);
+  // East upper bound
+  TryDetermineCardinalDirection(
+      113, TripDirections_Maneuver_CardinalDirection_kEast);
+
+  // Southeast lower bound
+  TryDetermineCardinalDirection(
+      114, TripDirections_Maneuver_CardinalDirection_kSouthEast);
+  // Southeast middle
+  TryDetermineCardinalDirection(
+      135, TripDirections_Maneuver_CardinalDirection_kSouthEast);
+  // Southeast upper bound
+  TryDetermineCardinalDirection(
+      156, TripDirections_Maneuver_CardinalDirection_kSouthEast);
+
+  // South lower bound
+  TryDetermineCardinalDirection(
+      157, TripDirections_Maneuver_CardinalDirection_kSouth);
+  // South middle
+  TryDetermineCardinalDirection(
+      180, TripDirections_Maneuver_CardinalDirection_kSouth);
+  // South upper bound
+  TryDetermineCardinalDirection(
+      203, TripDirections_Maneuver_CardinalDirection_kSouth);
+
+  // Southwest lower bound
+  TryDetermineCardinalDirection(
+      204, TripDirections_Maneuver_CardinalDirection_kSouthWest);
+  // Southwest middle
+  TryDetermineCardinalDirection(
+      225, TripDirections_Maneuver_CardinalDirection_kSouthWest);
+  // Southwest upper bound
+  TryDetermineCardinalDirection(
+      246, TripDirections_Maneuver_CardinalDirection_kSouthWest);
+
+  // West lower bound
+  TryDetermineCardinalDirection(
+      247, TripDirections_Maneuver_CardinalDirection_kWest);
+  // West middle
+  TryDetermineCardinalDirection(
+      270, TripDirections_Maneuver_CardinalDirection_kWest);
+  // West upper bound
+  TryDetermineCardinalDirection(
+      293, TripDirections_Maneuver_CardinalDirection_kWest);
+
+  // Northwest lower bound
+  TryDetermineCardinalDirection(
+      294, TripDirections_Maneuver_CardinalDirection_kNorthWest);
+  // Northwest middle
+  TryDetermineCardinalDirection(
+      315, TripDirections_Maneuver_CardinalDirection_kNorthWest);
+  // Northwest upper bound
+  TryDetermineCardinalDirection(
+      336, TripDirections_Maneuver_CardinalDirection_kNorthWest);
+
+}
+
 }
 
 int main() {
@@ -108,6 +203,9 @@ int main() {
 
   // SetSimpleDirectionalManeuverType
   suite.test(TEST_CASE(TestSetSimpleDirectionalManeuverType));
+
+  // DetermineCardinalDirection
+  suite.test(TEST_CASE(TestDetermineCardinalDirection));
 
   return suite.tear_down();
 }

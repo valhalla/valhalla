@@ -1,10 +1,11 @@
 #ifndef VALHALLA_ODIN_DIRECTIONSBUILDER_H_
 #define VALHALLA_ODIN_DIRECTIONSBUILDER_H_
 
-#include <vector>
+#include <list>
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/odin/maneuver.h>
 
 namespace valhalla{
 namespace odin{
@@ -18,7 +19,7 @@ class DirectionsBuilder {
   TripDirections Build(TripPath& trip_path);
 
  protected:
-
+  TripDirections PopulateTripDirections(std::list<Maneuver>& maneuvers);
 
 };
 

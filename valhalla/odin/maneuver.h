@@ -4,8 +4,7 @@
 #include <string>
 
 #include <valhalla/proto/tripdirections.pb.h>
-
-#include "odin/streetnames.h"
+#include <valhalla/odin/streetnames.h>
 
 namespace valhalla {
 namespace odin {
@@ -20,6 +19,8 @@ class Maneuver {
   const StreetNames& street_names() const;
   StreetNames* mutable_street_names();
   void set_street_names(const StreetNames& street_names);
+
+  bool HasStreetNames() const;
 
   const StreetNames& begin_street_names() const;
   void set_begin_street_names(const StreetNames& begin_street_names);

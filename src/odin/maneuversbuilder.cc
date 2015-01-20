@@ -200,8 +200,8 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int nodeIndex) {
   // TODO
 
   // Set begin cardinal direction
-  // TODO
-  //maneuver.set_begin_cardinal_direction(TODO);
+  maneuver.set_begin_cardinal_direction(
+      DetermineCardinalDirection(currEdge->begin_heading()));
 
   // Set the begin heading
   maneuver.set_begin_heading(currEdge->begin_heading());
@@ -242,6 +242,27 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
     maneuver.set_type(TripDirections_Maneuver_Type_kLeft);
   } else if ((turn_degree > 315) && (turn_degree < 350)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+  }
+}
+
+TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDirection(
+    uint32_t heading) {
+  if ((heading > 336) || (heading < 24)) {
+    return TripDirections_Maneuver_CardinalDirection_kNorth;
+  } else if ((heading > 23) && (heading < 67)) {
+    return TripDirections_Maneuver_CardinalDirection_kNorthEast;
+  } else if ((heading > 66) && (heading < 114)) {
+    return TripDirections_Maneuver_CardinalDirection_kEast;
+  } else if ((heading > 113) && (heading < 157)) {
+    return TripDirections_Maneuver_CardinalDirection_kSouthEast;
+  } else if ((heading > 156) && (heading < 204)) {
+    return TripDirections_Maneuver_CardinalDirection_kSouth;
+  } else if ((heading > 203) && (heading < 247)) {
+    return TripDirections_Maneuver_CardinalDirection_kSouthWest;
+  } else if ((heading > 246) && (heading < 294)) {
+    return TripDirections_Maneuver_CardinalDirection_kWest;
+  } else if ((heading > 293) && (heading < 337)) {
+    return TripDirections_Maneuver_CardinalDirection_kNorthWest;
   }
 }
 
