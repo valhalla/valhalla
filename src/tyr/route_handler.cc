@@ -126,20 +126,49 @@ const std::unordered_map<unsigned int, std::string> maneuver_type = {
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kLeft),            "7" },//TurnLeft,
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft),      "8" },//TurnSlightLeft,
     //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "9" },//ReachViaLocation,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),        "10" },//HeadOn,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),         "10" },//HeadOn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),        "1" },//GoStraight,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),         "1" },//GoStraight,
     //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "11" },//EnterRoundAbout,
     //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "12" },//LeaveRoundAbout,
     //{ static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_k),              "13" },//StayOnRoundAbout,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),           "14" },//StartAtEndOfStreet,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),      "14" },//StartAtEndOfStreet,
-    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),       "14" },//StartAtEndOfStreet,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),           "10" },//HeadOn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),      "10" },//HeadOn,
+    { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),       "10" },//HeadOn,
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestination),     "15" },//ReachedYourDestination,
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight),"15" },//ReachedYourDestination,
     { static_cast<unsigned int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft), "15" },//ReachedYourDestination,
     //{ static_cast<unsigned int>valhalla::odin::TripDirections_Maneuver_Type_k), 16 },//EnterAgainstAllowedDirection,
     //{ static_cast<unsigned int>valhalla::odin::TripDirections_Maneuver_Type_k), 17 },//LeaveAgainstAllowedDirection
 };
+
+std::string cardinal_direction_string(TripDirections_Maneuver_CardinalDirection cardinal_direction) {
+  switch (cardinal_direction) {
+    case TripDirections_Maneuver_CardinalDirection_kNorth: {
+      return "N";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kNorthEast: {
+      return "NE";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kEast: {
+      return "E";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kSouthEast: {
+      return "SE";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kSouth: {
+      return "S";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kSouthWest: {
+      return "SW";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kWest: {
+      return "W";
+    }
+    case TripDirections_Maneuver_CardinalDirection_kNorthWest: {
+      return "NW";
+    }
+  }
+}
 
 json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
   auto route_instructions = json::array({});
@@ -161,7 +190,7 @@ json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_dir
       static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
       static_cast<uint64_t>(maneuver.time()), //time in seconds
       length.str(), //length as a string with a unit suffix
-      string(""), //TODO: TripDirections_Maneuver_CardinalDirection as one of: N S E W NW NE SW SE
+      cardinal_direction_string(maneuver.begin_cardinal_direction()), // one of: N S E W NW NE SW SE
       static_cast<uint64_t>(maneuver.begin_heading())
     }));
   }
@@ -244,7 +273,7 @@ std::string RouteHandler::Action() {
 
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
-  valhalla::odin::TripDirections trip_directions = directions_builder.BuildSimple(trip_path);
+  valhalla::odin::TripDirections trip_directions = directions_builder.Build(trip_path);
 
   //make some json
   std::ostringstream stream;
