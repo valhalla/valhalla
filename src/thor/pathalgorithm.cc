@@ -127,12 +127,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     }
 
     // Stop expanding the local level once 50 transitions have been made
-    if (dist2dest > 10.0f && node.level() == 2 && upto1count > 50) {
+    if (dist2dest > 10000.0f && node.level() == 2 && upto1count > 50) {
       continue;
     }
 
     // Stop expanding arterial level once 250 transitions have been made
-    if (dist2dest > 50.0f && node.level() == 1 && upto0count > 250) {
+    if (dist2dest > 50000.0f && node.level() == 1 && upto0count > 250) {
       continue;
     }
 
