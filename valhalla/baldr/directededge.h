@@ -22,6 +22,9 @@ constexpr uint8_t kNcn = 1;
 constexpr uint8_t kRcn = 2;
 constexpr uint8_t kLcn = 4;
 
+// Maximum length of an edge
+constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
+
 /**
  * Directed edge within the graph.
  */
@@ -38,16 +41,23 @@ class DirectedEdge {
   virtual ~DirectedEdge();
 
   /**
-   * Gets the length of the edge in kilometers.
-   * @return  Returns the length in kilometers.
-   */
-  float length() const;
-
-  /**
    * Gets the end node of this directed edge.
    * @return  Returns the end node.
    */
   GraphId endnode() const;
+
+  /**
+   * Offset to the common edge data. The offset is from the start
+   * of the common edge data within a tile.
+   * @return  Returns offset from the start of the edge data within a tile.
+   */
+  uint32_t edgedataoffset() const;
+
+  /**
+   * Gets the length of the edge in meters.
+   * @return  Returns the length in meters.
+   */
+  uint32_t length() const;
 
   /**
    * Get the access modes in the forward direction (bit field).
@@ -60,17 +70,10 @@ class DirectedEdge {
   uint8_t reverseaccess() const;
 
   /**
-   * Gets the speed in KPH. TODO - cast to float instead?
+   * Gets the speed in KPH.
    * @return  Returns the speed in KPH.
    */
   uint8_t speed() const;
-
-  /**
-   * Offset to the common edge data. The offset is from the start
-   * of the common edge data within a tile.
-   * @return  Returns offset from the start of the edge data within a tile.
-   */
-  uint32_t edgedataoffset() const;
 
   /**
    * Is this edge part of a ferry?
@@ -210,9 +213,13 @@ class DirectedEdge {
   // Offset to the common edge data within the tile
   uint32_t edgedataoffset_;
 
-  // Length of the link in kilometers. TODO - change to meters? perhaps use
-  // 20 or so bits? Would that preclude building routing?
-  float length_;
+  // Geometric attributes: length, elevation factor.
+  struct GeoAttributes {
+    uint32_t length        : 24;  // Length in meters
+    uint32_t elevation     : 4;   // Elevation factor
+    uint32_t spare         : 4;
+  };
+  GeoAttributes geoattributes_;
 
   // Legal access to the directed link ((also include reverse direction access).
   // TODO - come up with final set of values!
@@ -232,9 +239,9 @@ class DirectedEdge {
   Access forwardaccess_;
   Access reverseaccess_;
 
-  // Speed in kilometers. Range 0-250 KPH. Applies to "normal vehicles".
-  // Save values above 250 as special cases (closures, construction,
-  // etc.)
+  // Speed in kilometers per hour. Range 0-250 KPH. Applies to
+  // "normal vehicles". Save values above 250 as special cases
+  // (closures, construction, // etc.)
   // TODO - do we need or does OSM support "truck speed"
   uint8_t speed_;
 
@@ -252,11 +259,11 @@ class DirectedEdge {
     uint32_t railferry      : 1;
     uint32_t toll           : 1;
     uint32_t dest_only      : 1;
-    uint32_t unpaved        : 1;
+    uint32_t unpaved        : 1;  // TODO - change to a range of values
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 1;
+    uint32_t spare          : 5;
     uint32_t trans_up       : 1;  // Edge represents a transition up one
                                   // level in the hierarchy
     uint32_t trans_down     : 1;  // Transition down one level
@@ -267,7 +274,6 @@ class DirectedEdge {
     uint32_t opp_index      : 5;  // Opposing directed edge index
     uint32_t bikenetwork    : 4;
     uint32_t lanecount      : 4;
-    uint32_t elevation      : 4;  // Elevation factor
   };
   Attributes attributes_;
 

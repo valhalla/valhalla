@@ -6,7 +6,7 @@ namespace baldr {
 // Default constructor
 DirectedEdge::DirectedEdge()
     : edgedataoffset_(0),
-      length_(0),
+      geoattributes_{},
       forwardaccess_{},
       reverseaccess_{},
       speed_(0),
@@ -17,11 +17,6 @@ DirectedEdge::DirectedEdge()
 DirectedEdge::~DirectedEdge() {
 }
 
-// Gets the length of the edge in kilometers.
-float DirectedEdge::length() const {
-  return length_;
-}
-
 // Gets the end node of this directed edge.
 GraphId DirectedEdge::endnode() const {
   return endnode_;
@@ -30,6 +25,11 @@ GraphId DirectedEdge::endnode() const {
 // Get the offset to the common edge data.
 uint32_t DirectedEdge::edgedataoffset() const {
   return edgedataoffset_;
+}
+
+// Gets the length of the edge in meters.
+uint32_t DirectedEdge::length() const {
+  return geoattributes_.length;
 }
 
 // Get the access modes in the forward direction (bit field).
