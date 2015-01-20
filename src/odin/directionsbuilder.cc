@@ -86,10 +86,33 @@ TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
   }
 
   // Create the narrative
-  // TODO
+  // TODO - factory
 
   // Return trip directions
+  return PopulateTripDirections(maneuvers);
+}
+
+TripDirections DirectionsBuilder::PopulateTripDirections(
+    std::list<Maneuver>& maneuvers) {
   TripDirections trip_directions;
+  for (const auto& maneuver : maneuvers) {
+    auto* trip_maneuver = trip_directions.add_maneuver();
+    trip_maneuver->set_type(maneuver.type());
+    trip_maneuver->set_text_instruction(maneuver.instruction());
+    for (const auto& street_name : maneuver.street_names()) {
+      trip_maneuver->add_street_name(street_name.name());
+    }
+    trip_maneuver->set_length(maneuver.distance());
+    trip_maneuver->set_time(maneuver.time());
+    trip_maneuver->set_begin_cardinal_direction(
+        maneuver.begin_cardinal_direction());
+    trip_maneuver->set_begin_heading(maneuver.begin_heading());
+    trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
+    trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
+    trip_maneuver->set_portions_toll(maneuver.portions_toll());
+    trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
+  }
+
   return trip_directions;
 }
 
