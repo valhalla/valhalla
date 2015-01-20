@@ -198,8 +198,8 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
   }
 
   // Importance (class), link, use, and attributes must also match.
-  // NOTE: might want "better" bridge attribution. Seems most overpass
-  // bridges get marked as a bridge and lead to less shortcuts
+  // NOTE: might want "better" bridge attribution. Seems most overpasses
+  // get marked as a bridge and lead to less shortcuts
   if (edge1->importance() != edge2->importance()
       || edge1->link() != edge2->link() || edge1->use() != edge2->use()
       || edge1->speed() != edge2->speed() || edge1->ferry() != edge2->ferry()
@@ -302,13 +302,10 @@ void HierarchyBuilder::FormTilesInNewLevel(
       node.set_edge_index(edgeindex);
       node.set_bestrc(baseni->bestrc());
 
-      // Add shortcut edges first. If node is not contracted then there
-      // may be shortcuts. Set the edgecount from this node.
+      // Add shortcut edges first
       std::vector<DirectedEdgeBuilder> directededges;
-      if (!newnode.contract) {
-        AddShortcutEdges(newnode, nodea, baseni, tile, rcc, tilebuilder,
+      AddShortcutEdges(newnode, nodea, baseni, tile, rcc, tilebuilder,
                          directededges);
-      }
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -326,11 +323,10 @@ void HierarchyBuilder::FormTilesInNewLevel(
           DirectedEdgeBuilder newedge =
               static_cast<DirectedEdgeBuilder&>(oldedge);
 
-          // Set the end node for this edge
+          // Set the end node for this edge. Opposing edge indexes
+          // get set in graph optimizer so set to 0 here.
           nodeb = nodemap_[directededge->endnode().value()];
           newedge.set_endnode(nodeb);
-
-          // TODO - how do we set the opposing index?
           newedge.set_opp_index(0);
 
           // Get edge info, shape, and names from the old tile and add
@@ -378,13 +374,15 @@ void HierarchyBuilder::FormTilesInNewLevel(
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-uint32_t HierarchyBuilder::AddShortcutEdges(
+void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
+  // Get the edge pairs for this node (if contracted)
+  auto edgepairs = newnode.contract ?
+      contractions_.find(nodea.value()) : contractions_.end();
+
   // Iterate through directed edges of the base node
-  // Only create driveable shortcuts (auto)
-  uint32_t edgecount = 0;
   GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(),
                        baseni->edge_index());
   for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
@@ -398,6 +396,16 @@ uint32_t HierarchyBuilder::AddShortcutEdges(
     if (directededge->importance() > rcc || directededge->trans_down()
         || directededge->shortcut()) {
       continue;
+    }
+
+    // Check edgepairs for this node. If this edge is in the pair of exiting
+    // shortcut edges at this node we skip it
+    if (edgepairs != contractions_.end()) {
+      //
+      if (edgepairs->second.edge1.second == base_edge_id ||
+          edgepairs->second.edge2.second == base_edge_id) {
+        continue;
+      }
     }
 
     // Get the end node and check if it is set for contraction and the edge
@@ -443,8 +451,6 @@ uint32_t HierarchyBuilder::AddShortcutEdges(
             // Break out of loop. This case can happen when a shortcut edge
             // enters another shortcut edge (but is not driveable in reverse
             // direction from the node).
-            //std::cout << "Edge " << next_edge_id << " does not match any in the node " <<
-            //    nodeb << " EdgePairs" << std::endl;
             break;
           }
         }
@@ -471,11 +477,9 @@ uint32_t HierarchyBuilder::AddShortcutEdges(
 
       // Add directed edge
       directededges.emplace_back(std::move(newedge));
-      edgecount++;
     }
   }
-  shortcutcount_ += edgecount;
-  return edgecount;
+  shortcutcount_ += directededges.size();
 }
 
 // Connect 2 edges shape and update the next end node in the new level

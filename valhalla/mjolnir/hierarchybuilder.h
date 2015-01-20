@@ -155,13 +155,13 @@ class HierarchyBuilder {
   /**
    * Adds shortcut edges from the node.
    */
-  uint32_t AddShortcutEdges(const NewNode& newnode,
-                            const baldr::GraphId& nodea,
-                            const baldr::NodeInfo* oldnodeinfo,
-                            baldr::GraphTile* tile,
-                            const baldr::RoadClass rcc,
-                            GraphTileBuilder& tilebuilder,
-                            std::vector<DirectedEdgeBuilder>& directededges);
+  void AddShortcutEdges(const NewNode& newnode,
+                        const baldr::GraphId& nodea,
+                        const baldr::NodeInfo* oldnodeinfo,
+                        baldr::GraphTile* tile,
+                        const baldr::RoadClass rcc,
+                        GraphTileBuilder& tilebuilder,
+                        std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
    * Connect edges on the shortcut. Appends shape.
