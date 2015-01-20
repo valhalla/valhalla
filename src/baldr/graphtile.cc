@@ -2,6 +2,7 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 
 #include <string>
 #include <vector>
@@ -59,8 +60,8 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::ifstream file(hierarchy.tile_dir() + "/" + FileSuffix(id_, hierarchy),
-                     std::ios::in | std::ios::binary | std::ios::ate);
+  std::string file_location = hierarchy.tile_dir() + "/" + FileSuffix(id_, hierarchy);
+  std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
     // allocate memory
@@ -94,8 +95,9 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
 
     // Set the size to indicate success
     size_ = filesize;
-  } else {
-//    std::cout << "Tile for " << Filename(basedirectory, id_) << " not found" << std::endl;
+  }
+  else {
+    LOG_DEBUG("Tile " + file_location + " was not found");
   }
 }
 
