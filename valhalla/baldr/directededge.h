@@ -117,6 +117,16 @@ class DirectedEdge {
   bool roundabout() const;
 
   /**
+   * Get the smoothness.
+   */
+  Surface surface() const;
+
+  /**
+   * Get the cycle lane.
+   */
+  CycleLane cyclelane() const;
+
+  /**
    * Does this edge represent a transition up one level in the hierarchy.
    * Transition edges move between nodes in different levels of the
    * hierarchy but have no length or other attribution. An upward transition
@@ -259,11 +269,12 @@ class DirectedEdge {
     uint32_t railferry      : 1;
     uint32_t toll           : 1;
     uint32_t dest_only      : 1;
-    uint32_t unpaved        : 1;  // TODO - change to a range of values
+    uint32_t spare          : 1;
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
-    uint32_t spare          : 5;
+    uint32_t surface        : 3;  // representation of smoothness
+    uint32_t cycle_lane     : 2;
     uint32_t trans_up       : 1;  // Edge represents a transition up one
                                   // level in the hierarchy
     uint32_t trans_down     : 1;  // Transition down one level

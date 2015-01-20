@@ -37,7 +37,23 @@ enum class Use : uint8_t {
   kOther
 };
 
+enum class CycleLane : uint8_t {
+  kNone,
+  kDedicated,
+  kSeparated,
+  kShared
+};
 
+enum class Surface : uint8_t {
+  kPavedSmooth,
+  kPaved,
+  kPavedRough,
+  kCompacted,
+  kDirt,
+  kGravel,
+  kPath,
+  kImpassable
+};
 }
 }
 
