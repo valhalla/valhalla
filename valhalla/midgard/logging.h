@@ -1,3 +1,6 @@
+#ifndef VALHALLA_MIDGARD_LOGGING_H_
+#define VALHALLA_MIDGARD_LOGGING_H_
+
 #include <string>
 #include <stdexcept>
 #include <iostream>
@@ -274,3 +277,5 @@ static void Configure(const LoggingConfig& config) {
 
 }
 }
+
+#endif
