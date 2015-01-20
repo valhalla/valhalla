@@ -32,7 +32,12 @@ void ThreadFileLoggerTest() {
   //get rid of it first so we don't append
   std::remove("test/thread_file_log_test.log");
 
-  //configure logging, if you dont it defaults to standard out logging with colors
+  //configure bogusly
+  try {
+    logging::Configure({ {"type", "file"}, {"file_name", "test/thread_file_log_test.log"}, {"reopen_interval", "opi-903"} });
+    throw std::runtime_error("Configuring with non numeric reopen_interval should have thrown");
+  }catch(...){}
+  //configure properly
   logging::Configure({ {"type", "file"}, {"file_name", "test/thread_file_log_test.log"}, {"reopen_interval", "1"} });
 
   //start up some threads

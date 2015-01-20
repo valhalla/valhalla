@@ -15,18 +15,6 @@ namespace midgard {
 
 namespace logging {
 
-//turn a string into a T
-template <class T>
-T atoT(const std::string& input)
-{
-  std::istringstream stream(input);
-  T output;
-  stream >> std::ws >> output >> std::ws;
-  if(!stream.eof())
-    throw std::runtime_error("Couldn't convert string to integral type");
-  return output;
-}
-
 //returns formated to: 'year/mo/dy hr:mn:sc.xxxxxx'
 std::string TimeStamp() {
   //get the time
@@ -148,7 +136,7 @@ class FileLogger : public Logger {
     if(interval != config.end())
     {
       try {        
-        reopen_interval = std::chrono::seconds(atoT<int>(interval->second));
+        reopen_interval = std::chrono::seconds(std::stoul(interval->second));
       }
       catch(...) {
         throw std::runtime_error(interval->second + " is not a valid reopen interval");
