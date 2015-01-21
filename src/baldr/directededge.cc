@@ -66,7 +66,7 @@ bool DirectedEdge::destonly() const {
 }
 
 bool DirectedEdge::unpaved() const {
-  return false;  //TODO Fix.
+  return (surface() <= Surface::kCompacted);
 }
 
 bool DirectedEdge::tunnel() const {
