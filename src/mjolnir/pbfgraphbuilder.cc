@@ -19,6 +19,7 @@ using namespace valhalla::mjolnir;
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/logging.h>
 
 namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
@@ -104,9 +105,14 @@ int main(int argc, char** argv) {
   //check what type of input we are getting
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_file_path.c_str(), pt);
-  std::string input_type = pt.get<std::string>("input.type");
+
+  //configure logging
+  boost::property_tree::ptree logging_subtree = pt.get_child("logging");
+  auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree);
+  valhalla::midgard::logging::Configure(logging_config);
 
   //we only support protobuf at present
+  std::string input_type = pt.get<std::string>("input.type");
   if(input_type == "protocolbuffer"){
     BuildLocalGraphFromPBF(pt, input_files);
   }/*else if("postgres"){

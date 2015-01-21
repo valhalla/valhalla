@@ -1,4 +1,5 @@
 #include "mjolnir/directededgebuilder.h"
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
@@ -25,7 +26,7 @@ void DirectedEdgeBuilder::set_edgedataoffset(const uint32_t offset) {
 // Sets the length of the edge in meters.
 void DirectedEdgeBuilder::set_length(const uint32_t length) {
   if (length > kMaxEdgeLength) {
-    std::cout << "Exceeding max. edge length: " << length << std::endl;
+    LOG_WARN("Exceeding max. edge length: " + std::to_string(length));
     geoattributes_.length = kMaxEdgeLength;
   } else {
     geoattributes_.length = length;
