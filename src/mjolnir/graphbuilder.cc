@@ -12,6 +12,8 @@
 #include <thread>
 #include <memory>
 
+#include <boost/algorithm/string.hpp>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -353,37 +355,46 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     //TODO     if surface = Unpaved and Highway = path then surface = kPath
     //         if track the surface = dirt?
     else if (tag.first == "surface") {
-      if (tag.second.find("paved") != std::string::npos
-          || tag.second.find("asphalt") != std::string::npos
-          || tag.second.find("concrete") != std::string::npos)
+
+      std::string value = tag.second;
+      boost::algorithm::to_lower(value);
+
+      if (value.find("paved") != std::string::npos
+          || value.find("pavement") != std::string::npos
+          || value.find("asphalt") != std::string::npos
+          || value.find("concrete") != std::string::npos
+          || value.find("cement") != std::string::npos)
         w.set_surface(Surface::kPavedSmooth);
 
-      else if (tag.second.find("tartan") != std::string::npos
-          || tag.second.find("pavingstone") != std::string::npos
-          || tag.second.find("paving_stones") != std::string::npos)
+      else if (value.find("tartan") != std::string::npos
+          || value.find("pavingstone") != std::string::npos
+          || value.find("paving_stones") != std::string::npos
+          || value.find("sett") != std::string::npos)
         w.set_surface(Surface::kPaved);
 
-      else if (tag.second.find("cobblestone") != std::string::npos
-          || tag.second.find("bricks") != std::string::npos)
+      else if (value.find("cobblestone") != std::string::npos
+          || value.find("brick") != std::string::npos)
         w.set_surface(Surface::kPavedRough);
 
-      else if (tag.second.find("compacted") != std::string::npos)
+      else if (value.find("compacted") != std::string::npos)
         w.set_surface(Surface::kCompacted);
 
-      else if (tag.second.find("dirt") != std::string::npos
-          || tag.second.find("natural") != std::string::npos
-          || tag.second.find("earth") != std::string::npos
-          || tag.second.find("ground") != std::string::npos
-          || tag.second.find("mud") != std::string::npos)
+      else if (value.find("dirt") != std::string::npos
+          || value.find("natural") != std::string::npos
+          || value.find("earth") != std::string::npos
+          || value.find("ground") != std::string::npos
+          || value.find("mud") != std::string::npos)
         w.set_surface(Surface::kDirt);
 
-      else if (tag.second.find("gravel") != std::string::npos
-          || tag.second.find("pebblestone") != std::string::npos
-          || tag.second.find("sand") != std::string::npos
-          || tag.second.find("wood") != std::string::npos
-          || tag.second.find("unpaved") != std::string::npos)
+      else if (value.find("gravel") != std::string::npos
+          || value.find("pebblestone") != std::string::npos
+          || value.find("sand") != std::string::npos
+          || value.find("wood") != std::string::npos
+          || value.find("boardwalk") != std::string::npos
+          || value.find("unpaved") != std::string::npos)
         w.set_surface(Surface::kGravel);
-
+      else if (value.find("grass") != std::string::npos)
+        w.set_surface(Surface::kPath);
       //else TODO.  Based on Highway type.
 
     }
