@@ -27,6 +27,7 @@ class Maneuver {
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
+  void set_instruction(std::string&& instruction);
 
   float distance() const;
   void set_distance(float distance);

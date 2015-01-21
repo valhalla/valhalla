@@ -3,6 +3,11 @@
 #include "odin/narrativebuilder.h"
 #include "odin/maneuver.h"
 
+namespace {
+// Text instruction initial capacity
+constexpr auto kTextInstructionInitialCapacity = 128;
+}
+
 namespace valhalla {
 namespace odin {
 
@@ -55,63 +60,79 @@ NarrativeBuilder::NarrativeBuilder() {
 // dictionary
 
 void NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
-  std::string text_instruction = "Start out going "
-      + FormCardinalDirection(maneuver.begin_cardinal_direction());
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Start out going ";
+  text_instruction += FormCardinalDirection(
+      maneuver.begin_cardinal_direction());
   if (maneuver.HasStreetNames()) {
-    text_instruction += " on " + maneuver.street_names().ToString();
+    text_instruction += " on ";
+    text_instruction += maneuver.street_names().ToString();
   }
   // TODO - side of street
 
   text_instruction += ".";
-  maneuver.set_instruction(text_instruction);
+  maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
   // TODO - phrase will vary depending on location
   // for now just keep it simple
-  std::string text_instruction = "You have arrived at your destination.";
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "You have arrived at your destination.";
 
   // TODO - side of street
 
-  maneuver.set_instruction(text_instruction);
+  maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
-  std::string text_instruction = "Continue";
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Continue";
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " onto " + maneuver.street_names().ToString();
+    text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
   }
 
   text_instruction += ".";
-  maneuver.set_instruction(text_instruction);
+  maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
-  std::string text_instruction = "Turn "
-      + FormTurnTypeInstruction(maneuver.type());
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Turn ";
+  text_instruction += FormTurnTypeInstruction(maneuver.type());
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " onto " + maneuver.street_names().ToString();
+    text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
   }
 
   text_instruction += ".";
-  maneuver.set_instruction(text_instruction);
+  maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
-  std::string text_instruction = "Make a "
-      + FormTurnTypeInstruction(maneuver.type()) + "U-turn";
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Make a ";
+  text_instruction += FormTurnTypeInstruction(maneuver.type());
+  text_instruction += " U-turn";
 
   // TODO - add intersecting street name
   // i.e. "at Main Street"
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " onto " + maneuver.street_names().ToString();
+    text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
   }
 
   text_instruction += ".";
-  maneuver.set_instruction(text_instruction);
+  maneuver.set_instruction(std::move(text_instruction));
 }
 
 std::string NarrativeBuilder::FormCardinalDirection(

@@ -64,6 +64,10 @@ void Maneuver::set_instruction(const std::string& instruction) {
   instruction_ = instruction;
 }
 
+void Maneuver::set_instruction(std::string&& instruction) {
+  instruction_ = std::move(instruction);
+}
+
 float Maneuver::distance() const {
   return distance_;
 }
