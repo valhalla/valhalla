@@ -56,13 +56,7 @@ void GraphOptimizer::Optimize() {
                                   nodeinfo.edge_index() + j);
 
           // Set the opposing edge index
-          // NOTE: shortcut edges do not always have opposing shortcuts
-          // may need to fix this!
-          if (directededge.shortcut()) {
-            directededge.set_opp_index(31);
-          } else {
-            directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
-          }
+          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
           directededges.emplace_back(std::move(directededge));
         }
 
@@ -93,7 +87,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& node,
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < n; i++, directededge++) {
     if (directededge->endnode() == node &&
-        fabs(directededge->length() - edge.length()) < 0.0001f) {
+        directededge->length() == edge.length()) {
       return i;
     }
   }
@@ -107,7 +101,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& node,
   directededge =  tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < n; i++, directededge++) {
     std::cout << "    Length = " << directededge->length() << " Endnode: " <<
-        directededge->endnode() << std::endl;
+        directededge->endnode() << " Shortcut: " << directededge->shortcut() << std::endl;
   }
   return 0;
 }
