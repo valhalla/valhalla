@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/logging.h>
 
 #include "odin/maneuversbuilder.h"
 
@@ -45,34 +46,18 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // Step through nodes in reverse order to produce maneuvers
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
-    // GDG
-    /*
+
+#ifdef LOGGING_LEVEL_TRACE
     auto* prevEdge = trip_path_->GetPrevEdge(i);
     auto* currEdge = trip_path_->GetCurrEdge(i);
     auto* nextEdge = trip_path_->GetNextEdge(i);
-    std::cout << i << ":  ";
-    if (prevEdge)
-      std::cout
-          << "prevEdge="
-          << ((prevEdge->name_size() > 0) ? prevEdge->name(0) : "unnamed");
-    else
-      std::cout << "prevEdge=NONE";
+    LOG_TRACE(std::to_string(i) + ":  ");
+    LOG_TRACE(std::string("  prevEdge=") + (prevEdge ? (prevEdge->name_size() > 0 ? prevEdge->name(0) : "unnamed") : "NONE"));
+    LOG_TRACE(std::string("  currEdge=") + (currEdge ? (currEdge->name_size() > 0 ? currEdge->name(0) : "unnamed") : "NONE"));
+    LOG_TRACE(std::string("  nextEdge=") + (nextEdge ? (nextEdge->name_size() > 0 ? nextEdge->name(0) : "unnamed") : "NONE"));
+    LOG_TRACE("---------------------------------------------");
+#endif
 
-    if (currEdge)
-      std::cout
-          << "  | currEdge="
-          << ((currEdge->name_size() > 0) ? currEdge->name(0) : "unnamed");
-    else
-      std::cout << "  | currEdge=NONE";
-
-    if (nextEdge)
-      std::cout << "  | nextEdge="
-                << ((nextEdge->name_size() > 0) ? nextEdge->name(0) : "unnamed")
-                << std::endl;
-    else
-      std::cout << "  | nextEdge=NONE" << std::endl;
-    std::cout << "---------------------------------------------" << std::endl;
-    */
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
       UpdateManeuver(maneuvers.front(), i);
