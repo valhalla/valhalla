@@ -4,6 +4,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
@@ -132,9 +133,11 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 
 // Get the cost to traverse the edge in seconds.
 float AutoCost::Get(const DirectedEdge* edge) const {
+#ifdef LOGGING_LEVEL_WARN
   if (edge->speed() > 150) {
-    std::cout << "Speed = " << static_cast<uint32_t>(edge->speed()) << std::endl;
+    LOG_WARN("Speed = " + std::to_string(edge->speed()));
   }
+#endif
   return edge->length() * speedfactor_[edge->speed()];
 }
 

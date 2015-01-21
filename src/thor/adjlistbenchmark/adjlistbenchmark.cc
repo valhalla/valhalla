@@ -5,6 +5,7 @@
 #include <boost/program_options.hpp>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/logging.h>
 #include "config.h"
 
 #include "thor/edgelabel.h"
@@ -49,8 +50,8 @@ int Benchmark(const unsigned int n, const float maxcost,
   }
 
   unsigned int msecs1 = (std::clock() - start1) / (double)(CLOCKS_PER_SEC / 1000);
-    std::cout << "Priority Queue: Added and removed " << count << " edgelabels in " <<
-        msecs1 << " ms" << std::endl;
+  LOG_INFO("Priority Queue: Added and removed " + std::to_string(count) + " edgelabels in " +
+    std::to_string(msecs1) + " ms");
 
   std::clock_t start = std::clock();
 
@@ -70,8 +71,8 @@ int Benchmark(const unsigned int n, const float maxcost,
     count++;
   }
   unsigned int msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "Added and removed " << count << " edgelabels in " <<
-      msecs << " ms" << std::endl;
+  LOG_INFO("Added and removed " + std::to_string(count) + " edgelabels in " +
+    std::to_string(msecs1) + " ms");
 
   return 0;
 }
@@ -98,13 +99,7 @@ int main(int argc, char *argv[])
   options.add_options()
     ("help,h", "Print this help message.")
     ("version,v", "Print the version of this software.")
-    // positional arguments
-    ("echo", bpo::value<std::string>(&echo), "String for the application to echo back")
     ;
-
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("echo", 1);
 
   bpo::variables_map vm;
 
@@ -127,25 +122,13 @@ int main(int argc, char *argv[])
   }
 
   if (vm.count("version")) {
-    std::cout << "valhalla " << VERSION << "\n";
+    std::cout << "AdjacencyListBenchmark " << VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
-  // argument checking and verification
-  for (auto arg : {"echo"}) {
-    if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
-      std::cerr << options << "\n";
-      return EXIT_FAILURE;
-    }
-  }
-
-  //echo it back
-  std::cout << echo << "\n";
-
   // Benchmark with count, maxcost, and bucketsize
   Benchmark(500000, 50000, 5);
-std::cout << "Done Benchmark!" << std::endl;
+  LOG_INFO("Done Benchmark!");
 
   return EXIT_SUCCESS;
 }
