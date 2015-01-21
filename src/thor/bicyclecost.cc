@@ -79,7 +79,7 @@ class BicycleCost : public DynamicCost {
   virtual float UnitSize() const;
 
  protected:
-  enum BicycleType {
+  enum class BicycleType {
     kRoad     = 0,
     kCross    = 1,
     kHybrid   = 2,
@@ -147,13 +147,13 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge, const bool uturn,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  if (bicycletype_ == kRoad)
+  if (bicycletype_ == BicycleType::kRoad)
     return edge->surface() <= Surface::kPavedRough;
-  else if (bicycletype_ == kHybrid)
+  else if (bicycletype_ == BicycleType::kHybrid)
       return edge->surface() <= Surface::kCompacted;
-  else if (bicycletype_ == kCross)
+  else if (bicycletype_ == BicycleType::kCross)
     return edge->surface() <= Surface::kDirt;
-  else if (bicycletype_ == kMountain)
+  else if (bicycletype_ == BicycleType::kMountain)
     return edge->surface() < Surface::kPath;   // Allow all but unpassable
 
   return true;
