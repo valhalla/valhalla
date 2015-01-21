@@ -224,6 +224,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   float default_speed;
   bool has_speed = false;
+  bool has_surface = true;
 
   // Process tags
   for (const auto& tag : results) {
@@ -395,7 +396,8 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
         w.set_surface(Surface::kGravel);
       else if (value.find("grass") != std::string::npos)
         w.set_surface(Surface::kPath);
-      //else TODO.  Based on Highway type.
+      //We have to set a flag as surface may come before Road classes and Uses
+      else has_surface = false;
 
     }
 
@@ -450,9 +452,47 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.set_destination_ref_to(tag.second);
     else if (tag.first == "junction_ref")
       w.set_junction_ref(tag.second);
+  }
 
-    // if (osmid == 368034)   //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
-    //   std::cout << "key: " << tag.first << " value: " << tag.second << std::endl;
+//If no surface has been set by a user, assign a surface based on Road Class and Use
+  if (!has_surface) {
+
+    switch (w.road_class()) {
+
+      case RoadClass::kMotorway:
+      case RoadClass::kTrunk:
+      case RoadClass::kPrimary:
+      case RoadClass::kTertiaryUnclassified:
+      case RoadClass::kResidential:
+      case RoadClass::kService:
+        w.set_surface(Surface::kPavedSmooth);
+        break;
+      case RoadClass::kTrack:
+        w.set_surface(Surface::kPath);
+        break;
+      default:
+        switch (w.use()) {
+
+        case Use::kFootway:
+          w.set_surface(Surface::kPath);
+          break;
+        case Use::kParkingAisle:
+        case Use::kDriveway:
+        case Use::kAlley:
+        case Use::kEmergencyAccess:
+        case Use::kDriveThru:
+          w.set_surface(Surface::kPavedSmooth);
+          break;
+        case Use::kCycleway:
+        case Use::kSteps:
+          w.set_surface(Surface::kPaved);
+          break;
+        default:
+          w.set_surface(Surface::kImpassable);  //Not sure about this one.
+          break;
+        }
+        break;
+    }
   }
 
 //If no speed has been set by a user, assign a speed based on highway tag.
@@ -461,11 +501,9 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     speed_assignment_count_++;
   }
 
-
   // Add the way to the list
   ways_.emplace_back(std::move(w));
-//  if (ways_.size() % 1000000 == 0) std::cout << ways_.size() <<
-//      " ways parsed" << std::endl;
+
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
