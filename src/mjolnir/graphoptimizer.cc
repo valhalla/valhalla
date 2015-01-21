@@ -105,7 +105,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& node,
     % edge.length() % node % edge.endnode() % edge.shortcut() % edge.trans_down() % edge.trans_up()).str());
   directededge =  tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < n; i++, directededge++) {
-    LOG_WARN("Length = " + std::to_string(directededge->length()) +  " Endnode: " + std::string(directededge->endnode()));
+    LOG_WARN((boost::format("Length = %1% Endnode: %2%") % directededge->length() % directededge->endnode()).str());
   }
   return 0;
 }
