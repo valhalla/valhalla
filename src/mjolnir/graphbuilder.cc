@@ -12,8 +12,9 @@
 #include <thread>
 #include <memory>
 
+#include <boost/format.hpp>
+#include <valhalla/midgard/logging.h>
 #include <boost/algorithm/string.hpp>
-
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -79,28 +80,28 @@ void GraphBuilder::Load(const std::vector<std::string>& input_files) {
   for(const auto& input_file : input_files) {
     // Parse the ways and relations. Find all node Ids needed.
     std::clock_t start = std::clock();
-    std::cout << "Parsing ways and relations to mark nodes needed" << std::endl;
+    LOG_INFO("Parsing ways and relations to mark nodes needed");
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    std::cout << "Routable ways " << ways_.size() << std::endl;
+    LOG_INFO("Routable ways " + std::to_string(ways_.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-    std::cout << "Parsing ways and relations took " << msecs << " ms" << std::endl;
+    LOG_INFO("Parsing ways and relations took " + std::to_string(msecs) + " ms");
   }
 
-  std::cout << "Percentage of ways using speed assignment: " << std::fixed <<
-      std::setprecision(2) <<
-      (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100  << std::endl;
+  std::ostringstream s;
+  s << std::fixed << std::setprecision(2) << (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100;
+  LOG_INFO("Percentage of ways using speed assignment: " + s.str());
 
   for(const auto& input_file : input_files) {
     // Run through the nodes
     std::clock_t start = std::clock();
-    std::cout << "Parsing nodes but only keeping " << node_count_ << std::endl;
+    LOG_INFO("Parsing nodes but only keeping " + std::to_string(node_count_));
     nodes_.reserve(node_count_);
     //TODO: we know how many knows we expect, stop early once we have that many
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
-    std::cout << "Routable nodes " << nodes_.size() << std::endl;
+    LOG_INFO("Routable nodes " + std::to_string(nodes_.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-    std::cout << "Parsing nodes took " << msecs << " ms" << std::endl;
+    LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
   }
 }
 
@@ -110,13 +111,13 @@ void GraphBuilder::Build() {
   std::clock_t start = std::clock();
   ConstructEdges();
   uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "ConstructEdges took " << msecs << " ms" << std::endl;
+  LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
 
   // Sort the edge indexes at the nodes (by driveability and importance)
   start = std::clock();
   SortEdgesFromNodes();
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "SortEdges took " << msecs << " ms" << std::endl;
+  LOG_INFO("SortEdges took " + std::to_string(msecs) + " ms");
 
   // Tile the nodes
   //TODO: generate more than just the most detailed level?
@@ -124,13 +125,13 @@ void GraphBuilder::Build() {
   const auto& tl = tile_hierarchy_.levels().rbegin();
   TileNodes(tl->second.tiles.TileSize(), tl->second.level);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "TileNodes took " << msecs << " ms" << std::endl;
+  LOG_INFO("TileNodes took " + std::to_string(msecs) + " ms");
 
   // Iterate through edges - tile the end nodes to create connected graph
   start = std::clock();
   BuildLocalTiles(tl->second.level);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  std::cout << "BuildLocalTiles took " << msecs << " ms" << std::endl;
+  LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 }
 
 // Initialize Lua tag transformations
@@ -184,7 +185,7 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   nodes_.emplace(osmid, std::move(n));
 
   if (nodes_.size() % 1000000 == 0) {
-    std::cout << "Processed " << nodes_.size() << " nodes on ways" << std::endl;
+    LOG_INFO("Processed " + std::to_string(nodes_.size()) + " nodes on ways");
   }
 }
 
@@ -447,7 +448,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.set_junction_ref(tag.second);
   }
 
-//If no surface has been set by a user, assign a surface based on Road Class and Use
+  //If no surface has been set by a user, assign a surface based on Road Class and Use
   if (!has_surface) {
 
     switch (w.road_class()) {
@@ -488,7 +489,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     }
   }
 
-//If no speed has been set by a user, assign a speed based on highway tag.
+  //If no speed has been set by a user, assign a speed based on highway tag.
   if (!has_speed) {
     w.set_speed(default_speed);
     speed_assignment_count_++;
@@ -496,7 +497,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   // Add the way to the list
   ways_.emplace_back(std::move(w));
-
 }
 
 void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
@@ -550,7 +550,7 @@ void GraphBuilder::ConstructEdges() {
       }
     }
   }
-  std::cout << "Constructed " << edges_.size() << " edges" << std::endl;
+  LOG_INFO("Constructed " + std::to_string(edges_.size()) + " edges");
 }
 
 class EdgeSorter {
@@ -616,7 +616,7 @@ uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode,
       n++;
     }
   }
-  std::cout << "ERROR Opposing directed edge not found!" << std::endl;
+  LOG_ERROR("ERROR Opposing directed edge not found!");
   return 31;
 }
 
@@ -682,7 +682,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
                   const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy,  std::promise<size_t>& result) {
 
-  std::cout << "Thread " << std::this_thread::get_id() << " started" << std::endl;
+  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
+  LOG_INFO("Thread " + thread_id + " started");
 
   // A place to keep information about what was done
   size_t written = 0;
@@ -742,20 +743,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             bestrc = w.road_class();
           }
 
-          //http://www.openstreetmap.org/way/368034#map=18/39.82859/-75.38610
-          /*  if (w.osmwayid_ == 368034)
-           {
-           std::cout << edge.sourcenode_ << " "
-           << edge.targetnode_ << " "
-           << w.auto_forward_ << " "
-           << w.pedestrian_ << " "
-           << w.bike_forward_ << " "
-           << w.auto_backward_ << " "
-           << w.pedestrian_ << " "
-           << w.bike_backward_ << std::endl;
-
-           }*/
-
           // TODO - if sorting of directed edges occurs after this will need to
           // remove this code and do elsewhere.
 
@@ -763,13 +750,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           // or reverse between the 2 nodes)
           const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
           if (!nodea.Is_Valid()) {
-            std::cout << "ERROR: Node A: OSMID = " << edge.sourcenode_ <<
-                " GraphID is not valid" << std::endl;
+            LOG_ERROR("Node A: OSMID = " + std::to_string(edge.sourcenode_) + " GraphID is not valid");
           }
           const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid(); //TODO: check validity?
           if (!nodeb.Is_Valid()) {
-            std::cout << "Node B: OSMID = " << edge.targetnode_ <<
-              " GraphID is not valid" << std::endl;
+            LOG_ERROR("Node B: OSMID = " + std::to_string(edge.targetnode_) + " GraphID is not valid");
           }
           if (edge.sourcenode_ == osmnodeid) {
             // Edge traversed in forward direction
@@ -823,11 +808,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
               }
           } else {
             // ERROR!!!
-            std::cout << "ERROR: WayID = " << w.way_id() << " Edge Index = " <<
-                edgeindex << " Edge nodes " <<
-                edge.sourcenode_ << " and " << edge.targetnode_ <<
-                " do not match the OSM node Id" <<
-                osmnodeid << std::endl;
+            LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
+              % w.way_id() % edgeindex %  edge.sourcenode_  % edge.targetnode_ % osmnodeid).str());
           }
 
           // Add edge info to the tile and set the offset in the directed edge
@@ -847,13 +829,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      std::cout << "Thread " << std::this_thread::get_id() << " wrote tile " << tile_start->first << ": " << graphtile.size() << " bytes" << std::endl;
+      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
       written += graphtile.size();
     }// Whatever happens in Vagas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      std::cout << "Thread " << std::this_thread::get_id() << " failed tile " << tile_start->first << ": " << e.what() << std::endl;
+      LOG_ERROR((boost::format("Thread %1% failed tile %2%: %3%") % thread_id % tile_start->first % e.what()).str());
       return;
     }
   }
@@ -862,7 +844,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
-  std::cout << "Tiling nodes" << std::endl;
+  LOG_INFO("Tiling nodes");
 
   // Get number of tiles and reserve space for them
   // < 30% of the earth is land and most roads are on land, even less than that even has roads
@@ -872,7 +854,6 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
   for (auto& node : nodes_) {
     // Skip any nodes that have no edges
     if (node.second.edge_count() == 0) {
-      //std::cout << "Node with no edges" << std::endl;
       continue;
     }
     // Put the node into the tile
@@ -883,10 +864,10 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
     node.second.set_graphid(GraphId(id.tileid(), id.level(), tile.size() - 1));
   }
 
-  std::cout << "Tiled nodes created" << std::endl;
+  LOG_INFO("Tiled nodes created");
 }
 
-// Build tiles for the local graph hierarchy (basically
+// Build tiles for the local graph hierarchy
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
@@ -896,7 +877,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   size_t floor = tilednodes_.size() / threads.size();
   size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
-  std::cout << tilednodes_.size() << " tiles\n";
+  LOG_INFO(std::to_string(tilednodes_.size()) + " tiles");
   for (size_t i = 0; i < threads.size(); ++i) {
     // Figure out how many this thread will work on (either ceiling or floor)
     size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
@@ -938,14 +919,14 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
         // If it was ready
         if (status == std::future_status::ready) {
           size_t bytes = result->second.get();
-          std::cout << "Wrote tile " << result->first << ": " << bytes << " bytes" << std::endl;
+          LOG_INFO((boost::format("Wrote tile %1%: %2% bytes") % result->first % bytes).str());
           results.erase(result);
           break;
         }
       }
       catch (const std::exception& e) {
         //TODO: log and rethrow
-        std::cout << "Filed tile " << result->first << ": " << e.what() << std::endl;
+        LOG_ERROR((boost::format("Failed tile %1%: %2%") % result->first % << e.what()).str());
         results.erase(result);
         break;
       }
