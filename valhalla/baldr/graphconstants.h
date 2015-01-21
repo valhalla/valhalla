@@ -39,9 +39,9 @@ enum class Use : uint8_t {
 
 enum class CycleLane : uint8_t {
   kNone,
+  kShared,
   kDedicated,
-  kSeparated,
-  kShared
+  kSeparated
 };
 
 enum class Surface : uint8_t {
