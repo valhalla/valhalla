@@ -379,6 +379,8 @@ void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
+if (newnode.contract)
+return;
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value()) : contractions_.end();
@@ -402,7 +404,6 @@ void HierarchyBuilder::AddShortcutEdges(
     // Check edgepairs for this node. If this edge is in the pair of exiting
     // shortcut edges at this node we skip it
     if (edgepairs != contractions_.end()) {
-      //
       if (edgepairs->second.edge1.second == base_edge_id ||
           edgepairs->second.edge2.second == base_edge_id) {
         continue;
