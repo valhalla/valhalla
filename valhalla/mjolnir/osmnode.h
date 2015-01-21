@@ -55,8 +55,11 @@ class OSMNode {
 
   /**
    * Add an edge.
+   * @param  edgeindex  Index in the list of edges.
+   * @param  link       Flag indicating whether this edge is a link
+   *                    (highway=*_link)
    */
-  void AddEdge(const uint32_t edgeindex);
+  void AddEdge(const uint32_t edgeindex, const bool link);
 
   /**
    * Get the number of edges beginning or ending at the node.
@@ -127,6 +130,12 @@ class OSMNode {
    */
   bool modes_mask() const;
 
+  /**
+   * Get the non-link edge flag. True if any connected edge is not a
+   * highway=*_link.
+   */
+  bool non_link_edge() const;
+
  private:
   // Lat,lng of the node
   midgard::PointLL latlng_;
@@ -140,12 +149,13 @@ class OSMNode {
   // Node attributes
   union NodeAttributes {
     struct Fields {
-      uint16_t gate       : 1;
-      uint16_t bollard    : 1;
-      uint16_t exit_to    : 1;
-      uint16_t ref        : 1;
-      uint16_t modes_mask : 8;
-      uint16_t spare      : 4;
+      uint16_t gate          : 1;
+      uint16_t bollard       : 1;
+      uint16_t exit_to       : 1;
+      uint16_t ref           : 1;
+      uint16_t modes_mask    : 8;
+      uint16_t non_link_edge : 1;
+      uint16_t spare         : 3;
     } fields;
     uint16_t v;
   };
