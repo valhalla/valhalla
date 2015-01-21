@@ -1,8 +1,9 @@
 #include "mjolnir/graphoptimizer.h"
-#include "config.h"
+#include <valhalla/midgard/logging.h>
 
 #include <ostream>
 #include <set>
+#include <boost/format.hpp>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -71,37 +72,37 @@ void GraphOptimizer::Optimize() {
 }
 
 // Get the GraphId of the opposing edge.
-uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& node,
+uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
                                               DirectedEdge& edge) {
-  // Get the tile at the end node
+  // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
   GraphTile* tile = graphreader_.GetGraphTile(endnode);
-
-  // Get the node info
   const NodeInfo* nodeinfo = tile->node(endnode.id());
-  uint32_t n = nodeinfo->edge_count();
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
-  const DirectedEdge* directededge =  tile->directededge(
+  const DirectedEdge* directededge = tile->directededge(
               nodeinfo->edge_index());
-  for (uint32_t i = 0; i < n; i++, directededge++) {
-    if (directededge->endnode() == node &&
-        directededge->length() == edge.length()) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // End node must match the start node, shortcut flag must match
+    // and lengths must be close...
+    if (directededge->endnode() == startnode &&
+        edge.shortcut() == directededge->shortcut() &&
+        abs(directededge->length() - edge.length()) < 2) {
       return i;
     }
   }
 
-  std::cout << "Opposing edge not found at LL= " <<
-      nodeinfo->latlng().lat() << "," << nodeinfo->latlng().lng() << " edges at end node= " << n << std::endl;
-  std::cout << " Length = " << edge.length() <<
-      " Basenode " << node << " EndNode " << edge.endnode() <<
-      " sc,td,tu " << edge.shortcut() << "," << edge.trans_down() <<
-      "," << edge.trans_up() << std::endl;
+  LOG_ERROR("Opposing edge not found");
+  LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
+    % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
+  LOG_WARN((boost::format("Length = %1% Startnode %2% EndNode %3% sc %4%")
+    % edge.length() % startnode % edge.endnode() % edge.shortcut()).str());
   directededge =  tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < n; i++, directededge++) {
-    std::cout << "    Length = " << directededge->length() << " Endnode: " <<
-        directededge->endnode() << " Shortcut: " << directededge->shortcut() << std::endl;
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    LOG_WARN((boost::format("Length = %1% Endnode: %2% sc %3%")
+      % directededge->length() % directededge->endnode()
+      % directededge->shortcut()).str());
   }
   return 0;
 }
