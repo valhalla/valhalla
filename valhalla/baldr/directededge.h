@@ -21,7 +21,7 @@ constexpr uint8_t kHorseAccess      = 64;
 constexpr uint8_t kNcn = 1;   // Part of national bike network
 constexpr uint8_t kRcn = 2;   // Part of regional bike network
 constexpr uint8_t kLcn = 4;   // Part of local bike network
-constexpr uint8_t kMcn = 4;   // Part of mountain bike network
+constexpr uint8_t kMcn = 8;   // Part of mountain bike network
 
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
