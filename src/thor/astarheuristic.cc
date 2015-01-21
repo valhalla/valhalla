@@ -16,18 +16,18 @@ void AStarHeuristic::Init(const PointLL& ll, const float factor) {
   costfactor_ = factor;
 }
 
-// Ge tthe distance to the destination
-float AStarHeuristic::GetDistance(const midgard::PointLL& ll) {
+// Get the distance to the destination
+float AStarHeuristic::GetDistance(const midgard::PointLL& ll) const {
   return sqrtf(distapprox_.DistanceSquared(ll));
 }
 
 // Get the A* heuristic given the lat,lng.
-float AStarHeuristic::Get(const midgard::PointLL& ll) {
+float AStarHeuristic::Get(const midgard::PointLL& ll) const {
   return sqrtf(distapprox_.DistanceSquared(ll)) * costfactor_;
 }
 
 // Get the A* heuristic given the distance to the destination.
-float AStarHeuristic::Get(const float dist) {
+float AStarHeuristic::Get(const float dist) const {
   return dist * costfactor_;
 }
 

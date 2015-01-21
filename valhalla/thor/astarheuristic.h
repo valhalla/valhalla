@@ -5,13 +5,12 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-namespace valhalla{
-namespace thor{
+namespace valhalla {
+namespace thor {
 
 /**
  * Class to calculate A* cost heuristics based on distances of nodes from
  * a destination within the shortest path computation.
- * @author  David W. Nesbitt
  */
 class AStarHeuristic {
  public:
@@ -42,15 +41,15 @@ class AStarHeuristic {
    * @param  ll  Current latitude, longitude.
    * @return  Returns the distance to the destination.
    */
-  float GetDistance(const midgard::PointLL& ll);
+  float GetDistance(const midgard::PointLL& ll) const;
 
   /**
-   * Get the A* heuristic given the dstance to the destination.
+   * Get the A* heuristic given the distance to the destination.
    * @param  distance  Distance (meters) to the destination.
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */
-  float Get(const float distance);
+  float Get(const float distance) const;
 
   /**
    * Get the A* heuristic given the current lat,lng.
@@ -58,11 +57,11 @@ class AStarHeuristic {
    * @return  Returns an estimate of the cost to the destination.
    *          For A* shortest path this MUST UNDERESTIMATE the true cost.
    */
-  float Get(const midgard::PointLL& ll);
+  float Get(const midgard::PointLL& ll) const;
 
  private:
   midgard::DistanceApproximator distapprox_;  // Distance approximation
-  float costfactor_;    // Cost factor - ensures the cost
+  float costfactor_;    // Cost factor - ensures the cost estimate
                         // underestimates the true cost.
 };
 

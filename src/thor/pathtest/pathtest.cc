@@ -30,7 +30,7 @@ namespace bpo = boost::program_options;
  * TODO: add locations to TripPath
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-             const PathLocation& dest, std::string routetype) {
+                  const PathLocation& dest, std::string routetype) {
   // Register costing methods
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -50,7 +50,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   start = std::clock();
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   // Form output information based on pathedges
@@ -58,7 +58,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   TripPath trip_path = TripPathBuilder::Build(reader, pathedges);
 
   // TODO - perhaps walk the edges to find total length?
-//  std::cout << "Trip length is: " << trip_path.length << " km" << std::endl;
+  //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " km");
   msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
@@ -71,22 +71,17 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
 
 TripDirections DirectionsTest(TripPath& trip_path) {
   DirectionsBuilder directions;
-  TripDirections trip_directions = directions.BuildSimple(trip_path);
+  TripDirections trip_directions = directions.Build(trip_path);
   float totalDistance = 0.0f;
+  int m = 1;
   for (const auto& maneuver : trip_directions.maneuver()) {
     LOG_INFO("----------------------------------------------");
-    LOG_INFO(maneuver.text_instruction() + " for " + std::to_string(maneuver.length()) + " km");
+    LOG_INFO(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km");
     totalDistance += maneuver.length();
   }
   LOG_INFO("==============================================");
   LOG_INFO("Total distance: " + std::to_string(totalDistance) + " km");
 
-  return trip_directions;
-}
-
-TripDirections DirectionsTest2(TripPath& trip_path) {
-  DirectionsBuilder directions;
-  TripDirections trip_directions = directions.Build(trip_path);
   return trip_directions;
 }
 
@@ -189,7 +184,6 @@ int main(int argc, char *argv[]) {
 
   // Try the the directions
   TripDirections trip_directions = DirectionsTest(trip_path);
-  TripDirections trip_directions2 = DirectionsTest2(trip_path);
 
   return EXIT_SUCCESS;
 }

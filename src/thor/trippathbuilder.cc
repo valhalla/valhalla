@@ -214,7 +214,22 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   }
 
   trip_edge->set_ramp(directededge->link());
+
+  if (directededge->link()) {
+
+    if (directededge->use() == Use::kRamp)
+      trip_edge->set_ramp(true);
+    else if (directededge->use() == Use::kTurnChannel)
+      trip_edge->set_turn_channel(true);
+  }
+
+  trip_edge->set_ferry(directededge->ferry());
+  trip_edge->set_railferry(directededge->railferry());
   trip_edge->set_toll(directededge->toll());
+  trip_edge->set_unpaved(directededge->unpaved());
+  trip_edge->set_tunnel(directededge->tunnel());
+  trip_edge->set_bridge(directededge->bridge());
+  trip_edge->set_roundabout(directededge->roundabout());
 
   return trip_edge;
 }
