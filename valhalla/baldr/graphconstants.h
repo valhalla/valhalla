@@ -7,7 +7,7 @@
 namespace valhalla {
 namespace baldr {
 
-
+// Road class or importance of an edge
 enum class RoadClass : uint8_t {
   kMotorway = 0,
   kTrunk = 1,
@@ -24,6 +24,11 @@ const std::unordered_map<std::string, RoadClass> stringToRoadClass =
     {"Service", RoadClass::kService}, {"Track", RoadClass::kTrack}, {"Other", RoadClass::kOther}
   };
 
+// Maximum length in meters of a "link" that can be assigned use=kTurnChannel
+// (vs. kRamp)
+constexpr float kMaxTurnChannelLength = 150.0f;
+
+// Edge use
 enum class Use : uint8_t {
   kNone,
   kCycleway,
@@ -34,6 +39,8 @@ enum class Use : uint8_t {
   kEmergencyAccess,
   kDriveThru,
   kSteps,
+  kRamp,
+  kTurnChannel,
   kOther
 };
 

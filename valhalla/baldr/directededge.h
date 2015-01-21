@@ -18,9 +18,10 @@ constexpr uint8_t kTaxiAccess       = 32;
 constexpr uint8_t kHorseAccess      = 64;
 
 // Bike Network constants. Bit constants.
-constexpr uint8_t kNcn = 1;
-constexpr uint8_t kRcn = 2;
-constexpr uint8_t kLcn = 4;
+constexpr uint8_t kNcn = 1;   // Part of national bike network
+constexpr uint8_t kRcn = 2;   // Part of regional bike network
+constexpr uint8_t kLcn = 4;   // Part of local bike network
+constexpr uint8_t kMcn = 8;   // Part of mountain bike network
 
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
