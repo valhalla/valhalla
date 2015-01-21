@@ -27,9 +27,6 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-uint32_t rampcount = 0;
-uint32_t turnchannelcount = 0;
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -776,16 +773,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_link(w.link());
           if (directededge.link()) {
             if (directededge.use() != Use::kNone) {
-              std::cout << "Edge is a link but has use = " <<
-                    static_cast<int>(directededge.use()) << std::endl;
+              LOG_WARN("Edge is a link but has use = " +
+                       std::to_string(static_cast<int>(directededge.use())));
             }
             directededge.set_use(GetLinkUse(w.road_class(), length,
                      edge.sourcenode_, edge.targetnode_, nodes));
-
-            if (directededge.use() == Use::kRamp)
-              rampcount++;
-            else if (directededge.use() == Use::kTurnChannel)
-              turnchannelcount++;
           }
 
           // Check if more important
@@ -957,10 +949,6 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
       //TODO: throw further up the chain?
     }
   }
-
-  std::cout << "Ramp count = " << rampcount << " Turn Channel count = " <<
-            turnchannelcount << std::endl;
-
 
   /*// Wait for results to come back from the threads, logging what happened and removing the result
   auto process_result = [] (std::unordered_map<GraphId, std::future<size_t> >& results) {
