@@ -49,28 +49,34 @@ void Configure(const LoggingConfig& config);
 
 //convenience macros stand out when reading code
 //default to seeing INFO and up if nothing was specified
-#ifndef LOGGING_LEVEL_ERROR
-  #ifndef LOGGING_LEVEL_WARN
-    #ifndef LOGGING_LEVEL_INFO
-      #ifndef LOGGING_LEVEL_DEBUG
-        #ifndef LOGGING_LEVEL_TRACE
-          #define LOGGING_LEVEL_INFO
+#ifndef LOGGING_LEVEL_NONE
+  #ifndef LOGGING_LEVEL_ALL
+    #ifndef LOGGING_LEVEL_ERROR
+      #ifndef LOGGING_LEVEL_WARN
+        #ifndef LOGGING_LEVEL_INFO
+          #ifndef LOGGING_LEVEL_DEBUG
+            #ifndef LOGGING_LEVEL_TRACE
+              #define LOGGING_LEVEL_INFO
+            #endif
+          #endif
         #endif
       #endif
     #endif
   #endif
 #endif
 //mark all the stuff we should see
-#ifndef LOGGING_LEVEL_ERROR
-  #define LOGGING_LEVEL_ERROR
-  #ifndef LOGGING_LEVEL_WARN
-    #define LOGGING_LEVEL_WARN
-    #ifndef LOGGING_LEVEL_INFO
-      #define LOGGING_LEVEL_INFO
-      #ifndef LOGGING_LEVEL_DEBUG
-        #define LOGGING_LEVEL_DEBUG
-        #ifndef LOGGING_LEVEL_TRACE
-          #define LOGGING_LEVEL_TRACE
+#ifndef LOGGING_LEVEL_NONE
+  #ifndef LOGGING_LEVEL_ERROR
+    #define LOGGING_LEVEL_ERROR
+    #ifndef LOGGING_LEVEL_WARN
+      #define LOGGING_LEVEL_WARN
+      #ifndef LOGGING_LEVEL_INFO
+        #define LOGGING_LEVEL_INFO
+        #ifndef LOGGING_LEVEL_DEBUG
+          #define LOGGING_LEVEL_DEBUG
+          #ifndef LOGGING_LEVEL_TRACE
+            #define LOGGING_LEVEL_TRACE
+          #endif
         #endif
       #endif
     #endif
