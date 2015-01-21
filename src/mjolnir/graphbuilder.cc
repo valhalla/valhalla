@@ -521,7 +521,7 @@ void GraphBuilder::ConstructEdges() {
     nodeid = way.nodes()[0];
     OSMNode& node = nodes_[nodeid];
     Edge edge(nodeid, wayindex, node.latlng(), way);
-    node.AddEdge(edgeindex);
+    node.AddEdge(edgeindex, way.link());
 
     // Iterate through the nodes of the way and add lat,lng to the current
     // way until a node with > 1 uses is found.
@@ -536,7 +536,7 @@ void GraphBuilder::ConstructEdges() {
       if (intersection_.IsUsed(nodeid)) {
         // End the current edge and add its edge index to the node
         edge.targetnode_ = nodeid;
-        nd.AddEdge(edgeindex);
+        nd.AddEdge(edgeindex, way.link());
 
         // Add the edge to the list of edges
         edges_.emplace_back(std::move(edge));
@@ -545,7 +545,7 @@ void GraphBuilder::ConstructEdges() {
         // Start a new edge if this is not the last node in the way
         if (i < way.node_count() - 1) {
           edge = Edge(nodeid, wayindex, nd.latlng(), way);
-          nd.AddEdge(edgeindex);
+          nd.AddEdge(edgeindex, way.link());
         }
       }
     }
@@ -677,6 +677,37 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
   return false;
 }
 
+/**
+ * Get the use for a link (either a kRamp or kTurnChannel)
+ * TODO - validate logic with some real world cases.
+ */
+Use GetLinkUse(const RoadClass rc, const float length,
+               const uint64_t startnode,  const uint64_t endnode,
+               const std::unordered_map<uint64_t, OSMNode>& nodes) {
+  // Assume link that has highway = motorway or trunk is a ramp.
+  // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
+  if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
+      length > kMaxTurnChannelLength) {
+    return Use::kRamp;
+  }
+
+  // TODO - if there is a exit sign or exit number present this is
+  // considered kRamp
+
+  // Both end nodes have to connect to a non-link edge. If either end node
+  // connects only to "links" this likely indicates a split or fork,
+  // which are not so prevalent in turn channels.
+  auto startnd = nodes.find(startnode);
+  if (startnd != nodes.end()) {
+    auto endnd = nodes.find(endnode);
+    if (endnd != nodes.end()) {
+      if (startnd->second.non_link_edge() && endnd->second.non_link_edge())
+        return Use::kTurnChannel;
+    }
+  }
+  return Use::kRamp;
+}
+
 void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
                   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
@@ -725,7 +756,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           directededge.set_importance(w.road_class());
           directededge.set_use(w.use());
-          directededge.set_link(w.link());
           directededge.set_speed(w.speed());    // KPH
           directededge.set_ferry(w.ferry());
           directededge.set_railferry(w.rail());
@@ -737,6 +767,18 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_roundabout(w.roundabout());
           directededge.set_bridge(w.bridge());
           directededge.set_bikenetwork(w.bike_network());
+
+          // Link - this indicates a ramp or a turn channel. If link is set
+          // test to see if we can infer that the edge is a turn channel
+          directededge.set_link(w.link());
+          if (directededge.link()) {
+            if (directededge.use() != Use::kNone) {
+              LOG_WARN("Edge is a link but has use = " +
+                       std::to_string(static_cast<int>(directededge.use())));
+            }
+            directededge.set_use(GetLinkUse(w.road_class(), length,
+                     edge.sourcenode_, edge.targetnode_, nodes));
+          }
 
           // Check if more important
           if (w.road_class() < bestrc) {
@@ -907,7 +949,6 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
       //TODO: throw further up the chain?
     }
   }
-
 
   /*// Wait for results to come back from the threads, logging what happened and removing the result
   auto process_result = [] (std::unordered_map<GraphId, std::future<size_t> >& results) {

@@ -57,13 +57,7 @@ void GraphOptimizer::Optimize() {
                                   nodeinfo.edge_index() + j);
 
           // Set the opposing edge index
-          // NOTE: shortcut edges do not always have opposing shortcuts
-          // may need to fix this!
-          if (directededge.shortcut()) {
-            directededge.set_opp_index(31);
-          } else {
-            directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
-          }
+          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
           directededges.emplace_back(std::move(directededge));
         }
 
@@ -78,34 +72,37 @@ void GraphOptimizer::Optimize() {
 }
 
 // Get the GraphId of the opposing edge.
-uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& node,
+uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
                                               DirectedEdge& edge) {
-  // Get the tile at the end node
+  // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
   GraphTile* tile = graphreader_.GetGraphTile(endnode);
-
-  // Get the node info
   const NodeInfo* nodeinfo = tile->node(endnode.id());
-  uint32_t n = nodeinfo->edge_count();
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
-  const DirectedEdge* directededge =  tile->directededge(
+  const DirectedEdge* directededge = tile->directededge(
               nodeinfo->edge_index());
-  for (uint32_t i = 0; i < n; i++, directededge++) {
-    if (directededge->endnode() == node &&
-        fabs(directededge->length() - edge.length()) < 0.0001f) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // End node must match the start node, shortcut flag must match
+    // and lengths must be close...
+    if (directededge->endnode() == startnode &&
+        edge.shortcut() == directededge->shortcut() &&
+        abs(directededge->length() - edge.length()) < 2) {
       return i;
     }
   }
 
-  LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2% edges at end node= %3%")
-    % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % n).str());
-  LOG_WARN((boost::format("Length = %1% Basenode %2% EndNode %3% sc,td,tu %4%,%5%,%6%")
-    % edge.length() % node % edge.endnode() % edge.shortcut() % edge.trans_down() % edge.trans_up()).str());
+  LOG_ERROR("Opposing edge not found");
+  LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
+    % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
+  LOG_WARN((boost::format("Length = %1% Startnode %2% EndNode %3% sc %4%")
+    % edge.length() % startnode % edge.endnode() % edge.shortcut()).str());
   directededge =  tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < n; i++, directededge++) {
-    LOG_WARN((boost::format("Length = %1% Endnode: %2%") % directededge->length() % directededge->endnode()).str());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    LOG_WARN((boost::format("Length = %1% Endnode: %2% sc %3%")
+      % directededge->length() % directededge->endnode()
+      % directededge->shortcut()).str());
   }
   return 0;
 }
