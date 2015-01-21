@@ -79,6 +79,20 @@ std::string encode(const container_t& points);
 template<class container_t>
 container_t decode(const std::string& encoded);
 
+//useful in converting from one iteratable map to another
+//for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string> >(some_ptree)
+/*
+ * @param inmap the map to be converted
+ * @return the converted map of another type
+ */
+template <class T1, class T2>
+T2 ToMap(const T1& inmap) {
+  T2 outmap;
+  for(const auto& key_value : inmap)
+    outmap[key_value.first] = key_value.second.data();
+  return outmap;
+}
+
 }
 }
 #endif  // VALHALLA_MIDGARD_UTIL_H_
