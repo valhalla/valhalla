@@ -1,6 +1,7 @@
 #include "test.h"
 #include "tyr/route_handler.h"
 #include <valhalla/mjolnir/graphbuilder.h>
+#include <valhalla/midgard/logging.h>
 
 #include <fstream>
 #include <boost/python/dict.hpp>
@@ -92,7 +93,7 @@ void TestRouteHanlder() {
 
   //run the route
   valhalla::tyr::RouteHandler handler(dict);
-  std::cout << handler.Action();
+  LOG_DEBUG(handler.Action());
 }
 
 }
