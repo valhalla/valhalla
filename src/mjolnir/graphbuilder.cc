@@ -14,6 +14,7 @@
 
 #include <boost/format.hpp>
 #include <valhalla/midgard/logging.h>
+#include <boost/algorithm/string.hpp>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -224,6 +225,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
 
   float default_speed;
   bool has_speed = false;
+  bool has_surface = true;
 
   // Process tags
   for (const auto& tag : results) {
@@ -352,48 +354,52 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "int_ref")
       w.set_int_ref(tag.second);
 
-    //TODO     if surface = Unpaved and Highway = path then surface = kPath
-    //         if track the surface = dirt?
     else if (tag.first == "surface") {
-      if (tag.second.find("paved") != std::string::npos
-          || tag.second.find("asphalt") != std::string::npos
-          || tag.second.find("concrete") != std::string::npos)
+      std::string value = tag.second;
+      boost::algorithm::to_lower(value);
+
+      if (value.find("paved") != std::string::npos
+          || value.find("pavement") != std::string::npos
+          || value.find("asphalt") != std::string::npos
+          || value.find("concrete") != std::string::npos
+          || value.find("cement") != std::string::npos)
         w.set_surface(Surface::kPavedSmooth);
 
-      else if (tag.second.find("tartan") != std::string::npos
-          || tag.second.find("pavingstone") != std::string::npos
-          || tag.second.find("paving_stones") != std::string::npos)
+      else if (value.find("tartan") != std::string::npos
+          || value.find("pavingstone") != std::string::npos
+          || value.find("paving_stones") != std::string::npos
+          || value.find("sett") != std::string::npos)
         w.set_surface(Surface::kPaved);
 
-      else if (tag.second.find("cobblestone") != std::string::npos
-          || tag.second.find("bricks") != std::string::npos)
+      else if (value.find("cobblestone") != std::string::npos
+          || value.find("brick") != std::string::npos)
         w.set_surface(Surface::kPavedRough);
 
-      else if (tag.second.find("compacted") != std::string::npos)
+      else if (value.find("compacted") != std::string::npos)
         w.set_surface(Surface::kCompacted);
 
-      else if (tag.second.find("dirt") != std::string::npos
-          || tag.second.find("natural") != std::string::npos
-          || tag.second.find("earth") != std::string::npos
-          || tag.second.find("ground") != std::string::npos
-          || tag.second.find("mud") != std::string::npos)
+      else if (value.find("dirt") != std::string::npos
+          || value.find("natural") != std::string::npos
+          || value.find("earth") != std::string::npos
+          || value.find("ground") != std::string::npos
+          || value.find("mud") != std::string::npos)
         w.set_surface(Surface::kDirt);
 
-      else if (tag.second.find("gravel") != std::string::npos
-          || tag.second.find("pebblestone") != std::string::npos
-          || tag.second.find("sand") != std::string::npos
-          || tag.second.find("wood") != std::string::npos
-          || tag.second.find("unpaved") != std::string::npos)
+      else if (value.find("gravel") != std::string::npos
+          || value.find("pebblestone") != std::string::npos
+          || value.find("sand") != std::string::npos
+          || value.find("wood") != std::string::npos
+          || value.find("boardwalk") != std::string::npos
+          || value.find("unpaved") != std::string::npos)
         w.set_surface(Surface::kGravel);
-
-      //else TODO.  Based on Highway type.
-
+      else if (value.find("grass") != std::string::npos)
+        w.set_surface(Surface::kPath);
+      //We have to set a flag as surface may come before Road classes and Uses
+      else has_surface = false;
     }
 
     else if (tag.first == "cycle_lane") {
-
       CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
-
       switch (cyclelane) {
         case CycleLane::kNone:
           w.set_cyclelane(CycleLane::kNone);
@@ -411,7 +417,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
           w.set_use(Use::kNone);
           break;
       }
-
     }
 
     else if (tag.first == "lanes")
@@ -443,12 +448,52 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.set_junction_ref(tag.second);
   }
 
-//If no speed has been set by a user, assign a speed based on highway tag.
+  //If no surface has been set by a user, assign a surface based on Road Class and Use
+  if (!has_surface) {
+
+    switch (w.road_class()) {
+
+      case RoadClass::kMotorway:
+      case RoadClass::kTrunk:
+      case RoadClass::kPrimary:
+      case RoadClass::kTertiaryUnclassified:
+      case RoadClass::kResidential:
+      case RoadClass::kService:
+        w.set_surface(Surface::kPavedSmooth);
+        break;
+      case RoadClass::kTrack:
+        w.set_surface(Surface::kPath);
+        break;
+      default:
+        switch (w.use()) {
+
+        case Use::kFootway:
+          w.set_surface(Surface::kPath);
+          break;
+        case Use::kParkingAisle:
+        case Use::kDriveway:
+        case Use::kAlley:
+        case Use::kEmergencyAccess:
+        case Use::kDriveThru:
+          w.set_surface(Surface::kPavedSmooth);
+          break;
+        case Use::kCycleway:
+        case Use::kSteps:
+          w.set_surface(Surface::kPaved);
+          break;
+        default:
+          w.set_surface(Surface::kImpassable);  //Not sure about this one.
+          break;
+        }
+        break;
+    }
+  }
+
+  //If no speed has been set by a user, assign a speed based on highway tag.
   if (!has_speed) {
     w.set_speed(default_speed);
     speed_assignment_count_++;
   }
-
 
   // Add the way to the list
   ways_.emplace_back(std::move(w));

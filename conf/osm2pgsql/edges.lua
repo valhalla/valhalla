@@ -383,7 +383,11 @@ function filter_tags_generic(kv)
   end
   if lref or kv["lcn"] == "yes" then
     bike_mask = bit32.bor(bike_mask, 4)
-  end 
+  end
+  if kv["mtb"] == "yes" then
+    bike_mask = bit32.bor(bike_mask, 8)
+  end
+
   kv["bike_national_ref"] = nref
   kv["bike_regional_ref"] = rref
   kv["bike_local_ref"] = lref
