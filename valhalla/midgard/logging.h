@@ -39,7 +39,7 @@ class Logger {
 };
 
 //statically get a logger using the factory
-Logger& GetLogger(const LoggingConfig& config = { {"type", "std_out"}, {"color", ""} });
+Logger& GetLogger(const LoggingConfig& config = { {"type", "std_out"}, {"color", "true"} });
 
 //statically configure logging
 //try something like:

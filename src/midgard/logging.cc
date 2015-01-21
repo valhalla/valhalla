@@ -88,7 +88,7 @@ bool logger_registered =
 class StdOutLogger : public Logger {
  public:
   StdOutLogger() = delete;
-  StdOutLogger(const LoggingConfig& config) : Logger(config),levels(config.find("color") != config.end() ? colored : uncolored) {}
+  StdOutLogger(const LoggingConfig& config) : Logger(config), levels(config.find("color") != config.end() && config.find("color")->second == "true" ? colored : uncolored) {}
   virtual void Log(const std::string& message, const LogLevel level) {
     std::string output;
     output.reserve(message.length() + 64);
