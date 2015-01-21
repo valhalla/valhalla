@@ -66,7 +66,14 @@ bool DirectedEdge::destonly() const {
 }
 
 bool DirectedEdge::unpaved() const {
-  return false;  //TODO Fix.
+
+  Surface edge_surface = this->surface();
+  if (edge_surface == Surface::kPavedSmooth ||
+      edge_surface == Surface::kPaved ||
+      edge_surface == Surface::kPavedRough)
+    return false;
+
+  return true;
 }
 
 bool DirectedEdge::tunnel() const {
