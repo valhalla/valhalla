@@ -27,9 +27,9 @@ OSMWay::OSMWay()
   bike_regional_ref_ = "";
   bike_local_ref_ = "";
 
-  attributes_.v = 0;
+  attributes_.v = {0};
 
-  classification_.v = 0;
+  classification_.v = {0};
 
   speed_ = static_cast<unsigned char>(0.0f);
 }
@@ -55,9 +55,9 @@ OSMWay::OSMWay(uint64_t id) {
   bike_regional_ref_ = "";
   bike_local_ref_ = "";
 
-  attributes_.v = 0;
+  attributes_.v = {0};
 
-  classification_.v = 0;
+  classification_.v = {0};
 
   speed_ = static_cast<unsigned char>(0.0f);
 
@@ -446,18 +446,33 @@ void OSMWay::set_rail(const bool rail) {
 bool OSMWay::rail() const {
   return attributes_.fields.rail;
 }
+
 /**
- * Set surface flag.
+ * Set the surface.
  */
-void OSMWay::set_surface(const bool surface) {
-  attributes_.fields.surface = surface;
+void OSMWay::set_surface(const Surface surface) {
+  attributes_.fields.surface = static_cast<uint8_t>(surface);
 }
 
 /**
- * Get the surface flag.
+ * Get the surface.
  */
-bool OSMWay::surface() const {
-  return attributes_.fields.surface;
+Surface OSMWay::surface() const {
+  return static_cast<Surface>(attributes_.fields.surface);
+}
+
+/**
+ * Set the cycle lane.
+ */
+void OSMWay::set_cyclelane(const CycleLane cyclelane) {
+  attributes_.fields.cycle_lane = static_cast<uint8_t>(cyclelane);
+}
+
+/**
+ * Get the cycle lane.
+ */
+CycleLane OSMWay::cyclelane() const {
+  return static_cast<CycleLane>(attributes_.fields.cycle_lane);
 }
 
 /**

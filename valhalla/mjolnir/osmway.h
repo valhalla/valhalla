@@ -361,16 +361,28 @@ class OSMWay {
   bool rail() const;
 
   /**
-   * Sets the surface flag.
-   * @param  surface   Is paved?
+   * Sets the surface.
+   * @param  surface
    */
-  void set_surface(const bool surface);
+  void set_surface(const Surface surface);
 
   /**
-   * Get the surface flag.
-   * @return  Returns surface flag.
+   * Get the surface.
+   * @return  Returns Surface.
    */
-  bool surface() const;
+  Surface surface() const;
+
+  /**
+   * Sets the cycle lane.
+   * @param  cyclelane
+   */
+  void set_cyclelane(const CycleLane cyclelane);
+
+  /**
+   * Get the cycle lane.
+   * @return  Returns CycleLane.
+   */
+  CycleLane cyclelane() const;
 
   /**
    * Sets the number of lanes
@@ -518,13 +530,14 @@ class OSMWay {
       uint32_t roundabout       :1;
       uint32_t ferry            :1;
       uint32_t rail             :1;
-      uint32_t surface          :1;
+      uint32_t surface          :3;
+      uint32_t cycle_lane       :2;
       uint32_t lanes            :4;
       uint32_t tunnel           :1;
       uint32_t toll             :1;
       uint32_t bridge           :1;
       uint32_t bikenetwork      :4;
-      uint32_t spare            :9;
+      uint32_t spare            :5;
     } fields;
     uint32_t v;
   };
