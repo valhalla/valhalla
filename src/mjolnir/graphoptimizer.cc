@@ -19,7 +19,7 @@ GraphOptimizer::GraphOptimizer(const boost::property_tree::ptree& pt)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 }
 
-bool GraphOptimizer::Optimize() {
+void GraphOptimizer::Optimize() {
   // Iterate through all levels and all tiles.
   // TODO - concurrency
   for (auto tile_level :  tile_hierarchy_.levels()) {

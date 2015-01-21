@@ -33,7 +33,7 @@ class GraphOptimizer {
   /**
    * Optimize the graph tiles.
    */
-  bool Optimize();
+  void Optimize();
 
  protected:
   // Tile hierarchy/level information

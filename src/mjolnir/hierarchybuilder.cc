@@ -1,5 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
-#include "config.h"
+#include <valhalla/midgard/logging.h>
+#include <boost/format.hpp>
 
 #include <ostream>
 #include <set>
@@ -33,8 +34,8 @@ bool HierarchyBuilder::Build() {
   new_level++;
   for (; new_level != tile_hierarchy_.levels().rend();
       base_level++, ++new_level) {
-    std::cout << " Build Hierarchy Level " << new_level->second.name
-              << " Base Level is " << base_level->second.name << std::endl;
+    LOG_INFO("Build Hierarchy Level " + new_level->second.name
+              + " Base Level is " + base_level->second.name);
 
     // Clear the node map, contraction node map, and map of superseded edges
     nodemap_.clear();
@@ -51,12 +52,11 @@ bool HierarchyBuilder::Build() {
     contractcount_ = 0;
     shortcutcount_ = 0;
     GetNodesInNewLevel(base_level->second, new_level->second);
-    std::cout << "Can contract " << contractcount_ << " nodes" << " Out of "
-              << nodemap_.size() << " nodes" << std::endl;
+    LOG_INFO((boost::format("Can contract %1% nodes out of %2% nodes") % contractcount_ % nodemap_.size()).str());
 
     // Form all tiles in new level
     FormTilesInNewLevel(base_level->second, new_level->second);
-    std::cout << "Created " << shortcutcount_ << " shortcuts" << std::endl;
+    LOG_INFO((boost::format("Created %1% shortcuts") % shortcutcount_ ).str());
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
@@ -256,7 +256,7 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
       return edgeid;
     }
   }
-  std::cout << "Opposing directed edge not found!" << std::endl;
+  LOG_ERROR("Opposing directed edge not found!");
   return GraphId(0, 0, 0);
 }
 
@@ -439,7 +439,7 @@ void HierarchyBuilder::AddShortcutEdges(
         basenode = tilednodes_[nodeb.tileid()][nodeb.id()].basenode;
         auto edgepairs = contractions_.find(nodeb.value());
         if (edgepairs == contractions_.end()) {
-          std::cout << "No edge pairs found for contracted node" << std::endl;
+          LOG_WARN("No edge pairs found for contracted node");
           break;
         } else {
           // Oldedge should match one of the 2 first (inbound) edges in the
@@ -514,7 +514,7 @@ bool HierarchyBuilder::IsEnteringEdgeOfContractedNode(const GraphId& node,
                                                       const GraphId& edge) {
   auto edgepairs = contractions_.find(node.value());
   if (edgepairs == contractions_.end()) {
-    std::cout << "No edge pairs found for contracted node" << std::endl;
+    LOG_WARN("No edge pairs found for contracted node");
     return false;
   } else {
     return (edgepairs->second.edge1.first == edge

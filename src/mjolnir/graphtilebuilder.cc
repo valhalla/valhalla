@@ -1,5 +1,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
+#include <valhalla/midgard/logging.h>
+#include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
 #include <list>
@@ -63,10 +65,8 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the names
     SerializeTextListToOstream(file);
 
-    std::cout << "Write: " << filename << " nodes = " << nodes_builder_.size()
-              << " directededges = " << directededges_builder_.size()
-              << " edgeinfo size = " << edge_info_offset_
-              <<  " textlist size = " << text_list_offset_ << std::endl;
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% edgeinfo offset = %4% textlist offset = %5%")
+      % filename % nodes_builder_.size() % directededges_builder_.size() % edge_info_offset_ % text_list_offset_).str());
 
     size_ = file.tellp();
     file.close();
