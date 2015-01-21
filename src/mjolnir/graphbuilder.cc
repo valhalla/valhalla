@@ -353,10 +353,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "int_ref")
       w.set_int_ref(tag.second);
 
-    //TODO     if surface = Unpaved and Highway = path then surface = kPath
-    //         if track the surface = dirt?
     else if (tag.first == "surface") {
-
       std::string value = tag.second;
       boost::algorithm::to_lower(value);
 
@@ -398,13 +395,10 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
         w.set_surface(Surface::kPath);
       //We have to set a flag as surface may come before Road classes and Uses
       else has_surface = false;
-
     }
 
     else if (tag.first == "cycle_lane") {
-
       CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
-
       switch (cyclelane) {
         case CycleLane::kNone:
           w.set_cyclelane(CycleLane::kNone);
@@ -422,7 +416,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
           w.set_use(Use::kNone);
           break;
       }
-
     }
 
     else if (tag.first == "lanes")
