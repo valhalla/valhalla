@@ -44,7 +44,7 @@ message TripPath {
     optional bool ramp = 9;
     optional bool turn_channel = 10;
     optional bool ferry = 11;
-    optional bool railferry = 12;
+    optional bool rail_ferry = 12;
     optional bool toll = 13;
     optional bool unpaved = 14;
     optional bool tunnel = 15;
