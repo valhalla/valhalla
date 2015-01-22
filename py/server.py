@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
 import sys
-import BaseHTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
+import threading
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from SocketServer import ThreadingMixIn
 from cgi import parse_qs, escape
 import tyr_service
 
 '''
 sample url looks like this:
 
-http://localhost:8080/car/viaroute?z=17&output=json&instructions=true&loc=40.657912,-73.914450&loc=40.040501,-76.306271
-
-http://localhost:8080/car/locate?loc=40.657912,-73.914450
-
-http://localhost:8080/car/nearest?loc=40.657912,-73.914450
+http://localhost:8002/car/viaroute?z=17&output=json&instructions=true&loc=40.657912,-73.914450&loc=40.040501,-76.306271
+http://localhost:8002/car/locate?loc=40.657912,-73.914450
+http://localhost:8002/car/nearest?loc=40.657912,-73.914450
 '''
 
 #mapping mapzen osrm profiles to our internal costing algorithms
@@ -22,8 +21,12 @@ costing_methods = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
 #TODO: these will be methods to boost python bindings into the tyr library
 actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler}
 
+#enable threaded server
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+  pass
+
 #custom handler for getting routes
-class TyrHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class TyrHandler(BaseHTTPRequestHandler):
 
   #parse the request because we dont get this for free!
   def handle_request(self):
@@ -103,11 +106,10 @@ if __name__ == '__main__':
   else:
     port = 8002
 
-
   #setup the server
   server_address = ('0.0.0.0', port)
   TyrHandler.protocol_version = 'HTTP/1.0'
-  httpd = BaseHTTPServer.HTTPServer(server_address, TyrHandler)
+  httpd = ThreadedHTTPServer(server_address, TyrHandler)
 
   try:
     httpd.serve_forever()
