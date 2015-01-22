@@ -161,27 +161,27 @@ void Maneuver::set_ramp(bool ramp) {
   ramp_ = ramp;
 }
 
-bool valhalla::odin::Maneuver::ferry() const {
+bool Maneuver::ferry() const {
   return ferry_;
 }
 
-void valhalla::odin::Maneuver::set_ferry(bool ferry) {
+void Maneuver::set_ferry(bool ferry) {
   ferry_ = ferry;
 }
 
-bool valhalla::odin::Maneuver::rail_ferry() const {
+bool Maneuver::rail_ferry() const {
   return rail_ferry_;
 }
 
-void valhalla::odin::Maneuver::set_rail_ferry(bool rail_ferry) {
+void Maneuver::set_rail_ferry(bool rail_ferry) {
   rail_ferry_ = rail_ferry;
 }
 
-bool valhalla::odin::Maneuver::roundabout() const {
+bool Maneuver::roundabout() const {
   return roundabout_;
 }
 
-void valhalla::odin::Maneuver::set_roundabout(bool roundabout) {
+void Maneuver::set_roundabout(bool roundabout) {
   roundabout_ = roundabout;
 }
 
@@ -199,6 +199,14 @@ bool Maneuver::portions_unpaved() const {
 
 void Maneuver::set_portions_unpaved(bool portionsUnpaved) {
   portions_unpaved_ = portionsUnpaved;
+}
+
+bool Maneuver::portions_highway() const {
+  return portions_highway_;
+}
+
+void Maneuver::set_portions_highway(bool portionsHighway) {
+  portions_highway_ = portionsHighway;
 }
 
 std::string Maneuver::ToString() const {

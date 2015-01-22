@@ -78,6 +78,9 @@ class Maneuver {
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
 
+  bool portions_highway() const;
+  void set_portions_highway(bool portionsHighway);
+
   std::string ToString() const;
 
  protected:
@@ -101,6 +104,7 @@ class Maneuver {
   bool roundabout_;
   bool portions_toll_;
   bool portions_unpaved_;
+  bool portions_highway_;
 
   // TODO notes
 
