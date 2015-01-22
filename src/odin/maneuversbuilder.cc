@@ -58,7 +58,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE("---------------------------------------------");
 #endif
 
-
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
       UpdateManeuver(maneuvers.front(), i);
     } else {
@@ -254,13 +253,16 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   // TODO - fix it
   auto* prevEdge = trip_path_->GetPrevEdge(nodeIndex);
 
-  // TODO - add to streetnames
-  StreetNames new_names;
-  for (const auto& name : prevEdge->name()) {
-    new_names.push_back(StreetName(name));
+  StreetNames prev_edge_names(prevEdge->name());
+
+  if (maneuver.street_names() == prev_edge_names) {
+    return true;
   }
 
-  if (new_names == maneuver.street_names()) {
+  StreetNames common_street_names = maneuver.street_names()
+      .FindCommonStreetNames(prev_edge_names);
+  if (!common_street_names.empty()) {
+    maneuver.set_street_names(std::move(common_street_names));
     return true;
   }
 
