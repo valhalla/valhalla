@@ -9,22 +9,26 @@ namespace odin {
 EnhancedTripPath::EnhancedTripPath() {
 }
 
-TripPath_Edge* EnhancedTripPath::GetPrevEdge(const int nodeIndex, int delta) {
+EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int nodeIndex,
+                                                     int delta) {
   int index = nodeIndex - delta;
   if (IsValidNodeIndex(index))
-    return mutable_node(index)->mutable_edge(0);
+    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge(
+        0));
   else
     return nullptr;
 }
 
-TripPath_Edge* EnhancedTripPath::GetCurrEdge(const int nodeIndex) {
+EnhancedTripPath_Edge* EnhancedTripPath::GetCurrEdge(const int nodeIndex) {
   return GetNextEdge(nodeIndex, 0);
 }
 
-TripPath_Edge* EnhancedTripPath::GetNextEdge(const int nodeIndex, int delta) {
+EnhancedTripPath_Edge* EnhancedTripPath::GetNextEdge(const int nodeIndex,
+                                                     int delta) {
   int index = nodeIndex + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index))
-    return mutable_node(index)->mutable_edge(0);
+    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge(
+        0));
   else
     return nullptr;
 }
@@ -51,5 +55,15 @@ int EnhancedTripPath::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
+EnhancedTripPath_Edge::EnhancedTripPath_Edge() {
+}
+
+bool EnhancedTripPath_Edge::IsUnnamed() const {
+  if (name_size() == 0)
+    return true;
+  return false;
+}
+
 }
 }
+
