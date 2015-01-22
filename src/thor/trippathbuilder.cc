@@ -77,31 +77,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() +
               (trip_shape.size() ? 1 : 0), edgeinfo->shape().end());
 
-      trip_edge->set_begin_heading(
-          std::round(
-              PointLL::HeadingAlongPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
-      trip_edge->set_end_heading(
-          std::round(
-              PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
-
     } else {
 
       trip_shape.insert(
           trip_shape.end(),
           edgeinfo->shape().rbegin() + (trip_shape.size() ? 1 : 0),
           edgeinfo->shape().rend());
-
-      trip_edge->set_begin_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                               kMetersOffsetForHeading) + 180.0f), 360)));
-
-      trip_edge->set_end_heading(
-          std::round(
-              fmod(
-                  (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                               kMetersOffsetForHeading) + 180.0f), 360)));
     }
     trip_edge->set_end_shape_index(trip_shape.size());
 
@@ -182,7 +163,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   trip_edge->set_length(directededge->length() * 0.001f);  // Convert to km
   trip_edge->set_speed(directededge->speed());
 
-  // Test whether edge is traversed forward or reverse and set driveability
+  // Test whether edge is traversed forward or reverse and set driveability and heading
   if (directededge->forward()) {
     if (directededge->forwardaccess() && directededge->reverseaccess())
       trip_edge->set_driveability(
@@ -196,8 +177,16 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
     else
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kNone);
+
+    trip_edge->set_begin_heading(
+        std::round(
+            PointLL::HeadingAlongPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
+    trip_edge->set_end_heading(
+        std::round(
+            PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
+
   } else {
-    // Reverse driveability
+    // Reverse driveability and heading
     if (directededge->forwardaccess() && directededge->reverseaccess())
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBoth);
@@ -210,6 +199,18 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
     else
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kNone);
+
+    trip_edge->set_begin_heading(
+        std::round(
+            fmod(
+                (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
+                             kMetersOffsetForHeading) + 180.0f), 360)));
+
+    trip_edge->set_end_heading(
+        std::round(
+            fmod(
+                (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
+                             kMetersOffsetForHeading) + 180.0f), 360)));
   }
 
   trip_edge->set_ramp(directededge->link());
