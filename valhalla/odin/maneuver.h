@@ -63,6 +63,15 @@ class Maneuver {
   bool ramp() const;
   void set_ramp(bool ramp);
 
+  bool ferry() const;
+  void set_ferry(bool ferry);
+
+  bool rail_ferry() const;
+  void set_rail_ferry(bool rail_ferry);
+
+  bool roundabout() const;
+  void set_roundabout(bool roundabout);
+
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
 
@@ -87,6 +96,9 @@ class Maneuver {
   uint32_t begin_shape_index_;
   uint32_t end_shape_index_;
   bool ramp_;
+  bool ferry_;
+  bool rail_ferry_;
+  bool roundabout_;
   bool portions_toll_;
   bool portions_unpaved_;
 

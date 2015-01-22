@@ -161,6 +161,30 @@ void Maneuver::set_ramp(bool ramp) {
   ramp_ = ramp;
 }
 
+bool valhalla::odin::Maneuver::ferry() const {
+  return ferry_;
+}
+
+void valhalla::odin::Maneuver::set_ferry(bool ferry) {
+  ferry_ = ferry;
+}
+
+bool valhalla::odin::Maneuver::rail_ferry() const {
+  return rail_ferry_;
+}
+
+void valhalla::odin::Maneuver::set_rail_ferry(bool rail_ferry) {
+  rail_ferry_ = rail_ferry;
+}
+
+bool valhalla::odin::Maneuver::roundabout() const {
+  return roundabout_;
+}
+
+void valhalla::odin::Maneuver::set_roundabout(bool roundabout) {
+  roundabout_ = roundabout;
+}
+
 bool Maneuver::portions_toll() const {
   return portions_toll_;
 }
