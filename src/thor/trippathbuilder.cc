@@ -223,7 +223,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   }
 
   trip_edge->set_ferry(directededge->ferry());
-  trip_edge->set_railferry(directededge->railferry());
+  trip_edge->set_rail_ferry(directededge->railferry());
   trip_edge->set_toll(directededge->toll());
   trip_edge->set_unpaved(directededge->unpaved());
   trip_edge->set_tunnel(directededge->tunnel());
