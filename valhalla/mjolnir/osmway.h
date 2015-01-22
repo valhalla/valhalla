@@ -82,7 +82,7 @@ class OSMWay {
    * Get the ref.
    * @return  Returns ref.
    */
-  std::string ref() const;
+  const std::string& ref() const;
 
   /**
    * Sets the int ret
@@ -94,7 +94,7 @@ class OSMWay {
    * Get the int ref.
    * @return  Returns int ref.
    */
-  std::string int_ref() const;
+  const std::string& int_ref() const;
 
   /**
    * Sets the name
@@ -106,7 +106,7 @@ class OSMWay {
    * Get the name.
    * @return  Returns name.
    */
-  std::string name() const;
+  const std::string& name() const;
 
   /**
    * Sets the name:en
@@ -118,7 +118,7 @@ class OSMWay {
    * Get the name:en.
    * @return  Returns english name.
    */
-  std::string name_en() const;
+  const std::string& name_en() const;
 
   /**
    * Sets the alt name
@@ -130,7 +130,7 @@ class OSMWay {
    * Get the alt name.
    * @return  Returns alt name.
    */
-  std::string alt_name() const;
+  const std::string& alt_name() const;
 
   /**
    * Sets the official name
@@ -142,7 +142,7 @@ class OSMWay {
    * Get the official name.
    * @return  Returns official name.
    */
-  std::string official_name() const;
+  const std::string& official_name() const;
 
   /**
    * Sets the destination.
@@ -154,7 +154,7 @@ class OSMWay {
    * Get the get_destination.
    * @return  Returns destination.
    */
-  std::string destination() const;
+  const std::string& destination() const;
 
   /**
    * Sets the destination ref.
@@ -166,7 +166,7 @@ class OSMWay {
    * Get the destination_ref.
    * @return  Returns destination ref.
    */
-  std::string destination_ref() const;
+  const std::string& destination_ref() const;
 
   /**
    * Sets the destination ref to.
@@ -178,7 +178,7 @@ class OSMWay {
    * Get the destination ref to.
    * @return  Returns destination ref to.
    */
-  std::string destination_ref_to() const;
+  const std::string& destination_ref_to() const;
 
   /**
    * Sets the junction ref.
@@ -190,7 +190,7 @@ class OSMWay {
    * Get the junction ref.
    * @return  Returns junction ref.
    */
-  std::string junction_ref() const;
+  const std::string& junction_ref() const;
 
   /**
    * Sets the bike national ref.
@@ -202,7 +202,7 @@ class OSMWay {
    * Get the bike national ref.
    * @return  Returns national bike network name.
    */
-  std::string bike_national_ref() const;
+  const std::string& bike_national_ref() const;
 
   /**
    * Sets the bike regional ref.
@@ -214,7 +214,7 @@ class OSMWay {
    * Get the bike regional ref.
    * @return  Returns regional bike network name.
    */
-  std::string bike_regional_ref() const;
+  const std::string& bike_regional_ref() const;
 
   /**
    * Sets the bike local ref.
@@ -226,7 +226,7 @@ class OSMWay {
    * Get the bike local ref.
    * @return  Returns local bike network name.
    */
-  std::string bike_local_ref() const;
+  const std::string& bike_local_ref() const;
 
   /**
    * Sets the auto_forward flag.
