@@ -125,7 +125,7 @@ void OSMWay::set_ref(const std::string& ref) {
 /**
  * Get the ref.
  */
-std::string OSMWay::ref() const {
+const std::string& OSMWay::ref() const {
   return ref_;
 }
 
@@ -139,7 +139,7 @@ void OSMWay::set_int_ref(const std::string& int_ref) {
 /**
  * Get the int ref.
  */
-std::string OSMWay::int_ref() const {
+const std::string& OSMWay::int_ref() const {
   return int_ref_;
 }
 
@@ -153,7 +153,7 @@ void OSMWay::set_name(const std::string& name) {
 /**
  * Get the name.
  */
-std::string OSMWay::name() const {
+const std::string& OSMWay::name() const {
   return name_;
 }
 
@@ -167,7 +167,7 @@ void OSMWay::set_name_en(const std::string& name_en) {
 /**
  * Get the name:en.
  */
-std::string OSMWay::name_en() const {
+const std::string& OSMWay::name_en() const {
   return name_en_;
 }
 
@@ -181,7 +181,7 @@ void OSMWay::set_alt_name(const std::string& alt_name) {
 /**
  * Get the alt name.
  */
-std::string OSMWay::alt_name() const {
+const std::string& OSMWay::alt_name() const {
   return alt_name_;
 }
 
@@ -195,7 +195,7 @@ void OSMWay::set_official_name(const std::string& official_name) {
 /**
  * Get the official name.
  */
-std::string OSMWay::official_name() const {
+const std::string& OSMWay::official_name() const {
   return official_name_;
 }
 
@@ -209,7 +209,7 @@ void OSMWay::set_destination(const std::string& destination) {
 /**
  * Get the get_destination.
  */
-std::string OSMWay::destination() const {
+const std::string& OSMWay::destination() const {
   return destination_;
 }
 
@@ -223,7 +223,7 @@ void OSMWay::set_destination_ref(const std::string& destination_ref) {
 /**
  * Get the destination_ref.
  */
-std::string OSMWay::destination_ref() const {
+const std::string& OSMWay::destination_ref() const {
   return destination_ref_to_;
 }
 
@@ -237,7 +237,7 @@ void OSMWay::set_destination_ref_to(const std::string& destination_ref_to) {
 /**
  * Get the destination ref to.
  */
-std::string OSMWay::destination_ref_to() const {
+const std::string& OSMWay::destination_ref_to() const {
   return destination_ref_to_;
 }
 
@@ -251,7 +251,7 @@ void OSMWay::set_junction_ref(const std::string& junction_ref) {
 /**
  * Get the junction ref.
  */
-std::string OSMWay::junction_ref() const {
+const std::string& OSMWay::junction_ref() const {
   return junction_ref_;
 }
 
@@ -265,7 +265,7 @@ void OSMWay::set_bike_national_ref(const std::string& bike_national_ref) {
 /**
  * Get the bike national ref.
  */
-std::string OSMWay::bike_national_ref() const {
+const std::string& OSMWay::bike_national_ref() const {
   return bike_national_ref_;
 }
 
@@ -279,7 +279,7 @@ void OSMWay::set_bike_regional_ref(const std::string& bike_regional_ref) {
 /**
  * Get the bike regional ref.
  */
-std::string OSMWay::bike_regional_ref() const {
+const std::string& OSMWay::bike_regional_ref() const {
   return bike_regional_ref_;
 }
 
@@ -293,7 +293,7 @@ void OSMWay::set_bike_local_ref(const std::string& bike_local_ref) {
 /**
  * Get the bike local ref.
  */
-std::string OSMWay::bike_local_ref() const {
+const std::string& OSMWay::bike_local_ref() const {
   return bike_local_ref_;
 }
 
