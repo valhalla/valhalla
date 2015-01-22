@@ -720,6 +720,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
   size_t written = 0;
 
   // For each tile in the task
+  bool added = false;
   for(; tile_start != tile_end; ++tile_start) {
     try {
      // What actually writes the tile
@@ -856,7 +857,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.latlngs_, w.GetNames());
+               nodea, nodeb, edge.latlngs_, w.GetNames(), added);
           directededge.set_edgedataoffset(edge_info_offset);
         }
 
