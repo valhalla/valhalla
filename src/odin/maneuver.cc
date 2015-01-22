@@ -44,6 +44,10 @@ void Maneuver::set_street_names(const StreetNames& street_names) {
   street_names_ = street_names;
 }
 
+void Maneuver::set_street_names(StreetNames&& street_names) {
+  street_names_ = std::move(street_names);
+}
+
 bool Maneuver::HasStreetNames() const {
   return (street_names_.size() > 0);
 }

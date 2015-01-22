@@ -19,6 +19,7 @@ class Maneuver {
   const StreetNames& street_names() const;
   StreetNames* mutable_street_names();
   void set_street_names(const StreetNames& street_names);
+  void set_street_names(StreetNames&& street_names);
 
   bool HasStreetNames() const;
 
