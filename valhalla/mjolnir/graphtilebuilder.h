@@ -80,7 +80,8 @@ class GraphTileBuilder : public baldr::GraphTile {
   uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const std::vector<PointLL>& lls,
-                       const std::vector<std::string>& names);
+                       const std::vector<std::string>& names,
+                       bool& added);
 
   /**
    * Gets a builder for a node from an existing tile.
