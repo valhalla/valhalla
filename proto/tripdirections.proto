@@ -43,10 +43,10 @@ message TripDirections {
       kStayRight = 23;
       kStayLeft = 24;
       kMerge = 25;
-      kRoundaboutRight = 26;
-      kRoundaboutLeft = 27;
-      kFerryRight = 28;
-      kFerryLeft = 29;
+      kRoundaboutEnter = 26;
+      kRoundaboutExit = 27;
+      kFerryEnter = 28;
+      kFerryExit = 29;
     }
   
     optional Type type = 1;                                  // Maneuver type
