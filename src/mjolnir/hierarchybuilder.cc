@@ -201,8 +201,10 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts
   if (edge1->importance() != edge2->importance()
-      || edge1->link() != edge2->link() || edge1->use() != edge2->use()
-      || edge1->speed() != edge2->speed() || edge1->ferry() != edge2->ferry()
+      || edge1->link() != edge2->link()
+      || edge1->use() != edge2->use()
+      || edge1->speed() != edge2->speed()
+      || edge1->ferry() != edge2->ferry()
       || edge1->railferry() != edge2->railferry()
       || edge1->toll() != edge2->toll()
       || edge1->destonly() != edge2->destonly()
@@ -271,6 +273,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
     const TileHierarchy::TileLevel& base_level,
     const TileHierarchy::TileLevel& new_level) {
   // Iterate through tiled nodes in the new level
+  bool added = false;
   uint32_t tileid = 0;
   uint32_t nodeid = 0;
   uint32_t edgeindex = 0;
@@ -278,16 +281,16 @@ void HierarchyBuilder::FormTilesInNewLevel(
   uint8_t level = new_level.level;
   RoadClass rcc = new_level.importance;
   for (const auto& newtile : tilednodes_) {
-    // Skip if no new nodes
+    // Skip if no nodes in the tile at the new level
     if (newtile.size() == 0) {
       tileid++;
       continue;
     }
 
-    // Create new GraphTileBuilder for the new tile
+    // Create GraphTileBuilder for the new tile
     GraphTileBuilder tilebuilder;
 
-    // Iterate through the NewNodes in the tile at the new level
+    // Iterate through the nodes in the tile at the new level
     nodeid = 0;
     edgeindex = 0;
     GraphId nodea, nodeb;
@@ -334,11 +337,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
           std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-              directededge->edgedataoffset());
-          std::vector<std::string> names = tile->GetNames(
-              directededge->edgedataoffset());
+                              directededge->edgedataoffset());
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                             nodea, nodeb, edgeinfo->shape(), names);
+                             nodea, nodeb, edgeinfo->shape(),
+                             tile->GetNames(directededge->edgedataoffset()),
+                             added);
           newedge.set_edgedataoffset(edge_info_offset);
 
           // Set the superseded flag
@@ -380,7 +383,7 @@ void HierarchyBuilder::AddShortcutEdges(
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
 if (newnode.contract)
-return;
+  return;
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value()) : contractions_.end();
@@ -392,9 +395,6 @@ return;
     // Skip if > road class cutoff or a transition edge or shortcut in
     // the base level. Note that only downward transitions exist at this
     // point (upward transitions are created later).
-    // TODO - do we need to maintain "reverse" shortcuts - that is ones
-    // not driveable forward but driveable reverse. To be consistent we
-    // need to (and to support backwards graph progression).
     const DirectedEdge* directededge = tile->directededge(base_edge_id);
     if (directededge->importance() > rcc || directededge->trans_down()
         || directededge->shortcut()) {
@@ -423,10 +423,19 @@ return;
       DirectedEdgeBuilder newedge = static_cast<DirectedEdgeBuilder&>(oldedge);
       uint32_t length = newedge.length();
 
-      // Get the shape for this edge
+      // Get the shape for this edge. If this initial directed edge is not
+      // forward - reverse the shape so the edge info stored is forward for
+      // the first added edge info
       std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
           directededge->edgedataoffset());
-      std::vector<PointLL> shape = edgeinfo->shape();
+      std::vector<PointLL> shape;
+      if (directededge->forward()) {
+        shape = edgeinfo->shape();
+      } else {
+        // Reverse the shape
+        std::vector<PointLL> edgeshape = edgeinfo->shape();
+        shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
+      }
 
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(
@@ -463,10 +472,17 @@ return;
       }
 
       // Add the edge info. Use length to match edge in case multiple edges
-      // exist between the 2 nodes
+      // exist between the 2 nodes. Test whether this shape is forward or
+      // reverse (in case an existing edge exists)
+      bool added = true;
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
-                                                          shape, names);
+                                   shape, names, added);
       newedge.set_edgedataoffset(edge_info_offset);
+
+      // Set the forward flag on this directed edge. If a new edge was added
+      // the direction is forward otherwise the prior edge was the one stored
+      // in the forward direction
+      newedge.set_forward(added);
 
       // Update the length and end node
       newedge.set_length(length);
@@ -476,6 +492,9 @@ return;
       // have been copied from base level directed edge
       newedge.set_shortcut(true);
       newedge.set_superseded(false);
+
+//LOG_INFO((boost::format("Add shortcut from %1% LL %2%,%3% to %4%")
+//      % nodea % baseni->latlng().lat() % baseni->latlng().lng() % nodeb).str());
 
       // Add directed edge
       directededges.emplace_back(std::move(newedge));
@@ -497,13 +516,16 @@ uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
   std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
       directededge->edgedataoffset());
   std::vector<PointLL> edgeshape = edgeinfo->shape();
-  bool forward = (edgeshape.front().ApproximatelyEqual(shape.back()));
 
   // Append the shape
-  if (forward) {
+  if (edgeshape.front().ApproximatelyEqual(shape.back())) {
     shape.insert(shape.end(), edgeshape.begin() + 1, edgeshape.end());
-  } else {
+  } else if (edgeshape.back().ApproximatelyEqual(shape.back())) {
     shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
+  } else {
+    LOG_ERROR((boost::format("Connect edges mismatch: Shape end %1%,%2% Edge Begin %3%,%4% Edge End %5%,%6%")
+      % shape.back().lat() % shape.back().lng() % edgeshape.front().lat() % edgeshape.front().lng()
+      % edgeshape.back().lat() % edgeshape.back().lng()).str());
   }
 
   // Update the end node and return the length
