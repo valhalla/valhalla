@@ -164,6 +164,30 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   return trip_path;
 }
 
+namespace {
+TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
+  switch (road_class) {
+    case RoadClass::kMotorway:
+      return TripPath_RoadClass_kMotorway;
+    case RoadClass::kTrunk:
+      return TripPath_RoadClass_kTrunk;
+    case RoadClass::kPrimary:
+      return TripPath_RoadClass_kPrimary;
+    case RoadClass::kTertiaryUnclassified:
+      return TripPath_RoadClass_kTertiaryUnclassified;
+    case RoadClass::kResidential:
+      return TripPath_RoadClass_kResidential;
+    case RoadClass::kService:
+      return TripPath_RoadClass_kService;
+    case RoadClass::kTrack:
+      return TripPath_RoadClass_kTrack;
+    case RoadClass::kOther:
+      return TripPath_RoadClass_kOther;
+  }
+}
+
+}
+
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
@@ -177,6 +201,9 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   for (const auto& name : names) {
     trip_edge->add_name(name);
   }
+
+  // Set road class
+  trip_edge->set_road_class(GetTripPathRoadClass(directededge->importance()));
 
   // Set speed and length
   trip_edge->set_length(directededge->length() * 0.001f);  // Convert to km
