@@ -512,20 +512,13 @@ uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
   GraphTile* tile = graphreader_.GetGraphTile(basenode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
 
-  // Get the shape for this edge
-  std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-      directededge->edgedataoffset());
-  std::vector<PointLL> edgeshape = edgeinfo->shape();
-
-  // Append the shape
-  if (edgeshape.front().ApproximatelyEqual(shape.back())) {
+  // Get the shape for this edge and append to the shortcut's shape
+  std::vector<PointLL> edgeshape = tile->edgeinfo(
+          directededge->edgedataoffset())->shape();
+  if (directededge->forward()) {
     shape.insert(shape.end(), edgeshape.begin() + 1, edgeshape.end());
-  } else if (edgeshape.back().ApproximatelyEqual(shape.back())) {
-    shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
   } else {
-    LOG_ERROR((boost::format("Connect edges mismatch: Shape end %1%,%2% Edge Begin %3%,%4% Edge End %5%,%6%")
-      % shape.back().lat() % shape.back().lng() % edgeshape.front().lat() % edgeshape.front().lng()
-      % edgeshape.back().lat() % edgeshape.back().lng()).str());
+    shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
   }
 
   // Update the end node and return the length
