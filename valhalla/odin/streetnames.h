@@ -3,16 +3,22 @@
 
 #include <list>
 
+#include <google/protobuf/repeated_field.h>
+
 #include <valhalla/odin/streetname.h>
 
-namespace valhalla{
-namespace odin{
+namespace valhalla {
+namespace odin {
 
 class StreetNames : public std::list<StreetName> {
  public:
   StreetNames();
 
+  StreetNames(const ::google::protobuf::RepeatedPtrField<::std::string>& names);
+
   std::string ToString() const;
+
+  StreetNames FindCommonStreetNames(StreetNames other) const;
 
   // TODO - add more functionality later
 

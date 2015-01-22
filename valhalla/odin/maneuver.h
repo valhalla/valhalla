@@ -19,6 +19,7 @@ class Maneuver {
   const StreetNames& street_names() const;
   StreetNames* mutable_street_names();
   void set_street_names(const StreetNames& street_names);
+  void set_street_names(StreetNames&& street_names);
 
   bool HasStreetNames() const;
 
@@ -27,6 +28,7 @@ class Maneuver {
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
+  void set_instruction(std::string&& instruction);
 
   float distance() const;
   void set_distance(float distance);
