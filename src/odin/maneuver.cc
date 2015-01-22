@@ -19,8 +19,12 @@ Maneuver::Maneuver()
       begin_shape_index_(0),
       end_shape_index_(0),
       ramp_(false),
+      ferry_(false),
+      rail_ferry_(false),
+      roundabout_(false),
       portions_toll_(false),
-      portions_unpaved_(false) {
+      portions_unpaved_(false),
+      portions_highway_(false) {
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -30,7 +34,6 @@ const TripDirections_Maneuver_Type& Maneuver::type() const {
 void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
   type_ = type;
 }
-
 
 const StreetNames& Maneuver::street_names() const {
   return street_names_;
@@ -210,16 +213,20 @@ void Maneuver::set_portions_highway(bool portionsHighway) {
 }
 
 std::string Maneuver::ToString() const {
-   std::string man_str;
+  std::string man_str;
+  man_str.reserve(128);
 
-   man_str += "type_=" + std::to_string(type_);
-   man_str += " | street_names_=" + street_names_.ToString();
-   man_str += " | distance_=" + std::to_string(distance_);
-   // TODO - others
-   //man_str += " | TBD=";
-   //man_str += TBD;
+  man_str += "type_=";
+  man_str += std::to_string(type_);
+  man_str += " | street_names_=";
+  man_str += street_names_.ToString();
+  man_str += " | distance_=";
+  man_str += std::to_string(distance_);
+  // TODO - others
+  //man_str += " | TBD=";
+  //man_str += TBD;
 
-   return man_str;
+  return man_str;
 }
 
 }
