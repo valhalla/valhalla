@@ -133,7 +133,8 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
              const GraphId& nodea, const baldr::GraphId& nodeb,
              const std::vector<PointLL>& lls,
-             const std::vector<std::string>& names) {
+             const std::vector<std::string>& names,
+             bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
   auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
@@ -187,10 +188,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edge_info_offset_ += edgeinfo.SizeOf();
 
     // Return the offset to this edge info
+    added = true;
     return current_edge_offset;
   }
   else {
     // Already have this edge - return the offset
+    added = false;
     return existing_edge_offset_item->second;
   }
 }
