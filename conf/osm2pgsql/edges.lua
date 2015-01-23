@@ -348,7 +348,7 @@ function filter_tags_generic(kv)
   kv["private"] = private[kv["access"]] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
-  kv["rail"] = tostring(kv["auto_forward"] == "true" and kv["railway"] == rail)
+  kv["rail"] = tostring(kv["auto_forward"] == "true" and kv["railway"] == "rail")
   kv["name"] = kv["name"]
   kv["name:en"] = kv["name:en"]
   kv["alt_name"] = kv["alt_name"]
