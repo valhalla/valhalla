@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <utility>
 #include <algorithm>
 #include <boost/property_tree/ptree.hpp>
@@ -84,7 +85,8 @@ struct Edge {
       uint32_t importance       : 3;
       uint32_t driveableforward : 1;
       uint32_t driveablereverse : 1;
-      uint32_t spare_           : 27;
+      uint32_t link             : 1;
+      uint32_t spare            : 26;
     } fields;
     uint32_t v;
   };
@@ -111,6 +113,7 @@ struct Edge {
     attributes_.fields.importance = static_cast<uint32_t>(way.road_class());
     attributes_.fields.driveableforward = way.auto_forward();
     attributes_.fields.driveablereverse = way.auto_backward();
+    attributes_.fields.link = way.link();
     latlngs_.emplace_back(ll);
   }
 
@@ -202,6 +205,18 @@ class GraphBuilder {
    * @param  level  Hierarchy level.
    */
   void TileNodes(const float tilesize, const uint8_t level);
+
+  /**
+   * Update road class / importance of links (ramps)
+   */
+  void ReclassifyLinks();
+
+  /**
+   * Get the road classifications for any non-link edges. Adds to
+   * the specified set.
+   */
+  void GetNonLinkRoadClasses(const OSMNode& node,
+                             std::set<uint32_t>& nonlinkclasses) const;
 
   /**
    * Build tiles representing the local graph

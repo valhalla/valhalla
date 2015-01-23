@@ -119,8 +119,14 @@ void GraphBuilder::Build() {
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("SortEdges took " + std::to_string(msecs) + " ms");
 
-  // Tile the nodes
-  //TODO: generate more than just the most detailed level?
+  // Reclassify links (ramps). Cannot do this when building tiles since the
+  // edge list needs to be modified
+  start = std::clock();
+  ReclassifyLinks();
+  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+  LOG_INFO("ReclassifyLinks took " + std::to_string(msecs) + " ms");
+
+  // Tile the nodes at the base (local) level
   start = std::clock();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   TileNodes(tl->second.tiles.TileSize(), tl->second.level);
@@ -600,24 +606,112 @@ void GraphBuilder::SortEdgesFromNodes() {
   }
 }
 
-uint32_t GetOpposingIndex(const uint64_t endnode, const uint64_t startnode,
-                          const std::unordered_map<uint64_t, OSMNode>& nodes,
-                          const std::vector<Edge>& edges) {
-  uint32_t n = 0;
-  auto node = nodes.find(endnode);
-  if(node != nodes.end()) {
-    for (const auto& edgeindex : node->second.edges()) {
-      if ((edges[edgeindex].sourcenode_ == endnode &&
-           edges[edgeindex].targetnode_ == startnode) ||
-          (edges[edgeindex].targetnode_ == endnode &&
-           edges[edgeindex].sourcenode_ == startnode)) {
-        return n;
-      }
-      n++;
+void GraphBuilder::GetNonLinkRoadClasses(const OSMNode& node,
+                           std::set<uint32_t>& nonlinkclasses) const {
+  for (auto idx : node.edges()) {
+    const Edge& edge = edges_[idx];
+    if (!edge.attributes_.fields.link) {
+      nonlinkclasses.insert(edge.attributes_.fields.importance);
     }
   }
-  LOG_ERROR("ERROR Opposing directed edge not found!");
-  return 31;
+}
+
+// Reclassify links (ramps and turn channels).
+void GraphBuilder::ReclassifyLinks() {
+  for (const auto& node : nodes_) {
+    if (node.second.link_edge() && node.second.non_link_edge()) {
+      // Get the classification of non-link edges at this node
+      std::set<uint32_t> nonlinkclasses;
+      GetNonLinkRoadClasses(node.second, nonlinkclasses);
+
+      // Expand from all link edges
+      for (auto startedgeindex : node.second.edges()) {
+        const Edge& edge = edges_[startedgeindex];
+
+        // Skip any non-ramp edges
+        if (!edge.attributes_.fields.link) {
+          continue;
+        }
+
+        // List of links edges to classify
+        std::vector<uint32_t> linkedgeindexes;
+        linkedgeindexes.push_back(startedgeindex);
+
+        // Keep a visited set and and an expand set
+        std::unordered_set<uint64_t> visitedset;
+        std::unordered_set<uint64_t> expandset;
+        uint64_t endnode = (edge.sourcenode_ == node.first) ?
+                edge.targetnode_ : edge.sourcenode_;
+        expandset.emplace(endnode);
+
+        // Expand edges until all paths reach a node that has a non-link
+        // TODO - what is a realistic limit for stopping the expansion?
+        uint32_t n = 0;
+        uint64_t expandnode;
+        uint64_t osmendnode;
+        while (n < 512) {
+          // Once expand list is empty - mark all link edges encountered
+          // with the specified classification / importance and break out
+          // of this loop (can still expand other ramp edges
+          // from the starting node
+          if (expandset.empty()) {
+            if (nonlinkclasses.empty()) {
+              LOG_ERROR("Classifications of non-links is empty.");
+              break;
+            }
+            auto it = nonlinkclasses.begin();
+            if (nonlinkclasses.size() > 1) {
+              // Increment to get the 2nd highest classification
+              it++;
+            }
+            uint32_t linkclass = *it;
+            if (linkclass > 5) {
+              LOG_WARN("Link class > 5???");
+            }
+//            for (auto idx : linkedgeindexes) {
+//              edges_[idx].attributes_.fields.importance = linkclass;
+//            }
+            break;
+          }
+          n++;
+
+          // Get the node off of the expand list and add it to the visited list
+          expandnode = *expandset.begin();
+          expandset.erase(expandset.begin());
+          visitedset.emplace(expandnode);
+
+          // Expand all edges from this node
+          auto nd = nodes_.find(endnode);
+          if (nd != nodes_.end()) {
+            for (const auto& edgeindex : nd->second.edges()) {
+              if (edgeindex == startedgeindex) {
+                // Do not allow use of the start edge
+                continue;
+              }
+              const Edge& edge = edges_[edgeindex];
+              osmendnode = (edge.sourcenode_ == expandnode) ?
+                  edge.targetnode_ : edge.sourcenode_;
+
+              // Add this edge index
+              linkedgeindexes.push_back(edgeindex);
+
+              auto endnd = nodes_.find(osmendnode);
+              if (endnd != nodes_.end()) {
+                // If the end node contains just links, add it to expand set
+                if (!endnd->second.non_link_edge()) {
+                  expandset.emplace(osmendnode);
+                } else {
+                  // Do not expand from this end node. Check non-link edges
+                  // for their classification
+                  GetNonLinkRoadClasses(endnd->second, nonlinkclasses);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
@@ -629,7 +723,7 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
   std::unordered_set<uint64_t> visitedset;
   std::unordered_set<uint64_t> expandset;
 
-  // Add the end node to the expand and visited sets.
+  // Add the end node to the expand sets.
   expandset.emplace(endnode);
 
   // Expand edges until exhausted, the maximum number of expansions occur,
@@ -755,7 +849,11 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           // Get the way information and set attributes
           const OSMWay &w = ways[edge.wayindex_];
 
-          directededge.set_importance(w.road_class());
+          // Set the importance (from the edge rather than the way since
+          // ReclassifyLinks may change the importance
+          directededge.set_importance(
+              static_cast<RoadClass>(edge.attributes_.fields.importance));
+
           directededge.set_use(w.use());
           directededge.set_speed(w.speed());    // KPH
           directededge.set_ferry(w.ferry());
@@ -779,15 +877,32 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             }
             directededge.set_use(GetLinkUse(w.road_class(), length,
                      edge.sourcenode_, edge.targetnode_, nodes));
+
+            // TEMP - update ramp speeds based on class. Should have some way
+            // of doing this with lua?
+            if (directededge.use() == Use::kTurnChannel) {
+              directededge.set_speed(w.speed() * 1.25f);
+            } else if (directededge.use() == Use::kRamp) {
+              if (directededge.importance() == RoadClass::kMotorway) {
+                directededge.set_speed(95.0f);
+              } else if (directededge.importance() == RoadClass::kTrunk) {
+                directededge.set_speed(80.0f);
+              } else if (directededge.importance() == RoadClass::kPrimary) {
+                directededge.set_speed(65.0f);
+//              } else if (directededge.importance() == RoadClass::kSecondary) {
+//                directededge.set_speed(50.0f);
+              } else if (directededge.importance() == RoadClass::kTertiaryUnclassified) {
+                directededge.set_speed(40.0f);
+              } else {
+                directededge.set_speed(25.0f);
+              }
+            }
           }
 
           // Check if more important
           if (w.road_class() < bestrc) {
             bestrc = w.road_class();
           }
-
-          // TODO - if sorting of directed edges occurs after this will need to
-          // remove this code and do elsewhere.
 
           // Assign nodes and determine orientation along the edge (forward
           // or reverse between the 2 nodes)
@@ -813,17 +928,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             // Set end node to the target (end) node
             directededge.set_endnode(nodeb);
 
-            // Set the opposing edge offset at the end node of this directed edge.
-            directededge.set_opp_index(GetOpposingIndex(edge.targetnode_,
-                             edge.sourcenode_, nodes, edges));
-
-            // Set the not_thru flag. TODO - only do this for
-             if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
-               directededge.set_not_thru(false);
-             } else {
-               directededge.set_not_thru(IsNoThroughEdge(edge.sourcenode_,
-                            edge.targetnode_, edgeindex, nodes, edges));
-             }
+            // Set the not_thru flag.
+            if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
+              directededge.set_not_thru(false);
+            } else {
+              directededge.set_not_thru(IsNoThroughEdge(edge.sourcenode_,
+                      edge.targetnode_, edgeindex, nodes, edges));
+            }
           } else if (edge.targetnode_ == osmnodeid) {
             // Reverse direction.  Reverse the access logic and end node
             directededge.set_forward(false);
@@ -838,17 +949,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             // Set end node to the source (start) node
             directededge.set_endnode(nodea);
 
-            // Set opposing edge index at the end node of this directed edge.
-            directededge.set_opp_index(GetOpposingIndex(edge.sourcenode_,
-                                edge.targetnode_, nodes, edges));
-
             // Set the not_thru flag
-              if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
-                directededge.set_not_thru(false);
-              } else {
-                directededge.set_not_thru(IsNoThroughEdge(edge.targetnode_,
-                               edge.sourcenode_, edgeindex, nodes, edges));
-              }
+            if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
+              directededge.set_not_thru(false);
+            } else {
+              directededge.set_not_thru(IsNoThroughEdge(edge.targetnode_,
+                       edge.sourcenode_, edgeindex, nodes, edges));
+            }
           } else {
             // ERROR!!!
             LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
