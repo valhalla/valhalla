@@ -37,7 +37,7 @@ AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 
 # check pkg-config packaged packages.
-PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0 libzmq >= 2.1.10])
+PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE
