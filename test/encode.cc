@@ -2,12 +2,10 @@
 #include "valhalla/midgard/pointll.h"
 #include "test.h"
 
-#include <boost/format.hpp>
+#include <string>
 
 using namespace std;
 using namespace valhalla::midgard;
-
-
 
 namespace {
 
@@ -30,7 +28,7 @@ bool appx_equal(const container_t& a, const container_t& b) {
 std::string to_string(const std::vector<std::pair<double, double> >& points) {
   std::string out = "{";
   for(const auto& p : points) {
-    out += (boost::format("{%1%, %2%}, ") % p.first % p.second).str();
+    out += "{" + std::to_string(p.first) + ", " + std::to_string(p.second) + "}";
   }
   out += "}";
   if(out.length() > 2)
