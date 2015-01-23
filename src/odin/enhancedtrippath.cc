@@ -6,6 +6,9 @@
 namespace valhalla {
 namespace odin {
 
+///////////////////////////////////////////////////////////////////////////////
+// EnhancedTripPath
+
 EnhancedTripPath::EnhancedTripPath() {
 }
 
@@ -55,6 +58,9 @@ int EnhancedTripPath::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// EnhancedTripPath_Edge
+
 EnhancedTripPath_Edge::EnhancedTripPath_Edge() {
 }
 
@@ -62,6 +68,54 @@ bool EnhancedTripPath_Edge::IsUnnamed() const {
   if (name_size() == 0)
     return true;
   return false;
+}
+
+bool EnhancedTripPath_Edge::IsHighway() const {
+  if ((road_class() == TripPath_RoadClass_kMotorway) && (!ramp()))
+    return true;
+  return false;
+}
+
+std::string EnhancedTripPath_Edge::ToString() const {
+  std::string str;
+  str.reserve(128);
+
+  str += "name=";
+  if (name_size() == 0) {
+    str += "unnamed";
+  } else {
+    bool is_first = true;
+    for (const auto& name : this->name()) {
+      if (is_first)
+        is_first = false;
+      else
+        str += "/";
+      str += name;
+    }
+  }
+
+  str += " | length=";
+  str += std::to_string(length());
+
+  str += " | speed=";
+  str += std::to_string(speed());
+
+  str += " | road_class=";
+  str += std::to_string(road_class());
+
+  str += " | ramp=";
+  str += std::to_string(ramp());
+
+  str += " | ferry=";
+  str += std::to_string(ferry());
+
+  str += " | rail_ferry=";
+  str += std::to_string(rail_ferry());
+
+  str += " | roundabout=";
+  str += std::to_string(roundabout());
+
+  return str;
 }
 
 }

@@ -36,6 +36,10 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsUnnamed() const;
 
+  bool IsHighway() const;
+
+  std::string ToString() const;
+
  protected:
   EnhancedTripPath_Edge();
 
