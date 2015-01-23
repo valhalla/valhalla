@@ -28,6 +28,22 @@ class NarrativeBuilder {
 
   static void FormUturnInstruction(Maneuver& maneuver);
 
+  static void FormRampInstruction(Maneuver& maneuver);
+
+  static void FormExitInstruction(Maneuver& maneuver);
+
+  static void FormStayInstruction(Maneuver& maneuver);
+
+  static void FormMergeInstruction(Maneuver& maneuver);
+
+  static void FormEnterRoundaboutInstruction(Maneuver& maneuver);
+
+  static void FormExitRoundaboutInstruction(Maneuver& maneuver);
+
+  static void FormEnterFerryInstruction(Maneuver& maneuver);
+
+  static void FormExitFerryInstruction(Maneuver& maneuver);
+
   static std::string FormCardinalDirection(
       TripDirections_Maneuver_CardinalDirection cardinal_direction);
 

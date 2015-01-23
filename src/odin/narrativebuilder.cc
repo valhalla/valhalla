@@ -49,6 +49,43 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         FormUturnInstruction(maneuver);
         break;
       }
+      case TripDirections_Maneuver_Type_kRampStraight:
+      case TripDirections_Maneuver_Type_kRampRight:
+      case TripDirections_Maneuver_Type_kRampLeft: {
+        FormRampInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kExitRight:
+      case TripDirections_Maneuver_Type_kExitLeft: {
+        FormExitInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kStayStraight:
+      case TripDirections_Maneuver_Type_kStayRight:
+      case TripDirections_Maneuver_Type_kStayLeft: {
+        FormStayInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kMerge: {
+        FormMergeInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kRoundaboutEnter: {
+        FormEnterRoundaboutInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kRoundaboutExit: {
+        FormExitRoundaboutInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kFerryEnter: {
+        FormEnterFerryInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kFerryExit: {
+        FormExitFerryInstruction(maneuver);
+        break;
+      }
     }
   }
 }
@@ -128,6 +165,106 @@ void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
 
   if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormRampInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Take the ramp";
+
+  // TODO - add relative direction and exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormExitInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Take the exit";
+
+  // TODO - add relative direction and exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormStayInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Stay";
+
+  // TODO - add relative direction and exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  if (maneuver.HasStreetNames()){
+    text_instruction += "Merge onto ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+  else
+    text_instruction += "Merge";
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Enter roundabout";
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Take the ";
+  text_instruction += "TBD ";  // TODO - roundabout exit count
+  text_instruction += "exit";
+  if (maneuver.HasStreetNames()){
+    text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Take the ";
+  if (maneuver.HasStreetNames()){
+    text_instruction += maneuver.street_names().ToString();
+    text_instruction += " ";
+  }
+  text_instruction += "ferry";
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Go ";
+  text_instruction += FormCardinalDirection(
+        maneuver.begin_cardinal_direction());
+  if (maneuver.HasStreetNames()) {
+    text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();
   }
 
