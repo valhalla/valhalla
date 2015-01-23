@@ -316,14 +316,14 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
       return "sharp right";
     }
     case TripDirections_Maneuver_Type_kSharpLeft: {
-      return "slight left";
+      return "sharp left";
     }
     case TripDirections_Maneuver_Type_kLeft:
     case TripDirections_Maneuver_Type_kUturnLeft: {
       return "left";
     }
     case TripDirections_Maneuver_Type_kSlightLeft: {
-      return "sharp left";
+      return "slight left";
     }
   }
 
