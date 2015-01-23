@@ -1,6 +1,7 @@
 #include "test.h"
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "config.h"
 #include "thor/edgelabel.h"
 #include "thor/adjacencylist.h"
