@@ -12,7 +12,8 @@ namespace valhalla {
 namespace mjolnir {
 
 GraphOptimizer::GraphOptimizer(const boost::property_tree::ptree& pt)
-      : tile_hierarchy_(pt),
+      : dupcount_(0),
+        tile_hierarchy_(pt),
         graphreader_(tile_hierarchy_) {
 
   // Make sure there are at least 2 levels!
