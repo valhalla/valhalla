@@ -29,7 +29,6 @@ PathAlgorithm::~PathAlgorithm() {
 // Clear the temporary information generated during path construction.
 void PathAlgorithm::Clear() {
   // Set the edge label index back to 0
-  LOG_TRACE("EdgeLabel index = " + std::to_string(edgelabel_index_));
   edgelabel_index_ = 0;
   edgelabels_.clear();
 
@@ -278,6 +277,10 @@ bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
 // Form the path from the adjacency list.
 // TODO - support partial distances at origin/destination
 std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest) {
+  // TODO - leave in for now!
+  LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].truecost()) +
+           "  Iterations = " + std::to_string(edgelabel_index_));
+
   // Add the destination edge
   std::vector<GraphId> edgesonpath;
   edgesonpath.push_back(edgelabels_[dest].edgeid());
