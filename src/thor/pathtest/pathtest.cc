@@ -14,6 +14,7 @@
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/midgard/logging.h>
 #include "thor/pathalgorithm.h"
 #include "thor/costfactory.h"
 #include "thor/trippathbuilder.h"
@@ -40,32 +41,31 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
     c = std::tolower(c);
   std::shared_ptr<DynamicCost> cost = factory.Create(routetype);
 
-  std::cout << "routetype: " << routetype << std::endl;
+  LOG_INFO("routetype: " + routetype);
 
   std::clock_t start = std::clock();
   PathAlgorithm pathalgorithm;
   uint32_t msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "PathAlgorithm Construction took " << msecs << " ms"
-            << std::endl;
+  LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
   start = std::clock();
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
   msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "PathAlgorithm GetBestPath took " << msecs << " ms" << std::endl;
+  LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   // Form output information based on pathedges
   start = std::clock();
   TripPath trip_path = TripPathBuilder::Build(reader, pathedges);
 
   // TODO - perhaps walk the edges to find total length?
-//  std::cout << "Trip length is: " << trip_path.length << " km" << std::endl;
+  //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " km");
   msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "TripPathBuilder took " << msecs << " ms" << std::endl;
+  LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
   start = std::clock();
   pathalgorithm.Clear();
   msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "PathAlgorithm Clear took " << msecs << " ms" << std::endl;
+  LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
   return trip_path;
 }
 
@@ -75,13 +75,12 @@ TripDirections DirectionsTest(TripPath& trip_path) {
   float totalDistance = 0.0f;
   int m = 1;
   for (const auto& maneuver : trip_directions.maneuver()) {
-    std::cout << "----------------------------------------------" << std::endl;
-    std::cout << m++ << ": " << maneuver.text_instruction() << " | "
-              << maneuver.length() << " km" << std::endl;
+    LOG_INFO("----------------------------------------------");
+    LOG_INFO(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km");
     totalDistance += maneuver.length();
   }
-  std::cout << "==============================================" << std::endl;
-  std::cout << "Total distance: " << totalDistance << " km" << std::endl;
+  LOG_INFO("==============================================");
+  LOG_INFO("Total distance: " + std::to_string(totalDistance) + " km");
 
   return trip_directions;
 }
@@ -156,6 +155,12 @@ int main(int argc, char *argv[]) {
   //parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
+
+  //configure logging
+  boost::property_tree::ptree logging_subtree = pt.get_child("logging");
+  auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree);
+  valhalla::midgard::logging::Configure(logging_config);
+
   valhalla::baldr::GraphReader reader(pt);
 
   // Use Loki to get location information
@@ -170,7 +175,7 @@ int main(int argc, char *argv[]) {
   PathLocation pathDest = valhalla::loki::Search(destloc, reader);
 
   uint32_t msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
-  std::cout << "Location Processing took " << msecs << " ms" << std::endl;
+  LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // TODO - set locations
 

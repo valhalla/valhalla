@@ -5,6 +5,7 @@
 
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace thor {
@@ -43,9 +44,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (directededge->trans_up() || directededge->trans_down()) {
       // TODO - remove debug stuff later.
       if (directededge->trans_up()) {
-        std::cout << "Transition up!" << std::endl;
+        LOG_TRACE("Transition up!");
       } else {
-        std::cout << "Transition down" << std::endl;
+        LOG_TRACE("Transition down!");
       }
       // Get the end node (needed for connected edges at next iteration).
       GraphId endnode = directededge->endnode();
@@ -132,8 +133,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   }
 
 /** TODO - remove debug later
-  std::cout << "Took " << shortcutcount << " shortcut edges out of " <<
-      pathedges.size() << " edges" << std::endl;  **/
+  LOG_TRACE("Took " + std::to_string(shortcutcount) + " shortcut edges out of " +
+      std::to_string(pathedges.size()) + " edges");**/
 
   // Encode shape and add to trip path.
   std::string encoded_shape_;

@@ -15,5 +15,9 @@
     "node_function": "nodes_proc",
     "way_script": "conf/osm2pgsql/edges.lua",
     "way_function": "ways_proc"
+  },
+  "logging": {
+    "type": "std_out",
+    "color": true
   }
 }

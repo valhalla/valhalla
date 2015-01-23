@@ -3,6 +3,8 @@
 #include <algorithm>
 #include "thor/pathalgorithm.h"
 
+#include <valhalla/midgard/logging.h>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -27,7 +29,7 @@ PathAlgorithm::~PathAlgorithm() {
 // Clear the temporary information generated during path construction.
 void PathAlgorithm::Clear() {
   // Set the edge label index back to 0
-std::cout << "EdgeLabel index = " << edgelabel_index_ << std::endl;
+  LOG_TRACE("EdgeLabel index = " + std::to_string(edgelabel_index_));
   edgelabel_index_ = 0;
   edgelabels_.clear();
 
@@ -47,8 +49,8 @@ std::cout << "EdgeLabel index = " << edgelabel_index_ << std::endl;
 // Initialize prior to finding best path
 void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
     const std::shared_ptr<DynamicCost>& costing) {
-std::cout << "Orig LL = " << origll.lat() << "," << origll.lng() << std::endl;
-std::cout << "Dest LL = " << destll.lat() << "," << destll.lng() << std::endl;
+  LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
+  LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
   // Set the destination and cost factor in the A* heuristic
   astarheuristic_.Init(destll, costing->AStarCostFactor());
 
@@ -95,7 +97,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // error codes and return the appropriate one here
     next_label_index = adjacencylist_->Remove(edgelabels_);
     if (next_label_index == kInvalidLabel) {
-      std::cout << "Iterations = " << edgelabel_index_ << std::endl;
+      LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabel_index_));
       throw std::runtime_error("No path could be found for input");
     }
 
