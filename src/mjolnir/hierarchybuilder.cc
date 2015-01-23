@@ -76,9 +76,9 @@ void HierarchyBuilder::GetNodesInNewLevel(
   uint32_t ntiles = base_level.tiles.TileCount();
   uint32_t baselevel = (uint32_t) base_level.level;
   GraphTile* tile = nullptr;
-  for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
+  for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
     // Get the graph tile. Skip if no tile exists (common case)
-    tile = graphreader_.GetGraphTile(GraphId(tileid, baselevel, 0));
+    tile = graphreader_.GetGraphTile(GraphId(basetileid, baselevel, 0));
     if (tile == nullptr) {
       continue;
     }
@@ -86,18 +86,19 @@ void HierarchyBuilder::GetNodesInNewLevel(
     // Iterate through the nodes. Add nodes to the new level when
     // best road class <= the new level classification cutoff
     uint32_t nodecount = tile->header()->nodecount();
-    GraphId basenode(tileid, baselevel, 0);
+    GraphId basenode(basetileid, baselevel, 0);
     const NodeInfo* nodeinfo = tile->node(basenode);
     for (uint32_t i = 0; i < nodecount; i++, nodeinfo++, basenode++) {
       if (nodeinfo->bestrc() <= new_level.importance) {
         // Test this node to see if it can be contracted (for adding shortcut
         // edges). Add the node to the new tile and add the mapping from base
         // level node to the new node
-        uint32_t tileid = new_level.tiles.TileId(nodeinfo->latlng());
-        GraphId newnode(tileid, new_level.level, tilednodes_[tileid].size());
+        uint32_t newtileid = new_level.tiles.TileId(nodeinfo->latlng());
+        GraphId newnode(newtileid, new_level.level,
+                        tilednodes_[newtileid].size());
         bool contract = CanContract(tile, nodeinfo, basenode, newnode,
-                                    new_level.importance);
-        tilednodes_[tileid].emplace_back(NewNode(basenode, contract));
+                        new_level.importance);
+        tilednodes_[newtileid].emplace_back(NewNode(basenode, contract));
         nodemap_[basenode.value()] = newnode;
       }
     }
@@ -382,8 +383,9 @@ void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
+// REMOVE THIS LOGIC LATER TO "FIX" OPPOSING EDGES??
 if (newnode.contract)
-  return;
+return;
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value()) : contractions_.end();
@@ -493,8 +495,12 @@ if (newnode.contract)
       newedge.set_shortcut(true);
       newedge.set_superseded(false);
 
-//LOG_INFO((boost::format("Add shortcut from %1% LL %2%,%3% to %4%")
-//      % nodea % baseni->latlng().lat() % baseni->latlng().lng() % nodeb).str());
+/**
+if (nodea.level() == 0) {
+  LOG_INFO((boost::format("Add shortcut from %1% LL %2%,%3% to %4%")
+     % nodea % baseni->latlng().lat() % baseni->latlng().lng() % nodeb).str());
+}
+**/
 
       // Add directed edge
       directededges.emplace_back(std::move(newedge));
