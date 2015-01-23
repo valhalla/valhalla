@@ -2,7 +2,6 @@ machine:
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - sudo rm /etc/apt/sources.list.d/google-chrome.list #workaround for duplicate sources on ubuntu 12.04 circlci machine
     - sudo apt-get update
 
 checkout:
