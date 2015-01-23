@@ -12,7 +12,8 @@ namespace valhalla {
 namespace mjolnir {
 
 GraphOptimizer::GraphOptimizer(const boost::property_tree::ptree& pt)
-      : tile_hierarchy_(pt),
+      : dupcount_(0),
+        tile_hierarchy_(pt),
         graphreader_(tile_hierarchy_) {
 
   // Make sure there are at least 2 levels!
@@ -24,6 +25,7 @@ void GraphOptimizer::Optimize() {
   // Iterate through all levels and all tiles.
   // TODO - concurrency
   for (auto tile_level :  tile_hierarchy_.levels()) {
+    dupcount_ = 0;
     uint32_t level = (uint32_t)tile_level.second.level;
     uint32_t ntiles = tile_level.second.tiles.TileCount();
     for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
@@ -68,6 +70,9 @@ void GraphOptimizer::Optimize() {
       // Write the new file
       tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
     }
+
+    LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
+        % level % dupcount_).str());
   }
 }
 
@@ -79,8 +84,12 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
   GraphTile* tile = graphreader_.GetGraphTile(endnode);
   const NodeInfo* nodeinfo = tile->node(endnode.id());
 
+  // TODO - check if more than 1 edge has matching startnode and
+  // distance!
+
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
+  uint32_t opp_index = 777777;
   const DirectedEdge* directededge = tile->directededge(
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
@@ -88,23 +97,30 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
     // and lengths must be close...
     if (directededge->endnode() == startnode &&
         edge.shortcut() == directededge->shortcut() &&
-        abs(directededge->length() - edge.length()) < 2) {
-      return i;
+        directededge->length() == edge.length()) {
+      if (opp_index != 7777777) {
+   //     LOG_WARN("More than 1 edge matches nodes and length");
+        dupcount_++;
+      }
+      opp_index = i;
     }
   }
 
-  LOG_ERROR("Opposing edge not found");
-  LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
-    % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
-  LOG_WARN((boost::format("Length = %1% Startnode %2% EndNode %3% sc %4%")
-    % edge.length() % startnode % edge.endnode() % edge.shortcut()).str());
-  directededge =  tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    LOG_WARN((boost::format("Length = %1% Endnode: %2% sc %3%")
-      % directededge->length() % directededge->endnode()
-      % directededge->shortcut()).str());
+  if (opp_index == 777777) {
+    LOG_ERROR("Opposing edge not found");
+    LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
+      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
+    LOG_WARN((boost::format("Length = %1% Startnode %2% EndNode %3% sc %4%")
+      % edge.length() % startnode % edge.endnode() % edge.shortcut()).str());
+    directededge =  tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+      LOG_WARN((boost::format("Length = %1% Endnode: %2% sc %3%")
+        % directededge->length() % directededge->endnode()
+        % directededge->shortcut()).str());
+    }
+    return 31;  // TODO - what value to return that will not impact routes?
   }
-  return 0;
+  return opp_index;
 }
 
 }

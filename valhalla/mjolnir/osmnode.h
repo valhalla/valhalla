@@ -54,7 +54,8 @@ class OSMNode {
   const baldr::GraphId& graphid() const;
 
   /**
-   * Add an edge.
+   * Add an edge. Set flags to indicate a link and/or non-link edge
+   * exists at the node.
    * @param  edgeindex  Index in the list of edges.
    * @param  link       Flag indicating whether this edge is a link
    *                    (highway=*_link)
@@ -136,6 +137,12 @@ class OSMNode {
    */
   bool non_link_edge() const;
 
+  /**
+   * Get the non-link edge flag. True if any connected edge is a
+   * highway=*_link.
+   */
+  bool link_edge() const;
+
  private:
   // Lat,lng of the node
   midgard::PointLL latlng_;
@@ -155,7 +162,8 @@ class OSMNode {
       uint16_t ref           : 1;
       uint16_t modes_mask    : 8;
       uint16_t non_link_edge : 1;
-      uint16_t spare         : 3;
+      uint16_t link_edge     : 1;
+      uint16_t spare         : 2;
     } fields;
     uint16_t v;
   };

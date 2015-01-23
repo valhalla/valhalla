@@ -36,6 +36,9 @@ class GraphOptimizer {
   void Optimize();
 
  protected:
+  // Number of possible duplicates
+  uint32_t dupcount_;
+
   // Tile hierarchy/level information
   baldr::TileHierarchy tile_hierarchy_;
 

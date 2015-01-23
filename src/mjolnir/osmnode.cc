@@ -41,9 +41,12 @@ const baldr::GraphId& OSMNode::graphid() const {
   return graphid_;
 }
 
-// Add an edge to the list of outbound edges
+// Add an edge to the list of outbound edges. Set flags to indicate
+// a link and/or non-link edge exists at the node.
 void OSMNode::AddEdge(const uint32_t edgeindex, const bool link) {
-  if (!link) {
+  if (link) {
+    attributes_.fields.link_edge = true;
+  } else {
     attributes_.fields.non_link_edge = true;
   }
   edges_.emplace_back(edgeindex);
@@ -119,6 +122,13 @@ bool OSMNode::modes_mask() const {
 bool OSMNode::non_link_edge() const {
   return attributes_.fields.non_link_edge;
 }
+
+// Get the non-link edge flag. True if any connected edge is a
+// highway=*_link.
+bool OSMNode::link_edge() const {
+  return attributes_.fields.link_edge;
+}
+
 
 }
 }
