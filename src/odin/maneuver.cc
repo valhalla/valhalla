@@ -19,8 +19,12 @@ Maneuver::Maneuver()
       begin_shape_index_(0),
       end_shape_index_(0),
       ramp_(false),
+      ferry_(false),
+      rail_ferry_(false),
+      roundabout_(false),
       portions_toll_(false),
-      portions_unpaved_(false) {
+      portions_unpaved_(false),
+      portions_highway_(false) {
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -30,7 +34,6 @@ const TripDirections_Maneuver_Type& Maneuver::type() const {
 void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
   type_ = type;
 }
-
 
 const StreetNames& Maneuver::street_names() const {
   return street_names_;
@@ -161,6 +164,30 @@ void Maneuver::set_ramp(bool ramp) {
   ramp_ = ramp;
 }
 
+bool Maneuver::ferry() const {
+  return ferry_;
+}
+
+void Maneuver::set_ferry(bool ferry) {
+  ferry_ = ferry;
+}
+
+bool Maneuver::rail_ferry() const {
+  return rail_ferry_;
+}
+
+void Maneuver::set_rail_ferry(bool rail_ferry) {
+  rail_ferry_ = rail_ferry;
+}
+
+bool Maneuver::roundabout() const {
+  return roundabout_;
+}
+
+void Maneuver::set_roundabout(bool roundabout) {
+  roundabout_ = roundabout;
+}
+
 bool Maneuver::portions_toll() const {
   return portions_toll_;
 }
@@ -177,17 +204,29 @@ void Maneuver::set_portions_unpaved(bool portionsUnpaved) {
   portions_unpaved_ = portionsUnpaved;
 }
 
+bool Maneuver::portions_highway() const {
+  return portions_highway_;
+}
+
+void Maneuver::set_portions_highway(bool portionsHighway) {
+  portions_highway_ = portionsHighway;
+}
+
 std::string Maneuver::ToString() const {
-   std::string man_str;
+  std::string man_str;
+  man_str.reserve(128);
 
-   man_str += "type_=" + std::to_string(type_);
-   man_str += " | street_names_=" + street_names_.ToString();
-   man_str += " | distance_=" + std::to_string(distance_);
-   // TODO - others
-   //man_str += " | TBD=";
-   //man_str += TBD;
+  man_str += "type_=";
+  man_str += std::to_string(type_);
+  man_str += " | street_names_=";
+  man_str += street_names_.ToString();
+  man_str += " | distance_=";
+  man_str += std::to_string(distance_);
+  // TODO - others
+  //man_str += " | TBD=";
+  //man_str += TBD;
 
-   return man_str;
+  return man_str;
 }
 
 }

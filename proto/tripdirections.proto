@@ -18,11 +18,11 @@ message TripDirections {
     // TODO - add others later
     enum Type {
       kNone = 0;
-      kStartRight = 1;
-      kStart = 2;
+      kStart = 1;
+      kStartRight = 2;
       kStartLeft = 3;
-      kDestinationRight = 4;
-      kDestination = 5;
+      kDestination = 4;
+      kDestinationRight = 5;
       kDestinationLeft = 6;
       kBecomes = 7;
       kContinue = 8;
@@ -34,6 +34,19 @@ message TripDirections {
       kSharpLeft = 14;
       kLeft = 15;
       kSlightLeft = 16;
+      kRampStraight = 17;
+      kRampRight = 18;
+      kRampLeft = 19;
+      kExitRight = 20;
+      kExitLeft = 21;
+      kStayStraight = 22;
+      kStayRight = 23;
+      kStayLeft = 24;
+      kMerge = 25;
+      kRoundaboutEnter = 26;
+      kRoundaboutExit = 27;
+      kFerryEnter = 28;
+      kFerryExit = 29;
     }
   
     optional Type type = 1;                                  // Maneuver type

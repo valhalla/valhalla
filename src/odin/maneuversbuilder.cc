@@ -52,9 +52,9 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto* currEdge = trip_path_->GetCurrEdge(i);
     auto* nextEdge = trip_path_->GetNextEdge(i);
     LOG_TRACE(std::to_string(i) + ":  ");
-    LOG_TRACE(std::string("  prevEdge=") + (prevEdge ? (prevEdge->name_size() > 0 ? prevEdge->name(0) : "unnamed") : "NONE"));
-    LOG_TRACE(std::string("  currEdge=") + (currEdge ? (currEdge->name_size() > 0 ? currEdge->name(0) : "unnamed") : "NONE"));
-    LOG_TRACE(std::string("  nextEdge=") + (nextEdge ? (nextEdge->name_size() > 0 ? nextEdge->name(0) : "unnamed") : "NONE"));
+    LOG_TRACE(std::string("  prevEdge=") + (prevEdge ? prevEdge->ToString() : "NONE"));
+    LOG_TRACE(std::string("  currEdge=") + (currEdge ? currEdge->ToString() : "NONE"));
+    LOG_TRACE(std::string("  nextEdge=") + (nextEdge ? nextEdge->ToString() : "NONE"));
     LOG_TRACE("---------------------------------------------");
 #endif
 
@@ -121,6 +121,26 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int nodeIndex) {
   // Set the end shape index
   maneuver.set_end_shape_index(prevEdge->end_shape_index());
 
+  // Ramp
+  if (prevEdge->ramp()) {
+    maneuver.set_ramp(true);
+  }
+
+  // Ferry
+  if (prevEdge->ferry()) {
+    maneuver.set_ferry(true);
+  }
+
+  // Rail Ferry
+  if (prevEdge->rail_ferry()) {
+    maneuver.set_rail_ferry(true);
+  }
+
+  // Roundabout
+  if (prevEdge->roundabout()) {
+    maneuver.set_roundabout(true);
+  }
+
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, nodeIndex);
 }
@@ -148,11 +168,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
   maneuver.set_time(
       maneuver.time() + GetTime(prevEdge->length(), prevEdge->speed()));
 
-  // Ramp
-  if (prevEdge->ramp()) {
-    maneuver.set_ramp(true);
-  }
-
   // Portions Toll
   if (prevEdge->toll()) {
     maneuver.set_portions_toll(true);
@@ -161,6 +176,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
   // Portions unpaved
   if (prevEdge->unpaved()) {
     maneuver.set_portions_unpaved(true);
+  }
+
+  // Portions highway
+  if (prevEdge->IsHighway()) {
+    maneuver.set_portions_highway(true);
   }
 
 }
@@ -202,9 +222,53 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int nodeIndex) {
     return;
   }
 
-  // TODO - iterate and expand
+  auto* prevEdge = trip_path_->GetPrevEdge(nodeIndex);
+  auto* currEdge = trip_path_->GetCurrEdge(nodeIndex);
 
-  SetSimpleDirectionalManeuverType(maneuver);
+  // TODO - iterate and expand; "Stay"
+
+  // Process exit
+  if (maneuver.ramp() && prevEdge->IsHighway()) {
+    // TODO - calculate relative S/R/L on R/L roads
+    maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
+    LOG_TRACE("EXIT");
+  }
+  // Process on ramp
+  else if (maneuver.ramp() && !prevEdge->IsHighway()) {
+    // TODO - calculate relative S/R/L on R/L roads
+    maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
+    LOG_TRACE("RAMP");
+  }
+  // Process merge
+  else if (currEdge->IsHighway() && prevEdge->ramp()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
+    LOG_TRACE("MERGE");
+  }
+  // Process enter roundabout
+  else if (maneuver.roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
+    LOG_TRACE("ROUNDABOUT_ENTER");
+  }
+  // Process exit roundabout
+  else if (prevEdge->roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
+    LOG_TRACE("ROUNDABOUT_EXIT");
+  }
+  // Process enter ferry
+  else if (maneuver.ferry() || maneuver.rail_ferry()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kFerryEnter);
+    LOG_TRACE("FERRY_ENTER");
+  }
+  // Process exit ferry
+  else if (prevEdge->ferry() || prevEdge->rail_ferry()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kFerryExit);
+    LOG_TRACE("FERRY_EXIT");
+  }
+  // Process simple direction
+  else {
+    SetSimpleDirectionalManeuverType(maneuver);
+    LOG_TRACE("SIMPLE");
+  }
 
 }
 
@@ -253,12 +317,63 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   // TODO - fix it
   auto* prevEdge = trip_path_->GetPrevEdge(nodeIndex);
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Process ramps
+  if (maneuver.ramp() && !prevEdge->ramp()) {
+    return false;
+  }
+  if (prevEdge->ramp() && !maneuver.ramp()) {
+    return false;
+  }
+  // TODO - more logic with exit signs
+  if (maneuver.ramp() && prevEdge->ramp()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process ferries
+  if (maneuver.ferry() && !prevEdge->ferry()) {
+    return false;
+  }
+  if (prevEdge->ferry() && !maneuver.ferry()) {
+    return false;
+  }
+  if (maneuver.ferry() && prevEdge->ferry()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process rail ferries
+  if (maneuver.rail_ferry() && !prevEdge->rail_ferry()) {
+    return false;
+  }
+  if (prevEdge->rail_ferry() && !maneuver.rail_ferry()) {
+    return false;
+  }
+  if (maneuver.rail_ferry() && prevEdge->rail_ferry()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process roundabouts
+  if (maneuver.roundabout() && !prevEdge->roundabout()) {
+    return false;
+  }
+  if (prevEdge->roundabout() && !maneuver.roundabout()) {
+    return false;
+  }
+  if (maneuver.roundabout() && prevEdge->roundabout()) {
+    return true;
+  }
+
   StreetNames prev_edge_names(prevEdge->name());
 
+  // Process same names
   if (maneuver.street_names() == prev_edge_names) {
     return true;
   }
 
+  // Process common names
   StreetNames common_street_names = maneuver.street_names()
       .FindCommonStreetNames(prev_edge_names);
   if (!common_street_names.empty()) {

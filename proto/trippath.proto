@@ -32,33 +32,45 @@ message TripPath {
     kBoth = 3;
   }
   
+  enum RoadClass {
+    kMotorway = 0;
+    kTrunk = 1;
+    kPrimary = 2;
+    kTertiaryUnclassified = 3;
+    kResidential = 4;
+    kService = 5;
+    kTrack = 6;
+    kOther = 7;
+  }
+  
   message Edge {
     repeated string name = 1;               // street names
     optional float length = 2;              // km
     optional float speed = 3;               // km/h
-    optional uint32 begin_heading = 4;      // 0-359
-    optional uint32 end_heading = 5;        // 0-359
-    optional uint32 begin_shape_index = 6;  // inclusive
-    optional uint32 end_shape_index = 7;    // inclusive
-    optional Driveability driveability = 8;
-    optional bool ramp = 9;
-    optional bool turn_channel = 10;
-    optional bool ferry = 11;
-    optional bool railferry = 12;
-    optional bool toll = 13;
-    optional bool unpaved = 14;
-    optional bool tunnel = 15;
-    optional bool bridge = 16;
-    optional bool roundabout = 17;
-    optional bool internal_link = 18;
-    optional uint32 end_node_index = 19;
-    repeated Exit exit = 20;
+    optional RoadClass road_class = 4;
+    optional uint32 begin_heading = 5;      // 0-359
+    optional uint32 end_heading = 6;        // 0-359
+    optional uint32 begin_shape_index = 7;  // inclusive
+    optional uint32 end_shape_index = 8;    // inclusive
+    optional Driveability driveability = 9;
+    optional bool ramp = 10;
+    optional bool turn_channel = 11;
+    optional bool ferry = 12;
+    optional bool rail_ferry = 13;
+    optional bool toll = 14;
+    optional bool unpaved = 15;
+    optional bool tunnel = 16;
+    optional bool bridge = 17;
+    optional bool roundabout = 18;
+    optional bool internal_link = 19;
+    optional uint32 end_node_index = 20;
+    repeated Exit exit = 21;
   }
   
   message Node {
     optional uint64 id = 1;           // TODO - OpenLR?
-    optional uint32 shape_index = 3;  //
-    repeated Edge edge = 2;           // first one is the outbound path edge
+    optional uint32 shape_index = 2;  //
+    repeated Edge edge = 3;           // first one is the outbound path edge
   }
   
   optional uint64 trip_id = 1;
