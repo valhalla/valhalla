@@ -13,7 +13,7 @@ suite::suite(const string& suite_name) : failed(0) {
   cout << "=== Testing " << suite_name << " ===" << endl;
 }
 
-void suite::test(const string& test_name, boost::function<void ()> test_function) {
+void suite::test(const string& test_name, test_function function) {
   cout << setw(32) << test_name << flush;
   try {
     //run the test
