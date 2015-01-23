@@ -18,10 +18,9 @@ namespace thor {
  * An "overflow" bucket is maintained to allow reduced memory use - costs
  * outside the current bucket "range" get placed into the overflow bucket and
  * are moved into the low-level buckets as needed. The adjacency list stores
- * indexes into a list (vector) of label where complete cost and predecessor
+ * indexes into a list (vector) of labels where complete cost and predecessor
  * information are stored. The adjacency list simply provides a fast sorting
- *  method.
- * @author  David W. Nesbitt
+ * method.
  */
 class AdjacencyList {
  public:
@@ -43,25 +42,25 @@ class AdjacencyList {
   virtual ~AdjacencyList();
 
   /**
-   * Clear all labels from from the adjacency list
+   * Clear all labels from from the adjacency list.
    */
   void Clear();
 
   /**
-   * Adds a label to the sorted list. Adds to the appropriate bucket given
-   * its sort cost. If the sortcost is greater than maxcost_ the label is
-   * placed in the overflow bucket. If the sortcost is < the current bucket
+   * Adds a label index to the sorted list. Adds it to the appropriate bucket
+   * given the sort cost. If the sortcost is greater than maxcost_ the label
+   * is placed in the overflow bucket. If the sortcost is < the current bucket
    * cost then the label is placed at the front of the current bucket (this
    * prevents underflow).
-   * @param   label     Label to add to the adjacency list.
+   * @param   label     Label index to add to the adjacency list.
    * @param   sortcost  Sort cost for this label.
    */
   void Add(const uint32_t label, const float sortcost);
 
   /**
-   * The specified label now has a smaller cost.  Reorders it in the
+   * The specified label index now has a smaller cost.  Reorders it in the
    * sorted bucket list.
-   * @param  label  Label to reorder in the adjacency list
+   * @param  label  Label index to reorder in the adjacency list
    * @param  newsortcost  New sort cost.
    * @param  previouscost Previous sort cost.
    */
@@ -70,10 +69,10 @@ class AdjacencyList {
                     const float previouscost);
 
   /**
-   * Removes the lowest cost label from the sorted list.
+   * Removes the lowest cost label index from the sorted list.
    * @param  edgelabels  List of labels (for use when emptying
    *                         overflow buckets).
-   * @return  Returns the label (index) of the lowest cost label. Returns
+   * @return  Returns the label index of the lowest cost label. Returns
    *             kInvalidLabel if the adjacency list is empty.
    */
   uint32_t Remove(const std::vector<EdgeLabel>& edgelabels);
@@ -102,7 +101,7 @@ class AdjacencyList {
   std::list<uint32_t>& Bucket(const float cost);
 
   /**
-   * Empties the overflow bucket by placing the labels into the
+   * Empties the overflow bucket by placing the label indexes into the
    * low level buckets.
    * @param  edgelabels  List of all edge labels (required to get costs).
    */
