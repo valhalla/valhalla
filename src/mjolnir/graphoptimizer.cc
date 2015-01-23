@@ -89,7 +89,8 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
 
   // Get the directed edges and return when the end node matches
   // the specified node and length matches
-  uint32_t opp_index = 777777;
+  constexpr uint32_t absurd_index = 777777;
+  uint32_t opp_index = absurd_index;
   const DirectedEdge* directededge = tile->directededge(
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
@@ -98,7 +99,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
     if (directededge->endnode() == startnode &&
         edge.shortcut() == directededge->shortcut() &&
         directededge->length() == edge.length()) {
-      if (opp_index != 7777777) {
+      if (opp_index != absurd_index) {
    //     LOG_WARN("More than 1 edge matches nodes and length");
         dupcount_++;
       }
@@ -106,7 +107,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
     }
   }
 
-  if (opp_index == 777777) {
+  if (opp_index == absurd_index) {
     LOG_ERROR("Opposing edge not found");
     LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
       % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
