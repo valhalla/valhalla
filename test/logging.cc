@@ -54,7 +54,6 @@ void ThreadFileLoggerTest() {
       size_t count = result.get();
     }
     catch(std::exception& e) {
-      std::cout << e.what();
       exit_code++;
     }
   }
