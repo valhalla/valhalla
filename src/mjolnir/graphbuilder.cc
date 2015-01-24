@@ -36,6 +36,12 @@ constexpr uint32_t kMaxNoThruTries = 256;
 // Will throw an error if this is exceeded. Then we can increase.
 const uint64_t kMaxOSMNodeId = 4000000000;
 
+// Absurd classification.
+constexpr uint32_t kAbsurdRoadClass = 777777;
+
+uint32_t duplicates = 0;
+uint32_t not_thru_count = 0;
+
 // Constructor to create table of OSM Node IDs being used
 NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
   // Create a vector to mark bits. Initialize to 0.
@@ -138,6 +144,9 @@ void GraphBuilder::Build() {
   BuildLocalTiles(tl->second.level);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
+
+  LOG_INFO("Duplicate edgecount = " + std::to_string(duplicates));
+  LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count));
 }
 
 // Initialize Lua tag transformations
@@ -606,112 +615,131 @@ void GraphBuilder::SortEdgesFromNodes() {
   }
 }
 
-void GraphBuilder::GetNonLinkRoadClasses(const OSMNode& node,
-                           std::set<uint32_t>& nonlinkclasses) const {
+uint32_t GraphBuilder::GetBestNonLinkClass(const OSMNode& node) const {
+  uint32_t bestrc = kAbsurdRoadClass;
   for (auto idx : node.edges()) {
     const Edge& edge = edges_[idx];
     if (!edge.attributes_.fields.link) {
-      nonlinkclasses.insert(edge.attributes_.fields.importance);
+      if (edge.attributes_.fields.importance < bestrc)
+        bestrc = edge.attributes_.fields.importance;
     }
   }
+  return bestrc;
 }
 
 // Reclassify links (ramps and turn channels).
 void GraphBuilder::ReclassifyLinks() {
+  uint32_t count = 0;
+  std::unordered_set<uint64_t> visitedset;  // Set of visited nodes
+  std::unordered_set<uint64_t> expandset;   // Set of nodes to expand
+  std::vector<uint32_t> linkedgeindexes;    // Edge indexes to reclassify
   for (const auto& node : nodes_) {
     if (node.second.link_edge() && node.second.non_link_edge()) {
-      // Get the classification of non-link edges at this node
-      std::set<uint32_t> nonlinkclasses;
-      GetNonLinkRoadClasses(node.second, nonlinkclasses);
+      // Get the highest classification of non-link edges at this node
+      uint32_t beststartrc = GetBestNonLinkClass(node.second);
 
       // Expand from all link edges
       for (auto startedgeindex : node.second.edges()) {
-        const Edge& edge = edges_[startedgeindex];
-
-        // Skip any non-ramp edges
-        if (!edge.attributes_.fields.link) {
+        // Get the edge information. Skip non-link edges
+        const Edge& startedge = edges_[startedgeindex];
+        if (!startedge.attributes_.fields.link) {
           continue;
         }
 
-        // List of links edges to classify
-        std::vector<uint32_t> linkedgeindexes;
+        // Clear the sets and edge list
+        visitedset.clear();
+        expandset.clear();
+        linkedgeindexes.clear();
+
+        // Add the start edge to list of links edges to potentially reclassify
         linkedgeindexes.push_back(startedgeindex);
 
-        // Keep a visited set and and an expand set
-        std::unordered_set<uint64_t> visitedset;
-        std::unordered_set<uint64_t> expandset;
-        uint64_t endnode = (edge.sourcenode_ == node.first) ?
-                edge.targetnode_ : edge.sourcenode_;
-        expandset.emplace(endnode);
+        // If the first end node contains a non-link edge we compute the best
+        // classification. If not we add the end node to the expand set.
+        uint32_t bestendrc = kAbsurdRoadClass;
+        uint64_t endnode = (startedge.sourcenode_ == node.first) ?
+            startedge.targetnode_ : startedge.sourcenode_;
+        auto firstendnode = nodes_.find(endnode);
+        if (firstendnode != nodes_.end()) {
+          if (firstendnode->second.non_link_edge()) {
+            bestendrc = GetBestNonLinkClass(firstendnode->second);
+          } else {
+            expandset.insert(endnode);
+          }
+        }
 
         // Expand edges until all paths reach a node that has a non-link
-        // TODO - what is a realistic limit for stopping the expansion?
-        uint32_t n = 0;
-        uint64_t expandnode;
-        uint64_t osmendnode;
-        while (n < 512) {
+        for (uint32_t n = 0; n < 512; n++) {
           // Once expand list is empty - mark all link edges encountered
           // with the specified classification / importance and break out
           // of this loop (can still expand other ramp edges
           // from the starting node
           if (expandset.empty()) {
-            if (nonlinkclasses.empty()) {
-              LOG_ERROR("Classifications of non-links is empty.");
-              break;
-            }
-            auto it = nonlinkclasses.begin();
-            if (nonlinkclasses.size() > 1) {
-              // Increment to get the 2nd highest classification
-              it++;
-            }
-            uint32_t linkclass = *it;
-            if (linkclass > 5) {
-              LOG_WARN("Link class > 5???");
-            }
-//            for (auto idx : linkedgeindexes) {
-//              edges_[idx].attributes_.fields.importance = linkclass;
-//            }
-            break;
-          }
-          n++;
-
-          // Get the node off of the expand list and add it to the visited list
-          expandnode = *expandset.begin();
-          expandset.erase(expandset.begin());
-          visitedset.emplace(expandnode);
-
-          // Expand all edges from this node
-          auto nd = nodes_.find(endnode);
-          if (nd != nodes_.end()) {
-            for (const auto& edgeindex : nd->second.edges()) {
-              if (edgeindex == startedgeindex) {
-                // Do not allow use of the start edge
-                continue;
-              }
-              const Edge& edge = edges_[edgeindex];
-              osmendnode = (edge.sourcenode_ == expandnode) ?
-                  edge.targetnode_ : edge.sourcenode_;
-
-              // Add this edge index
-              linkedgeindexes.push_back(edgeindex);
-
-              auto endnd = nodes_.find(osmendnode);
-              if (endnd != nodes_.end()) {
-                // If the end node contains just links, add it to expand set
-                if (!endnd->second.non_link_edge()) {
-                  expandset.emplace(osmendnode);
-                } else {
-                  // Do not expand from this end node. Check non-link edges
-                  // for their classification
-                  GetNonLinkRoadClasses(endnd->second, nonlinkclasses);
+            // Make sure this connects...
+            if (bestendrc == kAbsurdRoadClass)  {
+              LOG_WARN("Link edge may not connect: OSM WayID = " +
+                       std::to_string(ways_[startedge.wayindex_].way_id()));
+            } else {
+              // Set to the lower of the 2 best road classes (start and end).
+              // Apply this to each of the link edges
+              uint32_t rc = std::max(beststartrc, bestendrc);
+              for (auto idx : linkedgeindexes) {
+                if (rc > edges_[idx].attributes_.fields.importance) {
+                  edges_[idx].attributes_.fields.importance = rc;
+                  count++;
                 }
               }
+            }
+            break;
+          }
+
+          // Get the node off of the expand list and add it to the visited list
+          uint64_t expandnode = *expandset.begin();
+          expandset.erase(expandset.begin());
+          visitedset.insert(expandnode);
+
+          // Expand all edges from this node
+          const auto nd = nodes_.find(expandnode);
+          if (nd == nodes_.end()) {
+            continue;
+          }
+          for (const auto& edgeindex : nd->second.edges()) {
+            // Do not allow use of the start edge
+            if (edgeindex == startedgeindex) {
+              continue;
+            }
+
+            // Add this edge (it should be a link edge) and get its end node
+            const Edge& nextedge = edges_[edgeindex];
+            if (!nextedge.attributes_.fields.link) {
+              LOG_ERROR("Expanding onto non-link edge!");
+              continue;
+            }
+            uint32_t osmendnode = (nextedge.sourcenode_ == expandnode) ?
+                    nextedge.targetnode_ : nextedge.sourcenode_;
+            linkedgeindexes.push_back(edgeindex);
+            const auto endnd = nodes_.find(osmendnode);
+            if (endnd == nodes_.end()) {
+              continue;
+            }
+
+            // If the end node contains any non-links find the best
+            // classification - do not expand from this node
+            if (endnd->second.non_link_edge()) {
+              uint32_t rc = GetBestNonLinkClass(endnd->second);
+              if (rc < bestendrc) {
+                bestendrc = rc;
+              }
+            } else if (visitedset.find(osmendnode) == visitedset.end()) {
+              // Add to the expand set if not in the visited set
+              expandset.insert(osmendnode);
             }
           }
         }
       }
     }
   }
+  LOG_INFO((boost::format("Reclassify Links: Count %1%") % count).str());
 }
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
@@ -720,51 +748,47 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
                      const uint32_t startedgeindex,
                      const std::unordered_map<uint64_t, OSMNode>& nodes,
                      const std::vector<Edge>& edges) {
+  // Add the end node Id to the set of nodes to expand
   std::unordered_set<uint64_t> visitedset;
   std::unordered_set<uint64_t> expandset;
-
-  // Add the end node to the expand sets.
-  expandset.emplace(endnode);
+  expandset.insert(endnode);
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
-  uint32_t n = 0;
-  uint64_t node;
-  uint64_t osmendnode;
-  while (n < kMaxNoThruTries) {
+  for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
     if (expandset.empty()) {
       return true;
     }
-    n++;
 
-    // Get the node off of the expand list and add it to the visited list
-    node = *expandset.begin();
+    // Get the node off of the expand list and add it to the visited list.
+    // Expand edges from this node.
+    uint64_t node = *expandset.begin();
     expandset.erase(expandset.begin());
     visitedset.emplace(node);
-
-    // Expand all edges from this node
-    auto nd = nodes.find(endnode);
+    const auto nd = nodes.find(node);
     if (nd != nodes.end()) {
       for (const auto& edgeindex : nd->second.edges()) {
         if (edgeindex == startedgeindex) {
           // Do not allow use of the start edge
           continue;
         }
-        const Edge& edge = edges[edgeindex];
-        osmendnode = (edge.sourcenode_ == node) ?
-            edge.targetnode_ : edge.sourcenode_;
 
         // Return false if we have returned back to the start node or we
         // encounter a tertiary road (or better)
+        const Edge& edge = edges[edgeindex];
+        uint64_t osmendnode = (edge.sourcenode_ == node) ?
+                  edge.targetnode_ : edge.sourcenode_;
         if (osmendnode == startnode ||
             edge.attributes_.fields.importance <=
             static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
           return false;
         }
 
-        // Add to the expand set
-        expandset.emplace(osmendnode);
+        // Add to the expand set if not in the visited set
+        if (visitedset.find(osmendnode) == visitedset.end()) {
+          expandset.insert(osmendnode);
+        }
       }
     }
   }
@@ -834,6 +858,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         // Track the best classification/importance or edge
         RoadClass bestrc = RoadClass::kOther;
 
+        std::unordered_map<uint64_t, uint32_t> endnodes;
+
         // Build directed edges
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
@@ -850,9 +876,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           const OSMWay &w = ways[edge.wayindex_];
 
           // Set the importance (from the edge rather than the way since
-          // ReclassifyLinks may change the importance
+          // ReclassifyLinks may change the importance). Update the node's
+          // best road class
           directededge.set_importance(
               static_cast<RoadClass>(edge.attributes_.fields.importance));
+          if (directededge.importance() < bestrc) {
+            bestrc = directededge.importance();
+          }
 
           directededge.set_use(w.use());
           directededge.set_speed(w.speed());    // KPH
@@ -875,7 +905,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
               LOG_WARN("Edge is a link but has use = " +
                        std::to_string(static_cast<int>(directededge.use())));
             }
-            directededge.set_use(GetLinkUse(w.road_class(), length,
+            directededge.set_use(GetLinkUse(directededge.importance(), length,
                      edge.sourcenode_, edge.targetnode_, nodes));
 
             // TEMP - update ramp speeds based on class. Should have some way
@@ -899,11 +929,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             }
           }
 
-          // Check if more important
-          if (w.road_class() < bestrc) {
-            bestrc = w.road_class();
-          }
-
           // Assign nodes and determine orientation along the edge (forward
           // or reverse between the 2 nodes)
           const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid(); //TODO: check validity?
@@ -924,6 +949,12 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_caraccess(false, true, w.auto_backward());
             directededge.set_pedestrianaccess(false, true, w.pedestrian());
             directededge.set_bicycleaccess(false, true, w.bike_backward());
+
+            const auto en = endnodes.find(nodeb.value());
+            if (en != endnodes.end() && en->second == directededge.length()) {
+              duplicates++;
+            }
+            endnodes[nodeb.value()] = directededge.length();
 
             // Set end node to the target (end) node
             directededge.set_endnode(nodeb);
@@ -946,6 +977,12 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_pedestrianaccess(false, true, w.pedestrian());
             directededge.set_bicycleaccess(false, true, w.bike_forward());
 
+            const auto en = endnodes.find(nodea.value());
+            if (en != endnodes.end() && en->second == directededge.length()) {
+              duplicates++;
+            }
+            endnodes[nodea.value()] = directededge.length();
+
             // Set end node to the source (start) node
             directededge.set_endnode(nodea);
 
@@ -966,6 +1003,10 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
                nodea, nodeb, edge.latlngs_, w.GetNames(), added);
           directededge.set_edgedataoffset(edge_info_offset);
+
+          if (directededge.not_thru()) {
+            not_thru_count++;
+          }
         }
 
         // Update the best classification used by directed edges

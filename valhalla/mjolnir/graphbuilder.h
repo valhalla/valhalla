@@ -212,11 +212,11 @@ class GraphBuilder {
   void ReclassifyLinks();
 
   /**
-   * Get the road classifications for any non-link edges. Adds to
-   * the specified set.
+   * Get the best classification for any non-link edges from a node.
+   * @param  node  Node - gets outbound edges from this node.
+   * @return  Returns the best (most important) classification
    */
-  void GetNonLinkRoadClasses(const OSMNode& node,
-                             std::set<uint32_t>& nonlinkclasses) const;
+  uint32_t GetBestNonLinkClass(const OSMNode& node) const;
 
   /**
    * Build tiles representing the local graph
