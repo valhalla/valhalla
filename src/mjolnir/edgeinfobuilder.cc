@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include "mjolnir/edgeinfobuilder.h"
 
@@ -32,9 +33,18 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
 
 std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Make packeditem
+  // TODO - protect against exceeding sizes!
   baldr::EdgeInfo::PackedItem item;
   item.fields.name_count = static_cast<uint32_t>(eib.street_name_offset_list_.size());
-  item.fields.encoded_shape_size = static_cast<uint32_t>(eib.encoded_shape_.size());
+
+  // Check if we are exceeding the max encoded size
+  if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
+    LOG_ERROR("EXCEEDING kMaxEncodedShapeSize: " +
+              std::to_string(eib.encoded_shape_.size()));
+    item.fields.encoded_shape_size = static_cast<uint32_t>(kMaxEncodedShapeSize);
+  } else {
+    item.fields.encoded_shape_size = static_cast<uint32_t>(eib.encoded_shape_.size());
+  }
   item.fields.exit_sign_count = static_cast<uint32_t>(eib.exit_signs_.size());
 
   // Write out the bytes
