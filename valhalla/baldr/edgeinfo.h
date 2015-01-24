@@ -16,6 +16,8 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
+constexpr size_t kMaxEncodedShapeSize = 16383;
+
 /**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
@@ -61,10 +63,11 @@ class EdgeInfo {
   // Packed items: counts for names, shape, exit signs
   union PackedItem {
     struct Fields {
+
       uint32_t name_count                     :4;
-      uint32_t encoded_shape_size             :11;
+      uint32_t encoded_shape_size             :14;
       uint32_t exit_sign_count                :4;
-      uint32_t spare                          :13;
+      uint32_t spare                          :10;
     } fields;
     uint32_t value;
   };
