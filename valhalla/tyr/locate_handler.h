@@ -11,10 +11,11 @@ class LocateHandler : public Handler {
   /**
    * Parses json request data to be used as options for the action
    *
-   * @param dict  the request data
+   * @param config   where the config file resides
+   * @param dict     the request data
    * @return a handler object ready to act
    */
-  LocateHandler(const boost::python::dict& dict_request);
+  LocateHandler(const std::string& config, const boost::python::dict& dict_request);
 
   /**
    * Don't expose the default constructor

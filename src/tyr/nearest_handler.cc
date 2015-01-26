@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace tyr {
 
-NearestHandler::NearestHandler(const boost::python::dict& dict_request) : Handler(dict_request) {
+NearestHandler::NearestHandler(const std::string& config, const boost::python::dict& dict_request) : Handler(config, dict_request) {
 
 }
 

@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace tyr {
 
-LocateHandler::LocateHandler(const boost::python::dict& dict_request) : Handler(dict_request) {
+LocateHandler::LocateHandler(const std::string& config, const boost::python::dict& dict_request) : Handler(config, dict_request) {
 
 }
 
