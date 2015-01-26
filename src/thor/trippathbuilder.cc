@@ -155,14 +155,14 @@ TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
       return TripPath_RoadClass_kTrunk;
     case RoadClass::kPrimary:
       return TripPath_RoadClass_kPrimary;
+    case RoadClass::kSecondary:
+      return TripPath_RoadClass_kSecondary;
     case RoadClass::kTertiaryUnclassified:
       return TripPath_RoadClass_kTertiaryUnclassified;
     case RoadClass::kResidential:
       return TripPath_RoadClass_kResidential;
     case RoadClass::kService:
       return TripPath_RoadClass_kService;
-    case RoadClass::kTrack:
-      return TripPath_RoadClass_kTrack;
     case RoadClass::kOther:
       return TripPath_RoadClass_kOther;
   }
