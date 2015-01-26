@@ -246,11 +246,6 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
     GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
-    // Do not allow any transition edges (prob should do in Loki?)
-    if (directededge->trans_up() || directededge->trans_down()) {
-      continue;
-    }
-
     // Get cost and sort cost
     float cost = costing->Get(directededge);
     float sortcost = cost + heuristic;
