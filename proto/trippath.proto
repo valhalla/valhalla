@@ -36,10 +36,10 @@ message TripPath {
     kMotorway = 0;
     kTrunk = 1;
     kPrimary = 2;
-    kTertiaryUnclassified = 3;
-    kResidential = 4;
-    kService = 5;
-    kTrack = 6;
+    kSecondary = 2;
+    kTertiaryUnclassified = 4;
+    kResidential = 5;
+    kService = 6;
     kOther = 7;
   }
   
