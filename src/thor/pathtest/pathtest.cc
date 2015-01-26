@@ -5,6 +5,7 @@
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/optional.hpp>
 
 #include "config.h"
 
@@ -157,9 +158,11 @@ int main(int argc, char *argv[]) {
   boost::property_tree::read_json(config.c_str(), pt);
 
   //configure logging
-  boost::property_tree::ptree logging_subtree = pt.get_child("logging");
-  auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree);
-  valhalla::midgard::logging::Configure(logging_config);
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("logging.thor");
+  if(logging_subtree) {
+    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+    valhalla::midgard::logging::Configure(logging_config);
+  }
 
   valhalla::baldr::GraphReader reader(pt);
 
