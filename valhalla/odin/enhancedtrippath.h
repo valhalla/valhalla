@@ -8,21 +8,24 @@ namespace odin {
 
 class EnhancedTripPath;
 class EnhancedTripPath_Edge;
+class EnhancedTripPath_Node;
 
 class EnhancedTripPath : public TripPath {
  public:
 
-  EnhancedTripPath_Edge* GetPrevEdge(const int nodeIndex, int delta = 1);
+  EnhancedTripPath_Node* GetEnhancedNode(const int node_index);
 
-  EnhancedTripPath_Edge* GetCurrEdge(const int nodeIndex);
+  EnhancedTripPath_Edge* GetPrevEdge(const int node_index, int delta = 1);
 
-  EnhancedTripPath_Edge* GetNextEdge(const int nodeIndex, int delta = 1);
+  EnhancedTripPath_Edge* GetCurrEdge(const int node_index);
 
-  bool IsValidNodeIndex(int nodeIndex) const;
+  EnhancedTripPath_Edge* GetNextEdge(const int node_index, int delta = 1);
 
-  bool IsFirstNodeIndex(int nodeIndex) const;
+  bool IsValidNodeIndex(int node_index) const;
 
-  bool IsLastNodeIndex(int nodeIndex) const;
+  bool IsFirstNodeIndex(int node_index) const;
+
+  bool IsLastNodeIndex(int node_index) const;
 
   int GetLastNodeIndex() const;
 
@@ -45,7 +48,30 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
 };
 
+class EnhancedTripPath_Node : public TripPath_Node {
+ public:
+  bool last_node() const;
+  void set_last_node(bool last_node);
+
+  bool HasIntersectingEdges() const;
+
+  size_t GetIntersectingEdgesCount() const;
+
+  EnhancedTripPath_Edge* GetIntersectingEdge(size_t index);
+
+  void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
+                                                uint32_t& right_count,
+                                                uint32_t& left_count);
+
+ protected:
+  EnhancedTripPath_Node();
+
+  bool last_node_;
+
+};
+
 }
 }
 
 #endif  // VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
+
