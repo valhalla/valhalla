@@ -1,4 +1,5 @@
 #include "baldr/directededge.h"
+#include <boost/functional/hash.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -10,7 +11,8 @@ DirectedEdge::DirectedEdge()
       forwardaccess_{},
       reverseaccess_{},
       speed_(0),
-      attributes_{} {
+      attributes_{},
+      classification_{}{
 }
 
 // Destructor.
@@ -151,6 +153,101 @@ bool DirectedEdge::link() const {
 // Get the use of this edge.
 Use DirectedEdge::use() const {
   return static_cast<Use>(classification_.use);
+}
+
+// Get the internal version
+const uint64_t DirectedEdge::internal_version() {
+
+  DirectedEdge de;
+
+  de.edgedataoffset_ = 0;
+  de.geoattributes_ = {};
+  de.forwardaccess_ = {};
+  de.reverseaccess_ = {};
+  de.speed_ = 0;
+  de.attributes_ = {};
+  de.classification_ = {};
+
+  uint64_t seed = 0;
+
+  boost::hash_combine(seed,de.edgedataoffset_);
+
+  de.geoattributes_.length = ~de.geoattributes_.length;
+  boost::hash_combine(seed,ffs(de.geoattributes_.length+1)-1);
+  de.geoattributes_.elevation = ~de.geoattributes_.elevation;
+  boost::hash_combine(seed,ffs(de.geoattributes_.elevation+1)-1);
+  de.geoattributes_.spare = ~de.geoattributes_.spare;
+  boost::hash_combine(seed,ffs(de.geoattributes_.spare+1)-1);
+
+  de.forwardaccess_.fields.pedestrian  = ~de.forwardaccess_.fields.pedestrian;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.pedestrian+1)-1);
+  de.forwardaccess_.fields.bicycle  = ~de.forwardaccess_.fields.bicycle;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.bicycle+1)-1);
+  de.forwardaccess_.fields.car  = ~de.forwardaccess_.fields.car;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.car+1)-1);
+  de.forwardaccess_.fields.emergency  = ~de.forwardaccess_.fields.emergency;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.emergency+1)-1);
+  de.forwardaccess_.fields.horse  = ~de.forwardaccess_.fields.horse;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.horse+1)-1);
+  de.forwardaccess_.fields.spare_  = ~de.forwardaccess_.fields.spare_;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.spare_+1)-1);
+  de.forwardaccess_.fields.taxi  = ~de.forwardaccess_.fields.taxi;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.taxi+1)-1);
+  de.forwardaccess_.fields.truck  = ~de.forwardaccess_.fields.truck;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.truck+1)-1);
+
+  boost::hash_combine(seed,de.speed_);
+
+  de.classification_.importance = ~de.classification_.importance;
+  boost::hash_combine(seed,ffs(de.classification_.importance+1)-1);
+  de.classification_.link = ~de.classification_.link;
+  boost::hash_combine(seed,ffs(de.classification_.link+1)-1);
+  de.classification_.use = ~de.classification_.use;
+  boost::hash_combine(seed,ffs(de.classification_.use+1)-1);
+
+  de.attributes_.bikenetwork = ~de.attributes_.bikenetwork;
+  boost::hash_combine(seed,ffs(de.attributes_.bikenetwork+1)-1);
+  de.attributes_.bridge = ~de.attributes_.bridge;
+  boost::hash_combine(seed,ffs(de.attributes_.bridge+1)-1);
+  de.attributes_.cycle_lane = ~de.attributes_.cycle_lane;
+  boost::hash_combine(seed,ffs(de.attributes_.cycle_lane+1)-1);
+  de.attributes_.dest_only = ~de.attributes_.dest_only;
+  boost::hash_combine(seed,ffs(de.attributes_.dest_only+1)-1);
+  de.attributes_.ferry = ~de.attributes_.ferry;
+  boost::hash_combine(seed,ffs(de.attributes_.ferry+1)-1);
+  de.attributes_.forward = ~de.attributes_.forward;
+  boost::hash_combine(seed,ffs(de.attributes_.forward+1)-1);
+  de.attributes_.lanecount = ~de.attributes_.lanecount;
+  boost::hash_combine(seed,ffs(de.attributes_.lanecount+1)-1);
+  de.attributes_.not_thru = ~de.attributes_.not_thru;
+  boost::hash_combine(seed,ffs(de.attributes_.not_thru+1)-1);
+  de.attributes_.opp_index = ~de.attributes_.opp_index;
+  boost::hash_combine(seed,ffs(de.attributes_.opp_index+1)-1);
+  de.attributes_.railferry = ~de.attributes_.railferry;
+  boost::hash_combine(seed,ffs(de.attributes_.railferry+1)-1);
+  de.attributes_.roundabout = ~de.attributes_.roundabout;
+  boost::hash_combine(seed,ffs(de.attributes_.roundabout+1)-1);
+  de.attributes_.shortcut = ~de.attributes_.shortcut;
+  boost::hash_combine(seed,ffs(de.attributes_.shortcut+1)-1);
+  de.attributes_.spare = ~de.attributes_.spare;
+  boost::hash_combine(seed,ffs(de.attributes_.spare+1)-1);
+  de.attributes_.superseded = ~de.attributes_.superseded;
+  boost::hash_combine(seed,ffs(de.attributes_.superseded+1)-1);
+  de.attributes_.surface = ~de.attributes_.surface;
+  boost::hash_combine(seed,ffs(de.attributes_.surface+1)-1);
+  de.attributes_.toll = ~de.attributes_.toll;
+  boost::hash_combine(seed,ffs(de.attributes_.toll+1)-1);
+  de.attributes_.trans_down = ~de.attributes_.trans_down;
+  boost::hash_combine(seed,ffs(de.attributes_.trans_down+1)-1);
+  de.attributes_.trans_up = ~de.attributes_.trans_up;
+  boost::hash_combine(seed,ffs(de.attributes_.trans_up+1)-1);
+  de.attributes_.tunnel = ~de.attributes_.tunnel;
+  boost::hash_combine(seed,ffs(de.attributes_.tunnel+1)-1);
+
+  boost::hash_combine(seed,sizeof(DirectedEdge));
+
+  return seed;
+
 }
 
 }

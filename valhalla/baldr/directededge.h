@@ -217,6 +217,12 @@ class DirectedEdge {
    */
   Use use() const;
 
+  /**
+   * Get the computed version of DirectedEdge attributes.
+   * @return   Returns internal version.
+   */
+  static const uint64_t internal_version();
+
  protected:
   // End node
   GraphId endnode_;

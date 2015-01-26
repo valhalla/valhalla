@@ -87,6 +87,12 @@ class GraphId {
   GraphId Tile_Base() const;
 
   /**
+   * Get the computed version of GraphId attributes.
+   * @return   Returns internal version.
+   */
+  static const uint64_t internal_version();
+
+  /**
    * Post increments the id.
    */
   void operator ++(int);

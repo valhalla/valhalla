@@ -4,6 +4,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
+#include <ctime>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -75,6 +76,13 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     char* ptr = graphtile_.get();
     header_ = reinterpret_cast<GraphTileHeader*>(ptr);
     ptr += sizeof(GraphTileHeader);
+
+    const GraphTileHeader gh;
+
+    if (header_->internal_version() != gh.internal_version()) {
+     LOG_ERROR("Version of tile is out of date or not supported!");
+     return;
+    }
 
     // Set a pointer to the node list
     nodes_ = reinterpret_cast<NodeInfo*>(ptr);

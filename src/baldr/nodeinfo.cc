@@ -1,4 +1,5 @@
 #include "baldr/nodeinfo.h"
+#include <boost/functional/hash.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -6,6 +7,7 @@ namespace baldr {
 // Default constructor
 NodeInfo::NodeInfo() {
   latlng_.Set(0.0f, 0.0f);
+  attributes_ = {0};
 }
 
 // Destructor.
@@ -30,6 +32,36 @@ uint32_t NodeInfo::edge_count() const {
 // Get the best road class of any outbound edges.
 RoadClass NodeInfo::bestrc() const {
   return static_cast<RoadClass>(attributes_.bestrc_);
+}
+
+// Get the hash_value
+const uint64_t NodeInfo::internal_version() {
+
+  NodeInfo ni;
+
+  ni.latlng_.Set(0.0f, 0.0f);
+  ni.attributes_ = {};
+
+  uint64_t seed = 0;
+  boost::hash_combine(seed, ni.latlng_);
+
+  //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
+  ni.attributes_.edge_index_ = ~ni.attributes_.edge_index_;
+  boost::hash_combine(seed,ffs(ni.attributes_.edge_index_+1)-1);
+
+  ni.attributes_.edge_count_ = ~ni.attributes_.edge_count_;
+  boost::hash_combine(seed, ffs(ni.attributes_.edge_count_+1)-1);
+
+  ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
+  boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
+
+  ni.attributes_.spare_ = ~ni.attributes_.spare_;
+  boost::hash_combine(seed, ffs(ni.attributes_.spare_+1)-1);
+
+  boost::hash_combine(seed,sizeof(NodeInfo));
+
+  return seed;
+
 }
 
 }
