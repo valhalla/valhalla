@@ -12,16 +12,16 @@ enum class RoadClass : uint8_t {
   kMotorway = 0,
   kTrunk = 1,
   kPrimary = 2,
-  kTertiaryUnclassified = 3,
-  kResidential = 4,
-  kService = 5,
-  kTrack = 6,
+  kSecondary = 3,
+  kTertiaryUnclassified = 4,
+  kResidential = 5,
+  kService = 6,
   kOther = 7
 };
 const std::unordered_map<std::string, RoadClass> stringToRoadClass =
   { {"Motorway", RoadClass::kMotorway}, {"Trunk", RoadClass::kTrunk}, {"Primary", RoadClass::kPrimary},
-    {"TertiaryUnclassified", RoadClass::kTertiaryUnclassified}, {"Residential", RoadClass::kResidential},
-    {"Service", RoadClass::kService}, {"Track", RoadClass::kTrack}, {"Other", RoadClass::kOther}
+    {"Secondary", RoadClass::kSecondary}, {"TertiaryUnclassified", RoadClass::kTertiaryUnclassified},
+    {"Residential", RoadClass::kResidential}, {"Service", RoadClass::kService}, {"Other", RoadClass::kOther}
   };
 
 // Maximum length in meters of a "link" that can be assigned use=kTurnChannel
@@ -41,6 +41,7 @@ enum class Use : uint8_t {
   kSteps,
   kRamp,
   kTurnChannel,
+  kTrack,
   kOther
 };
 
