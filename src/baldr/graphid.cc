@@ -1,6 +1,7 @@
 #include <limits>
 
 #include "baldr/graphid.h"
+#include <boost/functional/hash.hpp>
 
 namespace {
 // Invalid graphid.
@@ -89,6 +90,24 @@ bool GraphId::operator ==(const GraphId& rhs) const {
 std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
     return os << id.level() << '/' << id.tileid() << '/' << id.id();
+}
+
+// Get the hash_value
+const uint64_t GraphId::hash_value() {
+
+  uint64_t seed = 0;
+
+  graphid_.fields.id = ~graphid_.fields.id;
+  boost::hash_combine(seed,ffs(graphid_.fields.id+1)-1);
+  graphid_.fields.level = ~graphid_.fields.level;
+  boost::hash_combine(seed,ffs(graphid_.fields.level+1)-1);
+  graphid_.fields.tileid = ~graphid_.fields.tileid;
+  boost::hash_combine(seed,ffs(graphid_.fields.tileid+1)-1);
+
+  boost::hash_combine(seed,sizeof(GraphId));
+
+  return seed;
+
 }
 
 }
