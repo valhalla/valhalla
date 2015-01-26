@@ -52,7 +52,7 @@ void write_tiles(const std::string& config_file) {
 }
 
 boost::python::dict make_request(const std::string& loc1, const std::string& loc2,
-  const std::string& request_type, const std::string& config_file) {
+  const std::string& request_type) {
   //the dict should look something like this:
   /*{
       'loc': ['40.657912,-73.914450', '40.040501,-76.306271'],
@@ -74,7 +74,6 @@ boost::python::dict make_request(const std::string& loc1, const std::string& loc
   request["output"] = output;
   bp::list z; z.append("17");
   request["z"] = z;
-  request["config"] = config_file.c_str();
   bp::list instructions; instructions.append("true");
   request["instructions"] = instructions;
   return request;
@@ -89,10 +88,10 @@ void TestRouteHanlder() {
 
   //make the input
   boost::python::dict dict =
-    make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto", "test/test_config");
+    make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto");
 
   //run the route
-  valhalla::tyr::RouteHandler handler(dict);
+  valhalla::tyr::RouteHandler handler("test/test_config", dict);
   LOG_DEBUG(handler.Action());
 }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import json
 import threading
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
@@ -52,8 +53,6 @@ class TyrHandler(BaseHTTPRequestHandler):
     params = parse_qs(split[2])
     #throw costing method in
     params['costing_method'] = costing_method
-    #throw in path to config file
-    params['config'] = 'conf/pbf2graph.json'
     #do the action
     #just send the dict over to c++ and use it directly
     result = action(params).Action()
@@ -100,16 +99,20 @@ class TyrHandler(BaseHTTPRequestHandler):
 
 #go off an wait for connections
 if __name__ == '__main__':
-  #check for a port
-  if sys.argv[1:]:
-    port = int(sys.argv[1])
-  else:
-    port = 8002
+  #check for a config file
+  conf = {}
+  try:
+    with open(sys.argv[1]) as f:
+      conf = json.load(f)
+    tyr_service.Configure(sys.argv[1])
+  except Exception as e:
+    sys.stderr.write('Problem with config file: {0}\n'.format(e)) 
+    sys.exit(1)
 
   #setup the server
-  server_address = ('0.0.0.0', port)
+  server = (conf.get('listen_address', '0.0.0.0'), conf.get('port', 8002))
   TyrHandler.protocol_version = 'HTTP/1.0'
-  httpd = ThreadedHTTPServer(server_address, TyrHandler)
+  httpd = ThreadedHTTPServer(server, TyrHandler)
 
   try:
     httpd.serve_forever()

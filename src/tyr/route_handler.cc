@@ -224,7 +224,7 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 namespace valhalla {
 namespace tyr {
 
-RouteHandler::RouteHandler(const boost::python::dict& dict_request) : Handler(dict_request) {
+RouteHandler::RouteHandler(const std::string& config, const boost::python::dict& dict_request) : Handler(config, dict_request) {
   //parse out the type of route
   if(!dict_request.has_key("costing_method"))
     throw std::runtime_error("No edge/node costing method provided");
@@ -238,8 +238,7 @@ RouteHandler::RouteHandler(const boost::python::dict& dict_request) : Handler(di
   cost_ = factory.Create(costing_method);
   //get the config for the graph reader
   boost::property_tree::ptree pt;
-  std::string config_file = boost::python::extract<std::string>(boost::python::str(dict_request["config"]));
-  boost::property_tree::read_json(config_file, pt);
+  boost::property_tree::read_json(config, pt);
   reader_.reset(new valhalla::baldr::GraphReader(pt));
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
