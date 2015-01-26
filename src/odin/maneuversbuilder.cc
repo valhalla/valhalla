@@ -47,15 +47,24 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
 
-#ifdef LOGGING_LEVEL_TRACE
-    auto* prevEdge = trip_path_->GetPrevEdge(i);
-    auto* currEdge = trip_path_->GetCurrEdge(i);
-    auto* nextEdge = trip_path_->GetNextEdge(i);
-    LOG_TRACE(std::to_string(i) + ":  ");
-    LOG_TRACE(std::string("  prevEdge=") + (prevEdge ? prevEdge->ToString() : "NONE"));
-    LOG_TRACE(std::string("  currEdge=") + (currEdge ? currEdge->ToString() : "NONE"));
-    LOG_TRACE(std::string("  nextEdge=") + (nextEdge ? nextEdge->ToString() : "NONE"));
+#ifdef LOGGING_LEVEL_INFO
+    auto* prev_edge = trip_path_->GetPrevEdge(i);
+    auto* curr_edge = trip_path_->GetCurrEdge(i);
+    auto* next_edge = trip_path_->GetNextEdge(i);
     LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(i) + ":  ");
+    LOG_TRACE(std::string("  prev_edge=") + (prev_edge ? prev_edge->ToString() : "NONE"));
+    LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
+    LOG_TRACE(std::string("  prev_curr_turn_degree=") + std::to_string(
+        GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
+    auto* node = trip_path_->GetEnhancedNode(i);
+    for (size_t y = 0; y < node->GetIntersectingEdgesCount(); ++y) {
+      auto* intersecting_edge = node->GetIntersectingEdge(y);
+      LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
+      LOG_TRACE(std::string("    prev_int_turn_degree=") + std::to_string(
+          GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
+    }
+    LOG_TRACE(std::string("  next_edge=") + (next_edge ? next_edge->ToString() : "NONE"));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -155,7 +164,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int nodeIndex) {
   if (maneuver.street_names().empty()) {
     auto* names = maneuver.mutable_street_names();
     for (const auto& name : prevEdge->name()) {
-      names->emplace_back(name);
+      names->push_back(name);
     }
   } else {
     // TODO
