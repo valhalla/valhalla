@@ -61,6 +61,13 @@ class DirectedEdge {
   uint32_t length() const;
 
   /**
+   * Gets the intersection internal flag.
+   * @return  Returns true if the edge is internal to an intersection. This
+   *          is derived from OSM and used for doubly digitized intersections.
+   */
+  bool internal() const;
+
+  /**
    * Get the access modes in the forward direction (bit field).
    */
   uint8_t forwardaccess() const;
@@ -234,7 +241,8 @@ class DirectedEdge {
   struct GeoAttributes {
     uint32_t length        : 24;  // Length in meters
     uint32_t elevation     : 4;   // Elevation factor
-    uint32_t spare         : 4;
+    uint32_t internal      : 1;   // Edge that is internal to an intersection
+    uint32_t spare         : 3;
   };
   GeoAttributes geoattributes_;
 
