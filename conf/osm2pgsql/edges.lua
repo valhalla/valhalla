@@ -39,15 +39,14 @@ road_class = {
 ["trunk_link"] = 1,
 ["primary"] = 2,
 ["primary_link"] = 2,
-["secondary"] = 2,
-["secondary_link"] = 2,
-["tertiary"] = 3, 
-["tertiary_link"] = 3, 
-["unclassified"] = 3, 
-["residential"] = 4, 
-["residential_link"] = 4, 
-["service"] = 5, 
-["track"] = 6
+["secondary"] = 3,
+["secondary_link"] = 3,
+["tertiary"] = 4, 
+["tertiary_link"] = 4, 
+["unclassified"] = 4, 
+["residential"] = 5, 
+["residential_link"] = 5, 
+["service"] = 6 
 }
 
 default_speed = {
@@ -306,7 +305,9 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] == "steps" then
-    use = 7 --steps/stairs
+    use = 8 --steps/stairs
+  elseif kv["highway"] == "track" then
+    use = 11 
   elseif kv["highway"] == nil then 
     use = 0
   elseif kv["highway"] then
@@ -322,7 +323,7 @@ function filter_tags_generic(kv)
        use = 2
     end
   elseif use == nil and kv["service"] then
-    use = 9 --other
+    use = 12 --other
   else 
     use = 0 --none
   end
