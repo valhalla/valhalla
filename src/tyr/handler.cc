@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace tyr {
 
-Handler::Handler(const boost::python::dict& dict_request) {
+Handler::Handler(const std::string& config, const boost::python::dict& dict_request):config_(config) {
   //we require locations
   if(!dict_request.has_key("loc"))
     throw std::runtime_error("required parameter `loc' was not provided");
