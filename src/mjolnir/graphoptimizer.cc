@@ -100,7 +100,6 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
         edge.shortcut() == directededge->shortcut() &&
         directededge->length() == edge.length()) {
       if (opp_index != absurd_index) {
-   //     LOG_WARN("More than 1 edge matches nodes and length");
         dupcount_++;
       }
       opp_index = i;
@@ -108,16 +107,26 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
   }
 
   if (opp_index == absurd_index) {
-    LOG_ERROR("Opposing edge not found");
-    LOG_WARN((boost::format("Opposing edge not found at LL=%1%,%2%")
-      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng()).str());
-    LOG_WARN((boost::format("Length = %1% Startnode %2% EndNode %3% sc %4%")
-      % edge.length() % startnode % edge.endnode() % edge.shortcut()).str());
-    directededge =  tile->directededge(nodeinfo->edge_index());
+    bool sc = edge.shortcut();
+    LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
+      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
+      % startnode % edge.endnode() % sc).str());
+
+    uint32_t n = 0;
+    directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      LOG_WARN((boost::format("Length = %1% Endnode: %2% sc %3%")
-        % directededge->length() % directededge->endnode()
-        % directededge->shortcut()).str());
+      if (sc == directededge->shortcut() && directededge->shortcut()) {
+        LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
+          % directededge->length() % directededge->endnode()).str());
+        n++;
+      }
+    }
+    if (n == 0) {
+      if (sc) {
+        LOG_WARN("   No Shortcut edges found from end node");
+      } else {
+        LOG_WARN("   No regular edges found from end node");
+      }
     }
     return 31;  // TODO - what value to return that will not impact routes?
   }

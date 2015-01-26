@@ -255,6 +255,8 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
       i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
+        directededge->importance() == edge->importance() &&
+        directededge->use() == edge->use() &&
         directededge->length() == edge->length()) {
       return edgeid;
     }
@@ -383,9 +385,6 @@ void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
-// REMOVE THIS LOGIC LATER TO "FIX" OPPOSING EDGES??
-if (newnode.contract)
-return;
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value()) : contractions_.end();
