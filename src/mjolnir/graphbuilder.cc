@@ -525,15 +525,16 @@ void GraphBuilder::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
 void GraphBuilder::ConstructEdges() {
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
-  uint64_t nodeid;
+  uint64_t startnodeid, nodeid;
   edges_.reserve(edge_count_);
-  for (uint32_t wayindex = 0; wayindex < static_cast<uint32_t>(ways_.size()); wayindex++) {
+  for (uint32_t wayindex = 0; wayindex < static_cast<uint32_t>(ways_.size());
+                wayindex++) {
     // Get some way attributes needed for the edge
     const auto& way = ways_[wayindex];
 
     // Start an edge at the first node of the way and add the
     // edge index to the node
-    nodeid = way.nodes()[0];
+    startnodeid = nodeid = way.nodes()[0];
     OSMNode& node = nodes_[nodeid];
     Edge edge(nodeid, wayindex, node.latlng(), way);
     node.AddEdge(edgeindex, way.link());
@@ -551,7 +552,12 @@ void GraphBuilder::ConstructEdges() {
       if (intersection_.IsUsed(nodeid)) {
         // End the current edge and add its edge index to the node
         edge.targetnode_ = nodeid;
-        nd.AddEdge(edgeindex, way.link());
+
+        // Add the edgeindex to the node (unless this is a loop with same
+        // start and end node Ids)
+        if (startnodeid != nodeid) {
+          nd.AddEdge(edgeindex, way.link());
+        }
 
         // Add the edge to the list of edges
         edges_.emplace_back(std::move(edge));
@@ -559,6 +565,7 @@ void GraphBuilder::ConstructEdges() {
 
         // Start a new edge if this is not the last node in the way
         if (i < way.node_count() - 1) {
+          startnodeid = nodeid;
           edge = Edge(nodeid, wayindex, nd.latlng(), way);
           nd.AddEdge(edgeindex, way.link());
         }
@@ -678,7 +685,8 @@ void GraphBuilder::ReclassifyLinks() {
             // Make sure this connects...
             if (bestendrc == kAbsurdRoadClass)  {
               LOG_WARN("Link edge may not connect: OSM WayID = " +
-                       std::to_string(ways_[startedge.wayindex_].way_id()));
+                       std::to_string(ways_[startedge.wayindex_].way_id()) +
+                       " n = " + std::to_string(n));
             } else {
               // Set to the lower of the 2 best road classes (start and end).
               // Apply this to each of the link edges
@@ -826,6 +834,52 @@ Use GetLinkUse(const RoadClass rc, const float length,
   return Use::kRamp;
 }
 
+struct DuplicateEdgeInfo {
+  uint32_t edgeindex;
+  uint32_t length;
+
+  DuplicateEdgeInfo() : edgeindex(0), length(0) { }
+  DuplicateEdgeInfo(const uint32_t idx, const uint32_t l)
+      : edgeindex(idx),
+        length(l) {
+  }
+};
+
+void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
+                        const std::vector<uint32_t>& edgelengths,
+                        const std::unordered_map<uint64_t, OSMNode>& nodes,
+                        const std::vector<Edge>& edges,
+                        const std::vector<OSMWay>& ways) {
+  uint32_t n = 0;
+  uint64_t endnode;
+  std::unordered_map<uint64_t, DuplicateEdgeInfo> endnodes;
+  for (auto edgeindex : node.edges()) {
+    const Edge& edge = edges[edgeindex];
+    if (edge.sourcenode_ == osmnodeid) {
+      endnode = nodes.find(edge.targetnode_)->second.graphid().value();
+    } else {
+      endnode = nodes.find(edge.sourcenode_)->second.graphid().value();
+    }
+
+    // Check if the end node is already in the set of edges from this node
+    const auto en = endnodes.find(endnode);
+    if (en != endnodes.end() && en->second.length == edgelengths[n]) {
+      uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
+      uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
+      LOG_WARN("Duplicate: wayids = " + std::to_string(wayid1) +
+           " and " + std::to_string(wayid2) + " EdgeIndexes: " +
+           std::to_string(en->second.edgeindex) + " and " + std::to_string(edgeindex) +
+           " OSM NodeID: " + std::to_string(osmnodeid));
+      duplicates++;
+    } else {
+      endnodes.emplace(endnode, DuplicateEdgeInfo(edgeindex, edgelengths[n]));
+    }
+
+    // Iterate to next edge length
+    n++;
+  }
+}
+
 void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
                   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
@@ -858,9 +912,19 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         // Track the best classification/importance or edge
         RoadClass bestrc = RoadClass::kOther;
 
-        std::unordered_map<uint64_t, uint32_t> endnodes;
+        // Compute edge lengths from the edge lat,lngs (round to nearest meter)
+        std::vector<uint32_t> edgelengths;
+        for (auto edgeindex : node.edges()) {
+          const Edge& edge = edges[edgeindex];
+          float length = node.latlng().Length(edge.latlngs_);
+          edgelengths.push_back(static_cast<uint32_t>(length + 0.5f));
+        }
+
+        // Look for potential duplicates
+        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges, ways);
 
         // Build directed edges
+        uint32_t n = 0;
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
         for (auto edgeindex : node.edges()) {
@@ -868,9 +932,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           DirectedEdgeBuilder& directededge = directededges.back();
           const Edge& edge = edges[edgeindex];
 
-          // Compute length from the latlngs and convert to nearest meters
-          float length = node.latlng().Length(edge.latlngs_);
-          directededge.set_length(static_cast<uint32_t>(length + 0.5f));
+          // Set length
+          directededge.set_length(edgelengths[n]);
 
           // Get the way information and set attributes
           const OSMWay &w = ways[edge.wayindex_];
@@ -905,8 +968,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
               LOG_WARN("Edge is a link but has use = " +
                        std::to_string(static_cast<int>(directededge.use())));
             }
-            directededge.set_use(GetLinkUse(directededge.importance(), length,
-                     edge.sourcenode_, edge.targetnode_, nodes));
+            directededge.set_use(GetLinkUse(directededge.importance(),
+                 edgelengths[n], edge.sourcenode_, edge.targetnode_, nodes));
 
             // TEMP - update ramp speeds based on class. Should have some way
             // of doing this with lua?
@@ -950,12 +1013,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_pedestrianaccess(false, true, w.pedestrian());
             directededge.set_bicycleaccess(false, true, w.bike_backward());
 
-            const auto en = endnodes.find(nodeb.value());
-            if (en != endnodes.end() && en->second == directededge.length()) {
-              duplicates++;
-            }
-            endnodes[nodeb.value()] = directededge.length();
-
             // Set end node to the target (end) node
             directededge.set_endnode(nodeb);
 
@@ -976,12 +1033,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
             directededge.set_caraccess(false, true, w.auto_forward());
             directededge.set_pedestrianaccess(false, true, w.pedestrian());
             directededge.set_bicycleaccess(false, true, w.bike_forward());
-
-            const auto en = endnodes.find(nodea.value());
-            if (en != endnodes.end() && en->second == directededge.length()) {
-              duplicates++;
-            }
-            endnodes[nodea.value()] = directededge.length();
 
             // Set end node to the source (start) node
             directededge.set_endnode(nodea);
@@ -1007,6 +1058,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           if (directededge.not_thru()) {
             not_thru_count++;
           }
+
+          // Iterate to next edge length
+          n++;
         }
 
         // Update the best classification used by directed edges
