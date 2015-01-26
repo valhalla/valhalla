@@ -35,23 +35,28 @@ RoadClass NodeInfo::bestrc() const {
 }
 
 // Get the hash_value
-const uint64_t NodeInfo::hash_value() {
+const uint64_t NodeInfo::internal_version() {
+
+  NodeInfo ni;
+
+  ni.latlng_.Set(0.0f, 0.0f);
+  ni.attributes_ = {};
 
   uint64_t seed = 0;
-  boost::hash_combine(seed, latlng_);
+  boost::hash_combine(seed, ni.latlng_);
 
   //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
-  attributes_.edge_index_ = ~attributes_.edge_index_;
-  boost::hash_combine(seed,ffs(attributes_.edge_index_+1)-1);
+  ni.attributes_.edge_index_ = ~ni.attributes_.edge_index_;
+  boost::hash_combine(seed,ffs(ni.attributes_.edge_index_+1)-1);
 
-  attributes_.edge_count_ = ~attributes_.edge_count_;
-  boost::hash_combine(seed, ffs(attributes_.edge_count_+1)-1);
+  ni.attributes_.edge_count_ = ~ni.attributes_.edge_count_;
+  boost::hash_combine(seed, ffs(ni.attributes_.edge_count_+1)-1);
 
-  attributes_.bestrc_ = ~attributes_.bestrc_;
-  boost::hash_combine(seed, ffs(attributes_.bestrc_+1)-1);
+  ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
+  boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
 
-  attributes_.spare_ = ~attributes_.spare_;
-  boost::hash_combine(seed, ffs(attributes_.spare_+1)-1);
+  ni.attributes_.spare_ = ~ni.attributes_.spare_;
+  boost::hash_combine(seed, ffs(ni.attributes_.spare_+1)-1);
 
   boost::hash_combine(seed,sizeof(NodeInfo));
 

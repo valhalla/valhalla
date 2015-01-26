@@ -87,10 +87,10 @@ class GraphId {
   GraphId Tile_Base() const;
 
   /**
-   * Get the hash value of GraphId attributes.
-   * @return   Returns hash value.
+   * Get the computed version of GraphId attributes.
+   * @return   Returns internal version.
    */
-  const uint64_t hash_value();
+  static const uint64_t internal_version();
 
   /**
    * Post increments the id.

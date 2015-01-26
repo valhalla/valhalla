@@ -58,10 +58,10 @@ class NodeInfo {
   RoadClass bestrc() const;
 
   /**
-   * Get the hash value of NodeInfo attributes.
-   * @return   Returns hash value.
+   * Get the computed version of NodeInfo attributes.
+   * @return   Returns internal version.
    */
-  const uint64_t hash_value();
+  static const uint64_t internal_version();
 
  protected:
   // Latitude, longitude position of the node.

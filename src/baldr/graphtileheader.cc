@@ -14,14 +14,24 @@ GraphTileHeader::GraphTileHeader()
       textlist_offset_(0),
       internal_version_(0) {
 
-  NodeInfo n;
-  DirectedEdge de;
-  GraphId id;
+  internal_version_ = NodeInfo::internal_version() + DirectedEdge::internal_version() + GraphId::internal_version();
 
-  internal_version_ = n.hash_value() + de.hash_value() + id.hash_value();
+  date_created_ = std::time(nullptr);
 
   version_ = PACKAGE_VERSION;
 
+}
+
+int64_t GraphTileHeader::internal_version() const {
+  return internal_version_;
+}
+
+std::time_t GraphTileHeader::date_created() const {
+  return date_created_;
+}
+
+std::string GraphTileHeader::version() const {
+  return version_;
 }
 
 size_t GraphTileHeader::nodecount() const {
@@ -38,14 +48,6 @@ size_t GraphTileHeader::edgeinfo_offset() const {
 
 size_t GraphTileHeader::textlist_offset() const {
   return textlist_offset_;
-}
-
-int64_t GraphTileHeader::internal_version() const {
-  return internal_version_;
-}
-
-std::string GraphTileHeader::version() const {
-  return version_;
 }
 
 }
