@@ -158,7 +158,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // (they occur first so just check the first directed edge).
     edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
     directededge = tile->directededge(nodeinfo->edge_index());
-    bool has_shortcuts = directededge->shortcut();
+    bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
       // Skip any superseded edges if edges include shortcuts. Also skip
@@ -167,6 +167,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
           !costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
         continue;
       }
+
+      // Set the has_shortcuts flag if a shortcut was taken
+      has_shortcuts |= directededge->shortcut();
 
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
