@@ -39,8 +39,9 @@ const uint64_t kMaxOSMNodeId = 4000000000;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
-uint32_t duplicates = 0;
+// Not thru count and Duplicate way Ids (TODO - put in a stats/issues class)
 uint32_t not_thru_count = 0;
+std::map<std::pair<uint64_t, uint64_t>, uint32_t> DuplicateWays;
 
 // Constructor to create table of OSM Node IDs being used
 NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
@@ -145,6 +146,17 @@ void GraphBuilder::Build() {
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 
+  // TODO - log statistics and issues
+
+  // Log the duplicates
+  uint32_t duplicates = 0;
+  LOG_WARN("Duplicate Way count = " + std::to_string(DuplicateWays.size()));
+  for (const auto& dup : DuplicateWays) {
+    LOG_WARN("Duplicate: wayids = " + std::to_string(dup.first.first) +
+        " and " + std::to_string(dup.first.second) + " Created " +
+        std::to_string(dup.second) + " duplicate edges");
+    duplicates += dup.second;
+  }
   LOG_INFO("Duplicate edgecount = " + std::to_string(duplicates));
   LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count));
 }
@@ -849,10 +861,11 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
                         const std::unordered_map<uint64_t, OSMNode>& nodes,
                         const std::vector<Edge>& edges,
                         const std::vector<OSMWay>& ways) {
-  uint32_t n = 0;
+  uint32_t edgeindex;
   uint64_t endnode;
   std::unordered_map<uint64_t, DuplicateEdgeInfo> endnodes;
-  for (auto edgeindex : node.edges()) {
+  for (size_t n = 0; n < node.edge_count(); n++) {
+    edgeindex = node.edges().at(n);
     const Edge& edge = edges[edgeindex];
     if (edge.sourcenode_ == osmnodeid) {
       endnode = nodes.find(edge.targetnode_)->second.graphid().value();
@@ -865,17 +878,16 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
     if (en != endnodes.end() && en->second.length == edgelengths[n]) {
       uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
       uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
-      LOG_WARN("Duplicate: wayids = " + std::to_string(wayid1) +
-           " and " + std::to_string(wayid2) + " EdgeIndexes: " +
-           std::to_string(en->second.edgeindex) + " and " + std::to_string(edgeindex) +
-           " OSM NodeID: " + std::to_string(osmnodeid));
-      duplicates++;
+      std::pair<uint64_t, uint64_t> wayids = std::make_pair(wayid1, wayid2);
+      auto it = DuplicateWays.find(wayids);
+      if (it == DuplicateWays.end()) {
+        DuplicateWays.emplace(wayids, 1);
+      } else {
+        it->second++;
+      }
     } else {
       endnodes.emplace(endnode, DuplicateEdgeInfo(edgeindex, edgelengths[n]));
     }
-
-    // Iterate to next edge length
-    n++;
   }
 }
 
@@ -914,8 +926,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         // Compute edge lengths from the edge lat,lngs (round to nearest meter)
         std::vector<uint32_t> edgelengths;
         for (auto edgeindex : node.edges()) {
-          const Edge& edge = edges[edgeindex];
-          float length = node.latlng().Length(edge.latlngs_);
+          float length = node.latlng().Length(edges[edgeindex].latlngs_);
           edgelengths.push_back(static_cast<uint32_t>(length + 0.5f));
         }
 
@@ -923,12 +934,13 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges, ways);
 
         // Build directed edges
-        uint32_t n = 0;
+        uint32_t edgeindex;
         std::vector<DirectedEdgeBuilder> directededges;
         directededgecount += node.edge_count();
-        for (auto edgeindex : node.edges()) {
+        for (size_t n = 0; n < node.edge_count(); n++) {
           directededges.emplace_back();
           DirectedEdgeBuilder& directededge = directededges.back();
+          edgeindex = node.edges().at(n);
           const Edge& edge = edges[edgeindex];
 
           // Set length
@@ -1054,12 +1066,10 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                nodea, nodeb, edge.latlngs_, w.GetNames(), added);
           directededge.set_edgedataoffset(edge_info_offset);
 
+          // TODO - add general statistics!
           if (directededge.not_thru()) {
             not_thru_count++;
           }
-
-          // Iterate to next edge length
-          n++;
         }
 
         // Update the best classification used by directed edges
