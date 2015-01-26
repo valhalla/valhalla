@@ -527,8 +527,7 @@ void GraphBuilder::ConstructEdges() {
   uint32_t edgeindex = 0;
   uint64_t startnodeid, nodeid;
   edges_.reserve(edge_count_);
-  for (uint32_t wayindex = 0; wayindex < static_cast<uint32_t>(ways_.size());
-                wayindex++) {
+  for (size_t wayindex = 0; wayindex < ways_.size(); wayindex++) {
     // Get some way attributes needed for the edge
     const auto& way = ways_[wayindex];
 
