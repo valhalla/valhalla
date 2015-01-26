@@ -260,6 +260,9 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
         case RoadClass::kPrimary:
           w.set_road_class(RoadClass::kPrimary);
           break;
+        case RoadClass::kSecondary:
+          w.set_road_class(RoadClass::kSecondary);
+          break;
         case RoadClass::kTertiaryUnclassified:
           w.set_road_class(RoadClass::kTertiaryUnclassified);
           break;
@@ -268,9 +271,6 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
           break;
         case RoadClass::kService:
           w.set_road_class(RoadClass::kService);
-          break;
-        case RoadClass::kTrack:
-          w.set_road_class(RoadClass::kTrack);
           break;
         default:
           w.set_road_class(RoadClass::kOther);
@@ -324,6 +324,9 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
           break;
         case Use::kSteps:
           w.set_use(Use::kSteps);
+          break;
+        case Use::kTrack:
+          w.set_use(Use::kTrack);
           break;
         case Use::kOther:
           w.set_use(Use::kOther);
@@ -476,13 +479,11 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       case RoadClass::kService:
         w.set_surface(Surface::kPavedSmooth);
         break;
-      case RoadClass::kTrack:
-        w.set_surface(Surface::kPath);
-        break;
       default:
         switch (w.use()) {
 
         case Use::kFootway:
+        case Use::kTrack:
           w.set_surface(Surface::kPath);
           break;
         case Use::kParkingAisle:
