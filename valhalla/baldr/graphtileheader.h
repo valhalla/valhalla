@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
 #include <cstdlib>
+#include <string>
 
 namespace valhalla{
 namespace baldr{
@@ -41,8 +42,19 @@ class GraphTileHeader {
    */
   size_t textlist_offset() const;
 
+  /**
+   * Gets the internal version
+   * @return  Returns the internal version of this tile.
+   */
+  int64_t internal_version() const;
+
+  /**
+   * Gets the version of this tile
+   * @return  Returns the  version of this tile.
+   */
+  std::string version() const;
+
  protected:
-  // TODO - need to add some sort of versioning / creation date?
 
   // Number of nodes
   size_t nodecount_;
@@ -55,6 +67,12 @@ class GraphTileHeader {
 
   // Offset to name list
   size_t textlist_offset_;
+
+  // internal version info
+  int64_t internal_version_;
+
+  //balr version.
+  std::string version_;
 };
 
 }
