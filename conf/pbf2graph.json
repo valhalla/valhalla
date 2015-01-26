@@ -17,7 +17,9 @@
     "way_function": "ways_proc"
   },
   "logging": {
-    "type": "std_out",
-    "color": true
+    "thor": {
+      "type": "std_out",
+      "color": true
+    }
   }
 }
