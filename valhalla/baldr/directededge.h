@@ -217,6 +217,12 @@ class DirectedEdge {
    */
   Use use() const;
 
+  /**
+   * Get the hash value of directededge attributes.
+   * @return   Returns hash value.
+   */
+  const uint64_t hash_value();
+
  protected:
   // End node
   GraphId endnode_;

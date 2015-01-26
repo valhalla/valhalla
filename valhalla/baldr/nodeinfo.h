@@ -57,6 +57,12 @@ class NodeInfo {
    */
   RoadClass bestrc() const;
 
+  /**
+   * Get the hash value of NodeInfo attributes.
+   * @return   Returns hash value.
+   */
+  const uint64_t hash_value();
+
  protected:
   // Latitude, longitude position of the node.
   PointLL latlng_;
@@ -72,6 +78,7 @@ class NodeInfo {
     uint32_t edge_count_   : 5; // Number of outbound edges
     uint32_t bestrc_       : 3; // Best directed edge road class
     uint32_t spare_        : 2; // Spare
+
   };
   NodeAttributes attributes_;
 };
