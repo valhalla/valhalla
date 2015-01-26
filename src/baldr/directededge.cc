@@ -34,6 +34,16 @@ uint32_t DirectedEdge::length() const {
   return geoattributes_.length;
 }
 
+/**
+  * Gets the intersection internal flag.
+  * @return  Returns true if the edge is internal to an intersection. This
+  *          is derived from OSM and used for doubly digitized intersections.
+  */
+bool DirectedEdge::internal() const {
+  return geoattributes_.internal;
+}
+
+
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
   return forwardaccess_.v;
