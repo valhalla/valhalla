@@ -116,10 +116,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
 
   // Do not allow Uturns or entering no-thru edges.
   // TODO - evaluate later!
-  // TODO - until the opp_index is set in the new hierarchies do not test
-  // for uturn!
-//  if (uturn || (edge->not_thru() && dist2dest > 5000.0))
-  if ((edge->not_thru() && dist2dest > 5000.0)) {
+  if (uturn || (edge->not_thru() && dist2dest > 5000.0)) {
     return false;
   }
   return (edge->forwardaccess() & kAutoAccess);
