@@ -241,10 +241,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
                              kMetersOffsetForHeading) + 180.0f), 360)));
   }
 
-  trip_edge->set_ramp(directededge->link());
-
+  // Set ramp / turn channel flag
   if (directededge->link()) {
-
     if (directededge->use() == Use::kRamp)
       trip_edge->set_ramp(true);
     else if (directededge->use() == Use::kTurnChannel)
