@@ -801,6 +801,7 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
 }
 
 bool IsIntersectionInternal(const uint64_t startnode,  const uint64_t endnode,
+                            const uint32_t edgeindex,
                             const std::unordered_map<uint64_t, OSMNode>& nodes,
                             const std::vector<Edge>& edges) {
   return false;
@@ -912,8 +913,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
   // For each tile in the task
   bool added = false;
-  bool not_thru, forward;
+  bool not_thru, forward, internal;
   uint32_t edgeindex;
+  int64_t source, target;
   for(; tile_start != tile_end; ++tile_start) {
     try {
      // What actually writes the tile
@@ -961,8 +963,12 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           // the 2 nodes). Check for edge error.
           if (edge.sourcenode_ == osmnodeid) {
             forward = true;
+            source = edge.sourcenode_;
+            target = edge.targetnode_;
           } else if (edge.targetnode_ == osmnodeid) {
             forward = false;
+            source = edge.targetnode_;
+            target = edge.sourcenode_;
           } else {
             // ERROR!!!
             LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
@@ -973,13 +979,14 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           if (edge.attributes_.fields.importance <=
               static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
             not_thru = false;
-          } else if (forward) {
-            not_thru = IsNoThroughEdge(edge.sourcenode_, edge.targetnode_,
-                                       edgeindex, nodes, edges);
           } else {
-            not_thru = IsNoThroughEdge(edge.targetnode_, edge.sourcenode_,
-                                       edgeindex, nodes, edges);
+            not_thru = IsNoThroughEdge(source, target, edgeindex,
+                             nodes, edges);
           }
+
+          // Test if an internal intersection edge
+          internal = IsIntersectionInternal(source, target, edgeindex,
+                             nodes, edges);
 
           // Set the end node
           const GraphId& endnode = (forward) ? nodeb : nodea;
@@ -1000,7 +1007,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(DirectedEdgeBuilder(w, endnode, forward,
-                  edgelengths[n], speed, use, not_thru, rc));
+                  edgelengths[n], speed, use, not_thru, internal, rc));
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class

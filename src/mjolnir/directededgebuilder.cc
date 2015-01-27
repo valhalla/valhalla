@@ -18,7 +18,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
-                   const bool not_thru, const RoadClass rc)
+                   const bool not_thru, const bool internal,
+                   const RoadClass rc)
      :  DirectedEdge() {
   set_endnode(endnode);
   set_length(length);
@@ -37,6 +38,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_link(way.link());
   set_importance(rc);
   set_not_thru(not_thru);
+  set_internal(internal);
 
   // Set forward flag and access (based on direction)
   set_forward(forward);

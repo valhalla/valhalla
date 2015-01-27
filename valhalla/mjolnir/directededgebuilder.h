@@ -30,12 +30,14 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  speed    Speed in kph.
    * @param  use      Use of the edge.
    * @param  not_thru Is the edge not_thru?
+   * @param  internal Is the edge an intersection internal edge?
    * @param  rc       Road class / importance
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
                       const float speed, const baldr::Use use,
-                      const bool not_thru, const baldr::RoadClass rc);
+                      const bool not_thru, const bool internal,
+                      const baldr::RoadClass rc);
 
   /**
    * Set the end node of this directed edge.
