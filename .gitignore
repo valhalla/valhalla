@@ -38,9 +38,9 @@ libvalhalla_loki.la
 # tests
 test-suite.log
 test-driver
-#test/search
 test/*.log
 test/*.trs
+test/tiles
 test/search
 
 # test coverage stuff
