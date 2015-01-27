@@ -33,6 +33,11 @@ void DirectedEdgeBuilder::set_length(const uint32_t length) {
   }
 }
 
+// Sets the intersection internal flag.
+void DirectedEdgeBuilder::set_internal(const bool internal) {
+  geoattributes_.internal = internal;
+}
+
 // Sets the car access of the edge in each direction.
 void DirectedEdgeBuilder::set_caraccess(const bool forward, const bool reverse, const bool car) {
   if ( forward )
