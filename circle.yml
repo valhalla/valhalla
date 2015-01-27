@@ -8,13 +8,12 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/midgard.git deps/midgard
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/baldr.git deps/baldr
+    - for dep in midgard baldr mjolnir; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep; done
 
 dependencies:
   override:
     - sudo apt-get remove --purge -y libboost*
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev lcov
+    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
     - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make install; cd ..; done
