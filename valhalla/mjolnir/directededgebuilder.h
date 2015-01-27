@@ -41,6 +41,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_length(const uint32_t length);
 
   /**
+   * Sets the intersection internal flag.
+   * @param  internal  true if the edge is internal to an intersection. This
+   *          is derived from OSM and used for doubly digitized intersections
+   */
+  void set_internal(const bool internal);
+
+  /**
    * Sets the car access of the edge in each direction.
    * @param  forward  Set the car access for the forward direction.
    * @param  reverse  Set the car access for the reverse direction.
