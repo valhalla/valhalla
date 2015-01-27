@@ -23,7 +23,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
-#include "mjolnir/dataquality.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -39,10 +38,6 @@ const uint64_t kMaxOSMNodeId = 4000000000;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
-
-// Data quality / statistics.
-// TODO - how to make this work in a threaded env.
-DataQuality Stats;
 
 // Constructor to create table of OSM Node IDs being used
 NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
@@ -75,7 +70,8 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
       speed_assignment_count_(0),
       tile_hierarchy_(pt),
       shape_(kMaxOSMNodeId),
-      intersection_(kMaxOSMNodeId) {
+      intersection_(kMaxOSMNodeId),
+      stats_(new DataQuality()){
 
   // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
@@ -148,7 +144,7 @@ void GraphBuilder::Build() {
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 
   // Log statistics and issues
-  Stats.Log();
+  stats_->Log();
 }
 
 // Initialize Lua tag transformations
@@ -686,7 +682,7 @@ void GraphBuilder::ReclassifyLinks() {
           if (expandset.empty()) {
             // Make sure this connects...
             if (bestendrc == kAbsurdRoadClass)  {
-              Stats.AddIssue(kUnconnectedLinkEdge, GraphId(),
+              stats_->AddIssue(kUnconnectedLinkEdge, GraphId(),
                              ways_[startedge.wayindex_].way_id(), 0);
             } else {
               // Set to the lower of the 2 best road classes (start and end).
@@ -856,7 +852,7 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
                         const std::vector<uint32_t>& edgelengths,
                         const std::unordered_map<uint64_t, OSMNode>& nodes,
                         const std::vector<Edge>& edges,
-                        const std::vector<OSMWay>& ways) {
+                        const std::vector<OSMWay>& ways, std::atomic<DataQuality*>& stats) {
   uint32_t edgeindex;
   uint64_t endnode;
   std::unordered_map<uint64_t, DuplicateEdgeInfo> endnodes;
@@ -874,7 +870,7 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
     if (en != endnodes.end() && en->second.length == edgelengths[n]) {
       uint64_t wayid1 = ways[edges[en->second.edgeindex].wayindex_].way_id();
       uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
-      Stats.AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
+      (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
     } else {
       endnodes.emplace(endnode, DuplicateEdgeInfo(edgeindex, edgelengths[n]));
     }
@@ -884,7 +880,7 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
 void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
                   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
                   const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
-                  const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy,
+                  const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy, std::atomic<DataQuality*>& stats,
                   std::promise<size_t>& result) {
 
   std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
@@ -922,7 +918,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         }
 
         // Look for potential duplicates
-        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges, ways);
+        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges, ways, stats);
 
         // Build directed edges
         uint32_t edgeindex;
@@ -967,7 +963,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_link(w.link());
           if (directededge.link()) {
             if (directededge.use() != Use::kNone) {
-              Stats.AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
+              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
             }
             directededge.set_use(GetLinkUse(directededge.importance(),
                  edgelengths[n], edge.sourcenode_, edge.targetnode_, nodes));
@@ -1059,7 +1055,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           directededge.set_edgedataoffset(edge_info_offset);
 
           // Add to general statistics
-          Stats.AddStats(tile_start->first, directededge);
+          (*stats).AddStats(tile_start->first, directededge);
         }
 
         // Update the best classification used by directed edges
@@ -1121,6 +1117,8 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   size_t floor = tilednodes_.size() / threads.size();
   size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
   std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
+  // Atomically pass around stats info
+  std::atomic<DataQuality*> atomic_stats(stats_.get());
   LOG_INFO(std::to_string(tilednodes_.size()) + " tiles");
   for (size_t i = 0; i < threads.size(); ++i) {
     // Figure out how many this thread will work on (either ceiling or floor)
@@ -1132,7 +1130,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
     // Make the thread
     threads[i].reset(
       new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_,
-                      edges_, tile_hierarchy_, std::ref(results[i]))
+                      edges_, tile_hierarchy_, std::ref(atomic_stats), std::ref(results[i]))
     );
   }
 
