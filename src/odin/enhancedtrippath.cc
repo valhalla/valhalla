@@ -114,8 +114,26 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | road_class=";
   str += std::to_string(road_class());
 
+  str += " | begin_heading=";
+  str += std::to_string(begin_heading());
+
+  str += " | end_heading=";
+  str += std::to_string(end_heading());
+
+  str += " | begin_shape_index=";
+  str += std::to_string(begin_shape_index());
+
+  str += " | end_shape_index=";
+  str += std::to_string(end_shape_index());
+
+  str += " | driveability=";
+  str += std::to_string(driveability());
+
   str += " | ramp=";
   str += std::to_string(ramp());
+
+  str += " | turn_channel=";
+  str += std::to_string(turn_channel());
 
   str += " | ferry=";
   str += std::to_string(ferry());
@@ -123,8 +141,26 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | rail_ferry=";
   str += std::to_string(rail_ferry());
 
+  str += " | toll=";
+  str += std::to_string(toll());
+
+  str += " | unpaved=";
+  str += std::to_string(unpaved());
+
+  str += " | tunnel=";
+  str += std::to_string(tunnel());
+
+  str += " | bridge=";
+  str += std::to_string(bridge());
+
   str += " | roundabout=";
   str += std::to_string(roundabout());
+
+  str += " | internal_link=";
+  str += std::to_string(internal_link());
+
+  str += " | end_node_index=";
+  str += std::to_string(end_node_index());
 
   return str;
 }

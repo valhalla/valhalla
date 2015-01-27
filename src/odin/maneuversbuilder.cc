@@ -64,6 +64,12 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       LOG_TRACE(std::string("    prev_int_turn_degree=") + std::to_string(
           GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
     }
+    uint32_t right_count;
+    uint32_t left_count;
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), right_count, left_count);
+    LOG_TRACE(std::string("    right_count=") + std::to_string(right_count));
+    LOG_TRACE(std::string("    left_count=") + std::to_string(left_count));
+
     LOG_TRACE(std::string("  next_edge=") + (next_edge ? next_edge->ToString() : "NONE"));
 #endif
 
