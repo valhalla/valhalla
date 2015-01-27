@@ -8,8 +8,8 @@
 
 using namespace valhalla::midgard;
 
-namespace valhalla{
-namespace mjolnir{
+namespace valhalla {
+namespace mjolnir {
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -28,6 +28,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  ll  Lat,lng position of the node.
    * @param  edge_index  the GraphId of the first outbound edge.
    * @param  edge_count  the number of outbound directed edges.
+   * @param  rc          Best road class / importance of outbound edges.
    */
   NodeInfoBuilder(const PointLL& ll, const uint32_t edge_index,
                   const uint32_t edge_count, const baldr::RoadClass rc);
@@ -52,7 +53,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
 
   /**
    * Sets the best road class of the outbound directed edges.
-   * @param  bestrc  Best road class (lowest value).
+   * @param  bestrc  Best road class / importance (lowest value).
    */
   void set_bestrc(const baldr::RoadClass bestrc);
 };
