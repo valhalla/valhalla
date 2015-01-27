@@ -837,6 +837,26 @@ Use GetLinkUse(const RoadClass rc, const float length,
   return Use::kRamp;
 }
 
+float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
+  if (use == Use::kTurnChannel) {
+    return spd * 1.25f;
+  } else if (use == Use::kRamp) {
+    if (rc == RoadClass::kMotorway) {
+      return 95.0f;
+    } else if (rc == RoadClass::kTrunk) {
+      return 80.0f;
+    } else if (rc == RoadClass::kPrimary) {
+      return 65.0f;
+    } else if (rc == RoadClass::kSecondary) {
+      return 50.0f;
+    } else if (rc == RoadClass::kTertiaryUnclassified) {
+      return 40.0f;
+    } else {
+      return 25.0f;
+    }
+  }
+}
+
 struct DuplicateEdgeInfo {
   uint32_t edgeindex;
   uint32_t length;
@@ -883,7 +903,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
                   const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy, std::atomic<DataQuality*>& stats,
                   std::promise<size_t>& result) {
 
-  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
+  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream()
+        << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
 
   // A place to keep information about what was done
@@ -891,6 +912,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
   // For each tile in the task
   bool added = false;
+  bool not_thru, forward;
+  uint32_t edgeindex;
   for(; tile_start != tile_end; ++tile_start) {
     try {
      // What actually writes the tile
@@ -900,15 +923,6 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       uint32_t directededgecount = 0;
       for (const auto& osmnodeid : tile_start->second) {
         const OSMNode& node = nodes.find(osmnodeid)->second; //TODO: check validity?
-        NodeInfoBuilder nodebuilder;
-        nodebuilder.set_latlng(node.latlng());
-
-        // Set the index of the first outbound edge within the tile.
-        nodebuilder.set_edge_index(directededgecount);
-        nodebuilder.set_edge_count(node.edge_count());
-
-        // Track the best classification/importance or edge
-        RoadClass bestrc = RoadClass::kOther;
 
         // Compute edge lengths from the edge lat,lngs (round to nearest meter)
         std::vector<uint32_t> edgelengths;
@@ -918,136 +932,79 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
         }
 
         // Look for potential duplicates
-        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges, ways, stats);
+        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges,
+                           ways, stats);
 
-        // Build directed edges
-        uint32_t edgeindex;
+        // Build directed edges. Track the best classification/importance
+        // of outbound edges from this node.
+        RoadClass bestclass = RoadClass::kOther;
         std::vector<DirectedEdgeBuilder> directededges;
-        directededgecount += node.edge_count();
         for (size_t n = 0; n < node.edge_count(); n++) {
-          directededges.emplace_back();
-          DirectedEdgeBuilder& directededge = directededges.back();
+          // Get the edge and way
           edgeindex = node.edges().at(n);
           const Edge& edge = edges[edgeindex];
-
-          // Set length
-          directededge.set_length(edgelengths[n]);
-
-          // Get the way information and set attributes
           const OSMWay &w = ways[edge.wayindex_];
 
-          // Set the importance (from the edge rather than the way since
-          // ReclassifyLinks may change the importance). Update the node's
-          // best road class
-          directededge.set_importance(
-              static_cast<RoadClass>(edge.attributes_.fields.importance));
-          if (directededge.importance() < bestrc) {
-            bestrc = directededge.importance();
-          }
-
-          directededge.set_use(w.use());
-          directededge.set_speed(w.speed());    // KPH
-          directededge.set_ferry(w.ferry());
-          directededge.set_railferry(w.rail());
-          directededge.set_toll(w.toll());
-          directededge.set_dest_only(w.destination_only());
-          directededge.set_surface(w.surface());
-          directededge.set_cyclelane(w.cyclelane());
-          directededge.set_tunnel(w.tunnel());
-          directededge.set_roundabout(w.roundabout());
-          directededge.set_bridge(w.bridge());
-          directededge.set_bikenetwork(w.bike_network());
-
-          // Link - this indicates a ramp or a turn channel. If link is set
-          // test to see if we can infer that the edge is a turn channel
-          directededge.set_link(w.link());
-          if (directededge.link()) {
-            if (directededge.use() != Use::kNone) {
-              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
-            }
-            directededge.set_use(GetLinkUse(directededge.importance(),
-                 edgelengths[n], edge.sourcenode_, edge.targetnode_, nodes));
-
-            // TEMP - update ramp speeds based on class. Should have some way
-            // of doing this with lua?
-            if (directededge.use() == Use::kTurnChannel) {
-              directededge.set_speed(w.speed() * 1.25f);
-            } else if (directededge.use() == Use::kRamp) {
-              if (directededge.importance() == RoadClass::kMotorway) {
-                directededge.set_speed(95.0f);
-              } else if (directededge.importance() == RoadClass::kTrunk) {
-                directededge.set_speed(80.0f);
-              } else if (directededge.importance() == RoadClass::kPrimary) {
-                directededge.set_speed(65.0f);
-              } else if (directededge.importance() == RoadClass::kSecondary) {
-                directededge.set_speed(50.0f);
-              } else if (directededge.importance() == RoadClass::kTertiaryUnclassified) {
-                directededge.set_speed(40.0f);
-              } else {
-                directededge.set_speed(25.0f);
-              }
-            }
-          }
-
-          // Assign nodes and determine orientation along the edge (forward
-          // or reverse between the 2 nodes)
+          // Assign nodes
           const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid();
           if (!nodea.Is_Valid()) {
-            LOG_ERROR("Node A: OSMID = " + std::to_string(edge.sourcenode_) +
-                      " GraphID is not valid");
+            throw std::runtime_error("NodeA: OSMID = " +
+                 std::to_string(edge.sourcenode_) + " GraphId is not valid");
           }
           const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid();
           if (!nodeb.Is_Valid()) {
-            LOG_ERROR("Node B: OSMID = " + std::to_string(edge.targetnode_) +
-                      " GraphID is not valid");
+            throw std::runtime_error("NodeB: OSMID = " +
+                 std::to_string(edge.targetnode_) + " GraphId is not valid");
           }
+
+          // Determine orientation along the edge (forward or reverse between
+          // the 2 nodes). Check for edge error.
           if (edge.sourcenode_ == osmnodeid) {
-            // Edge traversed in forward direction
-            directededge.set_forward(true);
-            directededge.set_caraccess(true, false, w.auto_forward());
-            directededge.set_pedestrianaccess(true, false, w.pedestrian());
-            directededge.set_bicycleaccess(true, false, w.bike_forward());
-
-            directededge.set_caraccess(false, true, w.auto_backward());
-            directededge.set_pedestrianaccess(false, true, w.pedestrian());
-            directededge.set_bicycleaccess(false, true, w.bike_backward());
-
-            // Set end node to the target (end) node
-            directededge.set_endnode(nodeb);
-
-            // Set the not_thru flag.
-            if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
-              directededge.set_not_thru(false);
-            } else {
-              directededge.set_not_thru(IsNoThroughEdge(edge.sourcenode_,
-                      edge.targetnode_, edgeindex, nodes, edges));
-            }
+            forward = true;
           } else if (edge.targetnode_ == osmnodeid) {
-            // Reverse direction.  Reverse the access logic and end node
-            directededge.set_forward(false);
-            directededge.set_caraccess(true, false, w.auto_backward());
-            directededge.set_pedestrianaccess(true, false, w.pedestrian());
-            directededge.set_bicycleaccess(true, false, w.bike_backward());
-
-            directededge.set_caraccess(false, true, w.auto_forward());
-            directededge.set_pedestrianaccess(false, true, w.pedestrian());
-            directededge.set_bicycleaccess(false, true, w.bike_forward());
-
-            // Set end node to the source (start) node
-            directededge.set_endnode(nodea);
-
-            // Set the not_thru flag
-            if (directededge.importance() <= RoadClass::kTertiaryUnclassified) {
-              directededge.set_not_thru(false);
-            } else {
-              directededge.set_not_thru(IsNoThroughEdge(edge.targetnode_,
-                       edge.sourcenode_, edgeindex, nodes, edges));
-            }
+            forward = false;
           } else {
             // ERROR!!!
             LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
               % w.way_id() % edgeindex %  edge.sourcenode_  % edge.targetnode_ % osmnodeid).str());
           }
+
+          // Check for not_thru edge (only on low importance edges)
+          if (edge.attributes_.fields.importance <=
+              static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
+            not_thru = false;
+          } else if (forward) {
+            not_thru = IsNoThroughEdge(edge.sourcenode_, edge.targetnode_,
+                                       edgeindex, nodes, edges);
+          } else {
+            not_thru = IsNoThroughEdge(edge.targetnode_, edge.sourcenode_,
+                                       edgeindex, nodes, edges);
+          }
+
+          // Set the end node
+          const GraphId& endnode = (forward) ? nodeb : nodea;
+
+          // If link is set test to see if we can infer that the edge
+          // is a turn channel. Update speed for link edges.
+          float speed = w.speed();
+          RoadClass rc = static_cast<RoadClass>(edge.attributes_.fields.importance);
+          Use use = w.use();
+          if (w.link()) {
+            if (use != Use::kNone) {
+              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
+            }
+            use   = GetLinkUse(rc, edgelengths[n], edge.sourcenode_,
+                                edge.targetnode_, nodes);
+            speed = UpdateLinkSpeed(use, rc, w.speed());
+          }
+
+          // Add a directed edge and get a reference to it
+          directededges.emplace_back(DirectedEdgeBuilder(w, endnode, forward,
+                  edgelengths[n], speed, use, not_thru, rc));
+          DirectedEdgeBuilder& directededge = directededges.back();
+
+          // Update the node's best class
+          bestclass = std::min(bestclass, directededge.importance());
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
@@ -1058,8 +1015,12 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           (*stats).AddStats(tile_start->first, directededge);
         }
 
-        // Update the best classification used by directed edges
-        nodebuilder.set_bestrc(bestrc);
+        // Set the node lat,lng, index of the first outbound edge, and the
+        // directed edge count from this edge and the best road class
+        // from the node. Increment directed edge count.
+        NodeInfoBuilder nodebuilder(node.latlng(), directededgecount,
+                                    node.edge_count(), bestclass);
+        directededgecount += node.edge_count();
 
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
@@ -1071,7 +1032,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       // Made a tile
       LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
       written += graphtile.size();
-    }// Whatever happens in Vagas..
+    }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
@@ -1079,7 +1040,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
       return;
     }
   }
-  // Let the main thread how this thread faired
+  // Let the main thread see how this thread faired
   result.set_value(written);
 }
 

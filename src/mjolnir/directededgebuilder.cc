@@ -44,7 +44,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_bicycleaccess(forward, way.bike_forward());
   set_pedestrianaccess(forward, way.pedestrian());
 
-  // Opposite dir
+  // Access for opposite direction
   set_caraccess(!forward, way.auto_backward());
   set_bicycleaccess(!forward, way.bike_backward());
   set_pedestrianaccess(!forward, way.pedestrian());
