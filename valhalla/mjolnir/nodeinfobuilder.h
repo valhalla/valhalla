@@ -24,6 +24,15 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   NodeInfoBuilder();
 
   /**
+   * Constructor with arguments
+   * @param  ll  Lat,lng position of the node.
+   * @param  edge_index  the GraphId of the first outbound edge.
+   * @param  edge_count  the number of outbound directed edges.
+   */
+  NodeInfoBuilder(const PointLL& ll, const uint32_t edge_index,
+                  const uint32_t edge_count, const baldr::RoadClass rc);
+
+  /**
    * Sets the latitude and longitude.
    * @param  ll  Lat,lng position of the node.
    */
