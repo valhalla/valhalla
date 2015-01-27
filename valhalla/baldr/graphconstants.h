@@ -24,6 +24,9 @@ const std::unordered_map<std::string, RoadClass> stringToRoadClass =
     {"Residential", RoadClass::kResidential}, {"Service", RoadClass::kService}, {"Other", RoadClass::kOther}
   };
 
+// Maximum length in meters of an internal intersection edge
+constexpr float kMaxInternalLength = 60.0f;
+
 // Maximum length in meters of a "link" that can be assigned use=kTurnChannel
 // (vs. kRamp)
 constexpr float kMaxTurnChannelLength = 150.0f;
