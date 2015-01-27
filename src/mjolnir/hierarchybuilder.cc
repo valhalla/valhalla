@@ -204,6 +204,7 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
   if (edge1->importance() != edge2->importance()
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
+      || edge1->internal() != edge2->internal()
       || edge1->speed() != edge2->speed()
       || edge1->ferry() != edge2->ferry()
       || edge1->railferry() != edge2->railferry()

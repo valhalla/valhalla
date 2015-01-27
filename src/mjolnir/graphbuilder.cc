@@ -800,11 +800,75 @@ bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
   return false;
 }
 
-bool IsIntersectionInternal(const uint64_t startnode,  const uint64_t endnode,
-                            const uint32_t edgeindex,
+/**
+ * Test if a pair of one-way edges exist at the node. One must be
+ * inbound and one must be outbound. The current edge is skipped.
+ */
+bool OnewayPairEdgesExist(const OSMNode& node,
+                          const uint32_t edgeindex,
+                          const uint64_t wayid,
+                          const std::vector<Edge>& edges,
+                          const std::vector<OSMWay>& ways) {
+  // Iterate through the edges from this node. Skip the one with
+  // the specified edgeindex
+  uint32_t idx;
+  bool inbound  = false;
+  bool outbound = false;
+  for (const auto idx : node.edges()) {
+    if (idx == edgeindex) {
+      continue;
+    }
+
+    // Get the edge and way
+    const Edge& edge = edges[idx];
+    const OSMWay &w = ways[edge.wayindex_];
+
+    // Skip if this has matching way Id
+    if (w.way_id() == wayid) {
+      return false;
+    }
+
+    // Check if this is oneway inbound
+    if (!w.auto_forward() && w.auto_backward()) {
+      inbound = true;
+    }
+
+    // Check if this is oneway outbound
+    if (w.auto_forward() && !w.auto_backward()) {
+      outbound = true;
+    }
+  }
+}
+
+bool IsIntersectionInternal(const uint64_t startnode, const uint64_t endnode,
+                            const uint32_t edgeindex, const uint64_t wayid,
+                            const float length,
                             const std::unordered_map<uint64_t, OSMNode>& nodes,
-                            const std::vector<Edge>& edges) {
-  return false;
+                            const std::vector<Edge>& edges,
+                            const std::vector<OSMWay>& ways) {
+  // Limit the length of intersection internal edges
+  if (length > kMaxInternalLength) {
+    return false;
+  }
+
+  // Both end nodes must connect to at least 3 edges
+  const auto& node1 = nodes.find(startnode)->second;
+  if (node1.edge_count() < 3) {
+    return false;
+  }
+  const auto& node2 = nodes.find(endnode)->second;
+  if (node2.edge_count() < 3) {
+    return false;
+  }
+
+  // Each node must have a pair of oneways (one inbound and one outbound)
+  if (!OnewayPairEdgesExist(node1, edgeindex, wayid, edges, ways) ||
+      !OnewayPairEdgesExist(node2, edgeindex, wayid, edges, ways)) {
+    return false;
+  }
+
+  // Assume this is an intersection internal edge
+  return true;
 }
 
 /**
@@ -986,7 +1050,7 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Test if an internal intersection edge
           internal = IsIntersectionInternal(source, target, edgeindex,
-                             nodes, edges);
+                  w.way_id(), edgelengths[n], nodes, edges, ways);
 
           // Set the end node
           const GraphId& endnode = (forward) ? nodeb : nodea;
