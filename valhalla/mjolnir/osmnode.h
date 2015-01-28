@@ -100,6 +100,15 @@ class OSMNode {
    */
   bool ref() const;
 
+  /**
+   * Set the name flag
+   */
+  void set_name(const bool name);
+
+  /**
+   * Get the name flag
+   */
+  bool name() const;
 
   /**
    * Set gate flag.
@@ -160,10 +169,11 @@ class OSMNode {
       uint16_t bollard       : 1;
       uint16_t exit_to       : 1;
       uint16_t ref           : 1;
+      uint16_t name          : 1;
       uint16_t modes_mask    : 8;
       uint16_t non_link_edge : 1;
       uint16_t link_edge     : 1;
-      uint16_t spare         : 2;
+      uint16_t spare         : 1;
     } fields;
     uint16_t v;
   };
