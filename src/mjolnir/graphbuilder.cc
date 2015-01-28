@@ -68,7 +68,7 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
     : node_count_(0),
       edge_count_(0),
       speed_assignment_count_(0),
-      tile_hierarchy_(pt),
+      tile_hierarchy_(pt.get_child("hierarchy")),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId),
       stats_(new DataQuality()){
