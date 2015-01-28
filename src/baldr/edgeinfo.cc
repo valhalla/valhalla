@@ -50,6 +50,13 @@ const uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
     throw std::runtime_error("StreetNameOffset index was out of bounds");
 }
 
+const ExitSign* EdgeInfo::GetExitSign(uint8_t index) const {
+  if(index < item_->fields.exit_sign_count)
+    return (exit_signs_ + index);
+  else
+    throw std::runtime_error("ExitSign index was out of bounds");
+}
+
 const std::vector<PointLL>& EdgeInfo::shape() const {
   //if we haven't yet decoded the shape, do so
   if(encoded_shape_ != nullptr) {

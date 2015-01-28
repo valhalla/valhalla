@@ -7,6 +7,7 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/exitsigninfo.h>
 
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -124,6 +125,23 @@ class GraphTile {
    * @return   Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const std::unique_ptr<const EdgeInfo>& edge);
+
+  /**
+   * Convenience method to get the exit signs for an edge given the offset to the
+   * edge information.
+   * @param  edgeinfo_offset  Offset to the edge info.
+   * @return  Returns a list (vector) of exit signs.
+   */
+  std::vector<ExitSignInfo> GetExitSigns(const uint32_t edgeinfo_offset);
+
+  /**
+   * Convenience method to get the exit signs for an edge given an edgeinfo
+   * shared pointer.
+   * @param  edge  Shared pointer to the edge information.
+   * @return   Returns a list (vector) of exit signs.
+   */
+  std::vector<ExitSignInfo> GetExitSigns(
+      const std::unique_ptr<const EdgeInfo>& edge);
 
  protected:
   // Size of the tile in bytes

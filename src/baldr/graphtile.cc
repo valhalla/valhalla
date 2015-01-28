@@ -228,5 +228,28 @@ std::vector<std::string> GraphTile::GetNames(const std::unique_ptr<const EdgeInf
   return names;
 }
 
+// Convenience method to get the exit signs for an edge given the offset to the
+// edge info
+std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t edgeinfo_offset) {
+  return GetExitSigns(edgeinfo(edgeinfo_offset));
+}
+
+// Convenience method to get the exit signs for an edge given an edgeinfo shared
+// pointer.
+std::vector<ExitSignInfo> GraphTile::GetExitSigns(const std::unique_ptr<const EdgeInfo>& edge) {
+  // Get each exit sign
+  std::vector<ExitSignInfo> exit_list;
+  for (uint32_t i = 0; i < edge->exit_sign_count(); i++) {
+    const ExitSign* exit_sign = edge->GetExitSign(i);
+    if (exit_sign->text_offset() < textlist_size_) {
+      exit_list.emplace_back(
+          exit_sign->type(), (textlist_ + exit_sign->text_offset()));
+    } else {
+      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+    }
+  }
+  return exit_list;
+}
+
 }
 }

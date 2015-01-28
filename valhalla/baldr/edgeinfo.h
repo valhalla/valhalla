@@ -50,6 +50,9 @@ class EdgeInfo {
   // Returns the name index at the specified index.
   const uint32_t GetStreetNameOffset(uint8_t index) const;
 
+  // Returns an exit sign pointer at the specified index.
+  const ExitSign* GetExitSign(uint8_t index) const;
+
   /**
    * Get the shape of the edge.
    * @return  Returns the the list of lat,lng points describing the
