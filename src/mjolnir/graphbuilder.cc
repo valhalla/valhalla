@@ -173,8 +173,9 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   if (results.size() == 0)
     return;
 
-  bool is_highway_junction =
-      (results.find("highway")->second == "motorway_junction");
+  const auto& highway_junction = results.find("highway");
+  bool is_highway_junction = ((highway_junction != results.end())
+      && (highway_junction->second == "motorway_junction"));
 
   // Create a new node and set its attributes
   OSMNode n(lng, lat);
