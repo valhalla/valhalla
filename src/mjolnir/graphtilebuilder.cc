@@ -134,6 +134,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
              const GraphId& nodea, const baldr::GraphId& nodeb,
              const std::vector<PointLL>& lls,
              const std::vector<std::string>& names,
+             const std::vector<ExitSignInfo>& exit_sign_infos,
              bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);

@@ -19,6 +19,7 @@
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/baldr/exitsigninfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
 namespace valhalla {
@@ -81,6 +82,7 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const baldr::GraphId& nodeb,
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
+                       const std::vector<ExitSignInfo>& exit_sign_infos,
                        bool& added);
 
   /**
