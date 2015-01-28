@@ -18,6 +18,24 @@ enum DataIssueType {
   kIncompatibleLinkUse = 2    // Link (ramp) that has incompatible use (e.g. driveway)
 };
 
+// Simple struct for holding duplicate ways to allow sorting by edgecount
+struct DuplicateWay {
+  uint64_t wayid1;
+  uint64_t wayid2;
+  uint32_t edgecount;
+
+  DuplicateWay(const uint64_t id1, const uint64_t id2, const uint32_t n)
+      : wayid1(id1),
+        wayid2(id2),
+        edgecount(n) {
+  }
+
+  // For sorting by number of duplicate edges
+  bool operator < (const DuplicateWay& other) const {
+      return edgecount > other.edgecount;
+  }
+};
+
 /**
  * Class used to generate statistics and gather data quality issues.
  * Also forms per tile data quality metrics.
