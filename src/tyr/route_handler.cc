@@ -239,7 +239,7 @@ RouteHandler::RouteHandler(const std::string& config, const boost::python::dict&
   //get the config for the graph reader
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config, pt);
-  reader_.reset(new valhalla::baldr::GraphReader(pt));
+  reader_.reset(new valhalla::baldr::GraphReader(pt.get_child("mjolnir.hierarchy")));
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
