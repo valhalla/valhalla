@@ -13,6 +13,45 @@ DirectedEdgeBuilder::DirectedEdgeBuilder()
   : DirectedEdge() {
 }
 
+// Constructor with parameters
+DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
+                   const GraphId& endnode,
+                   const bool forward, const uint32_t length,
+                   const float speed, const baldr::Use use,
+                   const bool not_thru, const bool internal,
+                   const RoadClass rc)
+     :  DirectedEdge() {
+  set_endnode(endnode);
+  set_length(length);
+  set_use(use);
+  set_speed(speed);    // KPH
+  set_ferry(way.ferry());
+  set_railferry(way.rail());
+  set_toll(way.toll());
+  set_dest_only(way.destination_only());
+  set_surface(way.surface());
+  set_cyclelane(way.cyclelane());
+  set_tunnel(way.tunnel());
+  set_roundabout(way.roundabout());
+  set_bridge(way.bridge());
+  set_bikenetwork(way.bike_network());
+  set_link(way.link());
+  set_importance(rc);
+  set_not_thru(not_thru);
+  set_internal(internal);
+
+  // Set forward flag and access (based on direction)
+  set_forward(forward);
+  set_caraccess(forward, way.auto_forward());
+  set_bicycleaccess(forward, way.bike_forward());
+  set_pedestrianaccess(forward, way.pedestrian());
+
+  // Access for opposite direction
+  set_caraccess(!forward, way.auto_backward());
+  set_bicycleaccess(!forward, way.bike_backward());
+  set_pedestrianaccess(!forward, way.pedestrian());
+}
+
 // Sets the end node of this directed edge.
 void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
   endnode_ = endnode;
@@ -39,66 +78,66 @@ void DirectedEdgeBuilder::set_internal(const bool internal) {
 }
 
 // Sets the car access of the edge in each direction.
-void DirectedEdgeBuilder::set_caraccess(const bool forward, const bool reverse, const bool car) {
-  if ( forward )
+void DirectedEdgeBuilder::set_caraccess(const bool forward, const bool car) {
+  if (forward) {
     forwardaccess_.fields.car = car;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.car = car;
+  }
 }
 
 // Sets the taxi access of the edge in each direction.
-void DirectedEdgeBuilder::set_taxiaccess(const bool forward, const bool reverse, const bool taxi) {
-  if ( forward )
+void DirectedEdgeBuilder::set_taxiaccess(const bool forward, const bool taxi) {
+  if (forward) {
     forwardaccess_.fields.taxi = taxi;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.taxi = taxi;
+  }
 }
 
 // Sets the truck access of the edge in each direction.
-void DirectedEdgeBuilder::set_truckaccess(const bool forward, const bool reverse, const bool truck) {
-  if ( forward )
+void DirectedEdgeBuilder::set_truckaccess(const bool forward, const bool truck) {
+  if (forward) {
     forwardaccess_.fields.truck = truck;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.truck = truck;
+  }
 }
 
 // Sets the pedestrian access of the edge in each direction.
-void DirectedEdgeBuilder::set_pedestrianaccess(const bool forward, const bool reverse, const bool pedestrian) {
-  if ( forward )
+void DirectedEdgeBuilder::set_pedestrianaccess(const bool forward, const bool pedestrian) {
+  if (forward) {
     forwardaccess_.fields.pedestrian = pedestrian;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.pedestrian = pedestrian;
+  }
 }
 
 // Sets the bicycle access of the edge in each direction.
-void DirectedEdgeBuilder::set_bicycleaccess(const bool forward, const bool reverse, const bool bicycle) {
-  if ( forward )
+void DirectedEdgeBuilder::set_bicycleaccess(const bool forward, const bool bicycle) {
+  if (forward) {
     forwardaccess_.fields.bicycle = bicycle;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.bicycle = bicycle;
+  }
 }
 
 // Sets the emergency access of the edge in each direction.
-void DirectedEdgeBuilder::set_emergencyaccess(const bool forward, const bool reverse, const bool emergency) {
-  if ( forward )
+void DirectedEdgeBuilder::set_emergencyaccess(const bool forward, const bool emergency) {
+  if (forward) {
     forwardaccess_.fields.emergency = emergency;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.emergency = emergency;
+  }
 }
 
 // Sets the horse access of the edge in each direction.
-void DirectedEdgeBuilder::set_horseaccess(const bool forward, const bool reverse, const bool horse) {
-  if ( forward )
+void DirectedEdgeBuilder::set_horseaccess(const bool forward, const bool horse) {
+  if (forward) {
     forwardaccess_.fields.horse = horse;
-
-  if ( reverse )
+  } else {
     reverseaccess_.fields.horse = horse;
+  }
 }
 
 //Sets the ferry flag.

@@ -8,7 +8,8 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : not_thru_count_(0) {
+    : not_thru_count_(0),
+      internal_count_(0) {
 }
 
 // Add statistics
@@ -16,6 +17,9 @@ void DataQuality::AddStats(const GraphId& tileid,
                            const DirectedEdge& directededge) {
   if (directededge.not_thru()) {
     not_thru_count_++;
+  }
+  if (directededge.internal()) {
+    internal_count_++;
   }
 }
 
@@ -40,6 +44,7 @@ void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid
 // Logs statistics and issues
 void DataQuality::Log() {
   LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count_));
+  LOG_INFO("Internal edgecount = " + std::to_string(internal_count_));
 
   // Log the duplicate ways
   uint32_t duplicates = 0;

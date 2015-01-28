@@ -47,6 +47,7 @@ class DataQuality {
 
 protected:
   uint32_t not_thru_count_;
+  uint32_t internal_count_;
 
   // Unconnected links
   std::unordered_set<uint64_t> unconnectedlinks_;
