@@ -342,6 +342,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
                              nodea, nodeb, edgeinfo->shape(),
                              tile->GetNames(directededge->edgedataoffset()),
+                             tile->GetExitSigns(directededge->edgedataoffset()),
                              added);
           newedge.set_edgedataoffset(edge_info_offset);
 
@@ -442,6 +443,8 @@ return;
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(
           directededge->edgedataoffset());
+      std::vector<ExitSignInfo> exits = tile->GetExitSigns(
+          directededge->edgedataoffset());
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -478,7 +481,8 @@ return;
       // reverse (in case an existing edge exists)
       bool added = true;
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
-                                   shape, names, added);
+                                                          shape, names, exits,
+                                                          added);
       newedge.set_edgedataoffset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
