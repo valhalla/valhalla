@@ -9,6 +9,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/exitsigninfo.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 
@@ -66,7 +67,7 @@ boost::property_tree::ptree make_tile() {
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(PointLL().Length({{.01, .2}, {.2, .1}}));
     edge_builder.set_endnode(d);
-    uint32_t edge_info_offset = tile.AddEdgeInfo(0, b, d, {{.01, .2}, {.2, .1}}, {"0"}, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(0, b, d, {{.01, .2}, {.2, .1}}, {"0"}, {}, add);
     edge_builder.set_edgedataoffset(edge_info_offset);
     //add
     tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
@@ -85,7 +86,7 @@ boost::property_tree::ptree make_tile() {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .01}}));
       edge_builder.set_endnode(c);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, c, {{.01, .1}, {.01, .01}}, {"1"}, add);
+      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, c, {{.01, .1}, {.01, .01}}, {"1"}, {}, add);
       edge_builder.set_edgedataoffset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
@@ -94,7 +95,7 @@ boost::property_tree::ptree make_tile() {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .2}}));
       edge_builder.set_endnode(b);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, b, {{.01, .1}, {.01, .2}}, {"2"}, add);
+      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, b, {{.01, .1}, {.01, .2}}, {"2"}, {}, add);
       edge_builder.set_edgedataoffset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
@@ -103,7 +104,7 @@ boost::property_tree::ptree make_tile() {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.2, .1}}));
       edge_builder.set_endnode(d);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, d, {{.01, .1}, {.2, .1}}, {"3"}, add);
+      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, d, {{.01, .1}, {.2, .1}}, {"3"}, {}, add);
       edge_builder.set_edgedataoffset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
@@ -122,7 +123,7 @@ boost::property_tree::ptree make_tile() {
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(PointLL().Length({{.01, .01}, {.2, .1}}));
     edge_builder.set_endnode(d);
-    uint32_t edge_info_offset = tile.AddEdgeInfo(0, c, d, {{.01, .01}, {.2, .1}}, {"4"}, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(0, c, d, {{.01, .01}, {.2, .1}}, {"4"}, {}, add);
     edge_builder.set_edgedataoffset(edge_info_offset);
     //add
     tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
