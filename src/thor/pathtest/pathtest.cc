@@ -158,13 +158,13 @@ int main(int argc, char *argv[]) {
   boost::property_tree::read_json(config.c_str(), pt);
 
   //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("logging.thor");
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("thor.logging");
   if(logging_subtree) {
     auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  valhalla::baldr::GraphReader reader(pt);
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
   // Use Loki to get location information
   std::clock_t start = std::clock();
