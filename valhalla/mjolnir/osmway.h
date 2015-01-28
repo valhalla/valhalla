@@ -505,7 +505,7 @@ class OSMWay {
   std::string alt_name_;
   std::string official_name_;
 
-  // Destination information
+  // Sign Destination information
   std::string destination_;
   std::string destination_ref_;
   std::string destination_ref_to_;
