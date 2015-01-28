@@ -8,10 +8,7 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/midgard.git deps/midgard
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/baldr.git deps/baldr
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/loki.git deps/loki
-    - git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/odin.git deps/odin
+    - for dep in midgard baldr mjolnir loki odin; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep; done
 
 dependencies:
   override:
