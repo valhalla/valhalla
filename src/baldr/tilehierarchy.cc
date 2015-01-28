@@ -22,10 +22,10 @@ TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string
 
 TileHierarchy::TileHierarchy(const boost::property_tree::ptree& pt) {
   //grab out other config information
-  tile_dir_ = pt.get<std::string>("output.tile_dir");
+  tile_dir_ = pt.get<std::string>("tile_dir");
 
   //grab out each tile level
-  for(const auto& tile_level : pt.get_child("output.levels")) {
+  for(const auto& tile_level : pt.get_child("levels")) {
     TileLevel tl(tile_level.second);
     auto success = levels_.emplace(tl.level, tl);
     if(!success.second)
