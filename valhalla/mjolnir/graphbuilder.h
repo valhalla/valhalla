@@ -9,6 +9,7 @@
 #include <set>
 #include <utility>
 #include <algorithm>
+#include <memory>
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/midgard/pointll.h>
@@ -16,6 +17,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/dataquality.h>
 
 #include <valhalla/mjolnir/luatagtransform.h>
 
@@ -262,6 +264,9 @@ class GraphBuilder {
   // A place to keep each tile's nodes so that various threads can
   // write various tiles asynchronously
   std::unordered_map<GraphId, std::vector<uint64_t> > tilednodes_;
+
+  // Data quality / statistics.
+  std::unique_ptr<DataQuality> stats_;
 };
 
 }

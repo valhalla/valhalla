@@ -4,6 +4,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmway.h>
 
 using namespace valhalla::baldr;
 
@@ -20,6 +21,23 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Constructor
    */
   DirectedEdgeBuilder();
+
+  /**
+   * Constructor with arguments.
+   * @param  way      OSM way info generated from parsing OSM tags with Lua.
+   * @param  endnode  GraphId of the end node of this directed edge.
+   * @param  length   Length in meters.
+   * @param  speed    Speed in kph.
+   * @param  use      Use of the edge.
+   * @param  not_thru Is the edge not_thru?
+   * @param  internal Is the edge an intersection internal edge?
+   * @param  rc       Road class / importance
+   */
+  DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
+                      const bool forward, const uint32_t length,
+                      const float speed, const baldr::Use use,
+                      const bool not_thru, const bool internal,
+                      const baldr::RoadClass rc);
 
   /**
    * Set the end node of this directed edge.
@@ -41,60 +59,67 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_length(const uint32_t length);
 
   /**
+   * Sets the intersection internal flag.
+   * @param  internal  true if the edge is internal to an intersection. This
+   *          is derived from OSM and used for doubly digitized intersections
+   */
+  void set_internal(const bool internal);
+
+  /**
    * Sets the car access of the edge in each direction.
-   * @param  forward  Set the car access for the forward direction.
-   * @param  reverse  Set the car access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  car      Is car access allowed?
    */
-  void set_caraccess(const bool forward, const bool reverse, const bool car);
+  void set_caraccess(const bool forward, const bool car);
 
   /**
    * Sets the taxi access of the edge in each direction.
-   * @param  forward  Set the taxi access for the forward direction.
-   * @param  reverse  Set the taxi access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  taxi     Is taxi access allowed?
    */
-  void set_taxiaccess(const bool forward, const bool reverse, const bool taxi);
+  void set_taxiaccess(const bool forward, const bool taxi);
 
   /**
    * Sets the truck access of the edge in each direction.
-   * @param  forward  Set the truck access for the forward direction.
-   * @param  reverse  Set the truck access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  truck    Is truck access allowed?
    */
-  void set_truckaccess(const bool forward, const bool reverse, const bool truck);
+  void set_truckaccess(const bool forward, const bool truck);
 
   /**
    * Sets the pedestrian access of the edge in each direction.
-   * @param  forward     Set the pedestrian access for the forward direction.
-   * @param  reverse     Set the pedestrian access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  pedestrian  Is pedestrian access allowed?
    */
-  void set_pedestrianaccess(const bool forward, const bool reverse, const bool pedestrian);
+  void set_pedestrianaccess(const bool forward, const bool pedestrian);
 
   /**
    * Sets the bicycle access of the edge in each direction.
-   * @param  forward  Set the bicycle access for the forward direction.
-   * @param  reverse  Set the bicycle access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  bicycle  Is bicycle access allowed?
    */
-  void set_bicycleaccess(const bool forward, const bool reverse, const bool bicycle);
+  void set_bicycleaccess(const bool forward, const bool bicycle);
 
   /**
    * Sets the emergency access of the edge in each direction.
-   * @param  forward    Set the emergency access for the forward direction.
-   * @param  reverse    Set the emergency access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  emergency  Is emergency access allowed?
    */
-  void set_emergencyaccess(const bool forward, const bool reverse, const bool emergency);
+  void set_emergencyaccess(const bool forward, const bool emergency);
 
   /**
    * Sets the horse access of the edge in each direction.
-   * @param  forward  Set the horse access for the forward direction.
-   * @param  reverse  Set the horse access for the reverse direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
    * @param  horse    Is horse access allowed?
    */
-  void set_horseaccess(const bool forward, const bool reverse, const bool horse);
+  void set_horseaccess(const bool forward, const bool horse);
 
   /**
    * Sets the ferry flag.

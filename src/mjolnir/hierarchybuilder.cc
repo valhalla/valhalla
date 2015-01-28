@@ -98,7 +98,7 @@ void HierarchyBuilder::GetNodesInNewLevel(
                         tilednodes_[newtileid].size());
         bool contract = CanContract(tile, nodeinfo, basenode, newnode,
                         new_level.importance);
-        tilednodes_[newtileid].emplace_back(NewNode(basenode, contract));
+        tilednodes_[newtileid].emplace_back(basenode, contract);
         nodemap_[basenode.value()] = newnode;
       }
     }
@@ -204,6 +204,7 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
   if (edge1->importance() != edge2->importance()
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
+      || edge1->internal() != edge2->internal()
       || edge1->speed() != edge2->speed()
       || edge1->ferry() != edge2->ferry()
       || edge1->railferry() != edge2->railferry()
@@ -255,6 +256,8 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
       i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
+        directededge->importance() == edge->importance() &&
+        directededge->use() == edge->use() &&
         directededge->length() == edge->length()) {
       return edgeid;
     }
@@ -372,7 +375,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
     }
 
     // Store the new tile
-    tilebuilder.StoreTileData(tile_hierarchy_, GraphId(tileid, level, 0));
+    GraphId basetile(tileid, level, 0);
+    tilebuilder.StoreTileData(tile_hierarchy_, basetile);
+
+    LOG_INFO((boost::format("HierarchBuilder created tile %1%: %2% bytes") %
+         basetile % tilebuilder.size()).str());
 
     // Increment tileid
     tileid++;
@@ -384,9 +391,6 @@ void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
-// REMOVE THIS LOGIC LATER TO "FIX" OPPOSING EDGES??
-if (newnode.contract)
-return;
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value()) : contractions_.end();
@@ -565,7 +569,7 @@ void HierarchyBuilder::ConnectBaseLevelToNewLevel(
       for (const auto& newnode : newtile) {
         // Add to the map of connections
         connections[newnode.basenode.tileid()].emplace_back(
-            NodeConnection(newnode.basenode, GraphId(tileid, level, id)));
+              newnode.basenode, GraphId(tileid, level, id));
         id++;
       }
 
@@ -588,8 +592,8 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
     const uint32_t basetileid, const std::vector<NodeConnection>& connections) {
   // Read in existing tile
   uint8_t baselevel = connections[0].basenode.level();
-  GraphTileBuilder tilebuilder(tile_hierarchy_,
-                               GraphId(basetileid, baselevel, 0));
+  GraphId basetile(basetileid, baselevel, 0);
+  GraphTileBuilder tilebuilder(tile_hierarchy_, basetile);
 
   // Get the header information and update counts and offsets. No new nodes
   // are added. Directed edge count is increased by size of the connection
@@ -648,6 +652,9 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
 
   // Write the new file
   tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
+
+  LOG_INFO((boost::format("HierarchBuilder updated tile %1%: %2% bytes") %
+      basetile % tilebuilder.size()).str());
 }
 
 }

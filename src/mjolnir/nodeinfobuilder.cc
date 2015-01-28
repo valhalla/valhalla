@@ -9,6 +9,15 @@ NodeInfoBuilder::NodeInfoBuilder()
     : NodeInfo() {
 }
 
+NodeInfoBuilder::NodeInfoBuilder(const PointLL& ll, const uint32_t edge_index,
+                const uint32_t edge_count, const RoadClass rc) {
+  set_latlng(ll);
+  set_edge_index(edge_index);
+  set_edge_count(edge_count);
+  set_bestrc(rc);
+}
+
+
 // Sets the latitude and longitude.
 void NodeInfoBuilder::set_latlng(const PointLL& ll) {
   latlng_ = ll;

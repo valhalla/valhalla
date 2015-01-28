@@ -108,16 +108,16 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("logging.mjolnir");
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("mjolnir.logging");
   if(logging_subtree) {
     auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
   //we only support protobuf at present
-  std::string input_type = pt.get<std::string>("input.type");
+  std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt, input_files);
+    BuildLocalGraphFromPBF(pt.get_child("mjolnir"), input_files);
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
@@ -134,12 +134,12 @@ int main(int argc, char** argv) {
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder hierarchybuilder(pt);
+  HierarchyBuilder hierarchybuilder(pt.get_child("mjolnir.hierarchy"));
   hierarchybuilder.Build();
 
   // Optimize the graph to add information that cannot be added until
   // full graph is formed.
-  GraphOptimizer graphoptimizer(pt);
+  GraphOptimizer graphoptimizer(pt.get_child("mjolnir.hierarchy"));
   graphoptimizer.Optimize();
 
   return EXIT_SUCCESS;

@@ -46,6 +46,7 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
+	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
 	valhalla/mjolnir/graphtileheaderbuilder.h \
@@ -60,6 +61,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmnode.h \
 	valhalla/mjolnir/osmway.h 
 libvalhalla_mjolnir_la_SOURCES = \
+	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
 	src/mjolnir/graphtileheaderbuilder.cc \
