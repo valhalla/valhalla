@@ -1,4 +1,5 @@
 #include "mjolnir/dataquality.h"
+#include <fstream>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -46,16 +47,29 @@ void DataQuality::Log() {
   LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count_));
   LOG_INFO("Internal edgecount = " + std::to_string(internal_count_));
 
-  // Log the duplicate ways
+  // Log the duplicate ways - sort by number of duplicate edges
+
   uint32_t duplicates = 0;
+  std::vector<DuplicateWay> dups;
   LOG_WARN("Duplicate Ways: count = " + std::to_string(duplicateways_.size()));
   for (const auto& dup : duplicateways_) {
-    LOG_WARN("Duplicate: OSM Way Ids = " + std::to_string(dup.first.first) +
-        " and " + std::to_string(dup.first.second) + " Created " +
-        std::to_string(dup.second) + " duplicate edges");
+    dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second,
+                                    dup.second));
     duplicates += dup.second;
   }
-  LOG_WARN("Duplicate edgecount = " + std::to_string(duplicates));
+  LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) +
+           " duplicate edges = " + std::to_string(duplicates));
+
+  // Sort by edgecount and write to separate file
+  std::ofstream dupfile;
+  std::sort(dups.begin(), dups.end());
+  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::trunc);
+  dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
+  for (const auto& dupway : dups) {
+    dupfile << dupway.wayid1 << "," << dupway.wayid2 << ","
+            << dupway.edgecount << std::endl;
+  }
+  dupfile.close();
 
   // Log the unconnected link edges
   LOG_WARN("Link edges that are not connected. OSM Way Ids");

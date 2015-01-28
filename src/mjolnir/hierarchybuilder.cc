@@ -98,7 +98,7 @@ void HierarchyBuilder::GetNodesInNewLevel(
                         tilednodes_[newtileid].size());
         bool contract = CanContract(tile, nodeinfo, basenode, newnode,
                         new_level.importance);
-        tilednodes_[newtileid].emplace_back(NewNode(basenode, contract));
+        tilednodes_[newtileid].emplace_back(basenode, contract);
         nodemap_[basenode.value()] = newnode;
       }
     }
@@ -374,7 +374,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
     }
 
     // Store the new tile
-    tilebuilder.StoreTileData(tile_hierarchy_, GraphId(tileid, level, 0));
+    GraphId basetile(tileid, level, 0);
+    tilebuilder.StoreTileData(tile_hierarchy_, basetile);
+
+    LOG_INFO((boost::format("HierarchBuilder created tile %1%: %2% bytes") %
+         basetile % tilebuilder.size()).str());
 
     // Increment tileid
     tileid++;
@@ -561,7 +565,7 @@ void HierarchyBuilder::ConnectBaseLevelToNewLevel(
       for (const auto& newnode : newtile) {
         // Add to the map of connections
         connections[newnode.basenode.tileid()].emplace_back(
-            NodeConnection(newnode.basenode, GraphId(tileid, level, id)));
+              newnode.basenode, GraphId(tileid, level, id));
         id++;
       }
 
@@ -584,8 +588,8 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
     const uint32_t basetileid, const std::vector<NodeConnection>& connections) {
   // Read in existing tile
   uint8_t baselevel = connections[0].basenode.level();
-  GraphTileBuilder tilebuilder(tile_hierarchy_,
-                               GraphId(basetileid, baselevel, 0));
+  GraphId basetile(basetileid, baselevel, 0);
+  GraphTileBuilder tilebuilder(tile_hierarchy_, basetile);
 
   // Get the header information and update counts and offsets. No new nodes
   // are added. Directed edge count is increased by size of the connection
@@ -644,6 +648,9 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
 
   // Write the new file
   tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
+
+  LOG_INFO((boost::format("HierarchBuilder updated tile %1%: %2% bytes") %
+      basetile % tilebuilder.size()).str());
 }
 
 }
