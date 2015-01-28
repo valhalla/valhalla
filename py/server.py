@@ -105,6 +105,7 @@ if __name__ == '__main__':
     with open(sys.argv[1]) as f:
       conf = json.load(f)
     tyr_service.Configure(sys.argv[1])
+    conf = conf['tyr']
   except Exception as e:
     sys.stderr.write('Problem with config file: {0}\n'.format(e)) 
     sys.exit(1)

@@ -1,6 +1,7 @@
 #include "test.h"
 #include "tyr/route_handler.h"
 #include <valhalla/mjolnir/graphbuilder.h>
+#include <valhalla/mjolnir/graphoptimizer.h>
 #include <valhalla/midgard/logging.h>
 
 #include <fstream>
@@ -18,22 +19,24 @@ void write_config(const std::string& filename) {
   try {
   file.open(filename, std::ios_base::trunc);
   file << "{ \
-      \"input\": { \
-        \"type\": \"protocolbuffer\" \
-      }, \
-      \"output\": { \
-        \"tile_dir\": \"test/tiles\", \
-        \"levels\": [ \
-          {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-          {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"TertiaryUnclassified\"}, \
-          {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-        ] \
-      }, \
-      \"tagtransform\": { \
-        \"node_script\": \"test/lua/vertices.lua\", \
-        \"node_function\": \"nodes_proc\", \
-        \"way_script\": \"test/lua/edges.lua\", \
-        \"way_function\": \"ways_proc\" \
+      \"mjolnir\": { \
+        \"input\": { \
+          \"type\": \"protocolbuffer\" \
+        }, \
+        \"hierarchy\": { \
+          \"tile_dir\": \"test/tiles\", \
+          \"levels\": [ \
+            {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
+            {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"TertiaryUnclassified\"}, \
+            {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
+          ] \
+        }, \
+        \"tagtransform\": { \
+          \"node_script\": \"test/lua/vertices.lua\", \
+          \"node_function\": \"nodes_proc\", \
+          \"way_script\": \"test/lua/edges.lua\", \
+          \"way_function\": \"ways_proc\" \
+        } \
       } \
     }";
   }
@@ -46,9 +49,13 @@ void write_config(const std::string& filename) {
 void write_tiles(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
-  valhalla::mjolnir::GraphBuilder builder(conf);
+
+  valhalla::mjolnir::GraphBuilder builder(conf.get_child("mjolnir"));
   builder.Load({"test/data/liechtenstein-latest.osm.pbf"});
   builder.Build();
+
+  valhalla::mjolnir::GraphOptimizer graphoptimizer(conf.get_child("mjolnir.hierarchy"));
+  graphoptimizer.Optimize();
 }
 
 boost::python::dict make_request(const std::string& loc1, const std::string& loc2,

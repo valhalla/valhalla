@@ -32,7 +32,7 @@ namespace {
       boost::property_tree::read_json(*cached, pt);
 
       //configure logging
-      boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("logging.tyr");
+      boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("tyr.logging");
       if(logging_subtree) {
         auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
         valhalla::midgard::logging::Configure(logging_config);
