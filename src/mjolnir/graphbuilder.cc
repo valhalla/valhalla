@@ -957,7 +957,9 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
       uint64_t wayid2 = ways[edges[edgeindex].wayindex_].way_id();
       (*stats).AddIssue(kDuplicateWays, GraphId(), wayid1, wayid2);
     } else {
-      endnodes.emplace(endnode, DuplicateEdgeInfo(edgeindex, edgelengths[n]));
+      endnodes.emplace(std::piecewise_construct,
+                       std::forward_as_tuple(endnode),
+                       std::forward_as_tuple(edgeindex, edgelengths[n]));
     }
   }
 }
@@ -1070,8 +1072,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
           }
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(DirectedEdgeBuilder(w, endnode, forward,
-                  edgelengths[n], speed, use, not_thru, internal, rc));
+          directededges.emplace_back(w, endnode, forward, edgelengths[n],
+                        speed, use, not_thru, internal, rc);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
