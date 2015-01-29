@@ -87,6 +87,16 @@ bool OSMNode::ref() const {
   return attributes_.fields.ref;
 }
 
+// Set the name flag
+void OSMNode::set_name(const bool name) {
+  attributes_.fields.name = name;
+}
+
+// Get the name flag
+bool OSMNode::name() const {
+  return attributes_.fields.name;
+}
+
 // Set gate flag.
 void OSMNode::set_gate(const bool gate) {
   attributes_.fields.gate = gate;

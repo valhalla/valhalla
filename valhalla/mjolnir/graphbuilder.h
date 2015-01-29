@@ -255,6 +255,9 @@ class GraphBuilder {
   // Map that stores all the ref info on a node
   std::unordered_map<uint64_t, std::string> map_ref_;
 
+  // Map that stores all the name info on a node
+  std::unordered_map<uint64_t, std::string> map_name_;
+
   // Map that stores all the exit to info on a node
   std::unordered_map<uint64_t, std::string> map_exit_to_;
 

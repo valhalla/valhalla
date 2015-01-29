@@ -21,8 +21,10 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/exitsigninfo.h>
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
+
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -171,20 +173,30 @@ void GraphBuilder::node_callback(uint64_t osmid, double lng, double lat,
   if (results.size() == 0)
     return;
 
+  const auto& highway_junction = results.find("highway");
+  bool is_highway_junction = ((highway_junction != results.end())
+      && (highway_junction->second == "motorway_junction"));
+
   // Create a new node and set its attributes
   OSMNode n(lng, lat);
   for (const auto& tag : results) {
-    if (tag.first == "exit_to") {
+    if (is_highway_junction && (tag.first == "exit_to")) {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_exit_to(hasTag);
       if (hasTag)
         map_exit_to_[osmid] = tag.second;
     }
-    else if (tag.first == "ref") {
+    else if (is_highway_junction && (tag.first == "ref")) {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_ref(hasTag);
       if (hasTag)
         map_ref_[osmid] = tag.second;
+    }
+    else if (is_highway_junction && (tag.first == "name")) {
+      bool hasTag = (tag.second.length() ? true : false);
+      n.set_name(hasTag);
+      if (hasTag)
+        map_name_[osmid] = tag.second;
     }
     else if (tag.first == "gate")
       n.set_gate((tag.second == "true" ? true : false));
@@ -460,7 +472,7 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
       w.set_destination_ref(tag.second);
     else if (tag.first == "destination:ref:to")
       w.set_destination_ref_to(tag.second);
-    else if (tag.first == "junction_ref")
+    else if (tag.first == "junction:ref")
       w.set_junction_ref(tag.second);
   }
 
@@ -747,6 +759,8 @@ void GraphBuilder::ReclassifyLinks() {
   LOG_INFO((boost::format("Reclassify Links: Count %1%") % count).str());
 }
 
+namespace {
+
 // Test if this is a "not thru" edge. These are edges that enter a region that
 // has no exit other than the edge entering the region
 bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
@@ -964,11 +978,97 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
   }
 }
 
-void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
-                  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
-                  const std::unordered_map<uint64_t, OSMNode>& nodes, const std::vector<OSMWay>& ways,
-                  const std::vector<Edge>& edges, const baldr::TileHierarchy& hierarchy, std::atomic<DataQuality*>& stats,
-                  std::promise<size_t>& result) {
+// TODO: common location - util?
+/**
+ * Splits a tag into a vector of strings.  Delim defaults to ;
+ */
+std::vector<std::string> GetTagTokens(const std::string& tag_value,
+                                      char delim = ';') {
+  std::vector<std::string> tokens;
+  boost::algorithm::split(tokens, tag_value,
+                          std::bind1st(std::equal_to<char>(), delim),
+                          boost::algorithm::token_compress_on);
+  return tokens;
+}
+
+std::vector<ExitSignInfo> CreateExitSignInfoList(
+    const uint64_t osmnodeid, const OSMNode& node, const OSMWay& way,
+    const std::unordered_map<uint64_t, std::string>& map_ref,
+    const std::unordered_map<uint64_t, std::string>& map_name,
+    const std::unordered_map<uint64_t, std::string>& map_exit_to) {
+
+  std::vector<ExitSignInfo> exit_list;
+
+  // Exit sign number
+  if (!way.junction_ref().empty()) {
+    exit_list.emplace_back(ExitSign::Type::kNumber, way.junction_ref());
+  }  else if (node.ref()) {
+    exit_list.emplace_back(ExitSign::Type::kNumber, map_ref.find(osmnodeid)->second);
+  }
+
+  // Exit sign branch refs
+  bool has_branch = false;
+  if (!way.destination_ref().empty()) {
+    has_branch = true;
+    std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
+    for (auto& branch_ref : branch_refs) {
+      exit_list.emplace_back(ExitSign::Type::KBranch, branch_ref);
+    }
+  }
+
+  // Exit sign toward refs
+  bool has_toward = false;
+  if (!way.destination_ref_to().empty()) {
+    has_toward = true;
+    std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
+    for (auto& toward_ref : toward_refs) {
+      exit_list.emplace_back(ExitSign::Type::kToward, toward_ref);
+    }
+  }
+
+  // Exit sign toward names
+  if (!way.destination().empty()) {
+    has_toward = true;
+    std::vector<std::string> toward_names = GetTagTokens(way.destination());
+    for (auto& toward_name : toward_names) {
+      exit_list.emplace_back(ExitSign::Type::kToward, toward_name);
+    }
+  }
+
+  // Process exit_to only if other branch or toward info does not exist
+  // For now just make toward records
+  if (!has_branch && !has_toward) {
+    // TODO- see if we can make branch and toward records
+    if (node.exit_to()) {
+      std::vector<std::string> exit_tos = GetTagTokens(map_exit_to.find(osmnodeid)->second);
+      for (auto& exit_to : exit_tos) {
+        exit_list.emplace_back(ExitSign::Type::kToward, exit_to);
+      }
+    }
+  }
+
+  // Exit sign name
+  if (node.name()) {
+    std::vector<std::string> names = GetTagTokens(map_name.find(osmnodeid)->second);
+    for (auto& name : names) {
+      exit_list.emplace_back(ExitSign::Type::kName, name);
+    }
+  }
+
+  return exit_list;
+}
+
+void BuildTileSet(
+    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
+    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
+    const std::unordered_map<uint64_t, OSMNode>& nodes,
+    const std::vector<OSMWay>& ways, const std::vector<Edge>& edges,
+    const baldr::TileHierarchy& hierarchy,
+    const std::unordered_map<uint64_t, std::string>& map_ref,
+    const std::unordered_map<uint64_t, std::string>& map_name,
+    const std::unordered_map<uint64_t, std::string>& map_exit_to,
+    std::atomic<DataQuality*>& stats,
+    std::promise<size_t>& result) {
 
   std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream()
         << std::this_thread::get_id()).str();
@@ -1081,7 +1181,9 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.latlngs_, w.GetNames(), added);
+               nodea, nodeb, edge.latlngs_, w.GetNames(),
+               CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
+               added);
           directededge.set_edgedataoffset(edge_info_offset);
 
           // Add to general statistics
@@ -1115,6 +1217,8 @@ void BuildTileSet(std::unordered_map<GraphId, std::vector<uint64_t> >::const_ite
   }
   // Let the main thread see how this thread faired
   result.set_value(written);
+}
+
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
@@ -1163,8 +1267,9 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
     std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-      new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_,
-                      edges_, tile_hierarchy_, std::ref(atomic_stats), std::ref(results[i]))
+      new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways_, edges_,
+                      tile_hierarchy_, map_ref_, map_name_, map_exit_to_,
+                      std::ref(atomic_stats), std::ref(results[i]))
     );
   }
 
