@@ -64,7 +64,7 @@ message TripPath {
     optional bool roundabout = 18;
     optional bool internal_link = 19;
     optional uint32 end_node_index = 20;
-    repeated Exit exit = 21;
+    optional Exit exit = 21;
   }
   
   message Node {
