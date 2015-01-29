@@ -145,6 +145,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_shape(lls);
 
+    ///////////////////////////////////////////////////////////////////////////
     // Put each name's index into the chunk of bytes containing all the names
     // in the tile
     std::vector<uint32_t> street_name_offset_list;
@@ -177,7 +178,39 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     }
     edgeinfo.set_street_name_offset_list(street_name_offset_list);
 
-    // TODO - other attributes
+    ///////////////////////////////////////////////////////////////////////////
+    // Add each exit text to the text list
+    // Make list of exit type and text offset
+    std::vector<ExitSignBuilder> exit_signs;
+    exit_signs.reserve(names.size());
+    for (const auto& exit_sign_info : exit_sign_infos) {
+      // Skip blank names
+      if (exit_sign_info.text().empty()) {
+        continue;
+      }
+
+      // If nothing already used this exit text
+      auto existing_text_offset = text_offset_map.find(exit_sign_info.text());
+      if (existing_text_offset == text_offset_map.end()) {
+        // Add name to text list
+        textlistbuilder_.emplace_back(exit_sign_info.text());
+
+        // Add exit sign (type and offset) to list
+        exit_signs.emplace_back(exit_sign_info.type(), text_list_offset_);
+
+        // Add text/offset pair to map
+        text_offset_map.emplace(exit_sign_info.text(), text_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        text_list_offset_ += (exit_sign_info.text().length() + 1);
+      } // Something was already using this name
+      else {
+        // Add existing exit type and text offset to list
+        exit_signs.emplace_back(exit_sign_info.type(),
+                                existing_text_offset->second);
+      }
+    }
+    edgeinfo.set_exit_signs(std::move(exit_signs));
 
     // Add to the map
     edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);

@@ -16,10 +16,15 @@ void EdgeInfoBuilder::set_street_name_offset_list(
   street_name_offset_list_ = street_name_offset_list;
 }
 
-// Set the shape of the edge. TODO - move?
+// Set the shape of the edge.
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   // Set the shape
   encoded_shape_ = midgard::encode<std::vector<PointLL> >(shape);
+}
+
+// Set the exit signs used by this edge.
+void EdgeInfoBuilder::set_exit_signs(std::vector<ExitSignBuilder>&& exit_signs) {
+  exit_signs_ = std::move(exit_signs);
 }
 
 std::size_t EdgeInfoBuilder::SizeOf() const {
