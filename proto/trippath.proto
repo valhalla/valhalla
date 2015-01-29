@@ -22,7 +22,7 @@ message TripPath {
     optional string number = 1;  // 67B
     repeated string branch = 2;  // I 95 N
     repeated string toward = 3;  // New York
-    optional string name = 4;    // Not used much
+    repeated string name = 4;    // Not used much in US; Canada uses it
   }
   
   enum Driveability {
