@@ -132,7 +132,7 @@ struct Parser {
             fatal() << "Unable to open the file " << filename;
         buffer = new char[max_uncompressed_blob_size];
         unpack_buffer = new char[max_uncompressed_blob_size];
-        info() << "Reading the file" << filename;
+        info() << "Reading the file " << filename;
     }
 
     ~Parser(){
