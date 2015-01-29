@@ -1,7 +1,5 @@
 #include "mjolnir/osmway.h"
-
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
+#include "mjolnir/util.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -539,6 +537,20 @@ uint32_t OSMWay::bike_network() const {
 }
 
 /**
+ * Set exit flag.
+ */
+void OSMWay::set_exit(const bool exit) {
+  attributes_.fields.exit = exit;
+}
+
+/**
+ * Get the exit flag.
+ */
+bool OSMWay::exit() const {
+  return attributes_.fields.exit;
+}
+
+/**
  * Get the road class.
  */
 RoadClass OSMWay::road_class() const {
@@ -578,20 +590,6 @@ void OSMWay::set_link(const bool link) {
  */
 bool OSMWay::link() const {
   return classification_.fields.link;
-}
-
-namespace {
-/**
- * Splits a tag into a vector of strings.  Delim defaults to ;
- */
-std::vector<std::string> GetTagTokens(const std::string& tag_value,
-                                      char delim = ';') {
-  std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind1st(std::equal_to<char>(), delim),
-                          boost::algorithm::token_compress_on);
-  return tokens;
-}
 }
 
 /**
