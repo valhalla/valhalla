@@ -162,6 +162,43 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | end_node_index=";
   str += std::to_string(end_node_index());
 
+  // Process exits, if needed
+  if (this->has_exit()) {
+    str += " | exit.number=";
+    str += this->exit().number();
+
+    str += " | exit.branch=";
+    bool is_first = true;
+    for (const auto& branch : this->exit().branch()) {
+      if (is_first)
+        is_first = false;
+      else
+        str += "/";
+      str += branch;
+    }
+
+    str += " | exit.toward=";
+    is_first = true;
+    for (const auto& toward : this->exit().toward()) {
+      if (is_first)
+        is_first = false;
+      else
+        str += "/";
+      str += toward;
+    }
+
+    str += " | exit.name=";
+    is_first = true;
+    for (const auto& name : this->exit().name()) {
+      if (is_first)
+        is_first = false;
+      else
+        str += "/";
+      str += name;
+    }
+
+  }
+
   return str;
 }
 
