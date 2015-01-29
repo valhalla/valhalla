@@ -99,6 +99,11 @@ class DirectedEdge {
   bool toll() const;
 
   /**
+   * Does this edge have a exit?
+   */
+  bool exit() const;
+
+  /**
    * Is this edge part of a private or no through road that allows access
    * only if required to get to a destination?
    */
@@ -284,7 +289,7 @@ class DirectedEdge {
     uint32_t railferry      : 1;
     uint32_t toll           : 1;
     uint32_t dest_only      : 1;
-    uint32_t spare          : 1;
+    uint32_t exit           : 1;
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
