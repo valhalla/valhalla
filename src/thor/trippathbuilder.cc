@@ -4,6 +4,7 @@
 #include "thor/trippathbuilder.h"
 
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/exitsigninfo.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
@@ -184,6 +185,31 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
     trip_edge->add_name(name);
   }
 
+  // Set the exits
+  std::vector<ExitSignInfo> exits = graphtile->GetExitSigns(edgeinfo);
+  if (!exits.empty()) {
+    TripPath_Exit* trip_exit = trip_edge->mutable_exit();
+    for (const auto& exit : exits) {
+      switch (exit.type()) {
+        case ExitSign::Type::kNumber: {
+          trip_exit->set_number(exit.text());
+          break;
+        }
+        case ExitSign::Type::KBranch: {
+          trip_exit->add_branch(exit.text());
+          break;
+        }
+        case ExitSign::Type::kToward: {
+          trip_exit->add_toward(exit.text());
+          break;
+        }
+        case ExitSign::Type::kName: {
+          trip_exit->add_name(exit.text());
+          break;
+        }
+      }
+    }
+  }
   // Set road class
   trip_edge->set_road_class(GetTripPathRoadClass(directededge->importance()));
 
