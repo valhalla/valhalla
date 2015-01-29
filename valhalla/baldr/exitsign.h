@@ -14,7 +14,7 @@ namespace baldr {
 // Read only base class.
 class ExitSign {
  public:
-  enum class Type {
+  enum class Type : uint32_t {
     kNumber,
     KBranch,
     kToward,
