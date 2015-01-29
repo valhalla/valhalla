@@ -1,4 +1,4 @@
-#include <future>
+
 
 #include "mjolnir/graphbuilder.h"
 
@@ -6,15 +6,13 @@
 //     https://github.com/CanalTP/libosmpbfreader
 #include "osmpbfreader.h"
 
+#include <future>
 #include <utility>
-#include <algorithm>
-#include <string>
 #include <thread>
-#include <memory>
-
 #include <boost/format.hpp>
-#include <valhalla/midgard/logging.h>
 #include <boost/algorithm/string.hpp>
+
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -73,7 +71,8 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
       tile_hierarchy_(pt.get_child("hierarchy")),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId),
-      stats_(new DataQuality()){
+      stats_(new DataQuality()),
+      threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
 
   // Initialize Lua based on config
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
@@ -1248,7 +1247,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 // Build tiles for the local graph hierarchy
 void GraphBuilder::BuildLocalTiles(const uint8_t level) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(std::max(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency())));
+  std::vector<std::shared_ptr<std::thread> > threads(threads_);
   // A place to hold the results of those threads, be they exceptions or otherwise
   std::vector<std::promise<size_t> > results(threads.size());
   // Divvy up the work

@@ -144,6 +144,10 @@ struct Edge {
  */
 class GraphBuilder {
  public:
+  //not default constructable or copyable
+  GraphBuilder() = delete;
+  GraphBuilder(const GraphBuilder&) = delete;
+
   /**
    * Constructor
    */
@@ -181,7 +185,7 @@ class GraphBuilder {
    */
   void Build();
 
- private:
+ protected:
 
   /**
    * Initialize Lua with the scripts and functions.
@@ -225,9 +229,6 @@ class GraphBuilder {
    */
   void BuildLocalTiles(const uint8_t level) const;
 
-
- protected:
-
   //MAIN THREAD STUFF
 
   size_t node_count_, edge_count_, speed_assignment_count_;
@@ -267,6 +268,9 @@ class GraphBuilder {
 
   // Data quality / statistics.
   std::unique_ptr<DataQuality> stats_;
+
+  // How many threads to run
+  const unsigned int threads_;
 };
 
 }
