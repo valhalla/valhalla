@@ -211,7 +211,8 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
       || edge1->toll() != edge2->toll()
       || edge1->destonly() != edge2->destonly()
       || edge1->unpaved() != edge2->unpaved()
-      || edge1->surface() != edge2->surface() ||
+      || edge1->surface() != edge2->surface()
+      || edge1->exit() != edge2->exit() ||
 //      edge1->tunnel()     != edge2->tunnel() ||
 //      edge1->bridge()     != edge2->bridge() ||
       edge1->roundabout() != edge2->roundabout()) {

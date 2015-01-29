@@ -445,6 +445,18 @@ class OSMWay {
   uint32_t bike_network() const;
 
   /**
+   * Sets the exit tag.
+   * @param  exit       Exit flag.
+   */
+  void set_exit(const bool exit);
+
+  /**
+   * Get the exit flag.
+   * @return  Returns exit flag.
+   */
+  bool exit() const;
+
+  /**
    * Get the road class.
    * @return  Returns road class.
    */
@@ -480,7 +492,6 @@ class OSMWay {
    * @return  Returns link flag.
    */
   bool link() const;
-
 
   /**
    * Get the names for the edge info based on the road class.
@@ -537,7 +548,8 @@ class OSMWay {
       uint32_t toll             :1;
       uint32_t bridge           :1;
       uint32_t bikenetwork      :4;
-      uint32_t spare            :5;
+      uint32_t exit             :1;
+      uint32_t spare            :4;
     } fields;
     uint32_t v;
   };

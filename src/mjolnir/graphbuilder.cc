@@ -1,6 +1,7 @@
 #include <future>
 
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/util.h"
 
 // Use open source PBF reader from:
 //     https://github.com/CanalTP/libosmpbfreader
@@ -466,14 +467,22 @@ void GraphBuilder::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "bike_local_ref")
       w.set_bike_local_ref(tag.second);
 
-    else if (tag.first == "destination")
+    else if (tag.first == "destination") {
       w.set_destination(tag.second);
-    else if (tag.first == "destination:ref")
+      w.set_exit(true);
+    }
+    else if (tag.first == "destination:ref") {
       w.set_destination_ref(tag.second);
-    else if (tag.first == "destination:ref:to")
+      w.set_exit(true);
+    }
+    else if (tag.first == "destination:ref:to") {
       w.set_destination_ref_to(tag.second);
-    else if (tag.first == "junction:ref")
+      w.set_exit(true);
+    }
+    else if (tag.first == "junction:ref") {
       w.set_junction_ref(tag.second);
+      w.set_exit(true);
+    }
   }
 
   //If no surface has been set by a user, assign a surface based on Road Class and Use
@@ -978,19 +987,6 @@ void CheckForDuplicates(const uint64_t osmnodeid, const OSMNode& node,
   }
 }
 
-// TODO: common location - util?
-/**
- * Splits a tag into a vector of strings.  Delim defaults to ;
- */
-std::vector<std::string> GetTagTokens(const std::string& tag_value,
-                                      char delim = ';') {
-  std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind1st(std::equal_to<char>(), delim),
-                          boost::algorithm::token_compress_on);
-  return tokens;
-}
-
 std::vector<ExitSignInfo> CreateExitSignInfoList(
     const uint64_t osmnodeid, const OSMNode& node, const OSMWay& way,
     const std::unordered_map<uint64_t, std::string>& map_ref,
@@ -1171,9 +1167,12 @@ void BuildTileSet(
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
+          //Does the directed edge contain exit information?
+          bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
+
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, endnode, forward, edgelengths[n],
-                        speed, use, not_thru, internal, rc);
+                        speed, use, not_thru, has_exitinfo, internal, rc);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
