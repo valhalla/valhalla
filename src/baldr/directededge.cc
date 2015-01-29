@@ -73,6 +73,10 @@ bool DirectedEdge::toll() const {
   return attributes_.toll;
 }
 
+bool DirectedEdge::exit() const {
+  return attributes_.exit;
+}
+
 bool DirectedEdge::destonly() const {
   return attributes_.dest_only;
 }
@@ -239,8 +243,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.roundabout+1)-1);
   de.attributes_.shortcut = ~de.attributes_.shortcut;
   boost::hash_combine(seed,ffs(de.attributes_.shortcut+1)-1);
-  de.attributes_.spare = ~de.attributes_.spare;
-  boost::hash_combine(seed,ffs(de.attributes_.spare+1)-1);
+  de.attributes_.exit = ~de.attributes_.exit;
+  boost::hash_combine(seed,ffs(de.attributes_.exit+1)-1);
   de.attributes_.superseded = ~de.attributes_.superseded;
   boost::hash_combine(seed,ffs(de.attributes_.superseded+1)-1);
   de.attributes_.surface = ~de.attributes_.surface;
