@@ -8,6 +8,7 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/exitsign.h>
 #include "mjolnir/edgeinfobuilder.h"
+#include "mjolnir/exitsignbuilder.h"
 
 #include <boost/shared_array.hpp>
 #include <memory>
