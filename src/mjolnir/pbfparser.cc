@@ -504,16 +504,7 @@ void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
   //TODO:
 }
 
-// Gets the map of OSM nodes.
-const std::unordered_map<uint64_t, OSMNode>& PBFParser::nodes() const {
-  return nodes_;
-}
-
-// Gets the list of ways.
-const std::vector<OSMWay>& PBFParser::ways() const {
-  return ways_;
-}
-
+// Set the intersection flag on the OSM nodes.
 void PBFParser::PostProcess() {
   // Go through OMSNodes and set the intersection flag
   for (auto& node : nodes_) {
@@ -523,6 +514,7 @@ void PBFParser::PostProcess() {
   }
 
   // Trim the size of the OSM way vector
+  ways_.shrink_to_fit();
 }
 
 // Get the estimated edge count
@@ -530,29 +522,6 @@ size_t PBFParser::edge_count() const {
   return edge_count_;
 }
 
-/**
- * Gets the map of OSM refs.
- * @return  Returns a const reference to the map of node refs.
- */
-const std::unordered_map<uint64_t, std::string>& PBFParser::map_ref() const {
-  return map_ref_;
-}
-
-/**
- * Gets the map of OSM exit_to.
- * @return  Returns a const reference to the map of node exit_to.
- */
-const std::unordered_map<uint64_t, std::string>& PBFParser::map_exit_to() const {
-  return map_exit_to_;
-}
-
-/**
- * Gets the map of OSM node names.
- * @return  Returns a const reference to the map of node names.
- */
-const std::unordered_map<uint64_t, std::string>& PBFParser::map_name() const {
-  return map_name_;
-}
 
 }
 }

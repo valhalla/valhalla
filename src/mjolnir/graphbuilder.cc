@@ -167,7 +167,6 @@ void GraphBuilder::ConstructEdges(
   LOG_INFO("Constructed " + std::to_string(edges_.size()) + " edges");
 }
 
-/**
 class EdgeSorter {
  public:
   EdgeSorter(const std::vector<Edge>& edges)
@@ -214,7 +213,6 @@ void GraphBuilder::SortEdgesFromNodes() {
               node.second.mutable_edges().end(), sorter);
   }
 }
-**/
 
 uint32_t GraphBuilder::GetBestNonLinkClass(const Node& node) const {
   uint32_t bestrc = kAbsurdRoadClass;

@@ -119,36 +119,6 @@ class PBFParser {
    */
   size_t edge_count() const;
 
-  /**
-   * Gets the map of OSM nodes.
-   * @return  Returns a const reference to the map of nodes.
-   */
-  const std::unordered_map<uint64_t, OSMNode>& nodes() const;
-
-  /**
-   * Gets the list of ways.
-   * @return  Returns a const reference to the list of ways.
-   */
-  const std::vector<OSMWay>& ways() const;
-
-  /**
-   * Gets the map of OSM refs.
-   * @return  Returns a const reference to the map of refs.
-   */
-  const std::unordered_map<uint64_t, std::string>& map_ref() const;
-
-  /**
-   * Gets the map of OSM exit_to.
-   * @return  Returns a const reference to the map of exit_to.
-   */
-  const std::unordered_map<uint64_t, std::string>& map_exit_to() const;
-
-  /**
-   * Gets the map of OSM node names.
-   * @return  Returns a const reference to the map of node names.
-   */
-  const std::unordered_map<uint64_t, std::string>& map_name() const;
-
  protected:
 
   /**

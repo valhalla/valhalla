@@ -237,7 +237,7 @@ class GraphBuilder {
   /**
    * Sort edges from the nodes (by driveability and importance).
    */
-//  void SortEdgesFromNodes();
+  void SortEdgesFromNodes();
 
   /**
    * Add the nodes to tiles.
