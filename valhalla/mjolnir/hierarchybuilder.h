@@ -112,7 +112,7 @@ class HierarchyBuilder {
    * @param  rcc        Road class (importance) cutoff.
    * @return  Returns true if the node can be contracted, false if not.
    */
-  bool CanContract(baldr::GraphTile* tile,
+  bool CanContract(const baldr::GraphTile* tile,
                    const baldr::NodeInfo* nodeinfo,
                    const baldr::GraphId& basenode,
                    const baldr::GraphId& newnode,
@@ -125,7 +125,7 @@ class HierarchyBuilder {
    * @param  edge2  2nd directed edge.
    * @return  Returns true if the edges "match", false if not.
    */
-  bool EdgesMatch(GraphTile* tile, const baldr::DirectedEdge* edge1,
+  bool EdgesMatch(const baldr::GraphTile* tile, const baldr::DirectedEdge* edge1,
                   const baldr::DirectedEdge* edge2);
 
   /**
@@ -159,7 +159,7 @@ class HierarchyBuilder {
   void AddShortcutEdges(const NewNode& newnode,
                         const baldr::GraphId& nodea,
                         const baldr::NodeInfo* oldnodeinfo,
-                        baldr::GraphTile* tile,
+                        const baldr::GraphTile* tile,
                         const baldr::RoadClass rcc,
                         GraphTileBuilder& tilebuilder,
                         std::vector<DirectedEdgeBuilder>& directededges);

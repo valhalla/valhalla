@@ -81,7 +81,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
                                               DirectedEdge& edge) {
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
-  GraphTile* tile = graphreader_.GetGraphTile(endnode);
+  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
   const NodeInfo* nodeinfo = tile->node(endnode.id());
 
   // TODO - check if more than 1 edge has matching startnode and
