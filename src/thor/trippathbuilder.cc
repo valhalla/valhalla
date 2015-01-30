@@ -180,13 +180,13 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
   // Get the edgeinfo and list of names - add to the trip edge.
   std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
      directededge->edgedataoffset());
-  std::vector<std::string> names = graphtile->GetNames(edgeinfo);
+  std::vector<std::string> names = edgeinfo->GetNames();
   for (const auto& name : names) {
     trip_edge->add_name(name);
   }
 
   // Set the exits
-  std::vector<ExitSignInfo> exits = graphtile->GetExitSigns(edgeinfo);
+  std::vector<ExitSignInfo> exits = edgeinfo->GetExitSigns();
   if (!exits.empty()) {
     TripPath_Exit* trip_exit = trip_edge->mutable_exit();
     for (const auto& exit : exits) {
