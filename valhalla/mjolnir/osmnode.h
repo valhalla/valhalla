@@ -11,7 +11,9 @@
 namespace valhalla {
 namespace mjolnir {
 
-// OSM node
+/**
+ * OSM node information. Result of parsing an OSM node.
+ */
 class OSMNode {
  public:
   /**
@@ -42,73 +44,14 @@ class OSMNode {
   const midgard::PointLL& latlng() const;
 
   /**
-   * Set the graph Id
-   * @param  graphid  Graph ID for this node
+   * Set modes mask.
    */
-  void set_graphid(const baldr::GraphId& graphid);
+  void set_modes_mask(const uint32_t modes_mask);
 
   /**
-   * Get the graph Id of this node (after tiling).
-   * @return  Returns the graph Id of this node.
+   * Get the modes mask.
    */
-  const baldr::GraphId& graphid() const;
-
-  /**
-   * Add an edge. Set flags to indicate a link and/or non-link edge
-   * exists at the node.
-   * @param  edgeindex  Index in the list of edges.
-   * @param  link       Flag indicating whether this edge is a link
-   *                    (highway=*_link)
-   */
-  void AddEdge(const uint32_t edgeindex, const bool link);
-
-  /**
-   * Get the number of edges beginning or ending at the node.
-   * @return  Returns the number of edges.
-   */
-  uint32_t edge_count() const;
-
-  /**
-   * Get the list of edges.
-   * @return  Returns the list of edge indexes used by the node.
-   */
- const std::vector<uint32_t>& edges() const;
-
- /**
-  * Get a mutable list of edge indexes.
-  * @return  Returns the list of edge indexes used by the node.
-  */
- std::vector<uint32_t>& mutable_edges();
-
-  /**
-   * Set the exit to flag
-   */
-  void set_exit_to(const bool exit_to);
-
-  /**
-   * Get the exit to flag
-   */
-  bool exit_to() const;
-
-  /**
-   * Set the ref flag
-   */
-  void set_ref(const bool ref);
-
-  /**
-   * Get the ref flag
-   */
-  bool ref() const;
-
-  /**
-   * Set the name flag
-   */
-  void set_name(const bool name);
-
-  /**
-   * Get the name flag
-   */
-  bool name() const;
+  uint32_t modes_mask() const;
 
   /**
    * Set gate flag.
@@ -131,51 +74,85 @@ class OSMNode {
   bool bollard() const;
 
   /**
-   * Set modes mask.
+   * Set the exit to flag
    */
-  void set_modes_mask(const uint32_t modes_mask);
+  void set_exit_to(const bool exit_to);
 
   /**
-   * Get the modes mask.
+   * Get the exit to flag
    */
-  bool modes_mask() const;
+  bool exit_to() const;
 
   /**
-   * Get the non-link edge flag. True if any connected edge is not a
-   * highway=*_link.
+   * Set the ref flag
    */
-  bool non_link_edge() const;
+  void set_ref(const bool ref);
 
   /**
-   * Get the non-link edge flag. True if any connected edge is a
-   * highway=*_link.
+   * Get the ref flag
    */
-  bool link_edge() const;
+  bool ref() const;
 
- private:
+  /**
+   * Set the name flag (for some exit information)
+   */
+  void set_name(const bool name);
+
+  /**
+   * Get the name flag
+   */
+  bool name() const;
+
+  /**
+   * Set the intersection flag.
+   * @param  intersection  Is this node part of an intersection? True if
+   *                       this node is an end node of more than 1 way.
+   */
+  void set_intersection(const bool intersection);
+
+  /**
+   * Get the intersection flag
+   * @return  Returns true if the node is part of an intersection (end
+   *          node of more than 1 way), false if not.
+   */
+  bool intersection() const;
+
+  /**
+   * Set traffic_signal flag.
+   */
+  void set_traffic_signal(const bool traffic_signal);
+
+  /**
+   * Get the traffic_signal flag.
+   */
+  bool traffic_signal() const;
+
+  /**
+   * Get the attributes value.
+   * @return  Returns the attributes word.
+   */
+  bool attributes() const;
+
+ protected:
   // Lat,lng of the node
   midgard::PointLL latlng_;
-
-  // GraphId of the node (after tiling)
-  baldr::GraphId graphid_;
-
-  // List of edges beginning or ending at the node
-  std::vector<uint32_t> edges_;
 
   // Node attributes
   union NodeAttributes {
     struct Fields {
-      uint16_t gate          : 1;
-      uint16_t bollard       : 1;
-      uint16_t exit_to       : 1;
-      uint16_t ref           : 1;
-      uint16_t name          : 1;
-      uint16_t modes_mask    : 8;
-      uint16_t non_link_edge : 1;
-      uint16_t link_edge     : 1;
-      uint16_t spare         : 1;
+      uint32_t modes_mask     : 8;
+      uint32_t gate           : 1;
+      uint32_t bollard        : 1;
+      uint32_t exit_to        : 1;
+      uint32_t ref            : 1;
+      uint32_t name           : 1;
+      uint32_t intersection   : 1;
+      uint32_t traffic_signal : 1;
+      uint32_t non_link_edge  : 1;   // Used in derived Node class.
+      uint32_t link_edge      : 1;   // Used in derived Node class.
+      uint32_t spare          : 15;
     } fields;
-    uint16_t v;
+    uint32_t v;
   };
   NodeAttributes attributes_;
 };

@@ -31,40 +31,14 @@ const PointLL& OSMNode::latlng() const {
   return latlng_;
 }
 
-// Set the graph Id
-void OSMNode::set_graphid(const GraphId& graphid) {
-  graphid_ = graphid;
+// Set modes mask.
+void OSMNode::set_modes_mask(const uint32_t modes_mask) {
+  attributes_.fields.modes_mask = modes_mask;
 }
 
-// Get the graph Id of this node (after tiling).
-const baldr::GraphId& OSMNode::graphid() const {
-  return graphid_;
-}
-
-// Add an edge to the list of outbound edges. Set flags to indicate
-// a link and/or non-link edge exists at the node.
-void OSMNode::AddEdge(const uint32_t edgeindex, const bool link) {
-  if (link) {
-    attributes_.fields.link_edge = true;
-  } else {
-    attributes_.fields.non_link_edge = true;
-  }
-  edges_.emplace_back(edgeindex);
-}
-
-// Get the list of edges.
-const std::vector<uint32_t>& OSMNode::edges() const {
-  return edges_;
-}
-
-// Get the list of edges.
-std::vector<uint32_t>& OSMNode::mutable_edges() {
-  return edges_;
-}
-
-// Get the number of outbound edges.
-uint32_t OSMNode::edge_count() const {
-  return edges_.size();
+// Get the modes mask.
+uint32_t OSMNode::modes_mask() const {
+  return attributes_.fields.modes_mask;
 }
 
 // Set the exit to flag
@@ -117,26 +91,29 @@ bool OSMNode::bollard() const {
   return attributes_.fields.bollard;
 }
 
-// Set modes mask.
-void OSMNode::set_modes_mask(const uint32_t modes_mask) {
-  attributes_.fields.modes_mask = modes_mask;
+// Set the intersection flag.
+void OSMNode::set_intersection(const bool intersection) {
+  attributes_.fields.intersection = intersection;
 }
 
-// Get the modes mask.
-bool OSMNode::modes_mask() const {
-  return attributes_.fields.modes_mask;
+// Get the intersection flag
+bool OSMNode::intersection() const {
+  return attributes_.fields.intersection;
 }
 
-// Get the non-link edge flag. True if any connected edge is not a
-// highway=*_link.
-bool OSMNode::non_link_edge() const {
-  return attributes_.fields.non_link_edge;
+// Set traffic_signal flag.
+void OSMNode:: set_traffic_signal(const bool traffic_signal) {
+  attributes_.fields.traffic_signal = traffic_signal;
 }
 
-// Get the non-link edge flag. True if any connected edge is a
-// highway=*_link.
-bool OSMNode::link_edge() const {
-  return attributes_.fields.link_edge;
+// Get the traffic_signal flag.
+bool OSMNode::traffic_signal() const {
+  return attributes_.fields.traffic_signal;
+}
+
+// Get the attributes value.
+bool OSMNode::attributes() const {
+  return attributes_.v;
 }
 
 
