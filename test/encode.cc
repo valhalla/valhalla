@@ -25,7 +25,7 @@ bool appx_equal(const container_t& a, const container_t& b) {
 }
 
 //need ostream operators for some of these types
-std::string to_string(const std::vector<std::pair<double, double> >& points) {
+std::string to_string(const container_t& points) {
   std::string out = "{";
   for(const auto& p : points) {
     out += "{" + std::to_string(p.first) + ", " + std::to_string(p.second) + "}";
@@ -59,8 +59,8 @@ void TestSimple() {
    */
 
   //check an easy case first just to be sure Point2/PointLL is working
-  PointLL a(PointLL(1,2));
-  if(encode<std::vector<PointLL> >({{-76.3002, 40.0433}, {-76.3036, 40.043}}) != "s}ksFhkupM|@dT") {
+  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}});
+  if(encoded != "s}ksFfkupMz@fT") {
     throw std::runtime_error("Encoding of Point2/PointLL vector failed");
   }
 
