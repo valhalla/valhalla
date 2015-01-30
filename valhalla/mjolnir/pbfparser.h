@@ -16,6 +16,7 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/osmdata.h>
 
 #include <valhalla/mjolnir/luatagtransform.h>
 
@@ -75,17 +76,12 @@ class PBFParser {
   /**
    * Constructor
    */
-  PBFParser(const boost::property_tree::ptree& pt,
-            std::unordered_map<uint64_t, OSMNode>& nodes,
-            std::vector<OSMWay>& ways,
-            std::unordered_map<uint64_t, std::string>& map_ref,
-            std::unordered_map<uint64_t, std::string>& map_exit_to,
-            std::unordered_map<uint64_t, std::string>& map_name);
+  PBFParser(const boost::property_tree::ptree& pt);
 
   /**
    * Loads a given input file
    */
-   void Load(const std::vector<std::string>& input_file);
+  OSMData Load(const std::vector<std::string>& input_file);
 
   //TODO: put these callbacks inside of an pimpl or just rewrite
   //the bits of canalTP that we care about
@@ -108,18 +104,6 @@ class PBFParser {
   void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                          const std::vector<CanalTP::Reference> & /*refs*/);
 
-  /**
-   * Get the estimated edge count
-   * @return  Returns the estimated edge count.
-   */
-  size_t edge_count() const;
-
-  /**
-   * Get the number of intersection nodes.
-   * @return  Returns the intersection node co8nt.
-   */
-  size_t intersection_count() const;
-
  protected:
 
   /**
@@ -130,8 +114,7 @@ class PBFParser {
                const std::string& waytagtransformscript,
                const std::string& waytagtransformfunction);
 
-  size_t intersection_count_;
-  size_t node_count_, edge_count_, speed_assignment_count_;
+  size_t speed_assignment_count_;
 
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;
@@ -142,20 +125,8 @@ class PBFParser {
   // Mark the OSM Node Ids used by ways
   NodeIdTable shape_, intersection_;
 
-  // Stores all the ways that are part of the road network
-  std::vector<OSMWay>& ways_;
-
-  // Map that stores all the nodes read
-  std::unordered_map<uint64_t, OSMNode>& nodes_;
-
-  // Map that stores all the ref info on a node
-  std::unordered_map<uint64_t, std::string>& map_ref_;
-
-  // Map that stores all the exit to info on a node
-  std::unordered_map<uint64_t, std::string>& map_exit_to_;
-
-  // Map that stores all the name info on a node
-  std::unordered_map<uint64_t, std::string>& map_name_;
+  // Pointer to all the OSM data (for use by callbacks)
+  OSMData* osm_;
 
   // How many threads to run
   const unsigned int threads_;

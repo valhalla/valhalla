@@ -3,7 +3,6 @@
 #include <algorithm>
 
 using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {

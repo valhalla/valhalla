@@ -1,12 +1,11 @@
-#ifndef VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMNODE_H
-#define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMNODE_H
+#ifndef VALHALLA_MJOLNIR_OSMNODE_H
+#define VALHALLA_MJOLNIR_OSMNODE_H
 
 #include <cstdint>
 #include <string>
 #include <vector>
 
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -160,4 +159,4 @@ class OSMNode {
 }
 }
 
-#endif  // VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMNODE_H
+#endif  // VALHALLA_MJOLNIR_OSMNODE_H
