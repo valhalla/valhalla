@@ -75,7 +75,7 @@ void TestWriteRead() {
 
   // Make an edge info object from the memory
   boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
-  std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get()));
+  std::unique_ptr<EdgeInfo> ei(new EdgeInfo(memblock.get(), nullptr, 0));
 
   //TODO: errors thrown should say what was found and what was expected
 
