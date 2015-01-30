@@ -10,6 +10,7 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/exitsign.h>
+#include <valhalla/baldr/exitsigninfo.h>
 
 using namespace valhalla::midgard;
 
@@ -25,12 +26,15 @@ constexpr size_t kMaxEncodedShapeSize = 16383;
  */
 class EdgeInfo {
  public:
+  EdgeInfo() = delete;
+  EdgeInfo(const EdgeInfo& other) = delete;
+
   /**
    * Constructor
    *
    * @param pointer to a bit of memory that has the info for this edge
    */
-  EdgeInfo(char* ptr);
+  EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length);
 
   /**
    * Destructor
@@ -52,6 +56,18 @@ class EdgeInfo {
 
   // Returns an exit sign pointer at the specified index.
   const ExitSign* GetExitSign(uint8_t index) const;
+
+  /**
+   * Convenience method to get the names for an edge
+   * @return   Returns a list (vector) of names.
+   */
+  const std::vector<std::string> GetNames() const;
+
+  /**
+   * Convenience method to get the exit signs for an edge
+   * @return   Returns a list (vector) of exit signs.
+   */
+  std::vector<ExitSignInfo> GetExitSigns() const;
 
   /**
    * Get the shape of the edge.
@@ -77,12 +93,6 @@ class EdgeInfo {
 
 
  protected:
-  /**
-   * Constructor
-   */
-  EdgeInfo();
-
- private:
 
   // Where we keep the statistics about how large the vectors below are
   PackedItem* item_;
@@ -98,6 +108,12 @@ class EdgeInfo {
 
   // Lng, lat shape of the edge
   mutable std::vector<PointLL> shape_;
+
+  // The list of names within the tile
+  const char* names_list_;
+
+  // The size of the names list
+  const size_t names_list_length_;
 
 };
 

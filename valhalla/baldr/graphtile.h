@@ -108,7 +108,7 @@ class GraphTile {
    * @return  Returns a pointer to the first outbound directed edge.
    */
   const DirectedEdge* GetDirectedEdges(const uint32_t node_index,
-                                       uint32_t& count, uint32_t& edge_index);
+                                       uint32_t& count, uint32_t& edge_index) const;
 
   /**
    * Convenience method to get the names for an edge given the offset to the
@@ -116,15 +116,7 @@ class GraphTile {
    * @param  edgeinfo_offset  Offset to the edge info.
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset);
-
-  /**
-   * Convenience method to get the names for an edge given an edgeinfo
-   * shared pointer.
-   * @param  edge  Shared pointer to the edge information.
-   * @return   Returns a list (vector) of names.
-   */
-  std::vector<std::string> GetNames(const std::unique_ptr<const EdgeInfo>& edge);
+  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
    * Convenience method to get the exit signs for an edge given the offset to the
@@ -132,16 +124,7 @@ class GraphTile {
    * @param  edgeinfo_offset  Offset to the edge info.
    * @return  Returns a list (vector) of exit signs.
    */
-  std::vector<ExitSignInfo> GetExitSigns(const uint32_t edgeinfo_offset);
-
-  /**
-   * Convenience method to get the exit signs for an edge given an edgeinfo
-   * shared pointer.
-   * @param  edge  Shared pointer to the edge information.
-   * @return   Returns a list (vector) of exit signs.
-   */
-  std::vector<ExitSignInfo> GetExitSigns(
-      const std::unique_ptr<const EdgeInfo>& edge);
+  std::vector<ExitSignInfo> GetExitSigns(const uint32_t edgeinfo_offset) const;
 
  protected:
   // Size of the tile in bytes

@@ -3,7 +3,9 @@
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo(char* ptr) {
+EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
+  : names_list_(names_list), names_list_length_(names_list_length) {
+
   item_ = reinterpret_cast<PackedItem*>(ptr);
   ptr += sizeof(PackedItem);
 
@@ -22,13 +24,6 @@ EdgeInfo::EdgeInfo(char* ptr) {
 EdgeInfo::~EdgeInfo() {
   //nothing to delete these are all shallow pointers for the moment held
   //by another object
-}
-
-EdgeInfo::EdgeInfo()
-    : item_(nullptr),
-      street_name_offset_list_(nullptr),
-      encoded_shape_(nullptr),
-      exit_signs_(nullptr) {
 }
 
 const uint32_t EdgeInfo::name_count() const {
@@ -55,6 +50,35 @@ const ExitSign* EdgeInfo::GetExitSign(uint8_t index) const {
     return (exit_signs_ + index);
   else
     throw std::runtime_error("ExitSign index was out of bounds");
+}
+
+const std::vector<std::string> EdgeInfo::GetNames() const {
+  // Get each name
+  std::vector<std::string> names;
+  for (uint32_t i = 0; i < name_count(); i++) {
+    uint32_t offset = GetStreetNameOffset(i);
+    if (offset < names_list_length_) {
+      names.push_back(names_list_ + offset);
+    } else {
+      throw std::runtime_error("GetNames: offset exceeds size of text list");
+    }
+  }
+  return names;
+}
+
+std::vector<ExitSignInfo> EdgeInfo::GetExitSigns() const {
+  // Get each exit sign
+  std::vector<ExitSignInfo> exit_list;
+  for (uint32_t i = 0; i < exit_sign_count(); i++) {
+    const ExitSign* exit_sign = GetExitSign(i);
+    if (exit_sign->text_offset() < names_list_length_) {
+      exit_list.emplace_back(
+          exit_sign->type(), (names_list_ + exit_sign->text_offset()));
+    } else {
+      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+    }
+  }
+  return exit_list;
 }
 
 const std::vector<PointLL>& EdgeInfo::shape() const {
