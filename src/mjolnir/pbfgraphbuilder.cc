@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "pbfgraphbuilder.h"
+#include "mjolnir/pbfparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphoptimizer.h"
@@ -87,15 +88,49 @@ bool ParseArguments(int argc, char *argv[]) {
 }
 
 /**
+ * Parse PBF into the supplied data structures
+ */
+size_t ParsePBF(const boost::property_tree::ptree& pt,
+                const std::vector<std::string>& input_files,
+                std::unordered_map<uint64_t, OSMNode>& nodes,
+                std::vector<OSMWay>& ways,
+                std::unordered_map<uint64_t, std::string>& map_ref,
+                std::unordered_map<uint64_t, std::string>& map_exit_to,
+                std::unordered_map<uint64_t, std::string>& map_name) {
+  PBFParser parser(pt, nodes, ways, map_ref, map_exit_to, map_name);
+  parser.Load(input_files);
+  parser.PostProcess();
+  return parser.edge_count();
+}
+
+/**
  * Build local graph from protocol buffer input.
  */
 void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
                const std::vector<std::string>& input_files) {
+  // Stores all the ways that are part of the road network
+  std::vector<OSMWay> ways;
+
+  // Map that stores all the nodes read
+  std::unordered_map<uint64_t, OSMNode> nodes;
+
+  // Map that stores all the ref info on a node
+  std::unordered_map<uint64_t, std::string> map_ref;
+
+  // Map that stores all the exit to info on a node
+  std::unordered_map<uint64_t, std::string> map_exit_to;
+
+  // Map that stores all the name info on a node
+  std::unordered_map<uint64_t, std::string> map_name;
+
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the GraphConstructor class
+  // relations are defined within the PBFParser class
+  size_t edge_count = ParsePBF(pt, input_files, nodes, ways,
+                               map_ref, map_exit_to, map_name);
+
+  // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder graphbuilder(pt);
-  graphbuilder.Load(input_files);
-  graphbuilder.Build();
+  graphbuilder.Build(nodes, ways, edge_count, map_ref, map_exit_to, map_name);
 }
 
 int main(int argc, char** argv) {
