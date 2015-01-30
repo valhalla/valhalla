@@ -58,6 +58,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphoptimizer.h \
 	valhalla/mjolnir/hierarchybuilder.h \
 	valhalla/mjolnir/luatagtransform.h \
+	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfparser.h \
