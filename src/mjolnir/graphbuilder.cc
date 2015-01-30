@@ -44,16 +44,10 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
 }
 
 // Build the graph from the input
-void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-               const std::vector<OSMWay>& ways,
-               const std::unordered_map<uint64_t, std::string>& node_ref,
-               const std::unordered_map<uint64_t, std::string>& node_exit_to,
-               const std::unordered_map<uint64_t, std::string>& node_name,
-               const size_t edge_count,
-               const size_t intersection_count) {
+void GraphBuilder::Build(const OSMData& osmdata) {
   // Construct edges
   std::clock_t start = std::clock();
-  ConstructEdges(osmnodes, ways, edge_count, intersection_count);
+  ConstructEdges(osmdata);
   uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
 
@@ -67,7 +61,7 @@ void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   start = std::clock();
-  ReclassifyLinks(ways);
+  ReclassifyLinks(osmdata.ways);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("ReclassifyLinks took " + std::to_string(msecs) + " ms");
 
@@ -80,7 +74,8 @@ void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
 
   // Iterate through edges - tile the end nodes to create connected graph
   start = std::clock();
-  BuildLocalTiles(tl->second.level, ways, node_ref, node_exit_to, node_name);
+  BuildLocalTiles(tl->second.level, osmdata.ways,osmdata.node_ref,
+                  osmdata.node_exit_to, osmdata.node_name);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 
@@ -91,25 +86,22 @@ void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
 // Construct edges in the graph.
 // TODO - compare logic to example_routing app. to see why the edge
 // count differs.
-void GraphBuilder::ConstructEdges(
-            const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-            const std::vector<OSMWay>& ways, const size_t edge_count,
-            const size_t intersection_count) {
+void GraphBuilder::ConstructEdges(const OSMData& osmdata) {
   // Reserve size for the Node map
-  nodes_.reserve(intersection_count);
+  nodes_.reserve(osmdata.intersection_count);
 
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
   uint64_t startnodeid, nodeid;
-  edges_.reserve(edge_count);
-  for (size_t wayindex = 0; wayindex < ways.size(); wayindex++) {
+  edges_.reserve(osmdata.edge_count);
+  for (size_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
     // Get some way attributes needed for the edge
-    const auto& way = ways[wayindex];
+    const auto& way = osmdata.ways[wayindex];
 
     // Start an edge at the first node of the way and add the
     // edge index to the node
     startnodeid = nodeid = way.nodes()[0];
-    const auto& osmnode = osmnodes.find(nodeid)->second;
+    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
     Edge edge(nodeid, wayindex, osmnode.latlng(), way);
 
     // If Node exists add an edge to it, otherwise construct Node, add an
@@ -129,7 +121,7 @@ void GraphBuilder::ConstructEdges(
     for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
       nodeid  = way.nodes()[i];
-      const auto& osmnode = osmnodes.find(nodeid)->second;
+      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
       edge.AddLL(osmnode.latlng());
 
       // If a is an intersection or the end of the way

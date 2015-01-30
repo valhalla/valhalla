@@ -15,6 +15,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/mjolnir/osmdata.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/dataquality.h>
@@ -213,30 +214,19 @@ class GraphBuilder {
   GraphBuilder(const boost::property_tree::ptree& pt);
 
   /**
-   * Tell the builder to build the tiles from the provided datasource and configs
-   * @param  osmnodes  OSM nodes, mapped via the OSM Node Id
-   * @param  ways      OSM ways, references the nodes by OSM node Id.
+   * Tell the builder to build the tiles from the provided datasource
+   * and configs
+   * @param  osmdata  OSM data used to build the graph.
    */
-  void Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-             const std::vector<OSMWay>& ways,
-             const std::unordered_map<uint64_t, std::string>& node_ref,
-             const std::unordered_map<uint64_t, std::string>& node_exit_to,
-             const std::unordered_map<uint64_t, std::string>& name,
-             const size_t edge_count,
-             const size_t intersection_count);
+  void Build(const OSMData& osmdata);
 
  protected:
 
   /**
    * Construct edges in the graph.
-   * @param  osmnodes  OSM nodes, mapped via the OSM Node Id
-   * @param  ways      OSM ways, references the nodes by OSM node Id.
-   * @param  edge_count Estimated number of edges.
-   * @param  intersection_count Number of intersection nodes.
+   * @param  osmdata  OSM data used to construct edges in the graph.
    */
-  void ConstructEdges(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-           const std::vector<OSMWay>& ways, const size_t edge_count,
-           const size_t intersection_count);
+  void ConstructEdges(const OSMData& osmdata);
 
   /**
    * Sort edges from the nodes (by driveability and importance).

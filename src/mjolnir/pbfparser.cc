@@ -56,22 +56,9 @@ const bool NodeIdTable::IsUsed(const uint64_t id) const {
 }
 
 // Construct PBFParser based on properties file and input PBF extract
-PBFParser::PBFParser(const boost::property_tree::ptree& pt,
-                     std::unordered_map<uint64_t, OSMNode>& nodes,
-                     std::vector<OSMWay>& ways,
-                     std::unordered_map<uint64_t, std::string>& map_ref,
-                     std::unordered_map<uint64_t, std::string>& map_exit_to,
-                     std::unordered_map<uint64_t, std::string>& map_name)
-    : intersection_count_(0),
-      node_count_(0),
-      edge_count_(0),
-      speed_assignment_count_(0),
+PBFParser::PBFParser(const boost::property_tree::ptree& pt)
+    : speed_assignment_count_(0),
       tile_hierarchy_(pt.get_child("hierarchy")),
-      nodes_(nodes),
-      ways_(ways),
-      map_ref_(map_ref),
-      map_exit_to_(map_exit_to),
-      map_name_(map_name),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId),
       threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
@@ -83,7 +70,12 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt,
           pt.get<std::string>("tagtransform.way_function"));
 }
 
-void PBFParser::Load(const std::vector<std::string>& input_files) {
+OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
+  // Create OSM data. Set the member pointer so that the parsing callback
+  // methods can use it.
+  OSMData osmdata;
+  osm_ = &osmdata;
+
   // Parse each input file - first pass
   for(const auto& input_file : input_files) {
     // Parse the ways and relations. Find all node Ids needed.
@@ -91,37 +83,41 @@ void PBFParser::Load(const std::vector<std::string>& input_files) {
     LOG_INFO("Parsing ways and relations to mark nodes needed");
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    LOG_INFO("Routable ways " + std::to_string(ways_.size()));
+    LOG_INFO("Routable ways " + std::to_string(osmdata.ways.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing ways and relations took " + std::to_string(msecs) + " ms");
   }
 
   std::ostringstream s;
-  s << std::fixed << std::setprecision(2) << (static_cast<float>(speed_assignment_count_) / ways_.size()) * 100;
+  s << std::fixed << std::setprecision(2) << (static_cast<float>(speed_assignment_count_) /
+          osmdata.ways.size()) * 100;
   LOG_INFO("Percentage of ways using speed assignment: " + s.str());
 
   for(const auto& input_file : input_files) {
     // Run through the nodes
     std::clock_t start = std::clock();
-    LOG_INFO("Parsing nodes but only keeping " + std::to_string(node_count_));
-    nodes_.reserve(node_count_);
+    LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
+    osmdata.nodes.reserve(osmdata.node_count);
     //TODO: we know how many knows we expect, stop early once we have that many
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
-    LOG_INFO("Routable nodes " + std::to_string(nodes_.size()));
+    LOG_INFO("Routable nodes " + std::to_string(osmdata.nodes.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
   }
 
   // Go through OMSNodes and set the intersection flag
-  for (auto& node : nodes_) {
+  for (auto& node : osmdata.nodes) {
     if (intersection_.IsUsed(node.first)) {
       node.second.set_intersection(true);
-      intersection_count_++;
+      osmdata.intersection_count++;
     }
   }
 
   // Trim the size of the OSM way vector
-  ways_.shrink_to_fit();
+  osmdata.ways.shrink_to_fit();
+
+  // Return OSM data
+  return osmdata;
 }
 
 // Initialize Lua tag transformations
@@ -162,19 +158,19 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
       bool hasTag = (tag.second.length() ? true : false);
       n.set_exit_to(hasTag);
       if (hasTag)
-        map_exit_to_[osmid] = tag.second;
+        osm_->node_exit_to[osmid] = tag.second;
     }
     else if (is_highway_junction && (tag.first == "ref")) {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_ref(hasTag);
       if (hasTag)
-        map_ref_[osmid] = tag.second;
+        osm_->node_ref[osmid] = tag.second;
     }
     else if (is_highway_junction && (tag.first == "name")) {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_name(hasTag);
       if (hasTag)
-        map_name_[osmid] = tag.second;
+        osm_->node_name[osmid] = tag.second;
     }
     else if (tag.first == "gate")
       n.set_gate((tag.second == "true" ? true : false));
@@ -185,10 +181,10 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Add to the node map;
-  nodes_.emplace(osmid, std::move(n));
+  osm_->nodes.emplace(osmid, std::move(n));
 
-  if (nodes_.size() % 1000000 == 0) {
-    LOG_INFO("Processed " + std::to_string(nodes_.size()) + " nodes on ways");
+  if (osm_->nodes.size() % 1000000 == 0) {
+    LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
   }
 }
 
@@ -215,16 +211,16 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   for (const auto ref : refs) {
     if(shape_.IsUsed(ref)) {
       intersection_.set(ref);
-      ++edge_count_;
+      ++osm_->edge_count;
     }
     else {
-      ++node_count_;
+      ++osm_->node_count;
     }
     shape_.set(ref);
   }
   intersection_.set(refs.front());
   intersection_.set(refs.back());
-  edge_count_ += 2;
+  osm_->edge_count += 2;
 
   float default_speed;
   bool has_speed = false;
@@ -508,22 +504,12 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   }
 
   // Add the way to the list
-  ways_.emplace_back(std::move(w));
+  osm_->ways.emplace_back(std::move(w));
 }
 
 void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
                                      const CanalTP::References & /*refs*/) {
   //TODO:
-}
-
-// Get the estimated edge count
-size_t PBFParser::edge_count() const {
-  return edge_count_;
-}
-
-// Get the number of intersection nodes.
-size_t PBFParser::intersection_count() const {
-  return intersection_count_;
 }
 
 }
