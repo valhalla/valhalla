@@ -4,6 +4,7 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/directededge.h>
 
 namespace valhalla{
 namespace loki{
@@ -19,15 +20,23 @@ namespace loki{
 enum class SearchStrategy : bool { NODE, EDGE };
 
 /**
+ * A function point which returns true if an edge should be
+ * filtered out of the correlated set
+ */
+using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
+
+/**
  * Find an location within the route network given an input location
  * same tiled route data and a search strategy
  *
  * @param location  the position which needs to be correlated to the route network
  * @param reader    and object used to access tiled route data TODO: switch this out for a proper cache
  * @param strategy  what type of search to do
+ * @param filter    a function to be used in the rejection of edges
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
-baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader, const SearchStrategy strategy = SearchStrategy::NODE);
+baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
+  const SearchStrategy strategy = SearchStrategy::NODE, EdgeFilter filter = nullptr);
 
 }
 }

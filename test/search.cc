@@ -61,7 +61,7 @@ boost::property_tree::ptree make_tile() {
     node_builder.set_bestrc(RoadClass::kSecondary);
     node_builder.set_edge_count(1);
     node_builder.set_edge_index(0);
-    //3
+    //0
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(PointLL().Length({{.01, .2}, {.2, .1}}));
     edge_builder.set_endnode(d);
@@ -79,7 +79,7 @@ boost::property_tree::ptree make_tile() {
     node_builder.set_edge_count(3);
     node_builder.set_edge_index(1);
     std::vector<DirectedEdgeBuilder> edges;
-    //0
+    //1
     {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .01}}));
@@ -88,7 +88,7 @@ boost::property_tree::ptree make_tile() {
       edge_builder.set_edgedataoffset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
-    //1
+    //2
     {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .2}}));
@@ -97,7 +97,7 @@ boost::property_tree::ptree make_tile() {
       edge_builder.set_edgedataoffset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
-    //2
+    //3
     {
       DirectedEdgeBuilder edge_builder;
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.2, .1}}));
@@ -117,7 +117,7 @@ boost::property_tree::ptree make_tile() {
     node_builder.set_bestrc(RoadClass::kSecondary);
     node_builder.set_edge_count(1);
     node_builder.set_edge_index(4);
-    //3
+    //4
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(PointLL().Length({{.01, .01}, {.2, .1}}));
     edge_builder.set_endnode(d);
@@ -144,20 +144,50 @@ boost::property_tree::ptree make_tile() {
   return conf;
 }
 
-void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected){
+void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
+  const std::string& expected_name){
   valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::NODE);
+  if(!p.IsCorrelated())
+    throw std::runtime_error("Didn't find any node/edges");
   if(!p.IsNode())
     throw std::runtime_error("Node search should produce node results");
-  if(!p.vertex().ApproximatelyEqual(expected))
-    throw std::runtime_error("Found wrong node");
+  if(!p.vertex().ApproximatelyEqual(expected_point))
+    throw std::runtime_error("Found expected_point node");
+  if(p.edges().front().dist != 0)
+    throw std::runtime_error("Distance along the edge should always be 0 for node search");
+  GraphTile* tile = reader.GetGraphTile(location.latlng_);
+  if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
+    throw std::runtime_error("Didn't find expected road name");
 }
 
 void TestNodeSearch() {
-
   auto conf = make_tile();
   valhalla::baldr::GraphReader reader(conf);
 
-  node_search(reader, {{.01, .2}}, {.01, .2});
+  node_search(reader, {{.01, .2}}, {.01, .2}, "0");
+}
+
+void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
+  const std::string& expected_name, const float expected_distance){
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::EDGE);
+  if(!p.IsCorrelated())
+      throw std::runtime_error("Didn't find any node/edges");
+    if(p.IsNode() != (expected_distance == 0.f))
+      throw std::runtime_error("Edge search got unexpected IsNode result");
+    if(!p.vertex().ApproximatelyEqual(expected_point))
+      throw std::runtime_error("Found wrong point");
+    if(p.edges().front().dist != expected_distance)
+      throw std::runtime_error("Distance along the edge should always be 0 for node search");
+    GraphTile* tile = reader.GetGraphTile(location.latlng_);
+    if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
+      throw std::runtime_error("Didn't find expected road name");
+}
+
+void TestEdgeSearch() {
+  auto conf = make_tile();
+  valhalla::baldr::GraphReader reader(conf);
+
+  //edge_search(reader, {{.095, .1}}, {.095, .1}, "3", .5);
 }
 
 }
@@ -166,6 +196,8 @@ int main() {
   test::suite suite("search");
 
   suite.test(TEST_CASE(TestNodeSearch));
+
+  suite.test(TEST_CASE(TestEdgeSearch));
 
   return suite.tear_down();
 }
