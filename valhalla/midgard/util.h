@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_UTIL_H_
 
 #include <string>
+#include <stdexcept>
 
 namespace valhalla {
 namespace midgard {
@@ -91,6 +92,22 @@ T2 ToMap(const T1& inmap) {
   for(const auto& key_value : inmap)
     outmap[key_value.first] = key_value.second.data();
   return outmap;
+}
+
+/**
+ * equals with an epsilon for approximation
+ * @param first operand
+ * @param second operand
+ * @param epsilon to help with approximate equality
+ */
+template <class T>
+bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
+  if(epsilon < static_cast<T>(0))
+    throw std::logic_error("Using a negative epsilon is not supported");
+  T diff = a - b;
+  //if its non-negative it better be less than epsilon, if its negative then it better be bigger than epsilon
+  bool negative = diff < static_cast<T>(0);
+  return (!negative && diff < epsilon) || (negative && diff > -epsilon);
 }
 
 }

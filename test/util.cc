@@ -43,6 +43,17 @@ void TestGetTime() {
     throw std::runtime_error("Invalid time");
 }
 
+void AppxEqual() {
+  if(!equal<float>(-136.170790, -136.170800, .00002f))
+    throw std::runtime_error("Should be equal");
+  if(!equal<float>(-136.170800, -136.170790, .00002f))
+    throw std::runtime_error("Should be equal");
+  if(!equal<float>(16.645590, 16.645580, .00002f))
+    throw std::runtime_error("Should be equal");
+  if(!equal<float>(76.627980, 76.627970, .00002f))
+    throw std::runtime_error("Should be equal");
+}
+
 }
 
 int main() {
@@ -53,6 +64,8 @@ int main() {
 
   // GetTime
   suite.test(TEST_CASE(TestGetTime));
+
+  suite.test(TEST_CASE(AppxEqual));
 
   return suite.tear_down();
 }
