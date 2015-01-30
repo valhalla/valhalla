@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "mjolnir/graphbuilder.h"
+#include "mjolnir/pbfparser.h"
 
 #include <cstdint>
 #include <unordered_set>
