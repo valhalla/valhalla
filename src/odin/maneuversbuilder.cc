@@ -80,7 +80,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       FinalizeManeuver(maneuvers.front(), i);
 
       // Initialize new maneuver
-      maneuvers.emplace_front(Maneuver());
+      maneuvers.emplace_front();
       InitializeManeuver(maneuvers.front(), i);
     }
   }
