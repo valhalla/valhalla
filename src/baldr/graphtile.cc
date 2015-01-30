@@ -193,13 +193,13 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
 }
 
 std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
-  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset));
+  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset, textlist_, textlist_size_));
 }
 
 // Get the directed edges outbound from the specified node index.
 const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
                                                 uint32_t& count,
-                                                uint32_t& edge_index) {
+                                                uint32_t& edge_index) const {
   const NodeInfo* nodeinfo = node(node_index);
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();
@@ -208,48 +208,19 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
 
 // Convenience method to get the names for an edge given the offset to the
 // edge info
-std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) {
-  return GetNames(edgeinfo(edgeinfo_offset));
-}
-
-// Convenience method to get the names for an edge given an edgeinfo shared
-// pointer.
-std::vector<std::string> GraphTile::GetNames(const std::unique_ptr<const EdgeInfo>& edge) {
-  // Get each name
-  std::vector<std::string> names;
-  for (uint32_t i = 0; i < edge->name_count(); i++) {
-    uint32_t offset = edge->GetStreetNameOffset(i);
-    if (offset < textlist_size_) {
-      names.push_back(textlist_ + offset);
-    } else {
-      throw std::runtime_error("GetNames: offset exceeds size of text list");
-    }
-  }
-  return names;
+std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset)->GetNames();
 }
 
 // Convenience method to get the exit signs for an edge given the offset to the
 // edge info
-std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t edgeinfo_offset) {
-  return GetExitSigns(edgeinfo(edgeinfo_offset));
+std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t edgeinfo_offset) const {
+  return edgeinfo(edgeinfo_offset)->GetExitSigns();
 }
 
 // Convenience method to get the exit signs for an edge given an edgeinfo shared
 // pointer.
-std::vector<ExitSignInfo> GraphTile::GetExitSigns(const std::unique_ptr<const EdgeInfo>& edge) {
-  // Get each exit sign
-  std::vector<ExitSignInfo> exit_list;
-  for (uint32_t i = 0; i < edge->exit_sign_count(); i++) {
-    const ExitSign* exit_sign = edge->GetExitSign(i);
-    if (exit_sign->text_offset() < textlist_size_) {
-      exit_list.emplace_back(
-          exit_sign->type(), (textlist_ + exit_sign->text_offset()));
-    } else {
-      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
-    }
-  }
-  return exit_list;
-}
+
 
 }
 }

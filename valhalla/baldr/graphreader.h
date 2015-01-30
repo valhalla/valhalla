@@ -42,7 +42,7 @@ class GraphReader {
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  GraphTile* GetGraphTile(const GraphId& graphid);
+  const GraphTile* GetGraphTile(const GraphId& graphid);
 
   /**
    * Get a pointer to a graph tile object given a PointLL and a Level
@@ -50,14 +50,14 @@ class GraphReader {
    * @param level    the hierarchy level to use when getting the tile
    * @return GraphTile* a pointer to the graph tile
    */
-  GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level);
+  const GraphTile* GetGraphTile(const PointLL& pointll, const uint8_t level);
 
   /**
    * Get a pointer to a graph tile object given a PointLL and using the highest level in the hierarchy
    * @param pointll  the lat,lng that the tile covers
    * @return GraphTile* a pointer to the graph tile
    */
-  GraphTile* GetGraphTile(const PointLL& pointll);
+  const GraphTile* GetGraphTile(const PointLL& pointll);
 
  protected:
   // Information about where the tiles are kept
