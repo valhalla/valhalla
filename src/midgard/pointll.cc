@@ -97,19 +97,17 @@ float PointLL::Heading(const PointLL& ll2) const {
   return (bearing < 0.0f) ? bearing + 360.0f : bearing;
 }
 
-float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
-                            int& idx) const {
+std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts) const {
+  PointLL closest;
+  int idx;
   float mindist = std::numeric_limits<float>::max();
+
   // If there are no points we are done
-  if (pts.size() == 0)
-    return mindist;
+  if(pts.size() == 0)
+    return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
   // If there is one point we are done
-  if (pts.size() == 1) {
-    mindist = DistanceSquared(pts.front());
-    closest = pts.front();
-    idx = 0;
-    return mindist;
-  }
+  if(pts.size() == 1)
+    return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
 
   DistanceApproximator approx;
   approx.SetTestPoint(*this);
@@ -184,7 +182,7 @@ float PointLL::ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
       idx = (int) (pts.size() - 2);
     }
   }
-  return mindist;
+  return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
 }
 
 // Calculate the heading from the start of a polyline of lat,lng points to a

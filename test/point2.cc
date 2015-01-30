@@ -82,15 +82,13 @@ void TestDistanceSquared() {
 
 void TryClosestPoint(const std::vector<Point2>& pts, const Point2&p,
                      const Point2& c, const int idx, const float res) {
-  int index = 0;
-  Point2 closest;
-  float d = p.ClosestPoint(pts, closest, index);
-  if (fabs(d - res) > kEpsilon)
+  auto result = p.ClosestPoint(pts);
+  if (fabs(std::get<1>(result) - res) > kEpsilon)
     throw runtime_error("ClosestPoint test failed - distance squared is wrong");
-  if (idx != index )
+  if (idx != std::get<2>(result) )
       throw runtime_error("ClosestPoint test failed -index of closest segment is wrong");
-  if (fabs(c.x() - closest.x()) > kEpsilon ||
-      fabs(c.y() - closest.y()) > kEpsilon)
+  if (fabs(c.x() - std::get<0>(result).x()) > kEpsilon ||
+      fabs(c.y() - std::get<0>(result).y()) > kEpsilon)
     throw runtime_error("ClosestPoint test failed - closest point is wrong");
 }
 void TestClosestPoint() {

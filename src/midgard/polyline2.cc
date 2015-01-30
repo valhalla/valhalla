@@ -35,8 +35,8 @@ namespace midgard{
     return length;
   }
 
-  float Polyline2::ClosestPoint(const Point2& pt, Point2& nearest, int& idx) const {
-    return pt.ClosestPoint(pts_, nearest, idx);
+  std::tuple<Point2, float, int> Polyline2::ClosestPoint(const Point2& pt) const {
+    return pt.ClosestPoint(pts_);
   }
 
   unsigned int Polyline2::Generalize(const float t) {

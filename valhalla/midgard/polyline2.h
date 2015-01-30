@@ -5,6 +5,7 @@
 #include <valhalla/midgard/clipper2.h>
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
+#include <tuple>
 
 namespace valhalla{
 namespace midgard{
@@ -54,14 +55,15 @@ class Polyline2 {
   float Length(const std::vector<Point2>& pts) const;
 
   /**
-   * Gets the closest point to this polyline from the specified point.
-   * @param  pt      Point to find closest point to.
-   * @param  closest (OUT) Closest point along the polyline
-   * @param  idx     (OUT) Index of the segment of the polyline which contains
-   *                       the closest point.
-   * @return   Returns the distance squared of the closest point.
+   * Finds the closest point to the supplied polyline as well as the distance
+   * squared to that point and the index of the segment where the closest point lies.
+   * @param  pts     List of points on the polyline.
+   * @return  tuple of <Closest point along the polyline,
+   *                    Returns the distance squared (meters) of the closest point,
+   *                    Index of the segment of the polyline which contains the closest point
+   *                   >
    */
-  float ClosestPoint(const Point2& pt, Point2& nearest, int& idx) const;
+  std::tuple<Point2, float, int> ClosestPoint(const Point2& pt) const;
 
   /**
    * Generalize this polyline.

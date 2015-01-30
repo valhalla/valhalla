@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_POINTLL_H_
 
 #include <valhalla/midgard/point2.h>
+#include <tuple>
 
 namespace valhalla {
 namespace midgard {
@@ -94,15 +95,14 @@ class PointLL : public Point2 {
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point.
+   * squared to that point and the index of the segment where the closest point lies.
    * @param  pts     List of points on the polyline.
-   * @param  closest (OUT) Closest point along the polyline
-   * @param  idx     (OUT) Index of the segment of the polyline which contains
-   *                       the closest point.
-   * @return   Returns the distance squared (meters) of the closest point.
+   * @return  tuple of <Closest point along the polyline,
+   *                    Returns the distance squared (meters) of the closest point,
+   *                    Index of the segment of the polyline which contains the closest point
+   *                   >
    */
-  float ClosestPoint(const std::vector<PointLL>& pts, PointLL& closest,
-                     int& idx) const;
+  std::tuple<PointLL, float, int> ClosestPoint(const std::vector<PointLL>& pts) const;
 
   /**
    * Calculate the heading from the start of a polyline of lat,lng points to a
