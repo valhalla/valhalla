@@ -243,7 +243,7 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
   for (const auto& edge : origin.edges()) {
     // Get the directed edge
     GraphId edgeid = edge.id;
-    GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get cost and sort cost
