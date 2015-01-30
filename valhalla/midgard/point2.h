@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <tuple>
 
 namespace valhalla{
 namespace midgard{
@@ -121,15 +122,14 @@ class Point2 : public std::pair<float, float>{
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point.
+   * squared to that point and the index of the segment where the closest point lies.
    * @param  pts     List of points on the polyline.
-   * @param  closest (OUT) Closest point along the polyline
-   * @param  idx     (OUT) Index of the segment of the polyline which contains
-   *                       the closest point.
-   * @return   Returns the distance squared of the closest point.
+   * @return  tuple of <Closest point along the polyline,
+   *                    Returns the distance squared (meters) of the closest point,
+   *                    Index of the segment of the polyline which contains the closest point
+   *                   >
    */
-  float ClosestPoint(const std::vector<Point2>& pts, Point2& closest,
-            int& idx) const;
+  std::tuple<Point2, float, int> ClosestPoint(const std::vector<Point2>& pts) const;
 
  protected:
 };

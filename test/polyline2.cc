@@ -47,11 +47,9 @@ void TestGeneralizeAndLength() {
 
 void TryClosestPoint(const Polyline2& pl, const Point2& a, const Point2& b) {
 
-  Point2 c;
-  int x;
-  pl.ClosestPoint(a, c, x);
+  auto result = pl.ClosestPoint(a);
 
-  if (c != b)
+  if (std::get<0>(result)!= b)
     throw runtime_error("ClosestPoint test failed.");
 }
 

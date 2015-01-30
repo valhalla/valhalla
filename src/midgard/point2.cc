@@ -71,20 +71,17 @@ Vector2 Point2::operator -(const Point2& p) const {
   return Vector2(first - p.first, second - p.second);
 }
 
-float Point2::ClosestPoint(const std::vector<Point2>& pts, Point2& closest,
-                           int& idx) const {
-
+std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& pts) const {
+  Point2 closest;
+  int idx;
   float mindist = std::numeric_limits<float>::max();
+
   // If there are no points we are done
   if(pts.size() == 0)
-    return mindist;
+    return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
   // If there is one point we are done
-  if(pts.size() == 1) {
-    mindist = DistanceSquared(pts.front());
-    closest = pts.front();
-    idx = 0;
-    return mindist;
-  }
+  if(pts.size() == 1)
+    return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
 
   // Iterate through the pts
   bool beyond_end = true;   // Need to test past the end point?
@@ -156,7 +153,7 @@ float Point2::ClosestPoint(const std::vector<Point2>& pts, Point2& closest,
       idx = static_cast<int>(pts.size() - 2);
     }
   }
-  return mindist;
+  return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
 }
 
 }
