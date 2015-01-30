@@ -8,6 +8,10 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+using namespace valhalla::odin;
+
 namespace valhalla {
 namespace thor {
 
@@ -38,7 +42,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t prior_opp_index;
   std::vector<PointLL> trip_shape;
   for (const auto& edge : pathedges) {
-    GraphTile* graphtile = graphreader.GetGraphTile(edge);
+    const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
 
     // Skip transition edges
@@ -174,7 +178,7 @@ TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
-                                            GraphTile* graphtile) {
+                                            const GraphTile* graphtile) {
   TripPath_Edge* trip_edge = trip_node->add_edge();
 
   // Get the edgeinfo and list of names - add to the trip edge.
