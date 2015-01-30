@@ -21,14 +21,12 @@ boost::property_tree::ptree make_tile() {
 
   //make the config file
   std::stringstream json; json << "{ \
-    \"output\": { \
-      \"tile_dir\": \"test/tiles\", \
-      \"levels\": [ \
-        {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-        {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"TertiaryUnclassified\"}, \
-        {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-      ] \
-    } \
+    \"tile_dir\": \"test/tiles\", \
+    \"levels\": [ \
+      {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
+      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"TertiaryUnclassified\"}, \
+      {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
+    ] \
   }";
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
