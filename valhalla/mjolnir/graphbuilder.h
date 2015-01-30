@@ -19,51 +19,8 @@
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/dataquality.h>
 
-#include <valhalla/mjolnir/luatagtransform.h>
-
-// Forward declare
-namespace CanalTP {
-  class Reference;
-}
-
 namespace valhalla {
 namespace mjolnir {
-
-/**
- * A method for marking OSM node Ids that are used by ways.
- * Uses a vector where 1 bit is used for each possible Id.
- */
-class NodeIdTable {
- public:
-   /**
-    * Constructor
-    * @param   maxosmid   Maximum OSM Id to support.
-    */
-  NodeIdTable(const uint64_t maxosmid);
-
-  /**
-   * Destructor
-   */
-  ~NodeIdTable();
-
-  /**
-   * Sets the OSM Id as used.
-   * @param   osmid   OSM Id of the node.
-   */
-  void set(const uint64_t id);
-
-  /**
-   * Test if the OSM Id is used / set in the bitmarker.
-   * @param  id  OSM Id
-   * @return  Returns true if the OSM Id is used. False if not.
-   */
-  const bool IsUsed(const uint64_t id) const;
-
- private:
-  const uint64_t maxosmid_;
-  std::vector<uint64_t> bitmarkers_;
-};
-
 
 /**
  * An edge in the graph. Connects 2 nodes that have 2 or more "uses" - meaning
@@ -140,6 +97,108 @@ struct Edge {
 };
 
 /**
+ * Extend OSMNode to add edge data and GraphId - information added
+ * by GraphBuilder.
+ */
+class Node : public OSMNode {
+ public:
+  /**
+   * Constructor.
+   */
+  Node()
+      : OSMNode() {
+  }
+
+  /**
+   * Constructor with arguments
+   */
+  Node(const OSMNode& osmnode, const uint32_t edgeindex, const bool link) {
+    set_latlng(osmnode.latlng());
+    attributes_.v = osmnode.attributes();
+    AddEdge(edgeindex, link);
+  }
+
+  /**
+   * Set the graph Id
+   * @param  graphid  Graph ID for this node
+   */
+  void set_graphid(const baldr::GraphId& graphid) {
+    graphid_ = graphid;
+  }
+
+  /**
+   * Get the graph Id of this node (after tiling).
+   * @return  Returns the graph Id of this node.
+   */
+  const baldr::GraphId& graphid() const  {
+    return graphid_;
+  }
+
+  /**
+   * Add an edge. Set flags to indicate a link and/or non-link edge
+   * exists at the node.
+   * @param  edgeindex  Index in the list of edges.
+   * @param  link       Flag indicating whether this edge is a link
+   *                    (highway=*_link)
+   */
+  void AddEdge(const uint32_t edgeindex, const bool link) {
+    if (link) {
+      attributes_.fields.link_edge = true;
+    } else {
+      attributes_.fields.non_link_edge = true;
+    }
+    edges_.emplace_back(edgeindex);
+  }
+
+  /**
+   * Get the list of edges.
+   * @return  Returns the list of edge indexes used by the node.
+   */
+  const std::vector<uint32_t>& edges() const {
+    return edges_;
+  }
+
+  /**
+   * Get a mutable list of edge indexes.
+   * @return  Returns the list of edge indexes used by the node.
+   */
+  std::vector<uint32_t>& mutable_edges() {
+    return edges_;
+  }
+
+  /**
+   * Get the number of edges beginning or ending at the node.
+   * @return  Returns the number of edges.
+   */
+  uint32_t edge_count() const {
+    return edges_.size();
+  }
+
+  /**
+   * Get the non-link edge flag. True if any connected edge is not a
+   * highway=*_link.
+   */
+  bool non_link_edge() const {
+    return attributes_.fields.non_link_edge;
+  }
+
+  /**
+   * Get the non-link edge flag. True if any connected edge is a
+   * highway=*_link.
+   */
+  bool link_edge() const  {
+    return attributes_.fields.link_edge;
+  }
+
+ protected:
+  // GraphId of the node (after tiling)
+  baldr::GraphId graphid_;
+
+  // List of edges beginning or ending at the node
+  std::vector<uint32_t> edges_;
+};
+
+/**
  * Class used to construct temporary data used to build the initial graph.
  */
 class GraphBuilder {
@@ -154,51 +213,30 @@ class GraphBuilder {
   GraphBuilder(const boost::property_tree::ptree& pt);
 
   /**
-   * Loads a given input file
-   */
-   void Load(const std::vector<std::string>& input_file);
-
-  //TODO: put these callbacks inside of an pimpl or just rewrite
-  //the bits of canalTP that we care about
-
-  /**
-   * Callback method for OSMPBFReader. Called when a node is parsed.
-   */
-  void node_callback(uint64_t osmid, double lng, double lat,
-                     const Tags &/*tags*/);
-
-  /**
-   * Callback method for OSMPBFReader. Called when a way is parsed.
-   */
-  void way_callback(uint64_t osmid, const Tags &tags,
-                    const std::vector<uint64_t> &refs);
-
-  /**
-   * Callback method for OSMPBFReader. Called when a relation is parsed.
-   */
-  void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                         const std::vector<CanalTP::Reference> & /*refs*/);
-
-  /**
    * Tell the builder to build the tiles from the provided datasource and configs
-   *
+   * @param  osmnodes  OSM nodes, mapped via the OSM Node Id
+   * @param  ways      OSM ways, references the nodes by OSM node Id.
    */
-  void Build();
+  void Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
+             const std::vector<OSMWay>& ways,
+             const std::unordered_map<uint64_t, std::string>& node_ref,
+             const std::unordered_map<uint64_t, std::string>& node_exit_to,
+             const std::unordered_map<uint64_t, std::string>& name,
+             const size_t edge_count,
+             const size_t intersection_count);
 
  protected:
 
   /**
-   * Initialize Lua with the scripts and functions.
-   */
-  void LuaInit(const std::string& nodetagtransformscript,
-               const std::string& nodetagtransformfunction,
-               const std::string& waytagtransformscript,
-               const std::string& waytagtransformfunction);
-
-  /**
    * Construct edges in the graph.
+   * @param  osmnodes  OSM nodes, mapped via the OSM Node Id
+   * @param  ways      OSM ways, references the nodes by OSM node Id.
+   * @param  edge_count Estimated number of edges.
+   * @param  intersection_count Number of intersection nodes.
    */
-  void ConstructEdges();
+  void ConstructEdges(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
+           const std::vector<OSMWay>& ways, const size_t edge_count,
+           const size_t intersection_count);
 
   /**
    * Sort edges from the nodes (by driveability and importance).
@@ -215,52 +253,33 @@ class GraphBuilder {
   /**
    * Update road class / importance of links (ramps)
    */
-  void ReclassifyLinks();
+  void ReclassifyLinks(const std::vector<OSMWay>& ways);
 
   /**
    * Get the best classification for any non-link edges from a node.
    * @param  node  Node - gets outbound edges from this node.
    * @return  Returns the best (most important) classification
    */
-  uint32_t GetBestNonLinkClass(const OSMNode& node) const;
+  uint32_t GetBestNonLinkClass(const Node& node) const;
 
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const uint8_t level) const;
+  void BuildLocalTiles(const uint8_t level,
+                       const std::vector<OSMWay>& ways,
+                       const std::unordered_map<uint64_t, std::string>& node_ref,
+                       const std::unordered_map<uint64_t, std::string>& node_exit_to,
+                       const std::unordered_map<uint64_t, std::string>& node_name) const;
 
-  //MAIN THREAD STUFF
-
-  size_t node_count_, edge_count_, speed_assignment_count_;
 
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;
 
-  // Lua Tag Transformation class
-  LuaTagTransform lua_;
-
-  // Stores all the ways that are part of the road network
-  std::vector<OSMWay> ways_;
-
-  // Mark the OSM Node Ids used by ways
-  NodeIdTable shape_, intersection_;
-
-  //CHILD THREAD STUFF
-
   // Map that stores all the nodes read
-  std::unordered_map<uint64_t, OSMNode> nodes_;
+  std::unordered_map<uint64_t, Node> nodes_;
 
   // Stores all the edges
   std::vector<Edge> edges_;
-
-  // Map that stores all the ref info on a node
-  std::unordered_map<uint64_t, std::string> map_ref_;
-
-  // Map that stores all the name info on a node
-  std::unordered_map<uint64_t, std::string> map_name_;
-
-  // Map that stores all the exit to info on a node
-  std::unordered_map<uint64_t, std::string> map_exit_to_;
 
   // A place to keep each tile's nodes so that various threads can
   // write various tiles asynchronously
