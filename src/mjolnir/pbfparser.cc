@@ -73,7 +73,7 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt)
 OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
-  OSMData osmdata;
+  OSMData osmdata{};
   osm_ = &osmdata;
 
   // Parse each input file - first pass
