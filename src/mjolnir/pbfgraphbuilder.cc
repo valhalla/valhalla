@@ -96,10 +96,11 @@ size_t ParsePBF(const boost::property_tree::ptree& pt,
                 std::vector<OSMWay>& ways,
                 std::unordered_map<uint64_t, std::string>& map_ref,
                 std::unordered_map<uint64_t, std::string>& map_exit_to,
-                std::unordered_map<uint64_t, std::string>& map_name) {
+                std::unordered_map<uint64_t, std::string>& map_name,
+                size_t& intersection_count) {
   PBFParser parser(pt, nodes, ways, map_ref, map_exit_to, map_name);
   parser.Load(input_files);
-  parser.PostProcess();
+  intersection_count = parser.intersection_count();
   return parser.edge_count();
 }
 
@@ -125,12 +126,15 @@ void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
+  size_t intersection_count = 0;
   size_t edge_count = ParsePBF(pt, input_files, nodes, ways,
-                               map_ref, map_exit_to, map_name);
+                               map_ref, map_exit_to, map_name,
+                               intersection_count);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder graphbuilder(pt);
-  graphbuilder.Build(nodes, ways, edge_count, map_ref, map_exit_to, map_name);
+  graphbuilder.Build(nodes, ways, map_ref, map_exit_to, map_name,
+                     edge_count, intersection_count);
 }
 
 int main(int argc, char** argv) {

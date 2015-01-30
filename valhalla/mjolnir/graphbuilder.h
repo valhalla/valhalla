@@ -218,10 +218,12 @@ class GraphBuilder {
    * @param  ways      OSM ways, references the nodes by OSM node Id.
    */
   void Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-             const std::vector<OSMWay>& ways, const size_t edge_count,
+             const std::vector<OSMWay>& ways,
              const std::unordered_map<uint64_t, std::string>& node_ref,
              const std::unordered_map<uint64_t, std::string>& node_exit_to,
-             const std::unordered_map<uint64_t, std::string>& name);
+             const std::unordered_map<uint64_t, std::string>& name,
+             const size_t edge_count,
+             const size_t intersection_count);
 
  protected:
 
@@ -230,9 +232,11 @@ class GraphBuilder {
    * @param  osmnodes  OSM nodes, mapped via the OSM Node Id
    * @param  ways      OSM ways, references the nodes by OSM node Id.
    * @param  edge_count Estimated number of edges.
+   * @param  intersection_count Number of intersection nodes.
    */
   void ConstructEdges(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-           const std::vector<OSMWay>& ways, const size_t edge_count);
+           const std::vector<OSMWay>& ways, const size_t edge_count,
+           const size_t intersection_count);
 
   /**
    * Sort edges from the nodes (by driveability and importance).

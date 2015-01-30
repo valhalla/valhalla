@@ -45,13 +45,15 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
 
 // Build the graph from the input
 void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-               const std::vector<OSMWay>& ways, const size_t edge_count,
+               const std::vector<OSMWay>& ways,
                const std::unordered_map<uint64_t, std::string>& node_ref,
                const std::unordered_map<uint64_t, std::string>& node_exit_to,
-               const std::unordered_map<uint64_t, std::string>& node_name) {
+               const std::unordered_map<uint64_t, std::string>& node_name,
+               const size_t edge_count,
+               const size_t intersection_count) {
   // Construct edges
   std::clock_t start = std::clock();
-  ConstructEdges(osmnodes, ways, edge_count);
+  ConstructEdges(osmnodes, ways, edge_count, intersection_count);
   uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
 
@@ -91,7 +93,11 @@ void GraphBuilder::Build(const std::unordered_map<uint64_t, OSMNode>& osmnodes,
 // count differs.
 void GraphBuilder::ConstructEdges(
             const std::unordered_map<uint64_t, OSMNode>& osmnodes,
-            const std::vector<OSMWay>& ways, const size_t edge_count) {
+            const std::vector<OSMWay>& ways, const size_t edge_count,
+            const size_t intersection_count) {
+  // Reserve size for the Node map
+  nodes_.reserve(intersection_count);
+
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
   uint64_t startnodeid, nodeid;

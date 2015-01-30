@@ -62,15 +62,16 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt,
                      std::unordered_map<uint64_t, std::string>& map_ref,
                      std::unordered_map<uint64_t, std::string>& map_exit_to,
                      std::unordered_map<uint64_t, std::string>& map_name)
-    : nodes_(nodes),
-      ways_(ways),
-      map_ref_(map_ref),
-      map_exit_to_(map_exit_to),
-      map_name_(map_name),
+    : intersection_count_(0),
       node_count_(0),
       edge_count_(0),
       speed_assignment_count_(0),
       tile_hierarchy_(pt.get_child("hierarchy")),
+      nodes_(nodes),
+      ways_(ways),
+      map_ref_(map_ref),
+      map_exit_to_(map_exit_to),
+      map_name_(map_name),
       shape_(kMaxOSMNodeId),
       intersection_(kMaxOSMNodeId),
       threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
@@ -110,6 +111,17 @@ void PBFParser::Load(const std::vector<std::string>& input_files) {
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
   }
+
+  // Go through OMSNodes and set the intersection flag
+  for (auto& node : nodes_) {
+    if (intersection_.IsUsed(node.first)) {
+      node.second.set_intersection(true);
+      intersection_count_++;
+    }
+  }
+
+  // Trim the size of the OSM way vector
+  ways_.shrink_to_fit();
 }
 
 // Initialize Lua tag transformations
@@ -504,24 +516,15 @@ void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
   //TODO:
 }
 
-// Set the intersection flag on the OSM nodes.
-void PBFParser::PostProcess() {
-  // Go through OMSNodes and set the intersection flag
-  for (auto& node : nodes_) {
-    if (intersection_.IsUsed(node.first)) {
-      node.second.set_intersection(true);
-    }
-  }
-
-  // Trim the size of the OSM way vector
-  ways_.shrink_to_fit();
-}
-
 // Get the estimated edge count
 size_t PBFParser::edge_count() const {
   return edge_count_;
 }
 
+// Get the number of intersection nodes.
+size_t PBFParser::intersection_count() const {
+  return intersection_count_;
+}
 
 }
 }

@@ -109,15 +109,16 @@ class PBFParser {
                          const std::vector<CanalTP::Reference> & /*refs*/);
 
   /**
-   * Post process
-   */
-  void PostProcess();
-
-  /**
    * Get the estimated edge count
    * @return  Returns the estimated edge count.
    */
   size_t edge_count() const;
+
+  /**
+   * Get the number of intersection nodes.
+   * @return  Returns the intersection node co8nt.
+   */
+  size_t intersection_count() const;
 
  protected:
 
@@ -129,6 +130,7 @@ class PBFParser {
                const std::string& waytagtransformscript,
                const std::string& waytagtransformfunction);
 
+  size_t intersection_count_;
   size_t node_count_, edge_count_, speed_assignment_count_;
 
   // List of the tile levels to be created
