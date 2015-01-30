@@ -155,7 +155,7 @@ void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
     throw std::runtime_error("Found expected_point node");
   if(p.edges().front().dist != 0)
     throw std::runtime_error("Distance along the edge should always be 0 for node search");
-  GraphTile* tile = reader.GetGraphTile(location.latlng_);
+  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
   if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
     throw std::runtime_error("Didn't find expected road name");
 }
@@ -178,7 +178,7 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
       throw std::runtime_error("Found wrong point");
     if(p.edges().front().dist != expected_distance)
       throw std::runtime_error("Distance along the edge should always be 0 for node search");
-    GraphTile* tile = reader.GetGraphTile(location.latlng_);
+    const GraphTile* tile = reader.GetGraphTile(location.latlng_);
     if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
       throw std::runtime_error("Didn't find expected road name");
 }
