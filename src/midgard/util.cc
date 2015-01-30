@@ -3,6 +3,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/point2.h>
 
+#include <cstdint>
 #include <cmath>
 #include <stdlib.h>
 #include <sstream>
@@ -73,8 +74,8 @@ std::string encode(const container_t& points) {
   //for each point
   for (const auto& p : points) {
     //shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(floor(p.first * 1e5));
-    int lat = static_cast<int>(floor(p.second * 1e5));
+    int lon = static_cast<int>(floor(static_cast<double>(p.first) * static_cast<double>(1e5)));
+    int lat = static_cast<int>(floor(static_cast<double>(p.second) * static_cast<double>(1e5)));
     //encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
@@ -99,17 +100,17 @@ container_t decode(const std::string& encoded) {
   //handy lambda to turn a few bytes of an encoded string into an integer
   auto deserialize = [&encoded, &i](const int previous) {
     //grab each 5 bits and mask it in where it belongs using the shift
-      int byte, shift = 0, result = 0;
-      do {
-        //TODO: could use a check here for out of bounds
-        //which could happen on improper polyline string data
-        byte = static_cast<int>(encoded[i++]) - 63;
-        result |= (byte & 0x1f) << shift;
-        shift += 5;
-      }while (byte >= 0x20);
-      //undo the left shift from above or the bit flipping and add to previous since its an offset
-      return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
-    };
+    int byte, shift = 0, result = 0;
+    do {
+      //TODO: could use a check here for out of bounds
+      //which could happen on improper polyline string data
+      byte = static_cast<int>(encoded[i++]) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    }while (byte >= 0x20);
+    //undo the left shift from above or the bit flipping and add to previous since its an offset
+    return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
+  };
 
   //make sure to go over all the characters
   int last_lon = 0, last_lat = 0;
@@ -118,8 +119,8 @@ container_t decode(const std::string& encoded) {
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
     //shift the decimal point 5 places to the left
-    output.emplace_back(static_cast<float>(lon) / 1e5,
-                        static_cast<float>(lat) / 1e5);
+    output.emplace_back(static_cast<typename container_t::value_type::first_type>(static_cast<double>(lon) / static_cast<double>(1e5)),
+                        static_cast<typename container_t::value_type::second_type>(static_cast<double>(lat) / static_cast<double>(1e5)));
     //remember the last one we encountered
     last_lon = lon;
     last_lat = lat;

@@ -4,8 +4,8 @@
 #include <limits>
 #include <cmath>
 
-#include "valhalla/midgard/util.h"
-#include "valhalla/midgard/vector2.h"
+#include "midgard/util.h"
+#include "midgard/vector2.h"
 
 namespace {
 constexpr float EPSILON = .00002f;
@@ -39,25 +39,24 @@ void Point2::Set(const float x, const float y) {
 }
 
 bool Point2::ApproximatelyEqual(const Point2& p) const {
-  return std::fabs(first - p.x()) < EPSILON && std::fabs(second - p.y()) < EPSILON;
+  return equal<first_type>(first, p.first, EPSILON) && equal<second_type>(second, p.second, EPSILON);
 }
 
-
 float Point2::DistanceSquared(const Point2& p) const {
-  return sqr(first - p.x()) + sqr(second - p.y());
+  return sqr(first - p.first) + sqr(second - p.second);
 }
 
 float Point2::Distance(const Point2& p) const {
-  return sqrtf(sqr(first - p.x()) + sqr(second - p.y()));
+  return sqrtf(sqr(first - p.first) + sqr(second - p.second));
 }
 
 Point2 Point2::AffineCombination(const float a0, const float a1,
                                  const Point2& p1) const {
-  return Point2(a0 * first + a1 * p1.x(), a0 * second + a1 * p1.y());
+  return Point2(a0 * first + a1 * p1.first, a0 * second + a1 * p1.second);
 }
 
 Point2 Point2::MidPoint(const Point2& p1) const {
-  return Point2(0.5f * first + 0.5f * p1.x(), 0.5f * second + 0.5f * p1.y());
+  return Point2(0.5f * first + 0.5f * p1.first, 0.5f * second + 0.5f * p1.second);
 }
 
 Point2 Point2::operator +(const Vector2& v) const {
@@ -69,7 +68,7 @@ Point2 Point2::operator -(const Vector2& v) const {
 }
 
 Vector2 Point2::operator -(const Point2& p) const {
-  return Vector2(first - p.x(), second - p.y());
+  return Vector2(first - p.first, second - p.second);
 }
 
 float Point2::ClosestPoint(const std::vector<Point2>& pts, Point2& closest,
