@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#./pathtest -o 47.118589,9.543217 -d 47.166110,9.511975 -t auto conf/valhalla.json
-
 which parallel &> /dev/null
 if [ $? != 0 ]; then
 	echo "parallel is required please install it"
@@ -24,11 +22,11 @@ function usage() {
 
 #get the input file
 if [ -z "${1}" ]; then
-	usage;
+	usage
 elif [ ! -f "${1}" ]; then
-	usage;
+	usage
 else
-	INPUT="${1}";
+	INPUT="${1}"
 fi
 
 #diffing or not, default to not
@@ -37,21 +35,23 @@ DIFF="${2}"
 #how many threads do you want, default to max
 CONCURRENCY=$(nproc)
 if [ "${3}" ]; then
-	CONCURRENCY="${3}";
+	CONCURRENCY="${3}"
 fi
 
 #where do you want the output, default to current time
 OUTDIR=$(date +%Y_%m_%d_%H_%S)
 if [ "${4}" ]; then
-	OUTDIR="${4}";
+	OUTDIR="${4}"
 fi
 mkdir -p "${OUTDIR}"
 
 #run all of the paths, make sure to cut off the timestamps
-#from the log messages otherwise every line will be a diff 
-cat "${INPUT}" | parallel -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 2>&1 | sed -e 's/^[^\[]*\[//' &> ${OUTDIR}/{#}.txt"
+#from the log messages otherwise every line will be a diff
+echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
+cat "${INPUT}" | parallel --progress -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 2>&1 | sed -e 's/^[^\[]*\[//' &> ${OUTDIR}/{#}.txt"
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
+	echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR}:\x1b[0m"
 	diff "${DIFF}" "${OUTDIR}"
 fi
