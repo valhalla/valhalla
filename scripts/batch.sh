@@ -32,10 +32,7 @@ else
 fi
 
 #diffing or not, default to not
-DIFF=
-if [ -z "${2}" ]; then
-	DIFF="${2}";
-fi
+DIFF="${2}"
 
 #how many threads do you want, default to max
 CONCURRENCY=$(nproc)

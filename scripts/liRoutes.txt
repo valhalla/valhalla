@@ -1,5 +1,5 @@
 -o 47.118589,9.543217 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
--o 47.118589,9.543217 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
+-o 47.242062,9.530428 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
 -o 47.118589,9.543217 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
 -o 47.118589,9.543217 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
 -o 47.118589,9.543217 -d 47.166110,9.511975 -t auto ../conf/valhalla.json
