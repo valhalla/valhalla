@@ -77,15 +77,20 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
   osm_ = &osmdata;
 
   // Parse each input file - first pass
-  for(const auto& input_file : input_files) {
-    // Parse the ways and relations. Find all node Ids needed.
+  for (const auto& input_file : input_files) {
+    // Parse the ways. Find all node Ids needed.
     std::clock_t start = std::clock();
-    LOG_INFO("Parsing ways and relations to mark nodes needed");
+    LOG_INFO("Parsing ways and marking nodes needed");
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
-    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    LOG_INFO("Routable ways " + std::to_string(osmdata.ways.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-    LOG_INFO("Parsing ways and relations took " + std::to_string(msecs) + " ms");
+    LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
+    LOG_INFO("Routable ways " + std::to_string(osmdata.ways.size()));
+
+    // Parse relations.
+    start = std::clock();
+    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
+    msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+    LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
   }
 
   std::ostringstream s;
@@ -93,16 +98,17 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
           osmdata.ways.size()) * 100;
   LOG_INFO("Percentage of ways using speed assignment: " + s.str());
 
-  for(const auto& input_file : input_files) {
-    // Run through the nodes
+  // Parse node in all the input files. Skip any that are not marked from
+  // being used in a way.
+  for (const auto& input_file : input_files) {
     std::clock_t start = std::clock();
     LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
     osmdata.nodes.reserve(osmdata.node_count);
     //TODO: we know how many knows we expect, stop early once we have that many
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
-    LOG_INFO("Routable nodes " + std::to_string(osmdata.nodes.size()));
     uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
+    LOG_INFO("Routable nodes " + std::to_string(osmdata.nodes.size()));
   }
 
   // Go through OMSNodes and set the intersection flag
@@ -114,7 +120,7 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
   }
 
   // Trim the size of the OSM way vector
-  osmdata.ways.shrink_to_fit();
+//  osmdata.ways.shrink_to_fit();
 
   // Return OSM data
   return osmdata;
@@ -504,7 +510,8 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   }
 
   // Add the way to the list
-  osm_->ways.emplace_back(std::move(w));
+  //osm_->ways.emplace_back(std::move(w));
+  osm_->ways.push_back(w);
 }
 
 void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,

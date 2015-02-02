@@ -218,7 +218,7 @@ class GraphBuilder {
    * and configs
    * @param  osmdata  OSM data used to build the graph.
    */
-  void Build(const OSMData& osmdata);
+  void Build(OSMData& osmdata);
 
  protected:
 
@@ -243,7 +243,7 @@ class GraphBuilder {
   /**
    * Update road class / importance of links (ramps)
    */
-  void ReclassifyLinks(const std::vector<OSMWay>& ways);
+  void ReclassifyLinks(const WayVector& ways);
 
   /**
    * Get the best classification for any non-link edges from a node.
@@ -256,7 +256,7 @@ class GraphBuilder {
    * Build tiles representing the local graph
    */
   void BuildLocalTiles(const uint8_t level,
-                       const std::vector<OSMWay>& ways,
+                       const WayVector& ways,
                        const std::unordered_map<uint64_t, std::string>& node_ref,
                        const std::unordered_map<uint64_t, std::string>& node_exit_to,
                        const std::unordered_map<uint64_t, std::string>& node_name) const;

@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
+//#include <stxxl.h>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -10,6 +11,8 @@
 
 namespace valhalla {
 namespace mjolnir {
+
+using WayVector = std::vector<OSMWay>;
 
 /**
  * Simple container for OSM data.
@@ -21,7 +24,7 @@ struct OSMData {
   size_t edge_count;            // Estimated count of edges
 
   // Stores all the ways that are part of the road network
-  std::vector<OSMWay> ways;
+  WayVector ways;
 
   // Map that stores all the nodes read
   std::unordered_map<uint64_t, OSMNode> nodes;

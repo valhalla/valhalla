@@ -43,13 +43,25 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
       threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
 }
 
+// Delete the OSM node map.
+void delete_node_map(OSMData& osmdata) {
+  std::unordered_map<uint64_t, OSMNode> tmp;
+  tmp.swap(osmdata.nodes);
+}
+
 // Build the graph from the input
-void GraphBuilder::Build(const OSMData& osmdata) {
+void GraphBuilder::Build(OSMData& osmdata) {
   // Construct edges
   std::clock_t start = std::clock();
   ConstructEdges(osmdata);
   uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
+
+  // No longer need the OSMNodes map in osmdata - can we recover its
+  // memory?
+  LOG_INFO("Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
+  delete_node_map(osmdata);
+  LOG_INFO("After delete: Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
 
   // Sort the edge indexes at the nodes (by driveability and importance)
   // TODO (do we still need to do this??)
@@ -225,7 +237,7 @@ uint32_t GraphBuilder::GetBestNonLinkClass(const Node& node) const {
 }
 
 // Reclassify links (ramps and turn channels).
-void GraphBuilder::ReclassifyLinks(const std::vector<OSMWay>& ways) {
+void GraphBuilder::ReclassifyLinks(const WayVector& ways) {
   uint32_t count = 0;
   std::unordered_set<uint64_t> visitedset;  // Set of visited nodes
   std::unordered_set<uint64_t> expandset;   // Set of nodes to expand
@@ -402,7 +414,7 @@ bool OnewayPairEdgesExist(const Node& node,
                           const uint32_t edgeindex,
                           const uint64_t wayid,
                           const std::vector<Edge>& edges,
-                          const std::vector<OSMWay>& ways) {
+                          const WayVector& ways) {
   // Iterate through the edges from this node. Skip the one with
   // the specified edgeindex
   uint32_t idx;
@@ -439,7 +451,7 @@ bool IsIntersectionInternal(const uint64_t startnode, const uint64_t endnode,
                             const float length,
                             const std::unordered_map<uint64_t, Node>& nodes,
                             const std::vector<Edge>& edges,
-                            const std::vector<OSMWay>& ways) {
+                            const WayVector& ways) {
   // Limit the length of intersection internal edges
   if (length > kMaxInternalLength) {
     return false;
@@ -531,7 +543,7 @@ void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
                         const std::vector<uint32_t>& edgelengths,
                         const std::unordered_map<uint64_t, Node>& nodes,
                         const std::vector<Edge>& edges,
-                        const std::vector<OSMWay>& ways, std::atomic<DataQuality*>& stats) {
+                        const WayVector& ways, std::atomic<DataQuality*>& stats) {
   uint32_t edgeindex;
   uint64_t endnode;
   std::unordered_map<uint64_t, DuplicateEdgeInfo> endnodes;
@@ -629,7 +641,7 @@ void BuildTileSet(
     std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
     std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
     const std::unordered_map<uint64_t, Node>& nodes,
-    const std::vector<OSMWay>& ways, const std::vector<Edge>& edges,
+    const WayVector& ways, const std::vector<Edge>& edges,
     const baldr::TileHierarchy& hierarchy,
     const std::unordered_map<uint64_t, std::string>& map_ref,
     const std::unordered_map<uint64_t, std::string>& map_name,
@@ -817,7 +829,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
 
 // Build tiles for the local graph hierarchy
 void GraphBuilder::BuildLocalTiles(const uint8_t level,
-                                   const std::vector<OSMWay>& ways,
+                                   const WayVector& ways,
                                    const std::unordered_map<uint64_t, std::string>& node_ref,
                                    const std::unordered_map<uint64_t, std::string>& node_exit_to,
                                    const std::unordered_map<uint64_t, std::string>& node_name) const {
