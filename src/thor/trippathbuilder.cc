@@ -199,7 +199,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
           trip_exit->set_number(exit.text());
           break;
         }
-        case ExitSign::Type::KBranch: {
+        case ExitSign::Type::kBranch: {
           trip_exit->add_branch(exit.text());
           break;
         }
