@@ -82,7 +82,7 @@ bool DirectedEdge::destonly() const {
 }
 
 bool DirectedEdge::unpaved() const {
-  return (surface() <= Surface::kCompacted);
+  return (surface() >= Surface::kCompacted);
 }
 
 bool DirectedEdge::tunnel() const {
