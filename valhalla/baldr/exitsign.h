@@ -16,7 +16,7 @@ class ExitSign {
  public:
   enum class Type : uint32_t {
     kNumber,
-    KBranch,
+    kBranch,
     kToward,
     kName
   };
