@@ -51,15 +51,20 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case TripDirections_Maneuver_Type_kRampStraight:
         FormRampStraightInstruction(maneuver);
+        break;
       case TripDirections_Maneuver_Type_kRampRight:
         FormRampRightInstruction(maneuver);
+        break;
       case TripDirections_Maneuver_Type_kRampLeft: {
         FormRampLeftInstruction(maneuver);
         break;
       }
-      case TripDirections_Maneuver_Type_kExitRight:
+      case TripDirections_Maneuver_Type_kExitRight: {
+        FormExitRightInstruction(maneuver);
+        break;
+      }
       case TripDirections_Maneuver_Type_kExitLeft: {
-        FormExitInstruction(maneuver);
+        FormExitLeftInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kStayStraight:
@@ -213,12 +218,23 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
   maneuver.set_instruction(std::move(text_instruction));
 }
 
-void NarrativeBuilder::FormExitInstruction(Maneuver& maneuver) {
+void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the exit";
+  text_instruction += "Take the exit on the right";
 
-  // TODO - add relative direction and exit info
+  // TODO - exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Take the exit on the left";
+
+  // TODO - exit info
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
