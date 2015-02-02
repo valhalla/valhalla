@@ -65,13 +65,9 @@ class NodeInfo {
 
  protected:
   // Latitude, longitude position of the node.
-  PointLL latlng_;
+  std::pair<float, float> latlng_;
 
   // Node attributes.
-  // TODO - what is the max. number of edges within the tile?
-  // TODO - do we want/need number of driveable? We can probably sort by
-  // driveability to optimize for driving routes - when the first non
-  // driveable edge is encountered the successive edges can be skipped
   struct NodeAttributes {
     uint32_t edge_index_  : 22; // Index within the node's tile of its first
                                 // outbound directed edge

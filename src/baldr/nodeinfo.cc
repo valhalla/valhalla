@@ -5,9 +5,9 @@ namespace valhalla {
 namespace baldr {
 
 // Default constructor
-NodeInfo::NodeInfo() {
-  latlng_.Set(0.0f, 0.0f);
-  attributes_ = {0};
+NodeInfo::NodeInfo()
+    : latlng_{},
+      attributes_{} {
 }
 
 // Destructor.
@@ -16,7 +16,7 @@ NodeInfo::~NodeInfo() {
 
 // Get the latitude, longitude
 const PointLL& NodeInfo::latlng() const {
-  return latlng_;
+  return static_cast<const PointLL&>(latlng_);
 }
 
 // Get the index in this tile of the first outbound directed edge
@@ -38,9 +38,6 @@ RoadClass NodeInfo::bestrc() const {
 const uint64_t NodeInfo::internal_version() {
 
   NodeInfo ni;
-
-  ni.latlng_.Set(0.0f, 0.0f);
-  ni.attributes_ = {};
 
   uint64_t seed = 0;
   boost::hash_combine(seed, ni.latlng_);
