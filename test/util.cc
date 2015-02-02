@@ -1,7 +1,6 @@
 #include "test.h"
 #include "valhalla/midgard/util.h"
 
-using namespace std;
 using namespace valhalla::midgard;
 
 namespace {
@@ -51,6 +50,10 @@ void AppxEqual() {
   if(!equal<float>(16.645590, 16.645580, .00002f))
     throw std::runtime_error("Should be equal");
   if(!equal<float>(76.627980, 76.627970, .00002f))
+    throw std::runtime_error("Should be equal");
+  if(!equal<int>(0, 0))
+    throw std::runtime_error("Should be equal");
+  if(!equal<float>(1, 1, 0))
     throw std::runtime_error("Should be equal");
 }
 
