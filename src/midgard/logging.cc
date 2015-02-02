@@ -81,6 +81,7 @@ const std::unordered_map<LogLevel, std::string, EnumHasher> colored
 Logger::Logger(const LoggingConfig& config) {};
 Logger::~Logger() {};
 void Logger::Log(const std::string&, const LogLevel) {};
+void Logger::Log(const std::string&, const std::string&) {};
 bool logger_registered =
   RegisterLogger("", [](const LoggingConfig& config){Logger* l = new Logger(config); return l;});
 
@@ -90,10 +91,13 @@ class StdOutLogger : public Logger {
   StdOutLogger() = delete;
   StdOutLogger(const LoggingConfig& config) : Logger(config), levels(config.find("color") != config.end() && config.find("color")->second == "true" ? colored : uncolored) {}
   virtual void Log(const std::string& message, const LogLevel level) {
+    Log(message, levels.find(level)->second);
+  }
+  virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
-    output.append(levels.find(level)->second);
+    output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
     //cout is thread safe, to avoid multiple threads interleaving on one line
@@ -138,10 +142,13 @@ class FileLogger : public Logger {
     ReOpen();
   }
   virtual void Log(const std::string& message, const LogLevel level) {
+    Log(message, uncolored.find(level)->second);
+  }
+  virtual void Log(const std::string& message,  const std::string& custom_directive = " [TRACE] ") {
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
-    output.append(uncolored.find(level)->second);
+    output.append(custom_directive);
     output.append(message);
     output.push_back('\n');
     lock.lock();
@@ -184,6 +191,16 @@ bool file_logger_registered =
 logging::Logger& logging::GetLogger(const LoggingConfig& config) {
   static std::unique_ptr<Logger> singleton(GetFactory().Produce(config));
   return *singleton;
+}
+
+//statically log manually
+void logging::Log(const std::string& message, const logging::LogLevel level) {
+  GetLogger().Log(message, level);
+}
+
+//statically log manually
+void logging::Log(const std::string& message, const std::string& custom_directive) {
+  GetLogger().Log(message, custom_directive);
 }
 
 //statically configure logging
