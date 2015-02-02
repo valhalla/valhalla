@@ -49,7 +49,7 @@ mkdir -p "${OUTDIR}"
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
-cat "${INPUT}" | parallel --progress -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 2>&1 | sed -e 's/^[^\[]*\[//' &> ${OUTDIR}/{#}.txt"
+cat "${INPUT}" | parallel --progress -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 2>&1 | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then

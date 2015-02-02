@@ -70,18 +70,38 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   return trip_path;
 }
 
-TripDirections DirectionsTest(TripPath& trip_path) {
+namespace std {
+
+//TODO: maybe move this into location.h if its actually useful elsewhere than here?
+std::string to_string(const valhalla::baldr::Location& l) {
+  std::string s;
+  for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+    s.append(*address);
+    s.push_back(',');
+  }
+  s.erase(s.end() - 1);
+  return s;
+}
+
+}
+
+TripDirections DirectionsTest(TripPath& trip_path, Location origin, Location destination) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(trip_path);
   float totalDistance = 0.0f;
   int m = 1;
-  for (const auto& maneuver : trip_directions.maneuver()) {
-    LOG_INFO("----------------------------------------------");
-    LOG_INFO(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km");
+  valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
+  for(int i = 0; i < trip_directions.maneuver_size(); ++i) {
+    const auto& maneuver = trip_directions.maneuver(i);
+    valhalla::midgard::logging::Log(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km", " [NARRATIVE] ");
+    if(i < trip_directions.maneuver_size() - 1)
+      valhalla::midgard::logging::Log("----------------------------------------------", " [NARRATIVE] ");
     totalDistance += maneuver.length();
   }
-  LOG_INFO("==============================================");
-  LOG_INFO("Total distance: " + std::to_string(totalDistance) + " km");
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("Total distance: " + std::to_string(totalDistance) + " km", " [NARRATIVE] ");
 
   return trip_directions;
 }
@@ -186,7 +206,7 @@ int main(int argc, char *argv[]) {
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
 
   // Try the the directions
-  TripDirections trip_directions = DirectionsTest(trip_path);
+  TripDirections trip_directions = DirectionsTest(trip_path, originloc, destloc);
 
   return EXIT_SUCCESS;
 }
