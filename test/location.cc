@@ -27,12 +27,32 @@ namespace {
       throw std::runtime_error("Csv location parsing failed");
 
     csv = Location::FromCsv("1.452,-3.45,through");
-        if(csv.latlng_.y() != std::stof("1.452") || csv.latlng_.x() != std::stof("-3.45") || csv.stoptype_ != Location::StopType::THROUGH)
-          throw std::runtime_error("Csv location parsing failed");
+    if(csv.latlng_.y() != std::stof("1.452") || csv.latlng_.x() != std::stof("-3.45") || csv.stoptype_ != Location::StopType::THROUGH)
+      throw std::runtime_error("Csv location parsing failed");
 
     Location b(PointLL{1,2});
     if(b.latlng_.x() !=1 || b.latlng_.y() != 2)
       throw std::runtime_error("Location's latlng object should be set");
+
+    csv = Location::FromCsv("1.452,-3.45,through,a,place,that,is,somewhere");
+    if(csv.name_=="a" && csv.street_=="place" && csv.city_=="that" && csv.state_=="is" && csv.zip_=="somehwere")
+      throw std::runtime_error("Csv location parsing failed");
+
+    csv = Location::FromCsv("1.452,-3.45,through,a,place,that,is,somewhere,nice");
+    if(csv.name_=="a" && csv.street_=="place" && csv.city_=="that" && csv.state_=="is" && csv.zip_=="somehwere" && csv.country_=="nice")
+      throw std::runtime_error("Csv location parsing failed");
+
+    csv = Location::FromCsv("1.452,-3.45,through,a,place,");
+    if(csv.name_=="a" && csv.street_=="place" && csv.city_=="" && csv.state_=="" && csv.zip_=="" && csv.country_=="")
+      throw std::runtime_error("Csv location parsing failed");
+
+    csv = Location::FromCsv("1.452,-3.45,through,a,place,that,is,,nice");
+    if(csv.name_=="a" && csv.street_=="place" && csv.city_=="that" && csv.state_=="is" && csv.zip_=="" && csv.country_=="nice")
+      throw std::runtime_error("Csv location parsing failed");
+
+    csv = Location::FromCsv("1.452,-3.45,through,a,place,that,is,,,nice");
+    if(csv.name_=="a" && csv.street_=="place" && csv.city_=="that" && csv.state_=="is" && csv.zip_=="" && csv.country_=="")
+      throw std::runtime_error("Csv location parsing failed");
   }
 }
 
