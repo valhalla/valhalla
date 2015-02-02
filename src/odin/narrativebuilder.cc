@@ -50,9 +50,11 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         break;
       }
       case TripDirections_Maneuver_Type_kRampStraight:
+        FormRampStraightInstruction(maneuver);
       case TripDirections_Maneuver_Type_kRampRight:
+        FormRampRightInstruction(maneuver);
       case TripDirections_Maneuver_Type_kRampLeft: {
-        FormRampInstruction(maneuver);
+        FormRampLeftInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kExitRight:
@@ -172,12 +174,40 @@ void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
   maneuver.set_instruction(std::move(text_instruction));
 }
 
-void NarrativeBuilder::FormRampInstruction(Maneuver& maneuver) {
+void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the ramp";
+  text_instruction += "Stay straight to take the ramp";
 
-  // TODO - add relative direction and exit info
+  // TODO - exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
+    text_instruction += "Turn right to take the ramp";
+  else
+    text_instruction += "Take the ramp on the right";
+
+  // TODO - exit info
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
+    text_instruction += "Turn left to take the ramp";
+  else
+    text_instruction += "Take the ramp on the left";
+
+  // TODO - exit info
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));

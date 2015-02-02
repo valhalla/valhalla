@@ -28,7 +28,11 @@ class NarrativeBuilder {
 
   static void FormUturnInstruction(Maneuver& maneuver);
 
-  static void FormRampInstruction(Maneuver& maneuver);
+  static void FormRampStraightInstruction(Maneuver& maneuver);
+
+  static void FormRampRightInstruction(Maneuver& maneuver);
+
+  static void FormRampLeftInstruction(Maneuver& maneuver);
 
   static void FormExitInstruction(Maneuver& maneuver);
 
