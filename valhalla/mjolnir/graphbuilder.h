@@ -20,6 +20,9 @@
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/dataquality.h>
 
+#include <valhalla/baldr/exitsigninfo.h>
+#include "mjolnir/edgeinfobuilder.h"
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -261,6 +264,11 @@ class GraphBuilder {
                        const std::unordered_map<uint64_t, std::string>& node_exit_to,
                        const std::unordered_map<uint64_t, std::string>& node_name) const;
 
+  static std::vector<ExitSignInfo> CreateExitSignInfoList(
+      const uint64_t osmnodeid, const Node& node, const OSMWay& way,
+      const std::unordered_map<uint64_t, std::string>& map_ref,
+      const std::unordered_map<uint64_t, std::string>& map_name,
+      const std::unordered_map<uint64_t, std::string>& map_exit_to);
 
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;

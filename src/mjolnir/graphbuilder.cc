@@ -353,6 +353,11 @@ void GraphBuilder::ReclassifyLinks(const WayVector& ways) {
 
 namespace {
 
+class graphbuilder : public GraphBuilder {
+ public:
+  using GraphBuilder::CreateExitSignInfoList;
+};
+
 // Test if this is a "not thru" edge. These are edges that enter a region that
 // has no exit other than the edge entering the region
 bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
@@ -570,73 +575,6 @@ void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
   }
 }
 
-std::vector<ExitSignInfo> CreateExitSignInfoList(
-    const uint64_t osmnodeid, const Node& node, const OSMWay& way,
-    const std::unordered_map<uint64_t, std::string>& map_ref,
-    const std::unordered_map<uint64_t, std::string>& map_name,
-    const std::unordered_map<uint64_t, std::string>& map_exit_to) {
-
-  std::vector<ExitSignInfo> exit_list;
-
-  // Exit sign number
-  if (!way.junction_ref().empty()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, way.junction_ref());
-  }  else if (node.ref()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, map_ref.find(osmnodeid)->second);
-  }
-
-  // Exit sign branch refs
-  bool has_branch = false;
-  if (!way.destination_ref().empty()) {
-    has_branch = true;
-    std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
-    for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(ExitSign::Type::KBranch, branch_ref);
-    }
-  }
-
-  // Exit sign toward refs
-  bool has_toward = false;
-  if (!way.destination_ref_to().empty()) {
-    has_toward = true;
-    std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
-    for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_ref);
-    }
-  }
-
-  // Exit sign toward names
-  if (!way.destination().empty()) {
-    has_toward = true;
-    std::vector<std::string> toward_names = GetTagTokens(way.destination());
-    for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_name);
-    }
-  }
-
-  // Process exit_to only if other branch or toward info does not exist
-  // For now just make toward records
-  if (!has_branch && !has_toward) {
-    // TODO- see if we can make branch and toward records
-    if (node.exit_to()) {
-      std::vector<std::string> exit_tos = GetTagTokens(map_exit_to.find(osmnodeid)->second);
-      for (auto& exit_to : exit_tos) {
-        exit_list.emplace_back(ExitSign::Type::kToward, exit_to);
-      }
-    }
-  }
-
-  // Exit sign name
-  if (node.name()) {
-    std::vector<std::string> names = GetTagTokens(map_name.find(osmnodeid)->second);
-    for (auto& name : names) {
-      exit_list.emplace_back(ExitSign::Type::kName, name);
-    }
-  }
-
-  return exit_list;
-}
-
 void BuildTileSet(
     std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
     std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
@@ -764,7 +702,7 @@ void BuildTileSet(
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
                nodea, nodeb, edge.latlngs_, w.GetNames(),
-               CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
+               graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
                added);
           directededge.set_edgedataoffset(edge_info_offset);
 
@@ -801,6 +739,119 @@ void BuildTileSet(
   result.set_value(written);
 }
 
+}
+
+std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
+    const uint64_t osmnodeid, const Node& node, const OSMWay& way,
+    const std::unordered_map<uint64_t, std::string>& map_ref,
+    const std::unordered_map<uint64_t, std::string>& map_name,
+    const std::unordered_map<uint64_t, std::string>& map_exit_to) {
+
+  std::vector<ExitSignInfo> exit_list;
+
+  // Exit sign number
+  if (!way.junction_ref().empty()) {
+    exit_list.emplace_back(ExitSign::Type::kNumber, way.junction_ref());
+  }  else if (node.ref()) {
+    exit_list.emplace_back(ExitSign::Type::kNumber, map_ref.find(osmnodeid)->second);
+  }
+
+  // Exit sign branch refs
+  bool has_branch = false;
+  if (!way.destination_ref().empty()) {
+    has_branch = true;
+    std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
+    for (auto& branch_ref : branch_refs) {
+      exit_list.emplace_back(ExitSign::Type::kBranch, branch_ref);
+    }
+  }
+
+  // Exit sign toward refs
+  bool has_toward = false;
+  if (!way.destination_ref_to().empty()) {
+    has_toward = true;
+    std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
+    for (auto& toward_ref : toward_refs) {
+      exit_list.emplace_back(ExitSign::Type::kToward, toward_ref);
+    }
+  }
+
+  // Exit sign toward names
+  if (!way.destination().empty()) {
+    has_toward = true;
+    std::vector<std::string> toward_names = GetTagTokens(way.destination());
+    for (auto& toward_name : toward_names) {
+      exit_list.emplace_back(ExitSign::Type::kToward, toward_name);
+    }
+  }
+
+  // Process exit_to only if other branch or toward info does not exist
+  if (!has_branch && !has_toward) {
+    if (node.exit_to()) {
+
+      std::string tmp;
+      std::size_t pos;
+
+      std::vector<std::string> exit_tos = GetTagTokens(map_exit_to.find(osmnodeid)->second);
+      for (auto& exit_to : exit_tos) {
+
+        tmp = exit_to;
+
+        boost::algorithm::to_lower(tmp);
+
+        //remove the "To" For example:  US 11/To I 81/Carlisle/Harrisburg
+        if (boost::starts_with(tmp, "to ")) {
+            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(3));
+            continue;
+        }
+        //remove the "Toward" For example:  US 11/Toward I 81/Carlisle/Harrisburg
+        if (boost::starts_with(tmp, "toward ")) {
+            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(7));
+            continue;
+        }
+
+        std::size_t found = tmp.find(" to ");
+
+        //Default to kToward if found twice or "toward" found as well; otherwise, <branch> to <toward>
+        //For example:  I 95 to I 695
+        if (found != std::string::npos &&
+           (tmp.find(" to ",found+4) == std::string::npos && tmp.find(" toward ") == std::string::npos)) {
+
+            exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+
+            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+4));
+            continue;
+        }
+
+        found = tmp.find(" toward ");
+
+        //Default to kToward if found twice or "to" found as well; otherwise, <branch> toward <toward>
+        //For example:  I 95 to I 695
+        if (found != std::string::npos &&
+            (tmp.find(" toward ",found+8) == std::string::npos && tmp.find(" to ") == std::string::npos)) {
+
+          exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+
+          exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+8));
+          continue;
+        }
+
+        //default to toward.
+        exit_list.emplace_back(ExitSign::Type::kToward, exit_to);
+
+      }
+    }
+  }
+
+  // Exit sign name
+  if (node.name()) {
+    std::vector<std::string> names = GetTagTokens(map_name.find(osmnodeid)->second);
+    for (auto& name : names) {
+      exit_list.emplace_back(ExitSign::Type::kName, name);
+    }
+  }
+
+  return exit_list;
 }
 
 void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
