@@ -99,6 +99,15 @@ void Maneuver::set_turn_degree(uint32_t turn_degree) {
   turn_degree_ = turn_degree;
 }
 
+Maneuver::RelativeDirection Maneuver::begin_relative_direction() const {
+  return begin_relative_direction_;
+}
+
+void Maneuver::set_begin_relative_direction(
+    RelativeDirection begin_relative_direction) {
+  begin_relative_direction_ = begin_relative_direction;
+}
+
 TripDirections_Maneuver_CardinalDirection Maneuver::begin_cardinal_direction() const {
   return begin_cardinal_direction_;
 }
@@ -231,3 +240,4 @@ std::string Maneuver::ToString() const {
 
 }
 }
+

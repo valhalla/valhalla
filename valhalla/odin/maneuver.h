@@ -11,6 +11,16 @@ namespace odin {
 
 class Maneuver {
  public:
+  enum class RelativeDirection {
+    kNone,
+    kKeepStraight,
+    kKeepRight,
+    kRight,
+    KReverse,
+    kLeft,
+    kKeepLeft
+  };
+
   Maneuver();
 
   const TripDirections_Maneuver_Type& type() const;
@@ -38,6 +48,9 @@ class Maneuver {
 
   uint32_t turn_degree() const;
   void set_turn_degree(uint32_t turn_degree);
+
+  RelativeDirection begin_relative_direction() const;
+  void set_begin_relative_direction(RelativeDirection begin_relative_direction);
 
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void set_begin_cardinal_direction(
@@ -91,6 +104,7 @@ class Maneuver {
   float distance_;
   uint32_t time_;
   uint32_t turn_degree_;
+  RelativeDirection begin_relative_direction_;
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;

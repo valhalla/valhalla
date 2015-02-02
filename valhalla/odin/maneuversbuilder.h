@@ -26,20 +26,24 @@ class ManeuversBuilder {
 
   void CreateStartManeuver(Maneuver& maneuver);
 
-  void InitializeManeuver(Maneuver& maneuver, int nodeIndex);
+  void InitializeManeuver(Maneuver& maneuver, int node_index);
 
-  void UpdateManeuver(Maneuver& maneuver, int nodeIndex);
+  void UpdateManeuver(Maneuver& maneuver, int node_index);
 
-  void FinalizeManeuver(Maneuver& maneuver, int nodeIndex);
+  void FinalizeManeuver(Maneuver& maneuver, int node_index);
 
-  void SetManeuverType(Maneuver& maneuver, int nodeIndex);
+  void SetManeuverType(Maneuver& maneuver, int node_index);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver);
 
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading);
 
-  bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int nodeIndex);
+  bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
+
+  void DetermineRelativeDirection(Maneuver& maneuver, int node_index);
+
+  Maneuver::RelativeDirection DetermineRelativeDirection(uint32_t turn_degree);
 
   EnhancedTripPath* trip_path_;
 
