@@ -53,7 +53,7 @@ struct Location {
   //type of location for routing
   StopType stoptype_;
 
-  //TODO: this will probably need refactored..
+  //TODO: this will probably need refactored due to it being very US centered..
   //address of the location, probably should be its own more broken up structure
   std::string name_;
   std::string street_;
