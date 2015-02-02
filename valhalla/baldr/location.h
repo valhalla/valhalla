@@ -53,14 +53,21 @@ struct Location {
   //type of location for routing
   StopType stoptype_;
 
+  //TODO: this will probably need refactored..
+  //address of the location, probably should be its own more broken up structure
+  std::string name_;
+  std::string street_;
+  std::string city_;
+  std::string state_;
+  std::string zip_;
+  std::string country_;
+
   //TODO: fill these out in constructors and add getters and setters
 /*
   //the spot where the feature is on the map
   midgard::PointLL display_latlng_;
   //name of the location (useful for POIs)
   std::string name_;
-  //address of the location, probably should be its own more broken up structure
-  std::string address_;
   //id of the osm way that this location was on
   std::uint64_t wayid_;
 */
