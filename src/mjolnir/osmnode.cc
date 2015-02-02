@@ -2,31 +2,29 @@
 
 #include <algorithm>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace mjolnir {
 
-OSMNode::OSMNode() {
-  latlng_.Set(0.0f, 0.0f);
-  attributes_.v = 0;
+OSMNode::OSMNode()
+    : latlng_{},
+      attributes_{} {
 }
 
-OSMNode::OSMNode(const float lng, const float lat) {
-  latlng_.Set(lng, lat);
-  attributes_.v = 0;
+OSMNode::OSMNode(const float lng, const float lat)
+    : latlng_{lng, lat},
+      attributes_{} {
 }
 
 OSMNode::~OSMNode() {
 }
 
 // Sets the lat,lng.
-void OSMNode::set_latlng(const midgard::PointLL& ll) {
+void OSMNode::set_latlng(const std::pair<float, float>& ll) {
   latlng_ = ll;
 }
 
 // Gets the lat,lng.
-const PointLL& OSMNode::latlng() const {
+const std::pair<float, float>& OSMNode::latlng() const {
   return latlng_;
 }
 

@@ -36,6 +36,17 @@ constexpr uint32_t kMaxNoThruTries = 256;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
+// Method to get the shape for an edge - since LL is stored as a pair of
+// floats we need to change into PointLL to get length of an edge
+std::vector<midgard::PointLL> Edge::shape() const {
+  std::vector<midgard::PointLL> lls;
+  for (const std::pair<float, float>& ll : latlngs_) {
+    lls.emplace_back(midgard::PointLL(ll.first, ll.second));
+  }
+  return lls;
+}
+
+
 // Construct GraphBuilder based on properties file and input PBF extract
 GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
     : tile_hierarchy_(pt.get_child("hierarchy")),
@@ -674,7 +685,7 @@ void BuildTileSet(
         // Compute edge lengths from the edge lat,lngs (round to nearest meter)
         std::vector<uint32_t> edgelengths;
         for (auto edgeindex : node.edges()) {
-          float length = node.latlng().Length(edges[edgeindex].latlngs_);
+          float length = PointLL().Length(edges[edgeindex].shape());
           edgelengths.push_back(static_cast<uint32_t>(length + 0.5f));
         }
 
@@ -763,7 +774,7 @@ void BuildTileSet(
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.latlngs_, w.GetNames(),
+               nodea, nodeb, edge.shape(), w.GetNames(),
                CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
                added);
           directededge.set_edgedataoffset(edge_info_offset);

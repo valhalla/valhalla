@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/midgard/pointll.h>
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -34,13 +32,13 @@ class OSMNode {
    * Sets the lat,lng.
    * @param  ll  Lat,lng of the node.
    */
-  void set_latlng(const midgard::PointLL& ll);
+  void set_latlng(const std::pair<float, float>& ll);
 
   /**
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  const midgard::PointLL& latlng() const;
+  const std::pair<float, float>& latlng() const;
 
   /**
    * Set modes mask.
@@ -134,7 +132,7 @@ class OSMNode {
 
  protected:
   // Lat,lng of the node
-  midgard::PointLL latlng_;
+  std::pair<float, float> latlng_;
 
   // Node attributes
   union NodeAttributes {
