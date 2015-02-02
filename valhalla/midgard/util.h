@@ -107,7 +107,7 @@ bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
   T diff = a - b;
   //if its non-negative it better be less than epsilon, if its negative then it better be bigger than epsilon
   bool negative = diff < static_cast<T>(0);
-  return (!negative && diff < epsilon) || (negative && diff > -epsilon);
+  return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
 }
 
 }
