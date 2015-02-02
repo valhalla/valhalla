@@ -799,12 +799,12 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
 
         boost::algorithm::to_lower(tmp);
 
-        //remove the "To" For example:  US 11/To I 81/Carlisle/Harrisburg
+        //remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "to ")) {
             exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(3));
             continue;
         }
-        //remove the "Toward" For example:  US 11/Toward I 81/Carlisle/Harrisburg
+        //remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "toward ")) {
             exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(7));
             continue;
