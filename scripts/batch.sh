@@ -39,7 +39,7 @@ if [ "${3}" ]; then
 fi
 
 #where do you want the output, default to current time
-OUTDIR=$(date +%Y_%m_%d_%H_%S)
+OUTDIR=$(date +%Y_%m_%d_%H_%S)_$(basename "${INPUT}")
 if [ "${4}" ]; then
 	OUTDIR="${4}"
 fi
@@ -52,6 +52,10 @@ cat "${INPUT}" | parallel --progress -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
-	echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR}:\x1b[0m"
-	diff "${DIFF}" "${OUTDIR}"
+	if [[ "${DIFF}" == *$(basename ${INPUT})* ]]; then
+		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR}:\x1b[0m"
+		diff "${DIFF}" "${OUTDIR}"
+	else
+		echo -e "\x1b[31;1mFiled to diff ${DIFF} with ${OUTDIR} as it looks like they were generated from different input\x1b[0m"
+	fi
 fi
