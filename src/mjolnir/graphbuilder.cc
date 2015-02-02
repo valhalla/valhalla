@@ -712,7 +712,7 @@ void BuildTileSet(
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.latlngs_, w.GetNames(),
+               nodea, nodeb, edge.shape(), w.GetNames(),
                graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
                added);
           directededge.set_edgedataoffset(edge_info_offset);
