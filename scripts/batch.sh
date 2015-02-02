@@ -49,13 +49,14 @@ mkdir -p "${OUTDIR}"
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
-cat "${INPUT}" | parallel --progress -k -C ' ' -P "${CONCURRENCY}" "pathtest {} 2>&1 | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
+cat "${INPUT}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2>&1 | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
 	if [[ "${DIFF}" == *$(basename ${INPUT})* ]]; then
-		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR}:\x1b[0m"
-		diff "${DIFF}" "${OUTDIR}"
+		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR} to ${DIFF}_${OUTDIR}_diff:\x1b[0m"
+		mkdir -p "${DIFF%/}_${OUTDIR}_diff"
+		find ${DIFF}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "diff ${DIFF}/{} ${OUTDIR}/{} > ${DIFF%/}_${OUTDIR}_diff/{}"
 	else
 		echo -e "\x1b[31;1mFiled to diff ${DIFF} with ${OUTDIR} as it looks like they were generated from different input\x1b[0m"
 	fi
