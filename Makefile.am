@@ -72,7 +72,8 @@ check_PROGRAMS = \
 	test/location \
 	test/graphid \
 	test/tilehierarchy \
-	test/graphtile
+	test/graphtile \
+	test/nodeinfo
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -85,6 +86,9 @@ test_tilehierarchy_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_graphtile_SOURCES = test/graphtile.cc test/test.cc
 test_graphtile_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_graphtile_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_nodeinfo_SOURCES = test/nodeinfo.cc test/test.cc
+test_nodeinfo_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_nodeinfo_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)

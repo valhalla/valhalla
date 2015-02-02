@@ -23,7 +23,7 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
 }
 
 // Get a pointer to a graph tile object given a GraphId.
-GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
+const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
   auto cached = tilecache_.find(graphid.Tile_Base());
   if(cached != tilecache_.end())
@@ -39,11 +39,11 @@ GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   return &inserted.first->second;
 }
 
-GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
+const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t level){
   return GetGraphTile(tile_hierarchy_.GetGraphId(pointll, level));
 }
 
-GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
+const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
   return GetGraphTile(pointll, tile_hierarchy_.levels().rbegin()->second.level);
 }
 
