@@ -75,7 +75,7 @@ void HierarchyBuilder::GetNodesInNewLevel(
   // TODO - can be concurrent if we divide by rows for example
   uint32_t ntiles = base_level.tiles.TileCount();
   uint32_t baselevel = (uint32_t) base_level.level;
-  GraphTile* tile = nullptr;
+  const GraphTile* tile = nullptr;
   for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
     // Get the graph tile. Skip if no tile exists (common case)
     tile = graphreader_.GetGraphTile(GraphId(basetileid, baselevel, 0));
@@ -107,7 +107,7 @@ void HierarchyBuilder::GetNodesInNewLevel(
 
 // Test if the node is eligible to be contracted (part of a shortcut) in
 // the new level.
-bool HierarchyBuilder::CanContract(GraphTile* tile, const NodeInfo* nodeinfo,
+bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
                                    const GraphId& basenode,
                                    const GraphId& newnode,
                                    const RoadClass rcc) {
@@ -184,7 +184,7 @@ bool HierarchyBuilder::CanContract(GraphTile* tile, const NodeInfo* nodeinfo,
   return true;
 }
 
-bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
+bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
                                   const DirectedEdge* edge2) {
   // Check if edges end at same node.
   if (edge1->endnode() == edge2->endnode()) {
@@ -246,7 +246,7 @@ bool HierarchyBuilder::EdgesMatch(GraphTile* tile, const DirectedEdge* edge1,
 GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
                                           const DirectedEdge* edge) {
   // Get the tile at the end node
-  GraphTile* tile = graphreader_.GetGraphTile(edge->endnode());
+  const GraphTile* tile = graphreader_.GetGraphTile(edge->endnode());
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
 
   // Get the directed edges and return when the end node matches
@@ -301,7 +301,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
     GraphId nodea, nodeb;
     for (const auto& newnode : newtile) {
       // Get the node in the base level
-      GraphTile* tile = graphreader_.GetGraphTile(newnode.basenode);
+      const GraphTile* tile = graphreader_.GetGraphTile(newnode.basenode);
 
       // Copy node information
       nodea.Set(tileid, level, nodeid);
@@ -390,7 +390,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
 // Add shortcut edges (if they should exist) from the specified node
 void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
-    GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
+    const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges) {
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
@@ -524,7 +524,7 @@ uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
                                      std::vector<PointLL>& shape,
                                      GraphId& nodeb) {
   // Get the tile and directed edge
-  GraphTile* tile = graphreader_.GetGraphTile(basenode);
+  const GraphTile* tile = graphreader_.GetGraphTile(basenode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
 
   // Get the shape for this edge and append to the shortcut's shape
