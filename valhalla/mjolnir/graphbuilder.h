@@ -12,7 +12,6 @@
 #include <memory>
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/mjolnir/osmdata.h>
@@ -56,7 +55,7 @@ struct Edge {
   Attributes attributes_;
 
   // Shape of the edge (polyline)
-  std::vector<midgard::PointLL> latlngs_;
+  std::vector<std::pair<float, float>> latlngs_;
 
   /**
    * Construct a new edge. Target node and additional lat,lngs will
@@ -69,7 +68,7 @@ struct Edge {
    * @param drivereverse Auto use in the reverse direction of the edge
    */
   Edge(const uint64_t sourcenode, const uint32_t wayindex,
-       const midgard::PointLL& ll, const OSMWay& way)
+       const std::pair<float, float>& ll, const OSMWay& way)
       : sourcenode_(sourcenode),
         targetnode_(0),
         wayindex_(wayindex) {
@@ -84,9 +83,16 @@ struct Edge {
    * Add a lat,lng to the shape of the edge.
    * @param  ll  Lat,lng
    */
-  void AddLL(const midgard::PointLL& ll) {
+  void AddLL(const std::pair<float, float>& ll) {
     latlngs_.emplace_back(ll);
   }
+
+  /**
+   * Method to get the edge shape. Converts the stored lat,lng pairs into
+   * a vector of PointLL.
+   * @return  Returns a vector of PointLL so we can get the length of an edge.
+   */
+  std::vector<midgard::PointLL> shape() const;
 
  private:
   /**

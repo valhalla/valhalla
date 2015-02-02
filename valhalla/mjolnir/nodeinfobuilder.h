@@ -30,14 +30,14 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  edge_count  the number of outbound directed edges.
    * @param  rc          Best road class / importance of outbound edges.
    */
-  NodeInfoBuilder(const PointLL& ll, const uint32_t edge_index,
+  NodeInfoBuilder(const std::pair<float, float>& ll, const uint32_t edge_index,
                   const uint32_t edge_count, const baldr::RoadClass rc);
 
   /**
    * Sets the latitude and longitude.
    * @param  ll  Lat,lng position of the node.
    */
-  void set_latlng(const PointLL& ll);
+  void set_latlng(const std::pair<float, float>& ll);
 
   /**
    * Set the index within the node's tile of its first outbound edge.
