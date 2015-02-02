@@ -102,10 +102,10 @@ int main(int argc, char *argv[]) {
       "version,v", "Print the version of this software.")(
       "origin,o",
       boost::program_options::value<std::string>(&origin)->required(),
-      "Origin lat,lng.")(
+      "Origin lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "destination,d",
       boost::program_options::value<std::string>(&destination)->required(),
-      "Destination lat,lng.")(
+      "Destination lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "route_type,t",
       boost::program_options::value<std::string>(&routetype)->required(),
       "Route Type: auto|bicycle|pedestrian")
