@@ -19,17 +19,23 @@ namespace baldr{
   Location Location::FromCsv(const std::string& csv) {
     //split it up into parts
     std::vector<std::string> parts;
-    boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
+    boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","));
     if(parts.size() < 2)
       throw std::runtime_error("Bad format for csv formated location");
 
-    //make the lng, lat
-    midgard::PointLL ll(std::stof(parts[1]), std::stof(parts[0]));
+    //make the lng, lat and check for info about the stop type
+    Location l({std::stof(parts[1]), std::stof(parts[0])},
+      (parts.size() > 2 && parts[2] == "through" ? StopType::THROUGH : StopType::BREAK));
 
-    //check for info about the stop type
-    if(parts.size() > 2 && parts[2] == "through")
-      return Location(ll, StopType::THROUGH);
-    return Location(ll);
+    //grab some address info
+    auto part = parts.begin() + 2;
+    for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+      if(part == parts.end())
+        break;
+      address->swap(*part);
+      ++part;
+    }
+    return l;
   }
 
 }

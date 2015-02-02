@@ -42,6 +42,7 @@ test/location
 test/graphid
 test/tilehierarchy
 test/graphtile
+test/nodeinfo
 test/*.log
 test/*.trs
 
