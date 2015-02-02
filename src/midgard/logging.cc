@@ -93,7 +93,7 @@ class StdOutLogger : public Logger {
   virtual void Log(const std::string& message, const LogLevel level) {
     Log(message, levels.find(level)->second);
   }
-  virtual void Log(const std::string& message, const std::string& custom_directive = "TRACE") {
+  virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
@@ -144,7 +144,7 @@ class FileLogger : public Logger {
   virtual void Log(const std::string& message, const LogLevel level) {
     Log(message, uncolored.find(level)->second);
   }
-  virtual void Log(const std::string& message,  const std::string& custom_directive = "TRACE") {
+  virtual void Log(const std::string& message,  const std::string& custom_directive = " [TRACE] ") {
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());

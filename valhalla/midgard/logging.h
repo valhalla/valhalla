@@ -34,7 +34,7 @@ class Logger {
   Logger(const LoggingConfig& config);
   virtual ~Logger();
   virtual void Log(const std::string&, const LogLevel);
-  virtual void Log(const std::string&, const std::string& custom_directive = "TRACE");
+  virtual void Log(const std::string&, const std::string& custom_directive = " [TRACE] ");
  protected:
   std::mutex lock;
 };
@@ -44,7 +44,7 @@ Logger& GetLogger(const LoggingConfig& config = { {"type", "std_out"}, {"color",
 
 //statically log manually without the macros below
 void Log(const std::string&, const LogLevel);
-void Log(const std::string&, const std::string& custom_directive = "TRACE");
+void Log(const std::string&, const std::string& custom_directive = " [TRACE] ");
 
 //statically configure logging
 //try something like:
