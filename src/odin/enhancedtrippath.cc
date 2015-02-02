@@ -233,9 +233,12 @@ EnhancedTripPath_Edge* EnhancedTripPath_Node::GetIntersectingEdge(
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
-    uint32_t from_heading, uint32_t& right_count, uint32_t& left_count) {
+    uint32_t from_heading, uint32_t& right_count, uint32_t& right_similar_count,
+    uint32_t& left_count, uint32_t& left_similar_count) {
   right_count = 0;
+  right_similar_count = 0;
   left_count = 0;
+  left_similar_count = 0;
 
   // No turn at last node - just return
   if (last_node_)
@@ -246,26 +249,47 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   for (size_t i = 1; i <= GetIntersectingEdgesCount(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(from_heading,
                                                       edge(i).begin_heading());
+    bool is_similar = IsSimilarTurnDegree(path_turn_degree,
+                                          intersecting_turn_degree);
     if (path_turn_degree > 180) {
       if ((intersecting_turn_degree > path_turn_degree)
           || (intersecting_turn_degree < 180)) {
         ++right_count;
-      }
-      else if ((intersecting_turn_degree < path_turn_degree)
+        if (is_similar)
+          ++right_similar_count;
+      } else if ((intersecting_turn_degree < path_turn_degree)
           && (intersecting_turn_degree > 180)) {
         ++left_count;
+        if (is_similar)
+          ++left_similar_count;
       }
     } else {
       if ((intersecting_turn_degree > path_turn_degree)
           && (intersecting_turn_degree < 180)) {
         ++right_count;
-      }
-      else if ((intersecting_turn_degree < path_turn_degree)
+        if (is_similar)
+          ++right_similar_count;
+      } else if ((intersecting_turn_degree < path_turn_degree)
           || (intersecting_turn_degree > 180)) {
         ++left_count;
+        if (is_similar)
+          ++left_similar_count;
       }
     }
   }
+}
+
+bool EnhancedTripPath_Node::IsSimilarTurnDegree(
+    uint32_t turn_degree_a, uint32_t turn_degree_b,
+    uint32_t turn_degree_threshold) const {
+  uint32_t turn_degree_delta = 0;
+  if (turn_degree_a > turn_degree_b)
+    turn_degree_delta = (turn_degree_a - turn_degree_b);
+  else
+    turn_degree_delta = (turn_degree_b - turn_degree_a);
+
+  return ((turn_degree_delta <= turn_degree_threshold)
+      || (turn_degree_delta >= (360 - turn_degree_threshold)));
 }
 
 }
