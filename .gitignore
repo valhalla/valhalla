@@ -47,6 +47,7 @@ test/uniquenames
 test/nodetable
 test/graphtilebuilder
 test/graphbuilder
+test/exitsigninfo
 test/*.log
 test/*.trs
 EdgeInfoBuilder_TestWriteRead.gph
