@@ -59,8 +59,13 @@ void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
 }
 
 // Get the offset to the common edge data.
-void DirectedEdgeBuilder::set_edgedataoffset(const uint32_t offset) {
-  edgedataoffset_ = offset;
+void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
+  dataoffsets_.edgeinfo_offset = offset;
+}
+
+//Sets the exit flag.
+void DirectedEdgeBuilder::set_exit(const bool exit) {
+  dataoffsets_.exit = exit;
 }
 
 // Sets the length of the edge in meters.
@@ -73,9 +78,9 @@ void DirectedEdgeBuilder::set_length(const uint32_t length) {
   }
 }
 
-// Sets the intersection internal flag.
-void DirectedEdgeBuilder::set_internal(const bool internal) {
-  geoattributes_.internal = internal;
+// Sets the number of lanes
+void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
+  geoattributes_.lanecount = lanecount;
 }
 
 // Sets the car access of the edge in each direction.
@@ -156,11 +161,6 @@ void DirectedEdgeBuilder::set_toll(const bool toll) {
   attributes_.toll = toll;
 }
 
-//Sets the exit flag.
-void DirectedEdgeBuilder::set_exit(const bool exit) {
-  attributes_.exit = exit;
-}
-
 //Sets the destination only (private) flag.
 void DirectedEdgeBuilder::set_dest_only(const bool destonly) {
   attributes_.dest_only = destonly;
@@ -230,14 +230,14 @@ void DirectedEdgeBuilder::set_opp_index(const uint32_t opp_index) {
   attributes_.opp_index = opp_index;
 }
 
-//Sets the number of lanes
-void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
-  attributes_.lanecount = lanecount;
-}
-
 //Sets the bike network mask
 void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
   attributes_.bikenetwork = bikenetwork;
+}
+
+// Sets the intersection internal flag.
+void DirectedEdgeBuilder::set_internal(const bool internal) {
+  attributes_.internal = internal;
 }
 
 //Sets the road class.

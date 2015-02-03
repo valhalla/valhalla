@@ -41,7 +41,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 std::vector<midgard::PointLL> Edge::shape() const {
   std::vector<midgard::PointLL> lls;
   for (const OSMLatLng& ll : latlngs_) {
-    lls.emplace_back(midgard::PointLL(ll.first, ll.second));
+    lls.emplace_back(ll.first, ll.second);
   }
   return lls;
 }
@@ -716,7 +716,7 @@ void BuildTileSet(
                nodea, nodeb, edge.shape(), w.GetNames(),
                graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
                added);
-          directededge.set_edgedataoffset(edge_info_offset);
+          directededge.set_edgeinfo_offset(edge_info_offset);
 
           // Add to general statistics
           (*stats).AddStats(tile_start->first, directededge);

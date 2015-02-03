@@ -222,8 +222,8 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
   // Names must match
   // TODO - this allows matches in any order. Do we need to maintain order?
   // TODO - should allow near matches?
-  std::vector<std::string> edge1names = tile->GetNames(edge1->edgedataoffset());
-  std::vector<std::string> edge2names = tile->GetNames(edge2->edgedataoffset());
+  std::vector<std::string> edge1names = tile->GetNames(edge1->edgeinfo_offset());
+  std::vector<std::string> edge2names = tile->GetNames(edge2->edgeinfo_offset());
   if (edge1names.size() != edge2names.size()) {
     return false;
   }
@@ -342,13 +342,13 @@ void HierarchyBuilder::FormTilesInNewLevel(
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
           std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-                              directededge->edgedataoffset());
+                              directededge->edgeinfo_offset());
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
                              nodea, nodeb, edgeinfo->shape(),
-                             tile->GetNames(directededge->edgedataoffset()),
-                             tile->GetExitSigns(directededge->edgedataoffset()),
+                             tile->GetNames(directededge->edgeinfo_offset()),
+                             tile->GetExitSigns(directededge->edgeinfo_offset()),
                              added);
-          newedge.set_edgedataoffset(edge_info_offset);
+          newedge.set_edgeinfo_offset(edge_info_offset);
 
           // Set the superseded flag
           newedge.set_superseded(IsSuperseded(oldedgeid));
@@ -435,7 +435,7 @@ void HierarchyBuilder::AddShortcutEdges(
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-          directededge->edgedataoffset());
+          directededge->edgeinfo_offset());
       std::vector<PointLL> shape;
       if (directededge->forward()) {
         shape = edgeinfo->shape();
@@ -447,9 +447,9 @@ void HierarchyBuilder::AddShortcutEdges(
 
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(
-          directededge->edgedataoffset());
+          directededge->edgeinfo_offset());
       std::vector<ExitSignInfo> exits = tile->GetExitSigns(
-          directededge->edgedataoffset());
+          directededge->edgeinfo_offset());
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -488,7 +488,7 @@ void HierarchyBuilder::AddShortcutEdges(
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
                                                           shape, names, exits,
                                                           added);
-      newedge.set_edgedataoffset(edge_info_offset);
+      newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
       // the direction is forward otherwise the prior edge was the one stored
@@ -529,7 +529,7 @@ uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
 
   // Get the shape for this edge and append to the shortcut's shape
   std::vector<PointLL> edgeshape = tile->edgeinfo(
-          directededge->edgedataoffset())->shape();
+          directededge->edgeinfo_offset())->shape();
   if (directededge->forward()) {
     shape.insert(shape.end(), edgeshape.begin() + 1, edgeshape.end());
   } else {
