@@ -1,0 +1,156 @@
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -d 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.239819,9.525793,,Nellengasse,Ruggell,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.232986,9.545749,,Franz-Sales-Weg,Schellenberg,,9488,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.218931,9.509689,,Grütt,Gamprin,,9487,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.219368,9.542434,,Weiherring,Mauren,,9493,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.213298,9.522167,,Haldengasse,Eschen,,9492,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.197109,9.542906,,Ziegeleistrasse,Eschen,,9485,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d "47.185910,9.546339,,100 Dorfstrasse,Planken,,9498,Liechtenstein" -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.165373,9.511084,,Laurentiusweg,Schaan,,9494,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.139016,9.525788,,Bergstrasse,Vaduz,,94490,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.127630,9.539156,,Rotenbodenstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d 47.118753,9.543147,,Schlossstrasse,Triesenberg,,9497,Liechtenstein -t auto --config ../conf/valhalla.json
+-o 47.068690,9.504094,,Zwischenbäch,Balzers,,9496,Liechtenstein -d "47.107216,9.528277,,11 Gapont,Triesen,,9495,Liechtenstein" -t auto --config ../conf/valhalla.json

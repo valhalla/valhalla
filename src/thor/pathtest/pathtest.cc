@@ -70,18 +70,38 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   return trip_path;
 }
 
-TripDirections DirectionsTest(TripPath& trip_path) {
+namespace std {
+
+//TODO: maybe move this into location.h if its actually useful elsewhere than here?
+std::string to_string(const valhalla::baldr::Location& l) {
+  std::string s;
+  for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+    s.append(*address);
+    s.push_back(',');
+  }
+  s.erase(s.end() - 1);
+  return s;
+}
+
+}
+
+TripDirections DirectionsTest(TripPath& trip_path, Location origin, Location destination) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(trip_path);
   float totalDistance = 0.0f;
   int m = 1;
-  for (const auto& maneuver : trip_directions.maneuver()) {
-    LOG_INFO("----------------------------------------------");
-    LOG_INFO(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km");
+  valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
+  for(int i = 0; i < trip_directions.maneuver_size(); ++i) {
+    const auto& maneuver = trip_directions.maneuver(i);
+    valhalla::midgard::logging::Log(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km", " [NARRATIVE] ");
+    if(i < trip_directions.maneuver_size() - 1)
+      valhalla::midgard::logging::Log("----------------------------------------------", " [NARRATIVE] ");
     totalDistance += maneuver.length();
   }
-  LOG_INFO("==============================================");
-  LOG_INFO("Total distance: " + std::to_string(totalDistance) + " km");
+  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("Total distance: " + std::to_string(totalDistance) + " km", " [NARRATIVE] ");
 
   return trip_directions;
 }
@@ -101,17 +121,16 @@ int main(int argc, char *argv[]) {
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
       "origin,o",
-      boost::program_options::value<std::string>(&origin)->required(),
-      "Origin lat,lng.")(
+      boost::program_options::value<std::string>(&origin),
+      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "destination,d",
-      boost::program_options::value<std::string>(&destination)->required(),
-      "Destination lat,lng.")(
-      "route_type,t",
-      boost::program_options::value<std::string>(&routetype)->required(),
+      boost::program_options::value<std::string>(&destination),
+      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
+      "type,t",
+      boost::program_options::value<std::string>(&routetype),
       "Route Type: auto|bicycle|pedestrian")
   // positional arguments
-  ("config", bpo::value<std::string>(&config)->required(),
-   "String for the application to echo back");
+  ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -119,10 +138,7 @@ int main(int argc, char *argv[]) {
   bpo::variables_map vm;
 
   try {
-    bpo::store(
-        bpo::command_line_parser(argc, argv).options(options).positional(
-            pos_options).run(),
-        vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
     bpo::notify(vm);
 
   } catch (std::exception &e) {
@@ -143,11 +159,9 @@ int main(int argc, char *argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : std::vector<std::string> { "origin", "destination",
-      "route_type", "config" }) {
+  for (auto arg : std::vector<std::string> { "origin", "destination", "type", "config" }) {
     if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg
-                << "> argument was not provided, but is mandatory\n\n";
+      std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
       return EXIT_FAILURE;
     }
@@ -186,7 +200,7 @@ int main(int argc, char *argv[]) {
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
 
   // Try the the directions
-  TripDirections trip_directions = DirectionsTest(trip_path);
+  TripDirections trip_directions = DirectionsTest(trip_path, originloc, destloc);
 
   return EXIT_SUCCESS;
 }
