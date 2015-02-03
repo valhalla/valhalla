@@ -3,14 +3,17 @@
 
 #include <cstdlib>
 #include <string>
-#include <ctime>
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
+
+// Maximum size of the version string (stored as a fixed size
+// chararacter array so the GraphTileHeader size remains fixed).
+constexpr size_t kMaxVersionSize = 16;
 
 /**
- * Summary information about the graph tile.
- * @author  David W. Nesbitt
+ * Summary information about the graph tile. Includes version
+ * information and offsets to the various types of data.
  */
 class GraphTileHeader {
  public:
@@ -26,14 +29,15 @@ class GraphTileHeader {
   int64_t internal_version() const;
 
   /**
-   * Gets the date when this tile was created.
+   * Gets the date when this tile was created. Returns a Unix timestamp
+   * (seconds since 1/1/1970)
    * @return  Returns the date this tile was created.
    */
-  std::time_t date_created() const;
+  uint64_t date_created() const;
 
   /**
    * Gets the version of this tile
-   * @return  Returns the  version of this tile.
+   * @return  Returns the version of this tile.
    */
   std::string version() const;
 
@@ -41,49 +45,97 @@ class GraphTileHeader {
    * Gets the number of nodes in this tile.
    * @return  Returns the number of nodes.
    */
-  size_t nodecount() const;
+  uint32_t nodecount() const;
 
   /**
    * Gets the number of directed edges in this tile.
    * @return  Returns the number of directed edges.
    */
- size_t directededgecount() const;
+ uint32_t directededgecount() const;
 
   /**
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
-  size_t edgeinfo_offset() const;
+  uint32_t edgeinfo_offset() const;
 
   /**
    * Gets the offset to the text list.
    * @return  Returns the number of bytes to offset to the text list.
    */
-  size_t textlist_offset() const;
+  uint32_t textlist_offset() const;
+
+  /**
+   * Gets the offset to the exit list.
+   * @return  Returns the number of bytes to offset to the exit list.
+   */
+  uint32_t exitlist_offset() const;
+
+  /**
+   * Get the offset to the administrative information. (TODO)
+   * @return  Returns the number of bytes to offset to the administrative
+   *          information.
+   */
+  uint32_t admin_offset() const;
+
+  /**
+   * Get the offset to the Multi-Edge Restriction list. (TODO)
+   * @return  Returns the number of bytes to offset to the the list of
+   *          Multi-Edge Restrictions.
+   */
+  uint32_t merlist_offset() const;
+
+  /**
+   * Get the offset to the timed restriction list. (TODO)
+   * @return  Returns the number of bytes to offset to the the list of
+   *          timed restrictions.
+   */
+  uint32_t timedres_offset() const;
+
+  /**
+   * Get the offset to the transit schedule list. (TODO)
+   * @return  Returns the number of bytes to offset to the the list of
+   *          transit departures.
+   */
+  uint32_t transit_offset() const;
 
  protected:
 
-  // internal version info
+  // Internal version info
   int64_t internal_version_;
 
-  // date the tile was created.
-  std::time_t date_created_;
+  // Date the tile was created. Unix timestamp (seconds since 1/1/1970)
+  uint64_t date_created_;
 
-  //balr version.
-  std::string version_;
+  // baldr version.
+  char version_[kMaxVersionSize];
 
   // Number of nodes
-  size_t nodecount_;
+  uint32_t nodecount_;
 
   // Number of directed edges
-  size_t directededgecount_;
+  uint32_t directededgecount_;
 
   // Offset to edge info
-  size_t edgeinfo_offset_;
+  uint32_t edgeinfo_offset_;
 
   // Offset to name list
-  size_t textlist_offset_;
+  uint32_t textlist_offset_;
 
+  // Offset to exit list
+  uint32_t exitlist_offset_;
+
+  // Offset to the administrative information
+  uint32_t admin_offset_;
+
+  // Offset to the multi-edge restriction list
+  uint32_t merlist_offset_;
+
+  // Offset to the timed restriction list
+  uint32_t timedres_offset_;
+
+  // Offset to transit schedule list
+  uint32_t transit_offset_;
 };
 
 }
