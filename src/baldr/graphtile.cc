@@ -48,6 +48,8 @@ GraphTile::GraphTile()
       textlist_(nullptr),
       edgeinfo_size_(0),
       textlist_size_(0),
+      exitlist_created_(false),
+      exitlist_{},
       id_() {
 }
 
@@ -213,14 +215,52 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 }
 
 // Convenience method to get the exit signs for an edge given the offset to the
-// edge info
+// edge info. TODO - remove when not needed anymore...
 std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t edgeinfo_offset) const {
   return edgeinfo(edgeinfo_offset)->GetExitSigns();
 }
 
-// Convenience method to get the exit signs for an edge given an edgeinfo shared
-// pointer.
+// Create the exit list from the binary data
+void GraphTile::CreateExitList() {
+  char* ptr = graphtile_.get() + header_->exitlist_offset();
+  uint32_t count = *(reinterpret_cast<uint32_t*>(ptr));
+  ptr += sizeof(uint32_t);
+  for (uint32_t i = 0; i < count; i++) {
+    // Read the directed edge index, followed by type (char),
+    // and the exit string. Add one for the null terminator.
+    char* saveptr = ptr;
+    uint32_t idx = *(reinterpret_cast<uint32_t*>(ptr));
+    ptr += sizeof(uint32_t);
+    ExitSign::Type t = *(reinterpret_cast<ExitSign::Type*>(ptr));
+    ptr += sizeof(ExitSign::Type);
+    std::string exitname(ptr);
+    ptr += exitname.length() + 1;
+    InternalExit exit(idx, ExitSignInfo(t, exitname));
+    exitlist_.emplace_back(std::move(exit));
 
+    // Increment if necessary to get to next 4 byte boundary...
+    uint32_t n = ptr - saveptr;
+    if (n % 4 != 0) {
+      ptr += 4 - (n % 4);
+    }
+  }
+}
+
+// Get exit signs given the directed edge index.
+std::vector<ExitSignInfo> GraphTile::GetExitSignList(const uint32_t idx) {
+  if (!exitlist_created_) {
+    CreateExitList();
+  }
+
+  // Get all edges that match this index
+  std::vector<ExitSignInfo> signs;
+  InternalExit c(idx, ExitSignInfo(ExitSign::Type::kNumber, ""));
+  auto p = std::equal_range (exitlist_.begin(), exitlist_.end(), c);
+  for (auto i = p.first; i != p.second; i++) {
+    signs.emplace_back(i->sign);
+  }
+  return signs;
+}
 
 }
 }
