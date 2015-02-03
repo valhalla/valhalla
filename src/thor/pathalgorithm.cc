@@ -161,7 +161,6 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
-if (directededge->shortcut()) continue;
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
@@ -287,9 +286,9 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
            "  Iterations = " + std::to_string(edgelabel_index_));
 
   // Return path on local level...
-  if (true) {
+/**  if (true) {
     return FormLocalPath(dest, graphreader);
-  }
+  } **/
 
   // Add the destination edge
   std::vector<GraphId> edgesonpath;

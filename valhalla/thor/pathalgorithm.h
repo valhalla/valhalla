@@ -100,9 +100,8 @@ class PathAlgorithm {
    */
   baldr::GraphId GetStartNode(baldr::GraphReader& graphreader,
                               const baldr::DirectedEdge* directededge);
-
   std::vector<baldr::GraphId> FormLocalPath(const uint32_t dest,
-                    baldr::GraphReader& graphreader);
+                              baldr::GraphReader& graphreader);
 
   /**
    * Gets the edge label for an edge that is in the adjacency list.
