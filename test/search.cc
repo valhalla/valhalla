@@ -66,7 +66,7 @@ boost::property_tree::ptree make_tile() {
     edge_builder.set_length(PointLL().Length({{.01, .2}, {.2, .1}}));
     edge_builder.set_endnode(d);
     uint32_t edge_info_offset = tile.AddEdgeInfo(0, b, d, {{.01, .2}, {.2, .1}}, {"0"}, {}, add);
-    edge_builder.set_edgedataoffset(edge_info_offset);
+    edge_builder.set_edgeinfo_offset(edge_info_offset);
     //add
     tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
   }
@@ -85,7 +85,7 @@ boost::property_tree::ptree make_tile() {
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .01}}));
       edge_builder.set_endnode(c);
       uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, c, {{.01, .1}, {.01, .01}}, {"1"}, {}, add);
-      edge_builder.set_edgedataoffset(edge_info_offset);
+      edge_builder.set_edgeinfo_offset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
     //2
@@ -94,7 +94,7 @@ boost::property_tree::ptree make_tile() {
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .2}}));
       edge_builder.set_endnode(b);
       uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, b, {{.01, .1}, {.01, .2}}, {"2"}, {}, add);
-      edge_builder.set_edgedataoffset(edge_info_offset);
+      edge_builder.set_edgeinfo_offset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
     //3
@@ -103,7 +103,7 @@ boost::property_tree::ptree make_tile() {
       edge_builder.set_length(PointLL().Length({{.01, .1}, {.2, .1}}));
       edge_builder.set_endnode(d);
       uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, d, {{.01, .1}, {.2, .1}}, {"3"}, {}, add);
-      edge_builder.set_edgedataoffset(edge_info_offset);
+      edge_builder.set_edgeinfo_offset(edge_info_offset);
       edges.emplace_back(std::move(edge_builder));
     }
     //add
@@ -122,7 +122,7 @@ boost::property_tree::ptree make_tile() {
     edge_builder.set_length(PointLL().Length({{.01, .01}, {.2, .1}}));
     edge_builder.set_endnode(d);
     uint32_t edge_info_offset = tile.AddEdgeInfo(0, c, d, {{.01, .01}, {.2, .1}}, {"4"}, {}, add);
-    edge_builder.set_edgedataoffset(edge_info_offset);
+    edge_builder.set_edgeinfo_offset(edge_info_offset);
     //add
     tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
   }
@@ -156,7 +156,7 @@ void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
   if(p.edges().front().dist != 0)
     throw std::runtime_error("Distance along the edge should always be 0 for node search");
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-  if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
+  if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
     throw std::runtime_error("Didn't find expected road name");
 }
 
@@ -179,7 +179,7 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
     if(p.edges().front().dist != expected_distance)
       throw std::runtime_error("Distance along the edge should always be 0 for node search");
     const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-    if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgedataoffset())[0])
+    if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
       throw std::runtime_error("Didn't find expected road name");
 }
 
