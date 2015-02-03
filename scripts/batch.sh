@@ -67,6 +67,6 @@ if [ -d "${DIFF}" ]; then
 		mkdir -p "${DIFF%/}_${OUTDIR}_diff"
 		find ${DIFF}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "diff ${DIFF}/{} ${OUTDIR}/{} > ${DIFF%/}_${OUTDIR}_diff/{}"
 	else
-		echo -e "\x1b[31;1mFiled to diff ${DIFF} with ${OUTDIR} as it looks like they were generated from different input\x1b[0m"
+		echo -e "\x1b[31;1mFailed to diff ${DIFF} with ${OUTDIR} as it looks like they were generated from different input\x1b[0m"
 	fi
 fi
