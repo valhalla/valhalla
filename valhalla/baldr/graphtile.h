@@ -119,6 +119,7 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
+   * TODO - delete this method once new one is working...
    * Convenience method to get the exit signs for an edge given the offset to the
    * edge information.
    * @param  edgeinfo_offset  Offset to the edge info.
@@ -126,12 +127,36 @@ class GraphTile {
    */
   std::vector<ExitSignInfo> GetExitSigns(const uint32_t edgeinfo_offset) const;
 
+  /**
+   * Convenience method to get the exit signs for an edge given the offset to the
+   * edge information.
+   * @param  idx  Directed edge index. Used to lookup list of exit signs.
+   * @return  Returns a list (vector) of exit signs.
+   */
+  std::vector<ExitSignInfo> GetExitSignList(const uint32_t idx);
+
  protected:
+  // Internal exit list
+  struct InternalExit {
+    uint32_t     idx;
+    ExitSignInfo sign;
+
+    InternalExit(const uint32_t n, const ExitSignInfo& s)
+        : idx(n),
+          sign(s) {
+    }
+
+    // Compare by idx
+    bool operator< (const InternalExit& other) const {
+      return idx < other.idx;
+    }
+  };
+
   // Size of the tile in bytes
   size_t size_;
 
   // Graph tile memory, this must be shared so that we can put it into cache
-  // Aparently you can std::move a non-copyable
+  // Apparently you can std::move a non-copyable
   boost::shared_array<char> graphtile_;
 
   // Header information for the tile
@@ -152,15 +177,25 @@ class GraphTile {
   // Size of the edgeinfo data
   std::size_t edgeinfo_size_;
 
-  // Street names and exit names/numbers as sets of null-terminated char arrays.
-  // Edge info has offsets into this array.
+  // Street names as sets of null-terminated char arrays. Edge info has
+  // offsets into this array.
   char* textlist_;
 
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
 
+  // Exit information. Lookup by the directed edge index.
+  bool exitlist_created_;
+  std::vector<InternalExit> exitlist_;
+
   // The id of the tile for convenience
   const GraphId id_;
+
+  /**
+   * Creates a vector of exit sign information that can be access via the
+   * directed edge index.
+   */
+  void CreateExitList();
 };
 
 }
