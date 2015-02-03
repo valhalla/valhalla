@@ -716,7 +716,7 @@ void BuildTileSet(
                nodea, nodeb, edge.shape(), w.GetNames(),
                graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
                added);
-          directededge.set_edgedataoffset(edge_info_offset);
+          directededge.set_edgeinfo_offset(edge_info_offset);
 
           // Add to general statistics
           (*stats).AddStats(tile_start->first, directededge);

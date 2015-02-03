@@ -59,8 +59,8 @@ void DirectedEdgeBuilder::set_endnode(const GraphId& endnode) {
 }
 
 // Get the offset to the common edge data.
-void DirectedEdgeBuilder::set_edgedataoffset(const uint32_t offset) {
-  dataoffsets_.edgedataoffset = offset;
+void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
+  dataoffsets_.edgeinfo_offset = offset;
 }
 
 //Sets the exit flag.

@@ -47,11 +47,11 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_endnode(const baldr::GraphId& endnode);
 
   /**
-   * Set the offset to the common edge data. The offset is from the start
-   * of the common edge data within a tile.
-   * @param  offset  Offset from the start of the edge data within a tile.
+   * Set the offset to the common edge info. The offset is from the start
+   * of the common edge info within a tile.
+   * @param  offset  Offset from the start of the edge info within a tile.
    */
-  void set_edgedataoffset(const uint32_t offset);
+  void set_edgeinfo_offset(const uint32_t offset);
 
   /**
    * Sets the length of the edge in meters.
