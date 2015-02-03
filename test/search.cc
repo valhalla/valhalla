@@ -35,7 +35,7 @@ boost::property_tree::ptree make_tile() {
   TileHierarchy h(conf);
   GraphId tile_id = h.GetGraphId({.125,.125}, 2);
 
-  /* all paths leave a and arrive at d
+  /* this is what it looks like
   b
   |\
  2| \0
@@ -48,94 +48,57 @@ boost::property_tree::ptree make_tile() {
   */
 
   GraphTileBuilder tile;
-  GraphId b(tile_id.tileid(), tile_id.level(), 0),
-          a(tile_id.tileid(), tile_id.level(), 1),
-          c(tile_id.tileid(), tile_id.level(), 2),
-          d(tile_id.tileid(), tile_id.level(), 3);
-  bool add;
+  std::pair<GraphId, PointLL>
+    b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2}),
+    a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1}),
+    c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}),
+    d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
+  uint32_t edge_index = 0;
+
+  auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
+    NodeInfoBuilder node_builder;
+    node_builder.set_latlng(v.second);
+    node_builder.set_bestrc(RoadClass::kSecondary);
+    node_builder.set_edge_count(2);
+    node_builder.set_edge_index(edge_index);
+    return node_builder;
+  };
+  auto add_edge = [&tile, &edge_index] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v, const std::string& name) {
+    DirectedEdgeBuilder edge_builder;
+    edge_builder.set_length(u.second.Distance(v.second));
+    edge_builder.set_endnode(v.first);
+    bool add;
+    uint32_t edge_info_offset = tile.AddEdgeInfo(edge_index++, u.first, v.first, {u.second, v.second}, {name}, {}, add);
+    edge_builder.set_edgeinfo_offset(edge_info_offset);
+    return edge_builder;
+  };
 
   //B
   {
-    NodeInfoBuilder node_builder;
-    node_builder.set_latlng({.01, .2});
-    node_builder.set_bestrc(RoadClass::kSecondary);
-    node_builder.set_edge_count(1);
-    node_builder.set_edge_index(0);
-    //0
-    DirectedEdgeBuilder edge_builder;
-    edge_builder.set_length(PointLL().Length({{.01, .2}, {.2, .1}}));
-    edge_builder.set_endnode(d);
-    uint32_t edge_info_offset = tile.AddEdgeInfo(0, b, d, {{.01, .2}, {.2, .1}}, {"0"}, {}, add);
-    edge_builder.set_edgeinfo_offset(edge_info_offset);
-    //add
-    tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
+    auto node = add_node(b, 2);
+    auto edges { add_edge(b, d, "0"), add_edge(b, a, "2") };
+    tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //A
   {
-    NodeInfoBuilder node_builder;
-    node_builder.set_latlng({.01, .1});
-    node_builder.set_bestrc(RoadClass::kSecondary);
-    node_builder.set_edge_count(3);
-    node_builder.set_edge_index(1);
-    std::vector<DirectedEdgeBuilder> edges;
-    //1
-    {
-      DirectedEdgeBuilder edge_builder;
-      edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .01}}));
-      edge_builder.set_endnode(c);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, c, {{.01, .1}, {.01, .01}}, {"1"}, {}, add);
-      edge_builder.set_edgeinfo_offset(edge_info_offset);
-      edges.emplace_back(std::move(edge_builder));
-    }
-    //2
-    {
-      DirectedEdgeBuilder edge_builder;
-      edge_builder.set_length(PointLL().Length({{.01, .1}, {.01, .2}}));
-      edge_builder.set_endnode(b);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, b, {{.01, .1}, {.01, .2}}, {"2"}, {}, add);
-      edge_builder.set_edgeinfo_offset(edge_info_offset);
-      edges.emplace_back(std::move(edge_builder));
-    }
-    //3
-    {
-      DirectedEdgeBuilder edge_builder;
-      edge_builder.set_length(PointLL().Length({{.01, .1}, {.2, .1}}));
-      edge_builder.set_endnode(d);
-      uint32_t edge_info_offset = tile.AddEdgeInfo(0, a, d, {{.01, .1}, {.2, .1}}, {"3"}, {}, add);
-      edge_builder.set_edgeinfo_offset(edge_info_offset);
-      edges.emplace_back(std::move(edge_builder));
-    }
-    //add
-    tile.AddNodeAndDirectedEdges(node_builder, edges);
+    auto node = add_node(a, 3);
+    auto edges { add_edge(a, b, "2"), add_edge(a, d, "3"), add_edge(a, c, "1") };
+    tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //C
   {
-    NodeInfoBuilder node_builder;
-    node_builder.set_latlng({.01, .01});
-    node_builder.set_bestrc(RoadClass::kSecondary);
-    node_builder.set_edge_count(1);
-    node_builder.set_edge_index(4);
-    //4
-    DirectedEdgeBuilder edge_builder;
-    edge_builder.set_length(PointLL().Length({{.01, .01}, {.2, .1}}));
-    edge_builder.set_endnode(d);
-    uint32_t edge_info_offset = tile.AddEdgeInfo(0, c, d, {{.01, .01}, {.2, .1}}, {"4"}, {}, add);
-    edge_builder.set_edgeinfo_offset(edge_info_offset);
-    //add
-    tile.AddNodeAndDirectedEdges(node_builder, {edge_builder});
+    auto node = add_node(c, 2);
+    auto edges { add_edge(c, a, "1"), add_edge(c, d, "4") };
+    tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //D
   {
-    NodeInfoBuilder node_builder;
-    node_builder.set_latlng({.2, .1});
-    node_builder.set_bestrc(RoadClass::kSecondary);
-    node_builder.set_edge_count(1);
-    node_builder.set_edge_index(5);
-    //add
-    tile.AddNodeAndDirectedEdges(node_builder, {});
+    auto node = add_node(d, 3);
+    auto edges { add_edge(d, b, "0"), add_edge(d, a, "3"), add_edge(d, c, "4") };
+    tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //write the tile

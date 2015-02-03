@@ -132,16 +132,11 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   PathLocation correlated(location);
   if(closest_edge != nullptr){
     //compute partial distance along the shape
-    float partial_length = 0, total_length = 0;
-    for(size_t i = 1; i < closest_edge_info->shape().size(); ++i) {
-      //still doing partial distance
-      if(i < std::get<2>(closest_point))
-        partial_length = total_length = partial_length + closest_edge_info->shape()[i - 1].Distance(closest_edge_info->shape()[i]);
-      else
-        total_length = total_length + closest_edge_info->shape()[i - 1].Distance(closest_edge_info->shape()[i]);
-    }
+    float partial_length = 0;
+    for(size_t i = 1; i < std::get<2>(closest_point); ++i)
+        partial_length += closest_edge_info->shape()[i - 1].Distance(closest_edge_info->shape()[i]);
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
-    float length_ratio = partial_length / total_length;
+    float length_ratio = partial_length / closest_edge->length();
     //correlate it
     correlated.CorrelateEdge(closest_edge_id, length_ratio);
     //we need the opposing edge as well
