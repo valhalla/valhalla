@@ -8,6 +8,9 @@
 namespace valhalla {
 namespace mjolnir {
 
+// Internal storage of lat,lng
+using OSMLatLng = std::pair<float, float>;
+
 /**
  * OSM node information. Result of parsing an OSM node.
  */
@@ -32,13 +35,13 @@ class OSMNode {
    * Sets the lat,lng.
    * @param  ll  Lat,lng of the node.
    */
-  void set_latlng(const std::pair<float, float>& ll);
+  void set_latlng(const OSMLatLng& ll);
 
   /**
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  const std::pair<float, float>& latlng() const;
+  const OSMLatLng& latlng() const;
 
   /**
    * Set modes mask.
@@ -132,7 +135,7 @@ class OSMNode {
 
  protected:
   // Lat,lng of the node
-  std::pair<float, float> latlng_;
+  OSMLatLng latlng_;
 
   // Node attributes
   union NodeAttributes {
