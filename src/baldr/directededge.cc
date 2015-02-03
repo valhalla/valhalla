@@ -26,9 +26,9 @@ GraphId DirectedEdge::endnode() const {
 
 // ------------------  Data offsets and flags for extended data -------------//
 
-// Get the offset to the common edge data.
-uint32_t DirectedEdge::edgedataoffset() const {
-  return dataoffsets_.edgedataoffset;
+// Get the offset to the common edge information.
+uint32_t DirectedEdge::edgeinfo_offset() const {
+  return dataoffsets_.edgeinfo_offset;
 }
 
 // Does this directed edge have exit information.
@@ -186,8 +186,8 @@ const uint64_t DirectedEdge::internal_version() {
   de.classification_ = {};
 
   // DataOffsets
-  de.dataoffsets_.edgedataoffset = ~de.dataoffsets_.edgedataoffset;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.edgedataoffset+1)-1);
+  de.dataoffsets_.edgeinfo_offset = ~de.dataoffsets_.edgeinfo_offset;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.edgeinfo_offset+1)-1);
   de.dataoffsets_.spare = ~de.dataoffsets_.spare;
   boost::hash_combine(seed, ffs(de.dataoffsets_.spare+1)-1);
   de.dataoffsets_.exit = ~de.dataoffsets_.exit;

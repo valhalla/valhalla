@@ -52,10 +52,10 @@ class DirectedEdge {
 
   /**
    * Offset to the common edge data. The offset is from the start
-   * of the common edge data within a tile.
-   * @return  Returns offset from the start of the edge data within a tile.
+   * of the common edge information  within a tile.
+   * @return  Returns offset from the start of the edge info within a tile.
    */
-  uint32_t edgedataoffset() const;
+  uint32_t edgeinfo_offset() const;
 
   /**
    * Does this directed edge have exit information?
@@ -252,9 +252,9 @@ class DirectedEdge {
 
   // Data offsets and flags for extended data.
   struct DataOffsets {
-    uint32_t edgedataoffset : 24; // Offset to edge data.
-    uint32_t spare          :  7;
-    uint32_t exit           :  1; // Does this directed edge have exits
+    uint32_t edgeinfo_offset : 24; // Offset to edge data.
+    uint32_t spare           :  7;
+    uint32_t exit            :  1; // Does this directed edge have exits
   };
   DataOffsets dataoffsets_;
 
