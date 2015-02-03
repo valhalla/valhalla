@@ -20,7 +20,7 @@
 #include <valhalla/mjolnir/dataquality.h>
 
 #include <valhalla/baldr/exitsigninfo.h>
-#include "mjolnir/edgeinfobuilder.h"
+#include <valhalla/mjolnir/edgeinfobuilder.h>
 
 namespace valhalla {
 namespace mjolnir {
