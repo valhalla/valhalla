@@ -39,7 +39,7 @@ if [ "${3}" ]; then
 fi
 
 #where do you want the output, default to current time
-OUTDIR=$(date +%Y_%m_%d_%H_%S)_$(basename "${INPUT}")
+OUTDIR=$(date +%Y_%m_%d_%H_%M_%S)_$(basename "${INPUT%.*}")
 if [ "${4}" ]; then
 	OUTDIR="${4}"
 fi
@@ -62,7 +62,7 @@ rm -f "${TMP}"
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
-	if [[ "${DIFF}" == *$(basename ${INPUT})* ]]; then
+	if [[ "${DIFF}" == *$(basename ${INPUT%.*})* ]]; then
 		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR} to ${DIFF}_${OUTDIR}_diff:\x1b[0m"
 		mkdir -p "${DIFF%/}_${OUTDIR}_diff"
 		find ${DIFF}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "diff ${DIFF}/{} ${OUTDIR}/{} > ${DIFF%/}_${OUTDIR}_diff/{}"
