@@ -35,6 +35,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_version(const std::string& version);
 
   /**
+   * Set the graph Id of this tile.
+   * @param  graphid  GraphId (tileid and level) of this tile.
+   */
+  void set_graphid(const baldr::GraphId& graphid);
+
+  /**
    * Sets the number of nodes in this tile.
    * @param  count  Number of nodes within the tile.
    */

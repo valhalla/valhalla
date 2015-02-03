@@ -27,6 +27,11 @@ void GraphTileHeaderBuilder::set_version(const std::string& version) {
   version_[kMaxVersionSize-1] = 0;
 }
 
+// Set the graph Id of this tile.
+void GraphTileHeaderBuilder::set_graphid(const baldr::GraphId& graphid) {
+  graphid_ = graphid;
+}
+
 // Sets the number of nodes in this tile.
 void GraphTileHeaderBuilder::set_nodecount(const uint32_t count) {
   nodecount_ = count;
