@@ -187,7 +187,7 @@ void TestEdgeSearch() {
   auto conf = make_tile();
   valhalla::baldr::GraphReader reader(conf);
 
-  //edge_search(reader, {{.095, .1}}, {.095, .1}, "3", .5);
+  edge_search(reader, {{.095, .1}}, {.095, .1}, "3", .5);
 }
 
 }
