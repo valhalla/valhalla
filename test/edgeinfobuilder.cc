@@ -67,7 +67,7 @@ void TestWriteRead() {
   // Exit signs
   std::vector<ExitSignBuilder> exit_signs;
   exit_signs.emplace_back(ExitSign::Type::kNumber, 100);
-  exit_signs.emplace_back(ExitSign::Type::KBranch, 200);
+  exit_signs.emplace_back(ExitSign::Type::kBranch, 200);
   exit_signs.emplace_back(ExitSign::Type::kToward, 300);
   exit_signs.emplace_back(ExitSign::Type::kName, 400);
   std::vector<ExitSignBuilder> es(exit_signs);  // copy for compare below
