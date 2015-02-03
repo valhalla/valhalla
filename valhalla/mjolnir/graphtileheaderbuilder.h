@@ -6,24 +6,90 @@
 namespace valhalla {
 namespace mjolnir {
 
-// Summary information about the graph tile.
+/**
+ * Builds the summary information about the graph tile.
+ */
 class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
  public:
-  // Constructor
+  /**
+   * Constructor
+   */
   GraphTileHeaderBuilder();
 
-  // Sets the number of nodes in this tile.
-  void set_nodecount(const unsigned int nodecount);
+  /**
+   * Set the internal version
+   * @param  version  Internal version. TODO - describe?
+   */
+  void set_internal_version(const int64_t version);
 
-  // Sets the number of directed edges in this tile.
-  void set_directededgecount(const unsigned int directededgecount);
+  /**
+   * Set the date created.
+   * @param  date  Unix timestamp. Time in seconds since 1/1/1970.
+   */
+  void set_date_created(const uint64_t date);
 
-  // Sets the offset to the edge info.
-  void set_edgeinfo_offset(const unsigned int edgeinfo_offset);
+  /**
+   * Set the version string.
+   * @param  version Version string.
+   */
+  void set_version(const std::string& version);
 
-  // Sets the offset to the name list.
-  void set_textlist_offset(const unsigned int textlist_offset);
+  /**
+   * Sets the number of nodes in this tile.
+   * @param  count  Number of nodes within the tile.
+   */
+  void set_nodecount(const uint32_t count);
 
+  /**
+   * Sets the number of directed edges in this tile.
+   * @param  count  Number of directed edges within the tile.
+   */
+  void set_directededgecount(const uint32_t count);
+
+  /**
+   * Sets the offset to the edge info.
+   * @param offset Offset in bytes to the start of the edge information.
+   */
+  void set_edgeinfo_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the name list.
+   * @param offset Offset in bytes to the start of the text/name list.
+   */
+  void set_textlist_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the exit list.
+   * @param offset Offset in bytes to the start of the exit list.
+   */
+  void set_exitlist_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the administrative information.
+   * @param offset Offset in bytes to the start of the  administrative
+   *               information.
+   */
+  void set_admin_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the list of Multi-Edge Restrictions.
+   * @param offset Offset in bytes to the start of the Multi-Edge Restriction
+   *               list.
+   */
+  void set_merlist_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the list of timed restrictions.
+   * @param offset Offset in bytes to the start of the Multi-Edge Restriction
+   *               list.
+   */
+  void set_timedres_offset(const uint32_t offset);
+
+  /**
+   * Sets the offset to the list of transit departures / schedule.
+   * @param offset Offset in bytes to the start of the transit schedules.
+   */
+  void set_transit_offset(const uint32_t offset);
 };
 
 }

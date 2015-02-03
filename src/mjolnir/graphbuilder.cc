@@ -40,7 +40,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 // floats we need to change into PointLL to get length of an edge
 std::vector<midgard::PointLL> Edge::shape() const {
   std::vector<midgard::PointLL> lls;
-  for (const std::pair<float, float>& ll : latlngs_) {
+  for (const OSMLatLng& ll : latlngs_) {
     lls.emplace_back(midgard::PointLL(ll.first, ll.second));
   }
   return lls;
@@ -542,6 +542,7 @@ float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
       return 25.0f;
     }
   }
+  return spd;
 }
 
 struct DuplicateEdgeInfo {

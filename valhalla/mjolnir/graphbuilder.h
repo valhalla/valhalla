@@ -55,7 +55,7 @@ struct Edge {
   Attributes attributes_;
 
   // Shape of the edge (polyline)
-  std::vector<std::pair<float, float>> latlngs_;
+  std::vector<OSMLatLng> latlngs_;
 
   /**
    * Construct a new edge. Target node and additional lat,lngs will
@@ -68,7 +68,7 @@ struct Edge {
    * @param drivereverse Auto use in the reverse direction of the edge
    */
   Edge(const uint64_t sourcenode, const uint32_t wayindex,
-       const std::pair<float, float>& ll, const OSMWay& way)
+       const OSMLatLng& ll, const OSMWay& way)
       : sourcenode_(sourcenode),
         targetnode_(0),
         wayindex_(wayindex) {
@@ -83,7 +83,7 @@ struct Edge {
    * Add a lat,lng to the shape of the edge.
    * @param  ll  Lat,lng
    */
-  void AddLL(const std::pair<float, float>& ll) {
+  void AddLL(const OSMLatLng& ll) {
     latlngs_.emplace_back(ll);
   }
 
