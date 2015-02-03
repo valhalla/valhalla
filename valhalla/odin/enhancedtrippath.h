@@ -59,18 +59,17 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
   EnhancedTripPath_Edge* GetIntersectingEdge(size_t index);
 
-  void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
-                                                uint32_t& right_count,
-                                                uint32_t& right_similar_count,
-                                                uint32_t& left_count,
-                                                uint32_t& left_similar_count);
+  void CalculateRightLeftIntersectingEdgeCounts(
+      uint32_t from_heading, uint32_t& right_count,
+      uint32_t& right_similar_count, uint32_t& left_count,
+      uint32_t& left_similar_count) const;
 
  protected:
   EnhancedTripPath_Node();
 
-  bool IsSimilarTurnDegree(uint32_t turn_degree_a,
-                           uint32_t turn_degree_b,
-                           uint32_t turn_degree_threshold = 30) const;
+  static bool IsSimilarTurnDegree(uint32_t turn_degree_a,
+                                  uint32_t turn_degree_b,
+                                  uint32_t turn_degree_threshold = 30);
 
   bool last_node_;
 
