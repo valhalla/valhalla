@@ -41,7 +41,7 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
 std::vector<midgard::PointLL> Edge::shape() const {
   std::vector<midgard::PointLL> lls;
   for (const OSMLatLng& ll : latlngs_) {
-    lls.emplace_back(midgard::PointLL(ll.first, ll.second));
+    lls.emplace_back(ll.first, ll.second);
   }
   return lls;
 }
