@@ -92,7 +92,16 @@ class PathAlgorithm {
    * Form the path from the adjacency list.
    * TODO - support partial distances at origin/destination
    */
-  std::vector<baldr::GraphId> FormPath(const uint32_t dest);
+  std::vector<baldr::GraphId> FormPath(const uint32_t dest,
+                                       baldr::GraphReader& graphreader);
+
+  /**
+   * TODO - are we keeping these?
+   */
+  baldr::GraphId GetStartNode(baldr::GraphReader& graphreader,
+                              const baldr::DirectedEdge* directededge);
+  std::vector<baldr::GraphId> FormLocalPath(const uint32_t dest,
+                              baldr::GraphReader& graphreader);
 
   /**
    * Gets the edge label for an edge that is in the adjacency list.

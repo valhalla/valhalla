@@ -57,6 +57,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/dynamiccost.cc \
 	src/thor/edgelabel.cc \
 	src/thor/edgestatus.cc \
+	src/thor/formlocalpath.cc \
 	src/thor/pathalgorithm.cc \
 	src/thor/pedestriancost.cc \
 	src/thor/trippathbuilder.cc 

@@ -32,6 +32,7 @@ namespace bpo = boost::program_options;
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::string routetype) {
+LOG_INFO("Sizeof GraphTileHeader = " + std::to_string(sizeof(GraphTileHeader)));
   // Register costing methods
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -44,29 +45,41 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
 
   LOG_INFO("routetype: " + routetype);
 
-  std::clock_t start = std::clock();
+  auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
-  uint32_t msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
-  start = std::clock();
+  t1 = std::chrono::high_resolution_clock::now();
   std::vector<GraphId> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   // Form output information based on pathedges
-  start = std::clock();
+  t1 = std::chrono::high_resolution_clock::now();
   TripPath trip_path = TripPathBuilder::Build(reader, pathedges);
 
   // TODO - perhaps walk the edges to find total length?
   //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " km");
-  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
-  start = std::clock();
+  t1 = std::chrono::high_resolution_clock::now();
   pathalgorithm.Clear();
-  msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
+
+  // Run again to see benefits of caching
+  t1 = std::chrono::high_resolution_clock::now();
+  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
+
   return trip_path;
 }
 
@@ -181,7 +194,7 @@ int main(int argc, char *argv[]) {
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
   // Use Loki to get location information
-  std::clock_t start = std::clock();
+  auto t1 = std::chrono::high_resolution_clock::now();
 
   // Origin
   Location originloc = Location::FromCsv(origin);
@@ -190,17 +203,25 @@ int main(int argc, char *argv[]) {
   // Destination
   Location destloc = Location::FromCsv(destination);
   PathLocation pathDest = valhalla::loki::Search(destloc, reader);
-
-  uint32_t msecs = (std::clock() - start) / (double) (CLOCKS_PER_SEC / 1000);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // TODO - set locations
 
   // Try the route
+  t1 = std::chrono::high_resolution_clock::now();
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
 
   // Try the the directions
+  t1 = std::chrono::high_resolution_clock::now();
   TripDirections trip_directions = DirectionsTest(trip_path, originloc, destloc);
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
 
   return EXIT_SUCCESS;
 }
