@@ -121,17 +121,16 @@ int main(int argc, char *argv[]) {
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
       "origin,o",
-      boost::program_options::value<std::string>(&origin)->required(),
-      "Origin lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
+      boost::program_options::value<std::string>(&origin),
+      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "destination,d",
-      boost::program_options::value<std::string>(&destination)->required(),
-      "Destination lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
-      "route_type,t",
-      boost::program_options::value<std::string>(&routetype)->required(),
+      boost::program_options::value<std::string>(&destination),
+      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
+      "type,t",
+      boost::program_options::value<std::string>(&routetype),
       "Route Type: auto|bicycle|pedestrian")
   // positional arguments
-  ("config", bpo::value<std::string>(&config)->required(),
-   "String for the application to echo back");
+  ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -139,10 +138,7 @@ int main(int argc, char *argv[]) {
   bpo::variables_map vm;
 
   try {
-    bpo::store(
-        bpo::command_line_parser(argc, argv).options(options).positional(
-            pos_options).run(),
-        vm);
+    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
     bpo::notify(vm);
 
   } catch (std::exception &e) {
@@ -163,11 +159,9 @@ int main(int argc, char *argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : std::vector<std::string> { "origin", "destination",
-      "route_type", "config" }) {
+  for (auto arg : std::vector<std::string> { "origin", "destination", "type", "config" }) {
     if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg
-                << "> argument was not provided, but is mandatory\n\n";
+      std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
       return EXIT_FAILURE;
     }
