@@ -107,7 +107,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Check for completion. Form path and return if complete.
     if (IsComplete(nextlabel.edgeid())) {
-      return FormPath(next_label_index);
+      return FormPath(next_label_index, graphreader);
     }
 
     // TODO - do we need to terminate fruitless searches?
@@ -161,6 +161,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
+if (directededge->shortcut()) continue;
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
@@ -279,10 +280,16 @@ bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
 
 // Form the path from the adjacency list.
 // TODO - support partial distances at origin/destination
-std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest) {
+std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
+                     GraphReader& graphreader) {
   // TODO - leave in for now!
   LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].truecost()) +
            "  Iterations = " + std::to_string(edgelabel_index_));
+
+  // Return path on local level...
+  if (true) {
+    return FormLocalPath(dest, graphreader);
+  }
 
   // Add the destination edge
   std::vector<GraphId> edgesonpath;
