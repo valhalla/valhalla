@@ -77,7 +77,6 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   //TODO: be smarter about this either in loki or in baldr cache
   if(!tile)
     throw std::runtime_error("No data found for location");
-  throw std::runtime_error("Unimplemented");
 
   //a place to keep the closest information so far
   const DirectedEdge* closest_edge = nullptr;
@@ -94,10 +93,10 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
     const DirectedEdge* edge = tile->directededge(static_cast<size_t>(edge_index));
 
     //we haven't looked at this edge yet
-    auto inserted = searched.insert(edge->edgedataoffset());
+    auto inserted = searched.insert(edge->edgeinfo_offset());
     if(inserted.second) {
       //get some info about the edge
-      auto edge_info = tile->edgeinfo(edge->edgedataoffset());
+      auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
       auto candidate = location.latlng_.ClosestPoint(edge_info->shape());
 
       //is this really close to the geometry
