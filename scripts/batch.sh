@@ -45,11 +45,20 @@ if [ "${4}" ]; then
 fi
 mkdir -p "${OUTDIR}"
 
+#turn the nice input into something parallel can parse for args
+TMP="$(mktemp)"
+cp -rp "${INPUT}" "${TMP}"
+for arg in $(pathtest --help | grep -o '\-[a-z\-]\+' | sort | uniq); do
+	sed -i -e "s/[ ]\?${arg}[ ]\+/|${arg}|/g" "${TMP}"
+done
+sed -i -e "s/\([^\\]\)\"|/\1|/g" -e "s/|\"/|/g" "${TMP}"
+
 #run all of the paths, make sure to cut off the timestamps
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
-cat "${INPUT}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2>&1 | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
+cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2>&1 | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
+rm -f "${TMP}"
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
