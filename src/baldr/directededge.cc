@@ -6,7 +6,7 @@ namespace baldr {
 
 // Default constructor
 DirectedEdge::DirectedEdge()
-    : edgedataoffset_(0),
+    : dataoffsets_{},
       geoattributes_{},
       forwardaccess_{},
       reverseaccess_{},
@@ -24,9 +24,16 @@ GraphId DirectedEdge::endnode() const {
   return endnode_;
 }
 
-// Get the offset to the common edge data.
-uint32_t DirectedEdge::edgedataoffset() const {
-  return edgedataoffset_;
+// ------------------  Data offsets and flags for extended data -------------//
+
+// Get the offset to the common edge information.
+uint32_t DirectedEdge::edgeinfo_offset() const {
+  return dataoffsets_.edgeinfo_offset;
+}
+
+// Does this directed edge have exit information.
+bool DirectedEdge::exit() const {
+  return dataoffsets_.exit;
 }
 
 // Gets the length of the edge in meters.
@@ -34,15 +41,15 @@ uint32_t DirectedEdge::length() const {
   return geoattributes_.length;
 }
 
-/**
-  * Gets the intersection internal flag.
-  * @return  Returns true if the edge is internal to an intersection. This
-  *          is derived from OSM and used for doubly digitized intersections.
-  */
-bool DirectedEdge::internal() const {
-  return geoattributes_.internal;
+// Gets the elevation factor (0-15).
+uint32_t DirectedEdge::elevation() const {
+  return geoattributes_.elevation;
 }
 
+// Gets the lane count
+uint32_t DirectedEdge::lanecount() const {
+  return geoattributes_.lanecount;
+}
 
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
@@ -61,6 +68,21 @@ uint8_t DirectedEdge::speed() const {
 
 // TODO - methods for individual access
 
+// Get the road class / importance.
+RoadClass DirectedEdge::importance() const {
+  return static_cast<RoadClass>(classification_.importance);
+}
+
+// Is this edge a link / ramp?
+bool DirectedEdge::link() const {
+  return classification_.link;
+}
+
+// Get the use of this edge.
+Use DirectedEdge::use() const {
+  return static_cast<Use>(classification_.use);
+}
+
 bool DirectedEdge::ferry() const {
   return attributes_.ferry;
 }
@@ -71,10 +93,6 @@ bool DirectedEdge::railferry() const {
 
 bool DirectedEdge::toll() const {
   return attributes_.toll;
-}
-
-bool DirectedEdge::exit() const {
-  return attributes_.exit;
 }
 
 bool DirectedEdge::destonly() const {
@@ -105,11 +123,6 @@ Surface DirectedEdge::surface() const {
 // Get the cycle lane of this edge.
 CycleLane DirectedEdge::cyclelane() const {
   return static_cast<CycleLane>(attributes_.cycle_lane);
-}
-
-// Gets the lane count
-uint32_t DirectedEdge::lanecount() const {
-  return attributes_.lanecount;
 }
 
 // Does this edge represent a transition up one level in the hierarchy.
@@ -154,27 +167,17 @@ uint32_t DirectedEdge::bikenetwork() const {
   return attributes_.bikenetwork;
 }
 
-// Get the road class / importance.
-RoadClass DirectedEdge::importance() const {
-  return static_cast<RoadClass>(classification_.importance);
-}
-
-// Is this edge a link / ramp?
-bool DirectedEdge::link() const {
-  return classification_.link;
-}
-
-// Get the use of this edge.
-Use DirectedEdge::use() const {
-  return static_cast<Use>(classification_.use);
+// Gets the intersection internal flag.
+bool DirectedEdge::internal() const {
+  return attributes_.internal;
 }
 
 // Get the internal version
 const uint64_t DirectedEdge::internal_version() {
+  uint64_t seed = 0;
 
   DirectedEdge de;
-
-  de.edgedataoffset_ = 0;
+  de.dataoffsets_ = {};
   de.geoattributes_ = {};
   de.forwardaccess_ = {};
   de.reverseaccess_ = {};
@@ -182,17 +185,23 @@ const uint64_t DirectedEdge::internal_version() {
   de.attributes_ = {};
   de.classification_ = {};
 
-  uint64_t seed = 0;
+  // DataOffsets
+  de.dataoffsets_.edgeinfo_offset = ~de.dataoffsets_.edgeinfo_offset;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.edgeinfo_offset+1)-1);
+  de.dataoffsets_.spare = ~de.dataoffsets_.spare;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.spare+1)-1);
+  de.dataoffsets_.exit = ~de.dataoffsets_.exit;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.exit+1)-1);
 
-  boost::hash_combine(seed,de.edgedataoffset_);
-
+  // GeoAttributes
   de.geoattributes_.length = ~de.geoattributes_.length;
   boost::hash_combine(seed,ffs(de.geoattributes_.length+1)-1);
   de.geoattributes_.elevation = ~de.geoattributes_.elevation;
   boost::hash_combine(seed,ffs(de.geoattributes_.elevation+1)-1);
-  de.geoattributes_.spare = ~de.geoattributes_.spare;
-  boost::hash_combine(seed,ffs(de.geoattributes_.spare+1)-1);
+  de.geoattributes_.lanecount = ~de.geoattributes_.lanecount;
+  boost::hash_combine(seed,ffs(de.geoattributes_.lanecount+1)-1);
 
+  // Access
   de.forwardaccess_.fields.pedestrian  = ~de.forwardaccess_.fields.pedestrian;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.pedestrian+1)-1);
   de.forwardaccess_.fields.bicycle  = ~de.forwardaccess_.fields.bicycle;
@@ -210,8 +219,10 @@ const uint64_t DirectedEdge::internal_version() {
   de.forwardaccess_.fields.truck  = ~de.forwardaccess_.fields.truck;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.truck+1)-1);
 
+  // Speed
   boost::hash_combine(seed,de.speed_);
 
+  // Classification
   de.classification_.importance = ~de.classification_.importance;
   boost::hash_combine(seed,ffs(de.classification_.importance+1)-1);
   de.classification_.link = ~de.classification_.link;
@@ -219,6 +230,7 @@ const uint64_t DirectedEdge::internal_version() {
   de.classification_.use = ~de.classification_.use;
   boost::hash_combine(seed,ffs(de.classification_.use+1)-1);
 
+  // Attributes
   de.attributes_.bikenetwork = ~de.attributes_.bikenetwork;
   boost::hash_combine(seed,ffs(de.attributes_.bikenetwork+1)-1);
   de.attributes_.bridge = ~de.attributes_.bridge;
@@ -231,8 +243,6 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.ferry+1)-1);
   de.attributes_.forward = ~de.attributes_.forward;
   boost::hash_combine(seed,ffs(de.attributes_.forward+1)-1);
-  de.attributes_.lanecount = ~de.attributes_.lanecount;
-  boost::hash_combine(seed,ffs(de.attributes_.lanecount+1)-1);
   de.attributes_.not_thru = ~de.attributes_.not_thru;
   boost::hash_combine(seed,ffs(de.attributes_.not_thru+1)-1);
   de.attributes_.opp_index = ~de.attributes_.opp_index;
@@ -243,8 +253,6 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.roundabout+1)-1);
   de.attributes_.shortcut = ~de.attributes_.shortcut;
   boost::hash_combine(seed,ffs(de.attributes_.shortcut+1)-1);
-  de.attributes_.exit = ~de.attributes_.exit;
-  boost::hash_combine(seed,ffs(de.attributes_.exit+1)-1);
   de.attributes_.superseded = ~de.attributes_.superseded;
   boost::hash_combine(seed,ffs(de.attributes_.superseded+1)-1);
   de.attributes_.surface = ~de.attributes_.surface;
@@ -257,6 +265,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.trans_up+1)-1);
   de.attributes_.tunnel = ~de.attributes_.tunnel;
   boost::hash_combine(seed,ffs(de.attributes_.tunnel+1)-1);
+  de.attributes_.internal = ~de.attributes_.internal;
+  boost::hash_combine(seed,ffs(de.attributes_.internal+1)-1);
 
   boost::hash_combine(seed,sizeof(DirectedEdge));
 

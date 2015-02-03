@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string>
 
+#include <valhalla/baldr/graphid.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -40,6 +42,12 @@ class GraphTileHeader {
    * @return  Returns the version of this tile.
    */
   std::string version() const;
+
+  /**
+   * Get the GraphId (tileid and level) of this tile.
+   * @return  Returns the graph Id.
+   */
+  const baldr::GraphId& graphid() const;
 
   /**
    * Gets the number of nodes in this tile.
@@ -109,6 +117,9 @@ class GraphTileHeader {
 
   // baldr version.
   char version_[kMaxVersionSize];
+
+  // GraphId (tileid and level) of this tile
+  GraphId graphid_;
 
   // Number of nodes
   uint32_t nodecount_;

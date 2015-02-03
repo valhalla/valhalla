@@ -23,6 +23,9 @@ constexpr uint8_t kRcn = 2;   // Part of regional bike network
 constexpr uint8_t kLcn = 4;   // Part of local bike network
 constexpr uint8_t kMcn = 8;   // Part of mountain bike network
 
+// Maximum offset to edge information
+constexpr uint32_t kMaxEdgeInfoOffset = 16777215;   // 2^24 bytes
+
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 
@@ -49,10 +52,17 @@ class DirectedEdge {
 
   /**
    * Offset to the common edge data. The offset is from the start
-   * of the common edge data within a tile.
-   * @return  Returns offset from the start of the edge data within a tile.
+   * of the common edge information  within a tile.
+   * @return  Returns offset from the start of the edge info within a tile.
    */
-  uint32_t edgedataoffset() const;
+  uint32_t edgeinfo_offset() const;
+
+  /**
+   * Does this directed edge have exit information?
+   * @return  Returns true if the directed edge has exit information,
+   *          false if not.
+   */
+  bool exit() const;
 
   /**
    * Gets the length of the edge in meters.
@@ -61,11 +71,16 @@ class DirectedEdge {
   uint32_t length() const;
 
   /**
-   * Gets the intersection internal flag.
-   * @return  Returns true if the edge is internal to an intersection. This
-   *          is derived from OSM and used for doubly digitized intersections.
+   * Get the elevation factor.  TODO
+   * @return  Returns the elevation factor (0-15).
    */
-  bool internal() const;
+  uint32_t elevation() const;
+
+  /**
+   * Get the number of lanes for this directed edge.
+   * @return  Returns the number of lanes for this directed edge.
+   */
+  uint32_t lanecount() const;
 
   /**
    * Get the access modes in the forward direction (bit field).
@@ -84,6 +99,22 @@ class DirectedEdge {
   uint8_t speed() const;
 
   /**
+   * Get the importance of the road/path
+   * @return  Returns importance / RoadClass
+   */
+  RoadClass importance() const;
+
+  /**
+   * Is this edge a link/ramp?
+   */
+  bool link() const;
+
+  /**
+   * Get the use of this edge.
+   */
+  Use use() const;
+
+  /**
    * Is this edge part of a ferry?
    */
   bool ferry() const;
@@ -97,11 +128,6 @@ class DirectedEdge {
    * Does this edge have a toll or is it part of a toll road?
    */
   bool toll() const;
-
-  /**
-   * Does this edge have a exit?
-   */
-  bool exit() const;
 
   /**
    * Is this edge part of a private or no through road that allows access
@@ -208,26 +234,11 @@ class DirectedEdge {
   uint32_t bikenetwork() const;
 
   /**
-   * Get the number of lanes for this directed edge.
-   * @return  Returns the number of lanes for this directed edge.
+   * Gets the intersection internal flag.
+   * @return  Returns true if the edge is internal to an intersection. This
+   *          is derived from OSM and used for doubly digitized intersections.
    */
-  uint32_t lanecount() const;
-
-  /**
-   * Get the importance of the road/path
-   * @return  Returns importance / RoadClass
-   */
-  RoadClass importance() const;
-
-  /**
-   * Is this edge a link/ramp?
-   */
-  bool link() const;
-
-  /**
-   * Get the use of this edge.
-   */
-  Use use() const;
+  bool internal() const;
 
   /**
    * Get the computed version of DirectedEdge attributes.
@@ -239,15 +250,19 @@ class DirectedEdge {
   // End node
   GraphId endnode_;
 
-  // Offset to the common edge data within the tile
-  uint32_t edgedataoffset_;
+  // Data offsets and flags for extended data.
+  struct DataOffsets {
+    uint32_t edgeinfo_offset : 24; // Offset to edge data.
+    uint32_t spare           :  7;
+    uint32_t exit            :  1; // Does this directed edge have exits
+  };
+  DataOffsets dataoffsets_;
 
-  // Geometric attributes: length, elevation factor.
+  // Geometric attributes: length, elevation factor, lane count.
   struct GeoAttributes {
     uint32_t length        : 24;  // Length in meters
-    uint32_t elevation     : 4;   // Elevation factor
-    uint32_t internal      : 1;   // Edge that is internal to an intersection
-    uint32_t spare         : 3;
+    uint32_t elevation     :  4;  // Elevation factor
+    uint32_t lanecount     :  4;  // Number of lanes
   };
   GeoAttributes geoattributes_;
 
@@ -289,7 +304,7 @@ class DirectedEdge {
     uint32_t railferry      : 1;
     uint32_t toll           : 1;
     uint32_t dest_only      : 1;
-    uint32_t exit           : 1;
+    uint32_t spare          : 1;
     uint32_t tunnel         : 1;
     uint32_t bridge         : 1;
     uint32_t roundabout     : 1;
@@ -304,7 +319,9 @@ class DirectedEdge {
     uint32_t not_thru       : 1;  // Edge leads to "no-through" region
     uint32_t opp_index      : 5;  // Opposing directed edge index
     uint32_t bikenetwork    : 4;
-    uint32_t lanecount      : 4;
+    uint32_t internal       : 1;  // Edge that is internal to an intersection
+    uint32_t spare2         : 3;
+
   };
   Attributes attributes_;
 

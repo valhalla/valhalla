@@ -5,6 +5,8 @@
 #include "baldr/edgeinfo.h"
 #include "config.h"
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace baldr {
 
@@ -14,13 +16,16 @@ namespace baldr {
 // a tile.
 GraphTileHeader::GraphTileHeader()
     : date_created_{},
+      graphid_{},
       nodecount_(0),
       directededgecount_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
       exitlist_offset_(0),
       admin_offset_(0),
-      merlist_offset_(0) {
+      merlist_offset_(0),
+      timedres_offset_(0),
+      transit_offset_(0) {
   internal_version_ = NodeInfo::internal_version() +
                       DirectedEdge::internal_version() +
                       GraphId::internal_version();
@@ -41,6 +46,11 @@ uint64_t GraphTileHeader::date_created() const {
 // Get the version string.
 std::string GraphTileHeader::version() const {
   return version_;
+}
+
+// Get the GraphId (tileid and level) of this tile.
+const GraphId& GraphTileHeader::graphid() const {
+  return graphid_;
 }
 
 // Get the count of nodes in the tile.
