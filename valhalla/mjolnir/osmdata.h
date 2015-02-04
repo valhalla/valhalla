@@ -14,6 +14,12 @@ namespace mjolnir {
 
 using WayVector = std::vector<OSMWay>;
 
+enum class OSMType : uint8_t {
+    kNode,
+    kWay,
+    kRelation
+ };
+
 /**
  * Simple container for OSM data.
  * Populated by the PBF parser and sent into GraphBuilder.
