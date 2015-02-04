@@ -134,16 +134,16 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
   const std::string& expected_name, const float expected_distance){
   valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::EDGE);
   if(!p.IsCorrelated())
-      throw std::runtime_error("Didn't find any node/edges");
-    if(p.IsNode() != (expected_distance == 0.f))
-      throw std::runtime_error("Edge search got unexpected IsNode result");
-    if(!p.vertex().ApproximatelyEqual(expected_point))
-      throw std::runtime_error("Found wrong point");
-    if(p.edges().front().dist != expected_distance)
-      throw std::runtime_error("Distance along the edge should always be 0 for node search");
-    const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-    if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
-      throw std::runtime_error("Didn't find expected road name");
+    throw std::runtime_error("Didn't find any node/edges");
+  if(p.IsNode() != (expected_distance == 0.f))
+    throw std::runtime_error("Edge search got unexpected IsNode result");
+  if(!p.vertex().ApproximatelyEqual(expected_point))
+    throw std::runtime_error("Found wrong point");
+  if(p.edges().front().dist != expected_distance)
+    throw std::runtime_error("Distance along the edge should always be 0 for node search");
+  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
+  if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
+    throw std::runtime_error("Didn't find expected road name");
 }
 
 void TestEdgeSearch() {

@@ -131,15 +131,17 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   //now that we have a node we can pass back all the edges leaving it
   PathLocation correlated(location);
   if(closest_edge != nullptr){
+    //correlate the spot
+    correlated.CorrelateVertex(std::get<0>(closest_point));
     //compute partial distance along the shape
     float partial_length = 0;
     for(size_t i = 1; i < std::get<2>(closest_point); ++i)
         partial_length += closest_edge_info->shape()[i - 1].Distance(closest_edge_info->shape()[i]);
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     float length_ratio = partial_length / closest_edge->length();
-    //correlate it
+    //correlate the edge we found
     correlated.CorrelateEdge(closest_edge_id, length_ratio);
-    //we need the opposing edge as well
+    //correlate its evil twin
     const auto other_tile = reader.GetGraphTile(closest_edge->endnode());
     const auto end_node = other_tile->node(closest_edge->endnode());
     auto opposing_edge_id = closest_edge->endnode();
