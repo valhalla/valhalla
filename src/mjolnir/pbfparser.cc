@@ -534,24 +534,60 @@ void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &tags,
   if (results.size() == 0)
     return;
 
+  OSMRestriction restriction;
+
+  bool isRestriction = false;
+
   for (const auto& tag : results) {
-    std::cout << "type: " << tag.first << " value: " << tag.second << std::endl;
+
+    if (tag.first == "restriction") {
+      RestrictionType type = (RestrictionType) std::stoi(tag.second);
+
+      switch (type) {
+
+        case RestrictionType::kNoLeftTurn:
+        case RestrictionType::kNoRightTurn:
+        case RestrictionType::kNoStraightOn:
+        case RestrictionType::kNoUTurn:
+        case RestrictionType::kOnlyRightTurn:
+        case RestrictionType::kOnlyLeftTurn:
+        case RestrictionType::kOnlyStraightOn:
+          isRestriction = true;
+          restriction.set_type(type);
+          break;
+        case RestrictionType::kNoEntry:
+        case RestrictionType::kNoExit:
+        default:
+          // kNoEntry and kNoExit not supported in for simple restrictions.
+          return;
+          break;
+      }
+    }
   }
-  for (const auto& ref : refs) {
-    std::cout << "id: " << ref.member_id << " type: " << ref.member_type << " role: " << ref.role << std::endl;
+
+  if (isRestriction) {
+
+    for (const auto& ref : refs) {
+
+      // from and to must be of type 1(way).  via must be of type 0(node)
+      if (ref.role == "from" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+        restriction.set_from(ref.member_id);
+      else if (ref.role == "to" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+        restriction.set_to(ref.member_id);
+      else if (ref.role == "via" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
+        restriction.set_to(ref.member_id);
+    }
+    // Add the restriction to the list
+    osm_->restrictions.push_back(std::move(restriction));
   }
 
-  std::cout <<  std::endl;
-  std::cout <<  std::endl;
 
- /* type: restriction value: only_straight_on
-  type: type value: restriction
-  id: 54223989 type: 1 role: from
-  id: 11819330 type: 1 role: to
-  id: 683772729 type: 0 role: via
-*/
-
-
+  /* type: restriction value: only_straight_on
+   type: type value: restriction
+   id: 54223989 type: 1 role: from
+   id: 11819330 type: 1 role: to
+   id: 683772729 type: 0 role: via
+ */
 
 }
 
