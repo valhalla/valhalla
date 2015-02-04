@@ -67,6 +67,7 @@ enum class Surface : uint8_t {
 };
 
 enum class DOW : uint8_t {
+  kNone,
   kSunday,
   kMonday,
   kTuesday,
@@ -78,6 +79,7 @@ enum class DOW : uint8_t {
 
 
 enum class RestrictionType : uint8_t {
+  kNone,
   kNoLeftTurn,
   kNoRightTurn,
   kNoStraightOn,
