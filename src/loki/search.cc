@@ -1,6 +1,7 @@
 #include "loki/search.h"
 
 #include <unordered_set>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
@@ -35,7 +36,7 @@ PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, co
 
   //if we found nothing that is no good..
   if(correlated.edges().size() == 0)
-    throw std::runtime_error("Unable to find any edges connected to this location");
+    throw std::runtime_error("Unable to find any paths leaving this location");
 
   //give it back
   return correlated;
@@ -82,7 +83,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   const DirectedEdge* closest_edge = nullptr;
   GraphId closest_edge_id = tile->header()->graphid();
   std::unique_ptr<const EdgeInfo> closest_edge_info;
-  std::tuple<valhalla::midgard::PointLL, double, int> closest_point{{}, std::numeric_limits<double>::max(), 0};
+  std::tuple<valhalla::midgard::PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
 
   //a place to keep track of the edgeinfos we've already inspected
   std::unordered_set<uint32_t> searched(tile->header()->directededgecount());
@@ -122,6 +123,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
 
       //does this look better than the current edge
       if(std::get<1>(candidate) < std::get<1>(closest_point)) {
+        LOG_INFO("Found " + tile->GetNames(edge->edgeinfo_offset())[0] + " using offset " + std::to_string(edge->edgeinfo_offset()));
         closest_edge = edge;
         closest_edge_id.fields.id = edge_index;
         closest_edge_info.swap(edge_info);
@@ -153,7 +155,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
 
   //if we found nothing that is no good..
   if(correlated.edges().size() == 0)
-    throw std::runtime_error("Unable to find any edges connected to this location");
+    throw std::runtime_error("Unable to find any paths leaving this location");
 
   //give it back
   return correlated;
