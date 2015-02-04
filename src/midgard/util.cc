@@ -50,9 +50,9 @@ template<class container_t>
 std::string encode(const container_t& points) {
   //a place to keep the output
   std::string output;
-  //unless the shape is very course you should probably only need about
-  //2 or 3 bytes per coordinate, and there are 2 coordinates per point
-  output.reserve(points.size() * 6);
+  //unless the shape is very course you should probably only need about 3 bytes
+  //per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
+  output.reserve(points.size() * 8);
 
   //handy lambda to turn an integer into an encoded string
   auto serialize = [&output](int number) {
