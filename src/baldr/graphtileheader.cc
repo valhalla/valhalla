@@ -19,9 +19,9 @@ GraphTileHeader::GraphTileHeader()
       graphid_{},
       nodecount_(0),
       directededgecount_(0),
+      exitsigncount_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
-      exitlist_offset_(0),
       admin_offset_(0),
       merlist_offset_(0),
       timedres_offset_(0),
@@ -63,6 +63,11 @@ uint32_t GraphTileHeader::directededgecount() const {
   return directededgecount_;
 }
 
+// Gets the number of exit signs in the tile.
+uint32_t GraphTileHeader::exitsigncount() const {
+  return exitsigncount_;
+}
+
 // Get the offset in bytes to the start of the edge information.
 uint32_t GraphTileHeader::edgeinfo_offset() const {
   return edgeinfo_offset_;
@@ -71,11 +76,6 @@ uint32_t GraphTileHeader::edgeinfo_offset() const {
 // Get the offset in bytes to the start of the text / names list.
 uint32_t GraphTileHeader::textlist_offset() const {
   return textlist_offset_;
-}
-
-// Gets the offset in bytes to the exit list.
-uint32_t GraphTileHeader::exitlist_offset() const {
-  return exitlist_offset_;
 }
 
 // Get the offset in bytes to the administrative information. (TODO)
