@@ -221,7 +221,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
-      adjlistedges_[edgeid.value()] = edgelabel_index_;
+      adjlistedges_[edgeid.value] = edgelabel_index_;
       edgestatus_->Set(edgeid, kTemporary);
       edgelabel_index_++;
     }
@@ -263,7 +263,7 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
 void PathAlgorithm::SetDestination(const PathLocation& dest) {
   // TODO - add partial distances
   for (const auto& edge : dest.edges()) {
-    destinations_[edge.id.value()] = 1.0f;
+    destinations_[edge.id.value] = 1.0f;
   }
 }
 
@@ -273,7 +273,7 @@ bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
   // travel in both directions we need to make sure both directions
   // are found or some further cost is encountered to rule out the
   // other direction
-  const auto& p = destinations_.find(edgeid.value());
+  const auto& p = destinations_.find(edgeid.value);
   return (p == destinations_.end()) ? false : true;
 }
 
@@ -306,13 +306,13 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
 
 // Gets the edge label for an edge that is in the adjacency list.
 uint32_t PathAlgorithm::GetPriorEdgeLabel(const GraphId& edgeid) const {
-  const auto& p = adjlistedges_.find(edgeid.value());
+  const auto& p = adjlistedges_.find(edgeid.value);
   return (p == adjlistedges_.end()) ? kInvalidLabel : p->second;
 }
 
 // Remove the edge label from the map of edges in the adjacency list
 void PathAlgorithm::RemoveFromAdjMap(const GraphId& edgeid) {
-  auto p = adjlistedges_.find(edgeid.value());
+  auto p = adjlistedges_.find(edgeid.value);
   if (p != adjlistedges_.end()) {
     adjlistedges_.erase(p);
   }
