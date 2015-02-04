@@ -65,6 +65,30 @@ enum class Surface : uint8_t {
   kPath,
   kImpassable
 };
+
+enum class DOW : uint8_t {
+  kSunday,
+  kMonday,
+  kTuesday,
+  kWednesday,
+  kThursday,
+  kFriday,
+  kSaturday,
+};
+
+
+enum class RestrictionType : uint8_t {
+  kNoLeftTurn,
+  kNoRightTurn,
+  kNoStraightOn,
+  kNoUTurn,
+  kOnlyRightTurn,
+  kOnlyLeftTurn,
+  kOnlyStraightOn,
+  kNoEntry,
+  kNoExit
+};
+
 }
 }
 
