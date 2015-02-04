@@ -44,26 +44,24 @@ GraphTile::GraphTile()
       header_(nullptr),
       nodes_(nullptr),
       directededges_(nullptr),
+      exitsigns_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
-      textlist_size_(0),
-      exitlist_created_(false),
-      exitlist_{},
-      id_() {
+      textlist_size_(0) {
 }
 
 // Constructor given a filename. Reads the graph data into memory.
 GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
-    : size_(0),
-      id_(graphid.Tile_Base()) {
+    : size_(0) {
 
   // Don't bother with invalid ids
   if (!graphid.Is_Valid())
     return;
 
   // Open to the end of the file so we can immediately get size;
-  std::string file_location = hierarchy.tile_dir() + "/" + FileSuffix(id_, hierarchy);
+  std::string file_location = hierarchy.tile_dir() + "/" +
+                FileSuffix(graphid.Tile_Base(), hierarchy);
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to
@@ -79,11 +77,11 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     header_ = reinterpret_cast<GraphTileHeader*>(ptr);
     ptr += sizeof(GraphTileHeader);
 
+    // Check internal version
     const GraphTileHeader gh;
-
     if (header_->internal_version() != gh.internal_version()) {
-     LOG_ERROR("Version of tile is out of date or not supported!");
-     return;
+      LOG_ERROR("Version of tile is out of date or not supported!");
+      return;
     }
 
     // Set a pointer to the node list
@@ -93,6 +91,10 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     // Set a pointer to the directed edge list
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
+
+    // Set a pointer to the exit sign list
+    exitsigns_ = reinterpret_cast<ExitSign*>(ptr);
+    ptr += header_->exitsigncount() * sizeof(ExitSign);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -161,7 +163,7 @@ size_t GraphTile::size() const {
 }
 
 GraphId GraphTile::id() const {
-  return id_;
+  return header_->graphid();
 }
 
 const GraphTileHeader* GraphTile::header() const {
@@ -214,53 +216,31 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
   return edgeinfo(edgeinfo_offset)->GetNames();
 }
 
-// Convenience method to get the exit signs for an edge given the offset to the
-// edge info. TODO - remove when not needed anymore...
-std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t edgeinfo_offset) const {
-  return edgeinfo(edgeinfo_offset)->GetExitSigns();
+// Convenience method to get the exit signs for an edge given the
+// directed edge index.
+std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t idx) const {
+  // TODO - binary search of the exit data to find the ExitSigns with matching
+  // edge index. Retrieve the names to populate ExitSignInfo.
+  std::vector<ExitSignInfo> exits;
+
+  return exits;
 }
 
-// Create the exit list from the binary data
-void GraphTile::CreateExitList() {
-  char* ptr = graphtile_.get() + header_->exitlist_offset();
-  uint32_t count = *(reinterpret_cast<uint32_t*>(ptr));
-  ptr += sizeof(uint32_t);
-  for (uint32_t i = 0; i < count; i++) {
-    // Read the directed edge index, followed by type (char),
-    // and the exit string. Add one for the null terminator.
-    char* saveptr = ptr;
-    uint32_t idx = *(reinterpret_cast<uint32_t*>(ptr));
-    ptr += sizeof(uint32_t);
-    ExitSign::Type t = *(reinterpret_cast<ExitSign::Type*>(ptr));
-    ptr += sizeof(ExitSign::Type);
-    std::string exitname(ptr);
-    ptr += exitname.length() + 1;
-    InternalExit exit(idx, ExitSignInfo(t, exitname));
-    exitlist_.emplace_back(std::move(exit));
-
-    // Increment if necessary to get to next 4 byte boundary...
-    uint32_t n = ptr - saveptr;
-    if (n % 4 != 0) {
-      ptr += 4 - (n % 4);
+/**
+std::vector<ExitSignInfo> EdgeInfo::GetExitSigns() const {
+  // Get each exit sign
+  std::vector<ExitSignInfo> exit_list;
+  for (uint32_t i = 0; i < exit_sign_count(); i++) {
+    const ExitSign* exit_sign = GetExitSign(i);
+    if (exit_sign->text_offset() < names_list_length_) {
+      exit_list.emplace_back(
+          exit_sign->type(), (names_list_ + exit_sign->text_offset()));
+    } else {
+      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
     }
   }
+  return exit_list;
 }
-
-// Get exit signs given the directed edge index.
-std::vector<ExitSignInfo> GraphTile::GetExitSignList(const uint32_t idx) {
-  if (!exitlist_created_) {
-    CreateExitList();
-  }
-
-  // Get all edges that match this index
-  std::vector<ExitSignInfo> signs;
-  InternalExit c(idx, ExitSignInfo(ExitSign::Type::kNumber, ""));
-  auto p = std::equal_range (exitlist_.begin(), exitlist_.end(), c);
-  for (auto i = p.first; i != p.second; i++) {
-    signs.emplace_back(i->sign);
-  }
-  return signs;
-}
-
+**/
 }
 }

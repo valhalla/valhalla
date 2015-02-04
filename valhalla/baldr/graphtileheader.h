@@ -62,6 +62,12 @@ class GraphTileHeader {
  uint32_t directededgecount() const;
 
   /**
+   * Gets the number of exit signs in this tile.
+   * @return  Returns the number of exit signs.
+   */
+  uint32_t exitsigncount() const;
+
+  /**
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
@@ -72,12 +78,6 @@ class GraphTileHeader {
    * @return  Returns the number of bytes to offset to the text list.
    */
   uint32_t textlist_offset() const;
-
-  /**
-   * Gets the offset to the exit list.
-   * @return  Returns the number of bytes to offset to the exit list.
-   */
-  uint32_t exitlist_offset() const;
 
   /**
    * Get the offset to the administrative information. (TODO)
@@ -127,14 +127,14 @@ class GraphTileHeader {
   // Number of directed edges
   uint32_t directededgecount_;
 
+  // Number of exit signs
+  uint32_t exitsigncount_;
+
   // Offset to edge info
   uint32_t edgeinfo_offset_;
 
   // Offset to name list
   uint32_t textlist_offset_;
-
-  // Offset to exit list
-  uint32_t exitlist_offset_;
 
   // Offset to the administrative information
   uint32_t admin_offset_;

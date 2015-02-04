@@ -29,6 +29,8 @@ class GraphTile {
   /**
    * Constructor given a GraphId. Reads the graph tile from file
    * into memory.
+   * @param  hierarchy  Data describing the tiling and hierarchy system.
+   * @param  graphid    GraphId (tileid and level)
    */
   GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid);
 
@@ -49,15 +51,13 @@ class GraphTile {
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
    * of 0 indicates an error reading the tile data.
    * or unsuccessful read.
-   *
-   * @return size   the size of the tile in bytes
+   * @return  Returns the size of the tile in bytes.
    */
   size_t size() const;
 
   /**
-   * Gets the id of the *graph tile
-   *
-   * @return id     the graph id of the tile (pointing to the first node)
+   * Gets the id of the graph tile
+   * @return  Returns the graph id of the tile (pointing to the first node)
    */
   GraphId id() const;
 
@@ -119,38 +119,14 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
-   * TODO - delete this method once new one is working...
-   * Convenience method to get the exit signs for an edge given the offset to the
-   * edge information.
-   * @param  edgeinfo_offset  Offset to the edge info.
-   * @return  Returns a list (vector) of exit signs.
-   */
-  std::vector<ExitSignInfo> GetExitSigns(const uint32_t edgeinfo_offset) const;
-
-  /**
-   * Convenience method to get the exit signs for an edge given the offset to the
-   * edge information.
+   * Convenience method to get the exit signs for an edge given the directed
+   * edge index.
    * @param  idx  Directed edge index. Used to lookup list of exit signs.
    * @return  Returns a list (vector) of exit signs.
    */
-  std::vector<ExitSignInfo> GetExitSignList(const uint32_t idx);
+  std::vector<ExitSignInfo> GetExitSigns(const uint32_t idx) const;
 
  protected:
-  // Internal exit list
-  struct InternalExit {
-    uint32_t     idx;
-    ExitSignInfo sign;
-
-    InternalExit(const uint32_t n, const ExitSignInfo& s)
-        : idx(n),
-          sign(s) {
-    }
-
-    // Compare by idx
-    bool operator< (const InternalExit& other) const {
-      return idx < other.idx;
-    }
-  };
 
   // Size of the tile in bytes
   size_t size_;
@@ -170,6 +146,9 @@ class GraphTile {
   // indexed directly.
   DirectedEdge* directededges_;
 
+  // Exit signs (indexed by directed edge index)
+  ExitSign* exitsigns_;
+
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
   char* edgeinfo_;
@@ -183,19 +162,6 @@ class GraphTile {
 
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
-
-  // Exit information. Lookup by the directed edge index.
-  bool exitlist_created_;
-  std::vector<InternalExit> exitlist_;
-
-  // The id of the tile for convenience
-  const GraphId id_;
-
-  /**
-   * Creates a vector of exit sign information that can be access via the
-   * directed edge index.
-   */
-  void CreateExitList();
 };
 
 }

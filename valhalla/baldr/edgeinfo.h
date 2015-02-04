@@ -9,8 +9,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/exitsign.h>
-#include <valhalla/baldr/exitsigninfo.h>
 
 using namespace valhalla::midgard;
 
@@ -22,7 +20,6 @@ constexpr size_t kMaxEncodedShapeSize = 16383;
 /**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
- * @author  David W. Nesbitt
  */
 class EdgeInfo {
  public:
@@ -48,26 +45,14 @@ class EdgeInfo {
   // Returns the shape count
   const uint32_t encoded_shape_size() const;
 
-  // Returns the exit sign count
-  const uint32_t exit_sign_count() const;
-
   // Returns the name index at the specified index.
   const uint32_t GetStreetNameOffset(uint8_t index) const;
-
-  // Returns an exit sign pointer at the specified index.
-  const ExitSign* GetExitSign(uint8_t index) const;
 
   /**
    * Convenience method to get the names for an edge
    * @return   Returns a list (vector) of names.
    */
   const std::vector<std::string> GetNames() const;
-
-  /**
-   * Convenience method to get the exit signs for an edge
-   * @return   Returns a list (vector) of exit signs.
-   */
-  std::vector<ExitSignInfo> GetExitSigns() const;
 
   /**
    * Get the shape of the edge.
@@ -83,10 +68,9 @@ class EdgeInfo {
   union PackedItem {
     struct Fields {
 
-      uint32_t name_count                     :4;
-      uint32_t encoded_shape_size             :14;
-      uint32_t exit_sign_count                :4;
-      uint32_t spare                          :10;
+      uint32_t name_count          :4;
+      uint32_t encoded_shape_size  :14;
+      uint32_t spar                :14;
     } fields;
     uint32_t value;
   };
@@ -102,9 +86,6 @@ class EdgeInfo {
 
   // The encoded shape of the edge
   mutable char* encoded_shape_;
-
-  // List of exit signs (type and index)
-  ExitSign* exit_signs_;
 
   // Lng, lat shape of the edge
   mutable std::vector<PointLL> shape_;
