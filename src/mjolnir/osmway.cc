@@ -1,11 +1,14 @@
 #include "mjolnir/osmway.h"
 #include "mjolnir/util.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace mjolnir {
 
 OSMWay::OSMWay()
-{
+    : noderef_index_(0),
+      nodecount_(0) {
   osmwayid_ = 0; //shouldnt this be -1 (ie std::numeric_limits<uint64_t>::max())?
 
   ref_ = "";
@@ -32,7 +35,9 @@ OSMWay::OSMWay()
   speed_ = static_cast<unsigned char>(0.0f);
 }
 
-OSMWay::OSMWay(uint64_t id) {
+OSMWay::OSMWay(uint64_t id)
+    : noderef_index_(0),
+      nodecount_(0){
 
   osmwayid_ = id;
 
@@ -58,7 +63,6 @@ OSMWay::OSMWay(uint64_t id) {
   classification_.v = {0};
 
   speed_ = static_cast<unsigned char>(0.0f);
-
 }
 
 OSMWay::~OSMWay() {
@@ -78,25 +82,30 @@ uint64_t OSMWay::way_id() const {
   return osmwayid_;
 }
 
-/**
- * Set the list of nodes for this way.
- */
-void OSMWay::set_nodes(const std::vector<uint64_t> &nodes) {
-  nodes_.assign(nodes.begin(), nodes.end());
+// Set the index into the node references
+void OSMWay::set_noderef_index(const uint32_t idx) {
+  noderef_index_ = idx;
 }
 
+// Get the index into the node references
+uint32_t OSMWay::noderef_index() const {
+  return noderef_index_;
+}
+
+// Set the number of nodes for this way.
+void OSMWay::set_node_count(const uint32_t count) {
+  if (count > kMaxNodesPerWay) {
+    LOG_ERROR("Exceeded max nodes per way: " + std::to_string(count));
+    nodecount_ = static_cast<uint16_t>(kMaxNodesPerWay);
+  } else {
+    nodecount_ = static_cast<uint16_t>(count);
+  }
+}
 /**
  * Get the number of nodes for this way.
  */
 uint32_t OSMWay::node_count() const {
-  return nodes_.size();
-}
-
-/**
- * Get the list of nodes for this way.
- */
-const std::vector<uint64_t>& OSMWay::nodes() const {
-  return nodes_;
+  return nodecount_;
 }
 
 /**

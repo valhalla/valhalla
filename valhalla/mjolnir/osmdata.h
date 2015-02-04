@@ -13,6 +13,7 @@ namespace valhalla {
 namespace mjolnir {
 
 using WayVector = std::vector<OSMWay>;
+using NodeRefVector = std::vector<uint64_t>;
 
 /**
  * Simple container for OSM data.
@@ -25,6 +26,9 @@ struct OSMData {
 
   // Stores all the ways that are part of the road network
   WayVector ways;
+
+  // Node references
+  NodeRefVector noderefs;
 
   // Map that stores all the nodes read
   std::unordered_map<uint64_t, OSMNode> nodes;
