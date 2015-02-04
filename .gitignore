@@ -44,6 +44,9 @@ test/adjacencylist
 test/*.log
 test/*.trs
 
+# scripts
+scripts/duane_routes.txt
+
 # test coverage stuff
 *.gcno
 *.gcda
