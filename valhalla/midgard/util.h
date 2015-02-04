@@ -58,7 +58,10 @@ float rand01();
 float FastInvSqrt(float x);
 
 // Convenience method.
-float sqr(const float a);
+template<class T>
+T sqr(const T a) {
+  return a * a;
+}
 
 /**
  * Polyline encode a container of points into a string

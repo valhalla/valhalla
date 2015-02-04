@@ -10,6 +10,10 @@
 #include <vector>
 #include <utility>
 
+namespace {
+constexpr double POLYLINE_PRECISION = 1E6;
+}
+
 namespace valhalla {
 namespace midgard {
 
@@ -42,17 +46,13 @@ float FastInvSqrt(float x) {
   // x *= 1.5f - xhalf*x*x;          // repeating step increases accuracy
 }
 
-float sqr(const float a) {
-  return a * a;
-}
-
 template<class container_t>
 std::string encode(const container_t& points) {
   //a place to keep the output
   std::string output;
-  //unless the shape is very course you should probably only need about
-  //2 or 3 bytes per coordinate, and there are 2 coordinates per point
-  output.reserve(points.size() * 6);
+  //unless the shape is very course you should probably only need about 3 bytes
+  //per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
+  output.reserve(points.size() * 8);
 
   //handy lambda to turn an integer into an encoded string
   auto serialize = [&output](int number) {
@@ -74,8 +74,8 @@ std::string encode(const container_t& points) {
   //for each point
   for (const auto& p : points) {
     //shift the decimal point 5 places to the right and truncate
-    int lon = static_cast<int>(floor(static_cast<double>(p.first) * static_cast<double>(1e5)));
-    int lat = static_cast<int>(floor(static_cast<double>(p.second) * static_cast<double>(1e5)));
+    int lon = static_cast<int>(floor(static_cast<double>(p.first) * POLYLINE_PRECISION));
+    int lat = static_cast<int>(floor(static_cast<double>(p.second) * POLYLINE_PRECISION));
     //encode each coordinate, lat first for some reason
     serialize(lat - last_lat);
     serialize(lon - last_lon);
@@ -119,8 +119,8 @@ container_t decode(const std::string& encoded) {
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
     //shift the decimal point 5 places to the left
-    output.emplace_back(static_cast<typename container_t::value_type::first_type>(static_cast<double>(lon) / static_cast<double>(1e5)),
-                        static_cast<typename container_t::value_type::second_type>(static_cast<double>(lat) / static_cast<double>(1e5)));
+    output.emplace_back(static_cast<typename container_t::value_type::first_type>(static_cast<double>(lon) / POLYLINE_PRECISION),
+                        static_cast<typename container_t::value_type::second_type>(static_cast<double>(lat) / POLYLINE_PRECISION));
     //remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
