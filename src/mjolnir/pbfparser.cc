@@ -526,7 +526,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   osm_->ways.push_back(std::move(w));
 }
 
-void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &tags,
+void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
                                      const CanalTP::References &refs) {
 
   // Get tags
@@ -575,20 +575,13 @@ void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &tags,
       else if (ref.role == "to" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
         restriction.set_to(ref.member_id);
       else if (ref.role == "via" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
-        restriction.set_to(ref.member_id);
+        restriction.set_via(ref.member_id);
     }
+
     // Add the restriction to the list
-    osm_->restrictions.push_back(std::move(restriction));
+    if (restriction.from() && restriction.via() && restriction.to())
+      osm_->restrictions.push_back(std::move(restriction));
   }
-
-
-  /* type: restriction value: only_straight_on
-   type: type value: restriction
-   id: 54223989 type: 1 role: from
-   id: 11819330 type: 1 role: to
-   id: 683772729 type: 0 role: via
- */
-
 }
 
 }
