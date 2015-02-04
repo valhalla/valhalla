@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 #include <boost/format.hpp>
+#include <valhalla/midgard/logging.h>
+#include "mjolnir/osmdata.h"
 
 using namespace valhalla::mjolnir;
 
@@ -25,7 +27,7 @@ LuaTagTransform::LuaTagTransform()
   // Create a new lua state
   waystate_ = luaL_newstate();
   nodestate_ = luaL_newstate();
-
+  relationstate_ = luaL_newstate();
 }
 
 LuaTagTransform::~LuaTagTransform(){
@@ -36,12 +38,16 @@ LuaTagTransform::~LuaTagTransform(){
   if (nodestate_ != NULL) {
     lua_close(nodestate_);
   }
+  if (relationstate_ != NULL) {
+    lua_close(relationstate_);
+  }
 }
 
 void LuaTagTransform::OpenLib() const {
 
   luaL_openlibs(waystate_);
   luaL_openlibs(nodestate_);
+  luaL_openlibs(relationstate_);
 
   //check if way script and function exists.
   luaL_dofile(waystate_, luawayscript_.c_str());
@@ -50,6 +56,10 @@ void LuaTagTransform::OpenLib() const {
   //check if node script and function exists.
   luaL_dofile(nodestate_, luanodescript_.c_str());
   CheckLuaFuncExists(nodestate_, luanodefunc_);
+
+  //check if relation script and function exists.
+  luaL_dofile(relationstate_, luarelationscript_.c_str());
+  CheckLuaFuncExists(relationstate_, luarelationfunc_);
 }
 
 void LuaTagTransform::SetLuaWayFunc(std::string luawayfunc) {
@@ -60,6 +70,10 @@ void LuaTagTransform::SetLuaNodeFunc(std::string luanodefunc) {
   luanodefunc_ = luanodefunc;
 }
 
+void LuaTagTransform::SetLuaRelationFunc(std::string luarelationfunc) {
+  luarelationfunc_ = luarelationfunc;
+}
+
 std::string LuaTagTransform::GetLuaWayFunc() const {
   return luawayfunc_;
 }
@@ -68,12 +82,20 @@ std::string LuaTagTransform::GetLuaNodeFunc() const {
   return luanodefunc_;
 }
 
+std::string LuaTagTransform::GetLuaRelationFunc() const {
+  return luarelationfunc_;
+}
+
 void LuaTagTransform::SetLuaWayScript(std::string luawayscript) {
   luawayscript_ = luawayscript;
 }
 
 void LuaTagTransform::SetLuaNodeScript(std::string luanodescript) {
   luanodescript_ = luanodescript;
+}
+
+void LuaTagTransform::SetLuaRelationScript(std::string luarelationscript) {
+  luarelationscript_ = luarelationscript;
 }
 
 std::string LuaTagTransform::GetLuaWayScript() const {
@@ -115,17 +137,32 @@ void stackdump_g(lua_State* l)
 }
 }
 
-Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
+Tags LuaTagTransform::TransformInLua(OSMType type, const Tags &maptags) {
 
   //grab the proper function out of the lua code
   lua_State* state;
-  if (isWay){
-    lua_getglobal(waystate_,luawayfunc_.c_str());
-    state = waystate_;
-  }
-  else {
-    lua_getglobal(nodestate_,luanodefunc_.c_str());
-    state = nodestate_;
+
+  Tags result;
+
+  bool isWay = false;
+
+  switch (type) {
+
+    case OSMType::kNode:
+      lua_getglobal(nodestate_,luanodefunc_.c_str());
+      state = nodestate_;
+      break;
+    case OSMType::kWay:
+      lua_getglobal(waystate_,luawayfunc_.c_str());
+      state = waystate_;
+      isWay = true;
+      break;
+    case OSMType::kRelation:
+      lua_getglobal(relationstate_,luarelationfunc_.c_str());
+      state = relationstate_;
+      break;
+    default:
+      throw std::runtime_error("Invalid OSM element type!");
   }
 
   //set up the lua table (map)
@@ -143,11 +180,10 @@ Tags LuaTagTransform::TransformInLua(bool isWay, const Tags &maptags) {
 
   //call lua
   if (lua_pcall(state, 2, isWay ? 4 : 2, 0)) {
-    fprintf(stderr, "Failed to execute lua function for basic tag processing: %s\n", lua_tostring(state, -1));
+    LOG_ERROR("Failed to execute lua function for basic tag processing.");
   }
 
   //TODO:  if we dont care about it we stop looking.  Look for filter = 1
-  Tags result;
   /*if(lua_tonumber(state, 1))
     return result;*/
 
