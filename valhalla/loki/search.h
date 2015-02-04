@@ -20,10 +20,11 @@ namespace loki{
 enum class SearchStrategy : bool { NODE, EDGE };
 
 /**
- * A function point which returns true if an edge should be
- * filtered out of the correlated set
+ * A function pointer which returns true if an edge should be
+ * filtered out of the correlated set and false if the edge is usable
  */
 using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
+bool PassThroughFilter(const valhalla::baldr::DirectedEdge*) { return false; }
 
 /**
  * Find an location within the route network given an input location
@@ -36,7 +37,7 @@ using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  const SearchStrategy strategy = SearchStrategy::EDGE, EdgeFilter filter = nullptr);
+  const SearchStrategy strategy = SearchStrategy::EDGE, EdgeFilter filter = PassThroughFilter);
 
 }
 }

@@ -30,11 +30,14 @@ PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, co
       continue;
     GraphId id(tile->id());
     id.Set(id.tileid(), id.level(), closest->edge_index() + edge_index);
-    //TODO: is there something we can do to set distance along as either 0 or 1 depending on direction?
-    correlated.CorrelateEdge(id, 0);
+    if(!filter(edge))
+      correlated.CorrelateEdge(id, 0);
   }
 
   //if we found nothing that is no good..
+  //NOTE: that with filtering this can happen, it'll be easy enough to
+  //keep a set of the next best 5 candidates we found when searching
+  //and try those in succession
   if(correlated.edges().size() == 0)
     throw std::runtime_error("Unable to find any paths leaving this location");
 
@@ -144,16 +147,21 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
     //correlate the edge we found
-    correlated.CorrelateEdge(closest_edge_id, length_ratio);
+    if(!filter(closest_edge))
+      correlated.CorrelateEdge(closest_edge_id, length_ratio);
     //correlate its evil twin
     const auto other_tile = reader.GetGraphTile(closest_edge->endnode());
     const auto end_node = other_tile->node(closest_edge->endnode());
     auto opposing_edge_id = other_tile->header()->graphid();
     opposing_edge_id.fields.id = end_node->edge_index() + closest_edge->opp_index();
-    correlated.CorrelateEdge(opposing_edge_id, 1 - length_ratio);
+    if(!filter(other_tile->directededge(opposing_edge_id)))
+      correlated.CorrelateEdge(opposing_edge_id, 1 - length_ratio);
   }
 
   //if we found nothing that is no good..
+  //NOTE: that with filtering this can happen, it'll be easy enough to
+  //keep a set of the next best 5 candidates we found when searching
+  //and try those in succession
   if(correlated.edges().size() == 0)
     throw std::runtime_error("Unable to find any paths leaving this location");
 
