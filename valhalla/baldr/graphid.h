@@ -17,7 +17,7 @@ namespace baldr {
  * point.
  * @author  David W. Nesbitt
  */
-class GraphId {
+union GraphId {
  public:
   /**
    * Default constructor
@@ -30,20 +30,7 @@ class GraphId {
    * @param  level  Hierarchy level
    * @param  id     Unique identifier within the level.
    */
-  GraphId(const uint32_t tileid, const uint32_t level,
-          const uint64_t id);
-
-  /**
-   * Copy constructor.
-   * @param  g   GraphId to copy
-   */
-  GraphId(const GraphId& g);
-
-  /**
-   * Return a single 64 bit value representing the graph id.
-   * @return  Returns the graphId 64-bit value.
-   */
-  uint64_t value() const;
+  GraphId(const uint32_t tileid, const uint32_t level, const uint64_t id);
 
   /**
    * Gets the tile Id.
@@ -62,6 +49,7 @@ class GraphId {
    * @return   Returns the unique identifier within the level.
    */
   uint64_t id() const;
+
 
   /**
    * Convenience method to set individual graph Id elements.
@@ -107,16 +95,16 @@ class GraphId {
   // Operator EqualTo.
   bool operator ==(const GraphId& rhs) const;
 
- protected:
-  union Id {
-    struct Fields {
-      uint64_t tileid :24;
-      uint64_t level :3;
-      uint64_t id :37;
-    } fields;
-    uint64_t v;
-  };
-  Id graphid_;
+  struct Fields {
+    //the tile id
+    uint64_t tileid :24;
+    //the hierarchy level
+    uint64_t level :3;
+    //the id of the element within the tile
+    uint64_t id :37;
+  } fields;
+  //a single 64 bit value representing the graph id.
+  uint64_t value;
 
   friend std::ostream& operator<<(std::ostream& os, const GraphId& id);
 };
@@ -131,7 +119,7 @@ namespace std {
   {
     std::size_t operator()(const valhalla::baldr::GraphId& k) const
     {
-      return static_cast<size_t>(k.value());
+      return static_cast<size_t>(k.value);
     }
   };
 }
