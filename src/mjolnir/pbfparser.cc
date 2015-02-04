@@ -67,7 +67,9 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt)
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
           pt.get<std::string>("tagtransform.node_function"),
           pt.get<std::string>("tagtransform.way_script"),
-          pt.get<std::string>("tagtransform.way_function"));
+          pt.get<std::string>("tagtransform.way_function"),
+          pt.get<std::string>("tagtransform.relation_script"),
+          pt.get<std::string>("tagtransform.relation_function"));
 }
 
 OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
@@ -130,11 +132,15 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
 void PBFParser::LuaInit(const std::string& nodetagtransformscript,
                            const std::string& nodetagtransformfunction,
                            const std::string& waytagtransformscript,
-                           const std::string& waytagtransformfunction) {
+                           const std::string& waytagtransformfunction,
+                           const std::string& reltagtransformscript,
+                           const std::string& reltagtransformfunction) {
   lua_.SetLuaNodeScript(nodetagtransformscript);
   lua_.SetLuaNodeFunc(nodetagtransformfunction);
   lua_.SetLuaWayScript(waytagtransformscript);
   lua_.SetLuaWayFunc(waytagtransformfunction);
+  lua_.SetLuaRelationScript(reltagtransformscript);
+  lua_.SetLuaRelationFunc(reltagtransformfunction);
   lua_.OpenLib();
 }
 
@@ -146,7 +152,7 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Get tags
-  Tags results = lua_.TransformInLua(false, tags);
+  Tags results = lua_.TransformInLua(OSMType::kNode, tags);
   if (results.size() == 0)
     return;
 
@@ -204,7 +210,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
 
   // Transform tags. If no results that means the way does not have tags
   // suitable for use in routing.
-  Tags results = lua_.TransformInLua(true, tags);
+  Tags results = lua_.TransformInLua(OSMType::kWay, tags);
   if (results.size() == 0) {
     return;
   }
@@ -520,9 +526,62 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   osm_->ways.push_back(std::move(w));
 }
 
-void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                                     const CanalTP::References & /*refs*/) {
-  //TODO:
+void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
+                                     const CanalTP::References &refs) {
+
+  // Get tags
+  Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
+  if (results.size() == 0)
+    return;
+
+  OSMRestriction restriction;
+
+  bool isRestriction = false;
+
+  for (const auto& tag : results) {
+
+    if (tag.first == "restriction") {
+      RestrictionType type = (RestrictionType) std::stoi(tag.second);
+
+      switch (type) {
+
+        case RestrictionType::kNoLeftTurn:
+        case RestrictionType::kNoRightTurn:
+        case RestrictionType::kNoStraightOn:
+        case RestrictionType::kNoUTurn:
+        case RestrictionType::kOnlyRightTurn:
+        case RestrictionType::kOnlyLeftTurn:
+        case RestrictionType::kOnlyStraightOn:
+          isRestriction = true;
+          restriction.set_type(type);
+          break;
+        case RestrictionType::kNoEntry:
+        case RestrictionType::kNoExit:
+        default:
+          // kNoEntry and kNoExit not supported in for simple restrictions.
+          return;
+          break;
+      }
+    }
+  }
+
+  if (isRestriction) {
+
+    for (const auto& ref : refs) {
+
+      // from and to must be of type 1(way).  via must be of type 0(node)
+      if (ref.role == "from" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+        restriction.set_from(ref.member_id);
+      else if (ref.role == "to" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+        restriction.set_to(ref.member_id);
+      else if (ref.role == "via" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
+        restriction.set_via(ref.member_id);
+    }
+
+    // Add the restriction to the list
+    if (restriction.from() && restriction.via() && restriction.to())
+      osm_->restrictions.push_back(std::move(restriction));
+  }
 }
 
 }

@@ -101,8 +101,8 @@ class PBFParser {
   /**
    * Callback method for OSMPBFReader. Called when a relation is parsed.
    */
-  void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                         const std::vector<CanalTP::Reference> & /*refs*/);
+  void relation_callback(uint64_t /*osmid*/, const Tags &tags,
+                         const std::vector<CanalTP::Reference> &refs);
 
  protected:
 
@@ -112,7 +112,9 @@ class PBFParser {
   void LuaInit(const std::string& nodetagtransformscript,
                const std::string& nodetagtransformfunction,
                const std::string& waytagtransformscript,
-               const std::string& waytagtransformfunction);
+               const std::string& waytagtransformfunction,
+               const std::string& reltagtransformscript,
+               const std::string& reltagtransformfunction);
 
   size_t speed_assignment_count_;
 

@@ -60,6 +60,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/luatagtransform.h \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
+        valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfparser.h \
         valhalla/mjolnir/util.h
@@ -79,6 +80,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/hierarchybuilder.cc \
         src/mjolnir/luatagtransform.cc \
         src/mjolnir/osmnode.cc \
+        src/mjolnir/osmrestriction.cc \
         src/mjolnir/osmway.cc \
         src/mjolnir/pbfparser.cc \
         src/mjolnir/util.cc
