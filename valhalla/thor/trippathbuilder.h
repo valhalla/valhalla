@@ -33,7 +33,16 @@ class TripPathBuilder {
   static odin::TripPath Build(baldr::GraphReader& graphreader,
              const std::vector<baldr::GraphId>& pathedges);
 
-  static odin::TripPath_Edge* AddTripEdge(const baldr::DirectedEdge* directededge, odin::TripPath_Node* trip_node,
+  /**
+   * Add trip edge. (TOD more comments)
+   * @param  idx  Index of the directed edge within the tile.
+   * @param  directededge  Directed edge information.
+   * @param  trip_node     Trip node to add the edge information to.
+   * @param  graphtile     Graph tile for accessing data.
+   */
+  static odin::TripPath_Edge* AddTripEdge(const uint32_t idx,
+                                          const baldr::DirectedEdge* directededge,
+                                          odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile);
 };
 
