@@ -555,6 +555,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
           isRestriction = true;
           restriction.set_type(type);
           break;
+        case RestrictionType::kNone:
         case RestrictionType::kNoEntry:
         case RestrictionType::kNoExit:
         default:
@@ -562,6 +563,46 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
           return;
           break;
       }
+    }
+    //sample with date time.  1168738
+    else if (tag.first == "hour_on") {
+
+      std::size_t found = tag.second.find(":");
+      if (found == std::string::npos)
+        return;
+
+      std::stringstream stream(tag.second);
+      uint32_t hour, min;
+
+      stream >> hour;
+      stream.ignore();
+      stream >> min;
+
+      restriction.set_hour_on(hour);
+      restriction.set_minute_on(min);
+    }
+    else if  (tag.first == "hour_off") {
+
+      std::size_t found = tag.second.find(":");
+      if (found == std::string::npos)
+        return;
+
+      std::stringstream stream(tag.second);
+      uint32_t hour, min;
+
+      stream >> hour;
+      stream.ignore();
+      stream >> min;
+
+      restriction.set_hour_off(hour);
+      restriction.set_minute_off(min);
+
+    }
+    else if  (tag.first == "day_on") {
+      restriction.set_day_on((DOW) std::stoi(tag.second));
+    }
+    else if  (tag.first == "day_off") {
+      restriction.set_day_off((DOW) std::stoi(tag.second));
     }
   }
 
@@ -578,7 +619,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
         restriction.set_via(ref.member_id);
     }
 
-    // Add the restriction to the list
+    // Add the restriction to the list.  For now only support simple restrictions.
     if (restriction.from() && restriction.via() && restriction.to())
       osm_->restrictions.push_back(std::move(restriction));
   }
