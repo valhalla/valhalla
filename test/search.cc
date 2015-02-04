@@ -142,7 +142,7 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
   valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::EDGE);
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
-  if(p.IsNode() != (expected_distance == 0.f))
+  if(p.IsNode() != (expected_distance == 0.f || expected_distance == 1.f))
     throw std::runtime_error("Edge search got unexpected IsNode result");
   if(!p.vertex().ApproximatelyEqual(expected_point))
     throw std::runtime_error("Found wrong point");
@@ -165,7 +165,6 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
     if(found == found_names.end())
       throw std::runtime_error("Didn't find expected road name");
   }
-
 }
 
 void TestEdgeSearch() {
@@ -174,6 +173,8 @@ void TestEdgeSearch() {
 
   edge_search(reader, {{.105, .1}}, {.105, .1}, {"3"}, .5);
   edge_search(reader, {{.01, .1}}, {.01, .1}, {"1", "2", "3"}, 0);
+  edge_search(reader, {{.2, .1}}, {.2, .1}, {"0", "3", "4"}, 1);
+  //TODO: add more elaborate shape to test better the nodesnapping and distance along shape segment stuff
 }
 
 }
