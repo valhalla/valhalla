@@ -36,7 +36,9 @@ void write_config(const std::string& filename) {
           \"node_script\": \"test/lua/vertices.lua\", \
           \"node_function\": \"nodes_proc\", \
           \"way_script\": \"test/lua/edges.lua\", \
-          \"way_function\": \"ways_proc\" \
+          \"way_function\": \"ways_proc\", \
+          \"relation_script\": \"test/lua/relations.lua\", \
+          \"relation_function\": \"rels_proc\" \
         } \
       } \
     }";
