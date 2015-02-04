@@ -19,7 +19,7 @@
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/baldr/exitsigninfo.h>
+#include <valhalla/mjolnir/exitsignbuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
 namespace valhalla {
@@ -82,7 +82,6 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const baldr::GraphId& nodeb,
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
-                       const std::vector<ExitSignInfo>& exit_sign_infos,
                        bool& added);
 
   /**
@@ -137,6 +136,10 @@ class GraphTileBuilder : public baldr::GraphTile {
   // indexed directly.
   std::vector<DirectedEdgeBuilder> directededges_builder_;
 
+  // List of exit signs. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<ExitSignBuilder> exitsigns_builder_;
+
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
@@ -144,12 +147,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;
 
-   // Text list offset and map
-   uint32_t text_list_offset_ = 0;
-   std::unordered_map<std::string, uint32_t> text_offset_map;
+  // Text list offset and map
+  uint32_t text_list_offset_ = 0;
+  std::unordered_map<std::string, uint32_t> text_offset_map;
 
-   // Text list. List of names used within this tile
-   std::list<std::string> textlistbuilder_;
+  // Text list. List of names used within this tile
+  std::list<std::string> textlistbuilder_;
 };
 
 }
