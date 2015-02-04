@@ -42,6 +42,7 @@ libvalhalla_odin.la
 test-suite.log
 test-driver
 test/maneuversbuilder
+test/enhancedtrippath
 test/*.log
 test/*.trs
 
