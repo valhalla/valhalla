@@ -28,7 +28,9 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                                      const GraphId& graphid) {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(graphid, hierarchy);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
+          GraphTile::FileSuffix(graphid, hierarchy);
+
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
@@ -84,7 +86,7 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const std::vector<DirectedEdgeBuilder> directededges) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
-            GraphTile::FileSuffix(id_, hierarchy);
+            GraphTile::FileSuffix(hdr.graphid(), hierarchy);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -109,6 +111,8 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
     file.write(textlist_, textlist_size_);
+
+    // TODO - need to update ExitSigns!
 
     size_ = file.tellp();
     file.close();
@@ -135,7 +139,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
              const GraphId& nodea, const baldr::GraphId& nodeb,
              const std::vector<PointLL>& lls,
              const std::vector<std::string>& names,
-             const std::vector<ExitSignInfo>& exit_sign_infos,
              bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
@@ -178,40 +181,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
     }
     edgeinfo.set_street_name_offset_list(street_name_offset_list);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Add each exit text to the text list
-    // Make list of exit type and text offset
-    std::vector<ExitSignBuilder> exit_signs;
-    exit_signs.reserve(names.size());
-    for (const auto& exit_sign_info : exit_sign_infos) {
-      // Skip blank names
-      if (exit_sign_info.text().empty()) {
-        continue;
-      }
-
-      // If nothing already used this exit text
-      auto existing_text_offset = text_offset_map.find(exit_sign_info.text());
-      if (existing_text_offset == text_offset_map.end()) {
-        // Add name to text list
-        textlistbuilder_.emplace_back(exit_sign_info.text());
-
-        // Add exit sign (type and offset) to list
-        exit_signs.emplace_back(exit_sign_info.type(), text_list_offset_);
-
-        // Add text/offset pair to map
-        text_offset_map.emplace(exit_sign_info.text(), text_list_offset_);
-
-        // Update text offset value to length of string plus null terminator
-        text_list_offset_ += (exit_sign_info.text().length() + 1);
-      } // Something was already using this name
-      else {
-        // Add existing exit type and text offset to list
-        exit_signs.emplace_back(exit_sign_info.type(),
-                                existing_text_offset->second);
-      }
-    }
-    edgeinfo.set_exit_signs(std::move(exit_signs));
 
     // Add to the map
     edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);
@@ -261,6 +230,49 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+/**
+// Set the exit signs used by this edge.
+void EdgeInfoBuilder::set_exit_signs(std::vector<ExitSignBuilder>&& exit_signs) {
+  exit_signs_ = std::move(exit_signs);
+}
+  os.write(reinterpret_cast<const char*>(&eib.exit_signs_[0]),
+            (eib.exit_signs_.size() * sizeof(ExitSign)));
+
+            ///////////////////////////////////////////////////////////////////////////
+// Add each exit text to the text list
+// Make list of exit type and text offset
+std::vector<ExitSignBuilder> exit_signs;
+exit_signs.reserve(names.size());
+for (const auto& exit_sign_info : exit_sign_infos) {
+  // Skip blank names
+  if (exit_sign_info.text().empty()) {
+    continue;
+  }
+
+  // If nothing already used this exit text
+  auto existing_text_offset = text_offset_map.find(exit_sign_info.text());
+  if (existing_text_offset == text_offset_map.end()) {
+    // Add name to text list
+    textlistbuilder_.emplace_back(exit_sign_info.text());
+
+    // Add exit sign (type and offset) to list
+    exit_signs.emplace_back(exit_sign_info.type(), text_list_offset_);
+
+    // Add text/offset pair to map
+    text_offset_map.emplace(exit_sign_info.text(), text_list_offset_);
+
+    // Update text offset value to length of string plus null terminator
+    text_list_offset_ += (exit_sign_info.text().length() + 1);
+  } // Something was already using this name
+  else {
+    // Add existing exit type and text offset to list
+    exit_signs.emplace_back(exit_sign_info.type(),
+                            existing_text_offset->second);
+  }
+}
+edgeinfo.set_exit_signs(std::move(exit_signs));
+
+**/
 }
 }
 

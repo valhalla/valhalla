@@ -198,9 +198,15 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
+  // Neither directed edge can have exit information
+  if (edge1->exit() || edge2->exit()) {
+    return false;
+  }
+
   // Importance (class), link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
-  // get marked as a bridge and lead to less shortcuts
+  // get marked as a bridge and lead to less shortcuts - so we don't consider
+  // bridge and tunnel here
   if (edge1->importance() != edge2->importance()
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
@@ -212,10 +218,7 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
       || edge1->destonly() != edge2->destonly()
       || edge1->unpaved() != edge2->unpaved()
       || edge1->surface() != edge2->surface()
-      || edge1->exit() != edge2->exit() ||
-//      edge1->tunnel()     != edge2->tunnel() ||
-//      edge1->bridge()     != edge2->bridge() ||
-      edge1->roundabout() != edge2->roundabout()) {
+      || edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
@@ -346,7 +349,6 @@ void HierarchyBuilder::FormTilesInNewLevel(
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
                              nodea, nodeb, edgeinfo->shape(),
                              tile->GetNames(directededge->edgeinfo_offset()),
-                             tile->GetExitSigns(directededge->edgeinfo_offset()),
                              added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -355,6 +357,9 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
+
+          // Exits??
+//          tile->GetExitSigns(directededge->edgeinfo_offset()),
         }
       }
 
@@ -376,11 +381,10 @@ void HierarchyBuilder::FormTilesInNewLevel(
     }
 
     // Store the new tile
-    GraphId basetile(tileid, level, 0);
-    tilebuilder.StoreTileData(tile_hierarchy_, basetile);
-
+    GraphId tile(tileid, level, 0);
+    tilebuilder.StoreTileData(tile_hierarchy_, tile);
     LOG_INFO((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
-         basetile % tilebuilder.size()).str());
+         tile % tilebuilder.size()).str());
 
     // Increment tileid
     tileid++;
@@ -388,6 +392,8 @@ void HierarchyBuilder::FormTilesInNewLevel(
 }
 
 // Add shortcut edges (if they should exist) from the specified node
+// Should never combine 2 directed edges with different exit information so
+// no need to worry about it here.
 void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
@@ -486,8 +492,7 @@ void HierarchyBuilder::AddShortcutEdges(
       // reverse (in case an existing edge exists)
       bool added = true;
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
-                                                          shape, names, exits,
-                                                          added);
+                                                          shape, names, added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -596,12 +601,16 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   GraphId basetile(basetileid, baselevel, 0);
   GraphTileBuilder tilebuilder(tile_hierarchy_, basetile);
 
+  // TODO - anything index by directed edge index (e.g. ExitSigns) needs
+  // to be updated!
+
   // Get the header information and update counts and offsets. No new nodes
   // are added. Directed edge count is increased by size of the connection
   // list. The offsets to the edge info and text list are adjusted by the
   // size of the extra directed edges.
   const GraphTileHeader* existinghdr = tilebuilder.header();
   GraphTileHeaderBuilder hdrbuilder;
+  hdrbuilder.set_graphid(basetile);
   hdrbuilder.set_nodecount(existinghdr->nodecount());
   hdrbuilder.set_directededgecount(
       existinghdr->directededgecount() + connections.size());
@@ -654,7 +663,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   // Write the new file
   tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
 
-  LOG_INFO((boost::format("HierarchBuilder updated tile %1%: %2% bytes") %
+  LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());
 }
 

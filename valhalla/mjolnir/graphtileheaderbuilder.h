@@ -53,6 +53,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_directededgecount(const uint32_t count);
 
   /**
+   * Sets the number of exit signs within this tile.
+   * @param count Number of exit signs within the tile.
+   */
+  void set_exitsigncount(const uint32_t count);
+
+  /**
    * Sets the offset to the edge info.
    * @param offset Offset in bytes to the start of the edge information.
    */
@@ -63,12 +69,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param offset Offset in bytes to the start of the text/name list.
    */
   void set_textlist_offset(const uint32_t offset);
-
-  /**
-   * Sets the offset to the exit list.
-   * @param offset Offset in bytes to the start of the exit list.
-   */
-  void set_exitlist_offset(const uint32_t offset);
 
   /**
    * Sets the offset to the administrative information.
