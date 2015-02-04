@@ -43,7 +43,7 @@ class ManeuversBuilder {
 
   void DetermineRelativeDirection(Maneuver& maneuver, int node_index);
 
-  Maneuver::RelativeDirection DetermineRelativeDirection(uint32_t turn_degree);
+  static Maneuver::RelativeDirection DetermineRelativeDirection(uint32_t turn_degree);
 
   EnhancedTripPath* trip_path_;
 

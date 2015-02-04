@@ -25,8 +25,13 @@ class ManeuversBuilderTest : public ManeuversBuilder {
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading) {
     return ManeuversBuilder::DetermineCardinalDirection(heading);
-
   }
+
+  static Maneuver::RelativeDirection DetermineRelativeDirection(
+      uint32_t turn_degree) {
+    return ManeuversBuilder::DetermineRelativeDirection(turn_degree);
+  }
+
 };
 
 void TrySetSimpleDirectionalManeuverType(
@@ -196,6 +201,44 @@ void TestDetermineCardinalDirection() {
 
 }
 
+void TryDetermineRelativeDirection(uint32_t turn_degree,
+                                   Maneuver::RelativeDirection expected) {
+  if (ManeuversBuilderTest::DetermineRelativeDirection(turn_degree) != expected)
+    throw std::runtime_error("Incorrect cardinal direction");
+}
+
+void TestDetermineRelativeDirection() {
+  // kKeepStraight lower bound
+  TryDetermineRelativeDirection(330,
+                                Maneuver::RelativeDirection::kKeepStraight);
+  // kKeepStraight middle
+  TryDetermineRelativeDirection(0, Maneuver::RelativeDirection::kKeepStraight);
+  // kKeepStraight upper bound
+  TryDetermineRelativeDirection(30, Maneuver::RelativeDirection::kKeepStraight);
+
+  // kRight lower bound
+  TryDetermineRelativeDirection(31, Maneuver::RelativeDirection::kRight);
+  // kRight middle
+  TryDetermineRelativeDirection(90, Maneuver::RelativeDirection::kRight);
+  // kRight upper bound
+  TryDetermineRelativeDirection(159, Maneuver::RelativeDirection::kRight);
+
+  // KReverse lower bound
+  TryDetermineRelativeDirection(160, Maneuver::RelativeDirection::KReverse);
+  // KReverse middle
+  TryDetermineRelativeDirection(180, Maneuver::RelativeDirection::KReverse);
+  // KReverse upper bound
+  TryDetermineRelativeDirection(200, Maneuver::RelativeDirection::KReverse);
+
+  // kLeft lower bound
+  TryDetermineRelativeDirection(201, Maneuver::RelativeDirection::kLeft);
+  // kLeft middle
+  TryDetermineRelativeDirection(270, Maneuver::RelativeDirection::kLeft);
+  // kLeft upper bound
+  TryDetermineRelativeDirection(329, Maneuver::RelativeDirection::kLeft);
+
+}
+
 }
 
 int main() {
@@ -206,6 +249,9 @@ int main() {
 
   // DetermineCardinalDirection
   suite.test(TEST_CASE(TestDetermineCardinalDirection));
+
+  // DetermineRelativeDirection
+  suite.test(TEST_CASE(TestDetermineRelativeDirection));
 
   return suite.tear_down();
 }

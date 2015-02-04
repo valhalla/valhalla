@@ -476,8 +476,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver,
                                                  left_count,
                                                  left_similar_count);
 
-  Maneuver::RelativeDirection relative_direction = DetermineRelativeDirection(
-      maneuver.turn_degree());
+  Maneuver::RelativeDirection relative_direction =
+      ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
   if ((right_similar_count == 0) && (left_similar_count > 0)
