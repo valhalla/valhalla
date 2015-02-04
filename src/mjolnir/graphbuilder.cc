@@ -889,7 +889,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
       continue;
     }
     // Put the node into the tile
-    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
+    GraphId id = tile_hierarchy_.GetGraphId(static_cast<midgard::PointLL>(node.second.latlng()), level);
     std::vector<uint64_t>& tile = tilednodes_[id];
     tile.emplace_back(node.first);
     // Set the GraphId for this OSM node.
