@@ -36,7 +36,7 @@ using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  const SearchStrategy strategy = SearchStrategy::NODE, EdgeFilter filter = nullptr);
+  const SearchStrategy strategy = SearchStrategy::EDGE, EdgeFilter filter = nullptr);
 
 }
 }
