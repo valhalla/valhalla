@@ -72,7 +72,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //}
 
     // Add edge to the trip node and set its attributes
-    TripPath_Edge* trip_edge = AddTripEdge(directededge, trip_node, graphtile);
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge,
+                                           trip_node, graphtile);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -124,7 +125,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             connectededge->trans_up() || connectededge->trans_down()) {
           continue;
         }
-        AddTripEdge(connectededge, trip_node, graphtile);
+        AddTripEdge(edgeid, connectededge, trip_node, graphtile);
       }
     }
 
@@ -176,7 +177,8 @@ TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
 }
 
 // Add a trip edge to the trip node and set its attributes
-TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
+TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
+                                            const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile) {
   TripPath_Edge* trip_edge = trip_node->add_edge();
@@ -189,31 +191,34 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const DirectedEdge* directededge,
     trip_edge->add_name(name);
   }
 
-  // Set the exits
-  std::vector<ExitSignInfo> exits = edgeinfo->GetExitSigns();
-  if (!exits.empty()) {
-    TripPath_Exit* trip_exit = trip_edge->mutable_exit();
-    for (const auto& exit : exits) {
-      switch (exit.type()) {
-        case ExitSign::Type::kNumber: {
-          trip_exit->set_number(exit.text());
-          break;
-        }
-        case ExitSign::Type::kBranch: {
-          trip_exit->add_branch(exit.text());
-          break;
-        }
-        case ExitSign::Type::kToward: {
-          trip_exit->add_toward(exit.text());
-          break;
-        }
-        case ExitSign::Type::kName: {
-          trip_exit->add_name(exit.text());
-          break;
+  // Set the exits (if the directed edge has exit sign information)
+  if (directededge->exit()) {
+    std::vector<ExitSignInfo> exits = graphtile->GetExitSigns(idx);
+    if (!exits.empty()) {
+      TripPath_Exit* trip_exit = trip_edge->mutable_exit();
+      for (const auto& exit : exits) {
+        switch (exit.type()) {
+          case ExitSign::Type::kNumber: {
+            trip_exit->set_number(exit.text());
+            break;
+          }
+          case ExitSign::Type::kBranch: {
+            trip_exit->add_branch(exit.text());
+            break;
+          }
+          case ExitSign::Type::kToward: {
+            trip_exit->add_toward(exit.text());
+            break;
+          }
+          case ExitSign::Type::kName: {
+            trip_exit->add_name(exit.text());
+            break;
+          }
         }
       }
     }
   }
+
   // Set road class
   trip_edge->set_road_class(GetTripPathRoadClass(directededge->importance()));
 
