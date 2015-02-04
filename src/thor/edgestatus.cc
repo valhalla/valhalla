@@ -17,13 +17,13 @@ void EdgeStatus::Init() {
 // Set the edge status of a GraphId
 void EdgeStatus::Set(const baldr::GraphId& edgeid,
                      const EdgeStatusType status) {
-  edgestatus_.emplace(edgeid.value(), status);
+  edgestatus_.emplace(edgeid.value, status);
 }
 
 // Get the edge status of a GraphId. If not found in the map the
 // edge is considered unreached.
 EdgeStatusType EdgeStatus::Get(const baldr::GraphId& edgeid) const {
-  auto p = edgestatus_.find(edgeid.value());
+  auto p = edgestatus_.find(edgeid.value);
   return (p == edgestatus_.end()) ? kUnreached : p->second;
 }
 
