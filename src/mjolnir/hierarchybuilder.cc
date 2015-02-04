@@ -99,7 +99,7 @@ void HierarchyBuilder::GetNodesInNewLevel(
         bool contract = CanContract(tile, nodeinfo, basenode, newnode,
                         new_level.importance);
         tilednodes_[newtileid].emplace_back(basenode, contract);
-        nodemap_[basenode.value()] = newnode;
+        nodemap_[basenode.value] = newnode;
       }
     }
   }
@@ -169,16 +169,16 @@ bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodein
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
   GraphId oppedge1 = GetOpposingEdge(basenode, edge1);
   GraphId oppedge2 = GetOpposingEdge(basenode, edge2);
-  supersededmap_[edges[match.first].value()] = true;
-  supersededmap_[edges[match.second].value()] = true;
-  supersededmap_[oppedge1.value()] = true;
-  supersededmap_[oppedge2.value()] = true;
+  supersededmap_[edges[match.first].value] = true;
+  supersededmap_[edges[match.second].value] = true;
+  supersededmap_[oppedge1.value] = true;
+  supersededmap_[oppedge2.value] = true;
 
   // Store the pairs of base edges entering and exiting this node
   EdgePairs edgepairs;
   edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
   edgepairs.edge2 = std::make_pair(oppedge2, edges[match.first]);
-  contractions_[newnode.value()] = edgepairs;
+  contractions_[newnode.value] = edgepairs;
 
   contractcount_++;
   return true;
@@ -269,7 +269,7 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
 
 // Is the edge superseded (used in a shortcut edge)?
 bool HierarchyBuilder::IsSuperseded(const baldr::GraphId& edge) const {
-  const auto& s = supersededmap_.find(edge.value());
+  const auto& s = supersededmap_.find(edge.value);
   return (s == supersededmap_.end()) ? false : true;
 }
 
@@ -334,7 +334,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
           // Set the end node for this edge. Opposing edge indexes
           // get set in graph optimizer so set to 0 here.
-          nodeb = nodemap_[directededge->endnode().value()];
+          nodeb = nodemap_[directededge->endnode().value];
           newedge.set_endnode(nodeb);
           newedge.set_opp_index(0);
 
@@ -394,7 +394,7 @@ void HierarchyBuilder::AddShortcutEdges(
     std::vector<DirectedEdgeBuilder>& directededges) {
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
-      contractions_.find(nodea.value()) : contractions_.end();
+      contractions_.find(nodea.value) : contractions_.end();
 
   // Iterate through directed edges of the base node
   GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(),
@@ -422,7 +422,7 @@ void HierarchyBuilder::AddShortcutEdges(
     // is set as a matching, entering edge of the contracted node. Cases like
     // entrance ramps can lead to a contracted node
     GraphId basenode = newnode.basenode;
-    GraphId nodeb = nodemap_[directededge->endnode().value()];
+    GraphId nodeb = nodemap_[directededge->endnode().value];
     if (tilednodes_[nodeb.tileid()][nodeb.id()].contract
         && IsEnteringEdgeOfContractedNode(nodeb, base_edge_id)) {
 
@@ -457,7 +457,7 @@ void HierarchyBuilder::AddShortcutEdges(
       while (tilednodes_[nodeb.tileid()][nodeb.id()].contract) {
         // Get base node and the contracted node
         basenode = tilednodes_[nodeb.tileid()][nodeb.id()].basenode;
-        auto edgepairs = contractions_.find(nodeb.value());
+        auto edgepairs = contractions_.find(nodeb.value);
         if (edgepairs == contractions_.end()) {
           LOG_WARN("No edge pairs found for contracted node");
           break;
@@ -537,13 +537,13 @@ uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
   }
 
   // Update the end node and return the length
-  nodeb = nodemap_[directededge->endnode().value()];
+  nodeb = nodemap_[directededge->endnode().value];
   return directededge->length();
 }
 
 bool HierarchyBuilder::IsEnteringEdgeOfContractedNode(const GraphId& node,
                                                       const GraphId& edge) {
-  auto edgepairs = contractions_.find(node.value());
+  auto edgepairs = contractions_.find(node.value);
   if (edgepairs == contractions_.end()) {
     LOG_WARN("No edge pairs found for contracted node");
     return false;
