@@ -22,7 +22,7 @@ namespace baldr {
 
 // Default constructor
 GraphId::GraphId() {
-  graphid_.v = kInvalidId;
+  value = kInvalidId;
 }
 
 // Constructor with values for each field of the GraphId.
@@ -31,82 +31,70 @@ GraphId::GraphId(const uint32_t tileid, const uint32_t level,
   Set(tileid, level, id);
 }
 
-// Copy constructor
-GraphId::GraphId(const GraphId& g) {
-  graphid_.v = g.graphid_.v;
-}
-
-// Get a 64 bit value of the composite GraphId
-uint64_t GraphId::value() const {
-  return graphid_.v;
-}
-
 // Get the tile Id
 uint32_t GraphId::tileid() const {
-  return graphid_.fields.tileid;
+  return fields.tileid;
 }
 
 // Get the hierarchy level
 uint32_t GraphId::level() const {
-  return graphid_.fields.level;
+  return fields.level;
 }
 
 // Get the Id
 uint64_t GraphId::id() const {
-  return graphid_.fields.id;
+  return fields.id;
 }
 
 // Set the fields of the GraphId
 void GraphId::Set(const uint32_t tileid, const uint32_t level,
                   const uint64_t id) {
-  graphid_.fields.tileid = (tileid < kMaxGraphTileId) ? tileid : 0;
-  graphid_.fields.level = (level < kMaxGraphHierarchy) ? level : 0;
-  graphid_.fields.id = (id < kMaxGraphId) ? id : 0;
+  fields.tileid = (tileid < kMaxGraphTileId) ? tileid : 0;
+  fields.level = (level < kMaxGraphHierarchy) ? level : 0;
+  fields.id = (id < kMaxGraphId) ? id : 0;
 }
 
 bool GraphId::Is_Valid() const {
-  return graphid_.v != kInvalidId;
+  return value != kInvalidId;
 }
 
 GraphId GraphId::Tile_Base() const {
-  return GraphId( graphid_.fields.tileid,  graphid_.fields.level, 0);
+  return GraphId( fields.tileid,  fields.level, 0);
 }
 
 // Post increments the id.
 void GraphId::operator ++(int) {
-  graphid_.fields.id++;
+  fields.id++;
 }
 
 // Comparison for sorting
 bool GraphId::operator <(const GraphId& rhs) const {
-  return graphid_.v < rhs.graphid_.v;
+  return value < rhs.value;
 }
 
 // Equality operator
 bool GraphId::operator ==(const GraphId& rhs) const {
-  return graphid_.v == rhs.graphid_.v;
+  return value == rhs.value;
 }
 
 std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
-    return os << id.level() << '/' << id.tileid() << '/' << id.id();
+    return os << id.fields.level << '/' << id.fields.tileid << '/' << id.fields.id;
 }
 
 // Get the internal version
 const uint64_t GraphId::internal_version() {
 
-  GraphId id;
-
-  id.graphid_ = {};
+  GraphId id{};
 
   uint64_t seed = 0;
 
-  id.graphid_.fields.id = ~id.graphid_.fields.id;
-  boost::hash_combine(seed,ffs(id.graphid_.fields.id+1)-1);
-  id.graphid_.fields.level = ~id.graphid_.fields.level;
-  boost::hash_combine(seed,ffs(id.graphid_.fields.level+1)-1);
-  id.graphid_.fields.tileid = ~id.graphid_.fields.tileid;
-  boost::hash_combine(seed,ffs(id.graphid_.fields.tileid+1)-1);
+  id.fields.id = ~id.fields.id;
+  boost::hash_combine(seed,ffs(id.fields.id+1)-1);
+  id.fields.level = ~id.fields.level;
+  boost::hash_combine(seed,ffs(id.fields.level+1)-1);
+  id.fields.tileid = ~id.fields.tileid;
+  boost::hash_combine(seed,ffs(id.fields.tileid+1)-1);
 
   boost::hash_combine(seed,sizeof(GraphId));
 
