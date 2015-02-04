@@ -29,10 +29,10 @@ class ExitSign {
   uint32_t edgeindex() const;
 
   // Returns the exit sign type
-  const ExitSign::Type& type() const;
+  ExitSign::Type type() const;
 
   // Returns the text index
-  const uint32_t text_offset() const;
+  uint32_t text_offset() const;
 
  protected:
   // Constructor

@@ -17,12 +17,12 @@ uint32_t ExitSign::edgeindex() const {
 }
 
 // Get the exit sign type.
-const ExitSign::Type& ExitSign::type() const {
+ExitSign::Type ExitSign::type() const {
   return type_;
 }
 
 // Get the offset within the text/names list for the sign text.
-const uint32_t ExitSign::text_offset() const {
+uint32_t ExitSign::text_offset() const {
   return text_offset_;
 }
 
