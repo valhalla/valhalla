@@ -101,8 +101,8 @@ class PBFParser {
   /**
    * Callback method for OSMPBFReader. Called when a relation is parsed.
    */
-  void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                         const std::vector<CanalTP::Reference> & /*refs*/);
+  void relation_callback(uint64_t /*osmid*/, const Tags &tags,
+                         const std::vector<CanalTP::Reference> &refs);
 
  protected:
 
