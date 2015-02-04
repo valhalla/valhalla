@@ -568,9 +568,9 @@ void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
     edgeindex = node.edges().at(n);
     const Edge& edge = edges[edgeindex];
     if (edge.sourcenode_ == osmnodeid) {
-      endnode = nodes.find(edge.targetnode_)->second.graphid().value();
+      endnode = nodes.find(edge.targetnode_)->second.graphid().value;
     } else {
-      endnode = nodes.find(edge.sourcenode_)->second.graphid().value();
+      endnode = nodes.find(edge.sourcenode_)->second.graphid().value;
     }
 
     // Check if the end node is already in the set of edges from this node
