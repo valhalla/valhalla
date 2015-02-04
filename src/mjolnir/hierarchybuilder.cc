@@ -379,7 +379,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
     GraphId basetile(tileid, level, 0);
     tilebuilder.StoreTileData(tile_hierarchy_, basetile);
 
-    LOG_INFO((boost::format("HierarchBuilder created tile %1%: %2% bytes") %
+    LOG_INFO((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
          basetile % tilebuilder.size()).str());
 
     // Increment tileid

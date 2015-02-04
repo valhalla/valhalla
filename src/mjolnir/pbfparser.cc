@@ -209,9 +209,16 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
     return;
   }
 
-  // Add the node reference list to the way
+  // Add the refs to the node reference list
+  uint32_t idx = osm_->noderefs.size();
+  for (const auto ref : refs) {
+    osm_->noderefs.push_back(ref);
+  }
+
+  // Construct OSMWay and set the node ref index and count
   OSMWay w(osmid);
-  w.set_nodes(refs);
+  w.set_noderef_index(idx);
+  w.set_node_count(refs.size());
 
   // Mark the nodes that we will care about when processing nodes
   for (const auto ref : refs) {
@@ -510,8 +517,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   }
 
   // Add the way to the list
-  //osm_->ways.emplace_back(std::move(w));
-  osm_->ways.push_back(w);
+  osm_->ways.push_back(std::move(w));
 }
 
 void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
