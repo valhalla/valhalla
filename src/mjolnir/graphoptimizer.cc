@@ -38,6 +38,7 @@ void GraphOptimizer::Optimize() {
       // Update nodes and directed edges as needed
       const GraphTileHeader* existinghdr = tilebuilder.header();
       GraphTileHeaderBuilder hdrbuilder;
+      hdrbuilder.set_graphid(existinghdr->graphid());
       hdrbuilder.set_nodecount(existinghdr->nodecount());
       hdrbuilder.set_directededgecount(existinghdr->directededgecount());
       hdrbuilder.set_edgeinfo_offset(existinghdr->edgeinfo_offset());

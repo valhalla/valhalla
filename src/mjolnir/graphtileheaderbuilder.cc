@@ -42,6 +42,11 @@ void GraphTileHeaderBuilder::set_directededgecount(const uint32_t count) {
   directededgecount_ = count;
 }
 
+// Sets the exit sign count.
+void GraphTileHeaderBuilder::set_exitsigncount(const uint32_t count) {
+  exitsigncount_ = count;
+}
+
 // Sets the offset to the edge info.
 void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
   edgeinfo_offset_ = offset;
@@ -50,11 +55,6 @@ void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
 // Sets the offset to the name list.
 void GraphTileHeaderBuilder::set_textlist_offset(const uint32_t offset) {
   textlist_offset_ = offset;
-}
-
-// Sets the offset to the exit list.
-void GraphTileHeaderBuilder::set_exitlist_offset(const uint32_t offset) {
-  exitlist_offset_ = offset;
 }
 
 // Sets the offset to the administrative information.
@@ -68,7 +68,6 @@ void GraphTileHeaderBuilder::set_merlist_offset(const uint32_t offset) {
 }
 
 // Sets the offset to the list of timed restrictions.
-
 void GraphTileHeaderBuilder::set_timedres_offset(const uint32_t offset) {
   timedres_offset_ = offset;
 }

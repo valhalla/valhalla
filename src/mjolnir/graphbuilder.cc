@@ -722,9 +722,7 @@ void BuildTileSet(
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.shape(), w.GetNames(),
-               graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
-               added);
+               nodea, nodeb, edge.shape(), w.GetNames(), added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
           // Add to general statistics
@@ -737,6 +735,9 @@ void BuildTileSet(
         NodeInfoBuilder nodebuilder(node.latlng(), directededgecount,
                                     node.edge_count(), bestclass);
         directededgecount += node.edge_count();
+
+        // Any exits for this directed edge?
+// graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
 
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
@@ -889,7 +890,7 @@ void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
       continue;
     }
     // Put the node into the tile
-    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
+    GraphId id = tile_hierarchy_.GetGraphId(static_cast<midgard::PointLL>(node.second.latlng()), level);
     std::vector<uint64_t>& tile = tilednodes_[id];
     tile.emplace_back(node.first);
     // Set the GraphId for this OSM node.
