@@ -8,12 +8,14 @@
 
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/osmrestriction.h>
 
 namespace valhalla {
 namespace mjolnir {
 
 using WayVector = std::vector<OSMWay>;
 using NodeRefVector = std::vector<uint64_t>;
+using RestrictionsVector = std::vector<OSMRestriction>;
 
 enum class OSMType : uint8_t {
     kNode,
@@ -32,6 +34,9 @@ struct OSMData {
 
   // Stores all the ways that are part of the road network
   WayVector ways;
+
+  // Stores simple restrictions.
+  RestrictionsVector restrictions;
 
   // Node references
   NodeRefVector noderefs;
