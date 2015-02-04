@@ -60,6 +60,12 @@ void delete_node_map(OSMData& osmdata) {
   tmp.swap(osmdata.nodes);
 }
 
+// Delete the OSM node reference vector.
+void delete_noderefs(OSMData& osmdata) {
+  NodeRefVector tmp;
+  tmp.swap(osmdata.noderefs);
+}
+
 // Build the graph from the input
 void GraphBuilder::Build(OSMData& osmdata) {
   // Construct edges
@@ -73,6 +79,9 @@ void GraphBuilder::Build(OSMData& osmdata) {
   LOG_INFO("Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
   delete_node_map(osmdata);
   LOG_INFO("After delete: Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
+  LOG_INFO("Sizeof OSM node refs: " + std::to_string(osmdata.noderefs.size()));
+  delete_noderefs(osmdata);
+  LOG_INFO("After delete: Sizeof OSM node refs: " + std::to_string(osmdata.noderefs.size()));
 
   // Sort the edge indexes at the nodes (by driveability and importance)
   // TODO (do we still need to do this??)
@@ -123,7 +132,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata) {
 
     // Start an edge at the first node of the way and add the
     // edge index to the node
-    startnodeid = nodeid = way.nodes()[0];
+    startnodeid = nodeid = osmdata.noderefs[way.noderef_index()];
     const auto& osmnode = osmdata.nodes.find(nodeid)->second;
     Edge edge(nodeid, wayindex, osmnode.latlng(), way);
 
@@ -143,7 +152,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata) {
     // way until a node with > 1 uses is found.
     for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
-      nodeid  = way.nodes()[i];
+      nodeid  = osmdata.noderefs[way.noderef_index() + i];
       const auto& osmnode = osmdata.nodes.find(nodeid)->second;
       edge.AddLL(osmnode.latlng());
 
@@ -568,9 +577,9 @@ void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
     edgeindex = node.edges().at(n);
     const Edge& edge = edges[edgeindex];
     if (edge.sourcenode_ == osmnodeid) {
-      endnode = nodes.find(edge.targetnode_)->second.graphid().value();
+      endnode = nodes.find(edge.targetnode_)->second.graphid().value;
     } else {
-      endnode = nodes.find(edge.sourcenode_)->second.graphid().value();
+      endnode = nodes.find(edge.sourcenode_)->second.graphid().value;
     }
 
     // Check if the end node is already in the set of edges from this node

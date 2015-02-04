@@ -12,6 +12,8 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+constexpr uint32_t kMaxNodesPerWay = 65535;
+
 // OSM way
 class OSMWay {
  public:
@@ -45,10 +47,23 @@ class OSMWay {
   uint64_t way_id() const;
 
   /**
-   * Set local nodelist.
-   * @param   nodes  list of nodes for this way
+   * Set the index into the node references
+   * @param  idx  Index into the noderefs for this way's node Ids
    */
-  void set_nodes(const std::vector<uint64_t> &nodes);
+  void set_noderef_index(const uint32_t idx);
+
+  /**
+   * Get the index into the node references
+   * @return  Returns the index into the noderefs for this way's node Ids.
+   */
+  uint32_t noderef_index() const;
+
+  /**
+   * Set the number of nodes for this way.
+   * @param count  Number of nodes in this way.
+   */
+  void set_node_count(const uint32_t count);
+
   /**
    * Get the number of nodes for this way.
    */
@@ -58,7 +73,7 @@ class OSMWay {
    * Get the list of nodes for this way.
    * @return  Returns nodes
    */
-  const std::vector<uint64_t>& nodes() const;
+ // const std::vector<uint64_t>& nodes() const;
 
   /**
    * Sets the speed
@@ -503,8 +518,8 @@ class OSMWay {
   // OSM way Id
   uint64_t osmwayid_;
 
-  // List of OSM node Ids along the way
-  std::vector<uint64_t> nodes_;
+  // Index into the list of nodes
+  uint32_t noderef_index_;
 
   // Reference name (highway numbers)
   std::string ref_;
@@ -554,6 +569,9 @@ class OSMWay {
     uint32_t v;
   };
   WayAttributes attributes_;
+
+  // Can we save space by making this smaller?
+  uint16_t nodecount_;
 
   union Classification {
     struct Fields {

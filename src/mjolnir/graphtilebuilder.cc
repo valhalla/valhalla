@@ -38,6 +38,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                      std::ios::out | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Configure the header
+    header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_edgeinfo_offset(
