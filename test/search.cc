@@ -65,7 +65,7 @@ boost::property_tree::ptree make_tile() {
   };
   auto add_edge = [&tile, &edge_index] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v, const std::string& name) {
     DirectedEdgeBuilder edge_builder;
-    edge_builder.set_length(u.second.Distance(v.second));
+    edge_builder.set_length(u.second.Distance(v.second) + .5);
     edge_builder.set_endnode(v.first);
     bool add;
     uint32_t edge_info_offset = tile.AddEdgeInfo(edge_index++, u.first, v.first, {u.second, v.second}, {name}, {}, add);
@@ -139,8 +139,12 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
     throw std::runtime_error("Edge search got unexpected IsNode result");
   if(!p.vertex().ApproximatelyEqual(expected_point))
     throw std::runtime_error("Found wrong point");
-  if(p.edges().front().dist != expected_distance)
-    throw std::runtime_error("Distance along the edge should always be 0 for node search");
+  if(expected_distance != 0.f && expected_distance != 1.f && p.edges().size() != 2)
+    throw std::runtime_error("Unexpected number of correlated edges");
+  for(const auto& edge : p.edges()) {
+    if(!equal<float>(edge.dist, expected_distance) || !equal<float>(edge.dist, 1.f - expected_distance))
+      throw std::runtime_error("Unexpected distance along the edge");
+  }
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
   if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
     throw std::runtime_error("Didn't find expected road name");
@@ -150,7 +154,7 @@ void TestEdgeSearch() {
   auto conf = make_tile();
   valhalla::baldr::GraphReader reader(conf);
 
-  edge_search(reader, {{.095, .1}}, {.095, .1}, "3", .5);
+  edge_search(reader, {{.105, .1}}, {.105, .1}, "3", .5);
 }
 
 }
