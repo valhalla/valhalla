@@ -53,15 +53,15 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto* next_edge = trip_path_->GetNextEdge(i);
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(i) + ":  ");
-    LOG_TRACE(std::string("  prev_edge=") + (prev_edge ? prev_edge->ToString() : "NONE"));
+    //LOG_TRACE(std::string("  prev_edge=") + (prev_edge ? prev_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
-    LOG_TRACE(std::string("  prev_curr_turn_degree=") + std::to_string(
+    LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
     auto* node = trip_path_->GetEnhancedNode(i);
     for (size_t y = 0; y < node->GetIntersectingEdgesCount(); ++y) {
       auto* intersecting_edge = node->GetIntersectingEdge(y);
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
-      LOG_TRACE(std::string("    prev_int_turn_degree=") + std::to_string(
+      LOG_TRACE(std::string("    prev2int_turn_degree=") + std::to_string(
               GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
     }
     uint32_t right_count;
@@ -77,7 +77,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
         + std::string("    left_count=") + std::to_string(left_count));
     LOG_TRACE(std::string("    right_similar_count=") + std::to_string(right_similar_count)
         + std::string("    left_similar_count=") + std::to_string(left_similar_count));
-    LOG_TRACE(std::string("  next_edge=") + (next_edge ? next_edge->ToString() : "NONE"));
+    //LOG_TRACE(std::string("  next_edge=") + (next_edge ? next_edge->ToString() : "NONE"));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -476,8 +476,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver,
                                                  left_count,
                                                  left_similar_count);
 
-  Maneuver::RelativeDirection relative_direction = DetermineRelativeDirection(
-      maneuver.turn_degree());
+  Maneuver::RelativeDirection relative_direction =
+      ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
   if ((right_similar_count == 0) && (left_similar_count > 0)
@@ -488,8 +488,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver,
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);
-  }
 
+  }
 }
 
 Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(

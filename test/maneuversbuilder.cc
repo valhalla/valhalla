@@ -1,6 +1,7 @@
 #include "test.h"
 #include "valhalla/odin/maneuver.h"
 #include "valhalla/odin/maneuversbuilder.h"
+#include <valhalla/midgard/util.h>
 
 using namespace std;
 using namespace valhalla::odin;
@@ -25,8 +26,17 @@ class ManeuversBuilderTest : public ManeuversBuilder {
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading) {
     return ManeuversBuilder::DetermineCardinalDirection(heading);
-
   }
+
+  void DetermineRelativeDirection(Maneuver& maneuver, int node_index) {
+    return ManeuversBuilder::DetermineRelativeDirection(maneuver, node_index);
+  }
+
+  static Maneuver::RelativeDirection DetermineRelativeDirection(
+      uint32_t turn_degree) {
+    return ManeuversBuilder::DetermineRelativeDirection(turn_degree);
+  }
+
 };
 
 void TrySetSimpleDirectionalManeuverType(
@@ -196,6 +206,120 @@ void TestDetermineCardinalDirection() {
 
 }
 
+void TryDetermineRelativeDirection_Maneuver(
+    uint32_t prev_heading, uint32_t curr_heading,
+    const vector<uint32_t>& intersecting_headings,
+    Maneuver::RelativeDirection expected) {
+  TripPath path;
+  TripPath_Node* node;
+
+  // node:0
+  node = path.add_node();
+  node->add_edge()->set_end_heading(prev_heading);
+
+  // node:1
+  node = path.add_node();
+  node->add_edge()->set_begin_heading(curr_heading);
+  for (auto intersecting_heading : intersecting_headings)
+    node->add_edge()->set_begin_heading(intersecting_heading);
+
+  // node:2 dummy last node
+  node = path.add_node();
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+  Maneuver maneuver;
+  maneuver.set_turn_degree(
+      valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
+  mbTest.DetermineRelativeDirection(maneuver, 1);
+  if (maneuver.begin_relative_direction() != expected)
+    throw std::runtime_error("Incorrect relative direction");
+}
+
+void TestDetermineRelativeDirection_Maneuver() {
+  // Path straight, intersecting straight on the left - thus keep right
+  TryDetermineRelativeDirection_Maneuver(
+      0, 5, { 355 }, Maneuver::RelativeDirection::kKeepRight);
+
+  // Path straight, intersecting straight on the right - thus keep left
+  TryDetermineRelativeDirection_Maneuver(
+      0, 355, { 5 }, Maneuver::RelativeDirection::kKeepLeft);
+
+  // Path slight right, intersecting straight on the left - thus keep right
+  TryDetermineRelativeDirection_Maneuver(
+      0, 11, { 0 }, Maneuver::RelativeDirection::kKeepRight);
+
+  // Path slight right, intersecting straight on the left - thus keep right
+  TryDetermineRelativeDirection_Maneuver(
+      90, 105, { 85 }, Maneuver::RelativeDirection::kKeepRight);
+
+  // Path slight left, intersecting straight on the right - thus keep left
+  TryDetermineRelativeDirection_Maneuver(
+      0, 345, { 355 }, Maneuver::RelativeDirection::kKeepLeft);
+
+  // Path slight left, intersecting straight on the right - thus keep left
+  TryDetermineRelativeDirection_Maneuver(
+      270, 255, { 275 }, Maneuver::RelativeDirection::kKeepLeft);
+
+  // Path slight left, intersecting right and left - thus keep straight
+  TryDetermineRelativeDirection_Maneuver(
+      80, 60, { 157, 337 }, Maneuver::RelativeDirection::kKeepStraight);
+
+  // Path sharp right, intersecting right and left - thus right
+  TryDetermineRelativeDirection_Maneuver(180, 339, { 355, 270, 180, 90, 10 },
+                                         Maneuver::RelativeDirection::kRight);
+
+  // Path sharp left, intersecting right and left - thus left
+  TryDetermineRelativeDirection_Maneuver(180, 21, { 90, 180, 270, 352, 355, 5 },
+                                         Maneuver::RelativeDirection::kLeft);
+
+  // Path reverse right, intersecting right and left - thus reverse
+  TryDetermineRelativeDirection_Maneuver(180, 352, { 355, 270, 180, 90, 10 },
+                                         Maneuver::RelativeDirection::KReverse);
+
+  // Path reverse left, intersecting right and left - thus reverse
+  TryDetermineRelativeDirection_Maneuver(180, 15, { 355, 270, 180, 90, 10 },
+                                         Maneuver::RelativeDirection::KReverse);
+
+}
+
+void TryDetermineRelativeDirection(uint32_t turn_degree,
+                                   Maneuver::RelativeDirection expected) {
+  if (ManeuversBuilderTest::DetermineRelativeDirection(turn_degree) != expected)
+    throw std::runtime_error("Incorrect relative direction");
+}
+
+void TestDetermineRelativeDirection() {
+  // kKeepStraight lower bound
+  TryDetermineRelativeDirection(330,
+                                Maneuver::RelativeDirection::kKeepStraight);
+  // kKeepStraight middle
+  TryDetermineRelativeDirection(0, Maneuver::RelativeDirection::kKeepStraight);
+  // kKeepStraight upper bound
+  TryDetermineRelativeDirection(30, Maneuver::RelativeDirection::kKeepStraight);
+
+  // kRight lower bound
+  TryDetermineRelativeDirection(31, Maneuver::RelativeDirection::kRight);
+  // kRight middle
+  TryDetermineRelativeDirection(90, Maneuver::RelativeDirection::kRight);
+  // kRight upper bound
+  TryDetermineRelativeDirection(159, Maneuver::RelativeDirection::kRight);
+
+  // KReverse lower bound
+  TryDetermineRelativeDirection(160, Maneuver::RelativeDirection::KReverse);
+  // KReverse middle
+  TryDetermineRelativeDirection(180, Maneuver::RelativeDirection::KReverse);
+  // KReverse upper bound
+  TryDetermineRelativeDirection(200, Maneuver::RelativeDirection::KReverse);
+
+  // kLeft lower bound
+  TryDetermineRelativeDirection(201, Maneuver::RelativeDirection::kLeft);
+  // kLeft middle
+  TryDetermineRelativeDirection(270, Maneuver::RelativeDirection::kLeft);
+  // kLeft upper bound
+  TryDetermineRelativeDirection(329, Maneuver::RelativeDirection::kLeft);
+
+}
+
 }
 
 int main() {
@@ -206,6 +330,12 @@ int main() {
 
   // DetermineCardinalDirection
   suite.test(TEST_CASE(TestDetermineCardinalDirection));
+
+  // DetermineRelativeDirection_Maneuver
+  suite.test(TEST_CASE(TestDetermineRelativeDirection_Maneuver));
+
+  // DetermineRelativeDirection
+  suite.test(TEST_CASE(TestDetermineRelativeDirection));
 
   return suite.tear_down();
 }
