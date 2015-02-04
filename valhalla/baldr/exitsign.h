@@ -21,6 +21,13 @@ class ExitSign {
     kName
   };
 
+  /**
+   * Get the index of the directed edge this exit sign applies to.
+   * @return  Returns the directed edge index (within the same tile
+   *          as the exit information).
+   */
+  uint32_t edgeindex() const;
+
   // Returns the exit sign type
   const ExitSign::Type& type() const;
 
@@ -29,8 +36,10 @@ class ExitSign {
 
  protected:
   // Constructor
-  ExitSign(const ExitSign::Type& type, uint32_t text_offset);
+  ExitSign(const uint32_t idx, const ExitSign::Type& type,
+           const uint32_t text_offset);
 
+  uint32_t edgeindex_;
   ExitSign::Type type_;
   uint32_t text_offset_;
 };
