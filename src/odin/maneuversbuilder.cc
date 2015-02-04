@@ -488,8 +488,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver,
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);
-  }
 
+  }
 }
 
 Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
