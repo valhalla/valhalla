@@ -67,7 +67,9 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt)
   LuaInit(pt.get<std::string>("tagtransform.node_script"),
           pt.get<std::string>("tagtransform.node_function"),
           pt.get<std::string>("tagtransform.way_script"),
-          pt.get<std::string>("tagtransform.way_function"));
+          pt.get<std::string>("tagtransform.way_function"),
+          pt.get<std::string>("tagtransform.relation_script"),
+          pt.get<std::string>("tagtransform.relation_function"));
 }
 
 OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
@@ -130,11 +132,15 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
 void PBFParser::LuaInit(const std::string& nodetagtransformscript,
                            const std::string& nodetagtransformfunction,
                            const std::string& waytagtransformscript,
-                           const std::string& waytagtransformfunction) {
+                           const std::string& waytagtransformfunction,
+                           const std::string& reltagtransformscript,
+                           const std::string& reltagtransformfunction) {
   lua_.SetLuaNodeScript(nodetagtransformscript);
   lua_.SetLuaNodeFunc(nodetagtransformfunction);
   lua_.SetLuaWayScript(waytagtransformscript);
   lua_.SetLuaWayFunc(waytagtransformfunction);
+  lua_.SetLuaRelationScript(reltagtransformscript);
+  lua_.SetLuaRelationFunc(reltagtransformfunction);
   lua_.OpenLib();
 }
 
@@ -146,7 +152,7 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Get tags
-  Tags results = lua_.TransformInLua(false, tags);
+  Tags results = lua_.TransformInLua(OSMType::kNode, tags);
   if (results.size() == 0)
     return;
 
@@ -204,7 +210,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
 
   // Transform tags. If no results that means the way does not have tags
   // suitable for use in routing.
-  Tags results = lua_.TransformInLua(true, tags);
+  Tags results = lua_.TransformInLua(OSMType::kWay, tags);
   if (results.size() == 0) {
     return;
   }
@@ -514,9 +520,33 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   osm_->ways.push_back(w);
 }
 
-void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/,
-                                     const CanalTP::References & /*refs*/) {
-  //TODO:
+void PBFParser::relation_callback(uint64_t /*osmid*/, const Tags &tags,
+                                     const CanalTP::References &refs) {
+
+  // Get tags
+  Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
+  if (results.size() == 0)
+    return;
+
+  for (const auto& tag : results) {
+    std::cout << "type: " << tag.first << " value: " << tag.second << std::endl;
+  }
+  for (const auto& ref : refs) {
+    std::cout << "id: " << ref.member_id << " type: " << ref.member_type << " role: " << ref.role << std::endl;
+  }
+
+  std::cout <<  std::endl;
+  std::cout <<  std::endl;
+
+ /* type: restriction value: only_straight_on
+  type: type value: restriction
+  id: 54223989 type: 1 role: from
+  id: 11819330 type: 1 role: to
+  id: 683772729 type: 0 role: via
+*/
+
+
+
 }
 
 }
