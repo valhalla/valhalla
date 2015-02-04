@@ -51,7 +51,7 @@ void TestCalculateRightLeftIntersectingEdgeCounts_Straight_Straight() {
 void TestCalculateRightLeftIntersectingEdgeCounts_SlightRight_Straight() {
   // Path slight right, intersecting straight
   TripPath_Node node1;
-  node1.add_edge()->set_begin_heading(10);
+  node1.add_edge()->set_begin_heading(11);
   node1.add_edge()->set_begin_heading(0);
   TryCalculateRightLeftIntersectingEdgeCounts(
       0, static_cast<EnhancedTripPath_Node*>(&node1), 0, 0, 1, 1);
