@@ -731,8 +731,8 @@ void BuildTileSet(
           std::vector<SignInfo> exits = graphbuilder::CreateExitSignInfoList(
                 osmnodeid, node, w, map_ref, map_name, map_exit_to);
           if (!exits.empty()) {
-            //graphtile.AddSigns(idx, exits);
-            //directededge.set_exitsign(true);
+            graphtile.AddSigns(idx, exits);
+            directededge.set_exitsign(true);
           }
 
           // Increment the directed edge index within the tile

@@ -43,10 +43,12 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
+    header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)));
+            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)
+            + (signs_builder_.size() * sizeof(SignBuilder))));
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
@@ -72,7 +74,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the names
     SerializeTextListToOstream(file);
 
-    LOG_INFO((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%")
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%")
       % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_).str());
 
     size_ = file.tellp();

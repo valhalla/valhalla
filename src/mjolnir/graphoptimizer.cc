@@ -35,15 +35,12 @@ void GraphOptimizer::Optimize() {
         continue;
       }
 
-      // Update nodes and directed edges as needed
-      const GraphTileHeader* existinghdr = tilebuilder.header();
-      GraphTileHeaderBuilder hdrbuilder;
-      hdrbuilder.set_graphid(existinghdr->graphid());
-      hdrbuilder.set_nodecount(existinghdr->nodecount());
-      hdrbuilder.set_directededgecount(existinghdr->directededgecount());
-      hdrbuilder.set_edgeinfo_offset(existinghdr->edgeinfo_offset());
-      hdrbuilder.set_textlist_offset(existinghdr->textlist_offset());
+      // Copy existing header. No need to update any counts or offsets.
+      GraphTileHeader existinghdr = *(tilebuilder.header());
+      GraphTileHeaderBuilder hdrbuilder =
+          static_cast<GraphTileHeaderBuilder&>(existinghdr);
 
+      // Update nodes and directed edges as needed
       std::vector<NodeInfoBuilder> nodes;
       std::vector<DirectedEdgeBuilder> directededges;
 
