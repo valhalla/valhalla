@@ -40,8 +40,7 @@ lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/exitsign.h \
-        valhalla/baldr/exitsigninfo.h \
+	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
 	valhalla/baldr/graphtile.h \
@@ -49,13 +48,12 @@ nobase_include_HEADERS = \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
-	valhalla/baldr/graphconstants.h \
+	valhalla/baldr/sign.h \
+        valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
-	src/baldr/exitsign.cc \
-        src/baldr/exitsigninfo.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
 	src/baldr/graphtile.cc \
@@ -63,6 +61,8 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/nodeinfo.cc \
 	src/baldr/location.cc \
 	src/baldr/pathlocation.cc \
+	src/baldr/sign.cc \
+        src/baldr/signinfo.cc \
 	src/baldr/tilehierarchy.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@

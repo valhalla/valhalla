@@ -58,11 +58,11 @@ class DirectedEdge {
   uint32_t edgeinfo_offset() const;
 
   /**
-   * Does this directed edge have exit information?
-   * @return  Returns true if the directed edge has exit information,
+   * Does this directed edge have exit signs?
+   * @return  Returns true if the directed edge has exit signs,
    *          false if not.
    */
-  bool exit() const;
+  bool exitsign() const;
 
   /**
    * Gets the length of the edge in meters.
@@ -254,7 +254,7 @@ class DirectedEdge {
   struct DataOffsets {
     uint32_t edgeinfo_offset : 24; // Offset to edge data.
     uint32_t spare           :  7;
-    uint32_t exit            :  1; // Does this directed edge have exits
+    uint32_t exitsign        :  1; // Does this directed edge have exit signs
   };
   DataOffsets dataoffsets_;
 

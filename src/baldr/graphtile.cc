@@ -44,7 +44,7 @@ GraphTile::GraphTile()
       header_(nullptr),
       nodes_(nullptr),
       directededges_(nullptr),
-      exitsigns_(nullptr),
+      signs_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -92,9 +92,9 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-    // Set a pointer to the exit sign list
-    exitsigns_ = reinterpret_cast<ExitSign*>(ptr);
-    ptr += header_->exitsigncount() * sizeof(ExitSign);
+    // Set a pointer to the sign list
+    signs_ = reinterpret_cast<Sign*>(ptr);
+    ptr += header_->exitsigncount() * sizeof(Sign);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -218,20 +218,20 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 
 // Convenience method to get the exit signs for an edge given the
 // directed edge index.
-std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t idx) const {
+std::vector<SignInfo> GraphTile::GetExitSigns(const uint32_t idx) const {
   // TODO - binary search of the exit data to find the ExitSigns with matching
-  // edge index. Retrieve the names to populate ExitSignInfo.
-  std::vector<ExitSignInfo> exits;
+  // edge index. Retrieve the names to populate SignInfo.
+  std::vector<SignInfo> exits;
 
   return exits;
 }
 
 /**
-std::vector<ExitSignInfo> EdgeInfo::GetExitSigns() const {
+std::vector<SignInfo> EdgeInfo::GetExitSigns() const {
   // Get each exit sign
-  std::vector<ExitSignInfo> exit_list;
+  std::vector<SignInfo> exit_list;
   for (uint32_t i = 0; i < exit_sign_count(); i++) {
-    const ExitSign* exit_sign = GetExitSign(i);
+    const Sign* exit_sign = GetExitSign(i);
     if (exit_sign->text_offset() < names_list_length_) {
       exit_list.emplace_back(
           exit_sign->type(), (names_list_ + exit_sign->text_offset()));
