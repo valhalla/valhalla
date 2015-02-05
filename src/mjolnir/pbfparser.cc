@@ -557,14 +557,10 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
         isRoad = true;
     }
     else if (tag.first == "network") {
-
-      network = tag.second;
-      //US:US
-
+      network = tag.second;//US:US
     }
     else if (tag.first == "ref") {
       ref = tag.second;
-
     }
     else if (tag.first == "restriction") {
       RestrictionType type = (RestrictionType) std::stoi(tag.second);
