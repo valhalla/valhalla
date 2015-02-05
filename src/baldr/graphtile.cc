@@ -221,8 +221,26 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   // TODO - binary search of the exit data to find the Signs with matching
   // edge index. Retrieve the names to populate SignInfo.
+
+  // Just to test for now do a brute force search
   std::vector<SignInfo> signs;
 
+  for (uint32_t i = 0; i < header_->signcount(); i++) {
+    // Continue until we get to a sign with idx
+    if (signs_[i].edgeindex() != idx) {
+      continue;
+    }
+
+    while (signs_[i].edgeindex() == idx) {
+      if (signs_[i].text_offset() < textlist_size_) {
+        signs.emplace_back(
+            signs_[i].type(), (textlist_ + signs_[i].text_offset()));
+      } else {
+        throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+      }
+      i++;
+    }
+  }
   return signs;
 }
 
