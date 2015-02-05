@@ -4,7 +4,7 @@
 #include "thor/trippathbuilder.h"
 
 #include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/exitsigninfo.h>
+#include <valhalla/baldr/signinfo.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
@@ -192,26 +192,26 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   }
 
   // Set the exits (if the directed edge has exit sign information)
-  if (directededge->exit()) {
-    std::vector<ExitSignInfo> exits = graphtile->GetExitSigns(idx);
-    if (!exits.empty()) {
+  if (directededge->exitsign()) {
+    std::vector<SignInfo> signs = graphtile->GetSigns(idx);
+    if (!signs.empty()) {
       TripPath_Exit* trip_exit = trip_edge->mutable_exit();
-      for (const auto& exit : exits) {
-        switch (exit.type()) {
-          case ExitSign::Type::kNumber: {
-            trip_exit->set_number(exit.text());
+      for (const auto& sign : signs) {
+        switch (sign.type()) {
+          case Sign::Type::kExitNumber: {
+            trip_exit->set_number(sign.text());
             break;
           }
-          case ExitSign::Type::kBranch: {
-            trip_exit->add_branch(exit.text());
+          case Sign::Type::kExitBranch: {
+            trip_exit->add_branch(sign.text());
             break;
           }
-          case ExitSign::Type::kToward: {
-            trip_exit->add_toward(exit.text());
+          case Sign::Type::kExitToward: {
+            trip_exit->add_toward(sign.text());
             break;
           }
-          case ExitSign::Type::kName: {
-            trip_exit->add_name(exit.text());
+          case Sign::Type::kExitName: {
+            trip_exit->add_name(sign.text());
             break;
           }
         }
