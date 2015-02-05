@@ -14,7 +14,7 @@ SignBuilder::SignBuilder(const uint32_t idx,
 
 // Set the directed edge index.
 void SignBuilder::set_edgeindex(const uint32_t idx) {
-  edgeindex_ = idx;
+  data_.edgeindex = idx;
 }
 
 }
