@@ -202,6 +202,7 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
 
 void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
                                 const std::vector<uint64_t> &refs) {
+
   // Do not add ways with < 2 nodes. Log error or add to a problem list
   // TODO - find out if we do need these, why they exist...
   if (refs.size() < 2) {
@@ -537,10 +538,35 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
   OSMRestriction restriction;
 
   bool isRestriction = false;
+  bool hasRestriction = false;
+  bool isRoad = false;
+  bool isRoute = false;
+
+  std::string network, ref;
 
   for (const auto& tag : results) {
 
-    if (tag.first == "restriction") {
+    if (tag.first == "type") {
+      if (tag.second == "restriction")
+        isRestriction = true;
+      else if (tag.second == "route")
+        isRoute = true;
+    }
+    else if (tag.first == "route") {
+      if (tag.second == "road")
+        isRoad = true;
+    }
+    else if (tag.first == "network") {
+
+      network = tag.second;
+      //US:US
+
+    }
+    else if (tag.first == "ref") {
+      ref = tag.second;
+
+    }
+    else if (tag.first == "restriction") {
       RestrictionType type = (RestrictionType) std::stoi(tag.second);
 
       switch (type) {
@@ -552,7 +578,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
         case RestrictionType::kOnlyRightTurn:
         case RestrictionType::kOnlyLeftTurn:
         case RestrictionType::kOnlyStraightOn:
-          isRestriction = true;
+          hasRestriction = true;
           restriction.set_type(type);
           break;
         case RestrictionType::kNone:
@@ -606,7 +632,29 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
     }
   }
 
-  if (isRestriction) {
+  if (isRoad && isRoute && ref.size() && network.size()) {
+
+    std::vector<std::string> net = GetTagTokens(network,':');
+
+    if (net.size() != 2)
+      return;
+
+    std::string reference = net.at(1) + " " + ref;// US 51 or I 95
+
+    for (const auto& ref : refs) {
+
+      if (ref.role.size() == 0 || ref.role == "forward" || ref.role == "backward")
+        continue;
+
+      auto iter = osm_->way_ref.find(ref.member_id);
+      if (iter != osm_->way_ref.end() )
+        osm_->way_ref[ref.member_id] = iter->second + ";" + reference + "|" + ref.role;
+      else
+        osm_->way_ref[ref.member_id] = reference + "|" + ref.role;
+
+    }
+  }
+  else if (isRestriction && hasRestriction) {
 
     for (const auto& ref : refs) {
 
