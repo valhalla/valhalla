@@ -9,10 +9,10 @@ fi
 
 function usage() {
 	echo "Usage: $0 pathTestArgsFile [diffDir] [concurrency] [outDir]"
-        echo "Example: $0 paRoutes"
-	echo "Example: $0 paRoutes 2015_06_13_14_45_03"
-	echo "Example: $0 paRoutes 2015_06_13_14_45_03 8"
-	echo "Example: $0 paRoutes 2015_06_13_14_45_03 8 mySpecialDir"
+        echo "Example: $0 li.txt"
+	echo "Example: $0 li.txt 2015_06_13_14_45_03_li"
+	echo "Example: $0 li.txt 2015_06_13_14_45_03_li 8"
+	echo "Example: $0 li.txt 2015_06_13_14_45_03_li 8 mySpecialDir"
         echo
 	echo "Note: each line in your pathTestArgsFile should look like this:"
 	echo
@@ -69,4 +69,6 @@ if [ -d "${DIFF}" ]; then
 	else
 		echo -e "\x1b[31;1mFailed to diff ${DIFF} with ${OUTDIR} as it looks like they were generated from different input\x1b[0m"
 	fi
+elif [ "${DIFF}" != "" ]; then
+	echo -e "\x1b[31;1mFailed to diff using non-existant ${DIFF} directory\x1b[0m"
 fi

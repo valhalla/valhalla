@@ -22,6 +22,7 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::loki;
 using namespace valhalla::odin;
 using namespace valhalla::thor;
 
@@ -31,19 +32,8 @@ namespace bpo = boost::program_options;
  * TODO: add locations to TripPath
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, std::string routetype) {
+                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost) {
 LOG_INFO("Sizeof GraphTileHeader = " + std::to_string(sizeof(GraphTileHeader)));
-  // Register costing methods
-  CostFactory<DynamicCost> factory;
-  factory.Register("auto", CreateAutoCost);
-  factory.Register("bicycle", CreateBicycleCost);
-  factory.Register("pedestrian", CreatePedestrianCost);
-
-  for (auto & c : routetype)
-    c = std::tolower(c);
-  std::shared_ptr<DynamicCost> cost = factory.Create(routetype);
-
-  LOG_INFO("routetype: " + routetype);
 
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
@@ -191,27 +181,43 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  // Figure out the route type
+  CostFactory<DynamicCost> factory;
+  factory.Register("auto", CreateAutoCost);
+  factory.Register("bicycle", CreateBicycleCost);
+  factory.Register("pedestrian", CreatePedestrianCost);
+
+  for (auto & c : routetype)
+    c = std::tolower(c);
+  std::shared_ptr<DynamicCost> cost = factory.Create(routetype);
+
+  LOG_INFO("routetype: " + routetype);
+
+  // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
   // Use Loki to get location information
   auto t1 = std::chrono::high_resolution_clock::now();
-
-  // Origin
   Location originloc = Location::FromCsv(origin);
-  PathLocation pathOrigin = valhalla::loki::Search(originloc, reader);
-
-  // Destination
   Location destloc = Location::FromCsv(destination);
-  PathLocation pathDest = valhalla::loki::Search(destloc, reader);
+  PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
+  PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
+  /*logging::Log("Location Processing took " + std::to_string(msecs) + " ms", " [NARRATIVE] ");
+  t1 = std::chrono::high_resolution_clock::now();
+  Search(originloc, reader, cost->GetFilter());
+  Search(destloc, reader, cost->GetFilter());
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  logging::Log("Cached Location Processing took " + std::to_string(msecs) + " ms", " [NARRATIVE] ");*/
 
   // TODO - set locations
 
   // Try the route
   t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = PathTest(reader, pathOrigin, pathDest, routetype);
+  TripPath trip_path = PathTest(reader, pathOrigin, pathDest, cost);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");

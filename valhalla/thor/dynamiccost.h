@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/loki/search.h>
 #include <memory>
 
 namespace valhalla {
@@ -76,6 +77,12 @@ class DynamicCost {
    * @return  Returns the unit size for sorting.
    */
   virtual float UnitSize() const = 0;
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each edges attribution
+   */
+  virtual const loki::EdgeFilter GetFilter() const = 0;
 };
 
 typedef std::shared_ptr<DynamicCost> cost_ptr_t;
