@@ -510,9 +510,10 @@ class OSMWay {
 
   /**
    * Get the names for the edge info based on the road class.
+   * @param  ref       updated refs from relations.
    * @return  Returns vector of strings
    */
-  std::vector<std::string> GetNames() const;
+  std::vector<std::string> GetNames(const std::string& ref) const;
 
  private:
   // OSM way Id

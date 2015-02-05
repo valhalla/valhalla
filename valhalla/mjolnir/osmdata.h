@@ -52,6 +52,9 @@ struct OSMData {
 
   // Map that stores all the name info on a node
   std::unordered_map<uint64_t, std::string> node_name;
+
+  // Map that stores an updated ref for a way
+  std::unordered_map<uint64_t, std::string> way_ref;
 };
 
 }

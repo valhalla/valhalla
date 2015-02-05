@@ -604,13 +604,19 @@ bool OSMWay::link() const {
 /**
  * Get the names for the edge info based on the road class.
  */
-std::vector<std::string> OSMWay::GetNames() const {
+std::vector<std::string> OSMWay::GetNames(const std::string& ref) const {
   std::vector<std::string> names;
   // Process motorway and trunk refs
-  if (!ref_.empty()
+  if ((!ref_.empty() || !ref.empty())
       && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
           || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
-    std::vector<std::string> tokens = GetTagTokens(ref_);
+    std::vector<std::string> tokens;
+
+    if (!ref.empty())
+      tokens = GetTagTokens(ref);// use updated refs from relations.
+    else
+      tokens = GetTagTokens(ref_);
+
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
