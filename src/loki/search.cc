@@ -1,13 +1,14 @@
 #include "loki/search.h"
 
 #include <unordered_set>
-#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
 namespace {
 
-constexpr float NODE_SNAP = 8 * 8; //we are working in square meters below
+//during edge searching we snap to vertices if you are closer than
+//10 meters to a given vertex.
+constexpr float NODE_SNAP = 15 * 15;
 
 const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
   //get the node at the end of this edge
@@ -126,7 +127,6 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
 
       //does this look better than the current edge
       if(std::get<1>(candidate) < std::get<1>(closest_point)) {
-        LOG_INFO("Found " + tile->GetNames(edge->edgeinfo_offset())[0] + " using offset " + std::to_string(edge->edgeinfo_offset()));
         closest_edge = edge;
         closest_edge_id.fields.id = edge_index;
         closest_edge_info.swap(edge_info);
