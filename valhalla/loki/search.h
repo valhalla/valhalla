@@ -26,8 +26,7 @@ enum class SearchStrategy : bool { NODE, EDGE };
  * update this to a functor and use something like std::function<>
  * in place of straight up function pointers
  */
-using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
-bool PassThroughFilter(const valhalla::baldr::DirectedEdge*) { return false; }
+using EdgeFilter = bool (*)(const baldr::DirectedEdge*);
 
 /**
  * Find an location within the route network given an input location
@@ -36,11 +35,11 @@ bool PassThroughFilter(const valhalla::baldr::DirectedEdge*) { return false; }
  * @param location  the position which needs to be correlated to the route network
  * @param reader    and object used to access tiled route data TODO: switch this out for a proper cache
  * @param strategy  what type of search to do
- * @param filter    a function to be used in the rejection of edges
+ * @param filter    a function to be used in the rejection of edges. defaults to a pass through filter
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  const SearchStrategy strategy = SearchStrategy::EDGE, EdgeFilter filter = PassThroughFilter);
+  const SearchStrategy strategy = SearchStrategy::EDGE, EdgeFilter filter = [](const baldr::DirectedEdge*){ return false; });
 
 }
 }
