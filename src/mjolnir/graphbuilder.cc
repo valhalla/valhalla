@@ -107,7 +107,7 @@ void GraphBuilder::Build(OSMData& osmdata) {
   // Iterate through edges - tile the end nodes to create connected graph
   start = std::clock();
   BuildLocalTiles(tl->second.level, osmdata.ways,osmdata.node_ref,
-                  osmdata.node_exit_to, osmdata.node_name);
+                  osmdata.node_exit_to, osmdata.node_name, osmdata.way_ref);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 
@@ -376,6 +376,7 @@ namespace {
 class graphbuilder : public GraphBuilder {
  public:
   using GraphBuilder::CreateExitSignInfoList;
+  using GraphBuilder::GetRef;
 };
 
 // Test if this is a "not thru" edge. These are edges that enter a region that
@@ -605,6 +606,7 @@ void BuildTileSet(
     const std::unordered_map<uint64_t, std::string>& map_ref,
     const std::unordered_map<uint64_t, std::string>& map_name,
     const std::unordered_map<uint64_t, std::string>& map_exit_to,
+    const std::unordered_map<uint64_t, std::string>& way_ref,
     std::atomic<DataQuality*>& stats,
     std::promise<size_t>& result) {
 
@@ -720,9 +722,16 @@ void BuildTileSet(
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.importance());
 
+          std::string ref;
+          // Check for updated ref from relations.
+          auto iter = way_ref.find(w.way_id());
+          if (iter != way_ref.end()) {
+            ref = graphbuilder::GetRef(w.ref(),iter->second);
+          }
+
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.shape(), w.GetNames(), added);
+               nodea, nodeb, edge.shape(), w.GetNames(ref), added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
           // Add to general statistics
@@ -760,6 +769,55 @@ void BuildTileSet(
   // Let the main thread see how this thread faired
   result.set_value(written);
 }
+
+}
+
+
+std::string GraphBuilder::GetRef(const std::string& way_ref,const std::string& relation_ref) {
+
+ // std::cout << "way_ref " << way_ref << " relation_ref " << relation_ref << std::endl;
+
+  std::string refs;
+
+  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
+
+  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
+
+  bool found = false;
+
+  for (auto& ref : way_refs) {
+
+    found = false;
+
+    for (auto& refdir : refdirs) {
+
+      std::vector<std::string> tmp = GetTagTokens(refdir,'|'); // US 51|north
+
+      if (tmp.size() == 2)
+      {
+        if (tmp[0] == ref) { // US 51 == US 51
+          if (refs.size())
+            refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
+          else
+            refs = ref + " " + tmp[1];
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) // no direction found in relations for this ref
+    {
+      if (refs.size())
+        refs += ";" + ref;
+      else
+        refs = ref;
+    }
+  }
+
+//  std::cout << "OUT " << refs << std::endl;
+
+  return refs;
 
 }
 
@@ -905,7 +963,8 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level,
                                    const WayVector& ways,
                                    const std::unordered_map<uint64_t, std::string>& node_ref,
                                    const std::unordered_map<uint64_t, std::string>& node_exit_to,
-                                   const std::unordered_map<uint64_t, std::string>& node_name) const {
+                                   const std::unordered_map<uint64_t, std::string>& node_name,
+                                   const std::unordered_map<uint64_t, std::string>& way_ref) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(threads_);
   // A place to hold the results of those threads, be they exceptions or otherwise
@@ -927,7 +986,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level,
     // Make the thread
     threads[i].reset(
       new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways, edges_,
-                      tile_hierarchy_, node_ref, node_name, node_exit_to,
+                      tile_hierarchy_, node_ref, node_name, node_exit_to, way_ref,
                       std::ref(atomic_stats), std::ref(results[i]))
     );
   }

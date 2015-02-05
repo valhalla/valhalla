@@ -268,7 +268,11 @@ class GraphBuilder {
                        const WayVector& ways,
                        const std::unordered_map<uint64_t, std::string>& node_ref,
                        const std::unordered_map<uint64_t, std::string>& node_exit_to,
-                       const std::unordered_map<uint64_t, std::string>& node_name) const;
+                       const std::unordered_map<uint64_t, std::string>& node_name,
+                       const std::unordered_map<uint64_t, std::string>& way_ref) const;
+
+  static std::string GetRef(const std::string& way_ref,
+                            const std::string& relation_ref);
 
   static std::vector<ExitSignInfo> CreateExitSignInfoList(
       const uint64_t osmnodeid, const Node& node, const OSMWay& way,
