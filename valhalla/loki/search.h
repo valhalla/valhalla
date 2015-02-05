@@ -22,6 +22,9 @@ enum class SearchStrategy : bool { NODE, EDGE };
 /**
  * A function pointer which returns true if an edge should be
  * filtered out of the correlated set and false if the edge is usable
+ * TODO: if ever we need to hold state when filtring we'll need to
+ * update this to a functor and use something like std::function<>
+ * in place of straight up function pointers
  */
 using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
 bool PassThroughFilter(const valhalla::baldr::DirectedEdge*) { return false; }
