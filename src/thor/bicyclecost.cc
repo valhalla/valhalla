@@ -125,15 +125,17 @@ class BicycleCost : public DynamicCost {
     BicycleType b = bicycletype_;
     return [b](const baldr::DirectedEdge* edge){
       // Prohibit certain roads based on surface type and bicycle type
-      if (b == BicycleType::kRoad)
-        return edge->surface() > Surface::kPavedRough;
-      else if (b == BicycleType::kHybrid)
-        return edge->surface() > Surface::kCompacted;
-      else if (b == BicycleType::kCross)
-        return edge->surface() > Surface::kDirt;
-      else if (b == BicycleType::kMountain)
-        return edge->surface() >= Surface::kPath;
-      return !(edge->forwardaccess() & kBicycleAccess);
+      if(edge->forwardaccess() & kBicycleAccess) {
+        if (b == BicycleType::kRoad)
+          return edge->surface() > Surface::kPavedRough;
+        else if (b == BicycleType::kHybrid)
+          return edge->surface() > Surface::kCompacted;
+        else if (b == BicycleType::kCross)
+          return edge->surface() > Surface::kDirt;
+        else if (b == BicycleType::kMountain)
+          return edge->surface() >= Surface::kPath;
+      }
+      return true;
     };
   }
 };
