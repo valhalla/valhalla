@@ -2,7 +2,9 @@
 
 #include <unordered_set>
 
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::loki;
 
 namespace {
 
@@ -21,7 +23,19 @@ const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edg
   return tile->directededge(tile->node(node_id)->edge_index() + opposing_index);
 }
 
-PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, const GraphTile* tile, valhalla::loki::EdgeFilter filter){
+bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter filter) {
+  //for each edge leaving this node
+  for(uint32_t edge_index = 0; edge_index < node->edge_count(); ++edge_index) {
+    const auto edge = tile->directededge(node->edge_index() + edge_index);
+    //if this edge is good we'll take
+    if(!filter(edge)){
+      return false;
+    }
+  }
+  return true;
+}
+
+PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, const GraphTile* tile, EdgeFilter filter){
   //now that we have a node we can pass back all the edges leaving it
   PathLocation correlated(location);
   correlated.CorrelateVertex(closest->latlng());
@@ -36,9 +50,6 @@ PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, co
   }
 
   //if we found nothing that is no good..
-  //NOTE: that with filtering this can happen, it'll be easy enough to
-  //keep a set of the next best 5 candidates we found when searching
-  //and try those in succession
   if(correlated.edges().size() == 0)
     throw std::runtime_error("Unable to find any paths leaving this location");
 
@@ -46,7 +57,7 @@ PathLocation CorrelateNode(const NodeInfo* closest, const Location& location, co
   return correlated;
 }
 
-PathLocation NodeSearch(const Location& location, GraphReader& reader, valhalla::loki::EdgeFilter filter) {
+PathLocation NodeSearch(const Location& location, GraphReader& reader, EdgeFilter filter) {
 
   //grab the tile the lat, lon is in
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
@@ -62,10 +73,10 @@ PathLocation NodeSearch(const Location& location, GraphReader& reader, valhalla:
 
   //for each node
   for(size_t node_index = 1; node_index < tile->header()->nodecount(); ++node_index) {
-    //if this is closer then its better
+    //if this is closer then its better, unless nothing interesting leaves it..
     const NodeInfo* node = tile->node(node_index);
     float node_sqdist = node->latlng().DistanceSquared(location.latlng_);
-    if(node_sqdist < sqdist) {
+    if(node_sqdist < sqdist && !FilterNode(tile, node, filter)) {
       sqdist = node_sqdist;
       closest = node;
     }
@@ -74,7 +85,7 @@ PathLocation NodeSearch(const Location& location, GraphReader& reader, valhalla:
   return CorrelateNode(closest, location, tile, filter);
 }
 
-PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla::loki::EdgeFilter filter) {
+PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter) {
   //grab the tile the lat, lon is in
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
 
@@ -87,7 +98,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   const DirectedEdge* closest_edge = nullptr;
   GraphId closest_edge_id = tile->header()->graphid();
   std::unique_ptr<const EdgeInfo> closest_edge_info;
-  std::tuple<valhalla::midgard::PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
+  std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
 
   //a place to keep track of the edgeinfos we've already inspected
   std::unordered_set<uint32_t> searched(tile->header()->directededgecount());
@@ -96,6 +107,9 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   for(uint32_t edge_index = 0; edge_index < tile->header()->directededgecount(); ++edge_index) {
     //get the edge
     const DirectedEdge* edge = tile->directededge(static_cast<size_t>(edge_index));
+    //if its junk, skip it
+    if(filter(edge))
+      continue;
 
     //we haven't looked at this edge yet
     auto inserted = searched.insert(edge->edgeinfo_offset());
@@ -113,15 +127,18 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
 
           //get the opposing edge of this one
           const auto opposing_edge = GetOpposingEdge(reader, edge);
-          return CorrelateNode(tile->node(opposing_edge->endnode()), location, tile, filter);
+          const auto node = tile->node(opposing_edge->endnode());
+          if(!FilterNode(tile, node, filter))
+            return CorrelateNode(node, location, tile, filter);
         }//is it basically right on the end of the line
         else if(std::get<2>(candidate) == edge_info->shape().size() - 2 &&
           std::get<0>(candidate).DistanceSquared(edge_info->shape().back()) < NODE_SNAP) {
 
           //the end node could be in another tile
-          auto node_id = edge->endnode();
-          tile = reader.GetGraphTile(node_id);
-          return CorrelateNode(tile->node(node_id), location, tile, filter);
+          const auto other_tile = reader.GetGraphTile(edge->endnode());
+          const auto node = other_tile->node(edge->endnode());
+          if(!FilterNode(other_tile, node, filter))
+            return CorrelateNode(node, location, other_tile, filter);
         }
       }
 
@@ -147,8 +164,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
     //correlate the edge we found
-    if(!filter(closest_edge))
-      correlated.CorrelateEdge(closest_edge_id, length_ratio);
+    correlated.CorrelateEdge(closest_edge_id, length_ratio);
     //correlate its evil twin
     const auto other_tile = reader.GetGraphTile(closest_edge->endnode());
     const auto end_node = other_tile->node(closest_edge->endnode());
@@ -159,9 +175,6 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
   }
 
   //if we found nothing that is no good..
-  //NOTE: that with filtering this can happen, it'll be easy enough to
-  //keep a set of the next best 5 candidates we found when searching
-  //and try those in succession
   if(correlated.edges().size() == 0)
     throw std::runtime_error("Unable to find any paths leaving this location");
 
@@ -174,7 +187,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, valhalla:
 namespace valhalla {
 namespace loki {
 
-PathLocation Search(const Location& location, GraphReader& reader, const SearchStrategy strategy, EdgeFilter filter) {
+PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter, const SearchStrategy strategy) {
   if(strategy == SearchStrategy::EDGE)
     return EdgeSearch(location, reader, filter);
   return NodeSearch(location, reader, filter);

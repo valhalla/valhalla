@@ -116,7 +116,7 @@ boost::property_tree::ptree make_tile() {
 
 void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
   const std::string& expected_name){
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::NODE);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::NODE);
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
   if(!p.IsNode())
@@ -139,7 +139,7 @@ void TestNodeSearch() {
 
 void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
   const std::vector<std::string>& expected_names, const float expected_distance){
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::SearchStrategy::EDGE);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::EDGE);
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
   if(p.IsNode() != (expected_distance == 0.f || expected_distance == 1.f))
