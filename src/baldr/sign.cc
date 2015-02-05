@@ -6,19 +6,19 @@ namespace baldr {
 // Constructor given parameters.
 Sign::Sign(const uint32_t idx, const Sign::Type& type,
                    const uint32_t text_offset)
-    : edgeindex_(idx),
-      type_(type),
-      text_offset_(text_offset) {
+    : text_offset_(text_offset) {
+  data_.edgeindex = idx;
+  data_.type = type;
 }
 
 // Get the directed edge index to which this sign applies.
 uint32_t Sign::edgeindex() const {
-  return edgeindex_;
+  return data_.edgeindex;
 }
 
 // Get the sign type.
 Sign::Type Sign::type() const {
-  return type_;
+  return data_.type;
 }
 
 // Get the offset within the text/names list for the sign text.

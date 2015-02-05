@@ -18,7 +18,7 @@ namespace baldr {
  */
 class Sign {
  public:
-  enum class Type : uint32_t {
+  enum class Type : uint8_t {
     kExitNumber,
     kExitBranch,
     kExitToward,
@@ -50,8 +50,12 @@ class Sign {
   Sign(const uint32_t idx, const Sign::Type& type,
            const uint32_t text_offset);
 
-  uint32_t edgeindex_;
-  Sign::Type type_;
+  struct IndexAndType {
+    uint32_t   edgeindex  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
+    Sign::Type type       :  8;
+    uint32_t   spare      :  2;
+  };
+  IndexAndType data_;
   uint32_t text_offset_;
 };
 
