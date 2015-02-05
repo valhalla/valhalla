@@ -198,8 +198,8 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
-  // Neither directed edge can have exit information
-  if (edge1->exit() || edge2->exit()) {
+  // Neither directed edge can have exit signs
+  if (edge1->exitsign() || edge2->exitsign()) {
     return false;
   }
 
@@ -454,8 +454,8 @@ void HierarchyBuilder::AddShortcutEdges(
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(
           directededge->edgeinfo_offset());
-      std::vector<ExitSignInfo> exits = tile->GetExitSigns(
-          directededge->edgeinfo_offset());
+
+      // TODO - should not be any signs
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -618,12 +618,19 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   hdrbuilder.set_edgeinfo_offset(existinghdr->edgeinfo_offset() + addedsize);
   hdrbuilder.set_textlist_offset(existinghdr->textlist_offset() + addedsize);
 
+  // Get the directed edge index of the first sign
+  uint32_t nextexitidx = existinghdr->directededgecount() + 1;
+  if (tilebuilder.header()->signcount() > 0)
+    uint32_t nextexitidx = tilebuilder.sign(0).edgeindex();
+
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
+  uint32_t exitidx = 0;
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
+  std::vector<SignBuilder> exits;
   for (uint32_t id = 0; id < existinghdr->nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
@@ -631,6 +638,19 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
     uint32_t idx = node.edge_index();
     for (uint32_t n = 0; n < node.edge_count(); n++) {
       directededges.emplace_back(std::move(tilebuilder.directededge(idx++)));
+
+      // Add any signs that use this idx - increment their index by the
+      // number of added edges
+      while (idx == nextexitidx) {
+        SignBuilder sign = tilebuilder.sign(exitidx);
+        sign.set_edgeindex(sign.edgeindex() + n);
+        exits.emplace_back(std::move(sign));
+
+        // Increment to the next sign and update nextexitidx
+        exitidx++;
+        nextexitidx = (exitidx >= tilebuilder.header()->signcount()) ?
+             0 : tilebuilder.sign(exitidx).edgeindex();
+      }
     }
 
     // Update the edge index by n (# of new edges have been added)
@@ -661,7 +681,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
+  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, exits);
 
   LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

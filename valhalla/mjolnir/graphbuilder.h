@@ -14,12 +14,13 @@
 
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/signinfo.h>
+
 #include <valhalla/mjolnir/osmdata.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/dataquality.h>
 
-#include <valhalla/baldr/exitsigninfo.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 
 namespace valhalla {
@@ -274,7 +275,7 @@ class GraphBuilder {
   static std::string GetRef(const std::string& way_ref,
                             const std::string& relation_ref);
 
-  static std::vector<ExitSignInfo> CreateExitSignInfoList(
+  static std::vector<SignInfo> CreateExitSignInfoList(
       const uint64_t osmnodeid, const Node& node, const OSMWay& way,
       const std::unordered_map<uint64_t, std::string>& map_ref,
       const std::unordered_map<uint64_t, std::string>& map_name,

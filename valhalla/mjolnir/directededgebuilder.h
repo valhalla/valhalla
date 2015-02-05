@@ -141,10 +141,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_toll(const bool toll);
 
   /**
-   * Sets the exit flag.
-   * @param  exit    Is exit?
+   * Sets the exit sign flag.
+   * @param  exit  True if this directed edge has exit signs, false if not.
    */
-  void set_exit(const bool exit);
+  void set_exitsign(const bool exit);
 
   /**
    * Sets the destination only (private) flag.

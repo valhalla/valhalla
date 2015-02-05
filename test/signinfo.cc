@@ -1,7 +1,8 @@
+#include <valhalla/baldr/signinfo.h>
+
 #include "test.h"
 
 #include "mjolnir/graphbuilder.h"
-#include <valhalla/baldr/exitsigninfo.h>
 
 using namespace std;
 using namespace valhalla::mjolnir;
@@ -27,12 +28,12 @@ void ExitToTest() {
 
   map_exit_to[osmnodeid] = "US 11;To I 81;Carlisle;Harrisburg";
 
-  std::vector<ExitSignInfo> exitsigns;
+  std::vector<SignInfo> exitsigns;
   exitsigns = test_graph_builder::CreateExitSignInfoList(osmnodeid, node, way, map_ref, map_name, map_exit_to);
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
-      if (exitsign.type() != ExitSign::Type::kToward)
+      if (exitsign.type() != Sign::Type::kExitToward)
         throw std::runtime_error("US 11;To I 81;Carlisle;Harrisburg types are not all Toward");
     }
 
@@ -49,7 +50,7 @@ void ExitToTest() {
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
-      if (exitsign.type() != ExitSign::Type::kToward)
+      if (exitsign.type() != Sign::Type::kExitToward)
         throw std::runtime_error("US 11;Toward I 81;Carlisle;Harrisburg types are not all Toward");
     }
     if (exitsigns[0].text() != "US 11" && exitsigns[1].text() != "I 81" &&
@@ -64,10 +65,10 @@ void ExitToTest() {
   exitsigns = test_graph_builder::CreateExitSignInfoList(osmnodeid, node, way, map_ref, map_name, map_exit_to);
 
   if (exitsigns.size() == 2) {
-     if (exitsigns[0].type() != ExitSign::Type::kBranch)
+     if (exitsigns[0].type() != Sign::Type::kExitBranch)
        throw std::runtime_error("I 95 should be a branch.");
 
-     if (exitsigns[1].type() != ExitSign::Type::kToward)
+     if (exitsigns[1].type() != Sign::Type::kExitToward)
        throw std::runtime_error("I 695 should be a toward.");
 
      if (exitsigns[0].text() != "I 95" && exitsigns[1].text() != "I 695")
@@ -81,10 +82,10 @@ void ExitToTest() {
   exitsigns = test_graph_builder::CreateExitSignInfoList(osmnodeid, node, way, map_ref, map_name, map_exit_to);
 
   if (exitsigns.size() == 2) {
-    if (exitsigns[0].type() != ExitSign::Type::kBranch)
+    if (exitsigns[0].type() != Sign::Type::kExitBranch)
       throw std::runtime_error("I 495 should be a branch.");
 
-    if (exitsigns[1].type() != ExitSign::Type::kToward)
+    if (exitsigns[1].type() != Sign::Type::kExitToward)
       throw std::runtime_error("I 270 should be a toward.");
 
     if (exitsigns[0].text() != "I 495" && exitsigns[1].text() != "I 270")
@@ -98,7 +99,7 @@ void ExitToTest() {
   exitsigns = test_graph_builder::CreateExitSignInfoList(osmnodeid, node, way, map_ref, map_name, map_exit_to);
 
   if (exitsigns.size() == 1) {
-    if (exitsigns[0].type() != ExitSign::Type::kToward)
+    if (exitsigns[0].type() != Sign::Type::kExitToward)
       throw std::runtime_error("I 495 Toward I 270 To I 95 should be a toward.");
 
     if (exitsigns[0].text() != "I 495 Toward I 270 To I 95")
@@ -111,7 +112,7 @@ void ExitToTest() {
 }
 
 int main() {
-  test::suite suite("exitsigninfo");
+  test::suite suite("signinfo");
 
   // Test setting and getting on random sizes of bit tables
   suite.test(TEST_CASE(ExitToTest));

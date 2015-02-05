@@ -62,6 +62,10 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the exit signs
+    file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
+               signs_builder_.size() * sizeof(SignBuilder));
+
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
@@ -78,12 +82,11 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
   }
 }
 
-// Update a graph tile with new header, nodes, and directed edges. This
-// is used to add directed edges connecting two hierarchy levels
+// Update a graph tile with new header, nodes, and directed edges.
 void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
-                const std::vector<DirectedEdgeBuilder> directededges) {
+                const std::vector<DirectedEdgeBuilder>& directededges) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
             GraphTile::FileSuffix(hdr.graphid(), hierarchy);
@@ -108,11 +111,13 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
-    // Write the existing edgeinfo and textlist
+    // Write the existing signs
+    file.write(reinterpret_cast<const char*>(&signs_[0]),
+               hdr.signcount() * sizeof(Sign));
+
+    // Write the existing edgeinfo, and textlist
     file.write(edgeinfo_, edgeinfo_size_);
     file.write(textlist_, textlist_size_);
-
-    // TODO - need to update ExitSigns!
 
     size_ = file.tellp();
     file.close();
@@ -121,6 +126,52 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
   }
 }
 
+// Update a graph tile with new header, nodes, directed edges, and signs.
+void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
+                const GraphTileHeaderBuilder& hdr,
+                const std::vector<NodeInfoBuilder>& nodes,
+                const std::vector<DirectedEdgeBuilder>& directededges,
+                const std::vector<SignBuilder>& signs) {
+  // Get the name of the file
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
+            GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file. Truncate so we replace the contents.
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write the updated header.
+    file.write(reinterpret_cast<const char*>(&hdr),
+               sizeof(GraphTileHeaderBuilder));
+
+    // Write the updated nodes
+    file.write(reinterpret_cast<const char*>(&nodes[0]),
+               nodes.size() * sizeof(NodeInfoBuilder));
+
+    // Write the updated directed edges
+    file.write(reinterpret_cast<const char*>(&directededges[0]),
+               directededges.size() * sizeof(DirectedEdgeBuilder));
+
+    // Write the updated exit signs
+    file.write(reinterpret_cast<const char*>(&signs[0]),
+               signs.size() * sizeof(SignBuilder));
+
+    // Write the existing edgeinfo and textlist
+    file.write(edgeinfo_, edgeinfo_size_);
+    file.write(textlist_, textlist_size_);
+
+    size_ = file.tellp();
+    file.close();
+  } else {
+    throw std::runtime_error("Failed to open file " + filename.string());
+  }
+}
+
+// Add a node and list of directed edges
 void GraphTileBuilder::AddNodeAndDirectedEdges(
     const NodeInfoBuilder& node,
     const std::vector<DirectedEdgeBuilder>& directededges) {
@@ -132,7 +183,39 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
     // Add the directed edge to the list
     directededges_builder_.push_back(directededge);
   }
+}
 
+// Add signs
+void GraphTileBuilder::AddSigns(const uint32_t idx,
+                                const std::vector<SignInfo>& signs) {
+  // Iterate through the list of sign info (with sign text)
+  for (const auto& sign : signs) {
+    // Skip signs with no sign text
+    if (sign.text().empty()) {
+      continue;
+    }
+
+    // If nothing already used this exit text
+    auto existing_text_offset = text_offset_map.find(sign.text());
+    if (existing_text_offset == text_offset_map.end()) {
+      // Add name to text list
+      textlistbuilder_.emplace_back(sign.text());
+
+      // Add exit sign to the list
+      signs_builder_.emplace_back(idx, sign.type(), text_list_offset_);
+
+      // Add text/offset pair to map
+      text_offset_map.emplace(sign.text(), text_list_offset_);
+
+      // Update text offset value to length of string plus null terminator
+      text_list_offset_ += (sign.text().length() + 1);
+    }
+    else {
+      // Name already exists. Add exit type and existing text offset to list
+      signs_builder_.emplace_back(idx, sign.type(),
+                  existing_text_offset->second);
+    }
+  }
 }
 
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -223,16 +306,24 @@ NodeInfoBuilder& GraphTileBuilder::node(const size_t idx) {
  throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
-// Gets a non-const node (builder) from existing tile data.
+// Gets a non-const directed edge (builder) from existing tile data.
 DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
   if (idx < header_->directededgecount())
     return static_cast<DirectedEdgeBuilder&>(directededges_[idx]);
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Gets a non-const sign (builder) from existing tile data.
+SignBuilder& GraphTileBuilder::sign(const size_t idx) {
+  if (idx < header_->signcount())
+    return static_cast<SignBuilder&>(signs_[idx]);
+  throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+
 /**
 // Set the exit signs used by this edge.
-void EdgeInfoBuilder::set_exit_signs(std::vector<ExitSignBuilder>&& exit_signs) {
+void EdgeInfoBuilder::set_exit_signs(std::vector<SignBuilder>&& exit_signs) {
   exit_signs_ = std::move(exit_signs);
 }
   os.write(reinterpret_cast<const char*>(&eib.exit_signs_[0]),
@@ -241,7 +332,7 @@ void EdgeInfoBuilder::set_exit_signs(std::vector<ExitSignBuilder>&& exit_signs) 
             ///////////////////////////////////////////////////////////////////////////
 // Add each exit text to the text list
 // Make list of exit type and text offset
-std::vector<ExitSignBuilder> exit_signs;
+std::vector<SignBuilder> exit_signs;
 exit_signs.reserve(names.size());
 for (const auto& exit_sign_info : exit_sign_infos) {
   // Skip blank names

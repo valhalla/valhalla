@@ -15,12 +15,14 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/signinfo.h>
+
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/exitsignbuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include "signbuilder.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -56,17 +58,32 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
-   * Update a graph tile with new header, nodes, and directed edges. This
-   * is used to add directed edges connecting two hierarchy levels.
+    * Update a graph tile with new header, nodes, and directed edges. Used
+    * in GraphOptimizer to update directed edge information.
+    * @param  hierarchy      How the tiles are setup on disk
+    * @param  hdr            Update header
+    * @param  nodes          Update list of nodes
+    * @param  directededges  Updated list of edges.
+    */
+   void Update(const baldr::TileHierarchy& hierarchy,
+               const GraphTileHeaderBuilder& hdr,
+               const std::vector<NodeInfoBuilder>& nodes,
+               const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Update a graph tile with new header, nodes, directed edges, and exits.
+   * This is used to add directed edges connecting two hierarchy levels.
    * @param  hierarchy      How the tiles are setup on disk
    * @param  hdr            Update header
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
+   * @param  signs          Updated list of signs.
    */
   void Update(const baldr::TileHierarchy& hierarchy,
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
-              const std::vector<DirectedEdgeBuilder> directededges);
+              const std::vector<DirectedEdgeBuilder>& directededges,
+              const std::vector<SignBuilder>& signs);
 
   /**
    * Add a node and its outbound edges.
@@ -74,6 +91,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddNodeAndDirectedEdges(
       const NodeInfoBuilder& node,
       const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Add sign information.
+   * @param  idx  Directed edge index.
+   * @param  signs  Sign information.
+   */
+  void AddSigns(const uint32_t idx,
+                const std::vector<baldr::SignInfo>& signs);
 
   /**
    * Add edge info to the tile.
@@ -95,6 +120,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  idx  Index of the directed edge within the tile.
    */
   DirectedEdgeBuilder& directededge(const size_t idx);
+
+  /**
+   * Gets a non-const sign (builder) from existing tile data.
+   * @param  idx  Index of the sign (index in the array, not the
+   *              directed edge index) within the tile.
+   */
+  SignBuilder& sign(const size_t idx);
 
  protected:
 
@@ -136,9 +168,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // indexed directly.
   std::vector<DirectedEdgeBuilder> directededges_builder_;
 
-  // List of exit signs. This is a fixed size structure so it can be
+  // List of signs. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<ExitSignBuilder> exitsigns_builder_;
+  std::vector<SignBuilder> signs_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;

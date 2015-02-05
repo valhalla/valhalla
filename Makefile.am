@@ -52,7 +52,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphtileheaderbuilder.h \
 	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
-	valhalla/mjolnir/exitsignbuilder.h \
 	valhalla/mjolnir/uniquenames.h \
 	valhalla/mjolnir/graphbuilder.h \
 	valhalla/mjolnir/graphoptimizer.h \
@@ -63,6 +62,7 @@ nobase_include_HEADERS = \
         valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfparser.h \
+	valhalla/mjolnir/signbuilder.h \
         valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/dataquality.cc \
@@ -71,7 +71,6 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/graphtileheaderbuilder.cc \
 	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
-	src/mjolnir/exitsignbuilder.cc \
 	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc \
@@ -83,9 +82,10 @@ libvalhalla_mjolnir_la_SOURCES = \
         src/mjolnir/osmrestriction.cc \
         src/mjolnir/osmway.cc \
         src/mjolnir/pbfparser.cc \
+	src/mjolnir/signbuilder.cc \
         src/mjolnir/util.cc
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
+libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ 
 
 #distributed executables
 bin_PROGRAMS = pbfgraphbuilder 
@@ -101,7 +101,7 @@ check_PROGRAMS = \
 	test/nodetable \
 	test/graphtilebuilder \
 	test/graphbuilder \
-	test/exitsigninfo 
+	test/signinfo 
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
@@ -117,9 +117,9 @@ test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ l
 test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
 test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_graphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_exitsigninfo_SOURCES = test/exitsigninfo.cc test/test.cc
-test_exitsigninfo_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_exitsigninfo_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_signinfo_SOURCES = test/signinfo.cc test/test.cc
+test_signinfo_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_signinfo_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 
 
 TESTS = $(check_PROGRAMS)
