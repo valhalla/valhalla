@@ -113,6 +113,31 @@ class BicycleCost : public DynamicCost {
   // while beginners may use a value of 0.1 to stay away from roads unless
   // absolutely necessary.
   float useroads_;
+
+ public:
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each edges attribution
+   * @return Function to be used in filtering out edges
+   */
+  virtual const loki::EdgeFilter GetFilter() const {
+    //throw back a lambda that checks the access for this type of costing
+    BicycleType b = bicycletype_;
+    return [b](const baldr::DirectedEdge* edge){
+      // Prohibit certain roads based on surface type and bicycle type
+      if(edge->forwardaccess() & kBicycleAccess) {
+        if (b == BicycleType::kRoad)
+          return edge->surface() > Surface::kPavedRough;
+        else if (b == BicycleType::kHybrid)
+          return edge->surface() > Surface::kCompacted;
+        else if (b == BicycleType::kCross)
+          return edge->surface() > Surface::kDirt;
+        else if (b == BicycleType::kMountain)
+          return edge->surface() >= Surface::kPath;
+      }
+      return true;
+    };
+  }
 };
 
 // Bicycle route costs are distance based with some favor/avoid based on
