@@ -127,6 +127,8 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  LOG_INFO("Sizeof OSMWay = " + std::to_string(sizeof(OSMWay)));
+
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){

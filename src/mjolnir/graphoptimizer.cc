@@ -69,7 +69,8 @@ void GraphOptimizer::Optimize() {
       }
 
       // Write the new file
-      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
+      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes,
+                         directededges);
     }
 
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")

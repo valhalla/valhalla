@@ -6,12 +6,11 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/exitsign.h>
 #include "mjolnir/edgeinfobuilder.h"
-#include "mjolnir/exitsignbuilder.h"
-
 #include <boost/shared_array.hpp>
+#include <valhalla/baldr/sign.h>
 #include <memory>
+#include "../valhalla/mjolnir/signbuilder.h"
 
 using namespace std;
 using namespace valhalla::baldr;

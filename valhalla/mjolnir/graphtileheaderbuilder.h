@@ -53,10 +53,10 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_directededgecount(const uint32_t count);
 
   /**
-   * Sets the number of exit signs within this tile.
-   * @param count Number of exit signs within the tile.
+   * Sets the number of signs within this tile.
+   * @param count Number of signs within the tile.
    */
-  void set_exitsigncount(const uint32_t count);
+  void set_signcount(const uint32_t count);
 
   /**
    * Sets the offset to the edge info.
