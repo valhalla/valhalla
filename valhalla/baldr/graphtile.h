@@ -118,12 +118,12 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
-   * Convenience method to get the exit signs for an edge given the directed
+   * Convenience method to get the signs for an edge given the directed
    * edge index.
-   * @param  idx  Directed edge index. Used to lookup list of exit signs.
-   * @return  Returns a list (vector) of exit signs.
+   * @param  idx  Directed edge index. Used to lookup list of signs.
+   * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> GetExitSigns(const uint32_t idx) const;
+  std::vector<SignInfo> GetSigns(const uint32_t idx) const;
 
  protected:
 

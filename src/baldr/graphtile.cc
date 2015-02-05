@@ -94,7 +94,7 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
 
     // Set a pointer to the sign list
     signs_ = reinterpret_cast<Sign*>(ptr);
-    ptr += header_->exitsigncount() * sizeof(Sign);
+    ptr += header_->signcount() * sizeof(Sign);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -216,14 +216,14 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
   return edgeinfo(edgeinfo_offset)->GetNames();
 }
 
-// Convenience method to get the exit signs for an edge given the
+// Convenience method to get the signs for an edge given the
 // directed edge index.
-std::vector<SignInfo> GraphTile::GetExitSigns(const uint32_t idx) const {
-  // TODO - binary search of the exit data to find the ExitSigns with matching
+std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
+  // TODO - binary search of the exit data to find the Signs with matching
   // edge index. Retrieve the names to populate SignInfo.
-  std::vector<SignInfo> exits;
+  std::vector<SignInfo> signs;
 
-  return exits;
+  return signs;
 }
 
 /**
