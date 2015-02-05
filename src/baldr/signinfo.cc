@@ -1,17 +1,20 @@
-#include "baldr/exitsigninfo.h"
+#include "../../valhalla/baldr/signinfo.h"
 
 namespace valhalla {
 namespace baldr {
 
-const ExitSign::Type& ExitSignInfo::type() const {
+// Get the sign type
+const Sign::Type& SignInfo::type() const {
   return type_;
 }
 
-const std::string& ExitSignInfo::text() const {
+// Get the sign text
+const std::string& SignInfo::text() const {
   return text_;
 }
 
-ExitSignInfo::ExitSignInfo(const ExitSign::Type& type, const std::string& text)
+// Constructor
+SignInfo::SignInfo(const Sign::Type& type, const std::string& text)
     : type_(type),
       text_(text) {
 }

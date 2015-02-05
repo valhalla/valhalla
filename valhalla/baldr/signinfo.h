@@ -1,29 +1,39 @@
-#ifndef VALHALLA_BALDR_EXITSIGNINFO_H_
-#define VALHALLA_BALDR_EXITSIGNINFO_H_
+#ifndef VALHALLA_BALDR_SIGNINFO_H_
+#define VALHALLA_BALDR_SIGNINFO_H_
 
-#include <valhalla/baldr/exitsign.h>
+#include "sign.h"
 
 namespace valhalla {
 namespace baldr {
 
-// Encapsulates the exit sign type and the associated text.
-class ExitSignInfo {
+/**
+ * Interface class used to pass information about a sign.
+ * Encapsulates the sign type and the associated text.
+ */
+class SignInfo {
  public:
-  // Constructor
-  ExitSignInfo(const ExitSign::Type& type, const std::string& text);
+  /**
+   * Constructor.
+   * @param  type   Sign type.
+   * @param  text   Text string.
+   */
+  SignInfo(const Sign::Type& type, const std::string& text);
 
   // Returns the exit sign type
-  const ExitSign::Type& type() const;
+  const Sign::Type& type() const;
 
-  // Returns the text index
+  /**
+   * Returns the sign text.
+   * @return  Returns the sign text as a const reference to the text string.
+   */
   const std::string& text() const;
 
  protected:
-  ExitSign::Type type_;
+  Sign::Type type_;
   std::string text_;
 };
 
 }
 }
 
-#endif  // VALHALLA_BALDR_EXITSIGNINFO_H_
+#endif  // VALHALLA_BALDR_SIGNINFO_H_
