@@ -6,6 +6,8 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
 
+#include <functional>
+
 namespace valhalla{
 namespace loki{
 
@@ -20,10 +22,11 @@ namespace loki{
 enum class SearchStrategy : bool { NODE, EDGE };
 
 /**
- * A function point which returns true if an edge should be
- * filtered out of the correlated set
+ * A callable element which returns true if an edge should be
+ * filtered out of the correlated set and false if the edge is usable
  */
-using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
+using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
+const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge*){ return false; };
 
 /**
  * Find an location within the route network given an input location
@@ -31,12 +34,13 @@ using EdgeFilter = bool (*)(const valhalla::baldr::DirectedEdge*);
  *
  * @param location  the position which needs to be correlated to the route network
  * @param reader    and object used to access tiled route data TODO: switch this out for a proper cache
- * @param strategy  what type of search to do
- * @param filter    a function to be used in the rejection of edges
+ * @param filter    a function/functor to be used in the rejection of edges. defaults to a pass through filter
+ * @param strategy  what type of search to do, defaults to edge based searching
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  const SearchStrategy strategy = SearchStrategy::NODE, EdgeFilter filter = nullptr);
+  EdgeFilter filter = PathThroughFilter,
+  const SearchStrategy strategy = SearchStrategy::EDGE);
 
 }
 }
