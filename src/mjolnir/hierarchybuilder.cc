@@ -198,7 +198,8 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
-  // Neither directed edge can have exit signs
+  // Neither directed edge can have exit signs.
+  // TODO - other sign types?
   if (edge1->exitsign() || edge2->exitsign()) {
     return false;
   }
@@ -358,8 +359,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
 
-          // Exits??
-//          tile->GetExitSigns(directededge->edgeinfo_offset()),
+          // Get signs from the base directed edge
+          if (oldedge.exitsign()) {
+            std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
+            tilebuilder.AddSigns(edgeindex + i, signs);
+          }
         }
       }
 

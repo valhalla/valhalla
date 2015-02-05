@@ -62,7 +62,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
-    // Write the exit signs
+    // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
 
@@ -72,8 +72,8 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the names
     SerializeTextListToOstream(file);
 
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% edgeinfo offset = %4% textlist offset = %5%")
-      % filename % nodes_builder_.size() % directededges_builder_.size() % edge_info_offset_ % text_list_offset_).str());
+    LOG_INFO((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%")
+      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_).str());
 
     size_ = file.tellp();
     file.close();
@@ -156,7 +156,7 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
-    // Write the updated exit signs
+    // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
 
@@ -195,13 +195,13 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
       continue;
     }
 
-    // If nothing already used this exit text
+    // If nothing already used this sign text
     auto existing_text_offset = text_offset_map.find(sign.text());
     if (existing_text_offset == text_offset_map.end()) {
       // Add name to text list
       textlistbuilder_.emplace_back(sign.text());
 
-      // Add exit sign to the list
+      // Add sign to the list
       signs_builder_.emplace_back(idx, sign.type(), text_list_offset_);
 
       // Add text/offset pair to map
@@ -211,7 +211,7 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
       text_list_offset_ += (sign.text().length() + 1);
     }
     else {
-      // Name already exists. Add exit type and existing text offset to list
+      // Name already exists. Add sign type and existing text offset to list
       signs_builder_.emplace_back(idx, sign.type(),
                   existing_text_offset->second);
     }
@@ -320,50 +320,6 @@ SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
-
-/**
-// Set the exit signs used by this edge.
-void EdgeInfoBuilder::set_exit_signs(std::vector<SignBuilder>&& exit_signs) {
-  exit_signs_ = std::move(exit_signs);
-}
-  os.write(reinterpret_cast<const char*>(&eib.exit_signs_[0]),
-            (eib.exit_signs_.size() * sizeof(ExitSign)));
-
-            ///////////////////////////////////////////////////////////////////////////
-// Add each exit text to the text list
-// Make list of exit type and text offset
-std::vector<SignBuilder> exit_signs;
-exit_signs.reserve(names.size());
-for (const auto& exit_sign_info : exit_sign_infos) {
-  // Skip blank names
-  if (exit_sign_info.text().empty()) {
-    continue;
-  }
-
-  // If nothing already used this exit text
-  auto existing_text_offset = text_offset_map.find(exit_sign_info.text());
-  if (existing_text_offset == text_offset_map.end()) {
-    // Add name to text list
-    textlistbuilder_.emplace_back(exit_sign_info.text());
-
-    // Add exit sign (type and offset) to list
-    exit_signs.emplace_back(exit_sign_info.type(), text_list_offset_);
-
-    // Add text/offset pair to map
-    text_offset_map.emplace(exit_sign_info.text(), text_list_offset_);
-
-    // Update text offset value to length of string plus null terminator
-    text_list_offset_ += (exit_sign_info.text().length() + 1);
-  } // Something was already using this name
-  else {
-    // Add existing exit type and text offset to list
-    exit_signs.emplace_back(exit_sign_info.type(),
-                            existing_text_offset->second);
-  }
-}
-edgeinfo.set_exit_signs(std::move(exit_signs));
-
-**/
 }
 }
 
