@@ -11,7 +11,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/exitsigninfo.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 
