@@ -44,6 +44,14 @@ libvalhalla_loki_la_SOURCES = \
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
+#distributed executables
+bin_PROGRAMS = loki_benchmark
+loki_benchmark_SOURCES = \
+        src/loki/benchmark.cc
+loki_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ libvalhalla_loki.la
+
+
 # tests
 check_PROGRAMS = \
 	test/search 

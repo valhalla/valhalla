@@ -1,0 +1,47 @@
+{
+  "mjolnir": {
+    "input": {
+      "type": "protocolbuffer"
+    },
+    "hierarchy": {
+      "tile_dir": "/data/valhalla",
+      "levels": [
+        {"name": "local", "level": 2, "size": 0.25},
+        {"name": "arterial", "level": 1, "size": 1, "importance_cutoff": "TertiaryUnclassified"},
+        {"name": "highway", "level": 0, "size": 4, "importance_cutoff": "Trunk"}
+      ]
+    },
+    "tagtransform": {
+      "node_script": "conf/vertices.lua",
+      "node_function": "nodes_proc",
+      "way_script": "conf/edges.lua",
+      "way_function": "ways_proc",
+      "relation_script": "conf/relations.lua",
+      "relation_function": "rels_proc"
+    },
+    "logging": {
+      "type": "std_out",
+      "color": true
+    }
+  },
+  "loki": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    }
+  },
+  "thor": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    }
+  },
+  "tyr": {
+    "listen_address": "0.0.0.0",
+    "port": 8003,
+    "logging": {
+      "type": "std_out",
+      "color": true
+    }
+  }
+}
