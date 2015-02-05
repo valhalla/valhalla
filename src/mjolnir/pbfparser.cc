@@ -632,7 +632,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
     }
   }
 
-  if (isRoad && isRoute && ref.size() && network.size()) {
+  if (isRoad && isRoute && !ref.empty() && !network.empty()) {
 
     std::vector<std::string> net = GetTagTokens(network,':');
 
@@ -643,7 +643,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
 
     for (const auto& ref : refs) {
 
-      if (ref.role.size() == 0 || ref.role == "forward" || ref.role == "backward")
+      if (ref.role.empty() || ref.role == "forward" || ref.role == "backward")
         continue;
 
       auto iter = osm_->way_ref.find(ref.member_id);

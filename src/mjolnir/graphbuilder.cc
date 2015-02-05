@@ -783,8 +783,6 @@ void BuildTileSet(
 
 std::string GraphBuilder::GetRef(const std::string& way_ref,const std::string& relation_ref) {
 
- // std::cout << "way_ref " << way_ref << " relation_ref " << relation_ref << std::endl;
-
   std::string refs;
 
   std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
@@ -804,7 +802,7 @@ std::string GraphBuilder::GetRef(const std::string& way_ref,const std::string& r
       if (tmp.size() == 2)
       {
         if (tmp[0] == ref) { // US 51 == US 51
-          if (refs.size())
+          if (!refs.empty())
             refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
           else
             refs = ref + " " + tmp[1];
@@ -816,14 +814,12 @@ std::string GraphBuilder::GetRef(const std::string& way_ref,const std::string& r
 
     if (!found) // no direction found in relations for this ref
     {
-      if (refs.size())
+      if (!refs.empty())
         refs += ";" + ref;
       else
         refs = ref;
     }
   }
-
-//  std::cout << "OUT " << refs << std::endl;
 
   return refs;
 
