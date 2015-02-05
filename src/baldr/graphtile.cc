@@ -244,21 +244,5 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
   return signs;
 }
 
-/**
-std::vector<SignInfo> EdgeInfo::GetExitSigns() const {
-  // Get each exit sign
-  std::vector<SignInfo> exit_list;
-  for (uint32_t i = 0; i < exit_sign_count(); i++) {
-    const Sign* exit_sign = GetExitSign(i);
-    if (exit_sign->text_offset() < names_list_length_) {
-      exit_list.emplace_back(
-          exit_sign->type(), (names_list_ + exit_sign->text_offset()));
-    } else {
-      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
-    }
-  }
-  return exit_list;
-}
-**/
 }
 }
