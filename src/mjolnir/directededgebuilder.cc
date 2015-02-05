@@ -18,7 +18,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
-                   const bool not_thru, const bool exit,
+                   const bool not_thru, const bool exitsign,
                    const bool internal, const RoadClass rc)
      :  DirectedEdge() {
   set_endnode(endnode);
@@ -28,7 +28,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_ferry(way.ferry());
   set_railferry(way.rail());
   set_toll(way.toll());
-  set_exit(exit);
+  set_exitsign(exitsign);
   set_dest_only(way.destination_only());
   set_surface(way.surface());
   set_cyclelane(way.cyclelane());
@@ -64,8 +64,8 @@ void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
 }
 
 //Sets the exit flag.
-void DirectedEdgeBuilder::set_exit(const bool exit) {
-  dataoffsets_.exit = exit;
+void DirectedEdgeBuilder::set_exitsign(const bool exit) {
+  dataoffsets_.exitsign = exit;
 }
 
 // Sets the length of the edge in meters.

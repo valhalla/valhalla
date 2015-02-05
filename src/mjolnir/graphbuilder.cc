@@ -20,7 +20,8 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/exitsigninfo.h>
+#include <valhalla/baldr/signinfo.h>
+
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
 
@@ -626,6 +627,7 @@ void BuildTileSet(
       GraphTileBuilder graphtile;
 
       // Iterate through the nodes
+      uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
       for (const auto& osmnodeid : tile_start->second) {
         const Node& node = nodes.find(osmnodeid)->second; //TODO: check validity?
@@ -709,7 +711,7 @@ void BuildTileSet(
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
-          //Does the directed edge contain exit information?
+          // Does the directed edge contain exit information?
           bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
 
           // Add a directed edge and get a reference to it
@@ -725,6 +727,16 @@ void BuildTileSet(
                nodea, nodeb, edge.shape(), w.GetNames(), added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
+          // Any exits for this directed edge?
+          std::vector<SignInfo> exits = graphbuilder::CreateExitSignInfoList(
+                osmnodeid, node, w, map_ref, map_name, map_exit_to);
+          if (exits.empty()) {
+            graphtile.AddSigns(idx, exits);
+          }
+
+          // Increment the directed edge index within the tile
+          idx++;
+
           // Add to general statistics
           (*stats).AddStats(tile_start->first, directededge);
         }
@@ -735,9 +747,6 @@ void BuildTileSet(
         NodeInfoBuilder nodebuilder(node.latlng(), directededgecount,
                                     node.edge_count(), bestclass);
         directededgecount += node.edge_count();
-
-        // Any exits for this directed edge?
-// graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
 
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
@@ -763,19 +772,19 @@ void BuildTileSet(
 
 }
 
-std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
+std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     const uint64_t osmnodeid, const Node& node, const OSMWay& way,
     const std::unordered_map<uint64_t, std::string>& map_ref,
     const std::unordered_map<uint64_t, std::string>& map_name,
     const std::unordered_map<uint64_t, std::string>& map_exit_to) {
 
-  std::vector<ExitSignInfo> exit_list;
+  std::vector<SignInfo> exit_list;
 
   // Exit sign number
   if (!way.junction_ref().empty()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, way.junction_ref());
+    exit_list.emplace_back(Sign::Type::kExitNumber, way.junction_ref());
   }  else if (node.ref()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, map_ref.find(osmnodeid)->second);
+    exit_list.emplace_back(Sign::Type::kExitNumber, map_ref.find(osmnodeid)->second);
   }
 
   // Exit sign branch refs
@@ -784,7 +793,7 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
     has_branch = true;
     std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
     for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(ExitSign::Type::kBranch, branch_ref);
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
     }
   }
 
@@ -794,7 +803,7 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
     has_toward = true;
     std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
     for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_ref);
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
     }
   }
 
@@ -803,7 +812,7 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
     has_toward = true;
     std::vector<std::string> toward_names = GetTagTokens(way.destination());
     for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_name);
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
     }
   }
 
@@ -823,12 +832,12 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
 
         //remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "to ")) {
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(3));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(3));
             continue;
         }
         //remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "toward ")) {
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(7));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(7));
             continue;
         }
 
@@ -839,9 +848,9 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
         if (found != std::string::npos &&
            (tmp.find(" to ",found+4) == std::string::npos && tmp.find(" toward ") == std::string::npos)) {
 
-            exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+            exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
 
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+4));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+4));
             continue;
         }
 
@@ -852,14 +861,14 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
         if (found != std::string::npos &&
             (tmp.find(" toward ",found+8) == std::string::npos && tmp.find(" to ") == std::string::npos)) {
 
-          exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
 
-          exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+8));
+          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+8));
           continue;
         }
 
         //default to toward.
-        exit_list.emplace_back(ExitSign::Type::kToward, exit_to);
+        exit_list.emplace_back(Sign::Type::kExitToward, exit_to);
 
       }
     }
@@ -869,10 +878,9 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
   if (node.name()) {
     std::vector<std::string> names = GetTagTokens(map_name.find(osmnodeid)->second);
     for (auto& name : names) {
-      exit_list.emplace_back(ExitSign::Type::kName, name);
+      exit_list.emplace_back(Sign::Type::kExitName, name);
     }
   }
-
   return exit_list;
 }
 

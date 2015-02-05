@@ -42,9 +42,9 @@ void GraphTileHeaderBuilder::set_directededgecount(const uint32_t count) {
   directededgecount_ = count;
 }
 
-// Sets the exit sign count.
-void GraphTileHeaderBuilder::set_exitsigncount(const uint32_t count) {
-  exitsigncount_ = count;
+// Sets the sign count.
+void GraphTileHeaderBuilder::set_signcount(const uint32_t count) {
+  signcount_ = count;
 }
 
 // Sets the offset to the edge info.
