@@ -198,7 +198,8 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
-  // Neither directed edge can have exit signs
+  // Neither directed edge can have exit signs.
+  // TODO - other sign types?
   if (edge1->exitsign() || edge2->exitsign()) {
     return false;
   }
@@ -358,8 +359,11 @@ void HierarchyBuilder::FormTilesInNewLevel(
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
 
-          // Exits??
-//          tile->GetExitSigns(directededge->edgeinfo_offset()),
+          // Get signs from the base directed edge
+          if (oldedge.exitsign()) {
+            std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
+            tilebuilder.AddSigns(edgeindex + i, signs);
+          }
         }
       }
 
@@ -601,56 +605,66 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   GraphId basetile(basetileid, baselevel, 0);
   GraphTileBuilder tilebuilder(tile_hierarchy_, basetile);
 
-  // TODO - anything index by directed edge index (e.g. ExitSigns) needs
+  // TODO - anything index by directed edge index (e.g. Signs) needs
   // to be updated!
 
   // Get the header information and update counts and offsets. No new nodes
   // are added. Directed edge count is increased by size of the connection
   // list. The offsets to the edge info and text list are adjusted by the
   // size of the extra directed edges.
-  const GraphTileHeader* existinghdr = tilebuilder.header();
-  GraphTileHeaderBuilder hdrbuilder;
-  hdrbuilder.set_graphid(basetile);
-  hdrbuilder.set_nodecount(existinghdr->nodecount());
+
+  // Copy existing header and update directed edge count and some offsets
+  GraphTileHeader existinghdr = *(tilebuilder.header());
+  GraphTileHeaderBuilder hdrbuilder =
+        static_cast<GraphTileHeaderBuilder&>(existinghdr);
   hdrbuilder.set_directededgecount(
-      existinghdr->directededgecount() + connections.size());
+      existinghdr.directededgecount() + connections.size());
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
-  hdrbuilder.set_edgeinfo_offset(existinghdr->edgeinfo_offset() + addedsize);
-  hdrbuilder.set_textlist_offset(existinghdr->textlist_offset() + addedsize);
+  hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
+  hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
+
+  // TODO - adjust these offsets if needed
+  hdrbuilder.set_admin_offset(existinghdr.admin_offset());
+  hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());
 
   // Get the directed edge index of the first sign
-  uint32_t nextexitidx = existinghdr->directededgecount() + 1;
-  if (tilebuilder.header()->signcount() > 0)
-    uint32_t nextexitidx = tilebuilder.sign(0).edgeindex();
+  uint32_t nextsignidx = existinghdr.directededgecount() + 1;
+  if (tilebuilder.header()->signcount() > 0) {
+    nextsignidx = tilebuilder.sign(0).edgeindex();
+  }
 
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
-  uint32_t exitidx = 0;
+  uint32_t signidx = 0;
+  uint32_t signcount = existinghdr.signcount();
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
-  std::vector<SignBuilder> exits;
-  for (uint32_t id = 0; id < existinghdr->nodecount(); id++) {
+  std::vector<SignBuilder> signs;
+  for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
     // Add existing directed edges
     uint32_t idx = node.edge_index();
     for (uint32_t n = 0; n < node.edge_count(); n++) {
-      directededges.emplace_back(std::move(tilebuilder.directededge(idx++)));
+      directededges.emplace_back(std::move(tilebuilder.directededge(idx)));
 
       // Add any signs that use this idx - increment their index by the
       // number of added edges
-      while (idx == nextexitidx) {
-        SignBuilder sign = tilebuilder.sign(exitidx);
+      while (idx == nextsignidx) {
+        SignBuilder sign = tilebuilder.sign(signidx);
         sign.set_edgeindex(sign.edgeindex() + n);
-        exits.emplace_back(std::move(sign));
+        signs.emplace_back(std::move(sign));
 
-        // Increment to the next sign and update nextexitidx
-        exitidx++;
-        nextexitidx = (exitidx >= tilebuilder.header()->signcount()) ?
-             0 : tilebuilder.sign(exitidx).edgeindex();
+        // Increment to the next sign and update nextsignidx
+        signidx++;
+        nextsignidx = (signidx >= signcount) ?
+              0 : tilebuilder.sign(signidx).edgeindex();
       }
+
+      // Increment index
+      idx++;
     }
 
     // Update the edge index by n (# of new edges have been added)
@@ -680,8 +694,14 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
     nodes.emplace_back(std::move(node));
   }
 
+  if (signs.size() != hdrbuilder.signcount()) {
+    LOG_ERROR("AddConnectionsToBaseTile: sign size = " +
+              std::to_string(signs.size()) + " Header says: " +
+              std::to_string(hdrbuilder.signcount()));
+  }
+
   // Write the new file
-  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, exits);
+  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs);
 
   LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

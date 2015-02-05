@@ -718,7 +718,7 @@ void BuildTileSet(
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, endnode, forward, edgelengths[n],
-                        speed, use, not_thru, has_exitinfo, internal, rc);
+                        speed, use, not_thru, internal, rc);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
@@ -739,8 +739,9 @@ void BuildTileSet(
           // Any exits for this directed edge?
           std::vector<SignInfo> exits = graphbuilder::CreateExitSignInfoList(
                 osmnodeid, node, w, map_ref, map_name, map_exit_to);
-          if (exits.empty()) {
+          if (!exits.empty()) {
             graphtile.AddSigns(idx, exits);
+            directededge.set_exitsign(true);
           }
 
           // Increment the directed edge index within the tile

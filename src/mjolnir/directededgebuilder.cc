@@ -18,8 +18,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
-                   const bool not_thru, const bool exitsign,
-                   const bool internal, const RoadClass rc)
+                   const bool not_thru,  const bool internal,
+                   const RoadClass rc)
      :  DirectedEdge() {
   set_endnode(endnode);
   set_length(length);
@@ -28,7 +28,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_ferry(way.ferry());
   set_railferry(way.rail());
   set_toll(way.toll());
-  set_exitsign(exitsign);
   set_dest_only(way.destination_only());
   set_surface(way.surface());
   set_cyclelane(way.cyclelane());
