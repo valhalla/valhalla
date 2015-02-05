@@ -114,7 +114,7 @@ void ExitToTest() {
 int main() {
   test::suite suite("signinfo");
 
-  // Test setting and getting on random sizes of bit tables
+  // Test exit to logic.
   suite.test(TEST_CASE(ExitToTest));
 
   return suite.tear_down();
