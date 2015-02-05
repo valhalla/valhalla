@@ -44,7 +44,7 @@ GraphTile::GraphTile()
       header_(nullptr),
       nodes_(nullptr),
       directededges_(nullptr),
-      exitsigns_(nullptr),
+      signs_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -92,9 +92,9 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-    // Set a pointer to the exit sign list
-    exitsigns_ = reinterpret_cast<ExitSign*>(ptr);
-    ptr += header_->exitsigncount() * sizeof(ExitSign);
+    // Set a pointer to the sign list
+    signs_ = reinterpret_cast<Sign*>(ptr);
+    ptr += header_->signcount() * sizeof(Sign);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -216,31 +216,33 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
   return edgeinfo(edgeinfo_offset)->GetNames();
 }
 
-// Convenience method to get the exit signs for an edge given the
+// Convenience method to get the signs for an edge given the
 // directed edge index.
-std::vector<ExitSignInfo> GraphTile::GetExitSigns(const uint32_t idx) const {
-  // TODO - binary search of the exit data to find the ExitSigns with matching
-  // edge index. Retrieve the names to populate ExitSignInfo.
-  std::vector<ExitSignInfo> exits;
+std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
+  // TODO - binary search of the exit data to find the Signs with matching
+  // edge index. Retrieve the names to populate SignInfo.
 
-  return exits;
-}
+  // Just to test for now do a brute force search
+  std::vector<SignInfo> signs;
 
-/**
-std::vector<ExitSignInfo> EdgeInfo::GetExitSigns() const {
-  // Get each exit sign
-  std::vector<ExitSignInfo> exit_list;
-  for (uint32_t i = 0; i < exit_sign_count(); i++) {
-    const ExitSign* exit_sign = GetExitSign(i);
-    if (exit_sign->text_offset() < names_list_length_) {
-      exit_list.emplace_back(
-          exit_sign->type(), (names_list_ + exit_sign->text_offset()));
-    } else {
-      throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+  for (uint32_t i = 0; i < header_->signcount(); i++) {
+    // Continue until we get to a sign with idx
+    if (signs_[i].edgeindex() != idx) {
+      continue;
+    }
+
+    while (signs_[i].edgeindex() == idx) {
+      if (signs_[i].text_offset() < textlist_size_) {
+        signs.emplace_back(
+            signs_[i].type(), (textlist_ + signs_[i].text_offset()));
+      } else {
+        throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+      }
+      i++;
     }
   }
-  return exit_list;
+  return signs;
 }
-**/
+
 }
 }

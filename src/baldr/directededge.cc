@@ -31,9 +31,9 @@ uint32_t DirectedEdge::edgeinfo_offset() const {
   return dataoffsets_.edgeinfo_offset;
 }
 
-// Does this directed edge have exit information.
-bool DirectedEdge::exit() const {
-  return dataoffsets_.exit;
+// Does this directed edge have exit signs.
+bool DirectedEdge::exitsign() const {
+  return dataoffsets_.exitsign;
 }
 
 // Gets the length of the edge in meters.
@@ -190,8 +190,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed, ffs(de.dataoffsets_.edgeinfo_offset+1)-1);
   de.dataoffsets_.spare = ~de.dataoffsets_.spare;
   boost::hash_combine(seed, ffs(de.dataoffsets_.spare+1)-1);
-  de.dataoffsets_.exit = ~de.dataoffsets_.exit;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.exit+1)-1);
+  de.dataoffsets_.exitsign = ~de.dataoffsets_.exitsign;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.exitsign+1)-1);
 
   // GeoAttributes
   de.geoattributes_.length = ~de.geoattributes_.length;

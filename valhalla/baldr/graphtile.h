@@ -7,10 +7,9 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/baldr/exitsigninfo.h>
-
 #include <boost/shared_array.hpp>
 #include <memory>
+#include "signinfo.h"
 
 namespace valhalla {
 namespace baldr {
@@ -119,12 +118,12 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   /**
-   * Convenience method to get the exit signs for an edge given the directed
+   * Convenience method to get the signs for an edge given the directed
    * edge index.
-   * @param  idx  Directed edge index. Used to lookup list of exit signs.
-   * @return  Returns a list (vector) of exit signs.
+   * @param  idx  Directed edge index. Used to lookup list of signs.
+   * @return  Returns a list (vector) of signs.
    */
-  std::vector<ExitSignInfo> GetExitSigns(const uint32_t idx) const;
+  std::vector<SignInfo> GetSigns(const uint32_t idx) const;
 
  protected:
 
@@ -146,8 +145,8 @@ class GraphTile {
   // indexed directly.
   DirectedEdge* directededges_;
 
-  // Exit signs (indexed by directed edge index)
-  ExitSign* exitsigns_;
+  // Signs (indexed by directed edge index)
+  Sign* signs_;
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
