@@ -23,6 +23,19 @@ const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edg
   return tile->directededge(tile->node(node_id)->edge_index() + opposing_index);
 }
 
+const NodeInfo* GetBeginNode(GraphReader& reader, const DirectedEdge* edge) {
+  auto opposing_edge = GetOpposingEdge(reader, edge);
+  auto tile = reader.GetGraphTile(opposing_edge->endnode());
+  return tile->node(opposing_edge->endnode());
+}
+
+const NodeInfo* GetEndNode(GraphReader& reader, const DirectedEdge* edge) {
+  //the node could be in another tile so we grab that
+  const auto tile = reader.GetGraphTile(edge->endnode());
+  //grab the nth edge leaving the node
+  return tile->node(edge->endnode());
+}
+
 bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter filter) {
   //for each edge leaving this node
   for(uint32_t edge_index = 0; edge_index < node->edge_count(); ++edge_index) {
@@ -99,6 +112,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   GraphId closest_edge_id = tile->header()->graphid();
   std::unique_ptr<const EdgeInfo> closest_edge_info;
   std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
+  //TODO: a place to keep the closest non inspected
 
   //a place to keep track of the edgeinfos we've already inspected
   std::unordered_set<uint32_t> searched(tile->header()->directededgecount());
@@ -107,13 +121,33 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   for(uint32_t edge_index = 0; edge_index < tile->header()->directededgecount(); ++edge_index) {
     //get the edge
     const DirectedEdge* edge = tile->directededge(static_cast<size_t>(edge_index));
-    //if its junk, skip it
-    if(filter(edge))
-      continue;
 
     //we haven't looked at this edge yet
     auto inserted = searched.insert(edge->edgeinfo_offset());
     if(inserted.second) {
+      //if its junk, skip it
+      if(filter(edge))
+        continue;
+
+      //during edge searching we skip edges whose length is shorter than the distance
+      //distance between the search location and the edges two end points. this works
+      //is motivated by the idea that the air-line distance between any point on the edge
+      //and either of the edges endpoints must be shorter than the edges total length.
+      //therefore if you draw a circle around each endpoint with radius = edge.length
+      //you will encapsulate the whole shape within the union of these two circles.
+      //if the search location doesn't within these two circles it is pretty unlikely
+      //to match the edge, however the edge must still be considered if no other candidates
+      //were found or if the best candidate is further away than this distance. we hope
+      //that we wont need to go back to inspect these alternate edges
+      auto sq_length = static_cast<float>(edge->length());
+      sq_length *= sq_length;
+      auto end_node = GetEndNode(reader, edge)->latlng();
+      if(sq_length < end_node.DistanceSquared(location.latlng_))
+        continue;
+      auto start_node = GetBeginNode(reader, edge)->latlng();
+      if(sq_length < start_node.DistanceSquared(location.latlng_))
+        continue;
+
       //get some info about the edge
       auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
       auto candidate = location.latlng_.ClosestPoint(edge_info->shape());
@@ -126,8 +160,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
           std::get<0>(candidate).DistanceSquared(edge_info->shape().front()) < NODE_SNAP) {
 
           //get the opposing edge of this one
-          const auto opposing_edge = GetOpposingEdge(reader, edge);
-          const auto node = tile->node(opposing_edge->endnode());
+          const auto node = GetBeginNode(reader, edge);
           if(!FilterNode(tile, node, filter))
             return CorrelateNode(node, location, tile, filter);
         }//is it basically right on the end of the line
