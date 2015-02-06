@@ -10,7 +10,7 @@ namespace valhalla {
 namespace baldr {
 
 // Maximum size of the version string (stored as a fixed size
-// chararacter array so the GraphTileHeader size remains fixed).
+// character array so the GraphTileHeader size remains fixed).
 constexpr size_t kMaxVersionSize = 16;
 
 /**
