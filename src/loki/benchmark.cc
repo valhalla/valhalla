@@ -14,8 +14,9 @@
 #include <thread>
 #include <future>
 #include <vector>
-#include <algorithm>
+#include <set>
 #include <tuple>
+#include <algorithm>
 
 namespace bpo = boost::program_options;
 
@@ -24,10 +25,31 @@ size_t threads = std::max(static_cast<size_t>(std::thread::hardware_concurrency(
 std::vector<std::string> input_files;
 std::atomic<bool> done(false);
 
-struct ll{
+struct job_t{
   float lng, lat;
 };
-boost::lockfree::queue<ll> jobs(512);
+boost::lockfree::queue<job_t> jobs(1024);
+struct result_t {
+  std::chrono::milliseconds time;
+  bool pass;
+  job_t job;
+  bool cached;
+  bool operator<(const result_t& other) const {
+    if(cached < other.cached)
+      return true;
+    if(time < other.time)
+      return true;
+    if(pass < other.pass)
+      return true;
+    if(job.lng == other.job.lng)
+      return job.lat < other.job.lat;
+    return job.lng < other.job.lng;
+  }
+  bool operator==(const result_t& other) const {
+    return cached == other.cached && time == other.time && pass == other.pass && job.lng == other.job.lng && job.lat == other.job.lat;
+  }
+};
+using results_t = std::set<result_t>;
 
 bool ParseArguments(int argc, char *argv[]) {
 
@@ -93,39 +115,49 @@ bool ParseArguments(int argc, char *argv[]) {
   return true;
 }
 
-void work(const boost::property_tree::ptree& config, std::promise<std::tuple<size_t, size_t, std::chrono::milliseconds> >& result) {
-  //things we will need for each job we do
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir.hierarchy"));
-  ll job;
-  std::tuple<size_t, size_t, std::chrono::milliseconds> stats;
-
+void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   //lambda to do the current job
-  auto search = [&reader, &job, &stats] () {
-    try {
-      auto location = valhalla::baldr::Location({job.lng, job.lat});
-      auto correlated = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter);
-      std::get<0>(stats) = std::get<0>(stats) + 1;
+  auto search = [&config] (const job_t job) {
+    //so that we dont benefit from cache coherency we always make a new reader
+    valhalla::baldr::GraphReader reader(config.get_child("mjolnir.hierarchy"));
+    auto location = valhalla::baldr::Location({job.lng, job.lat});
+    std::pair<result_t, result_t> result;
+    bool cached = false;
+    for(auto r : {&result.first, &result.second}) {
+      auto start = std::chrono::high_resolution_clock::now();
+      try {
+        //TODO: actually save the result
+        valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter);
+        auto end = std::chrono::high_resolution_clock::now();
+        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job, cached};
+      }
+      catch(...) {
+        auto end = std::chrono::high_resolution_clock::now();
+        (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), false, job, cached};
+      }
+      cached = true;
     }
-    catch(...) {
-      std::get<1>(stats) = std::get<1>(stats) + 1;
-    }
+    return result;
   };
 
   //pull work off and do it
-  auto start = std::chrono::high_resolution_clock::now();
+  job_t job;
+  results_t results;
   while(!done){
     while(jobs.pop(job)) {
-      search();
+      auto result = search(job);
+      results.emplace(std::move(result.first));
+      results.emplace(std::move(result.second));
     }
   }
   while(jobs.pop(job)) {
-    search();
+    auto result = search(job);
+    results.emplace(std::move(result.first));
+    results.emplace(std::move(result.second));
   }
-  auto end = std::chrono::high_resolution_clock::now();
 
   //return the statistics
-  std::get<2>(stats) = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  result.set_value(stats);
+  promise.set_value(std::move(results));
 }
 
 int main(int argc, char** argv) {
@@ -148,9 +180,9 @@ int main(int argc, char** argv) {
   //start up the threads
 
   std::vector<std::thread> pool;
-  std::vector<std::promise<std::tuple<size_t, size_t, std::chrono::milliseconds> > > results(threads);
+  std::vector<std::promise<results_t> > pool_results(threads);
   for(size_t i = 0; i < threads; ++i) {
-    pool.emplace_back(work, pt, std::ref(results[i]));
+    pool.emplace_back(work, pt, std::ref(pool_results[i]));
   }
 
   //let the main thread rip through the file
@@ -159,7 +191,7 @@ int main(int argc, char** argv) {
     std::string line;
     while(std::getline(stream, line)) {
       auto location = valhalla::baldr::Location::FromCsv(line);
-      jobs.push(ll{location.latlng_.lng(), location.latlng_.lat()});
+      jobs.push(job_t{location.latlng_.lng(), location.latlng_.lat()});
       line.clear();
     }
   }
@@ -170,27 +202,92 @@ int main(int argc, char** argv) {
     thread.join();
   }
 
-  // Check all of the outcomes
-  size_t succeeded = 0;
-  size_t failed = 0;
-  std::chrono::duration<double, std::milli> duration(0);
-  for(auto& result : results) {
+  //grab all the results
+  results_t results;
+  for(auto& thread_results : pool_results) {
     try {
-      auto stats = result.get_future().get();
-      if(std::get<0>(stats) > 0 || std::get<1>(stats) > 0) {
-        succeeded += std::get<0>(stats);
-        failed += std::get<1>(stats);
-        duration += std::get<2>(stats);
-      }
+      auto result = thread_results.get_future().get();
+      std::move(std::begin(result), std::end(result), std::inserter(results, results.begin()));
     }//rethrow anything that happened in a thread
     catch(std::exception& e) {
       throw e;
     }
   }
 
-  LOG_INFO("Succeeded: " + std::to_string(succeeded));
-  LOG_INFO("Failed: " + std::to_string(failed));
-  LOG_INFO("Avg Search: " + std::to_string(duration.count()/static_cast<double>(succeeded + failed)) + "ms");
+  //do some statistics,
+  const std::vector<std::tuple<std::string, bool, bool> > stat_types =
+    {
+      std::make_tuple("Succeeded Searches on Uncached Tiles", true, false),
+      std::make_tuple("Failed Searches on Uncached Tiles", false, false),
+      std::make_tuple("Succeeded Searches on Cached Tiles", true, true),
+      std::make_tuple("Failed Searches on Cached Tiles", false, true)
+    };
+  for(const auto& stat_type : stat_types) {
+    //grab the averages and the best and worst cases
+    size_t count = 0;
+    std::chrono::duration<double, std::milli> time(0);
+    result_t first, last;
+    for(const auto& result : results) {
+      //are we interested in this result
+      if(std::get<1>(stat_type) == result.pass && std::get<2>(stat_type) == result.cached) {
+        time += result.time;
+        if(count == 0) {
+          first = result;
+          last = result;
+        }
+        else {
+          if(result.time < first.time)
+            first = result;
+          if(result.time > last.time)
+            last = result;
+        }
+        count++;
+      }
+    }
+    double median = time.count() / static_cast<double>(count);
+    //grab the std deviation
+    double sum_squared_difference = 0;
+    for(const auto& result : results) {
+      //are we interested in this result
+      if(std::get<1>(stat_type) == result.pass && std::get<2>(stat_type) == result.cached) {
+        auto ms = std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(result.time).count();
+        auto diff = ms - median;
+        sum_squared_difference += diff * diff;
+      }
+    }
+    auto variance = sum_squared_difference / static_cast<double>(count);
+    auto std_deviation = sqrt(variance);
+    //stats about outliers
+    size_t faster = 0, slower = 0;
+    for(const auto& result : results) {
+      //are we interested in this result
+      if(std::get<1>(stat_type) == result.pass && std::get<2>(stat_type) == result.cached) {
+        auto ms = std::chrono::duration_cast<std::chrono::duration<double, std::milli> >(result.time).count();
+        if(ms < median - std_deviation)
+          faster++;
+        else if(ms > median + std_deviation)
+          slower++;
+      }
+    }
+
+    LOG_INFO(std::get<0>(stat_type));
+    LOG_INFO("--------------------------------");
+    if(count) {
+      LOG_INFO("Total: " + std::to_string(count));
+      LOG_INFO("Fastest: " + std::to_string(first.job.lat) + "," + std::to_string(first.job.lng) + " @ " +
+        std::to_string(std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(first.time).count()) + "ms");
+      LOG_INFO("Slowest: " + std::to_string(last.job.lat) + "," + std::to_string(last.job.lng) + " @ " +
+        std::to_string(std::chrono::duration_cast<std::chrono::duration<int, std::milli> >(last.time).count()) + "ms");
+      LOG_INFO("Median: " + std::to_string(median) + "ms");
+      LOG_INFO("Standard Deviation: " + std::to_string(std_deviation) + "ms");
+      LOG_INFO("Faster Than 1 Standard Deviation: " + std::to_string(faster));
+      LOG_INFO("Slower Than 1 Standard Deviation: " + std::to_string(slower));
+    }
+    else {
+      LOG_INFO("No results");
+    }
+    LOG_INFO("--------------------------------\n\n");
+  }
 
   return EXIT_SUCCESS;
 }
