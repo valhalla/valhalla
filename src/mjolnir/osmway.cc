@@ -629,7 +629,11 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref) const {
   // Process non limited access refs
   if (!ref_.empty() && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
       && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
-    std::vector<std::string> tokens = GetTagTokens(ref_);
+    std::vector<std::string> tokens;
+    if (!ref.empty())
+      tokens = GetTagTokens(ref);// use updated refs from relations.
+    else
+      tokens = GetTagTokens(ref_);
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
