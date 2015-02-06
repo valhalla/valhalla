@@ -131,7 +131,7 @@ class OSMNode {
    * Get the attributes value.
    * @return  Returns the attributes word.
    */
-  bool attributes() const;
+  uint32_t attributes() const;
 
  protected:
   // Lat,lng of the node
