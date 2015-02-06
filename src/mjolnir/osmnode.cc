@@ -109,7 +109,7 @@ bool OSMNode::traffic_signal() const {
 }
 
 // Get the attributes value.
-bool OSMNode::attributes() const {
+uint32_t OSMNode::attributes() const {
   return attributes_.v;
 }
 
