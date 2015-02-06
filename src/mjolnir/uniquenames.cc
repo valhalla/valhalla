@@ -3,7 +3,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-typedef std::map<std::string, uint32_t> nameindextype;
+using NameIndexType = std::unordered_map<std::string, uint32_t>;
 
 // Constructor
 UniqueNames::UniqueNames() {
@@ -14,16 +14,15 @@ UniqueNames::UniqueNames() {
 // Get an index given a name. Add the name if it is not in the current list
 // of unique names
 uint32_t UniqueNames::index(const std::string& name) {
-  // Get the iterator into the names map. If it points to a pair whose key
-  // is equivalent, then return the index stored in the map entry
+  // Find the name in the map. If it is there return the index.
   uint32_t index = 0;
-  auto it = names_.lower_bound(name);
-  if (it != names_.end() && !(names_.key_comp()(name, it->first))) {
+  auto it = names_.find(name);
+  if (it != names_.end()) {
      index = it->second;
   }
   else {
      // Not in the map, add index and update
-     it = names_.insert(it, nameindextype::value_type(name, 0));
+     it = names_.insert(it, NameIndexType::value_type(name, 0));
      indexes_.push_back(it);
      index = indexes_.size() - 1;
      it->second = index;
