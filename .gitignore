@@ -28,6 +28,7 @@ m4/lt~obsolete.m4
 libtool
 
 # built objects
+loki_benchmark
 *.o
 .deps/
 .dirstamp
