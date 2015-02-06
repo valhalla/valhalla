@@ -22,6 +22,7 @@ namespace bpo = boost::program_options;
 
 boost::filesystem::path config_file_path;
 size_t threads = std::max(static_cast<size_t>(std::thread::hardware_concurrency()), static_cast<size_t>(1));
+valhalla::loki::SearchStrategy strategy = valhalla::loki::SearchStrategy::EDGE;
 std::vector<std::string> input_files;
 std::atomic<bool> done(false);
 
@@ -64,6 +65,7 @@ bool ParseArguments(int argc, char *argv[]) {
     "\n"
     "\n");
 
+  std::string search_type;
   options.add_options()
       ("help,h", "Print this help message.")
       ("version,v", "Print the version of this software.")
@@ -73,6 +75,9 @@ bool ParseArguments(int argc, char *argv[]) {
       ("threads,t",
         boost::program_options::value<size_t>(&threads),
         "Concurrency to use.")
+      ("search,s",
+        boost::program_options::value<std::string>(&search_type),
+        "Type of search to use, one of: [node|edge].")
       //positional arguments
       ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
@@ -101,6 +106,17 @@ bool ParseArguments(int argc, char *argv[]) {
     return true;
   }
 
+  if (vm.count("search")) {
+    if(search_type == "node")
+      strategy = valhalla::loki::SearchStrategy::NODE;
+    else if(search_type == "edge")
+      strategy = valhalla::loki::SearchStrategy::EDGE;
+    else {
+      std::cerr << "The argument for --search must be one of [node|edge]" << '\n';
+      return false;
+    }
+  }
+
   // argument checking and verification
   for (auto arg : std::vector<std::string> { "config", "input_files" }) {
     if (vm.count(arg) == 0) {
@@ -127,7 +143,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
       auto start = std::chrono::high_resolution_clock::now();
       try {
         //TODO: actually save the result
-        valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter);
+        valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, strategy);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job, cached};
       }
