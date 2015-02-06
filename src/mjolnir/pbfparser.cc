@@ -163,6 +163,7 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   // Create a new node and set its attributes
   OSMNode n(lng, lat);
   for (const auto& tag : results) {
+
     if (tag.first == "highway") {
       n.set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
     }
@@ -637,17 +638,27 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
 
     std::string reference = net.at(1) + " " + ref;// US 51 or I 95
 
+    std::string direction;
+
     for (const auto& ref : refs) {
 
       if (ref.role.empty() || ref.role == "forward" || ref.role == "backward")
         continue;
 
-      auto iter = osm_->way_ref.find(ref.member_id);
-      if (iter != osm_->way_ref.end() )
-        osm_->way_ref[ref.member_id] = iter->second + ";" + reference + "|" + ref.role;
-      else
-        osm_->way_ref[ref.member_id] = reference + "|" + ref.role;
+      direction = ref.role;
 
+      boost::algorithm::to_upper(direction);
+
+      // TODO:  network=e-road with int_ref=E #
+      if ((boost::starts_with(direction, "NORTH (") || boost::starts_with(direction, "SOUTH (") ||
+          boost::starts_with(direction, "EAST (") || boost::starts_with(direction, "WEST (")) ||
+          direction == "NORTH" || direction == "SOUTH" || direction == "EAST" || direction == "WEST") {
+        auto iter = osm_->way_ref.find(ref.member_id);
+        if (iter != osm_->way_ref.end() )
+          osm_->way_ref[ref.member_id] = iter->second + ";" + reference + "|" + direction.substr(0,1);
+        else
+          osm_->way_ref[ref.member_id] = reference + "|" + direction.substr(0,1);
+      }
     }
   }
   else if (isRestriction && hasRestriction) {
