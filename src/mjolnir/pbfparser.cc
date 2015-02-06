@@ -164,9 +164,6 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   OSMNode n(lng, lat);
   for (const auto& tag : results) {
 
-    if (473366030 == osmid)
-      std::cout << "tag " << tag.first << " value " << tag.second << std::endl;
-
     if (tag.first == "highway") {
       n.set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
     }
@@ -179,12 +176,8 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
     else if (is_highway_junction && (tag.first == "ref")) {
       bool hasTag = (tag.second.length() ? true : false);
       n.set_ref(hasTag);
-      if (hasTag) {
-
-        if (473366030 == osmid)
-          std::cout << "YO!" << std::endl;
+      if (hasTag)
         osm_->node_ref[osmid] = tag.second;
-      }
     }
     else if (is_highway_junction && (tag.first == "name")) {
       bool hasTag = (tag.second.length() ? true : false);
