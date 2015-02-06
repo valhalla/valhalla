@@ -163,12 +163,20 @@ bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodein
     }
   }
 
-  // Mark the 2 edges entering the node (opposing) and 2 edges exiting
-  // (the directed edges) the node as "superseded"
+  // Get the opposing directed edges
   const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
   GraphId oppedge1 = GetOpposingEdge(basenode, edge1);
   GraphId oppedge2 = GetOpposingEdge(basenode, edge2);
+
+  // If either opposing directed edge has exit signs return false
+  if (graphreader_.GetGraphTile(oppedge1)->directededge(oppedge1)->exitsign() ||
+      graphreader_.GetGraphTile(oppedge2)->directededge(oppedge2)->exitsign()) {
+    return false;
+  }
+
+  // Mark the 2 edges entering the node (opposing) and 2 edges exiting
+  // (the directed edges) the node as "superseded"
   supersededmap_[edges[match.first].value] = true;
   supersededmap_[edges[match.second].value] = true;
   supersededmap_[oppedge1.value] = true;
@@ -342,6 +350,15 @@ void HierarchyBuilder::FormTilesInNewLevel(
           newedge.set_endnode(nodeb);
           newedge.set_opp_index(0);
 
+          // Get signs from the base directed edge
+          if (oldedge.exitsign()) {
+            std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
+            if (signs.size() == 0) {
+              LOG_ERROR("Base edge should have signs, but none found");
+            }
+            tilebuilder.AddSigns(edgeindex + directededges.size(), signs);
+          }
+
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
@@ -358,12 +375,6 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
-
-          // Get signs from the base directed edge
-          if (oldedge.exitsign()) {
-            std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
-            tilebuilder.AddSigns(edgeindex + i, signs);
-          }
         }
       }
 
@@ -513,6 +524,10 @@ void HierarchyBuilder::AddShortcutEdges(
       newedge.set_shortcut(true);
       newedge.set_superseded(false);
 
+      if (newedge.exitsign()) {
+        LOG_ERROR("Shortcut edge with exit signs");
+      }
+
 /**
 if (nodea.level() == 0) {
   LOG_INFO((boost::format("Add shortcut from %1% LL %2%,%3% to %4%")
@@ -627,11 +642,10 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   hdrbuilder.set_admin_offset(existinghdr.admin_offset());
   hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());
 
-  // Get the directed edge index of the first sign
-  uint32_t nextsignidx = existinghdr.directededgecount() + 1;
-  if (tilebuilder.header()->signcount() > 0) {
-    nextsignidx = tilebuilder.sign(0).edgeindex();
-  }
+  // Get the directed edge index of the first sign. If no signs are
+  // present in this tile set a value > number of directed edges
+  uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
+      tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
 
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
@@ -647,14 +661,18 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
 
     // Add existing directed edges
     uint32_t idx = node.edge_index();
-    for (uint32_t n = 0; n < node.edge_count(); n++) {
+    for (uint32_t j = 0; j < node.edge_count(); j++) {
+      bool has_sign = tilebuilder.directededge(idx).exitsign();
       directededges.emplace_back(std::move(tilebuilder.directededge(idx)));
 
       // Add any signs that use this idx - increment their index by the
       // number of added edges
       while (idx == nextsignidx) {
+        if (!has_sign) {
+          LOG_ERROR("Signs for this index but directededge says no sign");
+        }
         SignBuilder sign = tilebuilder.sign(signidx);
-        sign.set_edgeindex(sign.edgeindex() + n);
+        sign.set_edgeindex(idx + n);
         signs.emplace_back(std::move(sign));
 
         // Increment to the next sign and update nextsignidx
@@ -694,6 +712,10 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
     nodes.emplace_back(std::move(node));
   }
 
+  if (connections.size() != n) {
+    LOG_ERROR("Added " + std::to_string(n) + " directed edges. connections size = " +
+              std::to_string(connections.size()));
+  }
   if (signs.size() != hdrbuilder.signcount()) {
     LOG_ERROR("AddConnectionsToBaseTile: sign size = " +
               std::to_string(signs.size()) + " Header says: " +
