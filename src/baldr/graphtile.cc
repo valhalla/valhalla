@@ -219,27 +219,43 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 // Convenience method to get the signs for an edge given the
 // directed edge index.
 std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
-  // TODO - binary search of the exit data to find the Signs with matching
-  // edge index. Retrieve the names to populate SignInfo.
-
-  // Just to test for now do a brute force search
+  uint32_t count = header_->signcount();
   std::vector<SignInfo> signs;
+  if (count == 0) {
+    return signs;
+  }
 
-  for (uint32_t i = 0; i < header_->signcount(); i++) {
-    // Continue until we get to a sign with idx
-    if (signs_[i].edgeindex() != idx) {
-      continue;
-    }
-
-    while (signs_[i].edgeindex() == idx) {
-      if (signs_[i].text_offset() < textlist_size_) {
-        signs.emplace_back(
-            signs_[i].type(), (textlist_ + signs_[i].text_offset()));
-      } else {
-        throw std::runtime_error("GetExitSigns: offset exceeds size of text list");
+  // Binary search
+  uint32_t low = 0, high = count-1;
+  uint32_t mid;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (signs_[mid].edgeindex() == idx) {
+      // Back up while prior is equal (or at the beginning)
+      while (mid > 0 && signs_[mid-1].edgeindex() == idx) {
+        mid--;
       }
-      i++;
+      break;
     }
+    if (idx < signs_[mid].edgeindex() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  // Add signs
+  while (signs_[mid].edgeindex() == idx && mid < count) {
+    if (signs_[mid].text_offset() < textlist_size_) {
+      signs.emplace_back(signs_[mid].type(),
+              (textlist_ + signs_[mid].text_offset()));
+    } else {
+      throw std::runtime_error("GetSigns: offset exceeds size of text list");
+    }
+    mid++;
+  }
+  if (signs.size() == 0) {
+    LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   }
   return signs;
 }
