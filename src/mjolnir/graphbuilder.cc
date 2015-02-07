@@ -736,10 +736,13 @@ void BuildTileSet(
                nodea, nodeb, edge.shape(), w.GetNames(ref), added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
+          // TODO - update logic so we limit the CreateExitSignInfoList calls
+          // TODO - Also, we will have to deal with non ramp signs
           // Any exits for this directed edge?
           std::vector<SignInfo> exits = graphbuilder::CreateExitSignInfoList(
                 osmnodeid, node, w, map_ref, map_name, map_exit_to);
-          if (!exits.empty()) {
+          if (!exits.empty() && directededge.forwardaccess()
+              && (osmnodeid == source) && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
