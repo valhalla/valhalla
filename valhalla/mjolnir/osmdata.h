@@ -9,6 +9,8 @@
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/osmrestriction.h>
+#include <valhalla/mjolnir/uniquenames.h>
+
 
 namespace valhalla {
 namespace mjolnir {
@@ -55,6 +57,13 @@ struct OSMData {
 
   // Map that stores an updated ref for a way
   std::unordered_map<uint64_t, std::string> way_ref;
+
+  // References
+  UniqueNames ref_offset_map;
+
+  // Names
+  UniqueNames name_offset_map;
+
 };
 
 }

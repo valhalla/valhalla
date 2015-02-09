@@ -108,7 +108,8 @@ void GraphBuilder::Build(OSMData& osmdata) {
   // Iterate through edges - tile the end nodes to create connected graph
   start = std::clock();
   BuildLocalTiles(tl->second.level, osmdata.ways,osmdata.node_ref,
-                  osmdata.node_exit_to, osmdata.node_name, osmdata.way_ref);
+                  osmdata.node_exit_to, osmdata.node_name, osmdata.way_ref,
+                  osmdata.ref_offset_map, osmdata.name_offset_map);
   msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
 
@@ -608,6 +609,7 @@ void BuildTileSet(
     const std::unordered_map<uint64_t, std::string>& map_name,
     const std::unordered_map<uint64_t, std::string>& map_exit_to,
     const std::unordered_map<uint64_t, std::string>& way_ref,
+    const UniqueNames& ref_offset_map, const UniqueNames& name_offset_map,
     std::atomic<DataQuality*>& stats,
     std::promise<size_t>& result) {
 
@@ -714,7 +716,7 @@ void BuildTileSet(
           }
 
           // Does the directed edge contain exit information?
-          bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
+          //bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, endnode, forward, edgelengths[n],
@@ -728,19 +730,21 @@ void BuildTileSet(
           // Check for updated ref from relations.
           auto iter = way_ref.find(w.way_id());
           if (iter != way_ref.end()) {
-            ref = graphbuilder::GetRef(w.ref(),iter->second);
+            if (w.ref_index() != 0)
+              ref = graphbuilder::GetRef(ref_offset_map.name(w.ref_index()),iter->second);
           }
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.shape(), w.GetNames(ref), added);
+               nodea, nodeb, edge.shape(), w.GetNames(ref, ref_offset_map, name_offset_map), added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // TODO - Also, we will have to deal with non ramp signs
           // Any exits for this directed edge?
+          // is auto and oneway?
           std::vector<SignInfo> exits = graphbuilder::CreateExitSignInfoList(
-                osmnodeid, node, w, map_ref, map_name, map_exit_to);
+                osmnodeid, node, w, map_ref, map_name, map_exit_to,  ref_offset_map, name_offset_map);
           if (!exits.empty() && directededge.forwardaccess()
               && (osmnodeid == source) && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
@@ -833,22 +837,23 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     const uint64_t osmnodeid, const Node& node, const OSMWay& way,
     const std::unordered_map<uint64_t, std::string>& map_ref,
     const std::unordered_map<uint64_t, std::string>& map_name,
-    const std::unordered_map<uint64_t, std::string>& map_exit_to) {
+    const std::unordered_map<uint64_t, std::string>& map_exit_to,
+    const UniqueNames& ref_offset_map, const UniqueNames& name_offset_map) {
 
   std::vector<SignInfo> exit_list;
 
   // Exit sign number
-  if (!way.junction_ref().empty()) {
-    exit_list.emplace_back(Sign::Type::kExitNumber, way.junction_ref());
+  if (way.junction_ref_index() != 0) {
+    exit_list.emplace_back(Sign::Type::kExitNumber, ref_offset_map.name(way.junction_ref_index()));
   }  else if (node.ref()) {
     exit_list.emplace_back(Sign::Type::kExitNumber, map_ref.find(osmnodeid)->second);
   }
 
   // Exit sign branch refs
   bool has_branch = false;
-  if (!way.destination_ref().empty()) {
+  if (way.destination_ref_index() != 0) {
     has_branch = true;
-    std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
+    std::vector<std::string> branch_refs = GetTagTokens(ref_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
       exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
     }
@@ -856,18 +861,18 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 
   // Exit sign toward refs
   bool has_toward = false;
-  if (!way.destination_ref_to().empty()) {
+  if (way.destination_ref_to_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
+    std::vector<std::string> toward_refs = GetTagTokens(ref_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
       exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
     }
   }
 
   // Exit sign toward names
-  if (!way.destination().empty()) {
+  if (way.destination_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_names = GetTagTokens(way.destination());
+    std::vector<std::string> toward_names = GetTagTokens(name_offset_map.name(way.destination_index()));
     for (auto& toward_name : toward_names) {
       exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
     }
@@ -938,6 +943,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
       exit_list.emplace_back(Sign::Type::kExitName, name);
     }
   }
+
   return exit_list;
 }
 
@@ -971,7 +977,8 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level,
                                    const std::unordered_map<uint64_t, std::string>& node_ref,
                                    const std::unordered_map<uint64_t, std::string>& node_exit_to,
                                    const std::unordered_map<uint64_t, std::string>& node_name,
-                                   const std::unordered_map<uint64_t, std::string>& way_ref) const {
+                                   const std::unordered_map<uint64_t, std::string>& way_ref,
+                                   const UniqueNames& ref_offset_map, const UniqueNames& name_offset_map) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(threads_);
   // A place to hold the results of those threads, be they exceptions or otherwise
@@ -994,6 +1001,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level,
     threads[i].reset(
       new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways, edges_,
                       tile_hierarchy_, node_ref, node_name, node_exit_to, way_ref,
+                      ref_offset_map, name_offset_map,
                       std::ref(atomic_stats), std::ref(results[i]))
     );
   }
