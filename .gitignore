@@ -43,6 +43,7 @@ test-suite.log
 test-driver
 test/maneuversbuilder
 test/enhancedtrippath
+test/sign
 test/*.log
 test/*.trs
 

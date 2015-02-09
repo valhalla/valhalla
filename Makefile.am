@@ -56,7 +56,8 @@ nobase_include_HEADERS = \
 	valhalla/odin/enhancedtrippath.h \
 	valhalla/odin/maneuver.h \
 	valhalla/odin/streetname.h \
-	valhalla/odin/streetnames.h
+	valhalla/odin/streetnames.h \
+	valhalla/odin/sign.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
@@ -66,7 +67,8 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/enhancedtrippath.cc \
 	src/odin/maneuver.cc \
 	src/odin/streetname.cc \
-	src/odin/streetnames.cc
+	src/odin/streetnames.cc \
+	src/odin/sign.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 
@@ -79,13 +81,17 @@ libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 # tests
 check_PROGRAMS = \
 	test/maneuversbuilder \
-	test/enhancedtrippath 
+	test/enhancedtrippath \
+	test/sign 
 test_maneuversbuilder_SOURCES = test/maneuversbuilder.cc test/test.cc
 test_maneuversbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_maneuversbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 test_enhancedtrippath_SOURCES = test/enhancedtrippath.cc test/test.cc
 test_enhancedtrippath_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_enhancedtrippath_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
+test_sign_SOURCES = test/sign.cc test/test.cc
+test_sign_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_sign_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_odin.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
