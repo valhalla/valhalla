@@ -18,11 +18,11 @@ message TripPath {
     optional string country = 8;    
   }
   
-  message Exit {                 // TODO - exit vs sign
-    optional string number = 1;  // 67B
-    repeated string branch = 2;  // I 95 N
-    repeated string toward = 3;  // New York
-    repeated string name = 4;    // Not used much in US; Canada uses it
+  message Sign {
+    optional string exit_number = 1;  // 67B
+    repeated string exit_branch = 2;  // I 95 North
+    repeated string exit_toward = 3;  // New York
+    repeated string exit_name = 4;    // Not used much in US; Used in Canada
   }
   
   enum Driveability {
@@ -64,7 +64,7 @@ message TripPath {
     optional bool roundabout = 18;
     optional bool internal_link = 19;
     optional uint32 end_node_index = 20;
-    optional Exit exit = 21;
+    optional Sign sign = 21;
   }
   
   message Node {

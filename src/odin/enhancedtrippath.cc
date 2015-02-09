@@ -164,13 +164,13 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += std::to_string(end_node_index());
 
   // Process exits, if needed
-  if (this->has_exit()) {
+  if (this->has_sign()) {
     str += " | exit.number=";
-    str += this->exit().number();
+    str += this->sign().exit_number();
 
     str += " | exit.branch=";
     bool is_first = true;
-    for (const auto& branch : this->exit().branch()) {
+    for (const auto& branch : this->sign().exit_branch()) {
       if (is_first)
         is_first = false;
       else
@@ -180,7 +180,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
     str += " | exit.toward=";
     is_first = true;
-    for (const auto& toward : this->exit().toward()) {
+    for (const auto& toward : this->sign().exit_toward()) {
       if (is_first)
         is_first = false;
       else
@@ -190,7 +190,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
     str += " | exit.name=";
     is_first = true;
-    for (const auto& name : this->exit().name()) {
+    for (const auto& name : this->sign().exit_name()) {
       if (is_first)
         is_first = false;
       else
