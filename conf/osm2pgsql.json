@@ -61,6 +61,7 @@
       {"name": "highway",		  "type": "text"},
       {"name": "gate",                    "type": "boolean"},
       {"name": "bollard",                 "type": "boolean"},
+      {"name": "bicycle_rental",          "type": "boolean"},
       {"name": "modes_mask",              "type": "smallint"}
     ]
   }
