@@ -1,4 +1,4 @@
-#include "../../valhalla/baldr/signinfo.h"
+#include "baldr/signinfo.h"
 
 namespace valhalla {
 namespace baldr {
