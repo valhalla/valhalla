@@ -10,6 +10,7 @@ Maneuver::Maneuver()
       distance_(0.0f),
       time_(0),
       turn_degree_(0),
+      begin_relative_direction_(RelativeDirection::kNone),
       begin_cardinal_direction_(
           TripDirections_Maneuver_CardinalDirection_kNorth),
       begin_heading_(0),
