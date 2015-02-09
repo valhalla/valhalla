@@ -195,23 +195,23 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   if (directededge->exitsign()) {
     std::vector<SignInfo> signs = graphtile->GetSigns(idx);
     if (!signs.empty()) {
-      TripPath_Exit* trip_exit = trip_edge->mutable_exit();
+      TripPath_Sign* trip_exit = trip_edge->mutable_sign();
       for (const auto& sign : signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
-            trip_exit->set_number(sign.text());
+            trip_exit->set_exit_number(sign.text());
             break;
           }
           case Sign::Type::kExitBranch: {
-            trip_exit->add_branch(sign.text());
+            trip_exit->add_exit_branch(sign.text());
             break;
           }
           case Sign::Type::kExitToward: {
-            trip_exit->add_toward(sign.text());
+            trip_exit->add_exit_toward(sign.text());
             break;
           }
           case Sign::Type::kExitName: {
-            trip_exit->add_name(sign.text());
+            trip_exit->add_exit_name(sign.text());
             break;
           }
         }
