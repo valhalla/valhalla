@@ -1,7 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
-#include <stxxl.h>
+//#include <stxxl.h>
 #include <cstdint>
 #include <string>
 #include <vector>
