@@ -70,6 +70,10 @@ function nodes_proc (kv, nokeys)
 
   end
 
+  if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes")then
+     kv["bicycle_rental"] = true
+  end
+
   --store the gate and bollard info
   kv["gate"] = tostring(gate)
   kv["bollard"] = tostring(bollard)
