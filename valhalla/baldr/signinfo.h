@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_SIGNINFO_H_
 #define VALHALLA_BALDR_SIGNINFO_H_
 
-#include "sign.h"
+#include <valhalla/baldr/sign.h>
 
 namespace valhalla {
 namespace baldr {
@@ -19,7 +19,10 @@ class SignInfo {
    */
   SignInfo(const Sign::Type& type, const std::string& text);
 
-  // Returns the exit sign type
+  /**
+   * Returns the sign type.
+   * @return Returns the sign type.
+   */
   const Sign::Type& type() const;
 
   /**
