@@ -206,7 +206,7 @@ void OSMWay::set_bike_local_ref_index(const uint32_t idx) {
 
 // Get the bike local ref.
 uint32_t OSMWay::bike_local_ref_index() const {
-  return bike_local_ref_;
+  return bike_local_ref_index_;
 }
 
 // Set auto forward flag.
@@ -435,7 +435,7 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
                                           const UniqueNames& name_offset_map) const {
   std::vector<std::string> names;
   // Process motorway and trunk refs
-  if ((ref_ != 0 || !ref.empty())
+  if ((ref_index_ != 0 || !ref.empty())
       && ((static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kMotorway)
           || (static_cast<RoadClass>(classification_.fields.road_class) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
@@ -443,7 +443,7 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
     if (!ref.empty())
       tokens = GetTagTokens(ref);// use updated refs from relations.
     else
-      tokens = GetTagTokens(ref_offset_map.name(ref_));
+      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
 
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
@@ -451,32 +451,32 @@ std::vector<std::string> OSMWay::GetNames(const std::string& ref,
   // TODO int_ref
 
   // Process name
-  if (name_ != 0)
-    names.emplace_back(name_offset_map.name(name_));
+  if (name_index_ != 0)
+    names.emplace_back(name_offset_map.name(name_index_));
 
   // Process non limited access refs
-  if (ref_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
+  if (ref_index_ != 0 && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kMotorway)
       && (static_cast<RoadClass>(classification_.fields.road_class) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
     if (!ref.empty())
       tokens = GetTagTokens(ref);// use updated refs from relations.
     else
-      tokens = GetTagTokens(ref_offset_map.name(ref_));
+      tokens = GetTagTokens(ref_offset_map.name(ref_index_));
     names.insert(names.end(), tokens.begin(), tokens.end());
   }
 
   // Process alt_name
-  if (alt_name_ != 0)
-    names.emplace_back(name_offset_map.name(alt_name_));
+  if (alt_name_index_ != 0)
+    names.emplace_back(name_offset_map.name(alt_name_index_));
 
   // Process official_name
-  if (official_name_ != 0)
-    names.emplace_back(name_offset_map.name(official_name_));
+  if (official_name_index_ != 0)
+    names.emplace_back(name_offset_map.name(official_name_index_));
 
   // Process name_en_
   // TODO: process country specific names
-  if (name_en_ != 0)
-    names.emplace_back(ref_offset_map.name(name_en_));
+  if (name_en_index_ != 0)
+    names.emplace_back(ref_offset_map.name(name_en_index_));
 
   return names;
 }

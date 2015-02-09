@@ -511,7 +511,9 @@ class OSMWay {
 
   /**
    * Get the names for the edge info based on the road class.
-   * @param  ref       updated refs from relations.
+   * @param  ref              updated refs from relations.
+   * @param  ref_offset_map   map of unique refs from ways.
+   * @param  name_offset_map  map of unique names from ways.
    * @return  Returns vector of strings
    */
   std::vector<std::string> GetNames(const std::string& ref,

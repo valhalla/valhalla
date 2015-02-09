@@ -730,8 +730,8 @@ void BuildTileSet(
           // Check for updated ref from relations.
           auto iter = way_ref.find(w.way_id());
           if (iter != way_ref.end()) {
-            if (w.ref() != 0)
-              ref = graphbuilder::GetRef(ref_offset_map.name(w.ref()),iter->second);
+            if (w.ref_index() != 0)
+              ref = graphbuilder::GetRef(ref_offset_map.name(w.ref_index()),iter->second);
           }
 
           // Add edge info to the tile and set the offset in the directed edge
@@ -843,17 +843,17 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
   std::vector<SignInfo> exit_list;
 
   // Exit sign number
-  if (way.junction_ref() != 0) {
-    exit_list.emplace_back(Sign::Type::kExitNumber, ref_offset_map.name(way.junction_ref()));
+  if (way.junction_ref_index() != 0) {
+    exit_list.emplace_back(Sign::Type::kExitNumber, ref_offset_map.name(way.junction_ref_index()));
   }  else if (node.ref()) {
     exit_list.emplace_back(Sign::Type::kExitNumber, map_ref.find(osmnodeid)->second);
   }
 
   // Exit sign branch refs
   bool has_branch = false;
-  if (way.destination_ref() != 0) {
+  if (way.destination_ref_index() != 0) {
     has_branch = true;
-    std::vector<std::string> branch_refs = GetTagTokens(ref_offset_map.name(way.destination_ref()));
+    std::vector<std::string> branch_refs = GetTagTokens(ref_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
       exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
     }
@@ -861,18 +861,18 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 
   // Exit sign toward refs
   bool has_toward = false;
-  if (way.destination_ref_to() != 0) {
+  if (way.destination_ref_to_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_refs = GetTagTokens(ref_offset_map.name(way.destination_ref_to()));
+    std::vector<std::string> toward_refs = GetTagTokens(ref_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
       exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
     }
   }
 
   // Exit sign toward names
-  if (way.destination() != 0) {
+  if (way.destination_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_names = GetTagTokens(name_offset_map.name(way.destination()));
+    std::vector<std::string> toward_names = GetTagTokens(name_offset_map.name(way.destination_index()));
     for (auto& toward_name : toward_names) {
       exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
     }

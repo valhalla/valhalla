@@ -58,35 +58,11 @@ struct OSMData {
   // Map that stores an updated ref for a way
   std::unordered_map<uint64_t, std::string> way_ref;
 
-  // Reference name (highway numbers)
-
+  // References
   UniqueNames ref_offset_map;
 
-//  std::string ref_;
-//  std::string int_ref_;
-// std::string junction_ref_;
-  //  std::string destination_ref_;
-  //  std::string destination_ref_to_;
-  //  std::string bike_national_ref_;
-//  std::string bike_regional_ref_;
-//  std::string bike_local_ref_;
-
-
   // Names
-
   UniqueNames name_offset_map;
-
-
-//  std::string name_;
-//  std::string name_en_;
-//  std::string alt_name_;
-//  std::string official_name_;
-//std::string destination_;
-
-//
-
-  // Bike network information
-
 
 };
 

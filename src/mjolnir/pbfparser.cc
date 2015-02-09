@@ -356,13 +356,13 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
       w.set_rail(tag.second == "true" ? true : false);
 
     else if (tag.first == "name" && !tag.second.empty())
-      w.set_name(osm_->name_offset_map.index(tag.second));
+      w.set_name_index(osm_->name_offset_map.index(tag.second));
     else if (tag.first == "name:en" && !tag.second.empty())
-      w.set_name_en(osm_->name_offset_map.index(tag.second));
+      w.set_name_en_index(osm_->name_offset_map.index(tag.second));
     else if (tag.first == "alt_name" && !tag.second.empty())
-      w.set_alt_name(osm_->name_offset_map.index(tag.second));
+      w.set_alt_name_index(osm_->name_offset_map.index(tag.second));
     else if (tag.first == "official_name" && !tag.second.empty())
-      w.set_official_name(osm_->name_offset_map.index(tag.second));
+      w.set_official_name_index(osm_->name_offset_map.index(tag.second));
 
     else if (tag.first == "speed") {
       w.set_speed(std::stof(tag.second));
@@ -373,9 +373,9 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
       default_speed = std::stof(tag.second);
 
     else if (tag.first == "ref" && !tag.second.empty())
-      w.set_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_ref_index(osm_->ref_offset_map.index(tag.second));
     else if (tag.first == "int_ref" && !tag.second.empty())
-      w.set_int_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_int_ref_index(osm_->ref_offset_map.index(tag.second));
 
     else if (tag.first == "surface") {
       std::string value = tag.second;
@@ -455,26 +455,26 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "bike_network_mask")
       w.set_bike_network(std::stoi(tag.second));
     else if (tag.first == "bike_national_ref" && !tag.second.empty())
-      w.set_bike_national_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_bike_national_ref_index(osm_->ref_offset_map.index(tag.second));
     else if (tag.first == "bike_regional_ref" && !tag.second.empty())
-      w.set_bike_regional_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_bike_regional_ref_index(osm_->ref_offset_map.index(tag.second));
     else if (tag.first == "bike_local_ref" && !tag.second.empty())
-      w.set_bike_local_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_bike_local_ref_index(osm_->ref_offset_map.index(tag.second));
 
     else if (tag.first == "destination" && !tag.second.empty()) {
-      w.set_destination(osm_->name_offset_map.index(tag.second));
+      w.set_destination_index(osm_->name_offset_map.index(tag.second));
       w.set_exit(true);
     }
     else if (tag.first == "destination:ref" && !tag.second.empty()) {
-      w.set_destination_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_destination_ref_index(osm_->ref_offset_map.index(tag.second));
       w.set_exit(true);
     }
     else if (tag.first == "destination:ref:to" && !tag.second.empty()) {
-      w.set_destination_ref_to(osm_->ref_offset_map.index(tag.second));
+      w.set_destination_ref_to_index(osm_->ref_offset_map.index(tag.second));
       w.set_exit(true);
     }
     else if (tag.first == "junction:ref" && !tag.second.empty()) {
-      w.set_junction_ref(osm_->ref_offset_map.index(tag.second));
+      w.set_junction_ref_index(osm_->ref_offset_map.index(tag.second));
       w.set_exit(true);
     }
   }
