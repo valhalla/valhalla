@@ -109,8 +109,7 @@ std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>
   if(pts.size() == 1)
     return std::make_tuple(pts.front(), DistanceSquared(pts.front()), 0);
 
-  DistanceApproximator approx;
-  approx.SetTestPoint(*this);
+  DistanceApproximator approx(*this);
 
   // Iterate through the pts
   bool beyond_end = true;   // Need to test past the end point?

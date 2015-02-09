@@ -5,14 +5,10 @@ namespace valhalla {
 namespace midgard {
 
 // Constructor
-DistanceApproximator::DistanceApproximator()
-    : centerlat_(0.0f),
-      centerlng_(0.0f),
-      m_per_lng_degree_(0.0f) { }
-
-// Destructor
-DistanceApproximator::~DistanceApproximator() {
-}
+DistanceApproximator::DistanceApproximator(const PointLL& ll)
+    : centerlat_(ll.lat()),
+      centerlng_(ll.lng()),
+      m_per_lng_degree_(MetersPerLngDegree(centerlat_)) { }
 
 // Set the test point (lat,lng) used for future distance methods
 void DistanceApproximator::SetTestPoint(const PointLL& ll) {

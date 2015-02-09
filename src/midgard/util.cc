@@ -91,8 +91,8 @@ container_t decode(const std::string& encoded) {
   //a place to keep the output
   container_t output;
   //based on the length of the string we can make a guess at how many points are in it
-  //as above we'll say each point uses 6 bytes, so we'll guess its a sixth the size
-  output.reserve(encoded.size() * .16f);
+  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
+  output.reserve(encoded.size() * .25f);
 
   //what byte are we looking at
   size_t i = 0;
