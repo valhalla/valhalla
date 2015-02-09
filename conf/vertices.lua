@@ -54,12 +54,20 @@ function nodes_proc (kv, nokeys)
   auto = auto or bit32.band(access, 1)
 
   --check for gates and bollards
-  local gate = kv["barrier"] == "gate"
+  local gate = kv["barrier"] == "gate" or kv["barrier"] == "lift_gate"
   local bollard = false
   if gate == false then
     --if there was a bollard cars can't get through it
     bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block"
+
+    --save the following as gates.
+    if (bollard and (kv["bollard"] == "rising" or kv["bollard"] == "removable")) then
+      gate = true
+      bollard = false
+    end
+
     auto = bollard and 0 or 1
+
   end
 
   --store the gate and bollard info
