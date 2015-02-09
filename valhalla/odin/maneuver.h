@@ -122,18 +122,6 @@ class Maneuver {
 
   // TODO notes
 
-//  GDG
-//  optional Type type = 1;                                  // Maneuver type
-//  optional string text_instruction = 2;                    // instruction text
-//  repeated string street_name = 3;                         // street names
-//  optional float length = 4;                               // km (TODO: based on type)
-//  optional uint32 time = 5;                                // seconds
-//  optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
-//  optional uint32 begin_heading = 7;                       // 0-360
-//  optional uint32 begin_shape_index = 8;                   // inclusive index
-//  optional uint32 end_shape_index = 9;                     // inclusive index
-//  optional bool portions_toll = 10;                        // has portions toll
-//  optional bool portions_unpaved = 11;                     // has portions unpaved
 };
 
 }

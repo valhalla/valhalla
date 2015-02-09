@@ -47,7 +47,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
 
-#ifdef LOGGING_LEVEL_INFO
+#ifdef LOGGING_LEVEL_TRACE
     auto* prev_edge = trip_path_->GetPrevEdge(i);
     auto* curr_edge = trip_path_->GetCurrEdge(i);
     auto* next_edge = trip_path_->GetNextEdge(i);
