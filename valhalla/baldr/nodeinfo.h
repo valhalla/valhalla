@@ -12,7 +12,7 @@ namespace valhalla {
 namespace baldr {
 
 constexpr uint32_t kMaxTileEdgeCount = 4194303;   // 2^22 directed edges
-constexpr uint32_t kMaxEdgesPerNode  = 31;        // Maximum edges per node
+constexpr uint32_t kMaxEdgesPerNode  = 127;       // Maximum edges per node
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -71,12 +71,31 @@ class NodeInfo {
   struct NodeAttributes {
     uint32_t edge_index_  : 22; // Index within the node's tile of its first
                                 // outbound directed edge
-    uint32_t edge_count_   : 5; // Number of outbound edges
+    uint32_t edge_count_   : 7; // Number of outbound edges
     uint32_t bestrc_       : 3; // Best directed edge road class
-    uint32_t spare_        : 2; // Spare
-
   };
   NodeAttributes attributes_;
+/*
+  // Node type
+  struct NodeType {
+    uint16_t type         : 3; // Node type
+    uint16_t false_        : 1; // False node
+    uint16_t end          : 1; // End node (only connects to 1 edge)
+    uint16_t parent       : 1; // Is this a parent node
+    uint16_t child        : 1; // Is this a child node
+    uint16_t density;
+    uint32_t mode_change    : 1; // Mode change allowed?
+
+  };
+
+  // Administrative information
+  struct NodeAdmin {
+    uint16_t admin_index  : 6; // Index into this tile's list of admin data
+    uint16_t timezone     : 6; // Time zone
+    uint16_t dst          : 1; // Is Daylight Saving Time used?
+    uint16_t spare_       : 3; // Spare
+  };
+  */
 };
 
 }
