@@ -7,7 +7,7 @@ namespace thor {
 
 // Default constructor
 AStarHeuristic::AStarHeuristic()
-  : costfactor_(1.0f) {
+  : costfactor_(1.0f), distapprox_({}) {
 }
 
 // Initializes the AStar heuristic
