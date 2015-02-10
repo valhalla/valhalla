@@ -26,7 +26,7 @@ enum class SearchStrategy : bool { NODE, EDGE };
  * filtered out of the correlated set and false if the edge is usable
  */
 using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
-const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge*){ return false; };
+const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down(); };
 
 /**
  * Find an location within the route network given an input location
