@@ -33,6 +33,8 @@ namespace {
     }
     return digits;
   }
+  const std::locale dir_locale(std::locale("C"), new dir_facet());
+  const AABB2 world_box(PointLL(-180, -90), PointLL(180, 90));
 }
 
 namespace valhalla {
@@ -129,20 +131,19 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   */
 
   //figure the largest id for this level
-  auto level = hierarchy.levels().find(graphid.level());
+  const auto level = hierarchy.levels().find(graphid.level());
   if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
-  uint32_t max_id = Tiles::MaxTileId(AABB2(PointLL(-180, -90), PointLL(180, 90)), level->second.tiles.TileSize());
+  const uint32_t max_id = Tiles::MaxTileId(world_box, level->second.tiles.TileSize());
 
   //figure out how many digits
   //TODO: dont convert it to a string to get the length there are faster ways..
   size_t max_length = digits<uint32_t>(max_id);
-  size_t remainder = max_length % 3;
+  const size_t remainder = max_length % 3;
   if(remainder)
     max_length += 3 - remainder;
 
   //make a locale to use as a formatter for numbers
-  std::locale dir_locale(std::locale("C"), new dir_facet());
   std::ostringstream stream;
   stream.imbue(dir_locale);
 
