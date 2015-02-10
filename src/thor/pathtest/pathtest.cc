@@ -205,13 +205,6 @@ int main(int argc, char *argv[]) {
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
-  /*logging::Log("Location Processing took " + std::to_string(msecs) + " ms", " [NARRATIVE] ");
-  t1 = std::chrono::high_resolution_clock::now();
-  Search(originloc, reader, cost->GetFilter());
-  Search(destloc, reader, cost->GetFilter());
-  t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-  logging::Log("Cached Location Processing took " + std::to_string(msecs) + " ms", " [NARRATIVE] ");*/
 
   // TODO - set locations
 

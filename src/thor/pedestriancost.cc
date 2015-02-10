@@ -77,7 +77,7 @@ class PedestrianCost : public DynamicCost {
   virtual const loki::EdgeFilter GetFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
-      return !(edge->forwardaccess() & kPedestrianAccess);
+      return edge->trans_up() || edge->trans_down() || !(edge->forwardaccess() & kPedestrianAccess);
     };
   }
 
