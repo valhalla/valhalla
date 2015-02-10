@@ -1,4 +1,6 @@
-#include "valhalla/midgard/pointll.h"
+#include "midgard/pointll.h"
+#include "midgard/constants.h"
+#include <cmath>
 
 #include "test.h"
 
@@ -71,6 +73,35 @@ void TestHeadingAtEndOfPolyline() {
 //    << std::endl;
   }
 
+void TryClosestPoint(const std::vector<PointLL>& pts, const PointLL&p,
+                     const PointLL& c, const int idx) {
+  auto result = p.ClosestPoint(pts);
+  if (idx != std::get<2>(result) )
+      throw runtime_error("ClosestPoint test failed -index of closest segment is wrong");
+  if (fabs(c.x() - std::get<0>(result).lng()) > kEpsilon ||
+      fabs(c.y() - std::get<0>(result).lat()) > kEpsilon)
+    throw runtime_error("ClosestPoint test failed - closest point is wrong");
+}
+void TestClosestPoint() {
+  // Construct a simple polyline
+  std::vector<PointLL> pts = {
+      { 0.0f, 0.0f },
+      { 2.0f, 2.0f },
+      { 4.0f, 2.0f },
+      { 4.0f, 0.0f },
+      { 12.0f, 0.0f }
+  };
+
+  // Closest to the first point
+  TryClosestPoint(pts, PointLL(-4.0f, 0.0f), PointLL(0.0f, 0.0f), 0);
+
+  // Closest along the last segment
+  TryClosestPoint(pts, PointLL(10.0f, -4.0f), PointLL(10.0f, 0.0f), 3);
+
+  // Closest to the last point
+  TryClosestPoint(pts, PointLL(15.0f, 4.0f), PointLL(12.0f, 0.0f), 3);
+}
+
 }
 
 int main(void) {
@@ -84,6 +115,8 @@ int main(void) {
 
   // HeadingAtEndOfPolyline
   suite.test(TEST_CASE(TestHeadingAtEndOfPolyline));
+
+  suite.test(TEST_CASE(TestClosestPoint));
 
   //TODO: many more!
 
