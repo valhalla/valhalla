@@ -5,6 +5,7 @@
 
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/odin/streetnames.h>
+#include <valhalla/odin/signs.h>
 
 namespace valhalla {
 namespace odin {
@@ -94,6 +95,15 @@ class Maneuver {
   bool portions_highway() const;
   void set_portions_highway(bool portionsHighway);
 
+  const Signs& signs() const;
+  Signs* mutable_signs();
+
+  bool HasExitSign() const;
+  bool HasExitNumberSign() const;
+  bool HasExitBranchSign() const;
+  bool HasExitTowardSign() const;
+  bool HasExitNameSign() const;
+
   std::string ToString() const;
 
  protected:
@@ -119,6 +129,7 @@ class Maneuver {
   bool portions_toll_;
   bool portions_unpaved_;
   bool portions_highway_;
+  Signs signs_;
 
   // TODO notes
 

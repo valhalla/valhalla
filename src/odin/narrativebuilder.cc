@@ -3,6 +3,8 @@
 #include "odin/narrativebuilder.h"
 #include "odin/maneuver.h"
 
+#include "boost/format.hpp"
+
 namespace {
 // Text instruction initial capacity
 constexpr auto kTextInstructionInitialCapacity = 128;
@@ -193,7 +195,8 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
 void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
+  if (maneuver.begin_relative_direction()
+      == Maneuver::RelativeDirection::kRight)
     text_instruction += "Turn right to take the ramp";
   else
     text_instruction += "Take the ramp on the right";
@@ -219,11 +222,87 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
 }
 
 void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
+  // 0 Take the exit on the right
+  // 1 = exit number
+  // 2 = branch
+  // 4 = toward
+  // 8 = name?
+
+  // 1 Take exit 67A on the right
+  // 2 Take the I 95 South exit on the right
+  // 3 Take exit 67A on the right onto I 95 South
+  // 4 Take the exit on the right toward Baltimore
+  // 5 Take exit 67A on the right toward Baltimore
+  // 6 Take the I 95 South exit on the right toward Baltimore
+  // 7 Take exit 67A on the right onto I 95 South toward Baltimore
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the exit on the right";
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign())
+    phrase_id += 1;
+  if (maneuver.HasExitBranchSign())
+    phrase_id += 2;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 4;
 
-  // TODO - exit info
+  switch (phrase_id) {
+    // 1 Take exit 67A on the right
+    case 1: {
+      text_instruction += (boost::format("Take exit %1% on the right")
+          % maneuver.signs().GetExitNumberString()).str();
+      break;
+    }
+      // 2 Take the I 95 South exit on the right
+    case 2: {
+      text_instruction += (boost::format("Take the %1% exit on the right")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+      // 3 Take exit 67A on the right onto I 95 South
+    case 3: {
+      text_instruction += (boost::format("Take exit %1% on the right onto %2%")
+          % maneuver.signs().GetExitNumberString()
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+      // 4 Take the exit on the right toward Baltimore
+    case 4: {
+      text_instruction += (boost::format(
+          "Take the exit on the right toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 5 Take exit 67A on the right toward Baltimore
+    case 5: {
+      text_instruction += (boost::format(
+          "Take exit %1% on the right toward %2%")
+          % maneuver.signs().GetExitNumberString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 6 Take the I 95 South exit on the right toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the right toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 7 Take exit 67A on the right onto I 95 South toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Take exit %1% on the right onto %2% toward %3%")
+          % maneuver.signs().GetExitNumberString()
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    default: {
+      text_instruction += "Take the exit on the right";
+      break;
+    }
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
@@ -254,11 +333,10 @@ void NarrativeBuilder::FormStayInstruction(Maneuver& maneuver) {
 void NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  if (maneuver.HasStreetNames()){
+  if (maneuver.HasStreetNames()) {
     text_instruction += "Merge onto ";
     text_instruction += maneuver.street_names().ToString();
-  }
-  else
+  } else
     text_instruction += "Merge";
 
   text_instruction += ".";
@@ -280,7 +358,7 @@ void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
   text_instruction += "Take the ";
   text_instruction += "TBD ";  // TODO - roundabout exit count
   text_instruction += "exit";
-  if (maneuver.HasStreetNames()){
+  if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
     text_instruction += maneuver.street_names().ToString();
   }
@@ -293,7 +371,7 @@ void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "Take the ";
-  if (maneuver.HasStreetNames()){
+  if (maneuver.HasStreetNames()) {
     text_instruction += maneuver.street_names().ToString();
     text_instruction += " ";
   }
@@ -308,7 +386,7 @@ void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "Go ";
   text_instruction += FormCardinalDirection(
-        maneuver.begin_cardinal_direction());
+      maneuver.begin_cardinal_direction());
   if (maneuver.HasStreetNames()) {
     text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();

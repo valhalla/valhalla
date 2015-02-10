@@ -166,10 +166,17 @@ std::string EnhancedTripPath_Edge::ToString() const {
   // Process exits, if needed
   if (this->has_sign()) {
     str += " | exit.number=";
-    str += this->sign().exit_number();
+    bool is_first = true;
+    for (const auto& number : this->sign().exit_number()) {
+      if (is_first)
+        is_first = false;
+      else
+        str += "/";
+      str += number;
+    }
 
     str += " | exit.branch=";
-    bool is_first = true;
+    is_first = true;
     for (const auto& branch : this->sign().exit_branch()) {
       if (is_first)
         is_first = false;

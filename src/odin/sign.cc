@@ -4,9 +4,13 @@ namespace valhalla {
 namespace odin {
 
 // Constructor
-Sign::Sign(const baldr::Sign::Type& type, const std::string& text)
-    : baldr::SignInfo(type, text),
+Sign::Sign(const std::string& text)
+    : text_(text),
       consecutive_count_(0) {
+}
+
+const std::string& Sign::text() const {
+  return text_;
 }
 
 uint32_t Sign::consecutive_count() const {

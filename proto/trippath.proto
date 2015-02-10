@@ -19,7 +19,7 @@ message TripPath {
   }
   
   message Sign {
-    optional string exit_number = 1;  // 67B
+    repeated string exit_number = 1;  // 67B
     repeated string exit_branch = 2;  // I 95 North
     repeated string exit_toward = 3;  // New York
     repeated string exit_name = 4;    // Not used much in US; Used in Canada
