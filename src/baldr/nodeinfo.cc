@@ -52,9 +52,6 @@ const uint64_t NodeInfo::internal_version() {
   ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
   boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
 
-  ni.attributes_.spare_ = ~ni.attributes_.spare_;
-  boost::hash_combine(seed, ffs(ni.attributes_.spare_+1)-1);
-
   boost::hash_combine(seed,sizeof(NodeInfo));
 
   return seed;
