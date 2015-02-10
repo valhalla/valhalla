@@ -16,7 +16,7 @@
       "node_function": "nodes_proc",
       "way_script": "conf/edges.lua",
       "way_function": "ways_proc",
-      "relation_script": "conf/relations.lua",
+      "relation_script": "conf/edges.lua",
       "relation_function": "rels_proc"
     },
     "logging": {
