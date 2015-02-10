@@ -26,13 +26,13 @@ class DistanceApproximator
  public:
   /**
    * Constructor.
+   *
+   * Sets the test point.  This method is used when a distance is to be
+   * checked for a series of positions relative to a single point.  This
+   * precalculates the meters per degree of longitude.
+   * @param   ll    Latitude, longitude of the test point (degrees)
    */
-  DistanceApproximator();
-
-  /**
-   * Destructor.
-   */
-  ~DistanceApproximator();
+  DistanceApproximator(const PointLL& ll);
 
   /**
    * Sets the test point.  This method is used when a distance is to be

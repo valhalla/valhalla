@@ -21,8 +21,7 @@ void TestMetersPerDegreeLongitude() {
 
 void TryDistanceSquaredFromTestPt(const PointLL& testpt, const PointLL& p, const float d2) {
   // Test if distance is within 2% of the spherical distance
-  DistanceApproximator approx;
-  approx.SetTestPoint(testpt);
+  DistanceApproximator approx(testpt);
   float d = sqrtf(approx.DistanceSquared(p));
   //std::cout << " d = " << d << " ArcDistance = " << d2 << std::endl;
   if (fabs(d - d2) / d2 > 0.02f)

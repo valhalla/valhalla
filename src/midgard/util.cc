@@ -12,6 +12,7 @@
 
 namespace {
 constexpr double POLYLINE_PRECISION = 1E6;
+constexpr double INV_POLYLINE_PRECISION = 1.0 / POLYLINE_PRECISION;
 }
 
 namespace valhalla {
@@ -91,8 +92,8 @@ container_t decode(const std::string& encoded) {
   //a place to keep the output
   container_t output;
   //based on the length of the string we can make a guess at how many points are in it
-  //as above we'll say each point uses 6 bytes, so we'll guess its a sixth the size
-  output.reserve(encoded.size() * .16f);
+  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
+  output.reserve(encoded.size() * .25f);
 
   //what byte are we looking at
   size_t i = 0;
@@ -119,8 +120,8 @@ container_t decode(const std::string& encoded) {
     int lat = deserialize(last_lat);
     int lon = deserialize(last_lon);
     //shift the decimal point 5 places to the left
-    output.emplace_back(static_cast<typename container_t::value_type::first_type>(static_cast<double>(lon) / POLYLINE_PRECISION),
-                        static_cast<typename container_t::value_type::second_type>(static_cast<double>(lat) / POLYLINE_PRECISION));
+    output.emplace_back(static_cast<typename container_t::value_type::first_type>(static_cast<double>(lon) * INV_POLYLINE_PRECISION),
+                        static_cast<typename container_t::value_type::second_type>(static_cast<double>(lat) * INV_POLYLINE_PRECISION));
     //remember the last one we encountered
     last_lon = lon;
     last_lat = lat;
