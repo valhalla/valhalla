@@ -1,20 +1,24 @@
 #ifndef VALHALLA_ODIN_SIGN_H_
 #define VALHALLA_ODIN_SIGN_H_
 
-#include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/signinfo.h>
+#include <string>
 
 namespace valhalla {
 namespace odin {
 
-class Sign : public baldr::SignInfo {
+class Sign {
  public:
   /**
    * Constructor.
-   * @param  type   Sign type.
    * @param  text   Text string.
    */
-  Sign(const baldr::Sign::Type& type, const std::string& text);
+  Sign(const std::string& text);
+
+  /**
+   * Returns the sign text.
+   * @return  Returns the sign text as a const reference to the text string.
+   */
+  const std::string& text() const;
 
   /**
    * Returns the frequency of this sign within a set a consecutive signs.
@@ -29,6 +33,7 @@ class Sign : public baldr::SignInfo {
   void set_consecutive_count(uint32_t consecutive_count);
 
  protected:
+  std::string text_;
   uint32_t consecutive_count_;
 
 };
