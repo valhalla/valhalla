@@ -199,7 +199,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       for (const auto& sign : signs) {
         switch (sign.type()) {
           case Sign::Type::kExitNumber: {
-            trip_exit->set_exit_number(sign.text());
+            trip_exit->add_exit_number(sign.text());
             break;
           }
           case Sign::Type::kExitBranch: {
