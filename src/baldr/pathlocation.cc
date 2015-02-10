@@ -8,6 +8,7 @@ namespace baldr{
 
   PathLocation::PathLocation(const Location& location):Location(location) {
     node_ = false;
+    edges_.reserve(16);
   }
 
   bool PathLocation::IsNode() const {

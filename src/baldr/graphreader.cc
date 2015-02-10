@@ -10,6 +10,7 @@ namespace baldr {
 
 //this constructor delegates to the other
 GraphReader::GraphReader(const boost::property_tree::ptree& pt):GraphReader(TileHierarchy(pt)) {
+  tilecache_.reserve(32);
 }
 
 GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
