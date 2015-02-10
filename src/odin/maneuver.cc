@@ -222,6 +222,34 @@ void Maneuver::set_portions_highway(bool portionsHighway) {
   portions_highway_ = portionsHighway;
 }
 
+const Signs& Maneuver::signs() const {
+  return signs_;
+}
+
+Signs* Maneuver::mutable_signs() {
+  return &signs_;
+}
+
+bool Maneuver::HasExitSign() const {
+  return signs_.HasExit();
+}
+
+bool Maneuver::HasExitNumberSign() const {
+  return signs_.HasExitNumber();
+}
+
+bool Maneuver::HasExitBranchSign() const {
+  return signs_.HasExitBranch();
+}
+
+bool Maneuver::HasExitTowardSign() const {
+  return signs_.HasExitToward();
+}
+
+bool Maneuver::HasExitNameSign() const {
+  return signs_.HasExitName();
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(128);

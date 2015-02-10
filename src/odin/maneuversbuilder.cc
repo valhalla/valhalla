@@ -211,6 +211,30 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_portions_highway(true);
   }
 
+  // Signs
+  if (prev_edge->has_sign()) {
+    // Exit number
+    for (auto& text : prev_edge->sign().exit_number()) {
+      maneuver.mutable_signs()->mutable_exit_number_list()->emplace_back(text);
+    }
+
+    // Exit branch
+    for (auto& text : prev_edge->sign().exit_branch()) {
+      maneuver.mutable_signs()->mutable_exit_branch_list()->emplace_back(text);
+    }
+
+    // Exit toward
+    for (auto& text : prev_edge->sign().exit_toward()) {
+      maneuver.mutable_signs()->mutable_exit_toward_list()->emplace_back(text);
+    }
+
+    // Exit name
+    for (auto& text : prev_edge->sign().exit_name()) {
+      maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(text);
+    }
+
+  }
+
 }
 
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
@@ -391,6 +415,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
   // TODO - fix it
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process signs
+  if (maneuver.HasExitSign()) {
+    return false;
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process ramps
