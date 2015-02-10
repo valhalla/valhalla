@@ -13,6 +13,7 @@ namespace {
 //during edge searching we snap to vertices if you are closer than
 //15 meters to a given vertex.
 constexpr float NODE_SNAP = 15 * 15;
+constexpr float EDGE_RADIUS = 500 * 500;
 
 const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
   //get the node at the end of this edge
@@ -153,7 +154,7 @@ std::tuple<PointLL, float, int> Project(const PointLL& p, const std::vector<Poin
   return std::make_tuple(std::move(closest_point), std::move(closest_distance), std::move(closest_segment));
 }
 
-PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter) {
+PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter, const float sq_radius = EDGE_RADIUS) {
   //grab the tile the lat, lon is in
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
 
@@ -168,7 +169,6 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   std::unique_ptr<const EdgeInfo> closest_edge_info;
   std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
   DistanceApproximator approximator(location.latlng_);
-  //TODO: a place to keep the closest non inspected
 
   //a place to keep track of the edgeinfos we've already inspected
   std::unordered_set<uint32_t> searched(tile->header()->directededgecount());
@@ -181,30 +181,20 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     //we haven't looked at this edge yet and its not junk
     auto inserted = searched.insert(edge->edgeinfo_offset());
     if(inserted.second && !filter(edge)) {
-      //during edge searching we skip edges whose length is shorter than the distance
-      //distance between the search location and the edges two end points. this is
-      //motivated by the idea that the air-line distance between any point on the edge
-      //and either of the edges endpoints must be shorter than the edges total length.
-      //therefore if you draw a circle around each endpoint with radius = edge.length
-      //you will encapsulate the whole shape within the union of these two circles.
-      //if the search location doesn't lie within these two circles its unlikely
-      //to match the edge.
-      //TODO: however the edge must still be considered if no other candidates
-      //were found or if the best candidate is further away than this distance. we hope
-      //that we wont need to go back to inspect these alternate edges
-      auto sq_length = static_cast<float>(edge->length());
+
+      //we take the mid point of the edges end points and make a radius of half the length of the edge around it
+      //this circle is guaranteed to enclose all of the shape. we then say if the input location is less than
+      //the input sq_radius away from the circle around the shape, then we consider checking the shape
+      auto sq_length = static_cast<float>(edge->length()) * .5f;
       sq_length *= sq_length;
       auto end_node = GetEndNode(reader, edge)->latlng();
-      if(sq_length < approximator.DistanceSquared(end_node))
-        continue;
       auto start_node = GetBeginNode(reader, edge)->latlng();
-      if(sq_length < approximator.DistanceSquared(start_node))
+      if(sq_length + sq_radius < approximator.DistanceSquared(start_node.MidPoint(end_node)))
         continue;
 
       //get some info about the edge
       auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
       auto candidate = Project(location.latlng_, edge_info->shape(), approximator);
-      //auto candidate = location.latlng_.ClosestPoint(edge_info->shape());
 
       //does this look better than the current edge
       if(std::get<1>(candidate) < std::get<1>(closest_point)) {
