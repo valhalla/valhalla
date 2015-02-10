@@ -38,10 +38,6 @@ class Sign {
 
 };
 
-bool DescendingSortByConsecutiveCount(const Sign& lhs, const Sign& rhs) {
-  return lhs.consecutive_count() > rhs.consecutive_count();
-}
-
 }
 }
 

@@ -45,7 +45,11 @@ void TryDescendingSortByConsecutiveCount(
   if (signs.size() != expectedSigns.size())
     throw std::runtime_error("DescendingSortByConsecutiveCount size mismatch");
 
-  std::sort(signs.begin(), signs.end(), DescendingSortByConsecutiveCount);
+  std::sort(
+      signs.begin(), signs.end(),
+      [](const valhalla::odin::Sign& lhs, const valhalla::odin::Sign& rhs) {
+        return lhs.consecutive_count() > rhs.consecutive_count();
+      });
 
   for (size_t x = 0, n = signs.size(); x < n; ++x) {
     if (signs.at(x).consecutive_count()
