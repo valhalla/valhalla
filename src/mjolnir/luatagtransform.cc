@@ -143,71 +143,93 @@ Tags LuaTagTransform::TransformInLua(OSMType type, const Tags &maptags) {
   lua_State* state;
 
   Tags result;
+  std::string luafunc;
 
-  bool isWay = false;
+  try {
 
-  switch (type) {
+    bool isWay = false;
 
-    case OSMType::kNode:
-      lua_getglobal(nodestate_,luanodefunc_.c_str());
-      state = nodestate_;
-      break;
-    case OSMType::kWay:
-      lua_getglobal(waystate_,luawayfunc_.c_str());
-      state = waystate_;
-      isWay = true;
-      break;
-    case OSMType::kRelation:
-      lua_getglobal(relationstate_,luarelationfunc_.c_str());
-      state = relationstate_;
-      break;
-    default:
-      throw std::runtime_error("Invalid OSM element type!");
+    switch (type) {
+
+      case OSMType::kNode:
+        lua_getglobal(nodestate_,luanodefunc_.c_str());
+        luafunc = luanodefunc_;
+        state = nodestate_;
+        break;
+      case OSMType::kWay:
+        lua_getglobal(waystate_,luawayfunc_.c_str());
+        luafunc = luawayfunc_;
+        state = waystate_;
+        isWay = true;
+        break;
+      case OSMType::kRelation:
+        lua_getglobal(relationstate_,luarelationfunc_.c_str());
+        luafunc = luarelationfunc_;
+        state = relationstate_;
+        break;
+      default:
+        throw std::runtime_error("Invalid OSM element type!");
+    }
+
+    //set up the lua table (map)
+    int count = 0;
+    lua_newtable(state);
+    for (const auto& tag : maptags) {
+      lua_pushstring(state, tag.first.c_str());
+      lua_pushstring(state, tag.second.c_str());
+      lua_rawset(state, -3);
+      count++;
+    }
+
+    //tell lua how many items are in the map
+    lua_pushinteger(state, count);
+
+    //call lua
+    if (lua_pcall(state, 2, isWay ? 4 : 2, 0)) {
+      LOG_ERROR("Failed to execute lua function for basic tag processing.");
+    }
+
+    //TODO:  if we dont care about it we stop looking.  Look for filter = 1
+    /*if(lua_tonumber(state, 1))
+      return result;*/
+
+    //osm2pgsql has extra info for roads and polygons which we dont care about
+    if(isWay) {
+      lua_pop(state,1);
+      lua_pop(state,1);
+    }
+
+    //pull out the keys and values into a map
+    lua_pushnil(state);
+    while (lua_next(state,-2) != 0) {
+      const char* key = lua_tostring(state,-2);
+      if (key == nullptr) {
+        LOG_ERROR((boost::format("Invalid key in Lua function: %1%.") % luafunc).str());
+        break;
+      }
+      const char* value = lua_tostring(state,-1);
+      if (value == nullptr) {
+        LOG_ERROR((boost::format("Invalid value in Lua function: %1%.") % luafunc).str());
+        break;
+      }
+      result[key] = value;
+      lua_pop(state,1);
+    }
+
+    //pull out an int which if its 1 means we dont care about this way/node
+    int filter = lua_tointeger(state, -2);
+    lua_pop(state,2);
+
+    if (filter)
+      result.clear();
   }
-
-  //set up the lua table (map)
-  int count = 0;
-  lua_newtable(state);
-  for (const auto& tag : maptags) {
-    lua_pushstring(state, tag.first.c_str());
-    lua_pushstring(state, tag.second.c_str());
-    lua_rawset(state, -3);
-    count++;
+  catch(std::exception& e) {
+    // ..gets sent back to the main thread
+    LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % luafunc % e.what()).str());
   }
-
-  //tell lua how many items are in the map
-  lua_pushinteger(state, count);
-
-  //call lua
-  if (lua_pcall(state, 2, isWay ? 4 : 2, 0)) {
-    LOG_ERROR("Failed to execute lua function for basic tag processing.");
+  catch(...){
+    LOG_ERROR((boost::format("Unknown exception in Lua function: %1%.") % luafunc).str());
   }
-
-  //TODO:  if we dont care about it we stop looking.  Look for filter = 1
-  /*if(lua_tonumber(state, 1))
-    return result;*/
-
-  //osm2pgsql has extra info for roads and polygons which we dont care about
-  if(isWay) {
-    lua_pop(state,1);
-    lua_pop(state,1);
-  }
-
-  //pull out the keys and values into a map
-  lua_pushnil(state);
-  while (lua_next(state,-2) != 0) {
-    const char* key = lua_tostring(state,-2);
-    const char* value = lua_tostring(state,-1);
-    result[key] = value;
-    lua_pop(state,1);
-  }
-
-  //pull out an int which if its 1 means we dont care about this way/node
-  int filter = lua_tointeger(state, -2);
-  lua_pop(state,2);
-
-  if (filter)
-    result.clear();
 
   return result;
 }
