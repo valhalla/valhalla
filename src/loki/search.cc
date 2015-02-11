@@ -266,6 +266,9 @@ namespace valhalla {
 namespace loki {
 
 PathLocation Search(const Location& location, GraphReader& reader, const EdgeFilter filter, const SearchStrategy strategy) {
+  //TODO: if a name is supplied try to find edges with similar name
+  //TODO: if a direction is provided, try to find edges whose angles are similar to the input
+
   if(strategy == SearchStrategy::EDGE)
     return EdgeSearch(location, reader, filter);
   return NodeSearch(location, reader, filter);
