@@ -2,6 +2,7 @@
 #include <valhalla/midgard/distanceapproximator.h>
 
 #include <unordered_set>
+#include <list>
 #include <math.h>
 
 using namespace valhalla::midgard;
@@ -13,7 +14,7 @@ namespace {
 //during edge searching we snap to vertices if you are closer than
 //15 meters to a given vertex.
 constexpr float NODE_SNAP = 15 * 15;
-constexpr float EDGE_RADIUS = 500 * 500;
+constexpr float EDGE_RADIUS = 250 * 250;
 
 const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
   //get the node at the end of this edge
@@ -154,55 +155,63 @@ std::tuple<PointLL, float, int> Project(const PointLL& p, const std::vector<Poin
   return std::make_tuple(std::move(closest_point), std::move(closest_distance), std::move(closest_segment));
 }
 
-PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter, const float sq_radius = EDGE_RADIUS) {
+PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter, float sq_search_radius = EDGE_RADIUS) {
   //grab the tile the lat, lon is in
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
 
   //we couldn't find any data for this region
   //TODO: be smarter about this either in loki or in baldr cache
-  if(!tile)
+  if(!tile || tile->header()->directededgecount() == 0)
     throw std::runtime_error("No data found for location");
 
-  //a place to keep the closest information so far
-  const DirectedEdge* closest_edge = nullptr;
-  GraphId closest_edge_id = tile->header()->graphid();
-  std::unique_ptr<const EdgeInfo> closest_edge_info;
-  std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
-  DistanceApproximator approximator(location.latlng_);
-
-  //a place to keep track of the edgeinfos we've already inspected
-  std::unordered_set<uint32_t> searched(tile->header()->directededgecount());
+  //a place to keep track of the edges we should look at by their match quality (distance)
+  std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
+  std::list<const DirectedEdge*> close, far;
 
   //for each edge
+  DistanceApproximator approximator(location.latlng_);
   const auto start_edge = tile->directededge(0);
   const auto end_edge = start_edge + tile->header()->directededgecount();
   for(auto edge = start_edge; edge < end_edge; ++edge) {
 
     //we haven't looked at this edge yet and its not junk
-    auto inserted = searched.insert(edge->edgeinfo_offset());
-    if(inserted.second && !filter(edge)) {
+    if(!filter(edge) && visited.insert(edge->edgeinfo_offset()).second) {
 
       //we take the mid point of the edges end points and make a radius of half the length of the edge around it
-      //this circle is guaranteed to enclose all of the shape. we then say if the input location is less than
-      //the input sq_radius away from the circle around the shape, then we consider checking the shape
-      auto sq_length = static_cast<float>(edge->length()) * .5f;
-      sq_length *= sq_length;
+      //this circle is guaranteed to enclose all of the shape. we then store how far away from this circle the
+      //the input location is
+      auto sq_radius = static_cast<float>(edge->length()) * .5f;
+      sq_radius *= sq_radius;
       auto end_node = GetEndNode(reader, edge)->latlng();
       auto start_node = GetBeginNode(reader, edge)->latlng();
-      if(sq_length + sq_radius < approximator.DistanceSquared(start_node.MidPoint(end_node)))
-        continue;
+      if(approximator.DistanceSquared(start_node.MidPoint(end_node)) - sq_radius < sq_search_radius)
+        close.push_back(edge);
+      else
+        far.push_back(edge);
+    }
+  }
 
-      //get some info about the edge
-      auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
-      auto candidate = Project(location.latlng_, edge_info->shape(), approximator);
+  //we only want to look at edges that are a decently close to our input, however if none
+  //of them are close we just assume its a pretty empty tile and search the whole thing
+  if(close.size() == 0)
+    close.splice(close.end(), far);
 
-      //does this look better than the current edge
-      if(std::get<1>(candidate) < std::get<1>(closest_point)) {
-        closest_edge = edge;
-        closest_edge_id.fields.id = edge - start_edge;
-        closest_edge_info.swap(edge_info);
-        closest_point = std::move(candidate);
-      }
+  //for each edge
+  const DirectedEdge* closest_edge = nullptr;
+  GraphId closest_edge_id = tile->header()->graphid();
+  std::unique_ptr<const EdgeInfo> closest_edge_info;
+  std::tuple<PointLL, float, int> closest_point{{}, std::numeric_limits<float>::max(), 0};
+  for(const auto edge : close) {
+    //get some info about the edge
+    auto edge_info = tile->edgeinfo(edge->edgeinfo_offset());
+    auto candidate = Project(location.latlng_, edge_info->shape(), approximator);
+
+    //does this look better than the current edge
+    if(std::get<1>(candidate) < std::get<1>(closest_point)) {
+      closest_edge = edge;
+      closest_edge_id.fields.id = edge - start_edge;
+      closest_edge_info.swap(edge_info);
+      closest_point = std::move(candidate);
     }
   }
 
