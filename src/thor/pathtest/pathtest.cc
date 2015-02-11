@@ -49,7 +49,7 @@ LOG_INFO("Sizeof GraphTileHeader = " + std::to_string(sizeof(GraphTileHeader)));
 
   // Form output information based on pathedges
   t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = TripPathBuilder::Build(reader, pathedges);
+  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin, dest);
 
   // TODO - perhaps walk the edges to find total length?
   //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " km");
