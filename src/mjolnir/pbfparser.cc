@@ -80,28 +80,19 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
 
   // Parse each input file - first pass
   for (const auto& input_file : input_files) {
-    // Parse the ways. Find all node Ids needed. Shrink the OSM ways vector
-    // and the OSM node reference vector (list of nodes that the ways include).
-    auto t1 = std::chrono::high_resolution_clock::now();
+    // Parse the ways. Find all node Ids needed.
+    std::clock_t start = std::clock();
+    LOG_INFO("Parsing ways and marking nodes needed");
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
-    osmdata.ways.shrink_to_fit();
-    osmdata.noderefs.shrink_to_fit();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Routable ways count = " + std::to_string(osmdata.ways.size()));
-    LOG_INFO("Number of noderefs = " + std::to_string(osmdata.noderefs.size()));
+    LOG_INFO("Routable ways " + std::to_string(osmdata.ways.size()));
 
     // Parse relations.
-    t1 = std::chrono::high_resolution_clock::now();
+    start = std::clock();
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    osmdata.restrictions.shrink_to_fit();
-    t2 = std::chrono::high_resolution_clock::now();
-    msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Simple restrictions count = " +
-             std::to_string(osmdata.restrictions.size()));
-    LOG_INFO("Sizeof OSMRestriction = " + std::to_string(sizeof(OSMRestriction)));
   }
 
   std::ostringstream s;
@@ -111,20 +102,18 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
-  // TODO: we know how many knows we expect, stop early once we have that many
   for (const auto& input_file : input_files) {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    std::clock_t start = std::clock();
     LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
     osmdata.nodes.reserve(osmdata.node_count);
+    //TODO: we know how many knows we expect, stop early once we have that many
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Nodes included on routable ways, count = " +
-             std::to_string(osmdata.nodes.size()));
+    LOG_INFO("Routable nodes " + std::to_string(osmdata.nodes.size()));
   }
 
-  // Go through OMSNodes and set the intersection flag.
+  // Go through OMSNodes and set the intersection flag
   for (auto& node : osmdata.nodes) {
     if (intersection_.IsUsed(node.first)) {
       node.second.set_intersection(true);
@@ -132,15 +121,8 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
     }
   }
 
-  // Log some information about extra node information and names
-  LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
-  LOG_INFO("Number of node exit_to = " + std::to_string(osmdata.node_exit_to.size()));
-  LOG_INFO("Number of node names = " + std::to_string(osmdata.node_name.size()));
-  LOG_INFO("Number of way refs = " + std::to_string(osmdata.node_ref.size()));
-  LOG_INFO("Ref Names:");
-  osmdata.ref_offset_map.Log();
-  LOG_INFO("Names");
-  osmdata.name_offset_map.Log();
+  // Trim the size of the OSM way vector
+//  osmdata.ways.shrink_to_fit();
 
   // Return OSM data
   return osmdata;
@@ -211,13 +193,10 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
       n.set_modes_mask(std::stoi(tag.second));
   }
 
-  if (osmid == 569645326)
-    std::cout <<  n.modes_mask() << " " << n.bollard() << std::endl;
-
   // Add to the node map;
   osm_->nodes.emplace(osmid, std::move(n));
 
-  if (osm_->nodes.size() % 5000000 == 0) {
+  if (osm_->nodes.size() % 1000000 == 0) {
     LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
   }
 }
@@ -551,6 +530,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
 
 void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
                                      const CanalTP::References &refs) {
+
   // Get tags
   Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
   if (results.size() == 0)
