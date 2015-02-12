@@ -45,6 +45,11 @@ class UniqueNames {
    */
   size_t Size() const;
 
+  /**
+   * Log information about the number of unique names, size of the vector, etc.
+   */
+  void Log() const;
+
  protected:
   // Map of names to indexes
   std::unordered_map<std::string, uint32_t> names_;
