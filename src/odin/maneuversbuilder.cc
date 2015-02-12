@@ -287,7 +287,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
   // TripDirections_Maneuver_Type_kStayLeft
 
   // Process exit
-  if (maneuver.ramp() && prev_edge->IsHighway()) {
+  if (maneuver.ramp()
+      && (prev_edge->IsHighway() || maneuver.HasExitNumberSign())) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
@@ -430,7 +431,6 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   if (prev_edge->ramp() && !maneuver.ramp()) {
     return false;
   }
-  // TODO - more logic with exit signs
   if (maneuver.ramp() && prev_edge->ramp()) {
     return true;
   }

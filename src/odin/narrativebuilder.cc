@@ -193,29 +193,171 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
 }
 
 void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
+  // TODO - exit info
+  // 0 = Take the ramp on the right
+  // 1 = branch
+  // 2 = toward
+  // 4 = Turn right to take the ramp
+  // 8 = name?
+
+  // 0 Take the ramp on the right
+  // 1 Take the I 95 South ramp on the right
+  // 2 Take the ramp on the right toward Baltimore
+  // 3 Take the I 95 South ramp on the right toward Baltimore
+  // 4 Turn right to take the ramp
+  // 5 Turn right to take the I 95 South ramp
+  // 6 Turn right to take the ramp toward Baltimore
+  // 7 Turn right to take the I 95 South ramp toward Baltimore
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  if (maneuver.begin_relative_direction()
-      == Maneuver::RelativeDirection::kRight)
-    text_instruction += "Turn right to take the ramp";
-  else
-    text_instruction += "Take the ramp on the right";
+  uint8_t phrase_id = 0;
+  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
+    phrase_id = 4;
 
-  // TODO - exit info
+  if (maneuver.HasExitBranchSign())
+    phrase_id += 1;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 2;
+
+  switch (phrase_id) {
+    // 1 Take the I 95 South ramp on the right
+    case 1: {
+      text_instruction += (boost::format("Take the %1% ramp on the right")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 2 Take the ramp on the right toward Baltimore
+    case 2: {
+      text_instruction += (boost::format("Take the ramp on the right toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 3 Take the I 95 South ramp on the right toward Baltimore
+    case 3: {
+      text_instruction += (boost::format("Take the %1% ramp on the right toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 4 Turn right to take the ramp
+    case 4: {
+      text_instruction = "Turn right to take the ramp";
+      break;
+    }
+    // 5 Turn right to take the I 95 South ramp
+    case 5: {
+      text_instruction += (boost::format(
+          "Turn right to take the %1% ramp")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 6 Turn right to take the ramp toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Turn right to take the ramp toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 7 Turn right to take the I 95 South ramp toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Turn right to take the %1% ramp toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    default: {
+      text_instruction = "Take the ramp on the right";
+      break;
+    }
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
-    text_instruction += "Turn left to take the ramp";
-  else
-    text_instruction += "Take the ramp on the left";
 
   // TODO - exit info
+  // 0 = Take the ramp on the left
+  // 1 = branch
+  // 2 = toward
+  // 4 = Turn left to take the ramp
+  // 8 = name?
+
+  // 0 Take the ramp on the left
+  // 1 Take the I 95 South ramp on the left
+  // 2 Take the ramp on the left toward Baltimore
+  // 3 Take the I 95 South ramp on the left toward Baltimore
+  // 4 Turn left to take the ramp
+  // 5 Turn left to take the I 95 South ramp
+  // 6 Turn left to take the ramp toward Baltimore
+  // 7 Turn left to take the I 95 South ramp toward Baltimore
+
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
+    phrase_id = 4;
+
+  if (maneuver.HasExitBranchSign())
+    phrase_id += 1;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 2;
+
+  switch (phrase_id) {
+    // 1 Take the I 95 South ramp on the left
+    case 1: {
+      text_instruction += (boost::format("Take the %1% ramp on the left")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 2 Take the ramp on the left toward Baltimore
+    case 2: {
+      text_instruction += (boost::format("Take the ramp on the left toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 3 Take the I 95 South ramp on the left toward Baltimore
+    case 3: {
+      text_instruction += (boost::format("Take the %1% ramp on the left toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 4 Turn left to take the ramp
+    case 4: {
+      text_instruction = "Turn left to take the ramp";
+      break;
+    }
+    // 5 Turn left to take the I 95 South ramp
+    case 5: {
+      text_instruction += (boost::format(
+          "Turn left to take the %1% ramp")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 6 Turn left to take the ramp toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Turn left to take the ramp toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 7 Turn left to take the I 95 South ramp toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Turn left to take the %1% ramp toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    default: {
+      text_instruction = "Take the ramp on the left";
+      break;
+    }
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
