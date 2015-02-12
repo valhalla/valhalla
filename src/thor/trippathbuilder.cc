@@ -15,11 +15,30 @@ using namespace valhalla::odin;
 namespace {
 
 // Meters offset from start/end of shape for finding heading
-constexpr float kMetersOffsetForHeading =30.0f;
+constexpr float kMetersOffsetForHeading = 30.0f;
 
 template <class iter>
-void AddPartialShape(std::vector<PointLL>& shape, const iter& start, const iter& end, const float partial_length, bool back_insert) {
-//TODO
+void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float partial_length, bool back_insert, const PointLL& last) {
+  auto push = [&shape, &back_insert] (const PointLL& point) {
+    if(back_insert)
+      shape.push_back(point);
+    else
+      shape.insert(shape.begin(), point);
+  };
+
+  //for each segment
+  push(*start);
+  for(; start != end - 1; ++start) {
+    //is this segment longer than what we have left, then we found the segment the point lies on
+    const auto length = (start + 1)->Distance(*start);
+    if(length > partial_length) {
+      push(last);
+      return;
+    }
+    //just take the point from this segment
+    push(*(start + 1));
+    partial_length -= length;
+  }
 }
 
 }
@@ -50,13 +69,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t shortcutcount = 0;
   const NodeInfo* nodeinfo = nullptr;
 
-  float start_pct =  1.f - origin.edges().front().dist;
+  auto start_pct =  1.f - origin.edges().front().dist;
+  auto start_vrt = origin.vertex();
   for(size_t i = 1; i < origin.edges().size(); ++i){
     if(origin.edges()[i].id == pathedges.front()){
       start_pct = 1.f - origin.edges()[i].dist;
     }
   }
-  float end_pct = dest.edges().front().dist;
+  auto end_pct = dest.edges().front().dist;
+  auto end_vrt = dest.vertex();
   for(size_t i = 1; i < dest.edges().size(); ++i){
     if(dest.edges()[i].id == pathedges.back()){
       end_pct = dest.edges()[i].dist;
@@ -97,8 +118,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //}
 
     // Add edge to the trip node and set its attributes
-    bool partial;
-    float length_pct = (partial = (edge == pathedges.front()) ? start_pct : (partial = (edge == pathedges.back()) ? end_pct : 1.f));
+    float length_pct = (edge == pathedges.front() ? start_pct : (edge == pathedges.back() ? end_pct : 1.f));
     TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge,
                                            trip_node, graphtile, length_pct);
 
@@ -108,14 +128,18 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             directededge->edgeinfo_offset());
     trip_edge->set_begin_shape_index(trip_shape.size());
     // We need to clip the shape if its at the beginning or end and isnt a full length
-    if(partial) {
+    if(edge == pathedges.front() || edge == pathedges.back()) {
       float length = static_cast<float>(directededge->length()) * length_pct;
-      if(directededge->forward() == (edge == pathedges.back()))
+      if(directededge->forward() == (edge == pathedges.back())){
         AddPartialShape<std::vector<PointLL>::const_iterator>
-          (trip_shape, edgeinfo->shape().begin(), edgeinfo->shape().end(), length, edge == pathedges.back());
-      else
+          (trip_shape, edgeinfo->shape().begin(), edgeinfo->shape().end(),
+          length, edge == pathedges.back(), edge == pathedges.back() ? end_vrt : start_vrt);
+      }
+      else {
         AddPartialShape<std::vector<PointLL>::const_reverse_iterator>
-          (trip_shape, edgeinfo->shape().rbegin(), edgeinfo->shape().rend(), length, edge == pathedges.back());
+          (trip_shape, edgeinfo->shape().rbegin(), edgeinfo->shape().rend(),
+          length, edge == pathedges.back(), edge == pathedges.back() ? end_vrt : start_vrt);
+      }
     }// Just get the shape in there in the right direction
     else {
       if(directededge->forward())
@@ -175,9 +199,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       std::to_string(pathedges.size()) + " edges");**/
 
   // Encode shape and add to trip path.
-  std::string encoded_shape_;
-  if (trip_shape.size())
-    encoded_shape_ = encode<std::vector<PointLL>>(trip_shape);
+  std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
 
   //hand it back
