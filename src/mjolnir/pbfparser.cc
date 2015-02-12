@@ -83,7 +83,6 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
     // Parse the ways. Find all node Ids needed. Shrink the OSM ways vector
     // and the OSM node reference vector (list of nodes that the ways include).
     auto t1 = std::chrono::high_resolution_clock::now();
-    LOG_INFO("Parsing ways and marking nodes needed");
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
     osmdata.ways.shrink_to_fit();
     osmdata.noderefs.shrink_to_fit();
@@ -100,7 +99,7 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Simple restrictions count =" +
+    LOG_INFO("Simple restrictions count = " +
              std::to_string(osmdata.restrictions.size()));
     LOG_INFO("Sizeof OSMRestriction = " + std::to_string(sizeof(OSMRestriction)));
   }
@@ -142,7 +141,6 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
   osmdata.ref_offset_map.Log();
   LOG_INFO("Names");
   osmdata.name_offset_map.Log();
-  LOG_INFO("sizeof OSMData: " + std::to_string(sizeof(osmdata)));
 
   // Return OSM data
   return osmdata;
