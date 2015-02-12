@@ -86,7 +86,7 @@ const NodeInfo* FindClosestNode(const Location& location, const GraphTile* tile,
   const auto end_node = start_node + tile->header()->nodecount();
   for(auto node = start_node; node < end_node; ++node) {
     //if this is closer then its better, unless nothing interesting leaves it..
-    float node_sqdist = approximator.DistanceSquared(location.latlng_);
+    float node_sqdist = approximator.DistanceSquared(node->latlng());
     if(node_sqdist < sqdist && !FilterNode(tile, node, filter)) {
       sqdist = node_sqdist;
       closest = node;

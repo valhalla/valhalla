@@ -123,41 +123,11 @@ void make_tile() {
   tile.StoreTileData(h, tile_id);
 }
 
-void node_search(const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<std::string>& expected_names){
+void search(const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
+  const std::vector<std::pair<GraphId, float> >& expected_edges, const valhalla::loki::SearchStrategy& strategy){
 
   valhalla::baldr::GraphReader reader(conf);
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::NODE);
-
-  if(!p.IsCorrelated())
-    throw std::runtime_error("Didn't find any node/edges");
-  if(!p.IsNode())
-    throw std::runtime_error("Node search should produce node results");
-  if(!p.vertex().ApproximatelyEqual(expected_point))
-    throw std::runtime_error("Found unexpected_point node");
-  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-  std::unordered_set<std::string> found_names;
-  for(const auto& edge : p.edges()) {
-    if(!equal<float>(edge.dist, static_cast<float>(!tile->directededge(edge.id)->forward())))
-      throw std::runtime_error("Unexpected distance along the edge");
-    auto names = tile->GetNames(tile->directededge(edge.id)->edgeinfo_offset());
-    found_names.insert(names.begin(), names.end());
-  }
-
-  if(found_names.size() != expected_names.size())
-    throw std::runtime_error("Wrong number of names found");
-  for(const auto& name : expected_names) {
-    auto found = found_names.find(name);
-    if(found == found_names.end())
-      throw std::runtime_error("Didn't find expected road name");
-  }
-}
-
-void edge_search(const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<std::pair<GraphId, float> >& expected_edges){
-
-  valhalla::baldr::GraphReader reader(conf);
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::EDGE);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, strategy);
 
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
@@ -175,22 +145,28 @@ void edge_search(const valhalla::baldr::Location& location, const valhalla::midg
 }
 
 void TestNodeSearch() {
-  node_search({b.second}, b.second, {"0", "2"});
+  auto t = a.first.tileid();
+  auto l = a.first.level();
+
+  search({b.second}, b.second, { {{t, l, 0}, 1}, {{t, l, 1}, 0} }, valhalla::loki::SearchStrategy::NODE);
+  search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} }, valhalla::loki::SearchStrategy::NODE);
+  search({c.second}, c.second, { {{t, l, 5}, 0}, {{t, l, 6}, 1} }, valhalla::loki::SearchStrategy::NODE);
+  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::NODE);
 }
 
 void TestEdgeSearch() {
   auto t = a.first.tileid();
   auto l = a.first.level();
 
-  edge_search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} });
-  edge_search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} });
-  edge_search({a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), { {{t, l, 3}, .5f}, {{t, l, 8}, .5f} });
+  search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} }, valhalla::loki::SearchStrategy::EDGE);
+  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::EDGE);
+  search({a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), { {{t, l, 3}, .5f}, {{t, l, 8}, .5f} }, valhalla::loki::SearchStrategy::EDGE);
   PointLL answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
-  edge_search({answer}, answer, { {{t, l, 3}, ratio}, {{t, l, 8}, 1.f - ratio} });
+  search({answer}, answer, { {{t, l, 3}, ratio}, {{t, l, 8}, 1.f - ratio} }, valhalla::loki::SearchStrategy::EDGE);
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
-  edge_search({answer}, answer, { {{t, l, 0}, ratio}, {{t, l, 7}, 1.f - ratio} });
+  search({answer}, answer, { {{t, l, 0}, ratio}, {{t, l, 7}, 1.f - ratio} }, valhalla::loki::SearchStrategy::EDGE);
 }
 
 }
