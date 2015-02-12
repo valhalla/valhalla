@@ -39,7 +39,7 @@ if [ "${3}" ]; then
 fi
 
 #where do you want the output, default to current time
-OUTDIR=$(date +%Y_%m_%d_%H_%M_%S)_$(basename "${INPUT%.*}")
+OUTDIR=$(date +%Y%m%d_%H%M%S)_$(basename "${INPUT%.*}")
 if [ "${4}" ]; then
 	OUTDIR="${4}"
 fi
