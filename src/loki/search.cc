@@ -237,8 +237,8 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     correlated.CorrelateVertex(std::get<0>(closest_point));
     //compute partial distance along the shape
     double partial_length = 0;
-    for(size_t i = 1; i < std::get<2>(closest_point); ++i)
-        partial_length += closest_edge_info->shape()[i - 1].Distance(closest_edge_info->shape()[i]);
+    for(size_t i = 0; i < std::get<2>(closest_point); ++i)
+        partial_length += closest_edge_info->shape()[i].Distance(closest_edge_info->shape()[i + 1]);
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
     //correlate the edge we found

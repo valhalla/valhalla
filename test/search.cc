@@ -16,6 +16,12 @@
 
 namespace {
 
+std::pair<GraphId, PointLL>
+    b({}, {}),
+    a({}, {}),
+    c({}, {}),
+    d({}, {});
+
 boost::property_tree::ptree make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
@@ -49,11 +55,10 @@ boost::property_tree::ptree make_tile() {
   */
 
   GraphTileBuilder tile;
-  std::pair<GraphId, PointLL>
-    b({tile_id.tileid(), tile_id.level(), 0}, {.01, .2}),
-    a({tile_id.tileid(), tile_id.level(), 1}, {.01, .1}),
-    c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}),
-    d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
+  b.first = {tile_id.tileid(), tile_id.level(), 0}; b.second = {.01, .2};
+  a.first = {tile_id.tileid(), tile_id.level(), 1}; a.second = {.01, .1};
+  c.first = {tile_id.tileid(), tile_id.level(), 2}; c.second = {.01, .01};
+  d.first = {tile_id.tileid(), tile_id.level(), 3}; d.second = {.2, .1};
   uint32_t edge_index = 0;
 
   auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
@@ -71,10 +76,12 @@ boost::property_tree::ptree make_tile() {
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(u.second.Distance(v.second) + .5);
     edge_builder.set_endnode(v.first);
-    //this is a brain F
     edge_builder.set_opp_index(opposing);
     bool add;
-    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, {u.second, v.second}, {std::to_string(name)}, add);
+    //make more complex edge geom so that there are 3 segments, affine combination doesnt properly handle arcs but who cares
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first,
+        {u.second, u.second.AffineCombination(.7f, .3f, v.second), u.second.AffineCombination(.3f, .7f, v.second), v.second},
+        {std::to_string(name)}, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     return edge_builder;
   };
@@ -170,9 +177,9 @@ void TestEdgeSearch() {
   auto conf = make_tile();
   valhalla::baldr::GraphReader reader(conf);
 
-  edge_search(reader, {{.105, .1}}, {.105, .1}, {"3"}, .5);
-  edge_search(reader, {{.01, .1}}, {.01, .1}, {"1", "2", "3"}, 0);
-  edge_search(reader, {{.2, .1}}, {.2, .1}, {"0", "3", "4"}, 1);
+  edge_search(reader, {a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), {"3"}, .5);
+  edge_search(reader, {a.second}, a.second, {"1", "2", "3"}, 0);
+  edge_search(reader, {d.second}, d.second, {"0", "3", "4"}, 1);
   //TODO: add more elaborate shape to test better the nodesnapping and distance along shape segment stuff
 }
 
