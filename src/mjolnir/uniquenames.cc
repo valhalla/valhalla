@@ -1,5 +1,7 @@
 #include "mjolnir/uniquenames.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -49,6 +51,15 @@ void UniqueNames::Clear() {
 // unique name we return the size of the map - 1.
 size_t UniqueNames::Size() const {
   return names_.size() - 1;
+}
+
+/**
+ * Log information about the number of unique names, size of the vector, etc.
+ */
+void UniqueNames::Log() const {
+  LOG_INFO("Number of names: " + std::to_string(Size()));
+  LOG_INFO("Number of indexes: " + std::to_string(indexes_.size()));
+  LOG_INFO("sizeof nameiter = " +  std::to_string(sizeof(nameiter)));
 }
 
 }

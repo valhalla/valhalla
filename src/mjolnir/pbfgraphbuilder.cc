@@ -128,6 +128,9 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Sizeof OSMWay = " + std::to_string(sizeof(OSMWay)));
+  LOG_INFO("Sizeof OSMNode = " + std::to_string(sizeof(OSMNode)));
+  LOG_INFO("Sizeof Edge = " + std::to_string(sizeof(Edge)));
+  LOG_INFO("Sizeof Node = " + std::to_string(sizeof(Node)));
 
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
