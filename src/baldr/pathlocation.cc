@@ -40,7 +40,7 @@ namespace baldr{
   }
 
   bool PathLocation::operator==(const PathLocation& other) const {
-    if(node_ != other.node_ || vertex_.ApproximatelyEqual(other.vertex_))
+    if(node_ != other.node_ || !vertex_.ApproximatelyEqual(other.vertex_))
       return false;
     for(const auto& edge : edges_) {
       bool found = false;
