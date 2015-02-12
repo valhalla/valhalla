@@ -45,18 +45,19 @@ foot = {
 function nodes_proc (kv, nokeys)
   --normalize a few tags that we care about
   local access = access[kv["access"]] or "true"
-  local foot = foot[kv["foot"]] or 4
-  local bike = bicycle[kv["bicycle"]] or 2
+  local foot = foot[kv["foot"]] or 0
+  local bike = bicycle[kv["bicycle"]] or 0
   local auto = motor_vehicle[kv["motor_vehicle"]]
   if auto == nil then
     auto = motor_vehicle[kv["motorcar"]]
   end
-  auto = auto or 1
+  auto = auto or 0
 
-  if access == "false" then
-    foot = 0
-    bike = 0 
-    auto = 0
+  --access was set, but foot, bike, and auto tags were not.
+  if access == "true" and bit32.bor(auto, bike, foot) == 0 then
+    foot = 4
+    bike = 2 
+    auto = 1
   end 
 
   --check for gates and bollards
@@ -72,7 +73,7 @@ function nodes_proc (kv, nokeys)
       bollard = false
     end
 
-    auto = bollard and 0 or 1
+    auto = (bollard and 0) or 1
 
   end
 
