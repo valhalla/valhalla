@@ -11,6 +11,21 @@ namespace mjolnir {
 // Internal storage of lat,lng
 using OSMLatLng = std::pair<float, float>;
 
+// Node attributes. Shared by OSMNode and GraphBuilder Node.
+struct NodeAttributes {
+  uint32_t modes_mask     : 8;
+  uint32_t gate           : 1;
+  uint32_t bollard        : 1;
+  uint32_t exit_to        : 1;
+  uint32_t ref            : 1;
+  uint32_t name           : 1;
+  uint32_t intersection   : 1;
+  uint32_t traffic_signal : 1;
+  uint32_t non_link_edge  : 1;
+  uint32_t link_edge      : 1;
+  uint32_t spare          : 15;
+};
+
 /**
  * OSM node information. Result of parsing an OSM node.
  */
@@ -128,32 +143,16 @@ class OSMNode {
   bool traffic_signal() const;
 
   /**
-   * Get the attributes value.
-   * @return  Returns the attributes word.
+   * Get the attributes.
+   * @return  Returns the attributes.
    */
-  uint32_t attributes() const;
+  const NodeAttributes& attributes() const;
 
  protected:
   // Lat,lng of the node
   OSMLatLng latlng_;
 
   // Node attributes
-  union NodeAttributes {
-    struct Fields {
-      uint32_t modes_mask     : 8;
-      uint32_t gate           : 1;
-      uint32_t bollard        : 1;
-      uint32_t exit_to        : 1;
-      uint32_t ref            : 1;
-      uint32_t name           : 1;
-      uint32_t intersection   : 1;
-      uint32_t traffic_signal : 1;
-      uint32_t non_link_edge  : 1;   // Used in derived Node class.
-      uint32_t link_edge      : 1;   // Used in derived Node class.
-      uint32_t spare          : 15;
-    } fields;
-    uint32_t v;
-  };
   NodeAttributes attributes_;
 };
 
