@@ -193,6 +193,9 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
       n.set_modes_mask(std::stoi(tag.second));
   }
 
+  if (osmid == 569645326)
+    std::cout <<  n.modes_mask() << " " << n.bollard() << std::endl;
+
   // Add to the node map;
   osm_->nodes.emplace(osmid, std::move(n));
 
