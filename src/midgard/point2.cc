@@ -56,7 +56,7 @@ Point2 Point2::AffineCombination(const float a0, const float a1,
 }
 
 Point2 Point2::MidPoint(const Point2& p1) const {
-  return Point2(0.5f * first + 0.5f * p1.first, 0.5f * second + 0.5f * p1.second);
+  return Point2(0.5f * (first + p1.first), 0.5f * (second + p1.second));
 }
 
 Point2 Point2::operator +(const Vector2& v) const {
