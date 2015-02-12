@@ -194,6 +194,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     prior_opp_index = directededge->opp_index();
   }
 
+  // Add the last node
+  trip_path.add_node();
+
 /** TODO - remove debug later
   LOG_TRACE("Took " + std::to_string(shortcutcount) + " shortcut edges out of " +
       std::to_string(pathedges.size()) + " edges");**/
