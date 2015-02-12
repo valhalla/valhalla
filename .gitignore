@@ -48,6 +48,7 @@ test/nodetable
 test/graphtilebuilder
 test/graphbuilder
 test/refs
+test/parser
 test/signinfo
 test/*.log
 test/*.trs
