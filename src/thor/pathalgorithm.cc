@@ -247,7 +247,7 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get cost and sort cost
-    float cost = costing->Get(directededge);
+    float cost = costing->Get(directededge) * (1.f - edge.dist);
     float sortcost = cost + heuristic;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -263,7 +263,7 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
 void PathAlgorithm::SetDestination(const PathLocation& dest) {
   // TODO - add partial distances
   for (const auto& edge : dest.edges()) {
-    destinations_[edge.id.value] = 1.0f;
+    destinations_[edge.id.value] = edge.dist;
   }
 }
 
