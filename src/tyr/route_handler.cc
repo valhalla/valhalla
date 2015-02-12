@@ -259,7 +259,7 @@ std::string RouteHandler::Action() {
   path_edges = path_algorithm.GetBestPath(origin, destination, *reader_, cost_);
 
   //get some pbf
-  valhalla::odin::TripPath trip_path = valhalla::thor::TripPathBuilder::Build(*reader_, path_edges);
+  valhalla::odin::TripPath trip_path = valhalla::thor::TripPathBuilder::Build(*reader_, path_edges, origin, destination);
   path_algorithm.Clear();
 
   //get some annotated instructions
