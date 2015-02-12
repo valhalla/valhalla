@@ -70,6 +70,12 @@ class PathLocation : public Location {
    */
   void CorrelateVertex(const midgard::PointLL& correlated);
 
+  /**
+   * Equality check
+   * @return true if they are equal
+   */
+  bool operator==(const PathLocation& other) const;
+
  protected:
   //whether or not this location is on a vertex in the graph (intersection)
   //note: this implies all distances on edges are either 0's or 1's

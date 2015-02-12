@@ -1,4 +1,5 @@
 #include "baldr/pathlocation.h"
+#include <valhalla/midgard/util.h>
 
 namespace valhalla{
 namespace baldr{
@@ -36,6 +37,23 @@ namespace baldr{
 
   void PathLocation::CorrelateVertex(const midgard::PointLL& vertex) {
     vertex_ = vertex;
+  }
+
+  bool PathLocation::operator==(const PathLocation& other) const {
+    if(node_ != other.node_ || vertex_.ApproximatelyEqual(other.vertex_))
+      return false;
+    for(const auto& edge : edges_) {
+      bool found = false;
+      for(const auto& other_edge : other.edges_) {
+        if(edge.id == other_edge.id && midgard::equal<float>(edge.dist, other_edge.dist)){
+          found = true;
+          break;
+        }
+      }
+      if(!found)
+        return false;
+    }
+    return true;
   }
 
 }
