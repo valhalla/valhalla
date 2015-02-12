@@ -5,6 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <unordered_set>
+#include <algorithm>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
@@ -22,7 +23,9 @@ std::pair<GraphId, PointLL>
     c({}, {}),
     d({}, {});
 
-boost::property_tree::ptree make_tile() {
+boost::property_tree::ptree conf;
+
+void make_tile() {
   using namespace valhalla::mjolnir;
   using namespace valhalla::baldr;
 
@@ -35,7 +38,6 @@ boost::property_tree::ptree make_tile() {
       {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
     ] \
   }";
-  boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(json, conf);
 
   //basic tile information
@@ -71,17 +73,20 @@ boost::property_tree::ptree make_tile() {
     return node_builder;
   };
   auto add_edge = [&tile, &edge_index] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
-    const uint32_t name, const uint32_t opposing) {
+    const uint32_t name, const uint32_t opposing, const bool forward) {
 
     DirectedEdgeBuilder edge_builder;
     edge_builder.set_length(u.second.Distance(v.second) + .5);
     edge_builder.set_endnode(v.first);
     edge_builder.set_opp_index(opposing);
+    edge_builder.set_forward(forward);
+    std::vector<PointLL> shape = {u.second, u.second.AffineCombination(.7f, .3f, v.second), u.second.AffineCombination(.3f, .7f, v.second), v.second};
+    if(!forward)
+      std::reverse(shape.begin(), shape.end());
+
     bool add;
     //make more complex edge geom so that there are 3 segments, affine combination doesnt properly handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first,
-        {u.second, u.second.AffineCombination(.7f, .3f, v.second), u.second.AffineCombination(.3f, .7f, v.second), v.second},
-        {std::to_string(name)}, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, shape, {std::to_string(name)}, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     return edge_builder;
   };
@@ -89,76 +94,51 @@ boost::property_tree::ptree make_tile() {
   //B
   {
     auto node = add_node(b, 2);
-    auto edges { add_edge(b, d, 0, 0), add_edge(b, a, 2, 0) };
+    auto edges { add_edge(b, d, 0, 0, false), add_edge(b, a, 2, 0, true) };
     tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //A
   {
     auto node = add_node(a, 3);
-    auto edges { add_edge(a, b, 2, 1), add_edge(a, d, 3, 1), add_edge(a, c, 1, 0) };
+    auto edges { add_edge(a, b, 2, 1, false), add_edge(a, d, 3, 1, true), add_edge(a, c, 1, 0, false) };
     tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //C
   {
     auto node = add_node(c, 2);
-    auto edges { add_edge(c, a, 1, 2), add_edge(c, d, 4, 2) };
+    auto edges { add_edge(c, a, 1, 2, true), add_edge(c, d, 4, 2, false) };
     tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //D
   {
     auto node = add_node(d, 3);
-    auto edges { add_edge(d, b, 0, 0), add_edge(d, a, 3, 1), add_edge(d, c, 4, 1) };
+    auto edges { add_edge(d, b, 0, 0, true), add_edge(d, a, 3, 1, false), add_edge(d, c, 4, 1, true) };
     tile.AddNodeAndDirectedEdges(node, edges);
   }
 
   //write the tile
   tile.StoreTileData(h, tile_id);
-
-  return conf;
 }
 
-void node_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
-  const std::string& expected_name){
+void node_search(const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
+  const std::vector<std::string>& expected_names){
+
+  valhalla::baldr::GraphReader reader(conf);
   valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::NODE);
+
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
   if(!p.IsNode())
     throw std::runtime_error("Node search should produce node results");
   if(!p.vertex().ApproximatelyEqual(expected_point))
-    throw std::runtime_error("Found expected_point node");
-  if(p.edges().front().dist != 0)
-    throw std::runtime_error("Distance along the edge should always be 0 for node search");
-  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-  if(expected_name != tile->GetNames(tile->directededge(p.edges().front().id)->edgeinfo_offset())[0])
-    throw std::runtime_error("Didn't find expected road name");
-}
-
-void TestNodeSearch() {
-  auto conf = make_tile();
-  valhalla::baldr::GraphReader reader(conf);
-
-  node_search(reader, {{.01, .2}}, {.01, .2}, "0");
-}
-
-void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
-  const std::vector<std::string>& expected_names, const float expected_distance){
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::EDGE);
-  if(!p.IsCorrelated())
-    throw std::runtime_error("Didn't find any node/edges");
-  if(p.IsNode() != (expected_distance == 0.f || expected_distance == 1.f))
-    throw std::runtime_error("Edge search got unexpected IsNode result");
-  if(!p.vertex().ApproximatelyEqual(expected_point))
-    throw std::runtime_error("Found wrong point");
-  if(expected_distance != 0.f && expected_distance != 1.f && p.edges().size() != 2)
-    throw std::runtime_error("Unexpected number of correlated edges");
-
+    throw std::runtime_error("Found unexpected_point node");
   const GraphTile* tile = reader.GetGraphTile(location.latlng_);
   std::unordered_set<std::string> found_names;
   for(const auto& edge : p.edges()) {
-    if(!equal<float>(edge.dist, expected_distance) && !equal<float>(edge.dist, 1.f - expected_distance))
+    if(!equal<float>(edge.dist, static_cast<float>(!tile->directededge(edge.id)->forward())))
       throw std::runtime_error("Unexpected distance along the edge");
     auto names = tile->GetNames(tile->directededge(edge.id)->edgeinfo_offset());
     found_names.insert(names.begin(), names.end());
@@ -173,20 +153,52 @@ void edge_search(valhalla::baldr::GraphReader& reader, const valhalla::baldr::Lo
   }
 }
 
-void TestEdgeSearch() {
-  auto conf = make_tile();
-  valhalla::baldr::GraphReader reader(conf);
+void edge_search(const valhalla::baldr::Location& location, const valhalla::midgard::PointLL& expected_point,
+  const std::vector<std::pair<GraphId, float> >& expected_edges){
 
-  edge_search(reader, {a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), {"3"}, .5);
-  edge_search(reader, {a.second}, a.second, {"1", "2", "3"}, 0);
-  edge_search(reader, {d.second}, d.second, {"0", "3", "4"}, 1);
-  //TODO: add more elaborate shape to test better the nodesnapping and distance along shape segment stuff
+  valhalla::baldr::GraphReader reader(conf);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, valhalla::loki::SearchStrategy::EDGE);
+
+  if(!p.IsCorrelated())
+    throw std::runtime_error("Didn't find any node/edges");
+  if(!p.vertex().ApproximatelyEqual(expected_point))
+    throw std::runtime_error("Found wrong point");
+
+
+  valhalla::baldr::PathLocation answer(location);
+  answer.CorrelateVertex(expected_point);
+  for(const auto& expected_edge : expected_edges)
+    answer.CorrelateEdge(expected_edge.first, expected_edge.second);
+  if(!(answer == p)) {
+    throw std::runtime_error("Did not find expected edges");
+  }
+}
+
+void TestNodeSearch() {
+  node_search({b.second}, b.second, {"0", "2"});
+}
+
+void TestEdgeSearch() {
+  auto t = a.first.tileid();
+  auto l = a.first.level();
+
+  edge_search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} });
+  edge_search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} });
+  edge_search({a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), { {{t, l, 3}, .5f}, {{t, l, 8}, .5f} });
+  PointLL answer = a.second.AffineCombination(.6f, .4f, d.second);
+  auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
+  edge_search({answer}, answer, { {{t, l, 3}, ratio}, {{t, l, 8}, 1.f - ratio} });
+  answer = b.second.AffineCombination(.6f, .4f, d.second);
+  ratio = b.second.Distance(answer) / b.second.Distance(d.second);
+  edge_search({answer}, answer, { {{t, l, 0}, ratio}, {{t, l, 7}, 1.f - ratio} });
 }
 
 }
 
 int main() {
   test::suite suite("search");
+
+  suite.test(TEST_CASE(make_tile));
 
   suite.test(TEST_CASE(TestNodeSearch));
 
