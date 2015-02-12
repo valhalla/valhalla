@@ -213,7 +213,7 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
-    uint8_t phrase_id = 4;
+    phrase_id = 4;
 
   if (maneuver.HasExitBranchSign())
     phrase_id += 1;
@@ -299,7 +299,7 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
-    uint8_t phrase_id = 4;
+    phrase_id = 4;
 
   if (maneuver.HasExitBranchSign())
     phrase_id += 1;
