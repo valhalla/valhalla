@@ -73,15 +73,6 @@ void GraphBuilder::Build(OSMData& osmdata) {
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
 
-  // Shrink latlng and edge vectors
-  latlngs_.shrink_to_fit();
-  edges_.shrink_to_fit();
-
-  // Iterate through the tilednodes and shrink vectors
-  for (auto& tile : tilednodes_) {
-    tile.second.shrink_to_fit();
-  }
-
   // Create mappings of extended node info by GraphId rather than
   // OSM node Id.
   CreateNodeMaps(osmdata);
@@ -224,8 +215,14 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     }
   }
 
-  // Shrink the latlngs vector to fit
+  // Shrink the latlngs vector and the edges vector to fit
   latlngs_.shrink_to_fit();
+  edges_.shrink_to_fit();
+
+  // Iterate through the tilednodes and shrink vectors
+  for (auto& tile : tilednodes_) {
+    tile.second.shrink_to_fit();
+  }
 
   LOG_INFO("Constructed " + std::to_string(edges_.size()) + " edges and "
             + std::to_string(nodes_.size()) + " nodes");
@@ -282,7 +279,7 @@ void GraphBuilder::ReclassifyLinks(const WayVector& ways) {
   uint32_t count = 0;
   std::unordered_set<GraphId> visitedset;  // Set of visited nodes
   std::unordered_set<GraphId> expandset;   // Set of nodes to expand
-  std::vector<uint32_t> linkedgeindexes;   // Edge indexes to reclassify
+  std::list<uint32_t> linkedgeindexes;     // Edge indexes to reclassify
 
   for (const auto& tile : tilednodes_) {
     if (tile.second.size() == 0) {
