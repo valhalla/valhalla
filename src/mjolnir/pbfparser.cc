@@ -31,30 +31,6 @@ const uint64_t kMaxOSMNodeId = 4000000000;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
-// Constructor to create table of OSM Node IDs being used
-NodeIdTable::NodeIdTable(const uint64_t maxosmid): maxosmid_(maxosmid) {
-  // Create a vector to mark bits. Initialize to 0.
-  bitmarkers_.resize((maxosmid / 64) + 1, 0);
-}
-
-// Destructor for NodeId table
-NodeIdTable::~NodeIdTable() {
-}
-
-// Set an OSM Id within the node table
-void NodeIdTable::set(const uint64_t id) {
-  // Test if the max is exceeded
-  if (id > maxosmid_) {
-    throw std::runtime_error("NodeIDTable - OSM Id exceeds max specified");
-  }
-  bitmarkers_[id / 64] |= static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64));
-}
-
-// Check if an OSM Id is used (in the Node table)
-const bool NodeIdTable::IsUsed(const uint64_t id) const {
-  return bitmarkers_[id / 64] & (static_cast<uint64_t>(1) << (id % static_cast<uint64_t>(64)));
-}
-
 // Construct PBFParser based on properties file and input PBF extract
 PBFParser::PBFParser(const boost::property_tree::ptree& pt)
     : speed_assignment_count_(0),
