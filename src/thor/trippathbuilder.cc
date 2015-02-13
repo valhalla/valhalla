@@ -87,6 +87,23 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     }
   }
 
+  // If the path was only one edge we have a special case
+  if(pathedges.size() == 1) {
+    const auto tile = graphreader.GetGraphTile(pathedges.front());
+    const auto edge = tile->directededge(pathedges.front());
+    if(end_pct < start_pct)
+      throw std::runtime_error("Generated reverse trivial path, this is a bug and we are working on it");
+    TripPath_Edge* trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
+    std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+    trip_edge->set_begin_shape_index(0);
+    //TODO: get shape
+    std::vector<PointLL> shape;
+    trip_edge->set_end_shape_index(shape.size());
+    trip_path.add_node();
+    trip_path.set_shape(encode<std::vector<PointLL> >(shape));
+    return trip_path;
+  }
+
   // Iterate through path edges
   uint32_t prior_opp_index;
   std::vector<PointLL> trip_shape;
@@ -199,11 +216,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Add the last node
   trip_path.add_node();
-
-  // If the path was only one edge we have a special case and the shape must be fixed up
-  if(pathedges.size() == 1) {
-
-  }
 
 /** TODO - remove debug later
   LOG_TRACE("Took " + std::to_string(shortcutcount) + " shortcut edges out of " +
