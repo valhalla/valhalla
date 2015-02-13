@@ -44,11 +44,13 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
+    header_builder_.set_turnrestriction_count(turnrestriction_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)
-            + (signs_builder_.size() * sizeof(SignBuilder))));
+            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+            + (signs_builder_.size() * sizeof(SignBuilder))
+            + (turnrestriction_builder_.size() * sizeof(TurnRestrictionBuilder)));
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
@@ -233,6 +235,11 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
   }
 }
 
+// Add simple turn restriction.
+void GraphTileBuilder::AddTurnRestriction(const TurnRestrictionBuilder& tr) {
+  turnrestriction_builder_.push_back(tr);
+}
+
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
              const GraphId& nodea, const baldr::GraphId& nodeb,
              const std::vector<PointLL>& lls,
@@ -333,6 +340,13 @@ SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
     return static_cast<SignBuilder&>(signs_[idx]);
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+// Gets a non-const turn restriction (builder) from existing tile data.
+TurnRestrictionBuilder& GraphTileBuilder::turnrestriction(const size_t idx) {
+  if (idx < header_->turnrestriction_count())
+    return static_cast<TurnRestrictionBuilder&>(turnrestrictions_[idx]);
+  throw std::runtime_error("GraphTileBuilder turn restriction index is out of bounds");
 }
 
 }

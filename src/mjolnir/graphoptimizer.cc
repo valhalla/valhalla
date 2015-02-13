@@ -24,6 +24,38 @@ GraphOptimizer::GraphOptimizer(const boost::property_tree::ptree& pt)
 void GraphOptimizer::Optimize() {
   // Iterate through all levels and all tiles.
   // TODO - concurrency
+  LOG_INFO("GraphOptimizer - validate tiles first");
+
+  // Validate signs
+  for (auto tile_level :  tile_hierarchy_.levels()) {
+    uint32_t level = (uint32_t)tile_level.second.level;
+    uint32_t ntiles = tile_level.second.tiles.TileCount();
+    for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
+      // Get the graph tile. Skip if no tile exists (common case)
+      const GraphTile tile(tile_hierarchy_, GraphId(tileid, level, 0));
+      if (tile.size() == 0) {
+        continue;
+      }
+      for (uint32_t i = 0; i < tile.header()->nodecount(); i++) {
+        const NodeInfo* nodeinfo = tile.node(i);
+
+        // Go through directed edges and update data
+        uint32_t idx = nodeinfo->edge_index();
+        for (uint32_t j = 0, n = nodeinfo->edge_count(); j < n; j++, idx++) {
+          const DirectedEdge* directededge = tile.directededge(idx);
+
+          // Validate signs
+          if (directededge->exitsign()) {
+            if (tile.GetSigns(idx).size() == 0) {
+              LOG_ERROR("Directed edge marked as having signs but none found");
+            }
+          }
+        }
+      }
+    }
+  }
+  LOG_INFO("Validation of tiles is done");
+
   for (auto tile_level :  tile_hierarchy_.levels()) {
     dupcount_ = 0;
     uint32_t level = (uint32_t)tile_level.second.level;
