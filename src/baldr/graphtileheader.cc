@@ -20,6 +20,7 @@ GraphTileHeader::GraphTileHeader()
       nodecount_(0),
       directededgecount_(0),
       signcount_(0),
+      turnrestriction_count_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
       admin_offset_(0),
@@ -66,6 +67,11 @@ uint32_t GraphTileHeader::directededgecount() const {
 // Gets the number of signs in the tile.
 uint32_t GraphTileHeader::signcount() const {
   return signcount_;
+}
+
+// Gets the number of simple turn restrictions in the tile.
+uint32_t GraphTileHeader::turnrestriction_count() const {
+  return turnrestriction_count_;
 }
 
 // Get the offset in bytes to the start of the edge information.

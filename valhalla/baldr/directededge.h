@@ -58,6 +58,15 @@ class DirectedEdge {
   uint32_t edgeinfo_offset() const;
 
   /**
+   * Does this directed edge form the start of a simple turn restriction?
+   * These are turn restrictions from one edge to another that apply to
+   * all vehicles, at all times.
+   * @return  Returns true if the directed edge starts a simple turn
+   *          restriction, false if not.
+   */
+  bool simple_tr() const;
+
+  /**
    * Does this directed edge have exit signs?
    * @return  Returns true if the directed edge has exit signs,
    *          false if not.
@@ -253,7 +262,9 @@ class DirectedEdge {
   // Data offsets and flags for extended data.
   struct DataOffsets {
     uint32_t edgeinfo_offset : 24; // Offset to edge data.
-    uint32_t spare           :  7;
+    uint32_t spare           :  6;
+    uint32_t simple_tr       :  1; // Directed edge starts a simple
+                                   // turn restriction
     uint32_t exitsign        :  1; // Does this directed edge have exit signs
   };
   DataOffsets dataoffsets_;

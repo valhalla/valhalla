@@ -68,6 +68,12 @@ class GraphTileHeader {
   uint32_t signcount() const;
 
   /**
+   * Gets the number of simple turn restrictions in this tile.
+   * @return  Returns the number of turn restrictions.
+   */
+  uint32_t turnrestriction_count() const;
+
+  /**
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
@@ -129,6 +135,9 @@ class GraphTileHeader {
 
   // Number of signs
   uint32_t signcount_;
+
+  // Number of turn restrictions
+  uint32_t turnrestriction_count_;
 
   // Offset to edge info
   uint32_t edgeinfo_offset_;
