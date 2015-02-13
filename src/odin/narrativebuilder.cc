@@ -182,18 +182,58 @@ void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
 }
 
 void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
+  // 0 = Stay straight to take the ramp
+  // 1 = branch
+  // 2 = toward
+  // 4 = name?
+
+  // 0 Stay straight to take the ramp
+  // 1 Stay straight to take the I 95 South ramp
+  // 2 Stay straight to take the ramp toward Baltimore
+  // 3 Stay straight to take the I 95 South ramp toward Baltimore
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Stay straight to take the ramp";
+  uint8_t phrase_id = 0;
 
-  // TODO - exit info
+  if (maneuver.HasExitBranchSign())
+    phrase_id += 1;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 2;
+
+  switch (phrase_id) {
+    // 1 Stay straight to take the I 95 South ramp
+    case 1: {
+      text_instruction += (boost::format("Stay straight to take the %1% ramp")
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+      // 2 Stay straight to take the ramp toward Baltimore
+    case 2: {
+      text_instruction += (boost::format(
+          "Stay straight to take the ramp toward %1%")
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 3 Stay straight to take the I 95 South ramp toward Baltimore
+    case 3: {
+      text_instruction += (boost::format(
+          "Stay straight to take the %1% ramp toward %2%")
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    default: {
+      text_instruction = "Stay straight to take the ramp";
+      break;
+    }
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
 }
 
 void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
-  // TODO - exit info
   // 0 = Take the ramp on the right
   // 1 = branch
   // 2 = toward
@@ -279,7 +319,6 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
 
 void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
 
-  // TODO - exit info
   // 0 = Take the ramp on the left
   // 1 = branch
   // 2 = toward
