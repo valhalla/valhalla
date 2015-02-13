@@ -68,6 +68,10 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
 
+    // Write the turn restrictions
+    file.write(reinterpret_cast<const char*>(&turnrestriction_builder_[0]),
+               turnrestriction_builder_.size() * sizeof(TurnRestrictionBuilder));
+
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
@@ -117,6 +121,10 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
 
+    // Write the existing turn restrictions
+    file.write(reinterpret_cast<const char*>(&turnrestrictions_[0]),
+               hdr.turnrestriction_count() * sizeof(TurnRestriction));
+
     // Write the existing edgeinfo, and textlist
     file.write(edgeinfo_, edgeinfo_size_);
     file.write(textlist_, textlist_size_);
@@ -133,7 +141,8 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
-                const std::vector<SignBuilder>& signs) {
+                const std::vector<SignBuilder>& signs,
+                const std::vector<TurnRestrictionBuilder>& trs) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
             GraphTile::FileSuffix(hdr.graphid(), hierarchy);
@@ -161,6 +170,10 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
+
+    // Write the updated signs
+    file.write(reinterpret_cast<const char*>(&trs[0]),
+               trs.size() * sizeof(TurnRestrictionBuilder));
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
