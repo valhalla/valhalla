@@ -278,7 +278,9 @@ void GraphBuilder::UpdateRestrictions(OSMData& osmdata) {
   for (auto& rst : osmdata.restrictions) {
     const auto nd = nodes_.find(rst.second.via());
     if (nd == nodes_.end()) {
-      LOG_INFO("Restriction Via node on a non-graph node");
+      // TODO - log these as data issues??
+      LOG_ERROR("Restriction Via node on a non-graph node: from wayid = "
+           + std::to_string(rst.first));
     } else {
       rst.second.set_via(nd->second);
     }
@@ -698,7 +700,9 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     notype = true;
   }
   if (notype && onlytype) {
-    LOG_ERROR("Restrictions have both \"only\" and \"no\" types - skip them!");
+    // TODO - log these as data issues??
+    LOG_ERROR("Restrictions have both \"only\" and \"no\" types. From wayid = "
+          + std::to_string(wayid));
     return false;
   }
 
