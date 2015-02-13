@@ -5,8 +5,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-using NameIndexType = std::unordered_map<std::string, uint32_t>;
-
 // Constructor
 UniqueNames::UniqueNames() {
   // Insert dummy so index 0 is never used
@@ -24,7 +22,7 @@ uint32_t UniqueNames::index(const std::string& name) {
   }
   else {
      // Not in the map, add index and update
-     it = names_.insert(it, NameIndexType::value_type(name, 0));
+     it = names_.insert(it, NamesMap::value_type(name, 0));
      indexes_.push_back(it);
      index = indexes_.size() - 1;
      it->second = index;

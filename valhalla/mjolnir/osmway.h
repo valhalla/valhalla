@@ -8,8 +8,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
-using namespace valhalla::baldr;
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -69,12 +67,6 @@ class OSMWay {
    * Get the number of nodes for this way.
    */
   uint32_t node_count() const;
-
-  /**
-   * Get the list of nodes for this way.
-   * @return  Returns nodes
-   */
- // const std::vector<uint64_t>& nodes() const;
 
   /**
    * Sets the speed
@@ -380,25 +372,25 @@ class OSMWay {
    * Sets the surface.
    * @param  surface
    */
-  void set_surface(const Surface surface);
+  void set_surface(const baldr::Surface surface);
 
   /**
    * Get the surface.
    * @return  Returns Surface.
    */
-  Surface surface() const;
+  baldr::Surface surface() const;
 
   /**
    * Sets the cycle lane.
    * @param  cyclelane
    */
-  void set_cyclelane(const CycleLane cyclelane);
+  void set_cyclelane(const baldr::CycleLane cyclelane);
 
   /**
    * Get the cycle lane.
    * @return  Returns CycleLane.
    */
-  CycleLane cyclelane() const;
+  baldr::CycleLane cyclelane() const;
 
   /**
    * Sets the number of lanes
@@ -476,26 +468,26 @@ class OSMWay {
    * Get the road class.
    * @return  Returns road class.
    */
-  RoadClass road_class() const;
+  baldr::RoadClass road_class() const;
 
   /**
    * Sets the road class.
    * @param  roadclass  Road Class/highway type.
    */
-  void set_road_class(const RoadClass roadclass);
+  void set_road_class(const baldr::RoadClass roadclass);
 
   /**
    * Sets the use tag.
    * @param  use       use. None Cycleway ParkingAisle, Driveway, Alley,
    *                        EmergencyAccess, DriveThru, Steps, and Other
    */
-  void set_use(const Use use);
+  void set_use(const baldr::Use use);
 
   /**
    * Get the use.
    * @return  Returns use.
    */
-  Use use() const;
+  baldr::Use use() const;
 
   /**
    * Sets the link tag.

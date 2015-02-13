@@ -275,6 +275,12 @@ class GraphBuilder {
    */
   void CreateNodeMaps(const OSMData& osmdata);
 
+  /**
+   * Update restrictions. Replace OSM node Ids with GraphIds.
+   * @param  osmdata  Includes the restrictions
+   */
+  void UpdateRestrictions(OSMData& osmdata);
+
   // List of the tile levels to be created
   uint32_t level_;
   TileHierarchy tile_hierarchy_;

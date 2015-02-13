@@ -9,6 +9,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+using NamesMap = std::unordered_map<std::string, uint32_t>;
+
 /**
  * Class to hold a list of unique names and indexes to them.
  */
@@ -52,10 +54,10 @@ class UniqueNames {
 
  protected:
   // Map of names to indexes
-  std::unordered_map<std::string, uint32_t> names_;
+  NamesMap names_;
 
   // List of entries into the map
-  using nameiter = std::unordered_map<std::string, uint32_t>::iterator;
+  using nameiter = NamesMap::iterator;
   std::vector<nameiter> indexes_;
 };
 

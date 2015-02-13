@@ -30,6 +30,9 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+uint32_t simplerestrictions = 0;
+uint32_t timedrestrictions = 0;
+
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
@@ -41,15 +44,16 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
     : level_(0),
       tile_hierarchy_(pt.get_child("hierarchy")),
       stats_(new DataQuality()),
-      threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
+      threads_(std::max(static_cast<unsigned int>(1),
+               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
 }
 
 // Delete the OSM node map and extended node information maps.
 void delete_osmnode_map(OSMData& osmdata) {
-  std::unordered_map<uint64_t, OSMNode>().swap(osmdata.nodes);
-  std::unordered_map<uint64_t, std::string>().swap(osmdata.node_exit_to);
-  std::unordered_map<uint64_t, std::string>().swap(osmdata.node_ref);
-  std::unordered_map<uint64_t, std::string>().swap(osmdata.node_name);
+  OSMNodeMap().swap(osmdata.nodes);
+  OSMStringMap().swap(osmdata.node_exit_to);
+  OSMStringMap().swap(osmdata.node_ref);
+  OSMStringMap().swap(osmdata.node_name);
 }
 
 // Delete the OSM node map.
@@ -77,6 +81,9 @@ void GraphBuilder::Build(OSMData& osmdata) {
   // OSM node Id.
   CreateNodeMaps(osmdata);
 
+  // Update restrictions - replace OSM node Id in via with a GraphId
+  UpdateRestrictions(osmdata);
+
   // Try to recover memory by swapping empty maps/vectors for data we no
   // longer need.
   delete_osmnode_map(osmdata);
@@ -93,6 +100,7 @@ void GraphBuilder::Build(OSMData& osmdata) {
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   t1 = std::chrono::high_resolution_clock::now();
+  LOG_INFO("BuildLocalTile using " + std::to_string(threads_) + " threads");
   BuildLocalTiles(tl->second.level, osmdata);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
@@ -100,6 +108,9 @@ void GraphBuilder::Build(OSMData& osmdata) {
 
   // Log statistics and issues
   stats_->Log();
+
+  LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
+  LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
 }
 
 // Add a node to the appropriate tile.
@@ -257,6 +268,19 @@ void GraphBuilder::CreateNodeMaps(const OSMData& osmdata) {
       LOG_INFO("node name on a non-graph node");
     } else {
       node_name_[nd->second] = it.second;
+    }
+  }
+}
+
+// Create the extended node information mapped by the node's GraphId.
+// This is needed since we do not keep osmnodeid around.
+void GraphBuilder::UpdateRestrictions(OSMData& osmdata) {
+  for (auto& rst : osmdata.restrictions) {
+    const auto nd = nodes_.find(rst.second.via());
+    if (nd == nodes_.end()) {
+      LOG_INFO("Restriction Via node on a non-graph node");
+    } else {
+      rst.second.set_via(nd->second);
     }
   }
 }
@@ -786,6 +810,21 @@ void BuildTileSet(
                && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
+          }
+
+          // Handle restrictions
+          auto res = osmdata.restrictions.equal_range(w.way_id());
+          if (res.first != osmdata.restrictions.end()) {
+            // Edge is the from edge of a restriction
+            for (auto r = res.first; r != res.second; ++r) {
+              if (r->second.via_graphid() == target) {
+                if (r->second.day_on() != DOW::kNone) {
+                  timedrestrictions++;
+                } else {
+                  simplerestrictions++;
+                }
+              }
+            }
           }
 
           // Increment the directed edge index within the tile
