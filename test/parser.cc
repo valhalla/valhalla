@@ -1,10 +1,10 @@
 #include "test.h"
-#include "mjolnir/pbfparser.h"
 #include "mjolnir/osmnode.h"
 
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include "../valhalla/mjolnir/pbfgraphparser.h"
 
 using namespace std;
 using namespace valhalla::mjolnir;
@@ -49,7 +49,7 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFParser parser(conf.get_child("mjolnir"));
+  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
   auto osmdata = parser.Load({"test/data/liechtenstein-latest.osm.pbf"});
 
   //When we split set the uses at bollards and gates, this bollard will be found.
@@ -108,7 +108,7 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFParser parser(conf.get_child("mjolnir"));
+  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
   auto osmdata = parser.Load({"test/data/rome.osm.pbf"});
 
   //When we split set the uses at bollards and gates, this bollard will be found.
@@ -127,7 +127,7 @@ void Exits(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFParser parser(conf.get_child("mjolnir"));
+  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
   auto osmdata = parser.Load({"test/data/harrisburg.osm.pbf"});
 
   auto node = osmdata.nodes.find(33698177);
@@ -164,7 +164,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFParser parser(conf.get_child("mjolnir"));
+  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
   auto osmdata = parser.Load({"test/data/nyc.osm.pbf"});
 
   //When we support finding bike rentals, this test will need updated.

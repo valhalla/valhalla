@@ -1,10 +1,9 @@
 #include "test.h"
 
-#include "mjolnir/pbfparser.h"
-
 #include <cstdint>
 #include <unordered_set>
 #include <cstdlib>
+#include "../valhalla/mjolnir/pbfgraphparser.h"
 
 using namespace std;
 using namespace valhalla::mjolnir;
@@ -13,7 +12,7 @@ constexpr uint64_t kTableSize = 40000;
 
 void TestSetGet() {
 
-  NodeIdTable t(kTableSize);
+  IdTable t(kTableSize);
 
   //set them all and check them all
   for(uint64_t i = 0; i < kTableSize; ++i) {
@@ -32,7 +31,7 @@ void TestSetGet() {
 void TestRandom() {
 
   //randomly set and then go get some
-  NodeIdTable t(kTableSize);
+  IdTable t(kTableSize);
   std::unordered_set<uint64_t> ids;
   for(uint64_t i = 0; i < kTableSize; ++i) {
     uint64_t r = rand() % kTableSize;
