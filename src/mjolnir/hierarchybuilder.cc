@@ -212,6 +212,8 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
+  // TODO - turn restrictions...
+
   // Importance (class), link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
@@ -647,6 +649,8 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
 
+  // TODO - update turn restrictions
+
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
@@ -656,6 +660,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
   std::vector<SignBuilder> signs;
+  std::vector<TurnRestrictionBuilder> turnrestrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
@@ -723,7 +728,8 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs);
+  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs,
+                     turnrestrictions);
 
   LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());
