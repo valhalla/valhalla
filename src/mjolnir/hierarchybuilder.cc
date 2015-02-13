@@ -650,12 +650,17 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
 
   // TODO - update turn restrictions
+  uint32_t next_tridx = (tilebuilder.header()->turnrestriction_count() > 0) ?
+      tilebuilder.turnrestriction(0).edgeindex() :
+      existinghdr.directededgecount() + 1;
 
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
   uint32_t signidx = 0;
   uint32_t signcount = existinghdr.signcount();
+  uint32_t tridx = 0;
+  uint32_t trcount = existinghdr.turnrestriction_count();
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
@@ -684,6 +689,19 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
         signidx++;
         nextsignidx = (signidx >= signcount) ?
               0 : tilebuilder.sign(signidx).edgeindex();
+      }
+
+      // Any turn restrictions that use this index - increment
+      // by the number of added edges
+      if (idx == next_tridx) {
+        TurnRestrictionBuilder tr = tilebuilder.turnrestriction(tridx);
+        tr.set_edgeindex(idx + n);
+        turnrestrictions.emplace_back(std::move(tr));
+
+        // Increment to the next turn restriction and update next_tridx
+        tridx++;
+        next_tridx = (tridx >= trcount) ?
+              0 : tilebuilder.turnrestriction(tridx).edgeindex();
       }
 
       // Increment index
@@ -726,6 +744,11 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
               std::to_string(signs.size()) + " Header says: " +
               std::to_string(hdrbuilder.signcount()));
   }
+  if (turnrestrictions.size() != hdrbuilder.turnrestriction_count()) {
+      LOG_ERROR("AddConnectionsToBaseTile: turnrestriction size = " +
+                std::to_string(turnrestrictions.size()) + " Header says: " +
+                std::to_string(hdrbuilder.turnrestriction_count()));
+    }
 
   // Write the new file
   tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs,
