@@ -119,7 +119,7 @@ class PBFParser {
   size_t speed_assignment_count_;
 
   // List of the tile levels to be created
-  TileHierarchy tile_hierarchy_;
+  baldr::TileHierarchy tile_hierarchy_;
 
   // Lua Tag Transformation class
   LuaTagTransform lua_;

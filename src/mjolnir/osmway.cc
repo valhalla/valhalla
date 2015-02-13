@@ -3,6 +3,8 @@
 
 #include <valhalla/midgard/logging.h>
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 

@@ -20,6 +20,7 @@
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
+#include <valhalla/mjolnir/turnrestrictionbuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include "signbuilder.h"
@@ -71,19 +72,22 @@ class GraphTileBuilder : public baldr::GraphTile {
                const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
-   * Update a graph tile with new header, nodes, directed edges, and exits.
+   * Update a graph tile with new header, nodes, directed edges, signs,
+   * and turn restrictions.
    * This is used to add directed edges connecting two hierarchy levels.
    * @param  hierarchy      How the tiles are setup on disk
    * @param  hdr            Update header
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
    * @param  signs          Updated list of signs.
+   * @param  trs            Updated list of turn restrictions.
    */
   void Update(const baldr::TileHierarchy& hierarchy,
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
-              const std::vector<SignBuilder>& signs);
+              const std::vector<SignBuilder>& signs,
+              const std::vector<TurnRestrictionBuilder>& trs);
 
   /**
    * Add a node and its outbound edges.
@@ -99,6 +103,14 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void AddSigns(const uint32_t idx,
                 const std::vector<baldr::SignInfo>& signs);
+
+  /**
+   * Add simple turn restrictions.
+   * @param  idx  Directed edge index.
+   * @param  trs  Turn restrictions
+   */
+  void AddTurnRestrictions(const uint32_t idx,
+                const std::vector<baldr::TurnRestriction>& trs);
 
   /**
    * Add edge info to the tile.
@@ -171,6 +183,10 @@ class GraphTileBuilder : public baldr::GraphTile {
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<SignBuilder> signs_builder_;
+
+  // List of turn restrictions. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<TurnRestrictionBuilder> turnrestriction_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;

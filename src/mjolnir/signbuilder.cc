@@ -1,4 +1,4 @@
-#include "../../valhalla/mjolnir/signbuilder.h"
+#include "mjolnir/signbuilder.h"
 
 using namespace valhalla::baldr;
 

@@ -62,7 +62,14 @@ void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
   dataoffsets_.edgeinfo_offset = offset;
 }
 
-//Sets the exit flag.
+// Set the simple turn restriction flag. This indicates the directed edge
+// forms the start of a simple turn restriction. These are turn restrictions
+// from one edge to another that apply to all vehicles, at all times.
+void DirectedEdgeBuilder::set_simple_tr(const bool tr) {
+  dataoffsets_.simple_tr = tr;
+}
+
+// Sets the exit flag.
 void DirectedEdgeBuilder::set_exitsign(const bool exit) {
   dataoffsets_.exitsign = exit;
 }

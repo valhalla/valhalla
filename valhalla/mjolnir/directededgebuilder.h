@@ -140,6 +140,15 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_toll(const bool toll);
 
   /**
+   * Set the simple turn restriction flag. This indicates the directed edge
+   * forms the start of a simple turn restriction. These are turn restrictions
+   * from one edge to another that apply to all vehicles, at all times.
+   * @param  tr  Flag indicating whether this directed edge starts a simple turn
+   *             restriction.
+   */
+  void set_simple_tr(const bool tr);
+
+  /**
    * Sets the exit sign flag.
    * @param  exit  True if this directed edge has exit signs, false if not.
    */

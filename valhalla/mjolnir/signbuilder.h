@@ -2,10 +2,6 @@
 #define VALHALLA_MJOLNIR_SIGNBUILDER_H_
 
 #include <valhalla/baldr/sign.h>
-#include <valhalla/midgard/util.h>
-
-using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {

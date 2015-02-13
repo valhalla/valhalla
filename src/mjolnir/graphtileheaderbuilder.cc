@@ -47,6 +47,11 @@ void GraphTileHeaderBuilder::set_signcount(const uint32_t count) {
   signcount_ = count;
 }
 
+// Sets the number of simple turn restrictions within this tile.
+void GraphTileHeaderBuilder::set_turnrestriction_count(const uint32_t count) {
+  turnrestriction_count_ = count;
+}
+
 // Sets the offset to the edge info.
 void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
   edgeinfo_offset_ = offset;
