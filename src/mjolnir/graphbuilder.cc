@@ -660,6 +660,94 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 
+bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
+                 GraphTileBuilder& graphtile,
+                 const GraphId& endnode, const std::vector<Edge>& edges,
+                 const std::unordered_map<GraphId, std::vector<Node> >& nodes,
+                 const OSMData& osmdata) {
+  auto res = osmdata.restrictions.equal_range(wayid);
+  if (res.first == osmdata.restrictions.end()) {
+    return false;
+  }
+
+  // Edge is the from edge of a restriction. Find all TRs (if any)
+  // through the target (end) node of this directed edge.
+  std::vector<OSMRestriction> trs;
+  for (auto r = res.first; r != res.second; ++r) {
+    if (r->second.via_graphid() == endnode) {
+      if (r->second.day_on() != DOW::kNone) {
+        timedrestrictions++;
+      } else {
+        trs.push_back(r->second);
+      }
+    }
+  }
+  if (trs.empty()) {
+    return false;
+  }
+
+  // TODO - cannot mix types (no and only!)
+  bool notype = false;
+  bool onlytype = false;
+  for (const auto& tr : trs) {
+  if (tr.type() == RestrictionType::kOnlyRightTurn ||
+      tr.type() == RestrictionType::kOnlyLeftTurn ||
+      tr.type() == RestrictionType::kOnlyStraightOn)
+    onlytype = true;
+  else
+    notype = true;
+  }
+  if (notype && onlytype) {
+    LOG_ERROR("Restrictions have both \"only\" and \"no\" types - skip them!");
+    return false;
+  }
+
+  // Get the way Ids of the edges at the endnode
+  std::vector<uint64_t> wayids;
+  const Node& node = GetNode(endnode, nodes);
+  for (auto edgeindex : node.edges) {
+    wayids.push_back(osmdata.ways[edges[edgeindex].wayindex_].way_id());
+  }
+
+  uint32_t mask = 0;
+  RestrictionType type;
+  for (const auto& tr : trs) {
+    switch (tr.type()) {
+    case RestrictionType::kNoLeftTurn:
+    case RestrictionType::kNoRightTurn:
+    case RestrictionType::kNoStraightOn:
+    case RestrictionType::kNoUTurn:
+      // Iterate through the edge wayIds until the matching to way Id is found
+      for (uint32_t idx = 0, n = wayids.size(); idx < n; idx++) {
+        if (wayids[idx] == tr.to()) {
+          mask |= (1 << idx);
+          break;
+        }
+      }
+      type = tr.type();
+      break;
+
+    case RestrictionType::kOnlyRightTurn:
+    case RestrictionType::kOnlyLeftTurn:
+    case RestrictionType::kOnlyStraightOn:
+      // Iterate through the edge wayIds - any non-matching edge is added
+      // to the turn restriction
+      for (uint32_t idx = 0, n = wayids.size(); idx < n; idx++) {
+        if (wayids[idx] != tr.to()) {
+          mask |= (1 << idx);
+        }
+      }
+      type = tr.type();
+      break;
+    }
+  }
+
+  // Add a restriction to the graph tile
+  TurnRestrictionBuilder tr(edgeindex, type, mask);
+  graphtile.AddTurnRestriction(tr);
+  return true;
+}
+
 void BuildTileSet(
     std::unordered_map<GraphId, std::vector<Node> >::const_iterator tile_start,
     std::unordered_map<GraphId, std::vector<Node> >::const_iterator tile_end,
@@ -689,7 +777,7 @@ void BuildTileSet(
   PointLL node_ll;
   for(; tile_start != tile_end; ++tile_start) {
     try {
-     // What actually writes the tile
+      // What actually writes the tile
       GraphTileBuilder graphtile;
 
       // Iterate through the nodes
@@ -812,19 +900,12 @@ void BuildTileSet(
             directededge.set_exitsign(true);
           }
 
-          // Handle restrictions
-          auto res = osmdata.restrictions.equal_range(w.way_id());
-          if (res.first != osmdata.restrictions.end()) {
-            // Edge is the from edge of a restriction
-            for (auto r = res.first; r != res.second; ++r) {
-              if (r->second.via_graphid() == target) {
-                if (r->second.day_on() != DOW::kNone) {
-                  timedrestrictions++;
-                } else {
-                  simplerestrictions++;
-                }
-              }
-            }
+          // Handle simple turn restrictions that originate from this
+          // directed edge
+          if (CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
+                         target, edges, nodes, osmdata)) {
+            directededge.set_simple_tr(true);
+            simplerestrictions++;
           }
 
           // Increment the directed edge index within the tile
@@ -871,25 +952,15 @@ void BuildTileSet(
 
 std::string GraphBuilder::GetRef(const std::string& way_ref,
                                  const std::string& relation_ref) {
-
-  std::string refs;
-
-  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
-
-  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
-
   bool found = false;
-
+  std::string refs;
+  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
+  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
   for (auto& ref : way_refs) {
-
     found = false;
-
-    for (auto& refdir : refdirs) {
-
+    for (const auto& refdir : refdirs) {
       std::vector<std::string> tmp = GetTagTokens(refdir,'|'); // US 51|north
-
-      if (tmp.size() == 2)
-      {
+      if (tmp.size() == 2) {
         if (tmp[0] == ref) { // US 51 == US 51
           if (!refs.empty())
             refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
@@ -901,17 +972,14 @@ std::string GraphBuilder::GetRef(const std::string& way_ref,
       }
     }
 
-    if (!found) // no direction found in relations for this ref
-    {
+    if (!found) {   // no direction found in relations for this ref
       if (!refs.empty())
         refs += ";" + ref;
       else
         refs = ref;
     }
   }
-
   return refs;
-
 }
 
 std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
