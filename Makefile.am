@@ -56,6 +56,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphbuilder.h \
 	valhalla/mjolnir/graphoptimizer.h \
 	valhalla/mjolnir/hierarchybuilder.h \
+        valhalla/mjolnir/idtable.h \
 	valhalla/mjolnir/luatagtransform.h \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
@@ -78,6 +79,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/graphbuilder.cc \
 	src/mjolnir/graphoptimizer.cc \
 	src/mjolnir/hierarchybuilder.cc \
+        src/mjolnir/idtable.cc \
         src/mjolnir/luatagtransform.cc \
         src/mjolnir/osmnode.cc \
         src/mjolnir/osmrestriction.cc \
