@@ -95,7 +95,6 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
     // Parse relations.
     t1 = std::chrono::high_resolution_clock::now();
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    osmdata.restrictions.shrink_to_fit();
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
@@ -554,7 +553,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
     return;
 
   OSMRestriction restriction;
-
+  uint64_t from_way_id = 0;
   bool isRestriction = false;
   bool hasRestriction = false;
   bool isRoad = false;
@@ -689,7 +688,7 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
 
       // from and to must be of type 1(way).  via must be of type 0(node)
       if (ref.role == "from" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
-        restriction.set_from(ref.member_id);
+        from_way_id = ref.member_id;
       else if (ref.role == "to" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
         restriction.set_to(ref.member_id);
       else if (ref.role == "via" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
@@ -697,8 +696,8 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
     }
 
     // Add the restriction to the list.  For now only support simple restrictions.
-    if (restriction.from() && restriction.via() && restriction.to())
-      osm_->restrictions.push_back(std::move(restriction));
+    if (from_way_id != 0 && restriction.via() && restriction.to())
+      osm_->restrictions.insert(RestrictionsMap::value_type(from_way_id, restriction));
   }
 }
 
