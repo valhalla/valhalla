@@ -1,7 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
-//#include <stxxl.h>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -11,13 +10,14 @@
 #include <valhalla/mjolnir/osmrestriction.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
-
 namespace valhalla {
 namespace mjolnir {
 
 using WayVector = std::vector<OSMWay>;
 using NodeRefVector = std::vector<uint64_t>;
-using RestrictionsVector = std::vector<OSMRestriction>;
+using RestrictionsMap = std::unordered_multimap<uint64_t, OSMRestriction>;
+using OSMNodeMap = std::unordered_map<uint64_t, OSMNode>;
+using OSMStringMap = std::unordered_map<uint64_t, std::string>;
 
 enum class OSMType : uint8_t {
     kNode,
@@ -37,26 +37,26 @@ struct OSMData {
   // Stores all the ways that are part of the road network
   WayVector ways;
 
-  // Stores simple restrictions.
-  RestrictionsVector restrictions;
+  // Stores simple restrictions. Indexed by the from way Id.
+  RestrictionsMap restrictions;
 
   // Node references
   NodeRefVector noderefs;
 
-  // Map that stores all the nodes read
-  std::unordered_map<uint64_t, OSMNode> nodes;
+  // Map that stores all the nodes read. Indexed by OSM node Id.
+  OSMNodeMap nodes;
 
   // Map that stores all the ref info on a node
-  std::unordered_map<uint64_t, std::string> node_ref;
+  OSMStringMap node_ref;
 
-  // Map that stores all the exit to info on a node
-  std::unordered_map<uint64_t, std::string> node_exit_to;
+  // Map that stores all the exit_to info on a node
+  OSMStringMap node_exit_to;
 
   // Map that stores all the name info on a node
-  std::unordered_map<uint64_t, std::string> node_name;
+  OSMStringMap node_name;
 
   // Map that stores an updated ref for a way
-  std::unordered_map<uint64_t, std::string> way_ref;
+  OSMStringMap way_ref;
 
   // References
   UniqueNames ref_offset_map;

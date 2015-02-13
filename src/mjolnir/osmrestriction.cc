@@ -1,13 +1,14 @@
 #include "mjolnir/osmrestriction.h"
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 
 OSMRestriction::OSMRestriction()
-    : attributes_{},
-      from_(0),
-      via_(0),
-      to_(0) {
+    : via_{},
+      to_(0),
+      attributes_{} {
 }
 
 OSMRestriction::~OSMRestriction() {
@@ -83,23 +84,24 @@ uint32_t OSMRestriction::minute_off() const {
   return attributes_.minute_off_;
 }
 
-// Set the from way id
-void OSMRestriction::set_from(uint64_t from) {
-  from_ = from;
-}
-
-// Get the from way id
-uint64_t OSMRestriction::from() const {
-  return from_;
+// Set the via id
+void OSMRestriction::set_via(uint64_t via) {
+  via_.osmid = via;
 }
 
 // Set the via id
-void OSMRestriction::set_via(uint64_t via) {
-  via_ = via;
+void OSMRestriction::set_via(const GraphId& id) {
+  via_.id = id;
 }
-// Get the via id
+
+// Get the via OSM node id
 uint64_t OSMRestriction::via() const {
-  return via_;
+  return via_.osmid;
+}
+
+// Get the via node's GraphId
+const GraphId& OSMRestriction::via_graphid() const {
+  return via_.id;
 }
 
 // Set the to way id
