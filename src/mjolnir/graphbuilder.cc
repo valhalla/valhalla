@@ -688,7 +688,7 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     return false;
   }
 
-  // TODO - cannot mix types (no and only!)
+  // Cannot mix types (no and only!). Log an error/issue.
   bool notype = false;
   bool onlytype = false;
   for (const auto& tr : trs) {

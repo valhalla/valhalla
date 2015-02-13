@@ -54,7 +54,7 @@ void GraphOptimizer::Optimize() {
       }
     }
   }
-  LOG_INFO("DONE");
+  LOG_INFO("Validation of tiles is done");
 
   for (auto tile_level :  tile_hierarchy_.levels()) {
     dupcount_ = 0;
