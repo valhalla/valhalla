@@ -33,6 +33,16 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     throw std::runtime_error("Trip path does not have any nodes");
   }
 
+  // Check for a single node
+  if (trip_path_->node_size() == 1) {
+    // TODO - handle origin and destination are the same
+    throw std::runtime_error("Trip path has only one node");
+  }
+
+  LOG_INFO(
+      std::string(
+          "trip_path_->node_size()=" + std::to_string(trip_path_->node_size())));
+
   // Process the Destination maneuver
   maneuvers.emplace_front();
   CreateDestinationManeuver(maneuvers.front());
