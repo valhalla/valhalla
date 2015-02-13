@@ -79,16 +79,13 @@ enum class DOW : uint8_t {
 
 
 enum class RestrictionType : uint8_t {
-  kNone,
   kNoLeftTurn,
   kNoRightTurn,
   kNoStraightOn,
   kNoUTurn,
   kOnlyRightTurn,
   kOnlyLeftTurn,
-  kOnlyStraightOn,
-  kNoEntry,
-  kNoExit
+  kOnlyStraightOn
 };
 
 }
