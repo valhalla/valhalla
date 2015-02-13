@@ -1,5 +1,6 @@
 #include <ostream>
 #include <iostream>
+#include <algorithm>
 
 #include "thor/trippathbuilder.h"
 
@@ -40,6 +41,33 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float pa
       //just take the point from this segment
       push(*(start + 1));
       partial_length -= length;
+    }
+  }
+}
+
+void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& start_vertex, const float end, const PointLL& end_vertex) {
+  //clip up to the start point
+  float along = 0.f;
+  auto current = shape.begin();
+  while(current != shape.end() - 1) {
+    along += (current + 1)->Distance(*current);
+    //just crossed it
+    if(along > start){
+      along = start;
+      *current = start_vertex;
+      shape.erase(shape.begin(), current);
+      break;
+    }
+  }
+
+  //clip after the end point
+  while(current != shape.end() - 1) {
+    along += (current + 1)->Distance(*current);
+    //just crossed it
+    if(along > end) {
+      *(++current) = end_vertex;
+      shape.erase(++current, shape.end());
+      break;
     }
   }
 }
@@ -89,15 +117,20 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // If the path was only one edge we have a special case
   if(pathedges.size() == 1) {
-    const auto tile = graphreader.GetGraphTile(pathedges.front());
-    const auto edge = tile->directededge(pathedges.front());
     if(end_pct < start_pct)
       throw std::runtime_error("Generated reverse trivial path, this is a bug and we are working on it");
-    TripPath_Edge* trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
-    std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+    const auto tile = graphreader.GetGraphTile(pathedges.front());
+    const auto edge = tile->directededge(pathedges.front());
+
+    // Sort out the shape
+    auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
+    if(!edge->forward())
+      std::reverse(shape.begin(), shape.end());
+    float total = static_cast<float>(edge->length());
+    TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
+
+    auto trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
-    //TODO: get shape
-    std::vector<PointLL> shape;
     trip_edge->set_end_shape_index(shape.size());
     trip_path.add_node();
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
