@@ -63,7 +63,7 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
     if(!filter(edge)) {
       GraphId id(tile->id());
       id.fields.id = node->edge_index() + (edge - start_edge);
-      correlated.CorrelateEdge(std::move(id), static_cast<float>(!edge->forward()));
+      correlated.CorrelateEdge(std::move(id), 0);
     }
   }
 

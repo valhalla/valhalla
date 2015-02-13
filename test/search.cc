@@ -148,22 +148,26 @@ void TestNodeSearch() {
   auto t = a.first.tileid();
   auto l = a.first.level();
 
-  search({b.second}, b.second, { {{t, l, 0}, 1}, {{t, l, 1}, 0} }, valhalla::loki::SearchStrategy::NODE);
-  search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} }, valhalla::loki::SearchStrategy::NODE);
-  search({c.second}, c.second, { {{t, l, 5}, 0}, {{t, l, 6}, 1} }, valhalla::loki::SearchStrategy::NODE);
-  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::NODE);
+  search({b.second}, b.second, { {{t, l, 0}, 0}, {{t, l, 1}, 0} }, valhalla::loki::SearchStrategy::NODE);
+  search({a.second}, a.second, { {{t, l, 2}, 0}, {{t, l, 3}, 0}, {{t, l, 4}, 0} }, valhalla::loki::SearchStrategy::NODE);
+  search({c.second}, c.second, { {{t, l, 5}, 0}, {{t, l, 6}, 0} }, valhalla::loki::SearchStrategy::NODE);
+  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 0}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::NODE);
 }
 
 void TestEdgeSearch() {
   auto t = a.first.tileid();
   auto l = a.first.level();
 
-  search({a.second}, a.second, { {{t, l, 2}, 1}, {{t, l, 3}, 0}, {{t, l, 4}, 1} }, valhalla::loki::SearchStrategy::EDGE);
-  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 1}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::EDGE);
+  //degenerate to node searches
+  search({a.second}, a.second, { {{t, l, 2}, 0}, {{t, l, 3}, 0}, {{t, l, 4}, 0} }, valhalla::loki::SearchStrategy::EDGE);
+  search({d.second}, d.second, { {{t, l, 7}, 0}, {{t, l, 8}, 0}, {{t, l, 9}, 0} }, valhalla::loki::SearchStrategy::EDGE);
+  //mid point search
   search({a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), { {{t, l, 3}, .5f}, {{t, l, 8}, .5f} }, valhalla::loki::SearchStrategy::EDGE);
+  //set a point 40% along the edge runs with the shape direction
   PointLL answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
   search({answer}, answer, { {{t, l, 3}, ratio}, {{t, l, 8}, 1.f - ratio} }, valhalla::loki::SearchStrategy::EDGE);
+  //set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
   search({answer}, answer, { {{t, l, 0}, ratio}, {{t, l, 7}, 1.f - ratio} }, valhalla::loki::SearchStrategy::EDGE);
