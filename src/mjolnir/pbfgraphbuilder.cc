@@ -2,7 +2,8 @@
 #include <vector>
 
 #include "pbfgraphbuilder.h"
-#include "mjolnir/pbfparser.h"
+
+#include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphoptimizer.h"
@@ -92,7 +93,7 @@ bool ParseArguments(int argc, char *argv[]) {
  */
 OSMData ParsePBF(const boost::property_tree::ptree& pt,
                 const std::vector<std::string>& input_files) {
-  PBFParser parser(pt);
+  PBFGraphParser parser(pt);
   return parser.Load(input_files);
 }
 

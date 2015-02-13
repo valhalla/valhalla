@@ -1,5 +1,5 @@
-#ifndef VALHALLA_MJOLNIR_PBFPARSER_H
-#define VALHALLA_MJOLNIR_PBFPARSER_H
+#ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
+#define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
 #include <sstream>
 #include <iostream>
@@ -32,16 +32,16 @@ namespace mjolnir {
 /**
  * Class used to parse OSM protocol buffer extracts.
  */
-class PBFParser {
+class PBFGraphParser {
  public:
   //not default constructable or copyable
-  PBFParser() = delete;
-  PBFParser(const PBFParser&) = delete;
+  PBFGraphParser() = delete;
+  PBFGraphParser(const PBFGraphParser&) = delete;
 
   /**
    * Constructor
    */
-  PBFParser(const boost::property_tree::ptree& pt);
+  PBFGraphParser(const boost::property_tree::ptree& pt);
 
   /**
    * Loads a given input file
@@ -102,4 +102,4 @@ class PBFParser {
 }
 }
 
-#endif  // VALHALLA_MJOLNIR_PBFPARSER_H
+#endif  // VALHALLA_MJOLNIR_PBFGRAPHPARSER_H

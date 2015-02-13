@@ -1,6 +1,6 @@
 
 
-#include "mjolnir/pbfparser.h"
+#include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 
 // Use open source PBF reader from:
@@ -31,8 +31,8 @@ const uint64_t kMaxOSMNodeId = 4000000000;
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
-// Construct PBFParser based on properties file and input PBF extract
-PBFParser::PBFParser(const boost::property_tree::ptree& pt)
+// Construct PBFGraphParser based on properties file and input PBF extract
+PBFGraphParser::PBFGraphParser(const boost::property_tree::ptree& pt)
     : speed_assignment_count_(0),
       tile_hierarchy_(pt.get_child("hierarchy")),
       shape_(kMaxOSMNodeId),
@@ -48,7 +48,7 @@ PBFParser::PBFParser(const boost::property_tree::ptree& pt)
           pt.get<std::string>("tagtransform.relation_function"));
 }
 
-OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
+OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
   OSMData osmdata{};
@@ -122,7 +122,7 @@ OSMData PBFParser::Load(const std::vector<std::string>& input_files) {
 }
 
 // Initialize Lua tag transformations
-void PBFParser::LuaInit(const std::string& nodetagtransformscript,
+void PBFGraphParser::LuaInit(const std::string& nodetagtransformscript,
                            const std::string& nodetagtransformfunction,
                            const std::string& waytagtransformscript,
                            const std::string& waytagtransformfunction,
@@ -137,7 +137,7 @@ void PBFParser::LuaInit(const std::string& nodetagtransformscript,
   lua_.OpenLib();
 }
 
-void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
+void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
                                  const Tags &tags) {
   // Check if it is in the list of nodes used by ways
   if (!shape_.IsUsed(osmid)) {
@@ -194,7 +194,7 @@ void PBFParser::node_callback(uint64_t osmid, double lng, double lat,
   }
 }
 
-void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
+void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
                                 const std::vector<uint64_t> &refs) {
 
   // Do not add ways with < 2 nodes. Log error or add to a problem list
@@ -521,7 +521,7 @@ void PBFParser::way_callback(uint64_t osmid, const Tags &tags,
   osm_->ways.push_back(std::move(w));
 }
 
-void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
+void PBFGraphParser::relation_callback(uint64_t osmid, const Tags &tags,
                                      const CanalTP::References &refs) {
   // Get tags
   Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
