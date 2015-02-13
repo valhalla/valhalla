@@ -45,11 +45,11 @@ test-suite.log
 test-driver
 test/edgeinfobuilder
 test/uniquenames
-test/nodetable
+test/idtable
 test/graphtilebuilder
 test/graphbuilder
 test/refs
-test/parser
+test/graphparser
 test/signinfo
 test/*.log
 test/*.trs
