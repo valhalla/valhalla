@@ -36,7 +36,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // Check for a single node
   if (trip_path_->node_size() == 1) {
     // TODO - handle origin and destination are the same
-    throw std::runtime_error("Only one node");
+    throw std::runtime_error("Trip path has only one node");
   }
 
   LOG_INFO(
