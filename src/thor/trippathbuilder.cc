@@ -1,5 +1,6 @@
 #include <ostream>
 #include <iostream>
+#include <algorithm>
 
 #include "thor/trippathbuilder.h"
 
@@ -26,18 +27,49 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float pa
       shape.insert(shape.begin(), point);
   };
 
-  //for each segment
-  push(*start);
-  for(; start != end - 1; ++start) {
-    //is this segment longer than what we have left, then we found the segment the point lies on
-    const auto length = (start + 1)->Distance(*start);
-    if(length > partial_length) {
-      push(last);
-      return;
+  //yeah we dont add shape if we dont have any length to add
+  if(partial_length > 0.f) {
+    //for each segment
+    push(*start);
+    for(; start != end - 1; ++start) {
+      //is this segment longer than what we have left, then we found the segment the point lies on
+      const auto length = (start + 1)->Distance(*start);
+      if(length > partial_length) {
+        push(last);
+        return;
+      }
+      //just take the point from this segment
+      push(*(start + 1));
+      partial_length -= length;
     }
-    //just take the point from this segment
-    push(*(start + 1));
-    partial_length -= length;
+  }
+}
+
+void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& start_vertex, const float end, const PointLL& end_vertex) {
+  //clip up to the start point
+  float along = 0.f;
+  auto current = shape.begin();
+  while(current != shape.end() - 1) {
+    along += (current + 1)->Distance(*current);
+    //just crossed it
+    if(along > start){
+      along = start;
+      *current = start_vertex;
+      shape.erase(shape.begin(), current);
+      break;
+    }
+  }
+
+  //clip after the end point
+  current = shape.begin();
+  while(current != shape.end() - 1) {
+    along += (current + 1)->Distance(*current);
+    //just crossed it
+    if(along > end) {
+      *(++current) = end_vertex;
+      shape.erase(++current, shape.end());
+      break;
+    }
   }
 }
 
@@ -69,11 +101,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t shortcutcount = 0;
   const NodeInfo* nodeinfo = nullptr;
 
-  auto start_pct =  1.f - origin.edges().front().dist;
+  auto start_pct =  origin.edges().front().dist;
   auto start_vrt = origin.vertex();
   for(size_t i = 1; i < origin.edges().size(); ++i){
     if(origin.edges()[i].id == pathedges.front()){
-      start_pct = 1.f - origin.edges()[i].dist;
+      start_pct = origin.edges()[i].dist;
     }
   }
   auto end_pct = dest.edges().front().dist;
@@ -82,6 +114,31 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if(dest.edges()[i].id == pathedges.back()){
       end_pct = dest.edges()[i].dist;
     }
+  }
+
+  // If the path was only one edge we have a special case
+  if(pathedges.size() == 1) {
+    if(end_pct < start_pct)
+       throw std::runtime_error("Generated reverse trivial path, this is a bug and we are working on it");
+    const auto tile = graphreader.GetGraphTile(pathedges.front());
+    const auto edge = tile->directededge(pathedges.front());
+
+    // Sort out the shape
+    auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
+    if(!edge->forward())
+      std::reverse(shape.begin(), shape.end());
+    LOG_INFO("Start: " + std::to_string(start_pct) + " End: " + std::to_string(end_pct));
+    for(const auto& pt : shape)
+      LOG_INFO(std::to_string(pt.second) + "," + std::to_string(pt.first));
+    float total = static_cast<float>(edge->length());
+    TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
+
+    auto trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
+    trip_edge->set_begin_shape_index(0);
+    trip_edge->set_end_shape_index(shape.size());
+    trip_path.add_node();
+    trip_path.set_shape(encode<std::vector<PointLL> >(shape));
+    return trip_path;
   }
 
   // Iterate through path edges
@@ -118,7 +175,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //}
 
     // Add edge to the trip node and set its attributes
-    float length_pct = (edge == pathedges.front() ? start_pct : (edge == pathedges.back() ? end_pct : 1.f));
+    float length_pct = (edge == pathedges.front() ? 1.f - start_pct : (edge == pathedges.back() ? end_pct : 1.f));
     TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge,
                                            trip_node, graphtile, length_pct);
 

@@ -7,6 +7,26 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+
+GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
+  //check if any of the pairs of origin and destination edges could be a trivial path
+  //NOTE: it is true that there could be a shorter path by leaving this edge and coming
+  //back in the other direction however this should be uncommon
+  for(const auto& origin_edge : origin.edges()) {
+    for(const auto& destination_edge : destination.edges()) {
+      //same id and the origin shows up at the beginning of the edge
+      //while the destination shows up at the end of the edge
+      if(origin_edge.id == destination_edge.id && origin_edge.dist < destination_edge.dist) {
+        return origin_edge.id;
+      }
+    }
+  }
+  return GraphId();
+}
+
+}
+
 namespace valhalla {
 namespace thor {
 
@@ -33,7 +53,10 @@ void PathAlgorithm::Clear() {
   edgelabels_.clear();
 
   // Clear elements from the adjacency list
-  adjacencylist_->Clear();
+  if(adjacencylist_ != nullptr) {
+    adjacencylist_->Clear();
+    adjacencylist_ = nullptr;
+  }
 
   // Clear the edge status flags
   if (edgestatus_ != nullptr) {
@@ -68,6 +91,11 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
              std::shared_ptr<DynamicCost> costing) {
+  // Check for trivial path
+  auto trivial_id = trivial(origin, dest);
+  if(trivial_id.Is_Valid())
+    return {trivial_id};
+
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
 
