@@ -350,6 +350,12 @@ function filter_tags_generic(kv)
     return 1
   end
 
+   delete_tags = { 'FIXME', 'note', 'source' }
+
+   for i,k in ipairs(delete_tags) do
+      kv[k] = nil
+   end
+
   --set a few flags
   local road_class = road_class[kv["highway"]]
 
@@ -480,9 +486,7 @@ function ways_proc (kv, nokeys)
 end
 
 function rels_proc (kv, nokeys)
-  if (kv["type"] == "route" or kv["type"] == "restriction" or
-     (kv["type"] == "boundary" and kv["boundary"] == "administrative" and
-     (kv["admin_level"] == "2" or kv["admin_level"] == "4"))) then
+  if (kv["type"] == "route" or kv["type"] == "restriction") then
 
      if kv["type"] == "restriction" then
 
