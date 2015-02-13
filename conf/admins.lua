@@ -41,6 +41,12 @@ function rels_proc (kv, nokeys)
   if (kv["type"] == "boundary" and kv["boundary"] == "administrative" and
      (kv["admin_level"] == "2" or kv["admin_level"] == "4")) then
 
+     --save only states/prov for USA, MX, and CA.
+     if (kv["name"] == "United States of America" or 
+         kv["name"] == "Estados Unidos Mexicanos" or kv["name"] == "Canada") then
+       return 1, kv
+     end
+
      delete_tags = { 'FIXME', 'note', 'source' }
 
      for i,k in ipairs(delete_tags) do
