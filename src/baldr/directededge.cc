@@ -31,6 +31,13 @@ uint32_t DirectedEdge::edgeinfo_offset() const {
   return dataoffsets_.edgeinfo_offset;
 }
 
+// Does this directed edge form the start of a simple turn restriction?
+// These are turn restrictions from one edge to another that apply to
+// all vehicles, at all times.
+bool DirectedEdge::simple_tr() const {
+  return dataoffsets_.simple_tr;
+}
+
 // Does this directed edge have exit signs.
 bool DirectedEdge::exitsign() const {
   return dataoffsets_.exitsign;

@@ -47,6 +47,7 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       signs_(nullptr),
+      turnrestrictions_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -97,6 +98,10 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     // Set a pointer to the sign list
     signs_ = reinterpret_cast<Sign*>(ptr);
     ptr += header_->signcount() * sizeof(Sign);
+
+    // Set a pointer to the simple turn restriction list
+    turnrestrictions_ = reinterpret_cast<TurnRestriction*>(ptr);
+    ptr += header_->turnrestriction_count() * sizeof(TurnRestriction);
 
     // Start of edge information and its size
     edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
@@ -265,6 +270,34 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   }
   return signs;
+}
+
+// Convenience method to get the turn restriction mask for an edge given the
+// directed edge index.
+uint32_t GraphTile::GetTurnRestrictions(const uint32_t idx,
+                                        baldr::RestrictionType& type) const {
+  uint32_t count = header_->turnrestriction_count();
+  if (count == 0) {
+    return 0;
+  }
+
+  // Binary search
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (turnrestrictions_[mid].edgeindex() == idx) {
+      type = turnrestrictions_[mid].type();
+      return turnrestrictions_[mid].restriction_mask();
+    }
+    if (idx < turnrestrictions_[mid].edgeindex() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+  return 0;
 }
 
 }

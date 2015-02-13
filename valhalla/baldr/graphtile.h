@@ -5,6 +5,8 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/sign.h>
+#include <valhalla/baldr/turnrestriction.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <boost/shared_array.hpp>
@@ -16,7 +18,6 @@ namespace baldr {
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
- * @author  David W. Nesbitt
  */
 class GraphTile {
  public:
@@ -125,6 +126,17 @@ class GraphTile {
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx) const;
 
+  /**
+   * Convenience method to get turn restrictions for an edge given the
+   * directed edge index.
+   * @param  idx  Directed edge index. Used to lookup list of signs.
+   * @param  type (OUT) - Restriction type.
+   * @return  Returns an integer with bits marking which directed edge indexes
+   *          at the end node are restricted from this directed edge.
+   */
+  uint32_t GetTurnRestrictions(const uint32_t idx,
+                               baldr::RestrictionType& type) const;
+
  protected:
 
   // Size of the tile in bytes
@@ -147,6 +159,9 @@ class GraphTile {
 
   // Signs (indexed by directed edge index)
   Sign* signs_;
+
+  // Simple turn restrictions
+  TurnRestriction* turnrestrictions_;
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
