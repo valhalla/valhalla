@@ -105,12 +105,10 @@ class GraphTileBuilder : public baldr::GraphTile {
                 const std::vector<baldr::SignInfo>& signs);
 
   /**
-   * Add simple turn restrictions.
-   * @param  idx  Directed edge index.
-   * @param  trs  Turn restrictions
+   * Add simple turn restriction.
+   * @param  tr  Turn restriction (includes the directed edge index)
    */
-  void AddTurnRestrictions(const uint32_t idx,
-                const std::vector<baldr::TurnRestriction>& trs);
+  void AddTurnRestriction(const TurnRestrictionBuilder& tr);
 
   /**
    * Add edge info to the tile.

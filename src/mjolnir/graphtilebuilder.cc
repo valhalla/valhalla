@@ -44,11 +44,13 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
+    header_builder_.set_turnrestriction_count(turnrestriction_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)
-            + (signs_builder_.size() * sizeof(SignBuilder))));
+            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+            + (signs_builder_.size() * sizeof(SignBuilder))
+            + (turnrestriction_builder_.size() * sizeof(TurnRestrictionBuilder)));
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
@@ -67,7 +69,9 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
-
+if (header_builder_.turnrestriction_count() > 0) {
+  LOG_INFO("Write Tile with " + std::to_string(turnrestriction_builder_.size()) + " trs");
+}
     // Write the turn restrictions
     file.write(reinterpret_cast<const char*>(&turnrestriction_builder_[0]),
                turnrestriction_builder_.size() * sizeof(TurnRestrictionBuilder));
@@ -231,6 +235,11 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
                   existing_text_offset->second);
     }
   }
+}
+
+// Add simple turn restriction.
+void GraphTileBuilder::AddTurnRestriction(const TurnRestrictionBuilder& tr) {
+  turnrestriction_builder_.push_back(tr);
 }
 
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
