@@ -594,9 +594,6 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
           hasRestriction = true;
           restriction.set_type(type);
           break;
-        case RestrictionType::kNone:
-        case RestrictionType::kNoEntry:
-        case RestrictionType::kNoExit:
         default:
           // kNoEntry and kNoExit not supported in for simple restrictions.
           return;
