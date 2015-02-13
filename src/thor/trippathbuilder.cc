@@ -26,18 +26,21 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float pa
       shape.insert(shape.begin(), point);
   };
 
-  //for each segment
-  push(*start);
-  for(; start != end - 1; ++start) {
-    //is this segment longer than what we have left, then we found the segment the point lies on
-    const auto length = (start + 1)->Distance(*start);
-    if(length > partial_length) {
-      push(last);
-      return;
+  //yeah we dont add shape if we dont have any length to add
+  if(partial_length > 0.f) {
+    //for each segment
+    push(*start);
+    for(; start != end - 1; ++start) {
+      //is this segment longer than what we have left, then we found the segment the point lies on
+      const auto length = (start + 1)->Distance(*start);
+      if(length > partial_length) {
+        push(last);
+        return;
+      }
+      //just take the point from this segment
+      push(*(start + 1));
+      partial_length -= length;
     }
-    //just take the point from this segment
-    push(*(start + 1));
-    partial_length -= length;
   }
 }
 
@@ -196,6 +199,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Add the last node
   trip_path.add_node();
+
+  // If the path was only one edge we have a special case and the shape must be fixed up
+  if(pathedges.size() == 1) {
+
+  }
 
 /** TODO - remove debug later
   LOG_TRACE("Took " + std::to_string(shortcutcount) + " shortcut edges out of " +
