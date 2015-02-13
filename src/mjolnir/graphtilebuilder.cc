@@ -69,9 +69,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
-if (header_builder_.turnrestriction_count() > 0) {
-  LOG_INFO("Write Tile with " + std::to_string(turnrestriction_builder_.size()) + " trs");
-}
+
     // Write the turn restrictions
     file.write(reinterpret_cast<const char*>(&turnrestriction_builder_[0]),
                turnrestriction_builder_.size() * sizeof(TurnRestrictionBuilder));
@@ -342,6 +340,13 @@ SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
     return static_cast<SignBuilder&>(signs_[idx]);
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+// Gets a non-const turn restriction (builder) from existing tile data.
+TurnRestrictionBuilder& GraphTileBuilder::turnrestriction(const size_t idx) {
+  if (idx < header_->turnrestriction_count())
+    return static_cast<TurnRestrictionBuilder&>(turnrestrictions_[idx]);
+  throw std::runtime_error("GraphTileBuilder turn restriction index is out of bounds");
 }
 
 }

@@ -138,6 +138,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   SignBuilder& sign(const size_t idx);
 
+  /**
+   * Gets a non-const turn restriction (builder) from existing tile data.
+   * @param  idx  Index of the turn restriction (index in the array, not the
+   *              directed edge index) within the tile.
+   */
+  TurnRestrictionBuilder& turnrestriction(const size_t idx);
+
  protected:
 
   struct EdgeTupleHasher {
