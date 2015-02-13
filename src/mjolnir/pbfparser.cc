@@ -595,9 +595,8 @@ void PBFParser::relation_callback(uint64_t osmid, const Tags &tags,
           restriction.set_type(type);
           break;
         default:
-          // kNoEntry and kNoExit not supported in for simple restrictions.
+          // kNoEntry and kNoExit not supported.
           return;
-          break;
       }
     }
     //sample with date time.  1168738
