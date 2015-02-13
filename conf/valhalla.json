@@ -19,6 +19,14 @@
       "relation_script": "conf/edges.lua",
       "relation_function": "rels_proc"
     },
+    "admintagtransform": {
+      "node_script": "conf/admins.lua",
+      "node_function": "nodes_proc",
+      "way_script": "conf/admins.lua",
+      "way_function": "ways_proc",
+      "relation_script": "conf/admins.lua",
+      "relation_function": "rels_proc"
+    },
     "logging": {
       "type": "std_out",
       "color": true
