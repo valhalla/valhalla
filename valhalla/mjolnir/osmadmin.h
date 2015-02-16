@@ -103,11 +103,12 @@ class OSMAdmin {
   // Count of members.
   uint16_t memberid_count_;
 
+  // Admin level.  2 = country; 4 = state.
+  uint8_t admin_level_;
+
   // Name of country or state/prov
   std::string name_;
 
-  // Admin level.  2 = country; 4 = state.
-  uint8_t admin_level_;
 };
 
 }
