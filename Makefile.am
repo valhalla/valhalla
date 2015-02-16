@@ -56,12 +56,15 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphbuilder.h \
 	valhalla/mjolnir/graphoptimizer.h \
 	valhalla/mjolnir/hierarchybuilder.h \
+        valhalla/mjolnir/idtable.h \
 	valhalla/mjolnir/luatagtransform.h \
+        valhalla/mjolnir/osmadmin.h \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
         valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
-	valhalla/mjolnir/pbfparser.h \
+        valhalla/mjolnir/pbfadminparser.h \
+	valhalla/mjolnir/pbfgraphparser.h \
 	valhalla/mjolnir/signbuilder.h \
 	valhalla/mjolnir/turnrestrictionbuilder.h \
         valhalla/mjolnir/util.h
@@ -78,11 +81,14 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/graphbuilder.cc \
 	src/mjolnir/graphoptimizer.cc \
 	src/mjolnir/hierarchybuilder.cc \
+        src/mjolnir/idtable.cc \
         src/mjolnir/luatagtransform.cc \
+        src/mjolnir/osmadmin.cc \
         src/mjolnir/osmnode.cc \
         src/mjolnir/osmrestriction.cc \
         src/mjolnir/osmway.cc \
-        src/mjolnir/pbfparser.cc \
+        src/mjolnir/pbfadminparser.cc \
+        src/mjolnir/pbfgraphparser.cc \
 	src/mjolnir/signbuilder.cc \
 	src/mjolnir/turnrestrictionbuilder.cc \
         src/mjolnir/util.cc
@@ -90,20 +96,28 @@ libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPP
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ 
 
 #distributed executables
-bin_PROGRAMS = pbfgraphbuilder 
+bin_PROGRAMS = \ 
+	pbfgraphbuilder \
+	pbfadminbuilder
+
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder.cc 
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
 
+pbfadminbuilder_SOURCES = \
+        src/mjolnir/pbfadminbuilder.cc
+pbfadminbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+pbfadminbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+
 # tests
 check_PROGRAMS = \
 	test/edgeinfobuilder \
 	test/uniquenames \
-	test/nodetable \
+	test/idtable \
 	test/graphtilebuilder \
 	test/graphbuilder \
-        test/parser \
+        test/graphparser \
         test/refs \
 	test/signinfo 
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
@@ -112,9 +126,9 @@ test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ li
 test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
 test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_nodetable_SOURCES = test/nodetable.cc test/test.cc
-test_nodetable_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_nodetable_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_idtable_SOURCES = test/idtable.cc test/test.cc
+test_idtable_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_idtable_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_graphtilebuilder_SOURCES = test/graphtilebuilder.cc test/test.cc
 test_graphtilebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_graphtilebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
@@ -122,9 +136,9 @@ test_graphbuilder_SOURCES = test/graphbuilder.cc test/test.cc
 test_graphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_graphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_refs_SOURCES = test/refs.cc test/test.cc
-test_parser_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_parser_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_parser_SOURCES = test/parser.cc test/test.cc
+test_graphparser_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_graphparser_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
+test_graphparser_SOURCES = test/graphparser.cc test/test.cc
 test_refs_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_refs_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_signinfo_SOURCES = test/signinfo.cc test/test.cc

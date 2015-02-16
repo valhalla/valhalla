@@ -2,8 +2,7 @@
 #include <vector>
 
 #include "pbfgraphbuilder.h"
-
-#include "../../valhalla/mjolnir/pbfgraphparser.h"
+#include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphoptimizer.h"
@@ -19,9 +18,6 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
 
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/logging.h>
 
 namespace bpo = boost::program_options;
@@ -33,11 +29,11 @@ std::vector<std::string> input_files;
 bool ParseArguments(int argc, char *argv[]) {
 
   bpo::options_description options(
-    "pbfgraphbuilder " VERSION "\n"
+    "pbfadminbuilder " VERSION "\n"
     "\n"
-    " Usage: pbfgraphbuilder [options] <protocolbuffer_input_file>\n"
+    " Usage: pbfadminbuilder [options] <protocolbuffer_input_file>\n"
     "\n"
-    "pbfgraphbuilder is a program that creates the route graph from a osm.pbf "
+    "pbfadminbuilder is a program that creates the route graph from a osm.pbf "
     "extract or osm2pgsql import.  You should use the lua scripts provided for "
     "either method.  The scripts are located in the ./import/osm2pgsql directory.  "
     "Moreover, sample json cofigs are located in ./import/configs directory."
@@ -74,7 +70,7 @@ bool ParseArguments(int argc, char *argv[]) {
   }
 
   if (vm.count("version")) {
-    std::cout << "pbfgraphbuilder " << VERSION << "\n";
+    std::cout << "pbfadminbuilder " << VERSION << "\n";
     return true;
   }
 
@@ -93,23 +89,21 @@ bool ParseArguments(int argc, char *argv[]) {
  */
 OSMData ParsePBF(const boost::property_tree::ptree& pt,
                 const std::vector<std::string>& input_files) {
-  PBFGraphParser parser(pt);
+  PBFAdminParser parser(pt);
   return parser.Load(input_files);
 }
 
 /**
- * Build local graph from protocol buffer input.
+ * Build admins from protocol buffer input.
  */
-void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
+void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                const std::vector<std::string>& input_files) {
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
   OSMData osmdata = ParsePBF(pt, input_files);
 
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder graphbuilder(pt);
-  graphbuilder.Build(osmdata);
+  // TODO: save to sqlite.
 }
 
 int main(int argc, char** argv) {
@@ -128,15 +122,10 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  LOG_INFO("Sizeof OSMWay = " + std::to_string(sizeof(OSMWay)));
-  LOG_INFO("Sizeof OSMNode = " + std::to_string(sizeof(OSMNode)));
-  LOG_INFO("Sizeof Edge = " + std::to_string(sizeof(Edge)));
-  LOG_INFO("Sizeof Node = " + std::to_string(sizeof(Node)));
-
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt.get_child("mjolnir"), input_files);
+    BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
@@ -150,16 +139,6 @@ int main(int argc, char** argv) {
     else
       return false;  //unknown value;
   }*/
-
-  // Builds additional hierarchies based on the config file. Connections
-  // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder hierarchybuilder(pt.get_child("mjolnir.hierarchy"));
-  hierarchybuilder.Build();
-
-  // Optimize the graph to add information that cannot be added until
-  // full graph is formed.
-  GraphOptimizer graphoptimizer(pt.get_child("mjolnir.hierarchy"));
-  graphoptimizer.Optimize();
 
   return EXIT_SUCCESS;
 }
