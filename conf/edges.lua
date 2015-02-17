@@ -394,7 +394,7 @@ function filter_tags_generic(kv)
   elseif use == nil and kv["service"] then
     use = 12 --other
   else 
-    use = 0 --none
+    use = 0 --general road, no special use
   end
 
   kv["use"] = use
