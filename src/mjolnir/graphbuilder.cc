@@ -1121,7 +1121,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 // Build tiles for the local graph hierarchy
 void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(1); //threads_);
+  std::vector<std::shared_ptr<std::thread> > threads(threads_);
   // A place to hold the results of those threads, be they exceptions or otherwise
   std::vector<std::promise<size_t> > results(threads.size());
   // Divvy up the work
