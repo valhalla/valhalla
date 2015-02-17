@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
@@ -44,7 +45,8 @@ struct OSMData {
   NodeRefVector noderefs;
 
   // Map that stores all the nodes read. Indexed by OSM node Id.
-  OSMNodeMap nodes;
+  std::vector<OSMNode> nodes;
+//  OSMNodeMap nodes;
 
   // Map that stores all the ref info on a node
   OSMStringMap node_ref;
@@ -63,6 +65,17 @@ struct OSMData {
 
   // Names
   UniqueNames name_offset_map;
+
+  OSMNode GetNode(const uint64_t osmid) {
+    OSMNode test(osmid, 0.0f, 0.0f);
+    auto it = std::equal_range(nodes.begin(), nodes.end(), test);
+    return *(it.first);
+  }
+
+  // Sort the OSM nodes
+  void SortNodes() {
+    std::sort(nodes.begin(), nodes.end());
+  }
 
 };
 
