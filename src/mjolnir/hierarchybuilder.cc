@@ -677,7 +677,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
 
       // Add any signs that use this idx - increment their index by the
       // number of added edges
-      while (idx == nextsignidx) {
+      while (idx == nextsignidx && signidx < signcount) {
         if (!has_sign) {
           LOG_ERROR("Signs for this index but directededge says no sign");
         }
@@ -693,7 +693,7 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
 
       // Any turn restrictions that use this index - increment
       // by the number of added edges
-      if (idx == next_tridx) {
+      if (idx == next_tridx && tridx < trcount) {
         TurnRestrictionBuilder tr = tilebuilder.turnrestriction(tridx);
         tr.set_edgeindex(idx + n);
         turnrestrictions.emplace_back(std::move(tr));
