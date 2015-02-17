@@ -63,7 +63,7 @@ rm -f "${TMP}"
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
 	if [[ "${DIFF}" == *$(basename ${INPUT%.*})* ]]; then
-		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR} to ${DIFF}_${OUTDIR}_diff:\x1b[0m"
+		echo -e "\x1b[32;1mDiffing the output of ${DIFF} with ${OUTDIR} to ${DIFF}_${OUTDIR}_diff\x1b[0m"
 		mkdir -p "${DIFF%/}_${OUTDIR}_diff"
 		find ${DIFF}/*.txt -printf "%f\n" | parallel --progress -P "${CONCURRENCY}" "diff ${DIFF}/{} ${OUTDIR}/{} > ${DIFF%/}_${OUTDIR}_diff/{}"
 	else
