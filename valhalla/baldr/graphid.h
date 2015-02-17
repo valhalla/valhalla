@@ -95,6 +95,8 @@ union GraphId {
   // Operator EqualTo.
   bool operator ==(const GraphId& rhs) const;
 
+  bool operator !=(const GraphId& rhs) const;
+
   struct Fields {
     //the tile id
     uint64_t tileid :24;
