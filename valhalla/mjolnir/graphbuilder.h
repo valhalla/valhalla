@@ -224,7 +224,7 @@ class GraphBuilder {
    * @param  osmdata  OSM data used to construct edges in the graph.
    * @param  tilesize Tile size in degrees.
    */
-  void ConstructEdges(OSMData& osmdata, const float tilesize);
+  void ConstructEdges(const OSMData& osmdata, const float tilesize);
 
   /**
    * Add a new node to the tile (based on the OSM node lat,lng). Return

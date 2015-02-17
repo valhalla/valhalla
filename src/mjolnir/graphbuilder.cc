@@ -140,7 +140,7 @@ Node& GraphBuilder::GetNode(const GraphId& graphid) {
 }
 
 // Construct edges in the graph and assign nodes to tiles.
-void GraphBuilder::ConstructEdges(OSMData& osmdata, const float tilesize) {
+void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) {
   // Reserve size for the Node map
   nodes_.reserve(osmdata.intersection_count);
 

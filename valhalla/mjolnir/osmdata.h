@@ -66,7 +66,7 @@ struct OSMData {
   // Names
   UniqueNames name_offset_map;
 
-  OSMNode GetNode(const uint64_t osmid) {
+  OSMNode GetNode(const uint64_t osmid) const {
     OSMNode test(osmid, 0.0f, 0.0f);
     auto it = std::equal_range(nodes.begin(), nodes.end(), test);
     return *(it.first);
