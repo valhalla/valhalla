@@ -58,6 +58,7 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
       shape.erase(shape.begin(), current);
       break;
     }
+    ++current;
   }
 
   //clip after the end point
@@ -70,6 +71,7 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
       shape.erase(++current, shape.end());
       break;
     }
+    ++current;
   }
 }
 
