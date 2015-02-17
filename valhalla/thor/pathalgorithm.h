@@ -102,6 +102,11 @@ class PathAlgorithm {
                               const baldr::DirectedEdge* directededge);
   std::vector<baldr::GraphId> FormLocalPath(const uint32_t dest,
                               baldr::GraphReader& graphreader);
+  baldr::GraphId RecoverShortcut(baldr::GraphReader& graphreader,
+                                 const baldr::GraphId& startnode,
+                                 const baldr::GraphId& endnode,
+                                 const baldr::DirectedEdge* shortcutedge,
+                                 std::vector<baldr::GraphId>& edgesonpath);
 
   /**
    * Gets the edge label for an edge that is in the adjacency list.
