@@ -265,7 +265,7 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
+  if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kRight)
     phrase_id = 8;
 
   if (maneuver.HasExitBranchSign())
