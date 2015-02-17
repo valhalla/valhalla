@@ -130,10 +130,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if(!edge->forward())
       std::reverse(shape.begin(), shape.end());
     LOG_INFO("Start: " + std::to_string(start_pct) + " End: " + std::to_string(end_pct));
-    for(const auto& pt : shape)
-      LOG_INFO(std::to_string(pt.second) + "," + std::to_string(pt.first));
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
+    for(const auto& pt : shape)
+      LOG_INFO(std::to_string(pt.second) + "," + std::to_string(pt.first));
 
     auto trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
