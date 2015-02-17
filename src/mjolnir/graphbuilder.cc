@@ -73,7 +73,6 @@ void GraphBuilder::Build(OSMData& osmdata) {
   auto t1 = std::chrono::high_resolution_clock::now();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   level_ = tl->second.level;
-  osmdata.SortNodes();
   ConstructEdges(osmdata, tl->second.tiles.TileSize());
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();

@@ -99,6 +99,9 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
              std::to_string(osmdata.nodes.size()));
   }
 
+  // Sort the OSM nodes vector by OSM Id
+  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
+
   // Log some information about extra node information and names
   LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
   LOG_INFO("Number of node exit_to = " + std::to_string(osmdata.node_exit_to.size()));

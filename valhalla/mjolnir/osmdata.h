@@ -72,11 +72,6 @@ struct OSMData {
     return *(it.first);
   }
 
-  // Sort the OSM nodes
-  void SortNodes() {
-    std::sort(nodes.begin(), nodes.end());
-  }
-
 };
 
 }
