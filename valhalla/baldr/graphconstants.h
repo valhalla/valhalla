@@ -33,7 +33,7 @@ constexpr float kMaxTurnChannelLength = 150.0f;
 
 // Edge use
 enum class Use : uint8_t {
-  kNone,
+  kRoad,
   kCycleway,
   kFootway,
   kParkingAisle,
