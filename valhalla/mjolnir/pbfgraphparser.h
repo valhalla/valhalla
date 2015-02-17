@@ -1,5 +1,5 @@
-#ifndef VALHALLA_MJOLNIR_PBFPARSER_H
-#define VALHALLA_MJOLNIR_PBFPARSER_H
+#ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
+#define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
 #include <sstream>
 #include <iostream>
@@ -17,6 +17,7 @@
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/idtable.h>
 
 #include <valhalla/mjolnir/luatagtransform.h>
 
@@ -29,54 +30,18 @@ namespace valhalla {
 namespace mjolnir {
 
 /**
- * A method for marking OSM node Ids that are used by ways.
- * Uses a vector where 1 bit is used for each possible Id.
- * So for a maximum OSM Id of 4 billion this uses 500MB memory
- */
-class NodeIdTable {
- public:
-   /**
-    * Constructor
-    * @param   maxosmid   Maximum OSM Id to support.
-    */
-  NodeIdTable(const uint64_t maxosmid);
-
-  /**
-   * Destructor
-   */
-  ~NodeIdTable();
-
-  /**
-   * Sets the OSM Id as used.
-   * @param   osmid   OSM Id of the node.
-   */
-  void set(const uint64_t id);
-
-  /**
-   * Test if the OSM Id is used / set in the bitmarker.
-   * @param  id  OSM Id
-   * @return  Returns true if the OSM Id is used. False if not.
-   */
-  const bool IsUsed(const uint64_t id) const;
-
- private:
-  const uint64_t maxosmid_;
-  std::vector<uint64_t> bitmarkers_;
-};
-
-/**
  * Class used to parse OSM protocol buffer extracts.
  */
-class PBFParser {
+class PBFGraphParser {
  public:
   //not default constructable or copyable
-  PBFParser() = delete;
-  PBFParser(const PBFParser&) = delete;
+  PBFGraphParser() = delete;
+  PBFGraphParser(const PBFGraphParser&) = delete;
 
   /**
    * Constructor
    */
-  PBFParser(const boost::property_tree::ptree& pt);
+  PBFGraphParser(const boost::property_tree::ptree& pt);
 
   /**
    * Loads a given input file
@@ -125,7 +90,7 @@ class PBFParser {
   LuaTagTransform lua_;
 
   // Mark the OSM Node Ids used by ways
-  NodeIdTable shape_, intersection_;
+  IdTable shape_, intersection_;
 
   // Pointer to all the OSM data (for use by callbacks)
   OSMData* osm_;
@@ -137,4 +102,4 @@ class PBFParser {
 }
 }
 
-#endif  // VALHALLA_MJOLNIR_PBFPARSER_H
+#endif  // VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
