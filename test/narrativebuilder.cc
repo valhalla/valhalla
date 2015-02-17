@@ -76,6 +76,12 @@ void TestFormExitRightInstruction() {
                          { }, { }, { }),
       "Take exit 67A on the right.");
 
+  // phrase_id = 1; Test that name is ignored when number is present
+  TryFormExitRightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { "67A" },
+                         { }, { }, { "Gettysburg Pike" }),
+      "Take exit 67A on the right.");
+
   // phrase_id = 2
   TryFormExitRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { },
@@ -111,6 +117,31 @@ void TestFormExitRightInstruction() {
       CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { "67A" },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Take exit 67A on the right onto I 95 South toward Baltimore.");
+
+  // phrase_id = 8
+  TryFormExitRightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { },
+                         { }, { }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the right.");
+
+  // phrase_id = 10
+  TryFormExitRightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { },
+                         { "US 15" }, { }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the right onto US 15.");
+
+  // phrase_id = 12
+  TryFormExitRightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { }, { },
+                         { "Harrisburg", "Gettysburg" }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 14
+  TryFormExitRightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitRight, { },
+                         { "US 15" }, { "Harrisburg", "Gettysburg" },
+                         { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg.");
 
 }
 
