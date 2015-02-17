@@ -185,7 +185,6 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
   // 0 = Stay straight to take the ramp
   // 1 = branch
   // 2 = toward
-  // 4 = name?
 
   // 0 Stay straight to take the ramp
   // 1 Stay straight to take the I 95 South ramp
@@ -238,7 +237,6 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   // 1 = branch
   // 2 = toward
   // 4 = Turn right to take the ramp
-  // 8 = name?
 
   // 0 Take the ramp on the right
   // 1 Take the I 95 South ramp on the right
@@ -323,7 +321,6 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
   // 1 = branch
   // 2 = toward
   // 4 = Turn left to take the ramp
-  // 8 = name?
 
   // 0 Take the ramp on the left
   // 1 Take the I 95 South ramp on the left
@@ -407,7 +404,7 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
   // 1 = exit number
   // 2 = branch
   // 4 = toward
-  // 8 = name?
+  // 8 = name (when no number)
 
   // 1 Take exit 67A on the right
   // 2 Take the I 95 South exit on the right
@@ -416,6 +413,14 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
   // 5 Take exit 67A on the right toward Baltimore
   // 6 Take the I 95 South exit on the right toward Baltimore
   // 7 Take exit 67A on the right onto I 95 South toward Baltimore
+  // 8 Take the Gettysburg Pike exit on the right
+  // 10 Take the Gettysburg Pike exit on the right onto US 15
+  // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
+  // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
+  // 8 Take the Gettysburg Pike exit on the right
+  // 10 Take the Gettysburg Pike exit on the right onto US 15
+  // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
+  // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
 
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
@@ -426,6 +431,9 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
     phrase_id += 2;
   if (maneuver.HasExitTowardSign())
     phrase_id += 4;
+  // Only use name if there is no number
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign())
+    phrase_id += 8;
 
   switch (phrase_id) {
     // 1 Take exit 67A on the right
@@ -479,6 +487,38 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
+    // 8 Take the Gettysburg Pike exit on the right
+    case 8: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the right")
+          % maneuver.signs().GetExitNameString()).str();
+      break;
+    }
+    // 10 Take the Gettysburg Pike exit on the right onto US 15
+    case 10: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the right onto %2%")
+          % maneuver.signs().GetExitNameString()
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
+    case 12: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the right toward %2%")
+          % maneuver.signs().GetExitNameString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
+    case 14: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the right onto %2% toward %3%")
+          % maneuver.signs().GetExitNameString()
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
     default: {
       text_instruction += "Take the exit on the right";
       break;
@@ -494,7 +534,7 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
   // 1 = exit number
   // 2 = branch
   // 4 = toward
-  // 8 = name?
+  // 8 = name (when no number)
 
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
@@ -505,6 +545,9 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
     phrase_id += 2;
   if (maneuver.HasExitTowardSign())
     phrase_id += 4;
+  // Only use name if there is no number
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign())
+    phrase_id += 8;
 
   switch (phrase_id) {
     // 1 Take exit 67A on the left
@@ -554,6 +597,38 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
       text_instruction += (boost::format(
           "Take exit %1% on the left onto %2% toward %3%")
           % maneuver.signs().GetExitNumberString()
+          % maneuver.signs().GetExitBranchString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 8 Take the Gettysburg Pike exit on the left
+    case 8: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the left")
+          % maneuver.signs().GetExitNameString()).str();
+      break;
+    }
+    // 10 Take the Gettysburg Pike exit on the left onto US 15
+    case 10: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the left onto %2%")
+          % maneuver.signs().GetExitNameString()
+          % maneuver.signs().GetExitBranchString()).str();
+      break;
+    }
+    // 12 Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg
+    case 12: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the left toward %2%")
+          % maneuver.signs().GetExitNameString()
+          % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+    // 14 Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg
+    case 14: {
+      text_instruction += (boost::format(
+          "Take the %1% exit on the left onto %2% toward %3%")
+          % maneuver.signs().GetExitNameString()
           % maneuver.signs().GetExitBranchString()
           % maneuver.signs().GetExitTowardString()).str();
       break;
