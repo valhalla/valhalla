@@ -17,6 +17,10 @@ class NarrativeBuilderTest : public NarrativeBuilder {
     return NarrativeBuilder::FormExitRightInstruction(maneuver);
   }
 
+  static void FormExitLeftInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormExitLeftInstruction(maneuver);
+  }
+
 };
 
 Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
@@ -145,6 +149,95 @@ void TestFormExitRightInstruction() {
 
 }
 
+void TryFormExitLeftInstruction(Maneuver maneuver, std::string expected) {
+  NarrativeBuilderTest nbTest;
+  nbTest.FormExitLeftInstruction(maneuver);
+  if (maneuver.instruction() != expected)
+    throw std::runtime_error("Incorrect FormExitLeftInstruction");
+}
+
+void TestFormExitLeftInstruction() {
+  // phrase_id = 0
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { }, { }, { },
+                         { }),
+      "Take the exit on the left.");
+
+  // phrase_id = 1
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { "67A" },
+                         { }, { }, { }),
+      "Take exit 67A on the left.");
+
+  // phrase_id = 1; Test that name is ignored when number is present
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { "67A" },
+                         { }, { }, { "Gettysburg Pike" }),
+      "Take exit 67A on the left.");
+
+  // phrase_id = 2
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { "I 95 South" }, { }, { }),
+      "Take the I 95 South exit on the left.");
+
+  // phrase_id = 3
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { "67A" },
+                         { "I 95 South" }, { }, { }),
+      "Take exit 67A on the left onto I 95 South.");
+
+  // phrase_id = 4
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { }, { "Baltimore" }, { }),
+      "Take the exit on the left toward Baltimore.");
+
+  // phrase_id = 5
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { "67A" },
+                         { }, { "Baltimore" }, { }),
+      "Take exit 67A on the left toward Baltimore.");
+
+  // phrase_id = 6
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { "I 95 South" }, { "Baltimore" }, { }),
+      "Take the I 95 South exit on the left toward Baltimore.");
+
+  // phrase_id = 7
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { "67A" },
+                         { "I 95 South" }, { "Baltimore" }, { }),
+      "Take exit 67A on the left onto I 95 South toward Baltimore.");
+
+  // phrase_id = 8
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { }, { }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the left.");
+
+  // phrase_id = 10
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { "US 15" }, { }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the left onto US 15.");
+
+  // phrase_id = 12
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { }, { },
+                         { "Harrisburg", "Gettysburg" }, { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg.");
+
+  // phrase_id = 14
+  TryFormExitLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kExitLeft, { },
+                         { "US 15" }, { "Harrisburg", "Gettysburg" },
+                         { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg.");
+
+}
+
 }
 
 int main() {
@@ -152,6 +245,9 @@ int main() {
 
   // FormExitRightInstruction
   suite.test(TEST_CASE(TestFormExitRightInstruction));
+
+  // FormExitLeftInstruction
+  suite.test(TEST_CASE(TestFormExitLeftInstruction));
 
   return suite.tear_down();
 }
