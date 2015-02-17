@@ -77,6 +77,10 @@ bool GraphId::operator ==(const GraphId& rhs) const {
   return value == rhs.value;
 }
 
+bool GraphId::operator !=(const GraphId& rhs) const {
+  return value != rhs.value;
+}
+
 std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
     return os << id.fields.level << '/' << id.fields.tileid << '/' << id.fields.id;
