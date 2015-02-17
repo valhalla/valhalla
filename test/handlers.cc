@@ -1,6 +1,6 @@
 #include "test.h"
 #include "tyr/route_handler.h"
-#include <valhalla/mjolnir/pbfparser.h>
+#include <valhalla/mjolnir/pbfgraphparser.h>
 #include <valhalla/mjolnir/graphbuilder.h>
 #include <valhalla/mjolnir/graphoptimizer.h>
 #include <valhalla/midgard/logging.h>
@@ -53,7 +53,7 @@ void write_tiles(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFParser parser(conf.get_child("mjolnir"));
+  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
   auto osmdata = parser.Load({"test/data/liechtenstein-latest.osm.pbf"});
   valhalla::mjolnir::GraphBuilder builder(conf.get_child("mjolnir"));
   builder.Build(osmdata);
