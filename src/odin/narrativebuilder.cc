@@ -185,11 +185,13 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
   // 0 = Stay straight to take the ramp
   // 1 = branch
   // 2 = toward
+  // 4 = name (if no branch and toward)
 
   // 0 Stay straight to take the ramp
   // 1 Stay straight to take the I 95 South ramp
   // 2 Stay straight to take the ramp toward Baltimore
   // 3 Stay straight to take the I 95 South ramp toward Baltimore
+  // 4 Stay straight to take the Gettysburg Pike ramp
 
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
@@ -199,6 +201,9 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
     phrase_id += 1;
   if (maneuver.HasExitTowardSign())
     phrase_id += 2;
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
+      && !maneuver.HasExitTowardSign())
+    phrase_id += 4;
 
   switch (phrase_id) {
     // 1 Stay straight to take the I 95 South ramp
@@ -222,6 +227,13 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
+      // 4 Stay straight to take the Gettysburg Pike ramp
+    case 4: {
+      text_instruction += (boost::format(
+          "Stay straight to take the %1% ramp")
+          % maneuver.signs().GetExitNameString()).str();
+      break;
+    }
     default: {
       text_instruction = "Stay straight to take the ramp";
       break;
@@ -236,27 +248,33 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   // 0 = Take the ramp on the right
   // 1 = branch
   // 2 = toward
-  // 4 = Turn right to take the ramp
+  // 4 = name (if no branch and toward)
+  // 8 = Turn right to take the ramp
 
   // 0 Take the ramp on the right
   // 1 Take the I 95 South ramp on the right
   // 2 Take the ramp on the right toward Baltimore
   // 3 Take the I 95 South ramp on the right toward Baltimore
-  // 4 Turn right to take the ramp
-  // 5 Turn right to take the I 95 South ramp
-  // 6 Turn right to take the ramp toward Baltimore
-  // 7 Turn right to take the I 95 South ramp toward Baltimore
+  // 4 Take the Gettysburg Pike ramp on the right
+  // 8 Turn right to take the ramp
+  // 9 Turn right to take the I 95 South ramp
+  // 10 Turn right to take the ramp toward Baltimore
+  // 11 Turn right to take the I 95 South ramp toward Baltimore
+  // 12 Turn right to take the Gettysburg Pike ramp
 
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
-    phrase_id = 4;
+    phrase_id = 8;
 
   if (maneuver.HasExitBranchSign())
     phrase_id += 1;
   if (maneuver.HasExitTowardSign())
     phrase_id += 2;
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
+      && !maneuver.HasExitTowardSign())
+    phrase_id += 4;
 
   switch (phrase_id) {
     // 1 Take the I 95 South ramp on the right
@@ -265,44 +283,57 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 2 Take the ramp on the right toward Baltimore
+      // 2 Take the ramp on the right toward Baltimore
     case 2: {
-      text_instruction += (boost::format("Take the ramp on the right toward %1%")
+      text_instruction += (boost::format(
+          "Take the ramp on the right toward %1%")
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 3 Take the I 95 South ramp on the right toward Baltimore
+      // 3 Take the I 95 South ramp on the right toward Baltimore
     case 3: {
-      text_instruction += (boost::format("Take the %1% ramp on the right toward %2%")
+      text_instruction += (boost::format(
+          "Take the %1% ramp on the right toward %2%")
           % maneuver.signs().GetExitBranchString()
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 4 Turn right to take the ramp
+      // 4 Take the Gettysburg Pike ramp on the right
     case 4: {
+      text_instruction += (boost::format("Take the %1% ramp on the right")
+          % maneuver.signs().GetExitNameString()).str();
+      break;
+    }
+      // 8 Turn right to take the ramp
+    case 8: {
       text_instruction = "Turn right to take the ramp";
       break;
     }
-    // 5 Turn right to take the I 95 South ramp
-    case 5: {
-      text_instruction += (boost::format(
-          "Turn right to take the %1% ramp")
+      // 9 Turn right to take the I 95 South ramp
+    case 9: {
+      text_instruction += (boost::format("Turn right to take the %1% ramp")
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 6 Turn right to take the ramp toward Baltimore
-    case 6: {
+      // 10 Turn right to take the ramp toward Baltimore
+    case 10: {
       text_instruction += (boost::format(
           "Turn right to take the ramp toward %1%")
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 7 Turn right to take the I 95 South ramp toward Baltimore
-    case 7: {
+      // 11 Turn right to take the I 95 South ramp toward Baltimore
+    case 11: {
       text_instruction += (boost::format(
           "Turn right to take the %1% ramp toward %2%")
           % maneuver.signs().GetExitBranchString()
           % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 12 Turn right to take the Gettysburg Pike ramp
+    case 12: {
+      text_instruction += (boost::format("Turn right to take the %1% ramp")
+          % maneuver.signs().GetExitNameString()).str();
       break;
     }
     default: {
@@ -320,27 +351,33 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
   // 0 = Take the ramp on the left
   // 1 = branch
   // 2 = toward
-  // 4 = Turn left to take the ramp
+  // 4 = name (if no branch and toward)
+  // 8 = Turn left to take the ramp
 
   // 0 Take the ramp on the left
   // 1 Take the I 95 South ramp on the left
   // 2 Take the ramp on the left toward Baltimore
   // 3 Take the I 95 South ramp on the left toward Baltimore
-  // 4 Turn left to take the ramp
-  // 5 Turn left to take the I 95 South ramp
-  // 6 Turn left to take the ramp toward Baltimore
-  // 7 Turn left to take the I 95 South ramp toward Baltimore
+  // 4 Take the Gettysburg Pike ramp on the left
+  // 8 Turn left to take the ramp
+  // 9 Turn left to take the I 95 South ramp
+  // 10 Turn left to take the ramp toward Baltimore
+  // 11 Turn left to take the I 95 South ramp toward Baltimore
+  // 12 Turn left to take the Gettysburg Pike ramp
 
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
   if (maneuver.begin_relative_direction() == Maneuver::RelativeDirection::kLeft)
-    phrase_id = 4;
+    phrase_id = 8;
 
   if (maneuver.HasExitBranchSign())
     phrase_id += 1;
   if (maneuver.HasExitTowardSign())
     phrase_id += 2;
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
+      && !maneuver.HasExitTowardSign())
+    phrase_id += 4;
 
   switch (phrase_id) {
     // 1 Take the I 95 South ramp on the left
@@ -349,44 +386,56 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 2 Take the ramp on the left toward Baltimore
+      // 2 Take the ramp on the left toward Baltimore
     case 2: {
       text_instruction += (boost::format("Take the ramp on the left toward %1%")
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 3 Take the I 95 South ramp on the left toward Baltimore
+      // 3 Take the I 95 South ramp on the left toward Baltimore
     case 3: {
-      text_instruction += (boost::format("Take the %1% ramp on the left toward %2%")
+      text_instruction += (boost::format(
+          "Take the %1% ramp on the left toward %2%")
           % maneuver.signs().GetExitBranchString()
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 4 Turn left to take the ramp
+      // 4 Take the Gettysburg Pike ramp on the left
     case 4: {
+      text_instruction += (boost::format("Take the %1% ramp on the left")
+          % maneuver.signs().GetExitNameString()).str();
+      break;
+    }
+      // 8 Turn left to take the ramp
+    case 8: {
       text_instruction = "Turn left to take the ramp";
       break;
     }
-    // 5 Turn left to take the I 95 South ramp
-    case 5: {
-      text_instruction += (boost::format(
-          "Turn left to take the %1% ramp")
+      // 9 Turn left to take the I 95 South ramp
+    case 9: {
+      text_instruction += (boost::format("Turn left to take the %1% ramp")
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 6 Turn left to take the ramp toward Baltimore
-    case 6: {
+      // 10 Turn left to take the ramp toward Baltimore
+    case 10: {
       text_instruction += (boost::format(
           "Turn left to take the ramp toward %1%")
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 7 Turn left to take the I 95 South ramp toward Baltimore
-    case 7: {
+      // 11 Turn left to take the I 95 South ramp toward Baltimore
+    case 11: {
       text_instruction += (boost::format(
           "Turn left to take the %1% ramp toward %2%")
           % maneuver.signs().GetExitBranchString()
           % maneuver.signs().GetExitTowardString()).str();
+      break;
+    }
+      // 12 Turn left to take the Gettysburg Pike ramp
+    case 12: {
+      text_instruction += (boost::format("Turn left to take the %1% ramp")
+          % maneuver.signs().GetExitNameString()).str();
       break;
     }
     default: {
@@ -487,14 +536,13 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 8 Take the Gettysburg Pike exit on the right
+      // 8 Take the Gettysburg Pike exit on the right
     case 8: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the right")
+      text_instruction += (boost::format("Take the %1% exit on the right")
           % maneuver.signs().GetExitNameString()).str();
       break;
     }
-    // 10 Take the Gettysburg Pike exit on the right onto US 15
+      // 10 Take the Gettysburg Pike exit on the right onto US 15
     case 10: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right onto %2%")
@@ -502,7 +550,7 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
+      // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
     case 12: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right toward %2%")
@@ -510,7 +558,7 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
+      // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
     case 14: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right onto %2% toward %3%")
@@ -571,15 +619,13 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
     }
       // 4 Take the exit on the left toward Baltimore
     case 4: {
-      text_instruction += (boost::format(
-          "Take the exit on the left toward %1%")
+      text_instruction += (boost::format("Take the exit on the left toward %1%")
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
       // 5 Take exit 67A on the left toward Baltimore
     case 5: {
-      text_instruction += (boost::format(
-          "Take exit %1% on the left toward %2%")
+      text_instruction += (boost::format("Take exit %1% on the left toward %2%")
           % maneuver.signs().GetExitNumberString()
           % maneuver.signs().GetExitTowardString()).str();
       break;
@@ -601,14 +647,13 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 8 Take the Gettysburg Pike exit on the left
+      // 8 Take the Gettysburg Pike exit on the left
     case 8: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the left")
+      text_instruction += (boost::format("Take the %1% exit on the left")
           % maneuver.signs().GetExitNameString()).str();
       break;
     }
-    // 10 Take the Gettysburg Pike exit on the left onto US 15
+      // 10 Take the Gettysburg Pike exit on the left onto US 15
     case 10: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left onto %2%")
@@ -616,7 +661,7 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitBranchString()).str();
       break;
     }
-    // 12 Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg
+      // 12 Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg
     case 12: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left toward %2%")
@@ -624,7 +669,7 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
           % maneuver.signs().GetExitTowardString()).str();
       break;
     }
-    // 14 Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg
+      // 14 Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg
     case 14: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left onto %2% toward %3%")
