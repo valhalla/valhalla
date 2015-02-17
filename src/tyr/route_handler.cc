@@ -250,8 +250,8 @@ RouteHandler::~RouteHandler() {
 
 std::string RouteHandler::Action() {
   //where to
-  valhalla::baldr::PathLocation origin = valhalla::loki::Search(locations_[0], *reader_);
-  valhalla::baldr::PathLocation destination = valhalla::loki::Search(locations_[1], *reader_);
+  valhalla::baldr::PathLocation origin = valhalla::loki::Search(locations_[0], *reader_, cost_->GetFilter());
+  valhalla::baldr::PathLocation destination = valhalla::loki::Search(locations_[1], *reader_, cost_->GetFilter());
 
   //get the path
   valhalla::thor::PathAlgorithm path_algorithm;
