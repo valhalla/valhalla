@@ -17,6 +17,10 @@ class NarrativeBuilderTest : public NarrativeBuilder {
     return NarrativeBuilder::FormRampRightInstruction(maneuver);
   }
 
+  static void FormRampLeftInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormRampLeftInstruction(maneuver);
+  }
+
   static void FormExitRightInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormExitRightInstruction(maneuver);
   }
@@ -171,6 +175,114 @@ void TestFormRampRightInstruction() {
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
                          { "Gettysburg Pike" }),
       "Turn right to take the Gettysburg Pike ramp.");
+
+}
+
+void TryFormRampLeftInstruction(Maneuver maneuver, std::string expected) {
+  NarrativeBuilderTest nbTest;
+  nbTest.FormRampLeftInstruction(maneuver);
+  if (maneuver.instruction() != expected)
+    throw std::runtime_error("Incorrect FormRampLeftInstruction");
+}
+
+void TestFormRampLeftInstruction() {
+  // phrase_id = 0
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
+                         { }),
+      "Take the ramp on the left.");
+
+  // phrase_id = 1
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, {
+                             "I 95 South" },
+                         { }, { }),
+      "Take the I 95 South ramp on the left.");
+
+  // phrase_id = 1; Test that exit name is not used when a branch exists
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, {
+                             "I 95 South" },
+                         { }, { "Gettysburg Pike" }),
+      "Take the I 95 South ramp on the left.");
+
+  // phrase_id = 2
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
+                             "Baltimore" },
+                         { }),
+      "Take the ramp on the left toward Baltimore.");
+
+  // phrase_id = 2; Test that exit name is not used when a toward exists
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, { }, {
+                             "Baltimore" },
+                         { "Gettysburg Pike" }),
+      "Take the ramp on the left toward Baltimore.");
+
+  // phrase_id = 3
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, {
+                             "I 95 South" },
+                         { "Baltimore" }, { }),
+      "Take the I 95 South ramp on the left toward Baltimore.");
+
+  // phrase_id = 3; Test that exit name is not used when a branch or toward
+  // exists
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, {
+                             "I 95 South" },
+                         { "Baltimore" }, { "Gettysburg Pike" }),
+      "Take the I 95 South ramp on the left toward Baltimore.");
+
+  // phrase_id = 4
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kKeepLeft, { }, { }, { },
+                         { "Gettysburg Pike" }),
+      "Take the Gettysburg Pike ramp on the left.");
+
+  // phrase_id = 8
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kLeft, { }, { }, { },
+                         { }),
+      "Turn left to take the ramp.");
+
+  // phrase_id = 9
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kLeft, { },
+                         { "I 95 South" }, { }, { }),
+      "Turn left to take the I 95 South ramp.");
+
+  // phrase_id = 10
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kLeft, { },
+                         { }, { "Baltimore" }, { }),
+      "Turn left to take the ramp toward Baltimore.");
+
+  // phrase_id = 11
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kLeft, { },
+                         { "I 95 South" }, { "Baltimore" }, { }),
+      "Turn left to take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 12
+  TryFormRampLeftInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
+                         Maneuver::RelativeDirection::kLeft, { }, { }, { },
+                         { "Gettysburg Pike" }),
+      "Turn left to take the Gettysburg Pike ramp.");
 
 }
 
@@ -397,6 +509,9 @@ int main() {
 
   // FormRampRightInstruction
   suite.test(TEST_CASE(TestFormRampRightInstruction));
+
+  // FormRampLeftInstruction
+  suite.test(TEST_CASE(TestFormRampLeftInstruction));
 
   // FormExitRightInstruction
   suite.test(TEST_CASE(TestFormExitRightInstruction));
