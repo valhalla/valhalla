@@ -164,8 +164,8 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
   GraphId edgeid(startnode.tileid(), startnode.level(),
                  nodeinfo->edge_index());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                  i++, directededge++, edgeid++) {
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++,
+            directededge++, edgeid++) {
     if (directededge->trans_up() ||
         directededge->use() != shortcutedge->use() ||
         directededge->importance() != shortcutedge->importance() ||
@@ -207,8 +207,8 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
       GraphId connedgeid(connectededge->endnode().tileid(), startnode.level(),
                        nodeinfo->edge_index());
       connectededge = tile->directededge(nodeinfo->edge_index());
-      for (uint32_t j = 0, count = nodeinfo->edge_count(); j < count;
-                    j++, connectededge++, connedgeid++) {
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++,
+                connectededge++, connedgeid++) {
         // Skip opposing directed edge, any transition edges. Skip any
         // non-matching directed edges (use, importance) or non-driveable.
         if (j == opp_index || connectededge->trans_up() ||
