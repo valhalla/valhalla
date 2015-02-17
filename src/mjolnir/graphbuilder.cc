@@ -69,10 +69,11 @@ void delete_noderefs(OSMData& osmdata) {
 
 // Build the graph from the input
 void GraphBuilder::Build(OSMData& osmdata) {
-  // Construct edges
+  // Construct edges. Sort the OSM nodes vector by OSM Id
   auto t1 = std::chrono::high_resolution_clock::now();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   level_ = tl->second.level;
+  osmdata.SortNodes();
   ConstructEdges(osmdata, tl->second.tiles.TileSize());
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
@@ -140,7 +141,6 @@ Node& GraphBuilder::GetNode(const GraphId& graphid) {
 
 // Construct edges in the graph and assign nodes to tiles.
 void GraphBuilder::ConstructEdges(OSMData& osmdata, const float tilesize) {
-  osmdata.SortNodes();
   // Reserve size for the Node map
   nodes_.reserve(osmdata.intersection_count);
 
