@@ -296,9 +296,6 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
 
       switch (use) {
 
-        case Use::kNone:
-          w.set_use(Use::kNone);
-          break;
         case Use::kCycleway:
           w.set_use(Use::kCycleway);
           break;
@@ -329,8 +326,9 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
         case Use::kOther:
           w.set_use(Use::kOther);
           break;
+        case Use::kRoad:
         default:
-          w.set_use(Use::kNone);
+          w.set_use(Use::kRoad);
           break;
       }
     }
@@ -417,9 +415,6 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
     else if (tag.first == "cycle_lane") {
       CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
       switch (cyclelane) {
-        case CycleLane::kNone:
-          w.set_cyclelane(CycleLane::kNone);
-          break;
         case CycleLane::kDedicated:
           w.set_cyclelane(CycleLane::kDedicated);
           break;
@@ -429,8 +424,9 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
         case CycleLane::kShared:
           w.set_cyclelane(CycleLane::kShared);
           break;
+        case CycleLane::kNone:
         default:
-          w.set_use(Use::kNone);
+          w.set_cyclelane(CycleLane::kNone);
           break;
       }
     }
