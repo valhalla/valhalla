@@ -13,6 +13,10 @@ namespace {
 class NarrativeBuilderTest : public NarrativeBuilder {
  public:
 
+  static void FormRampStraightInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormRampStraightInstruction(maneuver);
+  }
+
   static void FormRampRightInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormRampRightInstruction(maneuver);
   }
@@ -68,6 +72,72 @@ Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
   }
 
   return maneuver;
+}
+
+void TryFormRampStraightInstruction(Maneuver maneuver, std::string expected) {
+  NarrativeBuilderTest nbTest;
+  nbTest.FormRampStraightInstruction(maneuver);
+  if (maneuver.instruction() != expected)
+    throw std::runtime_error("Incorrect FormRampStraightInstruction");
+}
+
+void TestFormRampStraightInstruction() {
+  // phrase_id = 0
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { }, { },
+                         { }, { }),
+      "Stay straight to take the ramp.");
+
+  // phrase_id = 1
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { "I 95 South" }, { }, { }),
+      "Stay straight to take the I 95 South ramp.");
+
+  // phrase_id = 1; Test that exit name is not used when a branch exists
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { "I 95 South" }, { }, { "Gettysburg Pike" }),
+      "Stay straight to take the I 95 South ramp.");
+
+  // phrase_id = 2
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { }, { "Baltimore" }, { }),
+      "Stay straight to take the ramp toward Baltimore.");
+
+  // phrase_id = 2; Test that exit name is not used when a toward exists
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { }, { "Baltimore" }, { "Gettysburg Pike" }),
+      "Stay straight to take the ramp toward Baltimore.");
+
+  // phrase_id = 3
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { "I 95 South" }, { "Baltimore" }, { }),
+      "Stay straight to take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 3; Test that exit name is not used when a branch or toward exists
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { "I 95 South" }, { "Baltimore" }, { "Gettysburg Pike" }),
+      "Stay straight to take the I 95 South ramp toward Baltimore.");
+
+  // phrase_id = 4
+  TryFormRampStraightInstruction(
+      CreateSignManeuver(TripDirections_Maneuver_Type_kRampStraight,
+                         Maneuver::RelativeDirection::kKeepStraight, { },
+                         { }, { }, { "Gettysburg Pike" }),
+      "Stay straight to take the Gettysburg Pike ramp.");
+
 }
 
 void TryFormRampRightInstruction(Maneuver maneuver, std::string expected) {
@@ -506,6 +576,9 @@ void TestFormExitLeftInstruction() {
 
 int main() {
   test::suite suite("narrativebuilder");
+
+  // FormRampStraightInstruction
+  suite.test(TEST_CASE(TestFormRampStraightInstruction));
 
   // FormRampRightInstruction
   suite.test(TEST_CASE(TestFormRampRightInstruction));
