@@ -44,15 +44,6 @@ class DirectedEdge {
   uint32_t edgeinfo_offset() const;
 
   /**
-   * Does this directed edge form the start of a simple turn restriction?
-   * These are turn restrictions from one edge to another that apply to
-   * all vehicles, at all times.
-   * @return  Returns true if the directed edge starts a simple turn
-   *          restriction, false if not.
-   */
-  bool simple_tr() const;
-
-  /**
    * Does this directed edge have exit signs?
    * @return  Returns true if the directed edge has exit signs,
    *          false if not.
@@ -245,6 +236,15 @@ class DirectedEdge {
   uint32_t localedgeidx() const;
 
   /**
+   * Simple turn restrictions from the end of this directed edge.
+   * These are turn restrictions from one edge to another that apply to
+   * all vehicles, at all times.
+   * @return  Returns a bit mask that indicates the local edge indexes
+   *          of outbound directed edges that are restricted.
+   */
+  uint32_t restrictions() const;
+
+  /**
    * Get the computed version of DirectedEdge attributes.
    * @return   Returns internal version.
    */
@@ -257,13 +257,11 @@ class DirectedEdge {
   // Data offsets and flags for extended data.
   struct DataOffsets {
     uint32_t edgeinfo_offset : 24; // Offset to edge data.
-    uint32_t spare           :  4;
+    uint32_t spare           :  5;
     uint32_t start_mer       :  1; // Directed edge starts a multi-edge
                                    // restriction
     uint32_t end_mer         :  1; // Directed edge ends a multi-edge
                                    // restriction
-    uint32_t simple_tr       :  1; // Directed edge starts a simple
-                                   // turn restriction
     uint32_t exitsign        :  1; // Does this directed edge have exit signs
   };
   DataOffsets dataoffsets_;
@@ -301,7 +299,9 @@ class DirectedEdge {
     uint64_t bikenetwork    : 4;  // Edge that is part of a bicycle network
     uint64_t internal       : 1;  // Edge that is internal to an intersection
     uint64_t localedgeidx   : 7;  // Index of the edge on the local level
-    uint64_t spare2         : 28;
+    uint64_t restrictions   : 7;  // Restrictions - mask of local edge indexes
+                                  // at the end node that are restricted.
+    uint64_t spare2         : 21;
   };
   Attributes attributes_;
 
