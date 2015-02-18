@@ -134,6 +134,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   // Find shortest path
   uint32_t uturn_index, next_label_index;
   uint32_t prior_label_index;
+  uint32_t restriction;
   float dist2dest, dist;
   float cost, sortcost, currentcost;
   GraphId node;
@@ -203,7 +204,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     nodeinfo =    tile->node(node);
     currentcost = nextlabel.truecost();
     uturn_index = nextlabel.uturn_index();
-
+    restriction = nextlabel.restrictions();
 
     // Check access at the node
     if (!costing->Allowed(nodeinfo)) {
@@ -220,7 +221,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
-          !costing->Allowed(directededge, (i == uturn_index), dist2dest)) {
+          !costing->Allowed(directededge, restriction,
+                    (i == uturn_index), dist2dest)) {
         continue;
       }
 
@@ -273,7 +275,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Add edge label
       edgelabels_.emplace_back(EdgeLabel(next_label_index, edgeid,
-               directededge, cost, sortcost, dist));
+               directededge, cost, sortcost, dist, restriction));
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
@@ -327,7 +329,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     edgelabels_.emplace_back(EdgeLabel(kInvalidLabel, edgeid,
-            directededge, cost, sortcost, dist));
+            directededge, cost, sortcost, dist, 0));
     adjacencylist_->Add(edgelabel_index_, sortcost);
     edgelabel_index_++;
   }
