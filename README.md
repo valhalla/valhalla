@@ -9,7 +9,7 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Midgard, serves as a set of Geographic/metric data structures and algorithms for use in essentially all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Midgard](http://en.wikipedia.org/wiki/Midgard) was chosen as it is represents the world as humans know it. Since the library deals a lot with the maths of our favorite spheroid, this seemed like a fitting name!
+Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Midgard, serves as a set of Geographic/metric data structures and algorithms for use in essentially all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Midgard](http://en.wikipedia.org/wiki/Midgard) was chosen as it is represents the world as humans know it. Since the library deals mostly with the maths of our favorite spheroid, this seemed like a fitting name!
 
 Build Status
 ------------
@@ -34,19 +34,19 @@ Using
 
 For detailed information about what algorithms, datastructures and executables are contained within midgard, please see the more [detailed documentation](docs/index.md).
 
-The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Midgard for your own projects as well. To simplify the inclusion of the Midgard library in another autotoolized project you may make use of [midgard m4](m4/valhalla_midgard.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Midgard, and all of the projects under the Valhalla organization use the [MIT License](LICENSE.md).
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Midgard for your own projects as well. To simplify the inclusion of the Midgard library in another autotoolized project you may make use of [midgard m4](m4/valhalla_midgard.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Midgard, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
 
-We welcome contributions to midgard. If you would like to report an issue, please use the [midgard issue tracker](https://github.com/valhalla/midgard/issues) on GitHub.
+We welcome contributions to midgard. If you would like to report an issue, or even better fix an existing one, please use the [midgard issue tracker](https://github.com/valhalla/midgard/issues) on GitHub.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/midgard) and highly recommend that your pull request include a test to validate the addition/change to functionality.
+If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11, in the K&R (1TBS variant) with two spaces as indentation. We generally follow this [c++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.html). We welcome contributions as pull requests to the [repository](https://github.com/valhalla/midgard) and highly recommend that your pull request include a test to validate the addition/change of functionality.
 
 Tests
 -----
 
-We highly encourage running and updating the tests make sure no regressions have been made. We use the Automake test suite to run our tests. To run the tests simply do:
+We highly encourage running and updating the tests to make sure no regressions have been made. We use the Automake test suite to run our tests by simply making the `check` target:
 
     make check
 
@@ -54,7 +54,7 @@ You can also build a test coverage report. This requires that the packages `lcov
 
     sudo apt-get install lcov
 
-To make the coverage report, configure the build for it by:
+To make the coverage report, configure the build for it:
 
     ./configure --enable-coverage
 
