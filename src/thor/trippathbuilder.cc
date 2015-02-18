@@ -256,9 +256,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
 
-  for(const auto& pt : trip_shape)
-    LOG_INFO(std::to_string(pt.second) + "," + std::to_string(pt.first));
-
   //hand it back
   return trip_path;
 }
