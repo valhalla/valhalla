@@ -674,14 +674,14 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 
-bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
+uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
                  GraphTileBuilder& graphtile,
                  const GraphId& endnode, const std::vector<Edge>& edges,
                  const std::unordered_map<GraphId, std::vector<Node> >& nodes,
                  const OSMData& osmdata) {
   auto res = osmdata.restrictions.equal_range(wayid);
   if (res.first == osmdata.restrictions.end()) {
-    return false;
+    return 0;
   }
 
   // Edge is the from edge of a restriction. Find all TRs (if any)
@@ -697,7 +697,7 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     }
   }
   if (trs.empty()) {
-    return false;
+    return 0;
   }
 
   // Cannot mix types (no and only!). Log an error/issue.
@@ -715,7 +715,7 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     // TODO - log these as data issues??
     LOG_ERROR("Restrictions have both \"only\" and \"no\" types. From wayid = "
           + std::to_string(wayid));
-    return false;
+    return 0;
   }
 
   // Get the way Ids of the edges at the endnode
@@ -758,10 +758,8 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     }
   }
 
-  // Add a restriction to the graph tile
-  TurnRestrictionBuilder tr(edgeindex, type, mask);
-  graphtile.AddTurnRestriction(tr);
-  return true;
+  // Return the restriction mask. TODO - do we need the type?
+  return mask;
 }
 
 void BuildTileSet(
@@ -789,6 +787,7 @@ void BuildTileSet(
   bool added = false;
   bool not_thru, forward, internal;
   uint32_t edgeindex;
+  uint32_t restrictions;
   GraphId source, target;
   PointLL node_ll;
   for(; tile_start != tile_end; ++tile_start) {
@@ -877,12 +876,17 @@ void BuildTileSet(
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
-          // Does the directed edge contain exit information?
-          //bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
+          // Handle simple turn restrictions that originate from this
+          // directed edge
+          restrictions = CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
+                      target, edges, nodes, osmdata);
+          if (restrictions != 0) {
+            simplerestrictions++;
+          }
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, target, forward, edgelengths[n],
-                        speed, use, not_thru, internal, rc);
+                        speed, use, not_thru, internal, rc, n, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
@@ -914,14 +918,6 @@ void BuildTileSet(
                && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
-          }
-
-          // Handle simple turn restrictions that originate from this
-          // directed edge
-          if (CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
-                         target, edges, nodes, osmdata)) {
-            directededge.set_simple_tr(true);
-            simplerestrictions++;
           }
 
           // Increment the directed edge index within the tile
