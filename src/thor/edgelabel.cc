@@ -19,16 +19,22 @@ EdgeLabel::EdgeLabel()
 // Constructor with values.
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const DirectedEdge* edge, const float cost,
-                     const float sortcost, const float dist)
+                     const float sortcost, const float dist,
+                     const uint32_t restrictions)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       truecost_(cost),
       sortcost_(sortcost),
       distance_(dist) {
-  endnode_                = edge->endnode();
-  attributes_.uturn_index = edge->opp_index();
-  attributes_.trans_up    = edge->trans_up();
-  attributes_.trans_down  = edge->trans_down();
+  endnode_                 = edge->endnode();
+  attributes_.uturn_index  = edge->opp_index();
+  attributes_.trans_up     = edge->trans_up();
+  attributes_.trans_down   = edge->trans_down();
+
+  // Set the simple restrictions mask. If the edge is a transition edge
+  // the prior edge restriction mask is used.
+  attributes_.restrictions = (edge->trans_up() || edge->trans_down()) ?
+        restrictions : edge->restrictions();
 }
 
 // Destructor
@@ -91,6 +97,12 @@ bool EdgeLabel::trans_up() const {
 // Get the transition down flag.
 bool EdgeLabel::trans_down() const {
   return attributes_.trans_down;
+}
+
+// Get the restriction mask at the end node. Each bit set to 1 indicates a
+// turn restriction onto the directed edge with matching local edge index.
+uint32_t EdgeLabel::restrictions() const {
+  return attributes_.restrictions;
 }
 
 // Operator for sorting.
