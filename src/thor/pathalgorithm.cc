@@ -361,10 +361,8 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
   // Add the destination edge
   std::vector<GraphId> edges;
   edges.reserve(edgelabels_.size());
-  uint32_t edgelabel_index = dest;
-  edges.push_back(edgelabels_[edgelabel_index].edgeid());
   // Work backwards from the destination
-  while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) != kInvalidLabel) {
+  for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel; edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     edges.push_back(edgelabels_[edgelabel_index].edgeid());
   }
   // We had a loop which means we end on the same edge we began
