@@ -56,7 +56,8 @@ namespace thor {
 PathAlgorithm::PathAlgorithm()
     : edgelabel_index_(0),
       adjacencylist_(nullptr),
-      edgestatus_(nullptr) {
+      edgestatus_(nullptr),
+      best_destination_{kInvalidLabel, std::numeric_limits<float>::max(), 0}{
   edgelabels_.reserve(kInitialEdgeLabelCount);
 }
 
@@ -70,6 +71,7 @@ void PathAlgorithm::Clear() {
   // Set the edge label index back to 0
   edgelabel_index_ = 0;
   edgelabels_.clear();
+  best_destination_ = std::make_tuple(kInvalidLabel, std::numeric_limits<float>::max(), 0);
 
   // Clear elements from the adjacency list
   if(adjacencylist_ != nullptr) {
@@ -123,7 +125,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
   // Initialize the origin and destination locations
   SetOrigin(graphreader, origin, costing, loop_edge);
-  SetDestination(dest);
+  SetDestination(graphreader, dest, costing);
 
   // Counts of transitions to upper levels (TEST - TODO better design!)
   uint32_t upto1count = 0;
@@ -146,6 +148,10 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // error codes and return the appropriate one here
     next_label_index = adjacencylist_->Remove(edgelabels_);
     if (next_label_index == kInvalidLabel) {
+      // If we had a destination but we were waiting on other possible ones
+      if(std::get<0>(best_destination_) != kInvalidLabel)
+        return FormPath(std::get<0>(best_destination_), graphreader, loop_edge);
+      // We didn't find any destination edge
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabel_index_));
       throw std::runtime_error("No path could be found for input");
     }
@@ -156,8 +162,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     edgestatus_->Set(nextlabel.edgeid(), kPermanent);
 
     // Check for completion. Form path and return if complete.
-    if (IsComplete(nextlabel)) {
-      return FormPath(next_label_index, graphreader, loop_edge);
+    if (IsComplete(next_label_index)) {
+      return FormPath(std::get<0>(best_destination_), graphreader, loop_edge);
     }
 
     // TODO - do we need to terminate fruitless searches?
@@ -283,7 +289,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 }
 
 // Add an edge at the origin to the adjacency list
-void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
+void PathAlgorithm::SetOrigin(GraphReader& graphreader,
           const PathLocation& origin, const std::shared_ptr<DynamicCost>& costing, const GraphId& loop_edge_id) {
   // Get sort heuristic based on distance from origin to destination
   float dist = astarheuristic_.GetDistance(origin.vertex());
@@ -328,21 +334,38 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
 }
 
 // Add a destination edge
-void PathAlgorithm::SetDestination(const PathLocation& dest) {
-  // TODO - add partial distances
+void PathAlgorithm::SetDestination(GraphReader& graphreader, const PathLocation& dest, const std::shared_ptr<DynamicCost>& costing) {
+  // For each edge
   for (const auto& edge : dest.edges()) {
-    destinations_[edge.id] = edge.dist;
+    // Keep the id and the cost to traverse the partial distance
+    const GraphTile* tile = graphreader.GetGraphTile(edge.id);
+    destinations_[edge.id] = costing->Get(tile->directededge(edge.id)) * edge.dist;
   }
 }
 
 // Test is the shortest path has been found.
-bool PathAlgorithm::IsComplete(const EdgeLabel& edge_label) {
-  // TODO - if destination is along an edge and the edge allows
-  // travel in both directions we need to make sure both directions
-  // are found or some further cost is encountered to rule out the
-  // other direction
-  const auto& p = destinations_.find(edge_label.edgeid());
-  return p != destinations_.end();
+bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
+  //grab the label
+  const EdgeLabel& edge_label = edgelabels_[edge_label_index];
+
+  //if we've already found a destination and the search's current edge is more costly to get to, we are done
+  if(std::get<0>(best_destination_) != kInvalidLabel && edge_label.truecost() > std::get<1>(best_destination_))
+    return true;
+  //check if its a destination
+  auto p = destinations_.find(edge_label.edgeid());
+  //it is indeed one of the possible destination edges
+  if(p != destinations_.end()) {
+    //if we didnt have another destination yet or this one is better
+    auto cost = edge_label.truecost() + p->second;
+    if(std::get<0>(best_destination_) == kInvalidLabel || cost < std::get<1>(best_destination_)){
+      std::get<0>(best_destination_) = edge_label_index;
+      std::get<1>(best_destination_) = cost;
+    }
+    ++std::get<2>(best_destination_);
+    //if we've found all of the destinations we are done looking
+    return std::get<2>(best_destination_) == destinations_.size();
+  }
+  return false;
 }
 
 // Form the path from the adjacency list.

@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <tuple>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -64,8 +65,11 @@ class PathAlgorithm {
   // to search to find an entry that is already in the adjacency list
   std::unordered_map<baldr::GraphId, uint32_t> adjlistedges_;
 
-  // Destinations
+  // Destinations, id and cost
   std::unordered_map<baldr::GraphId, float> destinations_;
+
+  // Destination that was last found with its true cost + partial cost
+  std::tuple<uint32_t, float, size_t> best_destination_;
 
   /**
    * Initialize
@@ -82,14 +86,16 @@ class PathAlgorithm {
   /**
    * Set the destination edge(s).
    */
-  void SetDestination(const baldr::PathLocation& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const baldr::PathLocation& dest,
+     const std::shared_ptr<DynamicCost>& costing);
 
   /**
-   * Test if the shortest path is found.
+   * Return a valid edge id if we've found the destination edge
    *
-   * @param edge_label        edgelabel to be tested for destination
+   * @param edge_label_index     edge label to be tested for destination
+   * @return bool                true if we've found the destination
    */
-  bool IsComplete(const EdgeLabel& edge_label);
+  bool IsComplete(const uint32_t edge_label_index);
 
   /**
    * Form the path from the adjacency list.
