@@ -20,11 +20,13 @@ class PedestrianCost : public DynamicCost {
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
    * @param edge      Pointer to a directed edge.
+   * @param restriction Turn restrictions (not applicable for pedestrians)
    * @param uturn     Is this a Uturn?
    * @param dist2dest Distance to the destination.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge, const bool uturn,
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const uint32_t restriction, const bool uturn,
                        const float dist2dest) const;
 
   /**
@@ -103,6 +105,7 @@ PedestrianCost::~PedestrianCost() {
 
 // Check if access is allowed on the specified edge.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
+                             const uint32_t,
                              const bool uturn, const float dist2dest) const {
   // Do not allow upward transitions (always stay at local level)
   // Also do not allow Uturns or entering no-thru edges
