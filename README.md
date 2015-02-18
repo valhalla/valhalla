@@ -19,7 +19,7 @@ Build Status
 Building
 --------
 
-Baldr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you can install the dependencies with:
+Baldr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to get its dependencies with:
 
     sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev
 
