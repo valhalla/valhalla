@@ -43,6 +43,7 @@ libvalhalla_mjolnir.la
 # tests
 test-suite.log
 test-driver
+test/test_config
 test/edgeinfobuilder
 test/uniquenames
 test/idtable
