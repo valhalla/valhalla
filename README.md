@@ -32,7 +32,7 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For detailed information about what algorithms, datastructures and executables are contained within midgard, please see the more [detailed documentation](docs/index.md).
+For detailed information about what algorithms, data structures and executables are contained within midgard, please see the more [detailed documentation](docs/index.md).
 
 The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Midgard for your own projects as well. To simplify the inclusion of the Midgard library in another autotoolized project you may make use of [midgard m4](m4/valhalla_midgard.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Midgard, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
