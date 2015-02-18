@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
-#include <tuple>
+#include <utility>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -69,7 +69,7 @@ class PathAlgorithm {
   std::unordered_map<baldr::GraphId, float> destinations_;
 
   // Destination that was last found with its true cost + partial cost
-  std::tuple<uint32_t, float, size_t> best_destination_;
+  std::pair<uint32_t, float> best_destination_;
 
   /**
    * Initialize
