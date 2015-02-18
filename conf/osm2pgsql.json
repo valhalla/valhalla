@@ -39,6 +39,8 @@
       {"name": "destination",             "type": "text"},
       {"name": "destination:ref",         "type": "text"},
       {"name": "destination:ref:to",      "type": "text"},
+      {"name": "destination:street",      "type": "text"},
+      {"name": "destination:street:to",   "type": "text"},
       {"name": "junction:ref",            "type": "text"},
       {"name": "bike_network_mask",       "type": "smallint"},
       {"name": "bike_national_ref",       "type": "text"},

@@ -462,6 +462,14 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
       w.set_destination_ref_to_index(osm_->ref_offset_map.index(tag.second));
       w.set_exit(true);
     }
+    else if (tag.first == "destination:street" && !tag.second.empty()) {
+      w.set_destination_street_index(osm_->name_offset_map.index(tag.second));
+      w.set_exit(true);
+    }
+    else if (tag.first == "destination:street:to" && !tag.second.empty()) {
+      w.set_destination_street_to_index(osm_->name_offset_map.index(tag.second));
+      w.set_exit(true);
+    }
     else if (tag.first == "junction:ref" && !tag.second.empty()) {
       w.set_junction_ref_index(osm_->ref_offset_map.index(tag.second));
       w.set_exit(true);

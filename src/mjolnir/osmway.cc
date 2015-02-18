@@ -9,11 +9,24 @@ namespace valhalla {
 namespace mjolnir {
 
 OSMWay::OSMWay()
-  : noderef_index_(0), nodecount_(0), ref_index_(0), int_ref_index_(0),
-    name_index_(0),name_en_index_(0), alt_name_index_(0), official_name_index_(0),
-    destination_index_(0), destination_ref_index_(0), destination_ref_to_index_(0), junction_ref_index_(0),
-    bike_national_ref_index_(0), bike_regional_ref_index_(0), bike_local_ref_index_(0),
-    osmwayid_(std::numeric_limits<uint64_t>::max()) {
+    : noderef_index_(0),
+      nodecount_(0),
+      ref_index_(0),
+      int_ref_index_(0),
+      name_index_(0),
+      name_en_index_(0),
+      alt_name_index_(0),
+      official_name_index_(0),
+      destination_index_(0),
+      destination_ref_index_(0),
+      destination_ref_to_index_(0),
+      destination_street_index_(0),
+      destination_street_to_index_(0),
+      junction_ref_index_(0),
+      bike_national_ref_index_(0),
+      bike_regional_ref_index_(0),
+      bike_local_ref_index_(0),
+      osmwayid_(std::numeric_limits<uint64_t>::max()) {
 
   attributes_.v = {0};
   classification_.v = {0};
@@ -21,10 +34,23 @@ OSMWay::OSMWay()
 }
 
 OSMWay::OSMWay(uint64_t id)
-  : noderef_index_(0), nodecount_(0), ref_index_(0), int_ref_index_(0),
-    name_index_(0),name_en_index_(0), alt_name_index_(0), official_name_index_(0),
-    destination_index_(0), destination_ref_index_(0), destination_ref_to_index_(0), junction_ref_index_(0),
-    bike_national_ref_index_(0), bike_regional_ref_index_(0), bike_local_ref_index_(0) {
+    : noderef_index_(0),
+      nodecount_(0),
+      ref_index_(0),
+      int_ref_index_(0),
+      name_index_(0),
+      name_en_index_(0),
+      alt_name_index_(0),
+      official_name_index_(0),
+      destination_index_(0),
+      destination_ref_index_(0),
+      destination_ref_to_index_(0),
+      destination_street_index_(0),
+      destination_street_to_index_(0),
+      junction_ref_index_(0),
+      bike_national_ref_index_(0),
+      bike_regional_ref_index_(0),
+      bike_local_ref_index_(0) {
 
   osmwayid_ = id;
 
@@ -158,7 +184,7 @@ void OSMWay::set_destination_ref_index(const uint32_t idx) {
 
 // Get the destination_ref.
 uint32_t OSMWay::destination_ref_index() const {
-  return destination_ref_to_index_;
+  return destination_ref_index_;
 }
 
 // Set the index for the destination_ref_to.
@@ -169,6 +195,26 @@ void OSMWay::set_destination_ref_to_index(const uint32_t idx) {
 // Get the destination ref to.
 uint32_t OSMWay::destination_ref_to_index() const {
   return destination_ref_to_index_;
+}
+
+// Set the index for thedestination_street.
+void OSMWay::set_destination_street_index(const uint32_t idx) {
+  destination_street_index_ = idx;
+}
+
+// Get the destination_street.
+uint32_t OSMWay::destination_street_index() const {
+  return destination_street_index_;
+}
+
+// Set the index for the destination_street_to.
+void OSMWay::set_destination_street_to_index(const uint32_t idx) {
+  destination_street_to_index_ = idx;
+}
+
+// Get the destination street to.
+uint32_t OSMWay::destination_street_to_index() const {
+  return destination_street_to_index_;
 }
 
 // Set the index for the junction_ref.
