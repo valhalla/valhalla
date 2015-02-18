@@ -9,6 +9,9 @@ using namespace valhalla::baldr;
 
 namespace {
 
+constexpr uint32_t kBucketCount = 20000;
+constexpr uint64_t kInitialEdgeLabelCount = 500000;
+
 GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
   //check if any of the pairs of origin and destination edges could be a trivial path
   //NOTE: it is true that there could be a shorter path by leaving this edge and coming
@@ -17,21 +20,37 @@ GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
     for(const auto& destination_edge : destination.edges()) {
       //same id and the origin shows up at the beginning of the edge
       //while the destination shows up at the end of the edge
-      if(origin_edge.id == destination_edge.id && origin_edge.dist < destination_edge.dist) {
+      if(origin_edge.id == destination_edge.id && origin_edge.dist <= destination_edge.dist) {
         return origin_edge.id;
       }
     }
   }
-  return GraphId();
+  return {};
+}
+
+GraphId loop(const PathLocation& origin, const PathLocation& destination) {
+  //if we end up with locations where there is a trivial path but you would have to
+  //traverse the edge in reverse to do it we need to mark this as a loop so that
+  //the initial edge can be considered on the path at some later point in time
+  for(const auto& origin_edge : origin.edges()) {
+    for(const auto& destination_edge : destination.edges()) {
+      //same id and the origin shows up at the end of the edge
+      //while the destination shows up at the beginning of the edge
+      if(origin_edge.id == destination_edge.id && origin_edge.dist > destination_edge.dist) {
+        //something is wrong if we have more than one option here
+        if(origin.edges().size() != 1 || destination.edges().size() != 1)
+          throw std::runtime_error("Found oneway loop but multiple ins and outs!");
+        return origin_edge.id;
+      }
+    }
+  }
+  return {};
 }
 
 }
 
 namespace valhalla {
 namespace thor {
-
-constexpr uint32_t kBucketCount = 20000;
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 PathAlgorithm::PathAlgorithm()
@@ -90,17 +109,20 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 // Calculate best path.
 std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& dest, GraphReader& graphreader,
-             std::shared_ptr<DynamicCost> costing) {
+             const std::shared_ptr<DynamicCost>& costing) {
   // Check for trivial path
   auto trivial_id = trivial(origin, dest);
   if(trivial_id.Is_Valid())
     return {trivial_id};
 
+  // Check for loop path
+  auto loop_edge = loop(origin, dest);
+
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
 
   // Initialize the origin and destination locations
-  SetOrigin(graphreader, origin, costing);
+  SetOrigin(graphreader, origin, costing, loop_edge);
   SetDestination(dest);
 
   // Counts of transitions to upper levels (TEST - TODO better design!)
@@ -134,8 +156,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     edgestatus_->Set(nextlabel.edgeid(), kPermanent);
 
     // Check for completion. Form path and return if complete.
-    if (IsComplete(nextlabel.edgeid())) {
-      return FormPath(next_label_index, graphreader);
+    if (IsComplete(nextlabel)) {
+      return FormPath(next_label_index, graphreader, loop_edge);
     }
 
     // TODO - do we need to terminate fruitless searches?
@@ -249,7 +271,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
-      adjlistedges_[edgeid.value] = edgelabel_index_;
+      adjlistedges_[edgeid] = edgelabel_index_;
       edgestatus_->Set(edgeid, kTemporary);
       edgelabel_index_++;
     }
@@ -262,20 +284,38 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
 // Add an edge at the origin to the adjacency list
 void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
-          const PathLocation& origin, const std::shared_ptr<DynamicCost>& costing) {
+          const PathLocation& origin, const std::shared_ptr<DynamicCost>& costing, const GraphId& loop_edge_id) {
   // Get sort heuristic based on distance from origin to destination
   float dist = astarheuristic_.GetDistance(origin.vertex());
   float heuristic = astarheuristic_.Get(dist);
 
+  //we need to do some additional bookkeeping if this path needs to be a loop
+  std::vector<baldr::PathLocation::PathEdge> loop_edges;
+  float loop_edge_cost = 0.f;
+  if(loop_edge_id.Is_Valid()) {
+    //grab some info about the edge and whats connected to the end of it
+    const auto node_id = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id)->endnode();
+    const auto tile = graphreader.GetGraphTile(node_id);
+    const auto node_info = tile->node(node_id);
+    loop_edge_cost = costing->Get(tile->directededge(loop_edge_id)) * (1.f - origin.edges().front().dist);
+    //keep information about all the edges leaving the end of this edge
+    for(uint32_t edge_index = node_info->edge_index(); edge_index < node_info->edge_index() + node_info->edge_count(); ++edge_index) {
+      if(!costing->GetFilter()(tile->directededge(edge_index))) {
+        loop_edges.emplace_back(node_id, 0.f);
+        loop_edges.back().id.fields.id = edge_index;
+      }
+    }
+  }
+
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.edges()) {
+  for (const auto& edge : (loop_edges.size() ? loop_edges : origin.edges())) {
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get cost and sort cost
-    float cost = costing->Get(directededge) * (1.f - edge.dist);
+    float cost = costing->Get(directededge) * (1.f - edge.dist) + loop_edge_cost;
     float sortcost = cost + heuristic;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -291,24 +331,24 @@ void PathAlgorithm::SetOrigin(baldr::GraphReader& graphreader,
 void PathAlgorithm::SetDestination(const PathLocation& dest) {
   // TODO - add partial distances
   for (const auto& edge : dest.edges()) {
-    destinations_[edge.id.value] = edge.dist;
+    destinations_[edge.id] = edge.dist;
   }
 }
 
 // Test is the shortest path has been found.
-bool PathAlgorithm::IsComplete(const baldr::GraphId& edgeid) {
+bool PathAlgorithm::IsComplete(const EdgeLabel& edge_label) {
   // TODO - if destination is along an edge and the edge allows
   // travel in both directions we need to make sure both directions
   // are found or some further cost is encountered to rule out the
   // other direction
-  const auto& p = destinations_.find(edgeid.value);
-  return (p == destinations_.end()) ? false : true;
+  const auto& p = destinations_.find(edge_label.edgeid());
+  return p != destinations_.end();
 }
 
 // Form the path from the adjacency list.
 // TODO - support partial distances at origin/destination
 std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
-                     GraphReader& graphreader) {
+                     GraphReader& graphreader, const GraphId& loop_edge) {
   // TODO - leave in for now!
   LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].truecost()) +
            "  Iterations = " + std::to_string(edgelabel_index_));
@@ -319,28 +359,33 @@ std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
   } **/
 
   // Add the destination edge
-  std::vector<GraphId> edgesonpath;
-  edgesonpath.push_back(edgelabels_[dest].edgeid());
-  uint32_t edgelabel_index = dest;
-  while ((edgelabel_index = edgelabels_[edgelabel_index].predecessor()) !=
-              kInvalidLabel) {
-    edgesonpath.emplace_back(edgelabels_[edgelabel_index].edgeid());
+  std::vector<GraphId> edges;
+  edges.reserve(edgelabels_.size());
+  // Work backwards from the destination
+  for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel; edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
+    edges.push_back(edgelabels_[edgelabel_index].edgeid());
   }
+  // We had a loop which means we end on the same edge we began
+  // this special case can only be handled by adding back the start
+  // edge at the end of the path finding because we need to encounter
+  // the same edge twice (loop) and the algorithm doesn't allow for this
+  if(loop_edge.Is_Valid())
+    edges.push_back(loop_edge);
 
   // Reverse the list and return
-  std::reverse(edgesonpath.begin(), edgesonpath.end());
-  return edgesonpath;
+  std:reverse(edges.begin(), edges.end());
+  return edges;
 }
 
 // Gets the edge label for an edge that is in the adjacency list.
 uint32_t PathAlgorithm::GetPriorEdgeLabel(const GraphId& edgeid) const {
-  const auto& p = adjlistedges_.find(edgeid.value);
+  const auto& p = adjlistedges_.find(edgeid);
   return (p == adjlistedges_.end()) ? kInvalidLabel : p->second;
 }
 
 // Remove the edge label from the map of edges in the adjacency list
 void PathAlgorithm::RemoveFromAdjMap(const GraphId& edgeid) {
-  auto p = adjlistedges_.find(edgeid.value);
+  auto p = adjlistedges_.find(edgeid);
   if (p != adjlistedges_.end()) {
     adjlistedges_.erase(p);
   }

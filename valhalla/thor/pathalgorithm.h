@@ -5,6 +5,7 @@
 #include <map>
 #include <unordered_map>
 
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/thor/adjacencylist.h>
@@ -37,7 +38,7 @@ class PathAlgorithm {
    */
   std::vector<baldr::GraphId> GetBestPath(const baldr::PathLocation& origin,
           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
-          std::shared_ptr<DynamicCost> costing);
+          const std::shared_ptr<DynamicCost>& costing);
 
   /**
    * Clear the temporary information generated during path construction.
@@ -61,10 +62,10 @@ class PathAlgorithm {
 
   // Map of edges in the adjacency list. Keep this map so we do not have
   // to search to find an entry that is already in the adjacency list
-  std::unordered_map<uint64_t, uint32_t> adjlistedges_;
+  std::unordered_map<baldr::GraphId, uint32_t> adjlistedges_;
 
   // Destinations
-  std::unordered_map<uint64_t, float> destinations_;
+  std::unordered_map<baldr::GraphId, float> destinations_;
 
   /**
    * Initialize
@@ -75,8 +76,8 @@ class PathAlgorithm {
   /**
    * Add edges at the origin to the adjacency list
    */
-  void SetOrigin(baldr::GraphReader& graphreader,
-        const baldr::PathLocation& origin, const std::shared_ptr<DynamicCost>& costing);
+  void SetOrigin(baldr::GraphReader& graphreader, const baldr::PathLocation& origin,
+      const std::shared_ptr<DynamicCost>& costing, const baldr::GraphId& loop_edge);
 
   /**
    * Set the destination edge(s).
@@ -85,15 +86,17 @@ class PathAlgorithm {
 
   /**
    * Test if the shortest path is found.
+   *
+   * @param edge_label        edgelabel to be tested for destination
    */
-  bool IsComplete(const baldr::GraphId& edgeid);
+  bool IsComplete(const EdgeLabel& edge_label);
 
   /**
    * Form the path from the adjacency list.
    * TODO - support partial distances at origin/destination
    */
   std::vector<baldr::GraphId> FormPath(const uint32_t dest,
-                                       baldr::GraphReader& graphreader);
+                                       baldr::GraphReader& graphreader, const baldr::GraphId& loop);
 
   /**
    * TODO - are we keeping these?
