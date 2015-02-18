@@ -32,12 +32,16 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  not_thru Is the edge not_thru?
    * @param  internal Is the edge an intersection internal edge?
    * @param  rc       Road class / importance
+   * @param  localidx  Index of the edge (from the node) on the local level
+   * @param  restrictions Mask of simple turn restrictions at the end node
+   *                      of this directed edge.
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
                       const float speed, const baldr::Use use,
                       const bool not_thru,  const bool internal,
-                      const baldr::RoadClass rc);
+                      const baldr::RoadClass rc, const uint32_t localidx,
+                      const uint32_t restrictions);
 
   /**
    * Set the end node of this directed edge.
@@ -138,15 +142,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  toll    Is toll?
    */
   void set_toll(const bool toll);
-
-  /**
-   * Set the simple turn restriction flag. This indicates the directed edge
-   * forms the start of a simple turn restriction. These are turn restrictions
-   * from one edge to another that apply to all vehicles, at all times.
-   * @param  tr  Flag indicating whether this directed edge starts a simple turn
-   *             restriction.
-   */
-  void set_simple_tr(const bool tr);
 
   /**
    * Sets the exit sign flag.
@@ -285,6 +280,23 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  speed  Speed in KPH.
   */
   void set_speed(const float speed);
+
+  /**
+   * Set the index of the directed edge on the local level of the graph
+   * hierarchy. This is used for turn restrictions so the edges can be
+   * identified on the different levels.
+   * @param idx The index of the edge on the local level.
+   */
+  void set_localedgeidx(const uint32_t idx);
+
+  /**
+   * Set simple turn restrictions from the end of this directed edge.
+   * These are turn restrictions from one edge to another that apply to
+   * all vehicles, at all times.
+   * @param  mask A bit mask that indicates the local edge indexes
+   *          of outbound directed edges that are restricted.
+   */
+  void set_restrictions(const uint32_t mask);
 };
 
 }

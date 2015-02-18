@@ -66,7 +66,6 @@ nobase_include_HEADERS = \
         valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
 	valhalla/mjolnir/signbuilder.h \
-	valhalla/mjolnir/turnrestrictionbuilder.h \
         valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/dataquality.cc \
@@ -90,7 +89,6 @@ libvalhalla_mjolnir_la_SOURCES = \
         src/mjolnir/pbfadminparser.cc \
         src/mjolnir/pbfgraphparser.cc \
 	src/mjolnir/signbuilder.cc \
-	src/mjolnir/turnrestrictionbuilder.cc \
         src/mjolnir/util.cc
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ 

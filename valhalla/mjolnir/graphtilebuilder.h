@@ -20,7 +20,6 @@
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
-#include <valhalla/mjolnir/turnrestrictionbuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include "signbuilder.h"
@@ -86,8 +85,7 @@ class GraphTileBuilder : public baldr::GraphTile {
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
-              const std::vector<SignBuilder>& signs,
-              const std::vector<TurnRestrictionBuilder>& trs);
+              const std::vector<SignBuilder>& signs);
 
   /**
    * Add a node and its outbound edges.
@@ -103,12 +101,6 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void AddSigns(const uint32_t idx,
                 const std::vector<baldr::SignInfo>& signs);
-
-  /**
-   * Add simple turn restriction.
-   * @param  tr  Turn restriction (includes the directed edge index)
-   */
-  void AddTurnRestriction(const TurnRestrictionBuilder& tr);
 
   /**
    * Add edge info to the tile.
@@ -137,13 +129,6 @@ class GraphTileBuilder : public baldr::GraphTile {
    *              directed edge index) within the tile.
    */
   SignBuilder& sign(const size_t idx);
-
-  /**
-   * Gets a non-const turn restriction (builder) from existing tile data.
-   * @param  idx  Index of the turn restriction (index in the array, not the
-   *              directed edge index) within the tile.
-   */
-  TurnRestrictionBuilder& turnrestriction(const size_t idx);
 
  protected:
 
@@ -188,10 +173,6 @@ class GraphTileBuilder : public baldr::GraphTile {
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<SignBuilder> signs_builder_;
-
-  // List of turn restrictions. This is a fixed size structure so it can be
-  // indexed directly.
-  std::vector<TurnRestrictionBuilder> turnrestriction_builder_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
