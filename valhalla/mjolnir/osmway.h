@@ -189,6 +189,30 @@ class OSMWay {
   uint32_t destination_ref_to_index() const;
 
   /**
+   * Sets the index for destination street.
+   * @param  idx  Index for the destination street.
+   */
+  void set_destination_street_index(const uint32_t idx);
+
+  /**
+   * Get the destination_street index.
+   * @return  Returns the index for the destination street.
+   */
+  uint32_t destination_street_index() const;
+
+  /**
+   * Sets the index for destination street to.
+   * @param  idx  Index for the destination street to.
+   */
+  void set_destination_street_to_index(const uint32_t idx);
+
+  /**
+   * Get the destination street to index.
+   * @return  Returns the index for the destination street to.
+   */
+  uint32_t destination_street_to_index() const;
+
+  /**
    * Sets the index for junction ref.
    * @param  idx  Index for the junction ref.
    */
@@ -533,6 +557,8 @@ class OSMWay {
   uint32_t destination_index_;
   uint32_t destination_ref_index_;
   uint32_t destination_ref_to_index_;
+  uint32_t destination_street_index_;
+  uint32_t destination_street_to_index_;
   uint32_t junction_ref_index_;
 
   // Bike network information
