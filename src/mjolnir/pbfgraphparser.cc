@@ -99,13 +99,8 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
              std::to_string(osmdata.nodes.size()));
   }
 
-  // Go through OMSNodes and set the intersection flag.
-  for (auto& node : osmdata.nodes) {
-    if (intersection_.IsUsed(node.first)) {
-      node.second.set_intersection(true);
-      osmdata.intersection_count++;
-    }
-  }
+  // Sort the OSM nodes vector by OSM Id
+  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
 
   // Log some information about extra node information and names
   LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
@@ -154,7 +149,7 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
       && (highway_junction->second == "motorway_junction"));
 
   // Create a new node and set its attributes
-  OSMNode n(lng, lat);
+  OSMNode n(osmid, lng, lat);
   for (const auto& tag : results) {
 
     if (tag.first == "highway") {
@@ -186,8 +181,16 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
       n.set_modes_mask(std::stoi(tag.second));
   }
 
+  // Set the intersection flag (relies on ways being processed first to set
+  // the intersection Id markers).
+  if (intersection_.IsUsed(osmid)) {
+    n.set_intersection(true);
+    osm_->intersection_count++;
+  }
+
   // Add to the node map;
-  osm_->nodes.emplace(osmid, std::move(n));
+ // osm_->nodes.emplace(osmid, std::move(n));
+   osm_->nodes.emplace_back(std::move(n));
 
   if (osm_->nodes.size() % 5000000 == 0) {
     LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
@@ -295,7 +298,6 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
       Use use = (Use) std::stoi(tag.second);
 
       switch (use) {
-
         case Use::kCycleway:
           w.set_use(Use::kCycleway);
           break;

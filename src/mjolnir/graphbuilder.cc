@@ -50,7 +50,8 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
 
 // Delete the OSM node map and extended node information maps.
 void delete_osmnode_map(OSMData& osmdata) {
-  OSMNodeMap().swap(osmdata.nodes);
+//  OSMNodeMap().swap(osmdata.nodes);
+  std::vector<OSMNode>().swap(osmdata.nodes);
   OSMStringMap().swap(osmdata.node_exit_to);
   OSMStringMap().swap(osmdata.node_ref);
   OSMStringMap().swap(osmdata.node_name);
@@ -68,7 +69,7 @@ void delete_noderefs(OSMData& osmdata) {
 
 // Build the graph from the input
 void GraphBuilder::Build(OSMData& osmdata) {
-  // Construct edges
+  // Construct edges. Sort the OSM nodes vector by OSM Id
   auto t1 = std::chrono::high_resolution_clock::now();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   level_ = tl->second.level;
@@ -124,7 +125,7 @@ GraphId GraphBuilder::AddNodeToTile(const uint64_t osmnodeid,
   std::vector<Node>& tile = tilednodes_[id];
 
   // Add a new Node to the tile
-  tile.emplace_back(osmnode.attributes(), edgeindex,link);
+  tile.emplace_back(osmnode.attributes(), edgeindex, link);
 
   // Set the GraphId for this OSM node.
   GraphId graphid(id.tileid(), id.level(), tile.size() - 1);
@@ -148,18 +149,22 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
   Tiles tiles(AABB2({-180.0f, -90.0f}, {180.0f, 90.0f}), tilesize);
   tilednodes_.reserve(tiles.TileCount() * .3f);
 
+  // Reserve space for latlng - should be equal to the noderefs size.
+  latlngs_.reserve(osmdata.noderefs.size());
+
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
   uint64_t startnodeid, nodeid;
   GraphId graphid;
   edges_.reserve(osmdata.edge_count);
-  for (size_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
+  for (uint32_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
     // Get some way attributes needed for the edge
     const auto& way = osmdata.ways[wayindex];
 
     // Get the OSM node information for the first node of the way
     startnodeid = nodeid = osmdata.noderefs[way.noderef_index()];
-    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+//    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+    OSMNode osmnode = osmdata.GetNode(nodeid);
 
     // If a graph Node exists add an edge to it, otherwise construct a
     // graph Node with an initial edge and add it to the appropriate tile.
@@ -182,7 +187,8 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
       nodeid  = osmdata.noderefs[way.noderef_index() + i];
-      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+//      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+      OSMNode osmnode = osmdata.GetNode(nodeid);
 
       // Add the node's lat,lng to the latlng list and increment the count
       // for this edge
@@ -226,11 +232,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     }
   }
 
-  // Shrink the latlngs vector and the edges vector to fit
+  // Shrink the latlngs vector and the edges vector to fit. Iterate through
+  // the tilednodes and shrink vectors
   latlngs_.shrink_to_fit();
   edges_.shrink_to_fit();
-
-  // Iterate through the tilednodes and shrink vectors
   for (auto& tile : tilednodes_) {
     tile.second.shrink_to_fit();
   }
@@ -504,7 +509,8 @@ bool IsNoThroughEdge(const GraphId& startnode, const GraphId& endnode,
  * Test if a pair of one-way edges exist at the node. One must be
  * inbound and one must be outbound. The current edge is skipped.
  */
-bool OnewayPairEdgesExist(const Node& node,
+bool OnewayPairEdgesExist(const GraphId& nodeid,
+                          const Node& node,
                           const uint32_t edgeindex,
                           const uint64_t wayid,
                           const std::vector<Edge>& edges,
@@ -512,6 +518,7 @@ bool OnewayPairEdgesExist(const Node& node,
   // Iterate through the edges from this node. Skip the one with
   // the specified edgeindex
   uint32_t idx;
+  bool forward;
   bool inbound  = false;
   bool outbound = false;
   for (const auto idx : node.edges) {
@@ -525,16 +532,21 @@ bool OnewayPairEdgesExist(const Node& node,
 
     // Skip if this has matching way Id
     if (w.way_id() == wayid) {
-      return false;
+      continue;
     }
 
+    // Check if edge is forward or reverse
+    forward = (edge.sourcenode_ == nodeid);
+
     // Check if this is oneway inbound
-    if (!w.auto_forward() && w.auto_backward()) {
+    if ( (forward && !w.auto_forward() &&  w.auto_backward()) ||
+        (!forward &&  w.auto_forward() && !w.auto_backward())) {
       inbound = true;
     }
 
     // Check if this is oneway outbound
-    if (w.auto_forward() && !w.auto_backward()) {
+    if ( (forward &&  w.auto_forward() && !w.auto_backward()) ||
+        (!forward && !w.auto_forward() &&  w.auto_backward())) {
       outbound = true;
     }
   }
@@ -563,8 +575,8 @@ bool IsIntersectionInternal(const GraphId& startnode, const GraphId& endnode,
   }
 
   // Each node must have a pair of oneways (one inbound and one outbound)
-  if (!OnewayPairEdgesExist(node1, edgeindex, wayid, edges, ways) ||
-      !OnewayPairEdgesExist(node2, edgeindex, wayid, edges, ways)) {
+  if (!OnewayPairEdgesExist(startnode, node1, edgeindex, wayid, edges, ways) ||
+      !OnewayPairEdgesExist(endnode, node2, edgeindex, wayid, edges, ways)) {
     return false;
   }
 
@@ -954,6 +966,7 @@ void BuildTileSet(
 
 }
 
+// Get highway refs from relations
 std::string GraphBuilder::GetRef(const std::string& way_ref,
                                  const std::string& relation_ref) {
   bool found = false;
