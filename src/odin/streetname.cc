@@ -5,16 +5,16 @@
 namespace valhalla {
 namespace odin {
 
-StreetName::StreetName(const std::string& name)
-    : name_(name) {
+StreetName::StreetName(const std::string& value)
+    : value_(value) {
 }
 
-const std::string& StreetName::name() const {
-  return name_;
+const std::string& StreetName::value() const {
+  return value_;
 }
 
 bool StreetName::operator ==(const StreetName& rhs) const {
-  return (name_ == rhs.name_);
+  return (value_ == rhs.value_);
 }
 
 }

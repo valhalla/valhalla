@@ -45,6 +45,8 @@ test/maneuversbuilder
 test/narrativebuilder
 test/enhancedtrippath
 test/sign
+test/streetname
+test/streetnames
 test/*.log
 test/*.trs
 

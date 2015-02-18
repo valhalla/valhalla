@@ -95,7 +95,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     trip_maneuver->set_type(maneuver.type());
     trip_maneuver->set_text_instruction(maneuver.instruction());
     for (const auto& street_name : maneuver.street_names()) {
-      trip_maneuver->add_street_name(street_name.name());
+      trip_maneuver->add_street_name(street_name.value());
     }
     trip_maneuver->set_length(maneuver.distance());
     trip_maneuver->set_time(maneuver.time());

@@ -8,16 +8,16 @@ namespace odin{
 
 class StreetName {
  public:
-  StreetName(const std::string& name);
+  StreetName(const std::string& value);
 
-  const std::string& name() const;
+  const std::string& value() const;
 
   bool operator ==(const StreetName& rhs) const;
 
-  // TODO - add more functionality later
+  // TODO - add more functionality later and comments
 
  protected:
-  std::string name_;
+  std::string value_;
 
 };
 
