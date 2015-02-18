@@ -119,7 +119,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   // If the path was only one edge we have a special case
   if(pathedges.size() == 1) {
     if(end_pct < start_pct)
-       throw std::runtime_error("Generated reverse trivial path, this is a bug and we are working on it");
+       throw std::runtime_error("Generated reverse trivial path, report this bug!");
     const auto tile = graphreader.GetGraphTile(pathedges.front());
     const auto edge = tile->directededge(pathedges.front());
 
