@@ -103,20 +103,18 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t shortcutcount = 0;
   const NodeInfo* nodeinfo = nullptr;
 
+  // Partial edge at the start
   auto start_pct =  origin.edges().front().dist;
   auto start_vrt = origin.vertex();
-  for(size_t i = 1; i < origin.edges().size(); ++i){
-    if(origin.edges()[i].id == pathedges.front()){
+  for(size_t i = 1; i < origin.edges().size(); ++i)
+    if(origin.edges()[i].id == pathedges.front())
       start_pct = origin.edges()[i].dist;
-    }
-  }
+  // Partial edge at the end
   auto end_pct = dest.edges().front().dist;
   auto end_vrt = dest.vertex();
-  for(size_t i = 1; i < dest.edges().size(); ++i){
-    if(dest.edges()[i].id == pathedges.back()){
+  for(size_t i = 1; i < dest.edges().size(); ++i)
+    if(dest.edges()[i].id == pathedges.back())
       end_pct = dest.edges()[i].dist;
-    }
-  }
 
   // If the path was only one edge we have a special case
   if(pathedges.size() == 1) {
@@ -129,9 +127,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
     if(!edge->forward())
       std::reverse(shape.begin(), shape.end());
-    LOG_INFO("Start: " + std::to_string(start_pct) + " End: " + std::to_string(end_pct));
-    for(const auto& pt : shape)
-      LOG_INFO(std::to_string(pt.second) + "," + std::to_string(pt.first));
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
@@ -146,7 +141,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   // Iterate through path edges
   uint32_t prior_opp_index;
   std::vector<PointLL> trip_shape;
-  for (const auto& edge : pathedges) {
+  for (auto edge_itr = pathedges.begin(); edge_itr != pathedges.end(); ++edge_itr) {
+    const GraphId& edge = *edge_itr;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
 
@@ -160,8 +156,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       }
       // Get the end node (needed for connected edges at next iteration).
       GraphId endnode = directededge->endnode();
-      nodeinfo = graphreader.GetGraphTile(endnode)->node(
-                      directededge->endnode());
+      nodeinfo = graphreader.GetGraphTile(endnode)->node(directededge->endnode());
       // TODO - how do we find the opposing edge to the incoming edge
       // on the prior level?
       prior_opp_index = kMaxEdgesPerNode + 1;
@@ -177,27 +172,27 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //}
 
     // Add edge to the trip node and set its attributes
-    float length_pct = (edge == pathedges.front() ? 1.f - start_pct : (edge == pathedges.back() ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge,
-                                           trip_node, graphtile, length_pct);
+    auto is_first_edge = edge_itr == pathedges.begin();
+    auto is_last_edge = edge_itr == pathedges.end() - 1;
+    float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge, trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
-    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
-            directededge->edgeinfo_offset());
+    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
     trip_edge->set_begin_shape_index(trip_shape.size());
     // We need to clip the shape if its at the beginning or end and isnt a full length
-    if(edge == pathedges.front() || edge == pathedges.back()) {
+    if(is_first_edge || is_last_edge) {
       float length = static_cast<float>(directededge->length()) * length_pct;
-      if(directededge->forward() == (edge == pathedges.back())){
+      if(directededge->forward() == is_last_edge) {
         AddPartialShape<std::vector<PointLL>::const_iterator>
           (trip_shape, edgeinfo->shape().begin(), edgeinfo->shape().end(),
-          length, edge == pathedges.back(), edge == pathedges.back() ? end_vrt : start_vrt);
+          length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
       else {
         AddPartialShape<std::vector<PointLL>::const_reverse_iterator>
           (trip_shape, edgeinfo->shape().rbegin(), edgeinfo->shape().rend(),
-          length, edge == pathedges.back(), edge == pathedges.back() ? end_vrt : start_vrt);
+          length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
     }// Just get the shape in there in the right direction
     else {
@@ -229,10 +224,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (nodeinfo != nullptr) {
       // Get the first edge from the node
       uint32_t edgeid = nodeinfo->edge_index();
-      const DirectedEdge* connectededge = graphtile->directededge(
-                      nodeinfo->edge_index());
-      for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                  i++, connectededge++, edgeid++) {
+      const DirectedEdge* connectededge = graphtile->directededge( nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, connectededge++, edgeid++) {
         // Skip the edge on the path and the incoming edge (this is the one
         // with prior_opp_index from this node). Skip any transition
         // edge.
@@ -246,8 +239,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     // Get the nodeinfo at the end node (may be in a different tile).
     GraphId endnode = directededge->endnode();
-    nodeinfo = graphreader.GetGraphTile(endnode)->node(
-                    directededge->endnode());
+    nodeinfo = graphreader.GetGraphTile(endnode)->node(directededge->endnode());
 
     // Save the index of the opposing directed edge at the end node
     prior_opp_index = directededge->opp_index();
