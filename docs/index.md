@@ -1,6 +1,6 @@
 # Midgard Library #
 
-The midgard library is essentially a set of various datastructures and alogrithms which deal with things like: closest point to line, vector and matrix operations, polyline encoding, logging, projection and culling.
+The midgard library is essentially a set of various data structures and alogrithms which deal with things like: closest point to line, vector and matrix operations, polyline encoding, logging, projection and culling.
 
 ## Components ##
 
