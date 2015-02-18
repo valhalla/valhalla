@@ -50,8 +50,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/pathlocation.h \
 	valhalla/baldr/sign.h \
         valhalla/baldr/signinfo.h \
-	valhalla/baldr/tilehierarchy.h \
-	valhalla/baldr/turnrestriction.h
+	valhalla/baldr/tilehierarchy.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
@@ -64,8 +63,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/pathlocation.cc \
 	src/baldr/sign.cc \
         src/baldr/signinfo.cc \
-	src/baldr/tilehierarchy.cc \
-	src/baldr/turnrestriction.cc
+	src/baldr/tilehierarchy.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
