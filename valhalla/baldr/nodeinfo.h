@@ -27,9 +27,9 @@ class NodeInfo {
   NodeInfo();
 
   /**
-   * Virtual destructor.
+   * Destructor.
    */
-  virtual ~NodeInfo();
+  ~NodeInfo();
 
   /**
    * Get the latitude, longitude of the node.
@@ -75,27 +75,41 @@ class NodeInfo {
     uint32_t bestrc_       : 3; // Best directed edge road class
   };
   NodeAttributes attributes_;
-/*
-  // Node type
-  struct NodeType {
-    uint16_t type         : 3; // Node type
-    uint16_t false_        : 1; // False node
-    uint16_t end          : 1; // End node (only connects to 1 edge)
-    uint16_t parent       : 1; // Is this a parent node
-    uint16_t child        : 1; // Is this a child node
-    uint16_t density;
-    uint32_t mode_change    : 1; // Mode change allowed?
 
-  };
+  // Node access (see graphconstants.h)
+  Access access_;
+
+  // Intersection type (TODO)
+  uint8_t intersection_;
 
   // Administrative information
   struct NodeAdmin {
     uint16_t admin_index  : 6; // Index into this tile's list of admin data
     uint16_t timezone     : 6; // Time zone
     uint16_t dst          : 1; // Is Daylight Saving Time used?
-    uint16_t spare_       : 3; // Spare
+    uint16_t spare        : 3;
   };
-  */
+  NodeAdmin nodeadmin_;
+
+  // Node type
+  // TODO - number of edges on local level?
+  // TODO - can we define street intersection types for use in
+  // transition costing?
+  struct NodeType {
+    uint32_t density      : 4; // Density (population? edges?)
+    uint32_t type         : 4; // Node type
+    uint32_t false_       : 1; // Node connects to only 2 edges (but
+                               // attributes of the edges change). TODO - new name!
+    uint32_t end          : 1; // End node (only connects to 1 edge)
+    uint32_t parent       : 1; // Is this a parent node
+    uint32_t child        : 1; // Is this a child node
+    uint32_t mode_change  : 1; // Mode change allowed?
+    uint32_t spare        : 19;
+  };
+  NodeType nodetype_;
+
+  // Transit stop Id
+  uint32_t stop_id;
 };
 
 }

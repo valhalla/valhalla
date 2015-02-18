@@ -8,15 +8,6 @@
 namespace valhalla {
 namespace baldr {
 
-// Access constants. Bit constants.
-constexpr uint8_t kAutoAccess       = 1;
-constexpr uint8_t kPedestrianAccess = 2;
-constexpr uint8_t kBicycleAccess    = 4;
-constexpr uint8_t kTruckAccess      = 8;
-constexpr uint8_t kEmergencyAccess  = 16;
-constexpr uint8_t kTaxiAccess       = 32;
-constexpr uint8_t kHorseAccess      = 64;
-
 // Bike Network constants. Bit constants.
 constexpr uint8_t kNcn = 1;   // Part of national bike network
 constexpr uint8_t kRcn = 2;   // Part of regional bike network
@@ -40,9 +31,9 @@ class DirectedEdge {
   DirectedEdge();
 
   /**
-   * Virtual destructor.
+   * Destructor.
    */
-  virtual ~DirectedEdge();
+  ~DirectedEdge();
 
   /**
    * Gets the end node of this directed edge.
@@ -108,7 +99,8 @@ class DirectedEdge {
   uint8_t speed() const;
 
   /**
-   * Get the importance of the road/path
+   * Get the importance of the road/path.
+   * TODO - rename to classification or roadclass since it returns RoadClass?!
    * @return  Returns importance / RoadClass
    */
   RoadClass importance() const;
@@ -250,6 +242,14 @@ class DirectedEdge {
   bool internal() const;
 
   /**
+   * Get the index of the directed edge on the local level of the graph
+   * hierarchy. This is used for turn restrictions so the edges can be
+   * identified on the different levels.
+   * @return  Returns the index of the edge on the local level.
+   */
+  uint32_t localedgeidx() const;
+
+  /**
    * Get the computed version of DirectedEdge attributes.
    * @return   Returns internal version.
    */
@@ -262,7 +262,11 @@ class DirectedEdge {
   // Data offsets and flags for extended data.
   struct DataOffsets {
     uint32_t edgeinfo_offset : 24; // Offset to edge data.
-    uint32_t spare           :  6;
+    uint32_t spare           :  4;
+    uint32_t start_mer       :  1; // Directed edge starts a multi-edge
+                                   // restriction
+    uint32_t end_mer         :  1; // Directed edge ends a multi-edge
+                                   // restriction
     uint32_t simple_tr       :  1; // Directed edge starts a simple
                                    // turn restriction
     uint32_t exitsign        :  1; // Does this directed edge have exit signs
@@ -277,21 +281,37 @@ class DirectedEdge {
   };
   GeoAttributes geoattributes_;
 
-  // Legal access to the directed link ((also include reverse direction access).
-  // TODO - come up with final set of values!
-  union Access {
-    struct Fields {
-      uint8_t car          : 1;
-      uint8_t pedestrian   : 1;
-      uint8_t bicycle      : 1;
-      uint8_t truck        : 1;
-      uint8_t emergency    : 1;
-      uint8_t taxi         : 1;
-      uint8_t horse        : 1;  // ???
-      uint8_t spare_       : 1;
-    } fields;
-    uint8_t v;
+  // Attributes. Can be used in edge costing methods to favor or avoid edges.
+  // TODO: add carriage type (LOCAL, EXPRESS, etc.) if we have it
+  // TODO - 64 bit or should we have 2x32 bit?
+  struct Attributes {
+    uint64_t ferry          : 1;
+    uint64_t railferry      : 1;
+    uint64_t toll           : 1;
+    uint64_t dest_only      : 1;
+    uint64_t spare          : 1;
+    uint64_t tunnel         : 1;
+    uint64_t bridge         : 1;
+    uint64_t roundabout     : 1;
+    uint64_t surface        : 3;  // representation of smoothness
+    uint64_t cycle_lane     : 2;
+    uint64_t trans_up       : 1;  // Edge represents a transition up one
+                                  // level in the hierarchy
+    uint64_t trans_down     : 1;  // Transition down one level
+    uint64_t shortcut       : 1;  // Shortcut edge
+    uint64_t superseded     : 1;  // Edge is superseded by a shortcut
+    uint64_t forward        : 1;  // Is the edge info forward or reverse
+    uint64_t not_thru       : 1;  // Edge leads to "no-through" region
+    uint64_t opp_index      : 5;  // Opposing directed edge index
+    uint64_t bikenetwork    : 4;  // Edge that is part of a bicycle network
+    uint64_t internal       : 1;  // Edge that is internal to an intersection
+    uint64_t localedgeidx   : 7;  // Index of the edge on the local level
+    uint64_t spare2         : 28;
   };
+  Attributes attributes_;
+
+  // Legal access to the directed link (also include reverse direction access).
+  // See graphconstants.h.
   Access forwardaccess_;
   Access reverseaccess_;
 
@@ -309,35 +329,11 @@ class DirectedEdge {
   };
   Classification classification_;
 
-  // Attributes. Can be used in edge costing methods to favor or avoid edges.
-  struct Attributes {
-    uint32_t ferry          : 1;
-    uint32_t railferry      : 1;
-    uint32_t toll           : 1;
-    uint32_t dest_only      : 1;
-    uint32_t spare          : 1;
-    uint32_t tunnel         : 1;
-    uint32_t bridge         : 1;
-    uint32_t roundabout     : 1;
-    uint32_t surface        : 3;  // representation of smoothness
-    uint32_t cycle_lane     : 2;
-    uint32_t trans_up       : 1;  // Edge represents a transition up one
-                                  // level in the hierarchy
-    uint32_t trans_down     : 1;  // Transition down one level
-    uint32_t shortcut       : 1;  // Shortcut edge
-    uint32_t superseded     : 1;  // Edge is superseded by a shortcut
-    uint32_t forward        : 1;  // Is the edge info forward or reverse
-    uint32_t not_thru       : 1;  // Edge leads to "no-through" region
-    uint32_t opp_index      : 5;  // Opposing directed edge index
-    uint32_t bikenetwork    : 4;
-    uint32_t internal       : 1;  // Edge that is internal to an intersection
-    uint32_t spare2         : 3;
-
-  };
-  Attributes attributes_;
-
   // TODO - turn restrictions, costs,
-  //        byte alignment / sizing
+  struct IntersectionTransition {
+    uint32_t spare:         32;
+  };
+  IntersectionTransition transitions_;
 };
 
 }

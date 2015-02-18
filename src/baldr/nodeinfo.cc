@@ -7,7 +7,11 @@ namespace baldr {
 // Default constructor
 NodeInfo::NodeInfo()
     : latlng_{},
-      attributes_{} {
+      attributes_{},
+      intersection_(0),
+      nodetype_{},
+      nodeadmin_{},
+      stop_id(0) {
 }
 
 // Destructor.

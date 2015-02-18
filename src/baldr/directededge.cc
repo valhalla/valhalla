@@ -11,8 +11,9 @@ DirectedEdge::DirectedEdge()
       forwardaccess_{},
       reverseaccess_{},
       speed_(0),
+      classification_{},
       attributes_{},
-      classification_{}{
+      transitions_{} {
 }
 
 // Destructor.
@@ -179,6 +180,13 @@ bool DirectedEdge::internal() const {
   return attributes_.internal;
 }
 
+// Get the index of the directed edge on the local level of the graph
+// hierarchy. This is used for turn restrictions so the edges can be
+// identified on the different levels.
+uint32_t DirectedEdge::localedgeidx() const {
+  return attributes_.localedgeidx;
+}
+
 // Get the internal version
 const uint64_t DirectedEdge::internal_version() {
   uint64_t seed = 0;
@@ -219,8 +227,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.emergency+1)-1);
   de.forwardaccess_.fields.horse  = ~de.forwardaccess_.fields.horse;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.horse+1)-1);
-  de.forwardaccess_.fields.spare_  = ~de.forwardaccess_.fields.spare_;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.spare_+1)-1);
+  de.forwardaccess_.fields.spare  = ~de.forwardaccess_.fields.spare;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.spare+1)-1);
   de.forwardaccess_.fields.taxi  = ~de.forwardaccess_.fields.taxi;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.taxi+1)-1);
   de.forwardaccess_.fields.truck  = ~de.forwardaccess_.fields.truck;
