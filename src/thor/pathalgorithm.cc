@@ -347,7 +347,6 @@ void PathAlgorithm::SetDestination(GraphReader& graphreader, const PathLocation&
 bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
   //grab the label
   const EdgeLabel& edge_label = edgelabels_[edge_label_index];
-
   //if we've already found a destination and the search's current edge is more costly to get to, we are done
   if(best_destination_.first != kInvalidLabel && edge_label.truecost() > best_destination_.second)
     return true;
