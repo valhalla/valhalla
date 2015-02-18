@@ -30,10 +30,14 @@ class EdgeLabel {
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    * @param dist      Distance meters to the destination
+   * @param restrictions Restriction mask from prior edge - this is used
+   *                  if edge is a transition edge. This allows restrictions
+   *                  to be carried across different hierarchy levels.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const float cost,
-            const float sortcost, const float dist);
+            const float sortcost, const float dist,
+            const uint32_t restrictions);
 
   /**
    * Destructor.
@@ -43,7 +47,7 @@ class EdgeLabel {
   /**
    * Update an existing edge label with new predecessor and cost information.
    * The edge Id and end node remain the same.
-   * @param predecessor Predecessor directeded edge in the shortest path.
+   * @param predecessor Predecessor directed edge in the shortest path.
    * @param cost      True cost to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    */
@@ -116,6 +120,13 @@ class EdgeLabel {
   bool trans_down() const;
 
   /**
+   * Get the restriction mask at the end node. Each bit set to 1 indicates a
+   * turn restriction onto the directed edge with matching local edge index.
+   * @return  Returns the restriction mask.
+   */
+  uint32_t restrictions() const;
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
@@ -146,12 +157,15 @@ class EdgeLabel {
    * uturn_index: Index at the end node of the edge that constitutes a U-turn
    * trans_up:    Was the prior edge a transition up to a higher level
    * trans_down:  Was the prior edge a transition down to a lower level
+   * restrictions: Bit mask of edges (by local edge index at the end node)
+   *               that are restricted (simple turn restrictions)
    */
   struct Attributes {
     uint32_t uturn_index  : 5;
     uint32_t trans_up     : 1;
     uint32_t trans_down   : 1;
-    uint32_t spare        : 25;
+    uint32_t restrictions : 7;
+    uint32_t spare        : 18;
   };
   Attributes attributes_;
 
