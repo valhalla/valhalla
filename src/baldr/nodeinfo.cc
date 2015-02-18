@@ -14,10 +14,6 @@ NodeInfo::NodeInfo()
       stop_id(0) {
 }
 
-// Destructor.
-NodeInfo::~NodeInfo() {
-}
-
 // Get the latitude, longitude
 const PointLL& NodeInfo::latlng() const {
   return static_cast<const PointLL&>(latlng_);

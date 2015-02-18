@@ -16,10 +16,6 @@ DirectedEdge::DirectedEdge()
       transitions_{} {
 }
 
-// Destructor.
-DirectedEdge::~DirectedEdge() {
-}
-
 // Gets the end node of this directed edge.
 GraphId DirectedEdge::endnode() const {
   return endnode_;

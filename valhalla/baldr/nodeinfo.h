@@ -27,11 +27,6 @@ class NodeInfo {
   NodeInfo();
 
   /**
-   * Destructor.
-   */
-  ~NodeInfo();
-
-  /**
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */

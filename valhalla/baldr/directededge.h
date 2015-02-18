@@ -31,11 +31,6 @@ class DirectedEdge {
   DirectedEdge();
 
   /**
-   * Destructor.
-   */
-  ~DirectedEdge();
-
-  /**
    * Gets the end node of this directed edge.
    * @return  Returns the end node.
    */
