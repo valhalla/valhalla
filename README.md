@@ -19,7 +19,11 @@ Build Status
 Building
 --------
 
-Midgard uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system, please first make sure you have c++11 compiler support, then you should be able to bootstrap the build system:
+Midgard uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you can install the dependencies with:
+
+    sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8
+
+Then you should be able to bootstrap the build system:
 
     ./autogen.sh
 
