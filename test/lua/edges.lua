@@ -433,6 +433,8 @@ function filter_tags_generic(kv)
   kv["destination"] = kv["destination"]
   kv["destination:ref"] = kv["destination:ref"]
   kv["destination:ref:to"] = kv["destination:ref:to"]
+  kv["destination:street"] = kv["destination:street"]
+  kv["destination:street:to"] = kv["destination:street:to"]
   kv["junction:ref"] = kv["junction:ref"]
 
   local nref = kv["ncn_ref"]

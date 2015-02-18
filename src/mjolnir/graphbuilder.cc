@@ -995,6 +995,9 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 
   std::vector<SignInfo> exit_list;
 
+  ////////////////////////////////////////////////////////////////////////////
+  // NUMBER
+
   // Exit sign number
   if (way.junction_ref_index() != 0) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
@@ -1004,8 +1007,12 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
             node_ref.find(nodeid)->second);
   }
 
-  // Exit sign branch refs
+  ////////////////////////////////////////////////////////////////////////////
+  // BRANCH
+
   bool has_branch = false;
+
+  // Exit sign branch refs
   if (way.destination_ref_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_refs = GetTagTokens(
@@ -1015,8 +1022,22 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
-  // Exit sign toward refs
+  // Exit sign branch road names
+  if (way.destination_street_index() != 0) {
+    has_branch = true;
+    std::vector<std::string> branch_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_index()));
+    for (auto& branch_street : branch_streets) {
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // TOWARD
+
   bool has_toward = false;
+
+  // Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_refs = GetTagTokens(
@@ -1026,7 +1047,17 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
-  // Exit sign toward names
+  // Exit sign toward streets
+  if (way.destination_street_to_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_to_index()));
+    for (auto& toward_street : toward_streets) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
+    }
+  }
+
+  // Exit sign toward locations
   if (way.destination_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_names = GetTagTokens(
@@ -1036,6 +1067,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
   // Process exit_to only if other branch or toward info does not exist
   if (!has_branch && !has_toward) {
     if (node.exit_to()) {
@@ -1093,6 +1125,9 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  // NAME
+
   // Exit sign name
   if (node.name()) {
     std::vector<std::string> names = GetTagTokens(
@@ -1101,6 +1136,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
       exit_list.emplace_back(Sign::Type::kExitName, name);
     }
   }
+
   return exit_list;
 }
 
