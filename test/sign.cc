@@ -31,10 +31,10 @@ void TestCtor() {
   // Exit branch
   TryCtor("I 81 South");
 
-  // Exit number
+  // Exit toward
   TryCtor("Carlisle");
 
-  // Exit number
+  // Exit name
   TryCtor("Harrisburg East");
 }
 
