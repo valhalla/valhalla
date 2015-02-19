@@ -60,6 +60,9 @@ tyr_service_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @
 tyr_service_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB) libvalhalla_tyr.la
 tyr_service_la_LDFLAGS = @COVERAGE_LDFLAGS@ -module -shared
 
+# python scripts
+python_PYTHON = py/tyr_simple_server.py
+
 # tests
 check_PROGRAMS = \
 	test/handlers \
