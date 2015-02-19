@@ -9,7 +9,7 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Odin, serves as a set of applications and algorithms for annotating a path through the graph for use in navigating. In keeping with the Norse mythological theme, the name [Odin](http://en.wikipedia.org/wiki/Odin) was chosen as he has often been noted as being very wise. Since the library deals mostly with providing, hopefully wise, guidance along path to be used for navigation, this seemed like a fitting name!
+Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Odin, serves as a set of applications and algorithms for annotating a path as input from the [routing engine](https://github.com/valhalla/thor) for use in navigation. In keeping with the Norse mythological theme, the name [Odin](http://en.wikipedia.org/wiki/Odin) was chosen as he has often been noted as being very wise. Since the library deals mostly with providing, hopefully wise, guidance along path to be used for navigation, this seemed like a fitting name!
 
 Build Status
 ------------
