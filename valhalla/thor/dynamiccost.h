@@ -28,11 +28,15 @@ class DynamicCost {
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
    * @param edge      Pointer to a directed edge.
+   * @param restriction Restriction mask. Identifies the edges at the end
+   *                  node onto which turns are restricted at all times.
+   *                  This mask is compared to the next edge's localedgeidx.
    * @param uturn     Is this a Uturn?
    * @param dist2dest Distance to the destination.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge, const bool uturn,
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const uint32_t restriction, const bool uturn,
                        const float dist2dest) const = 0;
 
   /**
@@ -56,7 +60,6 @@ class DynamicCost {
    * @return  Returns the time in seconds to traverse the edge.
    */
   virtual float Seconds(const baldr::DirectedEdge* edge) const = 0;
-
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied

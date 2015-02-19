@@ -26,11 +26,15 @@ class AutoCost : public DynamicCost {
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
    * @param edge      Pointer to a directed edge.
+   * @param restriction Restriction mask. Identifies the edges at the end
+   *                  node onto which turns are restricted at all times.
+   *                  This mask is compared to the next edge's localedgeidx.
    * @param uturn     Is this a Uturn?
    * @param dist2dest Distance to the destination.
    * @return  Returns true if access is allowed, false if not.
    */
-  virtual bool Allowed(const baldr::DirectedEdge* edge, const bool uturn,
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const uint32_t restriction, const bool uturn,
                        const float dist2dest) const;
 
   /**
@@ -107,8 +111,14 @@ AutoCost::~AutoCost() {
 }
 
 // Check if access is allowed on the specified edge.
-bool AutoCost::Allowed(const baldr::DirectedEdge* edge,  const bool uturn,
+bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
+                       const uint32_t restriction, const bool uturn,
                        const float dist2dest) const {
+  // Check for simple turn restrictions.
+  if (restriction & (1 << edge->localedgeidx())) {
+    return false;
+  }
+
   // TODO - test and add options for hierarchy transitions
   // Allow upward transitions except when close to the destination
   if (edge->trans_up()) {
