@@ -21,25 +21,25 @@ motor_vehicle = {
 }
 
 bicycle = {
-["yes"] = 2,
-["designated"] = 2,
-["dismount"] = 2,
+["yes"] = 4,
+["designated"] = 4,
+["dismount"] = 4,
 ["no"] = 0,
-["lane"] = 2,
-["track"] = 2,
-["shared"] = 2,
-["shared_lane"] = 2,
-["sidepath"] = 2,
-["share_busway"] = 2,
+["lane"] = 4,
+["track"] = 4,
+["shared"] = 4,
+["shared_lane"] = 4,
+["sidepath"] = 4,
+["share_busway"] = 4,
 ["none"] = 0
 }
 
 foot = {
 ["no"] = 0,
-["yes"] = 4,
-["designated"] = 4,
-["permissive"] = 4,
-["crossing"] = 4
+["yes"] = 2,
+["designated"] = 2,
+["permissive"] = 2,
+["crossing"] = 2
 }
 
 function nodes_proc (kv, nokeys)
@@ -55,8 +55,8 @@ function nodes_proc (kv, nokeys)
 
   --access was set, but foot, bike, and auto tags were not.
   if access == "true" and bit32.bor(auto, bike, foot) == 0 then
-    foot = 4
-    bike = 2 
+    bike = 4
+    foot = 2
     auto = 1
   end 
 
