@@ -408,6 +408,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   trip_edge->set_tunnel(directededge->tunnel());
   trip_edge->set_bridge(directededge->bridge());
   trip_edge->set_roundabout(directededge->roundabout());
+  trip_edge->set_internal_intersection(directededge->internal());
 
   return trip_edge;
 }
