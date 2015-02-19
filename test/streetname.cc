@@ -99,6 +99,21 @@ void TestGetPostDir() {
   TryGetPostDir(StreetName("Main Street"), "");
 }
 
+void TryGetPostCardinalDir(const StreetName& street_name,
+                           const std::string& post_dir) {
+  if (post_dir != street_name.GetPostCardinalDir())
+    throw std::runtime_error(
+        street_name.value() + ": Incorrect GetPostCardinalDir");
+}
+
+void TestGetPostCardinalDir() {
+  TryGetPostCardinalDir(StreetName("US 220 North"), " North");
+  TryGetPostCardinalDir(StreetName("US 22 East"), " East");
+  TryGetPostCardinalDir(StreetName("I 81 South"), " South");
+  TryGetPostCardinalDir(StreetName("PA 283 West"), " West");
+  TryGetPostCardinalDir(StreetName("Main Street"), "");
+}
+
 void TryGetBaseName(const StreetName& street_name,
                     const std::string& base_name) {
   if (base_name != street_name.GetBaseName())
@@ -201,6 +216,9 @@ int main() {
 
   // GetPostDir
   suite.test(TEST_CASE(TestGetPostDir));
+
+  // GetPostCardinalDir
+  suite.test(TEST_CASE(TestGetPostCardinalDir));
 
   // GetBaseName
   suite.test(TEST_CASE(TestGetBaseName));

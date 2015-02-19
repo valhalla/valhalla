@@ -23,6 +23,8 @@ class StreetName {
 
   std::string GetPostDir() const;
 
+  std::string GetPostCardinalDir() const;
+
   std::string GetBaseName() const;
 
   bool HasSameBaseName(const StreetName& rhs) const;
@@ -34,6 +36,7 @@ class StreetName {
 
   static const std::vector<std::string> pre_dirs_;
   static const std::vector<std::string> post_dirs_;
+  static const std::vector<std::string> post_cardinal_dirs_;
 };
 
 }
