@@ -9,7 +9,7 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Midgard, serves as a set of Geographic/metric data structures and algorithms for use in essentially all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Midgard](http://en.wikipedia.org/wiki/Midgard) was chosen as it is represents the world as humans know it. Since the library deals mostly with the maths of our favorite spheroid, this seemed like a fitting name!
+Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Midgard, serves as a set of geographic/metric data structures and algorithms for use in essentially all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Midgard](http://en.wikipedia.org/wiki/Midgard) was chosen as it is represents the world as humans know it. Since the library deals mostly with the maths of our favorite spheroid, this seemed like a fitting name!
 
 Build Status
 ------------
