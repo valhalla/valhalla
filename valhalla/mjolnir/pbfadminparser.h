@@ -66,6 +66,14 @@ class PBFAdminParser {
   void relation_callback(uint64_t /*osmid*/, const Tags &tags,
                          const std::vector<CanalTP::Reference> &refs);
 
+  // Vector of all the admin member/way ids.
+  std::vector<uint64_t> memberids_;
+
+  // Vector of admins.
+  std::vector<OSMAdmin> admins_;
+
+  std::unordered_map<uint64_t, OSMWay> admin_ways_;
+
  protected:
 
   /**
@@ -86,13 +94,6 @@ class PBFAdminParser {
 
   // Pointer to all the OSM data (for use by callbacks)
   OSMData* osm_;
-
-  // Vector of all the admin member/way ids.
-  std::vector<uint64_t> memberids_;
-
-  // Vector of admins.
-  std::vector<OSMAdmin> admins_;
-
 
 };
 

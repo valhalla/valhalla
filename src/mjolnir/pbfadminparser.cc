@@ -112,11 +112,6 @@ void PBFAdminParser::node_callback(uint64_t osmid, double lng, double lat,
     return;
   }
 
-  // Get tags
-  Tags results = lua_.TransformInLua(OSMType::kNode, tags);
-  if (results.size() == 0)
-    return;
-
   // Create a new node and set its attributes
   OSMNode n(lng, lat);
 
@@ -136,13 +131,6 @@ void PBFAdminParser::way_callback(uint64_t osmid, const Tags &tags,
     return;
   }
 
-  // Transform tags. If no results that means the way does not have tags
-  // suitable for use in routing.
-  Tags results = lua_.TransformInLua(OSMType::kWay, tags);
-  if (results.size() == 0) {
-    return;
-  }
-
   // Add the refs to the node reference list
   uint32_t idx = osm_->noderefs.size();
   for (const auto ref : refs) {
@@ -157,8 +145,8 @@ void PBFAdminParser::way_callback(uint64_t osmid, const Tags &tags,
   w.set_noderef_index(idx);
   w.set_node_count(refs.size());
 
-  // Add the way to the list
-  osm_->ways.push_back(std::move(w));
+  admin_ways_.emplace(osmid, std::move(w));
+
 }
 
 void PBFAdminParser::relation_callback(uint64_t osmid, const Tags &tags,
@@ -169,7 +157,6 @@ void PBFAdminParser::relation_callback(uint64_t osmid, const Tags &tags,
     return;
 
   OSMAdmin admin(osmid);
-  uint64_t from_way_id = 0;
 
   for (const auto& tag : results) {
 
@@ -181,16 +168,18 @@ void PBFAdminParser::relation_callback(uint64_t osmid, const Tags &tags,
   }
 
   uint32_t idx = memberids_.size();
-  for (const auto& ref : refs) {
+  uint32_t count = 0;
 
+  for (const auto& ref : refs) {
     if (ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
       ways_.set(ref.member_id);
       memberids_.push_back(ref.member_id);
+      count++;
     }
   }
 
   admin.set_member_index(idx);
-  admin.set_member_count(refs.size());
+  admin.set_member_count(count);
 
   admins_.push_back(std::move(admin));
 }
