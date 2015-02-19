@@ -9,7 +9,7 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Thor, serves as a routing engine backed by tiled open source routing data. The name [Thor](http://en.wikipedia.org/wiki/Thor) was chosen as an acronym standing for: Tiled Hierarchical Open Routing and was the foundational idea around which the organization Valhalla and its Norse mythology theme was formed.
+Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Thor, serves as a routing engine backed by tiled open source routing data. The created path can be used as input to the [guidance and narrative engine](https://github.com/valhalla/odin). The name [Thor](http://en.wikipedia.org/wiki/Thor) was chosen as an acronym standing for: Tiled Hierarchical Open Routing and was the foundational idea around which the organization Valhalla and its Norse mythology theme was formed.
 
 Build Status
 ------------
