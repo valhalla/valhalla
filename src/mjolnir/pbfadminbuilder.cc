@@ -239,17 +239,20 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
 
         nodeid = osmdata.noderefs[w.noderef_index() + j];
 
-        const auto& iter = osmdata.nodes.find(nodeid);
+       // const auto& iter = osmdata.nodes.find(nodeid);
 
-        if (iter == osmdata.nodes.end())
+        OSMNode osmnode = osmdata.GetNode(nodeid);
+
+        // TODO
+        /*if (iter == osmdata.nodes.end())
         {
           has_data = false;
           break;
-        }
+        }*/
 
         lastid = nodeid;
 
-        const auto& osmnode = iter->second;
+        //const auto& osmnode = iter->second;
         const PointLL& ll = osmnode.latlng();
 
         if (has_data)
