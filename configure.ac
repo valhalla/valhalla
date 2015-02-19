@@ -42,6 +42,15 @@ AX_PROG_LUA([5.2],[],[
     ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
 ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
+AX_LIB_SQLITE3(3.0.0)
+
+if test "x$SQLITE3_VERSION" = "x"; then 
+  AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.]) 
+fi 
+
+# spatialite needed for admin info
+PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 4.1.1], , AC_MSG_ERROR(['libspatialite-dev' version >= 4.1.1 is required.  Please install libspatialite-dev.]))
+
 # check pkg-config packaged packages.
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
 
