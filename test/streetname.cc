@@ -51,7 +51,7 @@ void TestEquals() {
 
 void TryStartsWith(const StreetName& street_name, const std::string& prefix) {
   if (!street_name.StartsWith(prefix))
-    throw std::runtime_error("Incorrect StartsWith");
+    throw std::runtime_error(street_name.value() + ": Incorrect StartsWith");
 }
 
 void TestStartsWith() {
@@ -61,7 +61,7 @@ void TestStartsWith() {
 
 void TryEndsWith(const StreetName& street_name, const std::string& suffix) {
   if (!street_name.EndsWith(suffix))
-    throw std::runtime_error("Incorrect EndsWith");
+    throw std::runtime_error(street_name.value() + ": Incorrect EndsWith");
 }
 
 void TestEndsWith() {
@@ -71,7 +71,7 @@ void TestEndsWith() {
 
 void TryGetPreDir(const StreetName& street_name, const std::string& pre_dir) {
   if (pre_dir != street_name.GetPreDir())
-    throw std::runtime_error("Incorrect GetPreDir");
+    throw std::runtime_error(street_name.value() + ": Incorrect GetPreDir");
 }
 
 void TestGetPreDir() {
@@ -84,7 +84,7 @@ void TestGetPreDir() {
 
 void TryGetPostDir(const StreetName& street_name, const std::string& post_dir) {
   if (post_dir != street_name.GetPostDir())
-    throw std::runtime_error("Incorrect GetPostDir");
+    throw std::runtime_error(street_name.value() + ": Incorrect GetPostDir");
 }
 
 void TestGetPostDir() {
@@ -102,7 +102,7 @@ void TestGetPostDir() {
 void TryGetBaseName(const StreetName& street_name,
                     const std::string& base_name) {
   if (base_name != street_name.GetBaseName())
-    throw std::runtime_error("Incorrect GetBaseName");
+    throw std::runtime_error(street_name.value() + ": Incorrect GetBaseName");
 }
 
 void TestGetBaseName() {
@@ -130,8 +130,10 @@ void TestGetBaseName() {
 }
 
 void TryHasSameBaseName(const StreetName& street_name, const StreetName& rhs) {
-  if (!street_name.HasSameBaseName(rhs))
-    throw std::runtime_error("Incorrect HasSameBaseName");
+  if (!street_name.HasSameBaseName(rhs)) {
+    throw std::runtime_error(
+        street_name.value() + ": Incorrect HasSameBaseName");
+  }
 }
 
 void TestHasSameBaseName() {
