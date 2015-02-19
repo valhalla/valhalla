@@ -53,6 +53,80 @@ class NodeInfo {
   RoadClass bestrc() const;
 
   /**
+   * Get the access modes (bit mask) allowed to pass through the node.
+   * See graphconstants.h
+   * @return  Returns the access bit mask indicating allowable modes.
+   */
+  uint8_t access() const;
+
+  // TODO - intersection type?
+
+  /**
+   * Get the index of the administrative information within this tile.
+   * @return  Returns an index within the tile's administrative information.
+   */
+  uint32_t admin_index() const;
+
+  /**
+   * Returns the timezone index. TODO - describe the timezone information.
+   * @return  Returns the timezone index.
+   */
+  uint32_t timezone() const;
+
+  /**
+   * Is daylight saving time observed at the node's location.
+   * @return  Returns true if daylight savings time is observed.
+   */
+  bool dst() const;
+
+  /**
+   * Get the relative density (TODO - define) at the node.
+   * @return  Returns relative density (0-15).
+   */
+  uint32_t density() const;
+
+  /**
+   * Gets the node type. See graphconstants.h for the list of types.
+   * @return  Returns the node type.
+   */
+  NodeType type() const;
+
+  // TODO - false node (need a new name!)
+
+  /**
+   * Is this a dead-end node that connects to only one edge?
+   * @return  Returns true if this is a dead-end node.
+   */
+  bool end() const;
+
+  /**
+   * Is this a parent node (e.g. a parent transit stop).
+   * @return  Returns true if this is a parent node.
+   */
+  bool parent() const;
+
+  /**
+   * Is this a child node (e.g. a child transit stop).
+   * @return  Returns true if this is a child node.
+   */
+  bool child() const;
+
+  // TODO - mode change??
+
+  /**
+   * Is there a traffic signal at this node?
+   * @return  Returns true if there is a traffic signal at the node.
+   */
+  bool traffic_signal() const;
+
+  /**
+   * Gets the transit stop Id. This is used for schedule lookups
+   * and possibly queries to a transit service.
+   * @return  Returns the transit stop Id.
+   */
+  uint32_t stop_id() const;
+
+  /**
    * Get the computed version of NodeInfo attributes.
    * @return   Returns internal version.
    */
@@ -74,7 +148,7 @@ class NodeInfo {
   // Node access (see graphconstants.h)
   Access access_;
 
-  // Intersection type (TODO)
+  // Intersection type (TODO). Includes "false/imposter"
   uint8_t intersection_;
 
   // Administrative information
@@ -84,27 +158,26 @@ class NodeInfo {
     uint16_t dst          : 1; // Is Daylight Saving Time used?
     uint16_t spare        : 3;
   };
-  NodeAdmin nodeadmin_;
+  NodeAdmin admin_;
 
   // Node type
   // TODO - number of edges on local level?
   // TODO - can we define street intersection types for use in
   // transition costing?
-  struct NodeType {
-    uint32_t density      : 4; // Density (population? edges?)
-    uint32_t type         : 4; // Node type
-    uint32_t false_       : 1; // Node connects to only 2 edges (but
-                               // attributes of the edges change). TODO - new name!
-    uint32_t end          : 1; // End node (only connects to 1 edge)
-    uint32_t parent       : 1; // Is this a parent node
-    uint32_t child        : 1; // Is this a child node
-    uint32_t mode_change  : 1; // Mode change allowed?
-    uint32_t spare        : 19;
+  struct NodeTypeInfo {
+    uint32_t density        : 4; // Density (population? edges?)
+    uint32_t type           : 4; // Node type
+    uint32_t end            : 1; // End node (only connects to 1 edge)
+    uint32_t parent         : 1; // Is this a parent node
+    uint32_t child          : 1; // Is this a child node
+    uint32_t mode_change    : 1; // Mode change allowed?
+    uint32_t traffic_signal : 1; // Traffic signal
+    uint32_t spare          : 20;
   };
-  NodeType nodetype_;
+  NodeTypeInfo type_;
 
   // Transit stop Id
-  uint32_t stop_id;
+  uint32_t stop_id_;
 };
 
 }
