@@ -97,7 +97,7 @@ class TyrHandler(BaseHTTPRequestHandler):
     except Exception as e:
       self.fail(str(e))
 
-#go off an wait for connections
+#go off and wait for connections
 if __name__ == '__main__':
   #check for a config file
   conf = {}
