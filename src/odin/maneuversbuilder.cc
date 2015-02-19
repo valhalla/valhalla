@@ -79,10 +79,10 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     uint32_t left_count;
     uint32_t left_similar_count;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                   right_count,
-                                                   right_similar_count,
-                                                   left_count,
-                                                   left_similar_count);
+        right_count,
+        right_similar_count,
+        left_count,
+        left_similar_count);
     LOG_TRACE(std::string("    right_count=") + std::to_string(right_count)
         + std::string("    left_count=") + std::to_string(left_count));
     LOG_TRACE(std::string("    right_similar_count=") + std::to_string(right_similar_count)
@@ -318,8 +318,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
       }
-    }
-    LOG_TRACE("EXIT");
+    } LOG_TRACE("EXIT");
   }
   // Process on ramp
   else if (maneuver.ramp() && !prev_edge->IsHighway()) {
@@ -346,8 +345,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
       }
-    }
-    LOG_TRACE("RAMP");
+    } LOG_TRACE("RAMP");
   }
   // Process merge
   else if (curr_edge->IsHighway() && prev_edge->ramp()) {
@@ -488,11 +486,11 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return true;
   }
 
-  // Process common names
-  StreetNames common_street_names = maneuver.street_names()
-      .FindCommonStreetNames(prev_edge_names);
-  if (!common_street_names.empty()) {
-    maneuver.set_street_names(std::move(common_street_names));
+  // Process common base names
+  StreetNames common_base_names = prev_edge_names.FindCommonBaseNames(
+      maneuver.street_names());
+  if (!common_base_names.empty()) {
+    maneuver.set_street_names(std::move(common_base_names));
     return true;
   }
 

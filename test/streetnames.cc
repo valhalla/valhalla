@@ -43,8 +43,8 @@ void TryFindCommonStreetNames(const StreetNames& lhs, const StreetNames& rhs,
                               const StreetNames& expected) {
   StreetNames computed = lhs.FindCommonStreetNames(rhs);
   if (computed != expected) {
-    throw std::runtime_error(
-        "Incorrect street names returned from FindCommonStreetNames");
+    throw std::runtime_error(expected.ToString() +
+        ": Incorrect street names returned from FindCommonStreetNames");
   }
 }
 
@@ -57,9 +57,43 @@ void TestFindCommonStreetNames() {
                            GetStreetNames( { "Fishburn Road", "PA 743" }),
                            GetStreetNames( { }));
 
-  TryFindCommonStreetNames(GetStreetNames( { "Capital Beltway", "I 95 South", "I 495 South" }),
-                           GetStreetNames( { "I 95 South" }),
-                           GetStreetNames( { "I 95 South" }));
+  TryFindCommonStreetNames(GetStreetNames( { "Capital Beltway", "I 95 South",
+      "I 495 South" }),
+                           GetStreetNames( { "I 95 South" }), GetStreetNames( {
+                               "I 95 South" }));
+
+}
+
+void TryFindCommonBaseNames(const StreetNames& lhs, const StreetNames& rhs,
+                            const StreetNames& expected) {
+  StreetNames computed = lhs.FindCommonBaseNames(rhs);
+  if (computed != expected) {
+    throw std::runtime_error(expected.ToString() +
+        ": Incorrect street names returned from FindCommonBaseNames");
+  }
+}
+
+void TestFindCommonBaseNames() {
+  TryFindCommonBaseNames(GetStreetNames( { "Hershey Road", "PA 743 North" }),
+                         GetStreetNames( { "Fishburn Road", "PA 743 North" }),
+                         GetStreetNames( { "PA 743 North" }));
+
+  TryFindCommonBaseNames(GetStreetNames( { "Hershey Road", "PA 743 North" }),
+                         GetStreetNames( { "Fishburn Road", "PA 743" }),
+                         GetStreetNames( { "PA 743 North" }));
+
+  TryFindCommonBaseNames(GetStreetNames( { "Hershey Road", "PA 743" }),
+                         GetStreetNames( { "Fishburn Road", "PA 743 North" }),
+                         GetStreetNames( { "PA 743 North" }));
+
+  TryFindCommonBaseNames(GetStreetNames( { "Hershey Road", "PA 743" }),
+                         GetStreetNames( { "Fishburn Road", "PA 743" }),
+                         GetStreetNames( { "PA 743" }));
+
+  TryFindCommonBaseNames(GetStreetNames( { "Capital Beltway", "I 95 South",
+      "I 495 South" }),
+                         GetStreetNames( { "I 95 South" }), GetStreetNames( {
+                             "I 95 South" }));
 
 }
 
@@ -73,6 +107,9 @@ int main() {
 
   // FindCommonStreetNames
   suite.test(TEST_CASE(TestFindCommonStreetNames));
+
+  // FindCommonBaseNames
+  suite.test(TEST_CASE(TestFindCommonBaseNames));
 
   return suite.tear_down();
 }

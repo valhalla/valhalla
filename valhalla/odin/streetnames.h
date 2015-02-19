@@ -20,6 +20,8 @@ class StreetNames : public std::list<StreetName> {
 
   StreetNames FindCommonStreetNames(StreetNames other_street_names) const;
 
+  StreetNames FindCommonBaseNames(StreetNames other_street_names) const;
+
   // TODO - add more functionality later
 
  protected:
