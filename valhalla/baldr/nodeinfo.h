@@ -114,6 +114,12 @@ class NodeInfo {
   // TODO - mode change??
 
   /**
+   * Is there a traffic signal at this node?
+   * @return  Returns true if there is a traffic signal at the node.
+   */
+  bool traffic_signal() const;
+
+  /**
    * Gets the transit stop Id. This is used for schedule lookups
    * and possibly queries to a transit service.
    * @return  Returns the transit stop Id.
@@ -142,7 +148,7 @@ class NodeInfo {
   // Node access (see graphconstants.h)
   Access access_;
 
-  // Intersection type (TODO)
+  // Intersection type (TODO). Includes "false/imposter"
   uint8_t intersection_;
 
   // Administrative information
@@ -159,15 +165,14 @@ class NodeInfo {
   // TODO - can we define street intersection types for use in
   // transition costing?
   struct NodeTypeInfo {
-    uint32_t density      : 4; // Density (population? edges?)
-    uint32_t type         : 4; // Node type
-    uint32_t false_       : 1; // Node connects to only 2 edges (but
-                               // attributes of the edges change). TODO - new name!
-    uint32_t end          : 1; // End node (only connects to 1 edge)
-    uint32_t parent       : 1; // Is this a parent node
-    uint32_t child        : 1; // Is this a child node
-    uint32_t mode_change  : 1; // Mode change allowed?
-    uint32_t spare        : 19;
+    uint32_t density        : 4; // Density (population? edges?)
+    uint32_t type           : 4; // Node type
+    uint32_t end            : 1; // End node (only connects to 1 edge)
+    uint32_t parent         : 1; // Is this a parent node
+    uint32_t child          : 1; // Is this a child node
+    uint32_t mode_change    : 1; // Mode change allowed?
+    uint32_t traffic_signal : 1; // Traffic signal
+    uint32_t spare          : 20;
   };
   NodeTypeInfo type_;
 

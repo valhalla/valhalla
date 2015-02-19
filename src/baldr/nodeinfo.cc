@@ -67,8 +67,6 @@ NodeType NodeInfo::type() const {
   return static_cast<NodeType>(type_.type);
 }
 
-// TODO - false node?
-
 // Is this a dead-end node that connects to only one edge?
 bool NodeInfo::end() const {
   return type_.end;
@@ -85,6 +83,11 @@ bool NodeInfo::child() const {
 }
 
 // TODO - mode changes?
+
+// Is there a traffic signal at this node?
+bool NodeInfo::traffic_signal() const {
+  return type_.traffic_signal;
+}
 
 // Gets the transit stop Id. This is used for schedule lookups
 // and possibly queries to a transit service.
