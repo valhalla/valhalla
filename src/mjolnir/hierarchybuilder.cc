@@ -326,22 +326,20 @@ void HierarchyBuilder::FormTilesInNewLevel(
 
       // Copy node information
       nodea.Set(tileid, level, nodeid);
-      NodeInfoBuilder node;
-      const NodeInfo* baseni = tile->node(newnode.basenode.id());
-      node.set_latlng(baseni->latlng());
+      NodeInfo baseni = *(tile->node(newnode.basenode.id()));
+      NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
       node.set_edge_index(edgeindex);
-      node.set_bestrc(baseni->bestrc());
 
       // Add shortcut edges first
       std::vector<DirectedEdgeBuilder> directededges;
-      AddShortcutEdges(newnode, nodea, baseni, tile, rcc, tilebuilder,
+      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
                          directededges);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
       GraphId oldedgeid(newnode.basenode.tileid(), newnode.basenode.level(),
-                        baseni->edge_index());
-      for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, oldedgeid++) {
+                        baseni.edge_index());
+      for (uint32_t i = 0, n = baseni.edge_count(); i < n; i++, oldedgeid++) {
         // Store the directed edge if less than the road class cutoff and
         // it is not a transition edge or shortcut in the base level
         const DirectedEdge* directededge = tile->directededge(oldedgeid);
