@@ -13,13 +13,30 @@ NodeInfoBuilder::NodeInfoBuilder()
 NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const uint32_t edge_index,
                                  const uint32_t edge_count,
-                                 const RoadClass rc) {
+                                 const RoadClass rc,
+                                 const uint32_t access,
+                                 const NodeType type,
+                                 const bool end,
+                                 const bool traffic_signal) {
   set_latlng(ll);
   set_edge_index(edge_index);
   set_edge_count(edge_count);
   set_bestrc(rc);
-}
 
+  set_access(access);
+  set_type(type);
+  set_end(end);
+  set_traffic_signal(traffic_signal);
+
+  // Not populated yet.
+  set_admin_index(0);
+  set_timezone(0);
+  set_dst(false);
+  set_density(0);
+  set_parent(false);
+  set_child(false);
+  set_stop_id(0);
+}
 
 // Sets the latitude and longitude.
 void NodeInfoBuilder::set_latlng(const std::pair<float, float>& ll) {
@@ -47,8 +64,72 @@ void NodeInfoBuilder::set_edge_count(const uint32_t edge_count) {
   }
 }
 
+// Set the best road class of the outbound directed edges.
 void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
-   attributes_.bestrc_= static_cast<uint32_t>(bestrc);
+   attributes_.bestrc_ = static_cast<uint32_t>(bestrc);
+}
+
+// Set the access modes (bit mask) allowed to pass through the node.
+void NodeInfoBuilder::set_access(const uint32_t access) {
+
+  if (access & kAutoAccess)
+    access_.fields.car = true;
+
+  if (access & kPedestrianAccess)
+    access_.fields.pedestrian = true;
+
+  if (access & kBicycleAccess)
+    access_.fields.bicycle = true;
+}
+
+// Set the index of the administrative information within this tile.
+void NodeInfoBuilder::set_admin_index(const uint16_t admin_index) {
+  admin_.admin_index = admin_index;
+}
+
+// Set the timezone index.
+void NodeInfoBuilder::set_timezone(const uint16_t timezone) {
+  admin_.timezone = timezone;
+}
+
+// Set the daylight saving time flag
+void NodeInfoBuilder::set_dst(const bool dst) {
+  admin_.dst = dst;
+}
+
+// Set the relative density
+void NodeInfoBuilder::set_density(const uint32_t density) {
+  type_.density = density;
+}
+
+// Set the node type.
+void NodeInfoBuilder::set_type(const NodeType type) {
+  type_.type =  static_cast<uint8_t>(type);
+}
+
+// Set the dead-end node flag.
+void NodeInfoBuilder::set_end(const bool end) {
+  type_.end = end;
+}
+
+// Set the parent node flag (e.g. a parent transit stop).
+void NodeInfoBuilder::set_parent(const bool parent) {
+  type_.parent = parent;
+}
+
+// Set the child node flag (e.g. a child transit stop).
+void NodeInfoBuilder::set_child(const bool child) {
+  type_.child = child;
+}
+
+// Set the traffic signal flag.
+void NodeInfoBuilder::set_traffic_signal(const bool traffic_signal) {
+  type_.traffic_signal = traffic_signal;
+}
+
+// Set the transit stop Id.
+void NodeInfoBuilder::set_stop_id(const uint32_t stop_id) {
+  stop_id_ = stop_id;
 }
 
 }

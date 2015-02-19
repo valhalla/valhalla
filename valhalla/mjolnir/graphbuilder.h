@@ -180,6 +180,48 @@ struct Node {
   }
 
   /**
+   * Set access mask.
+   */
+  void set_access_mask(const uint32_t access_mask) {
+    attributes.access_mask = access_mask;
+  }
+
+  /**
+   * Get the access mask.
+   */
+  uint32_t access_mask() const {
+    return attributes.access_mask;
+  }
+
+  /**
+   * Set the node type.
+   */
+  void set_type(const NodeType type) {
+    attributes.type = static_cast<uint8_t>(type);
+  }
+
+  /**
+   * Get the node type.
+   */
+  NodeType type() const {
+    return static_cast<baldr::NodeType>(attributes.type);
+  }
+
+  /**
+   * Set traffic_signal flag.
+   */
+  void set_traffic_signal(const bool traffic_signal) {
+    attributes.traffic_signal = traffic_signal;
+  }
+
+  /**
+   * Get the traffic_signal flag.
+   */
+  bool traffic_signal() const {
+    return attributes.traffic_signal;
+  }
+
+  /**
    * Get the non-link edge flag. True if any connected edge is not a
    * highway=*_link.
    */
