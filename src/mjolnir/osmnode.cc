@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -30,14 +32,14 @@ const std::pair<float, float>& OSMNode::latlng() const {
   return latlng_;
 }
 
-// Set modes mask.
-void OSMNode::set_modes_mask(const uint32_t modes_mask) {
-  attributes_.modes_mask = modes_mask;
+// Set access mask.
+void OSMNode::set_access_mask(const uint32_t access_mask) {
+  attributes_.access_mask = access_mask;
 }
 
-// Get the modes mask.
-uint32_t OSMNode::modes_mask() const {
-  return attributes_.modes_mask;
+// Get the access mask.
+uint32_t OSMNode::access_mask() const {
+  return attributes_.access_mask;
 }
 
 // Set the exit to flag
@@ -70,24 +72,14 @@ bool OSMNode::name() const {
   return attributes_.name;
 }
 
-// Set gate flag.
-void OSMNode::set_gate(const bool gate) {
-  attributes_.gate = gate;
+// Set the node type.
+void OSMNode::set_type(const NodeType type) {
+  attributes_.type = static_cast<uint8_t>(type);
 }
 
-// Get the gate flag.
-bool OSMNode::gate() const {
-  return attributes_.gate;
-}
-
-// Set bollard flag.
-void OSMNode::set_bollard(const bool bollard) {
-  attributes_.bollard = bollard;
-}
-
-// Get the bollard flag.
-bool OSMNode::bollard() const {
-  return attributes_.bollard;
+// Get the node type.
+NodeType OSMNode::type() const {
+  return static_cast<baldr::NodeType>(attributes_.type);
 }
 
 // Set the intersection flag.
@@ -101,7 +93,7 @@ bool OSMNode::intersection() const {
 }
 
 // Set traffic_signal flag.
-void OSMNode:: set_traffic_signal(const bool traffic_signal) {
+void OSMNode::set_traffic_signal(const bool traffic_signal) {
   attributes_.traffic_signal = traffic_signal;
 }
 

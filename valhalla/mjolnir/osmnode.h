@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/graphconstants.h>
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -13,9 +15,8 @@ using OSMLatLng = std::pair<float, float>;
 
 // Node attributes. Shared by OSMNode and GraphBuilder Node.
 struct NodeAttributes {
-  uint32_t modes_mask     : 8;
-  uint32_t gate           : 1;
-  uint32_t bollard        : 1;
+  uint32_t access_mask    : 8;
+  uint32_t type           : 3;
   uint32_t exit_to        : 1;
   uint32_t ref            : 1;
   uint32_t name           : 1;
@@ -23,7 +24,7 @@ struct NodeAttributes {
   uint32_t traffic_signal : 1;
   uint32_t non_link_edge  : 1;
   uint32_t link_edge      : 1;
-  uint32_t spare          : 15;
+  uint32_t spare          : 14;
 };
 
 /**
@@ -59,34 +60,26 @@ class OSMNode {
   const OSMLatLng& latlng() const;
 
   /**
-   * Set modes mask.
+   * Set access mask.
    */
-  void set_modes_mask(const uint32_t modes_mask);
+  void set_access_mask(const uint32_t modes_mask);
 
   /**
-   * Get the modes mask.
+   * Get the access mask.
    */
-  uint32_t modes_mask() const;
+  uint32_t access_mask() const;
 
   /**
-   * Set gate flag.
+   * Sets the type.
+   * @param  type
    */
-  void set_gate(const bool gate);
+  void set_type(const baldr::NodeType type);
 
   /**
-   * Get the gate flag.
+   * Get the type.
+   * @return  Returns the type of node.
    */
-  bool gate() const;
-
-  /**
-   * Set bollard flag.
-   */
-  void set_bollard(const bool bollard);
-
-  /**
-   * Get the bollard flag.
-   */
-  bool bollard() const;
+  baldr::NodeType type() const;
 
   /**
    * Set the exit to flag
