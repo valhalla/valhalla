@@ -60,11 +60,12 @@ constexpr float kMaxTurnChannelLength = 150.0f;
 enum class NodeType : uint8_t {
   kStreetIntersection = 0,
   kGate = 1,
-  kRailStop = 2,
-  kBusStop = 3,
-  kMultiUseTransitStop = 4,
-  kBikeShare = 5,
-  kParking = 6
+  kBollard = 2,
+  kRailStop = 3,
+  kBusStop = 4,
+  kMultiUseTransitStop = 5,
+  kBikeShare = 6,
+  kParking = 7
 };
 
 // Edge use
