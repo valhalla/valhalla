@@ -71,15 +71,7 @@ void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
 
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfoBuilder::set_access(const uint32_t access) {
-
-  if (access & kAutoAccess)
-    access_.fields.car = true;
-
-  if (access & kPedestrianAccess)
-    access_.fields.pedestrian = true;
-
-  if (access & kBicycleAccess)
-    access_.fields.bicycle = true;
+  access_.v = access;
 }
 
 // Set the index of the administrative information within this tile.
