@@ -59,12 +59,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_signcount(const uint32_t count);
 
   /**
-   * Sets the number of simple turn restrictions within this tile.
-   * @param count Number of simple turn restrictions within the tile.
-   */
-  void set_turnrestriction_count(const uint32_t count);
-
-  /**
    * Sets the offset to the edge info.
    * @param offset Offset in bytes to the start of the edge information.
    */

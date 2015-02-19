@@ -11,24 +11,22 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-// TODO - preprocess ramps to lower their importance. This would improve
-// the ability to create shortcut edges along highways...
-
+// Constructor. Ensure the tile hierarchy specification has a least 2 levels.
 HierarchyBuilder::HierarchyBuilder(const boost::property_tree::ptree& pt)
     : contractcount_(0),
       shortcutcount_(0),
       tile_hierarchy_(pt),
       graphreader_(tile_hierarchy_) {
-
-  // Make sure there are at least 2 levels!
   if (tile_hierarchy_.levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 }
 
+// Build successive levels of the hierarchy, starting at the local
+// base level. Each successive level of the hierarchy is based on
+// and connected to the next. Also adds shortcut edges through nodes
+// that only connect to 2 edges with compatible attributes and all other
+// edges are on lower hierarchy level.
 bool HierarchyBuilder::Build() {
-  // Build successive levels of the hierarchy, starting at the local
-  // base level. Each successive level of the hierarchy is based on
-  // and connected to the next.
   auto base_level = tile_hierarchy_.levels().rbegin();
   auto new_level = base_level;
   new_level++;
@@ -163,16 +161,27 @@ bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodein
     }
   }
 
-  // Get the opposing directed edges
+  // Get the directed edges - these are the outbound edges from the node.
+  // Get the opposing directed edges - these are the inbound edges to the node.
   const DirectedEdge* edge1 = tile->directededge(edges[match.first]);
   const DirectedEdge* edge2 = tile->directededge(edges[match.second]);
   GraphId oppedge1 = GetOpposingEdge(basenode, edge1);
   GraphId oppedge2 = GetOpposingEdge(basenode, edge2);
+  const DirectedEdge* oppdiredge1 =
+          graphreader_.GetGraphTile(oppedge1)->directededge(oppedge1);
+  const DirectedEdge* oppdiredge2 =
+      graphreader_.GetGraphTile(oppedge2)->directededge(oppedge2);
 
   // If either opposing directed edge has exit signs return false
-  if (graphreader_.GetGraphTile(oppedge1)->directededge(oppedge1)->exitsign() ||
-      graphreader_.GetGraphTile(oppedge2)->directededge(oppedge2)->exitsign()) {
+  if (oppdiredge1->exitsign() || oppdiredge2->exitsign()) {
     return false;
+  }
+
+  // Cannot have turn restriction from either inbound edge edge to
+  // the other outbound edge
+  if ((oppdiredge1->restrictions() & (1 << edge2->localedgeidx()) != 0) ||
+      (oppdiredge2->restrictions() & (1 << edge1->localedgeidx()) != 0)) {
+      return false;
   }
 
   // Mark the 2 edges entering the node (opposing) and 2 edges exiting
@@ -211,8 +220,6 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
   if (edge1->exitsign() || edge2->exitsign()) {
     return false;
   }
-
-  // TODO - turn restrictions...
 
   // Importance (class), link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
@@ -649,23 +656,15 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
 
-  // TODO - update turn restrictions
-  uint32_t next_tridx = (tilebuilder.header()->turnrestriction_count() > 0) ?
-      tilebuilder.turnrestriction(0).edgeindex() :
-      existinghdr.directededgecount() + 1;
-
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
   uint32_t signidx = 0;
   uint32_t signcount = existinghdr.signcount();
-  uint32_t tridx = 0;
-  uint32_t trcount = existinghdr.turnrestriction_count();
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
   std::vector<SignBuilder> signs;
-  std::vector<TurnRestrictionBuilder> turnrestrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
@@ -689,19 +688,6 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
         signidx++;
         nextsignidx = (signidx >= signcount) ?
               0 : tilebuilder.sign(signidx).edgeindex();
-      }
-
-      // Any turn restrictions that use this index - increment
-      // by the number of added edges
-      if (idx == next_tridx && tridx < trcount) {
-        TurnRestrictionBuilder tr = tilebuilder.turnrestriction(tridx);
-        tr.set_edgeindex(idx + n);
-        turnrestrictions.emplace_back(std::move(tr));
-
-        // Increment to the next turn restriction and update next_tridx
-        tridx++;
-        next_tridx = (tridx >= trcount) ?
-              0 : tilebuilder.turnrestriction(tridx).edgeindex();
       }
 
       // Increment index
@@ -744,15 +730,9 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
               std::to_string(signs.size()) + " Header says: " +
               std::to_string(hdrbuilder.signcount()));
   }
-  if (turnrestrictions.size() != hdrbuilder.turnrestriction_count()) {
-      LOG_ERROR("AddConnectionsToBaseTile: turnrestriction size = " +
-                std::to_string(turnrestrictions.size()) + " Header says: " +
-                std::to_string(hdrbuilder.turnrestriction_count()));
-    }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs,
-                     turnrestrictions);
+  tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges, signs);
 
   LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

@@ -1,4 +1,5 @@
 #include "mjolnir/directededgebuilder.h"
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -19,7 +20,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
                    const bool not_thru,  const bool internal,
-                   const RoadClass rc)
+                   const RoadClass rc, const uint32_t localidx,
+                   const uint32_t restrictions)
      :  DirectedEdge() {
   set_endnode(endnode);
   set_length(length);
@@ -39,6 +41,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_importance(rc);
   set_not_thru(not_thru);
   set_internal(internal);
+  set_localedgeidx(localidx);
+  set_restrictions(restrictions);
 
   // Set forward flag and access (based on direction)
   set_forward(forward);
@@ -62,13 +66,6 @@ void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
   dataoffsets_.edgeinfo_offset = offset;
 }
 
-// Set the simple turn restriction flag. This indicates the directed edge
-// forms the start of a simple turn restriction. These are turn restrictions
-// from one edge to another that apply to all vehicles, at all times.
-void DirectedEdgeBuilder::set_simple_tr(const bool tr) {
-  dataoffsets_.simple_tr = tr;
-}
-
 // Sets the exit flag.
 void DirectedEdgeBuilder::set_exitsign(const bool exit) {
   dataoffsets_.exitsign = exit;
@@ -86,6 +83,7 @@ void DirectedEdgeBuilder::set_length(const uint32_t length) {
 
 // Sets the number of lanes
 void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
+  // TOTO - make sure we don't exceed some max value
   geoattributes_.lanecount = lanecount;
 }
 
@@ -246,6 +244,24 @@ void DirectedEdgeBuilder::set_internal(const bool internal) {
   attributes_.internal = internal;
 }
 
+// Set the index of the directed edge on the local level of the graph
+// hierarchy. This is used for turn restrictions so the edges can be
+// identified on the different levels.
+void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
+  if (idx > kMaxEdgesPerNode) {
+    LOG_ERROR("Local Edge Index exceeds max: " + std::to_string(idx));
+    attributes_.localedgeidx = kMaxEdgesPerNode;
+  }
+  attributes_.localedgeidx = idx;
+}
+
+// Set simple turn restrictions from the end of this directed edge.
+// These are turn restrictions from one edge to another that apply to
+// all vehicles, at all times.
+void DirectedEdgeBuilder::set_restrictions(const uint32_t mask) {
+  attributes_.restrictions = mask;
+}
+
 //Sets the road class.
 void DirectedEdgeBuilder::set_importance(const RoadClass roadclass) {
   classification_.importance = static_cast<uint8_t>(roadclass);
@@ -266,6 +282,7 @@ void DirectedEdgeBuilder::set_speed(const float speed) {
   // TODO - protect against exceeding max speed
   speed_ = static_cast<unsigned char>(speed + 0.5f);
 }
+
 
 }
 }

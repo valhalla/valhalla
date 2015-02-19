@@ -113,10 +113,10 @@ void PBFAdminParser::node_callback(uint64_t osmid, double lng, double lat,
   }
 
   // Create a new node and set its attributes
-  OSMNode n(lng, lat);
+  OSMNode n(osmid, lng, lat);
 
   // Add to the node map;
-  osm_->nodes.emplace(osmid, std::move(n));
+  osm_->nodes.push_back(std::move(n));
 
   if (osm_->nodes.size() % 5000000 == 0) {
     LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");

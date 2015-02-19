@@ -50,7 +50,8 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
 
 // Delete the OSM node map and extended node information maps.
 void delete_osmnode_map(OSMData& osmdata) {
-  OSMNodeMap().swap(osmdata.nodes);
+//  OSMNodeMap().swap(osmdata.nodes);
+  std::vector<OSMNode>().swap(osmdata.nodes);
   OSMStringMap().swap(osmdata.node_exit_to);
   OSMStringMap().swap(osmdata.node_ref);
   OSMStringMap().swap(osmdata.node_name);
@@ -68,7 +69,7 @@ void delete_noderefs(OSMData& osmdata) {
 
 // Build the graph from the input
 void GraphBuilder::Build(OSMData& osmdata) {
-  // Construct edges
+  // Construct edges. Sort the OSM nodes vector by OSM Id
   auto t1 = std::chrono::high_resolution_clock::now();
   const auto& tl = tile_hierarchy_.levels().rbegin();
   level_ = tl->second.level;
@@ -124,7 +125,7 @@ GraphId GraphBuilder::AddNodeToTile(const uint64_t osmnodeid,
   std::vector<Node>& tile = tilednodes_[id];
 
   // Add a new Node to the tile
-  tile.emplace_back(osmnode.attributes(), edgeindex,link);
+  tile.emplace_back(osmnode.attributes(), edgeindex, link);
 
   // Set the GraphId for this OSM node.
   GraphId graphid(id.tileid(), id.level(), tile.size() - 1);
@@ -148,18 +149,22 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
   Tiles tiles(AABB2({-180.0f, -90.0f}, {180.0f, 90.0f}), tilesize);
   tilednodes_.reserve(tiles.TileCount() * .3f);
 
+  // Reserve space for latlng - should be equal to the noderefs size.
+  latlngs_.reserve(osmdata.noderefs.size());
+
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
   uint64_t startnodeid, nodeid;
   GraphId graphid;
   edges_.reserve(osmdata.edge_count);
-  for (size_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
+  for (uint32_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
     // Get some way attributes needed for the edge
     const auto& way = osmdata.ways[wayindex];
 
     // Get the OSM node information for the first node of the way
     startnodeid = nodeid = osmdata.noderefs[way.noderef_index()];
-    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+//    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+    OSMNode osmnode = osmdata.GetNode(nodeid);
 
     // If a graph Node exists add an edge to it, otherwise construct a
     // graph Node with an initial edge and add it to the appropriate tile.
@@ -182,7 +187,8 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     for (size_t i = 1; i < way.node_count(); i++) {
       // Add the node lat,lng to the edge shape.
       nodeid  = osmdata.noderefs[way.noderef_index() + i];
-      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+//      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
+      OSMNode osmnode = osmdata.GetNode(nodeid);
 
       // Add the node's lat,lng to the latlng list and increment the count
       // for this edge
@@ -226,11 +232,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     }
   }
 
-  // Shrink the latlngs vector and the edges vector to fit
+  // Shrink the latlngs vector and the edges vector to fit. Iterate through
+  // the tilednodes and shrink vectors
   latlngs_.shrink_to_fit();
   edges_.shrink_to_fit();
-
-  // Iterate through the tilednodes and shrink vectors
   for (auto& tile : tilednodes_) {
     tile.second.shrink_to_fit();
   }
@@ -504,7 +509,8 @@ bool IsNoThroughEdge(const GraphId& startnode, const GraphId& endnode,
  * Test if a pair of one-way edges exist at the node. One must be
  * inbound and one must be outbound. The current edge is skipped.
  */
-bool OnewayPairEdgesExist(const Node& node,
+bool OnewayPairEdgesExist(const GraphId& nodeid,
+                          const Node& node,
                           const uint32_t edgeindex,
                           const uint64_t wayid,
                           const std::vector<Edge>& edges,
@@ -512,6 +518,7 @@ bool OnewayPairEdgesExist(const Node& node,
   // Iterate through the edges from this node. Skip the one with
   // the specified edgeindex
   uint32_t idx;
+  bool forward;
   bool inbound  = false;
   bool outbound = false;
   for (const auto idx : node.edges) {
@@ -525,16 +532,21 @@ bool OnewayPairEdgesExist(const Node& node,
 
     // Skip if this has matching way Id
     if (w.way_id() == wayid) {
-      return false;
+      continue;
     }
 
+    // Check if edge is forward or reverse
+    forward = (edge.sourcenode_ == nodeid);
+
     // Check if this is oneway inbound
-    if (!w.auto_forward() && w.auto_backward()) {
+    if ( (forward && !w.auto_forward() &&  w.auto_backward()) ||
+        (!forward &&  w.auto_forward() && !w.auto_backward())) {
       inbound = true;
     }
 
     // Check if this is oneway outbound
-    if (w.auto_forward() && !w.auto_backward()) {
+    if ( (forward &&  w.auto_forward() && !w.auto_backward()) ||
+        (!forward && !w.auto_forward() &&  w.auto_backward())) {
       outbound = true;
     }
   }
@@ -563,8 +575,8 @@ bool IsIntersectionInternal(const GraphId& startnode, const GraphId& endnode,
   }
 
   // Each node must have a pair of oneways (one inbound and one outbound)
-  if (!OnewayPairEdgesExist(node1, edgeindex, wayid, edges, ways) ||
-      !OnewayPairEdgesExist(node2, edgeindex, wayid, edges, ways)) {
+  if (!OnewayPairEdgesExist(startnode, node1, edgeindex, wayid, edges, ways) ||
+      !OnewayPairEdgesExist(endnode, node2, edgeindex, wayid, edges, ways)) {
     return false;
   }
 
@@ -662,14 +674,14 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 
-bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
+uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
                  GraphTileBuilder& graphtile,
                  const GraphId& endnode, const std::vector<Edge>& edges,
                  const std::unordered_map<GraphId, std::vector<Node> >& nodes,
                  const OSMData& osmdata) {
   auto res = osmdata.restrictions.equal_range(wayid);
   if (res.first == osmdata.restrictions.end()) {
-    return false;
+    return 0;
   }
 
   // Edge is the from edge of a restriction. Find all TRs (if any)
@@ -685,7 +697,7 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     }
   }
   if (trs.empty()) {
-    return false;
+    return 0;
   }
 
   // Cannot mix types (no and only!). Log an error/issue.
@@ -703,7 +715,7 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     // TODO - log these as data issues??
     LOG_ERROR("Restrictions have both \"only\" and \"no\" types. From wayid = "
           + std::to_string(wayid));
-    return false;
+    return 0;
   }
 
   // Get the way Ids of the edges at the endnode
@@ -746,10 +758,8 @@ bool CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
     }
   }
 
-  // Add a restriction to the graph tile
-  TurnRestrictionBuilder tr(edgeindex, type, mask);
-  graphtile.AddTurnRestriction(tr);
-  return true;
+  // Return the restriction mask. TODO - do we need the type?
+  return mask;
 }
 
 void BuildTileSet(
@@ -777,6 +787,7 @@ void BuildTileSet(
   bool added = false;
   bool not_thru, forward, internal;
   uint32_t edgeindex;
+  uint32_t restrictions;
   GraphId source, target;
   PointLL node_ll;
   for(; tile_start != tile_end; ++tile_start) {
@@ -865,12 +876,17 @@ void BuildTileSet(
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
-          // Does the directed edge contain exit information?
-          //bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
+          // Handle simple turn restrictions that originate from this
+          // directed edge
+          restrictions = CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
+                      target, edges, nodes, osmdata);
+          if (restrictions != 0) {
+            simplerestrictions++;
+          }
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, target, forward, edgelengths[n],
-                        speed, use, not_thru, internal, rc);
+                        speed, use, not_thru, internal, rc, n, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
@@ -902,14 +918,6 @@ void BuildTileSet(
                && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
-          }
-
-          // Handle simple turn restrictions that originate from this
-          // directed edge
-          if (CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
-                         target, edges, nodes, osmdata)) {
-            directededge.set_simple_tr(true);
-            simplerestrictions++;
           }
 
           // Increment the directed edge index within the tile
@@ -954,6 +962,7 @@ void BuildTileSet(
 
 }
 
+// Get highway refs from relations
 std::string GraphBuilder::GetRef(const std::string& way_ref,
                                  const std::string& relation_ref) {
   bool found = false;
@@ -995,6 +1004,9 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 
   std::vector<SignInfo> exit_list;
 
+  ////////////////////////////////////////////////////////////////////////////
+  // NUMBER
+
   // Exit sign number
   if (way.junction_ref_index() != 0) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
@@ -1004,8 +1016,12 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
             node_ref.find(nodeid)->second);
   }
 
-  // Exit sign branch refs
+  ////////////////////////////////////////////////////////////////////////////
+  // BRANCH
+
   bool has_branch = false;
+
+  // Exit sign branch refs
   if (way.destination_ref_index() != 0) {
     has_branch = true;
     std::vector<std::string> branch_refs = GetTagTokens(
@@ -1015,8 +1031,22 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
-  // Exit sign toward refs
+  // Exit sign branch road names
+  if (way.destination_street_index() != 0) {
+    has_branch = true;
+    std::vector<std::string> branch_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_index()));
+    for (auto& branch_street : branch_streets) {
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // TOWARD
+
   bool has_toward = false;
+
+  // Exit sign toward refs
   if (way.destination_ref_to_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_refs = GetTagTokens(
@@ -1026,7 +1056,17 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
-  // Exit sign toward names
+  // Exit sign toward streets
+  if (way.destination_street_to_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_to_index()));
+    for (auto& toward_street : toward_streets) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
+    }
+  }
+
+  // Exit sign toward locations
   if (way.destination_index() != 0) {
     has_toward = true;
     std::vector<std::string> toward_names = GetTagTokens(
@@ -1036,6 +1076,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
   // Process exit_to only if other branch or toward info does not exist
   if (!has_branch && !has_toward) {
     if (node.exit_to()) {
@@ -1093,6 +1134,9 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  // NAME
+
   // Exit sign name
   if (node.name()) {
     std::vector<std::string> names = GetTagTokens(
@@ -1101,6 +1145,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
       exit_list.emplace_back(Sign::Type::kExitName, name);
     }
   }
+
   return exit_list;
 }
 
