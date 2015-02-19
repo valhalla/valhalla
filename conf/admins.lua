@@ -4,8 +4,8 @@
 
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
-  if (kv["boundary"] == "administrative" and
-     (kv["admin_level"] == "2" or kv["admin_level"] == "4")) then
+--  if (kv["boundary"] == "administrative" and
+--     (kv["admin_level"] == "2" or kv["admin_level"] == "4")) then
 
      delete_tags = { 'FIXME', 'note', 'source' }
 
@@ -14,9 +14,9 @@ function filter_tags_generic(kv)
      end
 
      return 0
-  end
+--  end
 
-  return 1
+--  return 1
 end
 
 function nodes_proc (kv, nokeys)
