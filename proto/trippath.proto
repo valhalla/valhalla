@@ -62,7 +62,7 @@ message TripPath {
     optional bool tunnel = 16;
     optional bool bridge = 17;
     optional bool roundabout = 18;
-    optional bool internal_link = 19;
+    optional bool internal_intersection = 19;
     optional uint32 end_node_index = 20;
     optional Sign sign = 21;
   }
