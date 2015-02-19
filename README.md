@@ -9,7 +9,7 @@
           ░        ░  ░    ░  ░ ░  ░  ░      ░  ░    ░  ░    ░  ░     ░  ░
          ░                                                                    
 
-Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Tyr, a service layer taking locations and options as input and returning a route and maneuvers as output essentially linking together all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Tyr](http://en.wikipedia.org/wiki/Tyr) was chosen as backcronym standing for: Take Your Route. Since the library deals mostly with providing routes based on http requests, this seemed like a fitting name!
+Valhalla is an open source routing engine and accompanying libraries for use with Open Street Map data. This library, Tyr, is a service layer taking locations and options as input and returning a route and maneuvers as output essentially linking together all other projects under the valhalla organization. In keeping with the Norse mythological theme, the name [Tyr](http://en.wikipedia.org/wiki/Tyr) was chosen as backcronym standing for: Take Your Route. Since the library deals mostly with providing routes based on http requests, this seemed like a fitting name!
 
 Build Status
 ------------
