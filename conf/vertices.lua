@@ -85,8 +85,8 @@ function nodes_proc (kv, nokeys)
     kv["bicycle_rental"] = "true"
   end
 
-  --store a mask denoting which modes of transport are allowed
-  kv["modes_mask"] = bit32.bor(auto, bike, foot)
+  --store a mask denoting access
+  kv["access_mask"] = bit32.bor(auto, bike, foot)
 
   return 0, kv
 end
