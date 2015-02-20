@@ -68,6 +68,13 @@ enum class NodeType : uint8_t {
   kParking = 7
 };
 
+// Intersection types. Classifications of various intersections.
+// TODO - enumerate and assign!
+enum class IntersectionType : uint8_t {
+  kFalse = 0       // False intersection. Only 2 edges connect. Typically
+                   // where 2 ways are split or where attributes force a split.
+};
+
 // Edge use
 // TODO - add values for each so we are explicit
 enum class Use : uint8_t {

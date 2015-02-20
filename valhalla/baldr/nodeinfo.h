@@ -13,6 +13,8 @@ namespace baldr {
 
 constexpr uint32_t kMaxTileEdgeCount = 4194303;   // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode  = 127;       // Maximum edges per node
+constexpr uint32_t kMaxLocalDriveable = 15;       // Max. count of driveable
+                                                  // edges on local level
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -41,7 +43,8 @@ class NodeInfo {
   uint32_t edge_index() const;
 
   /**
-   * Get the number of outbound directed edges.
+   * Get the number of outbound directed edges. This includes all edge
+   * present on the current hierarchy level.
    * @return  Returns the number of outbound directed edges.
    */
   uint32_t edge_count() const;
@@ -59,7 +62,11 @@ class NodeInfo {
    */
   uint8_t access() const;
 
-  // TODO - intersection type?
+  /**
+   * Get the intersection type.
+   * @return  Returns the intersection type.
+   */
+  IntersectionType intersection() const;
 
   /**
    * Get the index of the administrative information within this tile.
@@ -91,7 +98,11 @@ class NodeInfo {
    */
   NodeType type() const;
 
-  // TODO - false node (need a new name!)
+  /**
+   * Get the number of driveable edges on the local level.
+   * @return  Returns the number of driveable edges on the local level.
+   */
+  uint32_t local_driveable() const;
 
   /**
    * Is this a dead-end node that connects to only one edge?
@@ -111,7 +122,13 @@ class NodeInfo {
    */
   bool child() const;
 
-  // TODO - mode change??
+  /**
+   * Is a mode change allowed at this node? The access data tells which
+   * modes are allowed at the node. Examples include transit stops, bike
+   * share locations, and parking locations.
+   * @return  Returns true if mode changes are allowed.
+   */
+  bool mode_change() const;
 
   /**
    * Is there a traffic signal at this node?
@@ -140,7 +157,7 @@ class NodeInfo {
   struct NodeAttributes {
     uint32_t edge_index_  : 22; // Index within the node's tile of its first
                                 // outbound directed edge
-    uint32_t edge_count_   : 7; // Number of outbound edges
+    uint32_t edge_count_   : 7; // Number of outbound edges (on this level)
     uint32_t bestrc_       : 3; // Best directed edge road class
   };
   NodeAttributes attributes_;
@@ -148,8 +165,9 @@ class NodeInfo {
   // Node access (see graphconstants.h)
   Access access_;
 
-  // Intersection type (TODO). Includes "false/imposter"
-  uint8_t intersection_;
+  // Intersection type. Classification of the intersection.
+  // (see graphconstants.h)
+  IntersectionType intersection_;
 
   // Administrative information
   struct NodeAdmin {
@@ -161,18 +179,16 @@ class NodeInfo {
   NodeAdmin admin_;
 
   // Node type
-  // TODO - number of edges on local level?
-  // TODO - can we define street intersection types for use in
-  // transition costing?
   struct NodeTypeInfo {
-    uint32_t density        : 4; // Density (population? edges?)
-    uint32_t type           : 4; // Node type
-    uint32_t end            : 1; // End node (only connects to 1 edge)
-    uint32_t parent         : 1; // Is this a parent node
-    uint32_t child          : 1; // Is this a child node
-    uint32_t mode_change    : 1; // Mode change allowed?
-    uint32_t traffic_signal : 1; // Traffic signal
-    uint32_t spare          : 20;
+    uint32_t density          : 4; // Density (population? edges?)
+    uint32_t type             : 4; // Node type
+    uint32_t local_driveable  : 4; // Number of driveable edges on local level
+    uint32_t end              : 1; // End node (only connects to 1 edge)
+    uint32_t parent           : 1; // Is this a parent node
+    uint32_t child            : 1; // Is this a child node
+    uint32_t mode_change      : 1; // Mode change allowed?
+    uint32_t traffic_signal   : 1; // Traffic signal
+    uint32_t spare            : 15;
   };
   NodeTypeInfo type_;
 
