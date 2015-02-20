@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
-#include <utility>
+#include <fstream>
 
 namespace {
 constexpr double POLYLINE_PRECISION = 1E6;
