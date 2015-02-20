@@ -8,7 +8,7 @@ namespace baldr {
 NodeInfo::NodeInfo()
     : latlng_{},
       attributes_{},
-      intersection_(0),
+      intersection_(IntersectionType::kFalse),
       type_{},
       admin_{},
       stop_id_(0) {
@@ -40,7 +40,10 @@ uint8_t NodeInfo::access() const {
   return access_.v;
 }
 
-// TODO - intersection type?
+// Get the intersection type.
+IntersectionType NodeInfo::intersection() const {
+  return intersection_;
+}
 
 // Get the index of the administrative information within this tile.
 uint32_t NodeInfo::admin_index() const {
@@ -57,7 +60,7 @@ bool NodeInfo::dst() const {
   return admin_.dst;
 }
 
-// Get the relative density (TODO - define) at the node.
+// Get the relative density at the node.
 uint32_t NodeInfo::density() const {
   return type_.density;
 }
@@ -65,6 +68,11 @@ uint32_t NodeInfo::density() const {
 // Gets the node type. See graphconstants.h for the list of types.
 NodeType NodeInfo::type() const {
   return static_cast<NodeType>(type_.type);
+}
+
+// Get the number of driveable edges on the local level.
+uint32_t NodeInfo::local_driveable() const {
+  return type_.local_driveable;
 }
 
 // Is this a dead-end node that connects to only one edge?
@@ -82,7 +90,12 @@ bool NodeInfo::child() const {
   return type_.child;
 }
 
-// TODO - mode changes?
+// Is a mode change allowed at this node? The access data tells which
+// modes are allowed at the node. Examples include transit stops, bike
+// share locations, and parking locations.
+bool NodeInfo::mode_change() const {
+  return type_.mode_change;
+}
 
 // Is there a traffic signal at this node?
 bool NodeInfo::traffic_signal() const {
