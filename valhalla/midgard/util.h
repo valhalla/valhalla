@@ -123,7 +123,7 @@ bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
  */
 struct memory_status {
   memory_status() = delete;
-  memory_status(const std::unordered_set<std::string> interest = { });
+  memory_status(const std::unordered_set<std::string> interest = {});
 
   std::unordered_map<std::string, std::pair<double, std::string> > metrics;
 
