@@ -157,8 +157,8 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | roundabout=";
   str += std::to_string(roundabout());
 
-  str += " | internal_link=";
-  str += std::to_string(internal_link());
+  str += " | internal_intersection=";
+  str += std::to_string(internal_intersection());
 
   str += " | end_node_index=";
   str += std::to_string(end_node_index());
