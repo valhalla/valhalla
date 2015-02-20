@@ -13,6 +13,7 @@ NodeInfoBuilder::NodeInfoBuilder()
 NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const uint32_t edge_index,
                                  const uint32_t edge_count,
+                                 const uint32_t driveable,
                                  const RoadClass rc,
                                  const uint32_t access,
                                  const NodeType type,
@@ -22,7 +23,7 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
   set_edge_index(edge_index);
   set_edge_count(edge_count);
   set_bestrc(rc);
-
+  set_local_driveable(driveable);
   set_access(access);
   set_type(type);
   set_end(end);
@@ -35,6 +36,7 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
   set_density(0);
   set_parent(false);
   set_child(false);
+  set_mode_change(false);
   set_stop_id(0);
 }
 
@@ -74,6 +76,11 @@ void NodeInfoBuilder::set_access(const uint32_t access) {
   access_.v = access;
 }
 
+// Set the intersection type.
+void NodeInfoBuilder::set_intersection(const IntersectionType type) {
+  intersection_ = type;
+}
+
 // Set the index of the administrative information within this tile.
 void NodeInfoBuilder::set_admin_index(const uint16_t admin_index) {
   admin_.admin_index = admin_index;
@@ -99,6 +106,15 @@ void NodeInfoBuilder::set_type(const NodeType type) {
   type_.type =  static_cast<uint8_t>(type);
 }
 
+// Set the number of driveable edges on the local level.
+void NodeInfoBuilder::set_local_driveable(const uint32_t n) {
+  if (n > kMaxLocalDriveable) {
+    LOG_INFO("Exceeding max. local driveable count: " + std::to_string(n));
+    type_.local_driveable = kMaxLocalDriveable;
+  }
+  type_.local_driveable = n;
+}
+
 // Set the dead-end node flag.
 void NodeInfoBuilder::set_end(const bool end) {
   type_.end = end;
@@ -112,6 +128,13 @@ void NodeInfoBuilder::set_parent(const bool parent) {
 // Set the child node flag (e.g. a child transit stop).
 void NodeInfoBuilder::set_child(const bool child) {
   type_.child = child;
+}
+
+// Sets the flag indicating a mode change is allowed at this node.
+// The access data tells which modes are allowed at the node. Examples
+// include transit stops, bike share locations, and parking locations.
+void NodeInfoBuilder::set_mode_change(const bool mc) {
+  type_.mode_change = mc;
 }
 
 // Set the traffic signal flag.
