@@ -45,7 +45,9 @@ struct OSMData {
   NodeRefVector noderefs;
 
   // Map that stores all the nodes read. Indexed by OSM node Id.
-  std::vector<OSMNode> nodes;
+  std::unordered_map<uint64_t, size_t> node_map;
+  OSMNode* nodes;
+
 //  OSMNodeMap nodes;
 
   // Map that stores all the ref info on a node
@@ -66,11 +68,31 @@ struct OSMData {
   // Names
   UniqueNames name_offset_map;
 
-  OSMNode GetNode(const uint64_t osmid) const {
-    OSMNode test(osmid, 0.0f, 0.0f);
-    auto it = std::equal_range(nodes.begin(), nodes.end(), test);
-    return *(it.first);
+  const OSMNode* GetNode(const uint64_t osmid) const {
+    auto index = node_map.find(osmid);
+    if(index == node_map.end())
+      return nullptr;
+    return &nodes[index->second];
   }
+
+  void ReserveNodes(const size_t size) {
+    node_map.reserve(size);
+    nodes = new OSMNode[size];
+  }
+
+  OSMNode* WriteNode(const uint64_t osmid) {
+    node_map.insert(std::make_pair(osmid, node_write_index));
+    return &nodes[node_write_index++];
+  }
+
+  void DeleteNodes() {
+    std::unordered_map<uint64_t, size_t>().swap(node_map);
+    delete [] nodes;
+    nodes = nullptr;
+  }
+
+ protected:
+  size_t node_write_index;
 
 };
 

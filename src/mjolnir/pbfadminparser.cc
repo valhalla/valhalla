@@ -76,13 +76,13 @@ OSMData PBFAdminParser::Load(const std::vector<std::string>& input_files) {
   for (const auto& input_file : input_files) {
     auto t1 = std::chrono::high_resolution_clock::now();
     LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-    osmdata.nodes.reserve(osmdata.node_count);
+    osmdata.ReserveNodes(osmdata.node_count);
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
     auto t2 = std::chrono::high_resolution_clock::now();
     uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
     LOG_INFO("Nodes included on Admin ways, count = " +
-             std::to_string(osmdata.nodes.size()));
+             std::to_string(osmdata.node_map.size()));
   }
 
   // Return OSM data
@@ -118,13 +118,11 @@ void PBFAdminParser::node_callback(uint64_t osmid, double lng, double lat,
     return;
 
   // Create a new node and set its attributes
-  OSMNode n(osmid, lng, lat);
+  OSMNode* n = osm_->WriteNode(osmid);
+  n->set_latlng(std::move(std::make_pair(lng, lat)));
 
-  // Add to the node map;
-  osm_->nodes.push_back(std::move(n));
-
-  if (osm_->nodes.size() % 5000000 == 0) {
-    LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
+  if (osm_->node_map.size() % 5000000 == 0) {
+    LOG_INFO("Processed " + std::to_string(osm_->node_map.size()) + " nodes on ways");
   }
 }
 

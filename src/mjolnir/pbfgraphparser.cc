@@ -18,6 +18,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -57,6 +58,7 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   auto t1 = std::chrono::high_resolution_clock::now();
+  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   for (const auto& input_file : input_files) {
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
   }
@@ -74,6 +76,7 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   // nodes that the ways include).
   osmdata.ways.shrink_to_fit();
   osmdata.noderefs.shrink_to_fit();
+  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
 
   // Parse relations.
   t1 = std::chrono::high_resolution_clock::now();
@@ -91,8 +94,10 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   t1 = std::chrono::high_resolution_clock::now();
+  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-  osmdata.nodes.reserve(osmdata.node_count);
+  osmdata.ReserveNodes(osmdata.node_count);
+  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   for (const auto& input_file : input_files) {
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
   }
@@ -100,10 +105,8 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
   LOG_INFO("Nodes included on routable ways, count = " +
-          std::to_string(osmdata.nodes.size()));
-
-  // Sort the OSM nodes vector by OSM Id
-  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
+          std::to_string(osmdata.node_map.size()));
+  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
 
   // Log some information about extra node information and names
   LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
@@ -152,27 +155,28 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
       && (highway_junction->second == "motorway_junction"));
 
   // Create a new node and set its attributes
-  OSMNode n(osmid, lng, lat);
+  OSMNode* n = osm_->WriteNode(osmid);
+  n->set_latlng(std::move(std::make_pair(lng, lat)));
   for (const auto& tag : results) {
 
     if (tag.first == "highway") {
-      n.set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
+      n->set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
     }
     else if (is_highway_junction && (tag.first == "exit_to")) {
       bool hasTag = (tag.second.length() ? true : false);
-      n.set_exit_to(hasTag);
+      n->set_exit_to(hasTag);
       if (hasTag)
         osm_->node_exit_to[osmid] = tag.second;
     }
     else if (is_highway_junction && (tag.first == "ref")) {
       bool hasTag = (tag.second.length() ? true : false);
-      n.set_ref(hasTag);
+      n->set_ref(hasTag);
       if (hasTag)
         osm_->node_ref[osmid] = tag.second;
     }
     else if (is_highway_junction && (tag.first == "name")) {
       bool hasTag = (tag.second.length() ? true : false);
-      n.set_name(hasTag);
+      n->set_name(hasTag);
       if (hasTag)
         osm_->node_name[osmid] = tag.second;
     }
@@ -182,7 +186,7 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
           intersection_.set(osmid);
           ++osm_->edge_count;
         }
-        n.set_type(NodeType::kGate);
+        n->set_type(NodeType::kGate);
       }
     }
     else if (tag.first == "bollard") {
@@ -191,26 +195,22 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
           intersection_.set(osmid);
           ++osm_->edge_count;
         }
-        n.set_type(NodeType::kBollard);
+        n->set_type(NodeType::kBollard);
       }
     }
     else if (tag.first == "access_mask")
-      n.set_access_mask(std::stoi(tag.second));
+      n->set_access_mask(std::stoi(tag.second));
   }
 
   // Set the intersection flag (relies on ways being processed first to set
   // the intersection Id markers).
   if (intersection_.IsUsed(osmid)) {
-    n.set_intersection(true);
+    n->set_intersection(true);
     osm_->intersection_count++;
   }
 
-  // Add to the node map;
- // osm_->nodes.emplace(osmid, std::move(n));
-   osm_->nodes.emplace_back(std::move(n));
-
-  if (osm_->nodes.size() % 5000000 == 0) {
-    LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
+  if (osm_->node_map.size() % 5000000 == 0) {
+    LOG_INFO("Processed " + std::to_string(osm_->node_map.size()) + " nodes on ways");
   }
 }
 
