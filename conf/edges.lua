@@ -498,7 +498,10 @@ function rels_proc (kv, nokeys)
        else
          kv["restriction"] = restrict
        end
-
+     end
+     
+     if kv["day_on"] or kv["day_off"] then
+    
        local day_on = dow[kv["day_on"]]
        if day_on == nil then
          kv["day_on"] = 0
@@ -513,7 +516,7 @@ function rels_proc (kv, nokeys)
          kv["day_off"] = day_off
        end
 
-     end
+     end 
 
      return 0, kv
   end

@@ -173,12 +173,26 @@ void PBFGraphParser::node_callback(uint64_t osmid, double lng, double lat,
       if (hasTag)
         osm_->node_name[osmid] = tag.second;
     }
-    else if (tag.first == "gate")
-      n.set_gate((tag.second == "true" ? true : false));
-    else if (tag.first == "bollard")
-      n.set_bollard((tag.second == "true" ? true : false));
-    else if (tag.first == "modes_mask")
-      n.set_modes_mask(std::stoi(tag.second));
+    else if (tag.first == "gate") {
+      if (tag.second == "true") {
+        if (!intersection_.IsUsed(osmid)) {
+          intersection_.set(osmid);
+          ++osm_->edge_count;
+        }
+        n.set_type(NodeType::kGate);
+      }
+    }
+    else if (tag.first == "bollard") {
+      if (tag.second == "true") {
+        if (!intersection_.IsUsed(osmid)) {
+          intersection_.set(osmid);
+          ++osm_->edge_count;
+        }
+        n.set_type(NodeType::kBollard);
+      }
+    }
+    else if (tag.first == "access_mask")
+      n.set_access_mask(std::stoi(tag.second));
   }
 
   // Set the intersection flag (relies on ways being processed first to set

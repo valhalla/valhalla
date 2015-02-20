@@ -5,9 +5,12 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "../valhalla/mjolnir/pbfgraphparser.h"
+#include <valhalla/baldr/graphconstants.h>
+
 
 using namespace std;
 using namespace valhalla::mjolnir;
+using namespace valhalla::baldr;
 
 namespace {
 
@@ -57,7 +60,7 @@ void BollardsGates(const std::string& config_file) {
 //  if (node == osmdata.nodes.end())
 //    throw std::runtime_error("Bollard not at a intersection test failed.");
 //  else {
-    if (node.intersection())
+    if (!node.intersection())
       throw std::runtime_error("Bollard not marked as intersection.");
 //  }
 
@@ -66,7 +69,7 @@ void BollardsGates(const std::string& config_file) {
 //  if (node == osmdata.nodes.end())
 //    throw std::runtime_error("Gate not at a intersection test failed.");
 //  else {
-    if (node.intersection())
+    if (!node.intersection())
       throw std::runtime_error("Gate not marked as intersection.");
 //  }
 
@@ -76,7 +79,7 @@ void BollardsGates(const std::string& config_file) {
 //   throw std::runtime_error("Gate at a intersection test failed.");
 // else {
     if (!node.intersection() ||
-        !node.gate() || node.modes_mask() != 6)
+        node.type() != NodeType::kGate || node.access_mask() != 6)
       throw std::runtime_error("Gate at end of way test failed.");
 //  }
 
@@ -86,7 +89,7 @@ void BollardsGates(const std::string& config_file) {
 //  if (node == osmdata.nodes.end())
 //    throw std::runtime_error("Bollard(with flags) not at a intersection test failed.");
 //  else {
-    if (node.intersection()) // ||
+    if (!node.intersection()) // ||
        // || !node->second.bollard() || node->second.modes_mask() != 6)
       throw std::runtime_error("Bollard(with flags) not marked as intersection.");
 //  }
@@ -97,7 +100,7 @@ void BollardsGates(const std::string& config_file) {
 //  if (node == osmdata.nodes.end())
 //    throw std::runtime_error("Bollard=block not at a intersection test failed.");
 //  else {
-    if (node.intersection()) // ||
+    if (!node.intersection()) // ||
        // || !node.bollard() || node.modes_mask() != 4)
       throw std::runtime_error("Bollard=block not marked as intersection.");
 //  }
@@ -116,7 +119,7 @@ void RemovableBollards(const std::string& config_file) {
 //   if (node == osmdata.nodes.end())
 //     throw std::runtime_error("Rising Bollard not at a intersection test failed.");
 //   else {
-     if (node.intersection()) // ||
+     if (!node.intersection()) // ||
        // || !node->second.bollard() || node->second.modes_mask() != 4)
        throw std::runtime_error("Rising Bollard not marked as intersection.");
 //   }

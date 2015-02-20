@@ -932,7 +932,10 @@ void BuildTileSet(
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         NodeInfoBuilder nodebuilder(node_ll, directededgecount,
-                                    node.edge_count(), bestclass);
+                                    node.edge_count(), bestclass,
+                                    node.access_mask(), node.type(),
+                                    (node.edge_count() == 1), node.traffic_signal());
+
         directededgecount += node.edge_count();
 
         // Add node and directed edge information to the tile
