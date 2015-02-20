@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <sstream>
 #include <vector>
-#include <utility>
+#include <fstream>
+#include <algorithm>
 
 namespace {
 constexpr double POLYLINE_PRECISION = 1E6;
@@ -143,6 +144,43 @@ template std::vector<std::pair<float, float> > decode<
     std::vector<std::pair<float, float> > >(const std::string&);
 template std::vector<std::pair<double, double> > decode<
     std::vector<std::pair<double, double> > >(const std::string&);
+
+memory_status::memory_status(const std::unordered_set<std::string> interest){
+  //grab the vm stats from the file
+  std::ifstream file("/proc/self/status");
+  std::string line;
+  while(std::getline(file, line)){
+    //did we find a memory metric
+    if(line.find_first_of("Vm") == 0){
+      //grab the name of it and see if we care about it
+      std::string name = line.substr(0, line.find_first_of(':'));
+      if(interest.size() > 0 && interest.find(name) == interest.end())
+        continue;
+      //try to get the number of bytes
+      std::remove_if(line.begin(), line.end(), [](const char c) {return !std::isdigit(c);});
+      if(line.size() == 0)
+        continue;
+      auto bytes = std::stod(line) * 1024.0;
+      //get the units and scale
+      std::pair<double, std::string> metric = std::make_pair(bytes, "b");
+      for(auto unit : { "B", "KB", "MB", "GB" }){
+        metric.second = unit;
+        if (metric.first > 1024.0)
+          metric.first /= 1024.0;
+        else
+          break;
+      }
+      metrics.emplace(std::piecewise_construct, std::forward_as_tuple(name), std::forward_as_tuple(metric));
+    }
+    line.clear();
+  }
+}
+
+std::ostream& operator<<(std::ostream& stream, const memory_status& s){
+  for(const auto& metric : s.metrics)
+    stream << metric.first << ": " << metric.second.first << metric.second.second << std::endl;
+  return stream;
+}
 
 }
 }

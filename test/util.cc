@@ -57,6 +57,21 @@ void AppxEqual() {
     throw std::runtime_error("Should be equal");
 }
 
+void MemoryStatus() {
+  memory_status status({"VmSize", "VmSwap", "VmPeak"});
+
+  //should have each of these
+  for(const auto& key : {"VmSize", "VmSwap", "VmPeak"}) {
+    auto value = status.metrics.find(key);
+    if(value == status.metrics.end())
+      throw std::runtime_error("Missing memory statistic for " + std::string(key));
+    if(value->second.first < 0.)
+      throw std::runtime_error("Negative memory usage values are not allowed");
+    if(value->second.second.back() != 'B')
+      throw std::runtime_error("Units should be some magnitude of bytes");
+  }
+}
+
 }
 
 int main() {
@@ -69,6 +84,8 @@ int main() {
   suite.test(TEST_CASE(TestGetTime));
 
   suite.test(TEST_CASE(AppxEqual));
+
+  suite.test(TEST_CASE(MemoryStatus));
 
   return suite.tear_down();
 }

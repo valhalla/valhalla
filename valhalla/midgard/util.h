@@ -3,6 +3,11 @@
 
 #include <string>
 #include <stdexcept>
+#include <string>
+#include <ostream>
+#include <utility>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla {
 namespace midgard {
@@ -112,6 +117,19 @@ bool equal(const T a, const T b, const T epsilon = static_cast<T>(.00001)) {
   bool negative = diff < static_cast<T>(0);
   return (!negative && diff <= epsilon) || (negative && diff >= -epsilon);
 }
+
+/**
+ * A means by which you can get some information about the current processes memory footprint
+ */
+struct memory_status {
+  memory_status() = delete;
+  memory_status(const std::unordered_set<std::string> interest = {});
+
+  std::unordered_map<std::string, std::pair<double, std::string> > metrics;
+
+  friend std::ostream& operator<<(std::ostream&, const memory_status&);
+};
+std::ostream& operator<<(std::ostream& stream, const memory_status& s);
 
 }
 }
