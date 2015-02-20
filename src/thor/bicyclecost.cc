@@ -223,7 +223,7 @@ float BicycleCost::Get(const DirectedEdge* edge) const {
   // to use roadways! Footways with cycle access - favor unless the rider
   // wants to favor use of roads
   if (edge->use() == Use::kCycleway) {
-    factor *= 0.5f;
+    factor *= 0.65f;
   } else if (edge->use() == Use::kFootway) {
     // Cyclists who favor using roads want to avoid footways. A value of
     // 0.5 for useroads_ will result in no difference using footway
@@ -231,14 +231,15 @@ float BicycleCost::Get(const DirectedEdge* edge) const {
   } else {
     if (edge->cyclelane() == CycleLane::kNone) {
       // No cycle lane exists, base the factor on auto speed on the road.
-      // Roads < 45 kph are neutral. Start avoiding based on speed above this.
-      float speedfactor = (edge->speed() < 45.0f) ? 1.0f :
-            (edge->speed() - 45.0f) * (1.0f - useroads_) * 0.05f;
+      // Roads < 65 kph are neutral. Start avoiding based on speed above this.
+      // TODO - may want to avoid very low speed edges, alleys/service?
+      float speedfactor = (edge->speed() < 65.0f) ? 1.0f :
+            (1.0f + (edge->speed() - 65.0f) * (1.0f - useroads_) * 0.05f);
       factor *= speedfactor;
     } else {
       // A cycle lane exists. Favor separated lanes more than dedicated
       // and shared use.
-      float laneusefactor = 0.25f + useroads_ * 0.05f;
+      float laneusefactor = 0.75f + useroads_ * 0.05f;
       factor *= (laneusefactor + static_cast<uint32_t>(edge->cyclelane()) * 0.1f);
     }
   }
@@ -248,7 +249,6 @@ float BicycleCost::Get(const DirectedEdge* edge) const {
   if (edge->bikenetwork() > 0) {
     factor *= kBicycleNetworkFactor;
   }
-
   return edge->length() * factor;
 }
 
