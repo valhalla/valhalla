@@ -6,7 +6,6 @@
 #include <string>
 #include <ostream>
 #include <utility>
-#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 

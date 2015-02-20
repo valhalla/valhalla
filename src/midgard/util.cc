@@ -9,6 +9,7 @@
 #include <sstream>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 namespace {
 constexpr double POLYLINE_PRECISION = 1E6;
