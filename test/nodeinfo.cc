@@ -7,6 +7,10 @@ using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
+// Expected size is 24 bytes. Since there are still "spare" bits
+// we want to alert if somehow any change grows this structure size
+constexpr size_t kNodeInfoExpectedSize = 24;
+
 namespace {
 
   class test_node : public NodeInfo {
@@ -18,6 +22,11 @@ namespace {
     using NodeInfo::latlng_;
   };
 
+  void test_sizeof() {
+    if (sizeof(NodeInfo) != kNodeInfoExpectedSize)
+      throw std::runtime_error("NodeInfo size should be " +
+                std::to_string(kNodeInfoExpectedSize) + " bytes");
+  }
   void test_ll() {
     NodeInfo n;
     if(n.latlng().first != 0 || n.latlng().second != 0)
@@ -41,6 +50,7 @@ int main(void)
 {
   test::suite suite("location");
 
+  suite.test(TEST_CASE(test_sizeof));
   suite.test(TEST_CASE(test_ll));
   //TODO: many more
 
