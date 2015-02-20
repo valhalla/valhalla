@@ -65,10 +65,10 @@ function nodes_proc (kv, nokeys)
   local bollard = false
   if gate == false then
     --if there was a bollard cars can't get through it
-    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block"
+    bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or kv["bollard"] == "removable"
 
     --save the following as gates.
-    if (bollard and (kv["bollard"] == "rising" or kv["bollard"] == "removable")) then
+    if (bollard and (kv["bollard"] == "rising")) then
       gate = true
       bollard = false
     end
@@ -110,4 +110,5 @@ function rel_members_proc (keyvalues, keyvaluemembers, roles, membercount)
 
   return 1, keyvalues, membersuperseeded, 0, 0, 0
 end
+
 

@@ -259,6 +259,7 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
   float default_speed;
   bool has_speed = false;
   bool has_surface = true;
+  std::string name;
 
   // Process tags
   for (const auto& tag : results) {
@@ -366,7 +367,7 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
       w.set_rail(tag.second == "true" ? true : false);
 
     else if (tag.first == "name" && !tag.second.empty())
-      w.set_name_index(osm_->name_offset_map.index(tag.second));
+      name = tag.second;
     else if (tag.first == "name:en" && !tag.second.empty())
       w.set_name_en_index(osm_->name_offset_map.index(tag.second));
     else if (tag.first == "alt_name" && !tag.second.empty())
@@ -539,6 +540,33 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
     w.set_speed(default_speed);
     speed_assignment_count_++;
   }
+
+  // Delete the name from from name field if it exists in the ref.
+  if (!name.empty() && w.ref_index()) {
+    std::vector<std::string> names = GetTagTokens(name);
+    std::vector<std::string> refs = GetTagTokens(osm_->ref_offset_map.name(w.ref_index()));
+    bool bFound = false;
+
+    std::string tmp;
+
+    for (auto& name : names) {
+      for (auto& ref : refs) {
+        if (name == ref) {
+          bFound = true;
+          break;
+        }
+      }
+      if (!bFound) {
+        if (!tmp.empty())
+          tmp += ";";
+        tmp += name;
+      }
+      bFound = false;
+    }
+    if (!tmp.empty())
+      w.set_name_index(osm_->name_offset_map.index(tmp));
+  } else
+    w.set_name_index(osm_->name_offset_map.index(name));
 
   // Add the way to the list
   osm_->ways.push_back(std::move(w));
