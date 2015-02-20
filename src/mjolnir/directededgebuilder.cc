@@ -251,15 +251,22 @@ void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
   if (idx > kMaxEdgesPerNode) {
     LOG_ERROR("Local Edge Index exceeds max: " + std::to_string(idx));
     attributes_.localedgeidx = kMaxEdgesPerNode;
+  } else {
+    attributes_.localedgeidx = idx;
   }
-  attributes_.localedgeidx = idx;
 }
 
 // Set simple turn restrictions from the end of this directed edge.
 // These are turn restrictions from one edge to another that apply to
 // all vehicles, at all times.
 void DirectedEdgeBuilder::set_restrictions(const uint32_t mask) {
-  attributes_.restrictions = mask;
+  if (mask >= (1 << kMaxTurnRestrictionEdges)) {
+    LOG_ERROR("Restrictions mask exceeds allowable limit: " +
+                std::to_string(mask));
+    attributes_.restrictions &= ((1 << kMaxTurnRestrictionEdges) - 1);
+  } else {
+    attributes_.restrictions = mask;
+  }
 }
 
 //Sets the road class.
