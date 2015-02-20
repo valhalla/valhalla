@@ -146,8 +146,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
 
 // Check if access is allowed at the specified node.
 bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
-  // TODO
-  return true;
+  return (node->access() & kAutoAccess);
 }
 
 // Get the cost to traverse the edge in seconds.
