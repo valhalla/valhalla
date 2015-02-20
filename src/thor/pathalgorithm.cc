@@ -132,22 +132,13 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   uint32_t upto0count = 0;
 
   // Find shortest path
-  uint32_t uturn_index, next_label_index;
-  uint32_t prior_label_index;
-  uint32_t restriction;
-  float dist2dest, dist;
-  float cost, sortcost, currentcost;
-  GraphId node;
-  const NodeInfo* nodeinfo;
   const GraphTile* tile;
-  const DirectedEdge* directededge;
-  EdgeStatusType edgestatus;
   GraphId edgeid;
   while (true) {
     // Get next element from adjacency list. Check that it is valid.
     // TODO: make a class that extends std::exception, with messages and
     // error codes and return the appropriate one here
-    next_label_index = adjacencylist_->Remove(edgelabels_);
+    uint32_t next_label_index = adjacencylist_->Remove(edgelabels_);
     if (next_label_index == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
       if(best_destination_.first != kInvalidLabel)
@@ -167,12 +158,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       return FormPath(best_destination_.first, graphreader, loop_edge);
     }
 
-    // TODO - do we need to terminate fruitless searches?
+    // TODO - do we need to terminate fruitless searches? YES
 
     // Get the end node of the prior directed edge and the current distance
     // to the destination.
-    node      = nextlabel.endnode();
-    dist2dest = nextlabel.distance();
+    GraphId node    = nextlabel.endnode();
+    float dist2dest = nextlabel.distance();
 
     // Do not expand based on hierarchy level?
     // TODO - come up with rule sets/options/config
@@ -201,12 +192,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Set temp variables here. EdgeLabel is not good inside the loop
     // below since the edgelabel list is modified
-    nodeinfo =    tile->node(node);
-    currentcost = nextlabel.truecost();
-    uturn_index = nextlabel.uturn_index();
-    restriction = nextlabel.restrictions();
+    uint32_t currentcost = nextlabel.truecost();
+    uint32_t uturn_index = nextlabel.uturn_index();
+    uint32_t restriction = nextlabel.restrictions();
 
     // Check access at the node
+    const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
       continue;
     }
@@ -214,7 +205,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Expand from end node. Identify if this node has shortcut edges
     // (they occur first so just check the first directed edge).
     edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
-    directededge = tile->directededge(nodeinfo->edge_index());
+    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
@@ -231,24 +222,20 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
-      edgestatus = edgestatus_->Get(edgeid);
+      EdgeStatusType edgestatus = edgestatus_->Get(edgeid);
       if (edgestatus == kPermanent) {
         continue;
       }
 
-      // TODO
-      // Turn costs/restrictions...
-      // Transitions between hierarchy levels...
-
       // Get cost
-      cost = currentcost + costing->Get(directededge);
+      float cost = currentcost + costing->Get(directededge);
 
       // Check if already in adjacency list
       if (edgestatus == kTemporary) {
         // If cost is less than current cost to this edge then we
         // update the predecessor information and decrement the sort cost by
         // the difference in the real costs (the A* heuristic doesn't change)
-        prior_label_index = GetPriorEdgeLabel(edgeid);
+        uint32_t prior_label_index = GetPriorEdgeLabel(edgeid);
         if (prior_label_index != kInvalidLabel) {
           if (cost < edgelabels_[prior_label_index].truecost()) {
             float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
@@ -269,9 +256,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
         continue;
       }
-      dist = astarheuristic_.GetDistance(tile->node(
+      float dist = astarheuristic_.GetDistance(tile->node(
                 directededge->endnode())->latlng());
-      sortcost = cost + astarheuristic_.Get(dist);
+      float sortcost = cost + astarheuristic_.Get(dist);
 
       // Add edge label
       edgelabels_.emplace_back(EdgeLabel(next_label_index, edgeid,
