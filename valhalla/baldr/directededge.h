@@ -20,6 +20,9 @@ constexpr uint32_t kMaxEdgeInfoOffset = 16777215;   // 2^24 bytes
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 
+// Maximum number of edges allowed in a turn restriction mask
+constexpr uint32_t kMaxTurnRestrictionEdges = 8;
+
 /**
  * Directed edge within the graph.
  */
@@ -299,9 +302,9 @@ class DirectedEdge {
     uint64_t bikenetwork    : 4;  // Edge that is part of a bicycle network
     uint64_t internal       : 1;  // Edge that is internal to an intersection
     uint64_t localedgeidx   : 7;  // Index of the edge on the local level
-    uint64_t restrictions   : 7;  // Restrictions - mask of local edge indexes
+    uint64_t restrictions   : 8;  // Restrictions - mask of local edge indexes
                                   // at the end node that are restricted.
-    uint64_t spare2         : 21;
+    uint64_t spare2         : 20;
   };
   Attributes attributes_;
 
