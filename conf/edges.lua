@@ -323,7 +323,7 @@ function filter_tags_generic(kv)
   kv["oneway"] = oneway_norm
   if oneway_norm == "true" then
     kv["auto_backward"] = "false"
-    if kv["bike_backward"] then 
+    if kv["bike_backward"] == "true" then 
       if (oneway_bike == nil or oneway_bike == "true") then --bike only in reverse on a bike path.
         kv["bike_forward"] = "false"
       elseif oneway_bike == "false" then --bike in both directions on a bike path.
