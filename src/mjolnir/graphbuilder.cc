@@ -32,6 +32,7 @@ namespace mjolnir {
 
 uint32_t simplerestrictions = 0;
 uint32_t timedrestrictions = 0;
+uint32_t turnchannelcount = 0;
 
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
@@ -110,6 +111,7 @@ void GraphBuilder::Build(OSMData& osmdata) {
   // Log statistics and issues
   stats_->Log();
 
+  LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
   LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
   LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
 }
@@ -588,9 +590,11 @@ bool IsIntersectionInternal(const GraphId& startnode, const GraphId& endnode,
  * Get the use for a link (either a kRamp or kTurnChannel)
  * TODO - validate logic with some real world cases.
  */
-Use GetLinkUse(const RoadClass rc, const float length,
-               const GraphId& startnode,  const GraphId& endnode,
-               const std::unordered_map<GraphId, std::vector<Node>>& nodes) {
+Use GetLinkUse(const uint32_t edgeindex, const RoadClass rc,
+               const float length, const GraphId& startnode,
+               const GraphId& endnode,
+               const std::unordered_map<GraphId, std::vector<Node>>& nodes,
+               const std::vector<Edge>& edges) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
   if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
@@ -599,15 +603,33 @@ Use GetLinkUse(const RoadClass rc, const float length,
   }
 
   // TODO - if there is a exit sign or exit number present this is
-  // considered kRamp
+  // considered kRamp. Do we have this information anywhere yet?
 
   // Both end nodes have to connect to a non-link edge. If either end node
   // connects only to "links" this likely indicates a split or fork,
   // which are not so prevalent in turn channels.
   const Node& startnd = GetNode(startnode, nodes);
   const Node& endnd   = GetNode(endnode, nodes);
-  return (startnd.non_link_edge() && endnd.non_link_edge()) ?
-            Use::kTurnChannel : Use::kRamp;
+  if (startnd.non_link_edge() && endnd.non_link_edge()) {
+    // If either end node connects to another link then still
+    // call it a ramp. So turn channels are very short and ONLY connect
+    // to non-link edges without any exit signs.
+    for (auto idx : startnd.edges) {
+      if (idx != edgeindex && edges[idx].attributes.link) {
+        return Use::kRamp;
+      }
+    }
+    for (auto idx : endnd.edges) {
+      if (idx != edgeindex && edges[idx].attributes.link) {
+        return Use::kRamp;
+      }
+    }
+    turnchannelcount++;
+    return Use::kTurnChannel;
+  }
+  else {
+    return Use::kRamp;
+  }
 }
 
 float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
@@ -700,24 +722,6 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
     return 0;
   }
 
-  // Cannot mix types (no and only!). Log an error/issue.
-  bool notype = false;
-  bool onlytype = false;
-  for (const auto& tr : trs) {
-  if (tr.type() == RestrictionType::kOnlyRightTurn ||
-      tr.type() == RestrictionType::kOnlyLeftTurn ||
-      tr.type() == RestrictionType::kOnlyStraightOn)
-    onlytype = true;
-  else
-    notype = true;
-  }
-  if (notype && onlytype) {
-    // TODO - log these as data issues??
-    LOG_ERROR("Restrictions have both \"only\" and \"no\" types. From wayid = "
-          + std::to_string(wayid));
-    return 0;
-  }
-
   // Get the way Ids of the edges at the endnode
   std::vector<uint64_t> wayids;
   const Node& node = GetNode(endnode, nodes);
@@ -725,8 +729,10 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
     wayids.push_back(osmdata.ways[edges[edgeindex].wayindex_].way_id());
   }
 
+  // There are some cases where both ONLY and NO restriction types are
+  // present. Allow this. Iterate through all restrictions and set the
+  // restriction mask to include the indexes of restricted turns.
   uint32_t mask = 0;
-  RestrictionType type;
   for (const auto& tr : trs) {
     switch (tr.type()) {
     case RestrictionType::kNoLeftTurn:
@@ -740,7 +746,6 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
           break;
         }
       }
-      type = tr.type();
       break;
 
     case RestrictionType::kOnlyRightTurn:
@@ -753,12 +758,11 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
           mask |= (1 << idx);
         }
       }
-      type = tr.type();
       break;
     }
   }
 
-  // Return the restriction mask. TODO - do we need the type?
+  // Return the restriction mask
   return mask;
 }
 
@@ -785,11 +789,7 @@ void BuildTileSet(
 
   // For each tile in the task
   bool added = false;
-  bool not_thru, forward, internal;
-  uint32_t edgeindex;
-  uint32_t restrictions;
-  GraphId source, target;
-  PointLL node_ll;
+
   for(; tile_start != tile_end; ++tile_start) {
     try {
       // What actually writes the tile
@@ -800,6 +800,16 @@ void BuildTileSet(
       uint32_t directededgecount = 0;
       GraphId nodeid = tile_start->first.Tile_Base();
       for (const Node& node : tile_start->second) {
+        // Get the node lat,lng. Use the first edge from the node.
+        PointLL node_ll;
+        const Edge& edge = edges[node.edges.front()];
+        if (edge.sourcenode_ == nodeid) {
+          // Forward direction - use first lat,lng of the edge
+          node_ll = GetLL(latlngs, edge.llindex_);
+        } else {
+          // Reverse direction - use last lat,lng of the edge
+          node_ll = GetLL(latlngs, edge.llindex_ + edge.attributes.llcount-1);
+        }
 
         // Compute edge lengths from the edge lat,lngs (round to nearest meter)
         std::vector<uint32_t> edgelengths;
@@ -832,17 +842,16 @@ void BuildTileSet(
 
           // Determine orientation along the edge (forward or reverse between
           // the 2 nodes). Check for edge error.
+          bool forward;
+          GraphId source, target;
           if (edge.sourcenode_ == nodeid) {
             forward = true;
             source = edge.sourcenode_;
             target = edge.targetnode_;
-            node_ll = GetLL(latlngs, edges[edgeindex].llindex_);
           } else if (edge.targetnode_ == nodeid) {
             forward = false;
             source = edge.targetnode_;
             target = edge.sourcenode_;
-            node_ll = GetLL(latlngs,
-                   edges[edgeindex].llindex_ + edges[edgeindex].attributes.llcount - 1);
           } else {
             // ERROR!!!
             LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
@@ -850,16 +859,15 @@ void BuildTileSet(
           }
 
           // Check for not_thru edge (only on low importance edges)
-          if (edge.attributes.importance <=
+          bool not_thru = false;
+          if (edge.attributes.importance >
               static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
-            not_thru = false;
-          } else {
             not_thru = IsNoThroughEdge(source, target, edgeindex,
                              nodes, edges);
           }
 
           // Test if an internal intersection edge
-          internal = IsIntersectionInternal(source, target, edgeindex,
+          bool internal = IsIntersectionInternal(source, target, edgeindex,
                  w.way_id(), edgelengths[n], nodes, edges, osmdata.ways);
 
           // If link is set test to see if we can infer that the edge
@@ -871,15 +879,15 @@ void BuildTileSet(
 //            if (use != Use::kNone) {
 //              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
  //           }
-            use   = GetLinkUse(rc, edgelengths[n], edge.sourcenode_,
-                                edge.targetnode_, nodes);
+            use   = GetLinkUse(edgeindex, rc, edgelengths[n], edge.sourcenode_,
+                                edge.targetnode_, nodes, edges);
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
           // Handle simple turn restrictions that originate from this
           // directed edge
-          restrictions = CreateSimpleTurnRestriction(w.way_id(), idx, graphtile,
-                      target, edges, nodes, osmdata);
+          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(), idx,
+                      graphtile, target, edges, nodes, osmdata);
           if (restrictions != 0) {
             simplerestrictions++;
           }

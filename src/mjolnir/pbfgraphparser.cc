@@ -54,50 +54,53 @@ OSMData PBFGraphParser::Load(const std::vector<std::string>& input_files) {
   OSMData osmdata{};
   osm_ = &osmdata;
 
-  // Parse each input file - first pass
+  // Parse the ways and find all node Ids needed (those that are part of a
+  // way's node list. Iterate through each pbf input file.
+  auto t1 = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
-    // Parse the ways. Find all node Ids needed. Shrink the OSM ways vector
-    // and the OSM node reference vector (list of nodes that the ways include).
-    auto t1 = std::chrono::high_resolution_clock::now();
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::WAYS);
-    osmdata.ways.shrink_to_fit();
-    osmdata.noderefs.shrink_to_fit();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Routable ways count = " + std::to_string(osmdata.ways.size()));
-    LOG_INFO("Number of noderefs = " + std::to_string(osmdata.noderefs.size()));
-
-    // Parse relations.
-    t1 = std::chrono::high_resolution_clock::now();
-    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
-    t2 = std::chrono::high_resolution_clock::now();
-    msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Simple restrictions count = " +
-             std::to_string(osmdata.restrictions.size()));
-    LOG_INFO("Sizeof OSMRestriction = " + std::to_string(sizeof(OSMRestriction)));
   }
-
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Routable ways count = " + std::to_string(osmdata.ways.size()));
+  LOG_INFO("Number of noderefs = " + std::to_string(osmdata.noderefs.size()));
   std::ostringstream s;
   s << std::fixed << std::setprecision(2) << (static_cast<float>(speed_assignment_count_) /
-          osmdata.ways.size()) * 100;
+           osmdata.ways.size()) * 100;
   LOG_INFO("Percentage of ways using speed assignment: " + s.str());
+
+  // Shrink the OSM ways vector and the OSM node reference vector (list of
+  // nodes that the ways include).
+  osmdata.ways.shrink_to_fit();
+  osmdata.noderefs.shrink_to_fit();
+
+  // Parse relations.
+  t1 = std::chrono::high_resolution_clock::now();
+  for (const auto& input_file : input_files) {
+    CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::RELATIONS);
+  }
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Simple restrictions count = " +
+        std::to_string(osmdata.restrictions.size()));
+  LOG_INFO("Sizeof OSMRestriction = " + std::to_string(sizeof(OSMRestriction)));
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
+  t1 = std::chrono::high_resolution_clock::now();
+  LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
+  osmdata.nodes.reserve(osmdata.node_count);
   for (const auto& input_file : input_files) {
-    auto t1 = std::chrono::high_resolution_clock::now();
-    LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-    osmdata.nodes.reserve(osmdata.node_count);
     CanalTP::read_osm_pbf(input_file, *this, CanalTP::Interest::NODES);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Nodes included on routable ways, count = " +
-             std::to_string(osmdata.nodes.size()));
   }
+  t2 = std::chrono::high_resolution_clock::now();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Nodes included on routable ways, count = " +
+          std::to_string(osmdata.nodes.size()));
 
   // Sort the OSM nodes vector by OSM Id
   std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
@@ -256,6 +259,7 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
   float default_speed;
   bool has_speed = false;
   bool has_surface = true;
+  std::string name;
 
   // Process tags
   for (const auto& tag : results) {
@@ -363,7 +367,7 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
       w.set_rail(tag.second == "true" ? true : false);
 
     else if (tag.first == "name" && !tag.second.empty())
-      w.set_name_index(osm_->name_offset_map.index(tag.second));
+      name = tag.second;
     else if (tag.first == "name:en" && !tag.second.empty())
       w.set_name_en_index(osm_->name_offset_map.index(tag.second));
     else if (tag.first == "alt_name" && !tag.second.empty())
@@ -536,6 +540,33 @@ void PBFGraphParser::way_callback(uint64_t osmid, const Tags &tags,
     w.set_speed(default_speed);
     speed_assignment_count_++;
   }
+
+  // Delete the name from from name field if it exists in the ref.
+  if (!name.empty() && w.ref_index()) {
+    std::vector<std::string> names = GetTagTokens(name);
+    std::vector<std::string> refs = GetTagTokens(osm_->ref_offset_map.name(w.ref_index()));
+    bool bFound = false;
+
+    std::string tmp;
+
+    for (auto& name : names) {
+      for (auto& ref : refs) {
+        if (name == ref) {
+          bFound = true;
+          break;
+        }
+      }
+      if (!bFound) {
+        if (!tmp.empty())
+          tmp += ";";
+        tmp += name;
+      }
+      bFound = false;
+    }
+    if (!tmp.empty())
+      w.set_name_index(osm_->name_offset_map.index(tmp));
+  } else
+    w.set_name_index(osm_->name_offset_map.index(name));
 
   // Add the way to the list
   osm_->ways.push_back(std::move(w));
