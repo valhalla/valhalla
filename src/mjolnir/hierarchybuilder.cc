@@ -385,10 +385,12 @@ void HierarchyBuilder::FormTilesInNewLevel(
         }
       }
 
-      // Add the downward transition edge
+      // Add the downward transition edge.
+      // TODO - what access for downward transitions
       DirectedEdgeBuilder downwardedge;
       downwardedge.set_endnode(newnode.basenode);
       downwardedge.set_trans_down(true);
+      downwardedge.set_all_forward_access();
       directededges.emplace_back(std::move(downwardedge));
 
       // Set the edge count for the new node
@@ -702,10 +704,11 @@ void HierarchyBuilder::AddConnectionsToBaseTile(
       node.set_edge_count(node.edge_count() + 1);
 
       // Append a new directed edge that forms the connection.
-      // TODO - do we need to set access or any other attributes?
+      // TODO - what access do we allow on upward transitions?
       DirectedEdgeBuilder edgeconnection;
       edgeconnection.set_trans_up(true);
       edgeconnection.set_endnode(connections[n].newnode);
+      edgeconnection.set_all_forward_access();
       directededges.emplace_back(std::move(edgeconnection));
 
       // Increment n and get the next base node Id that connects. Set next

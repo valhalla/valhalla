@@ -87,6 +87,11 @@ void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
   geoattributes_.lanecount = lanecount;
 }
 
+// Set all forward access modes to true (used for transition edges)
+void DirectedEdgeBuilder::set_all_forward_access() {
+  forwardaccess_.v = kAllAccess;
+}
+
 // Sets the car access of the edge in each direction.
 void DirectedEdgeBuilder::set_caraccess(const bool forward, const bool car) {
   if (forward) {

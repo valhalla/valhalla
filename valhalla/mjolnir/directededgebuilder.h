@@ -70,6 +70,11 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_internal(const bool internal);
 
   /**
+   * Set all forward access modes to true (used for transition edges)
+   */
+  void set_all_forward_access();
+
+  /**
    * Sets the car access of the edge in each direction.
    * @param  forward  Set access for forward direction if true, otherwise
    *                  setting access for reverse direction.
