@@ -15,6 +15,7 @@ constexpr uint8_t kTruckAccess      = 8;
 constexpr uint8_t kEmergencyAccess  = 16;
 constexpr uint8_t kTaxiAccess       = 32;
 constexpr uint8_t kHorseAccess      = 64;  // ??
+constexpr uint8_t kAllAccess        = 255;
 
 // Access structure used by NodeInfo and DirectedEdge
 // TODO - should HOV and/or transponder only access be part of this?!
