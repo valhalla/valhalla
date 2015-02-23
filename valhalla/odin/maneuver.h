@@ -95,6 +95,9 @@ class Maneuver {
   bool portions_highway() const;
   void set_portions_highway(bool portionsHighway);
 
+  bool internal_intersection() const;
+  void set_internal_intersection(bool internal_intersection);
+
   const Signs& signs() const;
   Signs* mutable_signs();
 
@@ -129,6 +132,7 @@ class Maneuver {
   bool portions_toll_;
   bool portions_unpaved_;
   bool portions_highway_;
+  bool internal_intersection_;
   Signs signs_;
 
   // TODO notes

@@ -25,7 +25,8 @@ Maneuver::Maneuver()
       roundabout_(false),
       portions_toll_(false),
       portions_unpaved_(false),
-      portions_highway_(false) {
+      portions_highway_(false),
+      internal_intersection_(false) {
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -220,6 +221,14 @@ bool Maneuver::portions_highway() const {
 
 void Maneuver::set_portions_highway(bool portionsHighway) {
   portions_highway_ = portionsHighway;
+}
+
+bool Maneuver::internal_intersection() const {
+  return internal_intersection_;
+}
+
+void Maneuver::set_internal_intersection(bool internal_intersection) {
+  internal_intersection_ = internal_intersection;
 }
 
 const Signs& Maneuver::signs() const {
