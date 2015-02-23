@@ -116,9 +116,9 @@ void PBFAdminParser::node_callback(uint64_t osmid, double lng, double lat,
   OSMNode n(osmid, lng, lat);
 
   // Add to the node map;
-  osm_->nodes.push_back(std::move(n));
-
-  if (osm_->nodes.size() % 5000000 == 0) {
+ // osm_->admin_nodes.emplace(osmid, std::move(n));
+  osm_->admin_nodes.emplace(osmid, std::move(n));
+  if (osm_->admin_nodes.size() % 5000000 == 0) {
     LOG_INFO("Processed " + std::to_string(osm_->nodes.size()) + " nodes on ways");
   }
 }

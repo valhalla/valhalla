@@ -176,11 +176,12 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
 
   uint32_t count = 0;
   std::string geom;
-  uint64_t nodeid,lastid = 0;
+  uint64_t nodeid,old,lastid = 0;
   bool has_data = false, reverse = false;
 
   for (const auto admin : parser.admins_) {
 
+    lastid = 0;
     has_data = false;
     // setting up values / binding
     geom = "POLYGON((";
@@ -221,6 +222,9 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
         if (ret != SQLITE_DONE && ret != SQLITE_ROW)
           LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
 
+        std::cout << geom << std::endl;
+
+
         geom = "POLYGON((";
 
         has_data = false;
@@ -231,6 +235,10 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
       if (lastid != 0 && lastid != nodeid) {
         reverse = true;
         j = w.node_count() - 1;
+
+        if (lastid != osmdata.noderefs[w.noderef_index() + j])
+          std::cout << old << " " << memberid << std::endl;
+
       }
 
       bool done = false;
@@ -239,20 +247,21 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
 
         nodeid = osmdata.noderefs[w.noderef_index() + j];
 
-       // const auto& iter = osmdata.nodes.find(nodeid);
+        const auto& iter = osmdata.admin_nodes.find(nodeid);
 
-        OSMNode osmnode = osmdata.GetNode(nodeid);
+       // OSMNode osmnode = osmdata.GetNode(nodeid);
 
         // TODO
-        /*if (iter == osmdata.nodes.end())
+        if (iter == osmdata.admin_nodes.end())
         {
           has_data = false;
           break;
-        }*/
+        }
 
         lastid = nodeid;
 
-        //const auto& osmnode = iter->second;
+        const auto& osmnode = iter->second;
+
         const PointLL& ll = osmnode.latlng();
 
         if (has_data)
@@ -269,8 +278,8 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
           if (j == w.node_count())
             done = true;
         }
-
       }
+      old = memberid;
     }
 
     geom += "))";
