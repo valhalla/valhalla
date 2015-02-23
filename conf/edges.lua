@@ -285,6 +285,16 @@ function filter_tags_generic(kv)
     for k,v in pairs(forward) do
       kv[k] = v
     end
+
+    --check for auto_forward overrides
+    kv["auto_forward"] = motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorcar"]] or kv["auto_forward"]
+
+    --check for ped overrides
+    kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
+
+    --check for bike_forward overrides
+    kv["bike_forward"] = bicycle[kv["bicycle"]] or bicycle[kv["cycleway"]] or kv["bike_forward"]
+
   else
     --if its a ferry and these tags dont show up we want to set them to true 
     local default_val = tostring(ferry)
