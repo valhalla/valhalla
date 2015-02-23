@@ -38,7 +38,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_bridge(way.bridge());
   set_bikenetwork(way.bike_network());
   set_link(way.link());
-  set_importance(rc);
+  set_classification(rc);
   set_not_thru(not_thru);
   set_internal(internal);
   set_localedgeidx(localidx);
@@ -84,7 +84,7 @@ void DirectedEdgeBuilder::set_length(const uint32_t length) {
 // Sets the number of lanes
 void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
   // TOTO - make sure we don't exceed some max value
-  geoattributes_.lanecount = lanecount;
+  attributes_.lanecount = lanecount;
 }
 
 // Set all forward access modes to true (used for transition edges)
@@ -180,22 +180,22 @@ void DirectedEdgeBuilder::set_tunnel(const bool tunnel) {
   attributes_.tunnel = tunnel;
 }
 
-//Sets the bridge flag.
+// Sets the bridge flag.
 void DirectedEdgeBuilder::set_bridge(const bool bridge) {
   attributes_.bridge = bridge;
 }
 
-//Sets the roundabout flag.
+// Sets the roundabout flag.
 void DirectedEdgeBuilder::set_roundabout(const bool roundabout) {
   attributes_.roundabout = roundabout;
 }
 
-//Sets the surface.
+// Sets the surface.
 void DirectedEdgeBuilder::set_surface(const Surface surface) {
-  attributes_.surface = static_cast<uint8_t>(surface);
+  classification_.surface = static_cast<uint8_t>(surface);
 }
 
-//Sets the cycle lane.
+// Sets the cycle lane.
 void DirectedEdgeBuilder::set_cyclelane(const CycleLane cyclelane) {
   attributes_.cycle_lane = static_cast<uint8_t>(cyclelane);
 }
@@ -246,7 +246,7 @@ void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
 
 // Sets the intersection internal flag.
 void DirectedEdgeBuilder::set_internal(const bool internal) {
-  attributes_.internal = internal;
+  classification_.internal = internal;
 }
 
 // Set the index of the directed edge on the local level of the graph
@@ -274,19 +274,19 @@ void DirectedEdgeBuilder::set_restrictions(const uint32_t mask) {
   }
 }
 
-//Sets the road class.
-void DirectedEdgeBuilder::set_importance(const RoadClass roadclass) {
-  classification_.importance = static_cast<uint8_t>(roadclass);
+// Sets the road classification.
+void DirectedEdgeBuilder::set_classification(const RoadClass roadclass) {
+  classification_.classification = static_cast<uint8_t>(roadclass);
 }
 
-//Sets the link tag.
+// Sets the link flag.
 void DirectedEdgeBuilder::set_link(const uint8_t link) {
   classification_.link = link;
 }
 
-//Sets the use.
+// Sets the use.
 void DirectedEdgeBuilder::set_use(const Use use) {
-  classification_.use = static_cast<uint8_t>(use);
+  attributes_.use = static_cast<uint8_t>(use);
 }
 
 // Sets the speed in KPH.

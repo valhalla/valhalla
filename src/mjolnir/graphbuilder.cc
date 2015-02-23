@@ -906,7 +906,7 @@ void BuildTileSet(
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
-          bestclass = std::min(bestclass, directededge.importance());
+          bestclass = std::min(bestclass, directededge.classification());
 
           // Check for updated ref from relations.
           std::string ref;

@@ -263,10 +263,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_bikenetwork(const uint32_t bikenetwork);
 
   /**
-   * Sets the road class.
+   * Sets the road classification.
    * @param  roadclass  Road class.
    */
-  void set_importance(const RoadClass roadclass);
+  void set_classification(const RoadClass roadclass);
 
   /**
    * Sets the link tag.

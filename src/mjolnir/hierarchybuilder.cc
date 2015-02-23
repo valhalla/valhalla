@@ -120,7 +120,7 @@ bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodein
   GraphId edgeid(basenode.tileid(), basenode.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    if (directededge->importance() <= rcc && !directededge->trans_down()
+    if (directededge->classification() <= rcc && !directededge->trans_down()
         && !directededge->shortcut()) {
       edges.push_back(edgeid);
     }
@@ -221,11 +221,11 @@ bool HierarchyBuilder::EdgesMatch(const GraphTile* tile, const DirectedEdge* edg
     return false;
   }
 
-  // Importance (class), link, use, and attributes must also match.
+  // classification, link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
   // bridge and tunnel here
-  if (edge1->importance() != edge2->importance()
+  if (edge1->classification() != edge2->classification()
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
       || edge1->internal() != edge2->internal()
@@ -278,7 +278,7 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
       i++, directededge++, edgeid++) {
     if (directededge->endnode() == node &&
-        directededge->importance() == edge->importance() &&
+        directededge->classification() == edge->classification() &&
         directededge->use() == edge->use() &&
         directededge->length() == edge->length()) {
       return edgeid;
@@ -343,7 +343,7 @@ void HierarchyBuilder::FormTilesInNewLevel(
         // Store the directed edge if less than the road class cutoff and
         // it is not a transition edge or shortcut in the base level
         const DirectedEdge* directededge = tile->directededge(oldedgeid);
-        if (directededge->importance() <= rcc && !directededge->trans_down()
+        if (directededge->classification() <= rcc && !directededge->trans_down()
             && !directededge->shortcut()) {
           // Copy the directed edge information and update end node,
           // edge data offset, and opp_index
@@ -434,7 +434,7 @@ void HierarchyBuilder::AddShortcutEdges(
     // the base level. Note that only downward transitions exist at this
     // point (upward transitions are created later).
     const DirectedEdge* directededge = tile->directededge(base_edge_id);
-    if (directededge->importance() > rcc || directededge->trans_down()
+    if (directededge->classification() > rcc || directededge->trans_down()
         || directededge->shortcut()) {
       continue;
     }
