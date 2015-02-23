@@ -329,7 +329,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   }
 
   // Set road class
-  trip_edge->set_road_class(GetTripPathRoadClass(directededge->importance()));
+  trip_edge->set_road_class(GetTripPathRoadClass(directededge->classification()));
 
   // Set speed and length
   trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
