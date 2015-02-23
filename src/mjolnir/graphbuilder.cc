@@ -528,12 +528,12 @@ bool OnewayPairEdgesExist(const GraphId& nodeid,
       continue;
     }
 
-    // Get the edge and way
+    // Get the edge and way.
     const Edge& edge = edges[idx];
     const OSMWay &w = ways[edge.wayindex_];
 
-    // Skip if this has matching way Id
-    if (w.way_id() == wayid) {
+    // Skip if this has matching way Id or a link (ramps/turn channel)
+    if (w.way_id() == wayid || edge.attributes.link) {
       continue;
     }
 
@@ -576,7 +576,8 @@ bool IsIntersectionInternal(const GraphId& startnode, const GraphId& endnode,
     return false;
   }
 
-  // Each node must have a pair of oneways (one inbound and one outbound)
+  // Each node must have a pair of oneways (one inbound and one outbound).
+  // Exclude links (ramps/turn channels)
   if (!OnewayPairEdgesExist(startnode, node1, edgeindex, wayid, edges, ways) ||
       !OnewayPairEdgesExist(endnode, node2, edgeindex, wayid, edges, ways)) {
     return false;
