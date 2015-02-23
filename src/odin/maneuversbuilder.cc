@@ -102,6 +102,18 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     }
   }
 
+#ifdef LOGGING_LEVEL_TRACE
+    auto* curr_edge = trip_path_->GetCurrEdge(0);
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::string("0") + ":  ");
+    LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
+    auto* node = trip_path_->GetEnhancedNode(0);
+    for (size_t y = 0; y < node->GetIntersectingEdgesCount(); ++y) {
+      auto* intersecting_edge = node->GetIntersectingEdge(y);
+      LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
+    }
+#endif
+
   // Process the Start maneuver
   CreateStartManeuver(maneuvers.front());
 
@@ -179,6 +191,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_roundabout(true);
   }
 
+  // Internal_Intersection
+  if (prev_edge->internal_intersection()) {
+    maneuver.set_internal_intersection(true);
+  }
+
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, node_index);
 }
@@ -190,13 +207,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Street names
   // TODO - improve
-  if (maneuver.street_names().empty()) {
+  if (!maneuver.internal_intersection() && maneuver.street_names().empty()) {
     auto* names = maneuver.mutable_street_names();
     for (const auto& name : prev_edge->name()) {
       names->push_back(name);
     }
-  } else {
-    // TODO
   }
 
   // Distance
@@ -296,8 +311,13 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
   // TripDirections_Maneuver_Type_kStayRight
   // TripDirections_Maneuver_Type_kStayLeft
 
+  // Process Internal Intersection
+  if (maneuver.internal_intersection()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kNone);
+    LOG_TRACE("INTERNAL_INTERSECTION");
+  }
   // Process exit
-  if (maneuver.ramp()
+  else if (maneuver.ramp()
       && (prev_edge->IsHighway() || maneuver.HasExitNumberSign())) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
@@ -318,7 +338,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
       }
-    } LOG_TRACE("EXIT");
+    }LOG_TRACE("EXIT");
   }
   // Process on ramp
   else if (maneuver.ramp() && !prev_edge->IsHighway()) {
@@ -345,7 +365,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, int node_index) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
       }
-    } LOG_TRACE("RAMP");
+    }LOG_TRACE("RAMP");
   }
   // Process merge
   else if (curr_edge->IsHighway() && prev_edge->ramp()) {
@@ -424,6 +444,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
   // TODO - fix it
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process internal intersection
+  if (prev_edge->internal_intersection() && !maneuver.internal_intersection()) {
+    return false;
+  } else if (!prev_edge->internal_intersection()
+      && maneuver.internal_intersection()) {
+    return false;
+  } else if (prev_edge->internal_intersection()
+      && maneuver.internal_intersection()) {
+    return true;
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process signs
