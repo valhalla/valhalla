@@ -14,20 +14,22 @@ constexpr uint8_t kBicycleAccess    = 4;
 constexpr uint8_t kTruckAccess      = 8;
 constexpr uint8_t kEmergencyAccess  = 16;
 constexpr uint8_t kTaxiAccess       = 32;
-constexpr uint8_t kHorseAccess      = 64;  // ??
+constexpr uint8_t kHorseAccess      = 64;
+constexpr uint8_t kHOVAccess        = 128;
+constexpr uint8_t kAllAccess        = 255;
 
 // Access structure used by NodeInfo and DirectedEdge
 // TODO - should HOV and/or transponder only access be part of this?!
 union Access {
   struct Fields {
-    uint8_t car          : 1;
-    uint8_t pedestrian   : 1;
-    uint8_t bicycle      : 1;
-    uint8_t truck        : 1;
-    uint8_t emergency    : 1;
-    uint8_t taxi         : 1;
-    uint8_t horse        : 1;  // ???
-    uint8_t spare        : 1;
+    uint8_t car          : 1; // Auto and light vehicle access
+    uint8_t pedestrian   : 1; // Pedestrian access
+    uint8_t bicycle      : 1; // Bicycle access
+    uint8_t truck        : 1; // Truck / heavy good vehicle access
+    uint8_t emergency    : 1; // Emergency vehicle access
+    uint8_t taxi         : 1; // Taxi access
+    uint8_t horse        : 1; // Horse access
+    uint8_t hov          : 1; // High occupancy vehicle access
   } fields;
   uint8_t v;
 };
@@ -58,14 +60,15 @@ constexpr float kMaxTurnChannelLength = 150.0f;
 
 // Node types.
 enum class NodeType : uint8_t {
-  kStreetIntersection = 0,
-  kGate = 1,
-  kBollard = 2,
-  kRailStop = 3,
-  kBusStop = 4,
-  kMultiUseTransitStop = 5,
-  kBikeShare = 6,
-  kParking = 7
+  kStreetIntersection = 0,  // Regular intersection of 2 roads
+  kGate = 1,                // Gate or rising bollard
+  kBollard = 2,             // Bollard (fixed obstruction)
+  kTollBooth = 3,           // Toll booth / fare collection
+  kRailStop = 4,            // Rail/metro/subway stop
+  kBusStop = 5,             // Bus stop
+  kMultiUseTransitStop = 6, // Multi-use transit stop (rail and bus)
+  kBikeShare = 7,           // Bike share location
+  kParking = 8              // Parking location
 };
 
 // Intersection types. Classifications of various intersections.
@@ -78,19 +81,36 @@ enum class IntersectionType : uint8_t {
 // Edge use
 // TODO - add values for each so we are explicit
 enum class Use : uint8_t {
-  kRoad,
-  kCycleway,
-  kFootway,
-  kParkingAisle,
-  kDriveway,
-  kAlley,
-  kEmergencyAccess,
-  kDriveThru,
-  kSteps,
-  kRamp,
-  kTurnChannel,
-  kTrack,
-  kOther
+  // Road specific uses
+  kRoad = 0,
+  kRamp = 1,              // Link - exits/entrance ramps.
+  kTurnChannel = 2,       // Link - turn lane.
+  kTrack = 3,             // Agricultural use, forest tracks
+  kDriveway = 4,          // Driveway/private service
+  kAlley = 5,             // Service road - limited route use
+  kParkingAisle = 6,      // Access roads in parking areas
+  kEmergencyAccess = 7,   // Emergency vehicles only
+  kDriveThru = 8,         // Commerical drive-thru (banks/fast-food)
+  kCuldesac = 9,          // Cul-de-sac (edge that forms a loop and is only
+                          // connected at one node to another edge.
+
+  // Pedestrian specific uses
+  kFootway = 25,
+  kSteps   = 26,           // Stairs
+
+  // Bicycle specific uses
+  kCycleway = 20,          // Dedicated bicycle path
+  kMountainBike = 21,      // Mountain bike trail
+
+  // Transit specific uses
+  kRail = 30,              // Rail line
+  kBus = 31,               // Bus line
+  kRailConnection = 32,    // Connection to a rail stop
+  kBusConnection = 33,     // Connection to a bus stop
+  kTransitConnection = 34, // Connection to multi-use transit stop
+
+  // Other...
+  kOther = 63
 };
 
 // TODO - add comment and explicit values
