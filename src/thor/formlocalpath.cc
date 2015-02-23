@@ -168,7 +168,7 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
             directededge++, edgeid++) {
     if (directededge->trans_up() ||
         directededge->use() != shortcutedge->use() ||
-        directededge->importance() != shortcutedge->importance() ||
+        directededge->classification() != shortcutedge->classification() ||
         !(directededge->forwardaccess() & kAutoAccess)) {
       continue;
     }
@@ -213,7 +213,7 @@ GraphId PathAlgorithm::RecoverShortcut(GraphReader& graphreader,
         // non-matching directed edges (use, importance) or non-driveable.
         if (j == opp_index || connectededge->trans_up() ||
             connectededge->use() != shortcutedge->use() ||
-            connectededge->importance() != shortcutedge->importance() ||
+            connectededge->classification() != shortcutedge->classification() ||
             !(connectededge->forwardaccess() & kAutoAccess)) {
           continue;
         }
