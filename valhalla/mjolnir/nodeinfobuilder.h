@@ -28,6 +28,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  ll  Lat,lng position of the node.
    * @param  edge_index     The GraphId of the first outbound edge.
    * @param  edge_count     The number of outbound directed edges.
+   * @param  driveable      Number of driveable edges (either direction)
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
@@ -36,8 +37,9 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    *
    */
   NodeInfoBuilder(const std::pair<float, float>& ll, const uint32_t edge_index,
-                  const uint32_t edge_count, const baldr::RoadClass rc,
-                  const uint32_t access, const baldr::NodeType type, const bool end,
+                  const uint32_t edge_count, const uint32_t driveable,
+                  const baldr::RoadClass rc, const uint32_t access,
+                  const baldr::NodeType type, const bool end,
                   const bool traffic_signal);
 
   /**
@@ -71,6 +73,12 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_access(const uint32_t access);
 
   /**
+   * Set the intersection type.
+   * @param  type   Intersection type (see baldr/graphconstants.h)
+   */
+  void set_intersection(const baldr::IntersectionType type);
+
+  /**
    * Set the index of the administrative information within this tile.
    * @param  admin_index  admin index.
    */
@@ -101,6 +109,12 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_type(const baldr::NodeType type);
 
   /**
+   * Set the number of driveable edges on the local level.
+   * @param  n  Number of driveable edges on the local level.
+   */
+  void set_local_driveable(const uint32_t n);
+
+  /**
    * Set the dead-end node flag.
    * @param  end  dead-end flag.
    */
@@ -117,6 +131,14 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  child  child node flag.
    */
   void set_child(const bool child);
+
+  /**
+   * Sets the flag indicating a mode change is allowed at this node.
+   * The access data tells which modes are allowed at the node. Examples
+   * include transit stops, bike share locations, and parking locations.
+   * @param  mc  True if a mode change is allowed at the node.
+   */
+  void set_mode_change(const bool mc);
 
   /**
    * Set the traffic signal flag.
