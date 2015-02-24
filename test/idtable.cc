@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <unordered_set>
 #include <cstdlib>
-#include "../valhalla/mjolnir/pbfgraphparser.h"
+#include "mjolnir/idtable.h"
 
 using namespace std;
 using namespace valhalla::mjolnir;

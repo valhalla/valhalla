@@ -141,6 +141,15 @@ class OSMNode {
    */
   const NodeAttributes& attributes() const;
 
+
+  //for sorting we purposely only care about the id
+  //so that you can search for a node without more info
+  bool operator == (const OSMNode& other) const {
+    return osmid_ == other.osmid_;
+  }
+  bool operator != (const OSMNode& other) const {
+    return osmid_ != other.osmid_;
+  }
   bool operator < (const OSMNode& other) const {
     return osmid_ < other.osmid_;
   }

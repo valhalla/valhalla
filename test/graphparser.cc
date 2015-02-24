@@ -4,7 +4,7 @@
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "../valhalla/mjolnir/pbfgraphparser.h"
+#include "mjolnir/pbfgraphparser.h"
 #include <valhalla/baldr/graphconstants.h>
 
 
@@ -52,35 +52,34 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
-  auto osmdata = parser.Load({"test/data/liechtenstein-latest.osm.pbf"});
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
 
   //We split set the uses at bollards and gates.
   auto node = osmdata.GetNode(392700757);
-  if (!node.intersection())
+  if (!node->intersection())
     throw std::runtime_error("Bollard not marked as intersection.");
 
   //We split set the uses at bollards and gates.
   node = osmdata.GetNode(376947468);
-  if (!node.intersection())
+  if (!node->intersection())
     throw std::runtime_error("Gate not marked as intersection.");
 
   //Is a gate with foot and bike flags set; however, access is private.
   node = osmdata.GetNode(2949666866);
-  if (!node.intersection() ||
-      node.type() != NodeType::kGate || node.access_mask() != 6)
+  if (!node->intersection() ||
+      node->type() != NodeType::kGate || node->access_mask() != 6)
     throw std::runtime_error("Gate at end of way test failed.");
 
   //Is a bollard with foot and bike flags set.
   node = osmdata.GetNode(569645326);
-  if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 6)
+  if (!node->intersection() ||
+      node->type() != NodeType::kBollard || node->access_mask() != 6)
     throw std::runtime_error("Bollard(with flags) not marked as intersection.");
 
   //Is a bollard=block with foot flag set.
   node = osmdata.GetNode(1819036441);
-  if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 2)
+  if (!node->intersection() ||
+      node->type() != NodeType::kBollard || node->access_mask() != 2)
     throw std::runtime_error("Bollard=block not marked as intersection.");
 }
 
@@ -88,13 +87,12 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
-  auto osmdata = parser.Load({"test/data/rome.osm.pbf"});
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"});
 
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = osmdata.GetNode(2425784125);
-  if (!node.intersection() ||
-    node.type() != NodeType::kGate || node.access_mask() != 7)
+  if (!node->intersection() ||
+    node->type() != NodeType::kGate || node->access_mask() != 7)
     throw std::runtime_error("Rising Bollard not marked as intersection.");
 }
 
@@ -102,26 +100,25 @@ void Exits(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
-  auto osmdata = parser.Load({"test/data/harrisburg.osm.pbf"});
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"});
 
   auto node = osmdata.GetNode(33698177);
 
-  if (!node.intersection() ||
-      !node.ref() || osmdata.node_ref[33698177] != "51A-B")
+  if (!node->intersection() ||
+      !node->ref() || osmdata.node_ref[33698177] != "51A-B")
     throw std::runtime_error("Ref not set correctly .");
 
 
   node = osmdata.GetNode(1901353894);
 
-  if (!node.intersection() ||
-      !node.ref() || osmdata.node_name[1901353894] != "Harrisburg East")
+  if (!node->intersection() ||
+      !node->ref() || osmdata.node_name[1901353894] != "Harrisburg East")
     throw std::runtime_error("Ref not set correctly .");
 
 
   node = osmdata.GetNode(462240654);
 
-  if (!node.intersection() || osmdata.node_exit_to[462240654] != "PA441")
+  if (!node->intersection() || osmdata.node_exit_to[462240654] != "PA441")
     throw std::runtime_error("Ref not set correctly .");
 
 }
@@ -130,9 +127,7 @@ void Ways(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
-  auto osmdata = parser.Load({"test/data/baltimore.osm.pbf"});
-
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"});
 
   for (uint32_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
 
@@ -173,15 +168,14 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  valhalla::mjolnir::PBFGraphParser parser(conf.get_child("mjolnir"));
-  auto osmdata = parser.Load({"test/data/nyc.osm.pbf"});
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"});
 
   //When we support finding bike rentals, this test will need updated.
   auto node = osmdata.GetNode(3146484929);
   //  if (node != osmdata.nodes.end())
   //    throw std::runtime_error("Bike rental test failed.");
   /*else {
-    if (node.intersection())
+    if (node->intersection())
       throw std::runtime_error("Bike rental not marked as intersection.");
   }*/
 
@@ -196,7 +190,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
 
   node = osmdata.GetNode(42439096);
 
-  if (!node.intersection() || !node.traffic_signal())
+  if (!node->intersection() || !node->traffic_signal())
     throw std::runtime_error("Traffic Signal test failed.");
 
 }

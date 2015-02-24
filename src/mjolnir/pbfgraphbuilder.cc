@@ -89,15 +89,6 @@ bool ParseArguments(int argc, char *argv[]) {
 }
 
 /**
- * Parse PBF into the supplied data structures
- */
-OSMData ParsePBF(const boost::property_tree::ptree& pt,
-                const std::vector<std::string>& input_files) {
-  PBFGraphParser parser(pt);
-  return parser.Load(input_files);
-}
-
-/**
  * Build local graph from protocol buffer input.
  */
 void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
@@ -105,11 +96,11 @@ void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  OSMData osmdata = ParsePBF(pt, input_files);
+  auto osm_data = PBFGraphParser::Parse(pt, input_files);
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder graphbuilder(pt);
-  graphbuilder.Build(osmdata);
+  graphbuilder.Build(osm_data);
 }
 
 int main(int argc, char** argv) {
