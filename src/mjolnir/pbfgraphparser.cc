@@ -69,8 +69,7 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
-    OSMNode* n = osmdata_.WriteNode(osmid);
-    n->set_latlng(std::move(std::make_pair(lng, lat)));
+    OSMNode* n = osmdata_.WriteNode(osmid, lng, lat);
     for (const auto& tag : results) {
 
       if (tag.first == "highway") {
@@ -123,8 +122,8 @@ struct graph_callback : public OSMPBF::Callback {
       osmdata_.intersection_count++;
     }
 
-    if (osmdata_.node_map.size() % 5000000 == 0) {
-      LOG_INFO("Processed " + std::to_string(osmdata_.node_map.size()) + " nodes on ways");
+    if (osmdata_.nodes.size() % 5000000 == 0) {
+      LOG_INFO("Processed " + std::to_string(osmdata_.nodes.size()) + " nodes on ways");
     }
   }
 
@@ -667,7 +666,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   auto t1 = std::chrono::high_resolution_clock::now();
-  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   for (const auto& input_file : input_files) {
     parser.parse(input_file, OSMPBF::Interest::WAYS);
   }
@@ -681,7 +679,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // nodes that the ways include).
   osmdata.ways.shrink_to_fit();
   osmdata.noderefs.shrink_to_fit();
-  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
 
   // Parse relations.
   t1 = std::chrono::high_resolution_clock::now();
@@ -698,18 +695,18 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   t1 = std::chrono::high_resolution_clock::now();
-  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
   osmdata.ReserveNodes(osmdata.node_count);
-  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
   for (const auto& input_file : input_files) {
     parser.parse(input_file, OSMPBF::Interest::NODES);
   }
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-  LOG_INFO("Nodes included on routable ways, count = " + std::to_string(osmdata.node_map.size()));
-  std::cout << "Memory || " << std::endl << memory_status({"VmSize", "VmRSS"}) << std::endl << std::endl;
+  LOG_INFO("Nodes included on routable ways, count = " + std::to_string(osmdata.nodes.size()));
+
+  // Sort the OSM nodes vector by OSM Id
+  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
 
   // Log some information about extra node information and names
   LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));

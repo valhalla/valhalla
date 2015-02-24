@@ -8,12 +8,14 @@ namespace valhalla {
 namespace mjolnir {
 
 OSMNode::OSMNode()
-    : latlng_{},
+    : osmid_(0),
+      latlng_{},
       attributes_{} {
 }
 
-OSMNode::OSMNode(const float lng, const float lat)
-    : latlng_{lng, lat},
+OSMNode::OSMNode(const uint64_t osmid, const float lng, const float lat)
+    : osmid_(osmid),
+      latlng_{lng, lat},
       attributes_{} {
 }
 

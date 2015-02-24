@@ -40,7 +40,7 @@ class OSMNode {
   /**
    * Constructor given a lng,lat
    */
-  OSMNode(const float lng, const float lat);
+  OSMNode(const uint64_t osmid, const float lng, const float lat);
 
   /**
    * Destructor.
@@ -141,7 +141,22 @@ class OSMNode {
    */
   const NodeAttributes& attributes() const;
 
+
+  //for sorting we purposely only care about the id
+  //so that you can search for a node without more info
+  bool operator == (const OSMNode& other) const {
+    return osmid_ == other.osmid_;
+  }
+  bool operator != (const OSMNode& other) const {
+    return osmid_ != other.osmid_;
+  }
+  bool operator < (const OSMNode& other) const {
+    return osmid_ < other.osmid_;
+  }
+
  protected:
+  uint64_t osmid_;
+
   // Lat,lng of the node
   OSMLatLng latlng_;
 

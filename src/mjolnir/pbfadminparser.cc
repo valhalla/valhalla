@@ -57,11 +57,10 @@ struct admin_callback : public OSMPBF::Callback {
       return;
 
     // Create a new node and set its attributes
-    OSMNode* n = osmdata_.WriteNode(osmid);
-    n->set_latlng(std::move(std::make_pair(lng, lat)));
+    OSMNode* n = osmdata_.WriteNode(osmid, lng, lat);
 
-    if (osmdata_.node_map.size() % 5000000 == 0) {
-      LOG_INFO("Processed " + std::to_string(osmdata_.node_map.size()) + " nodes on ways");
+    if (osmdata_.nodes.size() % 5000000 == 0) {
+      LOG_INFO("Processed " + std::to_string(osmdata_.nodes.size()) + " nodes on ways");
     }
   }
 
@@ -194,8 +193,11 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
     auto t2 = std::chrono::high_resolution_clock::now();
     uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Nodes included on Admin ways, count = " + std::to_string(osmdata.node_map.size()));
+    LOG_INFO("Nodes included on Admin ways, count = " + std::to_string(osmdata.nodes.size()));
   }
+
+  // Sort the OSM nodes vector by OSM Id
+  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
 
   // Return OSM data
   return osmdata;

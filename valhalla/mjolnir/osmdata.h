@@ -45,8 +45,7 @@ struct OSMData {
   NodeRefVector noderefs;
 
   // Map that stores all the nodes read. Indexed by OSM node Id.
-  std::unordered_map<uint64_t, size_t> node_map;
-  OSMNode* nodes;
+  std::vector<OSMNode> nodes;
 
 //  OSMNodeMap nodes;
 
@@ -69,30 +68,25 @@ struct OSMData {
   UniqueNames name_offset_map;
 
   const OSMNode* GetNode(const uint64_t osmid) const {
-    auto index = node_map.find(osmid);
-    if(index == node_map.end())
+    OSMNode target(osmid, 0.f, 0.f);
+    auto it = std::lower_bound(nodes.begin(), nodes.end(), target);
+    if(it == nodes.end() || *it != target)
       return nullptr;
-    return &nodes[index->second];
+    return &*it;
   }
 
   void ReserveNodes(const size_t size) {
-    node_map.reserve(size);
-    nodes = new OSMNode[size];
+    nodes.reserve(size);
   }
 
-  OSMNode* WriteNode(const uint64_t osmid) {
-    node_map.insert(std::make_pair(osmid, node_write_index));
-    return &nodes[node_write_index++];
+  OSMNode* WriteNode(const uint64_t osmid, const float lng, const float lat) {
+    nodes.emplace_back(osmid, lng, lat);
+    return &nodes.back();
   }
 
   void DeleteNodes() {
-    std::unordered_map<uint64_t, size_t>().swap(node_map);
-    delete [] nodes;
-    nodes = nullptr;
+    std::vector<OSMNode>().swap(nodes);
   }
-
- protected:
-  size_t node_write_index;
 
 };
 
