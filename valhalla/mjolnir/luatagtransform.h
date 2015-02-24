@@ -10,13 +10,12 @@ extern "C" {
 #include <valhalla/mjolnir/osmdata.h>
 
 #include <string>
-#include <map>
-
-// Represents the key/values of an object
-typedef std::map<std::string, std::string> Tags;
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
+
+using Tags = std::unordered_map<std::string, std::string>;
 
 /**
  */

@@ -85,15 +85,6 @@ bool ParseArguments(int argc, char *argv[]) {
 }
 
 /**
- * Parse PBF into the supplied data structures
- */
-OSMData ParsePBF(const boost::property_tree::ptree& pt,
-                const std::vector<std::string>& input_files) {
-  PBFAdminParser parser(pt);
-  return parser.Load(input_files);
-}
-
-/**
  * Build admins from protocol buffer input.
  */
 void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
@@ -101,7 +92,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
-  OSMData osmdata = ParsePBF(pt, input_files);
+  OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
 
   // TODO: save to sqlite.
 }
