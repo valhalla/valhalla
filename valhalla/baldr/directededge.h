@@ -8,11 +8,12 @@
 namespace valhalla {
 namespace baldr {
 
-// Bike Network constants. Bit constants.
-constexpr uint8_t kNcn = 1;   // Part of national bike network
-constexpr uint8_t kRcn = 2;   // Part of regional bike network
-constexpr uint8_t kLcn = 4;   // Part of local bike network
-constexpr uint8_t kMcn = 8;   // Part of mountain bike network
+// Bicycle Network constants. Bit constants.
+constexpr uint8_t kNcn = 1;   // Part of national bicycle network
+constexpr uint8_t kRcn = 2;   // Part of regional bicycle network
+constexpr uint8_t kLcn = 4;   // Part of local bicycle network
+constexpr uint8_t kMcn = 8;   // Part of mountain bicycle network
+constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
 constexpr uint32_t kMaxEdgeInfoOffset = 16777215;   // 2^24 bytes
@@ -22,6 +23,16 @@ constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
 
 // Maximum number of edges allowed in a turn restriction mask
 constexpr uint32_t kMaxTurnRestrictionEdges = 8;
+
+// Maximum speed (kph)
+constexpr float kMaxSpeed = 255.0f;
+
+// Maximum lane count
+constexpr uint32_t kMaxLaneCount = 15;
+
+// Maximum elevation and curvature factors.
+constexpr uint32_t kMaxElevationFactor = 15;
+constexpr uint32_t kMaxCurvatureFactor = 15;
 
 /**
  * Directed edge within the graph.
@@ -303,7 +314,8 @@ class DirectedEdge {
   bool unpaved() const;
 
   /**
-   * Get the smoothness.
+   * Get the surface type (see graphconstants.h). This is a general indication
+   * of smoothness.
    */
   Surface surface() const;
 
@@ -313,11 +325,15 @@ class DirectedEdge {
   bool link() const;
 
   /**
-   * Gets the intersection internal flag.
-   * @return  Returns true if the edge is internal to an intersection. This
-   *          is derived from OSM and used for doubly digitized intersections.
+   * Gets the intersection internal flag. This indicates the edge is "internal"
+   * to an intersection. This is derived from OSM based on geometry of an
+   * of nearby edges and is used for routing behavior on doubly digitized
+   * intersections.
+   * @return  Returns true if the edge is internal to an intersection.
    */
   bool internal() const;
+
+  // TODO - intersection transitions
 
   /**
    * Get the computed version of DirectedEdge attributes.
