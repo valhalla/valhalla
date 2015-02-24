@@ -447,12 +447,12 @@ function filter_tags_generic(kv)
   kv["bridge"] = bridge[kv["bridge"]] or "false"
   
   -- TODO access:conditional
-  if kv["seasonal"] and kv["seasonal"] != "no" then
+  if kv["seasonal"] and kv["seasonal"] ~= "no" then
     kv["seasonal"] = "true"
   end
 
   -- TODO access
-  if (kv["hov"] and kv["hov"] != "no") or kv["hov:lanes"] or kv["hov:minimum"] then
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
     kv["hov"] = "true"
   end
 
