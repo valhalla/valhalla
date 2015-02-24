@@ -75,19 +75,6 @@ struct OSMData {
     return &*it;
   }
 
-  void ReserveNodes(const size_t size) {
-    nodes.reserve(size);
-  }
-
-  OSMNode* WriteNode(const uint64_t osmid, const float lng, const float lat) {
-    nodes.emplace_back(osmid, lng, lat);
-    return &nodes.back();
-  }
-
-  void DeleteNodes() {
-    std::vector<OSMNode>().swap(nodes);
-  }
-
 };
 
 }

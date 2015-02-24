@@ -48,7 +48,7 @@ GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
 // Delete the OSM node map and extended node information maps.
 void delete_osmnode_map(OSMData& osmdata) {
 //  OSMNodeMap().swap(osmdata.nodes);
-  osmdata.DeleteNodes();
+  std::vector<OSMNode>().swap(osmdata.nodes);
   OSMStringMap().swap(osmdata.node_exit_to);
   OSMStringMap().swap(osmdata.node_ref);
   OSMStringMap().swap(osmdata.node_name);

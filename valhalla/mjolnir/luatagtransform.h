@@ -58,7 +58,7 @@ class LuaTagTransform {
 
   std::string GetLuaRelationScript() const;
 
-  Tags TransformInLua(OSMType type, const Tags &tags);
+  Tags Transform(OSMType type, const Tags &tags);
 
  protected:
 

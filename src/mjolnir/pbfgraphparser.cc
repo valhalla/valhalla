@@ -58,7 +58,7 @@ struct graph_callback : public OSMPBF::Callback {
     }
 
     // Get tags
-    Tags results = lua_.TransformInLua(OSMType::kNode, tags);
+    Tags results = lua_.Transform(OSMType::kNode, tags);
     if (results.size() == 0)
       return;
 
@@ -67,27 +67,27 @@ struct graph_callback : public OSMPBF::Callback {
         && (highway_junction->second == "motorway_junction"));
 
     // Create a new node and set its attributes
-    OSMNode* n = osmdata_.WriteNode(osmid, lng, lat);
+    OSMNode n(osmid, lng, lat);
     for (const auto& tag : results) {
 
       if (tag.first == "highway") {
-        n->set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
+        n.set_traffic_signal(tag.second == "traffic_signals" ? true : false); // TODO: add logic for traffic_signals:direction
       }
       else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n->set_exit_to(hasTag);
+        n.set_exit_to(hasTag);
         if (hasTag)
           osmdata_.node_exit_to[osmid] = tag.second;
       }
       else if (is_highway_junction && (tag.first == "ref")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n->set_ref(hasTag);
+        n.set_ref(hasTag);
         if (hasTag)
           osmdata_.node_ref[osmid] = tag.second;
       }
       else if (is_highway_junction && (tag.first == "name")) {
         bool hasTag = (tag.second.length() ? true : false);
-        n->set_name(hasTag);
+        n.set_name(hasTag);
         if (hasTag)
           osmdata_.node_name[osmid] = tag.second;
       }
@@ -97,7 +97,7 @@ struct graph_callback : public OSMPBF::Callback {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
-          n->set_type(NodeType::kGate);
+          n.set_type(NodeType::kGate);
         }
       }
       else if (tag.first == "bollard") {
@@ -106,19 +106,21 @@ struct graph_callback : public OSMPBF::Callback {
             intersection_.set(osmid);
             ++osmdata_.edge_count;
           }
-          n->set_type(NodeType::kBollard);
+          n.set_type(NodeType::kBollard);
         }
       }
       else if (tag.first == "access_mask")
-        n->set_access_mask(std::stoi(tag.second));
+        n.set_access_mask(std::stoi(tag.second));
     }
 
     // Set the intersection flag (relies on ways being processed first to set
     // the intersection Id markers).
     if (intersection_.IsUsed(osmid)) {
-      n->set_intersection(true);
+      n.set_intersection(true);
       osmdata_.intersection_count++;
     }
+
+    osmdata_.nodes.emplace_back(std::move(n));
 
     if (osmdata_.nodes.size() % 5000000 == 0) {
       LOG_INFO("Processed " + std::to_string(osmdata_.nodes.size()) + " nodes on ways");
@@ -135,7 +137,7 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results = lua_.TransformInLua(OSMType::kWay, tags);
+    Tags results = lua_.Transform(OSMType::kWay, tags);
     if (results.size() == 0) {
       return;
     }
@@ -480,9 +482,9 @@ struct graph_callback : public OSMPBF::Callback {
     osmdata_.ways.push_back(std::move(w));
   }
 
-  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
+  void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
     // Get tags
-    Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
+    Tags results = lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0)
       return;
 
@@ -694,7 +696,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // TODO: we know how many knows we expect, stop early once we have that many
   t1 = std::chrono::high_resolution_clock::now();
   LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-  osmdata.ReserveNodes(osmdata.node_count);
+  osmdata.nodes.reserve(osmdata.node_count);
   for (const auto& input_file : input_files) {
     parser.parse(input_file, OSMPBF::Interest::NODES);
   }

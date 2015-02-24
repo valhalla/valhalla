@@ -62,7 +62,7 @@ struct Callback {
   virtual ~Callback(){};
   virtual void node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) = 0;
   virtual void way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& nodes) = 0;
-  virtual void relation_callback(uint64_t osmid, const Tags &tags, const std::vector<Member> &members) = 0;
+  virtual void relation_callback(const uint64_t osmid, const Tags &tags, const std::vector<Member> &members) = 0;
 };
 
 //the parser used to get data out of the osmpbf file

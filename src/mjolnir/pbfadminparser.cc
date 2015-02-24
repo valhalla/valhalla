@@ -49,12 +49,12 @@ struct admin_callback : public OSMPBF::Callback {
     }
 
     // Get tags
-    auto results = lua_.TransformInLua(OSMType::kNode, tags);
+    auto results = lua_.Transform(OSMType::kNode, tags);
     if (results.size() == 0)
       return;
 
     // Create a new node and set its attributes
-    OSMNode* n = osmdata_.WriteNode(osmid, lng, lat);
+    osmdata_.nodes.emplace_back(osmid, lng, lat);
 
     if (osmdata_.nodes.size() % 5000000 == 0) {
       LOG_INFO("Processed " + std::to_string(osmdata_.nodes.size()) + " nodes on ways");
@@ -70,7 +70,7 @@ struct admin_callback : public OSMPBF::Callback {
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    auto results = lua_.TransformInLua(OSMType::kWay, tags);
+    auto results = lua_.Transform(OSMType::kWay, tags);
     if (results.size() == 0) {
       return;
     }
@@ -93,9 +93,9 @@ struct admin_callback : public OSMPBF::Callback {
     osmdata_.ways.push_back(std::move(w));
   }
 
-  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
+  void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
     // Get tags
-    auto results = lua_.TransformInLua(OSMType::kRelation, tags);
+    auto results = lua_.Transform(OSMType::kRelation, tags);
     if (results.size() == 0)
       return;
 
@@ -185,7 +185,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   for (const auto& input_file : input_files) {
     auto t1 = std::chrono::high_resolution_clock::now();
     LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-    osmdata.ReserveNodes(osmdata.node_count);
+    osmdata.nodes.reserve(osmdata.node_count);
     parser.parse(input_file, OSMPBF::Interest::NODES);
     auto t2 = std::chrono::high_resolution_clock::now();
     uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();

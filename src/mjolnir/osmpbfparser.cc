@@ -220,7 +220,8 @@ namespace OSMPBF {
             lon += 0.000000001 * (primblock.lon_offset() + (primblock.granularity() * dn.lon(i)));
             lat += 0.000000001 * (primblock.lat_offset() + (primblock.granularity() * dn.lat(i)));
 
-            Tags tags(dn.keys_vals_size());
+            //can't exactly preallocate because you don't know how many there are
+            Tags tags;
             while (current_kv < dn.keys_vals_size() && dn.keys_vals(current_kv) != 0) {
               uint64_t key = dn.keys_vals(current_kv);
               uint64_t val = dn.keys_vals(current_kv + 1);

@@ -137,7 +137,7 @@ void stackdump_g(lua_State* l)
 }
 }
 
-Tags LuaTagTransform::TransformInLua(OSMType type, const Tags &maptags) {
+Tags LuaTagTransform::Transform(OSMType type, const Tags &maptags) {
 
   //grab the proper function out of the lua code
   lua_State* state;
