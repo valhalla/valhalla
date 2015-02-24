@@ -235,6 +235,7 @@ toll = {
 ["true"] = "true",
 ["false"] = "false",
 ["1"] = "true",
+["interval"] = "true",
 ["snowmobile"] = "true"
 }
 
