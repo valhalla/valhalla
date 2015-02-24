@@ -100,8 +100,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   TripPath trip_path;
 
   // TODO - what about the first node? Probably should pass it in?
-  uint32_t shortcutcount = 0;
-  const NodeInfo* nodeinfo = nullptr;
+  GraphId startnode;
 
   // Partial edge at the start
   auto start_pct =  origin.edges().front().dist;
@@ -154,9 +153,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       } else {
         LOG_TRACE("Transition down!");
       }
-      // Get the end node (needed for connected edges at next iteration).
-      GraphId endnode = directededge->endnode();
-      nodeinfo = graphreader.GetGraphTile(endnode)->node(directededge->endnode());
+      // Get the end node - set as the startnode (for connected edges at
+      // next iteration).
+      startnode = directededge->endnode();
+
       // TODO - how do we find the opposing edge to the incoming edge
       // on the prior level?
       prior_opp_index = kMaxEdgesPerNode + 1;
@@ -167,7 +167,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // TODO - What to do on the 1st node of the path (since we just have
     // a list of path edges).
     TripPath_Node* trip_node = trip_path.add_node();
-    //if (nodeinfo != nullptr) {
+    //if (startnode.Is_Valid()) {
     // TODO:  Add the trip_node for exits.
     //}
 
@@ -203,7 +203,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     }
     trip_edge->set_end_shape_index(trip_shape.size());
 
-    // Add connected edges. Do this after the first trip edge is added
+    // Add connected edges from teh start node. Do this after the first trip
+    // edge is added
     //
     //Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
     //Each letter represents the edge info.
@@ -221,10 +222,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //          A || \\ G
     //            ||  \\
     //            (1)  (X)
-    if (nodeinfo != nullptr) {
-      // Get the first edge from the node
+    if (startnode.Is_Valid()) {
+      // Get the graph tile and the first edge from the node
+      const GraphTile* tile = graphreader.GetGraphTile(startnode);
+      const NodeInfo* nodeinfo =tile->node(startnode);
       uint32_t edgeid = nodeinfo->edge_index();
-      const DirectedEdge* connectededge = graphtile->directededge( nodeinfo->edge_index());
+      const DirectedEdge* connectededge = tile->directededge( nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, connectededge++, edgeid++) {
         // Skip the edge on the path and the incoming edge (this is the one
         // with prior_opp_index from this node). Skip any transition
@@ -233,13 +236,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             connectededge->trans_up() || connectededge->trans_down()) {
           continue;
         }
-        AddTripEdge(edgeid, connectededge, trip_node, graphtile);
+        AddTripEdge(edgeid, connectededge, trip_node, tile);
       }
     }
 
-    // Get the nodeinfo at the end node (may be in a different tile).
-    GraphId endnode = directededge->endnode();
-    nodeinfo = graphreader.GetGraphTile(endnode)->node(directededge->endnode());
+    // Set the endnode of this directed edge as the startnode of the next edge.
+    startnode = directededge->endnode();
 
     // Save the index of the opposing directed edge at the end node
     prior_opp_index = directededge->opp_index();
@@ -247,10 +249,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Add the last node
   trip_path.add_node();
-
-/** TODO - remove debug later
-  LOG_TRACE("Took " + std::to_string(shortcutcount) + " shortcut edges out of " +
-      std::to_string(pathedges.size()) + " edges");**/
 
   // Encode shape and add to trip path.
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
