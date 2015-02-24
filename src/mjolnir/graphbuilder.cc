@@ -2,10 +2,6 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/util.h"
 
-// Use open source PBF reader from:
-//     https://github.com/CanalTP/libosmpbfreader
-#include "osmpbfreader.h"
-
 #include <future>
 #include <utility>
 #include <thread>
@@ -166,7 +162,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     // Get the OSM node information for the first node of the way
     startnodeid = nodeid = osmdata.noderefs[way.noderef_index()];
 //    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
-    OSMNode osmnode = osmdata.GetNode(nodeid);
+    const OSMNode& osmnode = *osmdata.GetNode(nodeid);
 
     // If a graph Node exists add an edge to it, otherwise construct a
     // graph Node with an initial edge and add it to the appropriate tile.
@@ -190,7 +186,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
       // Add the node lat,lng to the edge shape.
       nodeid  = osmdata.noderefs[way.noderef_index() + i];
 //      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
-      OSMNode osmnode = osmdata.GetNode(nodeid);
+      const OSMNode& osmnode = *osmdata.GetNode(nodeid);
 
       // Add the node's lat,lng to the latlng list and increment the count
       // for this edge

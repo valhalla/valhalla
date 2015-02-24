@@ -46,6 +46,7 @@ struct OSMData {
 
   // Map that stores all the nodes read. Indexed by OSM node Id.
   std::vector<OSMNode> nodes;
+
 //  OSMNodeMap nodes;
 
   // Map that stores all the ref info on a node
@@ -66,10 +67,12 @@ struct OSMData {
   // Names
   UniqueNames name_offset_map;
 
-  OSMNode GetNode(const uint64_t osmid) const {
-    OSMNode test(osmid, 0.0f, 0.0f);
-    auto it = std::equal_range(nodes.begin(), nodes.end(), test);
-    return *(it.first);
+  const OSMNode* GetNode(const uint64_t osmid) const {
+    OSMNode target(osmid, 0.f, 0.f);
+    auto it = std::lower_bound(nodes.begin(), nodes.end(), target);
+    if(it == nodes.end() || *it != target)
+      return nullptr;
+    return &*it;
   }
 
 };
