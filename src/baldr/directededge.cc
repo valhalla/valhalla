@@ -339,6 +339,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.restrictions+1)-1);
   de.attributes_.use = ~de.attributes_.use;
   boost::hash_combine(seed,ffs(de.attributes_.use+1)-1);
+  de.attributes_.speed_type = ~de.attributes_.speed_type;
+  boost::hash_combine(seed,ffs(de.attributes_.speed_type+1)-1);
 
   // Access
   de.forwardaccess_.fields.car  = ~de.forwardaccess_.fields.car;
