@@ -1,0 +1,9 @@
+-o "40.181428,-76.600265,stop,PA 743 South" -d "40.173447,-76.595193,stop,PA 283 East,,,,," -t auto --config ../conf/valhalla.json
+-o "40.172472,-76.593220,stop,PA 283 West" -d "40.174585,-76.602597,stop,PA 743 South,,,,," -t auto --config ../conf/valhalla.json
+-o "39.176595,-76.848623,Broken Land Parkway" -d "39.178227,-76.848886,stop,Patuxent Woods Drive" -t auto --config ../conf/valhalla.json
+-o "39.206384,-76.867874,stop,Hickory Ridge Road" -d "39.207628,-76.866761,stop,Broken Land Parkway" -t auto --config ../conf/valhalla.json
+-o "39.379766,-76.474322,stop,MD 43 East" -d "39.381282,-76.471350,stop,Perry Hall Boulevard" -t auto --config ../conf/valhalla.json
+-o "39.379766,-76.474322,stop,MD 43 East" -d "39.379321, -76.456440,stop,MD 43 East" -t auto --config ../conf/valhalla.json
+-o "39.525728,-76.353193,stop,MD 24 North" -d "39.525809,-76.355119,stop,US 1 Business South" -t auto --config ../conf/valhalla.json
+-o "39.525712,-76.354974,stop,US 1 Business North" -d "39.526993,-76.355215,stop,MD 24 North" -t auto --config ../conf/valhalla.json
+-o "40.808886,-77.824852,stop,US 322 West" -d "40.811043,-77.830294,stop,East College Avenue" -t auto --config ../conf/valhalla.json

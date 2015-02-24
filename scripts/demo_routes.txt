@@ -1,0 +1,10 @@
+-o "40.6501038,-73.949582,stop,Brooklyn" -d "40.646078,-73.783902,stop,JFK Airport" -t auto --config ../conf/valhalla.json
+-o "40.6429479,-73.779373,stop,JFK Airport" -d "40.6501038,-73.949582,stop,Brooklyn" -t auto --config ../conf/valhalla.json
+-o "40.310004,-75.130484,stop,,,Doylestown,PA" -d "40.7484284,-73.985654,stop,,350 5th Avenue,New York,NY" -t auto --config ../conf/valhalla.json
+-o "40.7484284,-73.985654,stop,,350 5th Avenue,New York,NY" -d "40.310004,-75.130484,stop,,,Doylestown,PA" -t auto --config ../conf/valhalla.json
+-o "40.2653681,-76.7083033,stop,,,Hummelstown,PA" -d "40.518681,-78.394736,stop,,,Altoona,PA" -t auto --config ../conf/valhalla.json
+-o "40.518681,-78.394736,stop,,,Altoona,PA" -d "40.2653681,-76.7083033,stop,,,Hummelstown,PA" -t auto --config ../conf/valhalla.json
+-o "40.03813,-76.3056686,stop,,,Lancaster,PA" -d "40.4416941,-79.9900861,stop,,,Pittsburgh,PA" -t auto --config ../conf/valhalla.json
+-o "40.4416941,-79.9900861,stop,,,Pittsburgh,PA" -d "40.03813,-76.3056686,stop,,,Lancaster,PA" -t auto --config ../conf/valhalla.json
+-o "40.2854881,-76.6506001,stop,,,Hershey,PA" -d "40.794026,-77.8606975,stop,,,State College,PA" -t auto --config ../conf/valhalla.json
+-o "40.794026,-77.8606975,stop,,,State College,PA" -d "40.2854881,-76.6506001,stop,,,Hershey,PA" -t auto --config ../conf/valhalla.json
