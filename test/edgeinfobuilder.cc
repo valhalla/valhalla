@@ -10,7 +10,7 @@
 #include <boost/shared_array.hpp>
 #include <valhalla/baldr/sign.h>
 #include <memory>
-#include "../valhalla/mjolnir/signbuilder.h"
+#include "mjolnir/signbuilder.h"
 
 using namespace std;
 using namespace valhalla::baldr;
