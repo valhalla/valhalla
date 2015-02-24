@@ -95,6 +95,10 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         FormExitFerryInstruction(maneuver);
         break;
       }
+      default: {
+        FormContinueInstruction(maneuver);
+        break;
+      }
     }
   }
 }

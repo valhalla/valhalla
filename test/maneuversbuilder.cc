@@ -28,8 +28,8 @@ class ManeuversBuilderTest : public ManeuversBuilder {
     return ManeuversBuilder::DetermineCardinalDirection(heading);
   }
 
-  void DetermineRelativeDirection(Maneuver& maneuver, int node_index) {
-    return ManeuversBuilder::DetermineRelativeDirection(maneuver, node_index);
+  void DetermineRelativeDirection(Maneuver& maneuver) {
+    return ManeuversBuilder::DetermineRelativeDirection(maneuver);
   }
 
   static Maneuver::RelativeDirection DetermineRelativeDirection(
@@ -228,9 +228,10 @@ void TryDetermineRelativeDirection_Maneuver(
 
   ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
   Maneuver maneuver;
+  maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(
       valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
-  mbTest.DetermineRelativeDirection(maneuver, 1);
+  mbTest.DetermineRelativeDirection(maneuver);
   if (maneuver.begin_relative_direction() != expected)
     throw std::runtime_error("Incorrect relative direction");
 }

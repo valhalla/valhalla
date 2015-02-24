@@ -22,6 +22,15 @@ class ManeuversBuilder {
 
   void Combine(std::list<Maneuver>& maneuvers);
 
+  std::list<Maneuver>::iterator CombineInternalManeuver(
+      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
+      std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man, bool start_man);
+
+  std::list<Maneuver>::iterator CombineSameNameStraightManeuver(
+      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man);
+
   void CreateDestinationManeuver(Maneuver& maneuver);
 
   void CreateStartManeuver(Maneuver& maneuver);
@@ -32,7 +41,7 @@ class ManeuversBuilder {
 
   void FinalizeManeuver(Maneuver& maneuver, int node_index);
 
-  void SetManeuverType(Maneuver& maneuver, int node_index);
+  void SetManeuverType(Maneuver& maneuver);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver);
 
@@ -41,9 +50,10 @@ class ManeuversBuilder {
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
-  void DetermineRelativeDirection(Maneuver& maneuver, int node_index);
+  void DetermineRelativeDirection(Maneuver& maneuver);
 
-  static Maneuver::RelativeDirection DetermineRelativeDirection(uint32_t turn_degree);
+  static Maneuver::RelativeDirection DetermineRelativeDirection(
+      uint32_t turn_degree);
 
   EnhancedTripPath* trip_path_;
 
