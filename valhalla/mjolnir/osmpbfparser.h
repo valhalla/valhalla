@@ -52,7 +52,7 @@ struct Member {
   Relation::MemberType member_type;
   uint64_t member_id;
   std::string role;
-  Member();
+  Member() = delete;
   Member(const Relation::MemberType type, const uint64_t id, const std::string& role);
   Member(Member&& other);
 };

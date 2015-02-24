@@ -61,9 +61,6 @@ OSMPBF::Tags get_tags(const T& object, const OSMPBF::PrimitiveBlock &primblock) 
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
 
-  Member::Member(): member_type(), member_id(), role() {
-  }
-
   Member::Member(const Relation::MemberType type, const uint64_t id, const std::string& role): member_type(type), member_id(id), role(role) {
   }
 
@@ -243,11 +240,12 @@ namespace OSMPBF {
         for (int i = 0; i < primitive_group.ways_size(); ++i) {
           const Way& w = primitive_group.ways(i);
 
-          uint64_t ref = 0;
-          std::vector<uint64_t> nodes(w.refs_size());
+          uint64_t node = 0;
+          std::vector<uint64_t> nodes;
+          nodes.reserve(w.refs_size());
           for (int j = 0; j < w.refs_size(); ++j) {
-            ref += w.refs(j);
-            nodes.push_back(ref);
+            node += w.refs(j);
+            nodes.push_back(node);
           }
           uint64_t id = w.id();
           callback.way_callback(id, get_tags<Way>(w, primblock), nodes);
@@ -259,7 +257,8 @@ namespace OSMPBF {
         for (int i = 0; i < primitive_group.relations_size(); ++i) {
           const Relation& rel = primitive_group.relations(i);
           uint64_t id = 0;
-          std::vector<Member> members(rel.memids_size());
+          std::vector<Member> members;
+          members.reserve(rel.memids_size());
           for (int l = 0; l < rel.memids_size(); ++l) {
             id += rel.memids(l);
             members.emplace_back(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l)));
