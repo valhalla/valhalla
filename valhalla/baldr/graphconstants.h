@@ -19,7 +19,6 @@ constexpr uint8_t kHOVAccess        = 128;
 constexpr uint8_t kAllAccess        = 255;
 
 // Access structure used by NodeInfo and DirectedEdge
-// TODO - should HOV and/or transponder only access be part of this?!
 union Access {
   struct Fields {
     uint8_t car          : 1; // Auto and light vehicle access
@@ -78,8 +77,7 @@ enum class IntersectionType : uint8_t {
                    // where 2 ways are split or where attributes force a split.
 };
 
-// Edge use
-// TODO - add values for each so we are explicit
+// Edge use. Indicates specialized uses.
 enum class Use : uint8_t {
   // Road specific uses
   kRoad = 0,
@@ -113,24 +111,28 @@ enum class Use : uint8_t {
   kOther = 63
 };
 
-// TODO - add comment and explicit values
+// Indication of the type of cycle lane (if any) present along an edge.
+// Higher values are more favorable to safe bicycling.
 enum class CycleLane : uint8_t {
-  kNone,
-  kShared,
-  kDedicated,
-  kSeparated
+  kNone = 0,      // No specified bicycle lane
+  kShared = 1,    // Shared use lane (could be shared with pedestrians)
+  kDedicated = 2, // Dedicated cycle lane
+  kSeparated = 3  // A separate cycle lane (physical separation from the
+                  // main carriageway)
 };
 
-// TODO - add comment and explicit values
+// Generalized representation of surface types. Lower values indicate smoother
+// surfaces. Vehicle or bicycle type can use this to avoid or disallow edges
+// that are "too rough" or inappropriate for the vehicle to travel on.
 enum class Surface : uint8_t {
-  kPavedSmooth,
-  kPaved,
-  kPavedRough,
-  kCompacted,
-  kDirt,
-  kGravel,
-  kPath,
-  kImpassable
+  kPavedSmooth = 0,
+  kPaved = 1,
+  kPavedRough = 2,
+  kCompacted = 3,
+  kDirt = 4,
+  kGravel = 5,
+  kPath = 6,
+  kImpassable = 7
 };
 
 // TODO - add comment and explicit values
