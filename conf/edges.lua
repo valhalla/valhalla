@@ -117,7 +117,7 @@ default_speed = {
 [1] = 90,
 [2] = 75,
 [3] = 60,
-[4] = 40,
+[4] = 50,
 [5] = 40,
 [6] = 20,
 [7] = 30
@@ -235,6 +235,7 @@ toll = {
 ["true"] = "true",
 ["false"] = "false",
 ["1"] = "true",
+["interval"] = "true",
 ["snowmobile"] = "true"
 }
 
@@ -444,6 +445,17 @@ function filter_tags_generic(kv)
   end
   kv["lanes"] = lane_count
   kv["bridge"] = bridge[kv["bridge"]] or "false"
+  
+  -- TODO access:conditional
+  if kv["seasonal"] and kv["seasonal"] ~= "no" then
+    kv["seasonal"] = "true"
+  end
+
+  -- TODO access
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+    kv["hov"] = "true"
+  end
+
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]

@@ -109,8 +109,19 @@ struct graph_callback : public OSMPBF::Callback {
           n.set_type(NodeType::kBollard);
         }
       }
+      else if (tag.first == "toll_booth") {
+        if (tag.second == "true") {
+          if (!intersection_.IsUsed(osmid)) {
+            intersection_.set(osmid);
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kTollBooth);
+        }
+      }
       else if (tag.first == "access_mask")
         n.set_access_mask(std::stoi(tag.second));
+      else if (tag.first == "payment_mask")
+        n.set_payment_mask(std::stoi(tag.second));
     }
 
     // Set the intersection flag (relies on ways being processed first to set
@@ -372,6 +383,10 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_toll(tag.second == "true" ? true : false);
       else if (tag.first == "bridge")
         w.set_bridge(tag.second == "true" ? true : false);
+      else if (tag.first == "seasonal")
+        w.set_seasonal(tag.second == "true" ? true : false);
+      else if (tag.first == "hov")
+        w.set_seasonal(tag.second == "true" ? true : false);
 
       else if (tag.first == "bike_network_mask")
         w.set_bike_network(std::stoi(tag.second));
@@ -450,6 +465,9 @@ struct graph_callback : public OSMPBF::Callback {
     //If no speed has been set by a user, assign a speed based on highway tag.
     if (!has_speed)
       w.set_speed(default_speed);
+
+// TODO  For now...drive on right.
+    w.set_drive_on_right(true);
 
     // Delete the name from from name field if it exists in the ref.
     if (!name.empty() && w.ref_index()) {
