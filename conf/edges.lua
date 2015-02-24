@@ -445,6 +445,12 @@ function filter_tags_generic(kv)
   end
   kv["lanes"] = lane_count
   kv["bridge"] = bridge[kv["bridge"]] or "false"
+  
+  -- TODO access:conditional
+  if kv["seasonal"] and kv["seasonal"] != "no" then
+    kv["seasonal"] = "true"
+  end
+
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
