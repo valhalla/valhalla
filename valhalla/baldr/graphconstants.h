@@ -18,6 +18,11 @@ constexpr uint8_t kHorseAccess      = 64;
 constexpr uint8_t kHOVAccess        = 128;
 constexpr uint8_t kAllAccess        = 255;
 
+// Payment constants. Bit constants.
+constexpr uint8_t kCoins  = 1; // Coins
+constexpr uint8_t kNotes  = 2; // Bills
+constexpr uint8_t kETC    = 4; // Electronic Toll Collector
+
 // Access structure used by NodeInfo and DirectedEdge
 union Access {
   struct Fields {
