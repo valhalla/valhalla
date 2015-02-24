@@ -287,6 +287,12 @@ class DirectedEdge {
   Use use() const;
 
   /**
+   * Get the speed type (see graphconstants.h)
+   * @return  Returns the speed type.
+   */
+  SpeedType speed_type() const;
+
+  /**
    * Get the access modes in the forward direction (bit field).
    */
   uint8_t forwardaccess() const;
@@ -399,7 +405,8 @@ class DirectedEdge {
     uint64_t restrictions   : 8;  // Restrictions - mask of local edge indexes
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
-    uint64_t spare          : 9;
+    uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
+    uint64_t spare          : 7;
   };
   Attributes attributes_;
 

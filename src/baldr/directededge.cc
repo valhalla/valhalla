@@ -205,6 +205,11 @@ Use DirectedEdge::use() const {
   return static_cast<Use>(attributes_.use);
 }
 
+// Get the speed type (see graphconstants.h)
+SpeedType DirectedEdge::speed_type() const {
+  return static_cast<SpeedType>(attributes_.speed_type);
+}
+
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
   return forwardaccess_.v;

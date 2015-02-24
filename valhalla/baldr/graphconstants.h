@@ -116,6 +116,14 @@ enum class Use : uint8_t {
   kOther = 63
 };
 
+// Speed type
+enum class SpeedType : uint8_t {
+  kTagged = 0,            // Tagged maximum speed
+  kClassified = 1,        // Speed assigned based on highway classification
+  kClassifiedUrban = 2,   // Classified speed in urban area
+  kClassifiedRural = 3    // Classified speed in rural area
+};
+
 // Indication of the type of cycle lane (if any) present along an edge.
 // Higher values are more favorable to safe bicycling.
 enum class CycleLane : uint8_t {
