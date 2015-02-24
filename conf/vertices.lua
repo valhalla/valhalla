@@ -42,6 +42,17 @@ foot = {
 ["crossing"] = 2
 }
 
+--TODO: snowmobile might not really be passable for much other than ped..
+toll = {
+["yes"] = "true",
+["no"] = "false",
+["true"] = "true",
+["false"] = "false",
+["1"] = "true",
+["interval"] = "true",
+["snowmobile"] = "true"
+}
+
 function nodes_proc (kv, nokeys)
   --normalize a few tags that we care about
   local access = access[kv["access"]] or "true"
@@ -80,6 +91,40 @@ function nodes_proc (kv, nokeys)
   --store the gate and bollard info
   kv["gate"] = tostring(gate)
   kv["bollard"] = tostring(bollard)
+
+  if kv["barrier"] == "toll_booth" then
+    kv["toll_booth"] = "true"
+  end
+
+  local coins = toll[kv["payment:coins"]] or "false"
+  local notes = toll[kv["payment:notes"]] or "false"
+
+  --assume cash for toll, toll:*, and fee
+  local cash =  toll[kv["toll"]] or toll[kv["toll:hgv"]] or toll[kv["toll:bicycle"]] or toll[kv["toll:hov"]] or
+                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or 
+                toll[kv["toll:motorcycle"]] or toll[kv["payment:cash"]] or toll[kv["fee"]] or "false"
+  
+  local etc = toll[kv["payment:e_zpass"]] or toll[kv["payment:e_zpass:name"]] or
+              toll[kv["payment:pikepass"]] or toll[kv["payment:via_verde"]] or "false"
+  
+  local cash_payment = 0
+
+  if (cash == "true" or (coins == "true" and notes == "true")) then
+    cash_payment = 3
+  elseif coins == "true" then
+    cash_payment = 1
+  elseif notes == "true" then
+    cash_payment = 2
+  end
+
+  local etc_payment = 0
+
+  if etc == "true" then 
+    etc_payment = 4
+  end
+
+  --store a mask denoting payment type 
+  kv["payment_mask"] = bit32.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
