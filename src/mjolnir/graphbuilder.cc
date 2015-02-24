@@ -2,10 +2,6 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/util.h"
 
-// Use open source PBF reader from:
-//     https://github.com/CanalTP/libosmpbfreader
-#include "osmpbfreader.h"
-
 #include <future>
 #include <utility>
 #include <thread>

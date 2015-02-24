@@ -24,56 +24,28 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __OSMPBFPARSER__
-#define __OSMPBFPARSER__
 
+// This is largely based off of: https://github.com/CanalTP/libosmpbfreader
+// there have been some minor changes for our own purposes but its largely the same
 #include <cstdint>
 #include <netinet/in.h>
 #include <zlib.h>
-#include <string>
-#include <fstream>
-#include <iostream>
 #include <vector>
 #include <unordered_map>
+
+#include "mjolnir/osmpbfparser.h"
 #include <valhalla/midgard/logging.h>
 
-// this describes the low-level blob storage
-#include "proto/fileformat.pb.h"
-// this describes the high-level OSM objects
-#include "proto/osmformat.pb.h"
+namespace {
+
 // the maximum size of a blob header in bytes 64 kB
 #define MAX_BLOB_HEADER_SIZE 65536
 // the maximum size of an uncompressed blob in bytes 32 MB
 #define MAX_UNCOMPRESSED_BLOB_SIZE 33554432
-// resolution for longitude/latitude used for conversion
-// between representation as double and as int
-#define lonlat_resolution 1000 * 1000 * 1000
-
-// extend the osmpbf namespace
-namespace OSMPBF{
-
-// Which callbacks you want to be called
-enum Interest { NODES = 0x01, WAYS = 0x02, RELATIONS = 0x04, ALL = 0x07 };
-
-// Represents the key/values of an object
-using Tags = std::unordered_map<std::string, std::string>;
-
-// References of a relation
-struct Reference {
-  Relation::MemberType member_type; // type de la relation
-  uint64_t member_id;
-  std::string role;
-
-  Reference() = delete;
-  Reference(Relation::MemberType member_type, uint64_t member_id, std::string role) :
-      member_type(member_type), member_id(member_id), role(role) {
-  }
-};
-using References = std::vector<Reference>;
 
 template <class T>
-Tags get_tags(const T& object, const PrimitiveBlock &primblock) {
-  Tags result(object.keys_size());
+OSMPBF::Tags get_tags(const T& object, const OSMPBF::PrimitiveBlock &primblock) {
+  OSMPBF::Tags result(object.keys_size());
   for (int i = 0; i < object.keys_size(); ++i) {
     uint64_t key = object.keys(i);
     uint64_t val = object.vals(i);
@@ -84,24 +56,26 @@ Tags get_tags(const T& object, const PrimitiveBlock &primblock) {
   return result;
 }
 
-//pure virtual interface for consumers to implement
-class Callback {
- public:
-  virtual ~Callback(){};
-  virtual void node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) = 0;
-  virtual void way_callback(const uint64_t osmid, const Tags& tags, const std::vector<uint64_t>& refs) = 0;
-  virtual void relation_callback(uint64_t osmid, const Tags &tags, const OSMPBF::References &refs) = 0;
-};
+}
 
+// extend the protobuf osmpbf namespace
+namespace OSMPBF {
 
-struct Parser {
+  Member::Member(): member_type(), member_id(), role() {
+  }
 
-  Parser(Callback& callback): callback(callback) {
+  Member::Member(const Relation::MemberType type, const uint64_t id, const std::string& role): member_type(type), member_id(id), role(role) {
+  }
+
+  Member::Member(Member&& other): member_type(other.member_type), member_id(other.member_id), role(std::move(other.role)) {
+  }
+
+  Parser::Parser(Callback& callback): callback(callback) {
     buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
     unpack_buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
   }
 
-  ~Parser() {
+  Parser::~Parser() {
     //done with protobuf and buffers
     google::protobuf::ShutdownProtobufLibrary();
     delete [] buffer;
@@ -111,7 +85,7 @@ struct Parser {
   //TODO: this could probably just be a static method, not much point in any
   //of this really being a class other than to keep some of the methods private
   //but we could easily hide the implementation in a source file instead
-  void parse(const std::string& filename, const Interest interest) {
+  void Parser::parse(const std::string& filename, const Interest interest) {
     //check if the file is open
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open())
@@ -136,12 +110,7 @@ struct Parser {
     }
   }
 
-private:
-  Callback& callback;
-  char* buffer;
-  char* unpack_buffer;
-
-  BlobHeader read_header(std::ifstream& file, bool& finished) {
+  BlobHeader Parser::read_header(std::ifstream& file, bool& finished) {
     BlobHeader result;
 
     //read the first 4 bytes of the file, this is the size of the blob-header
@@ -169,7 +138,7 @@ private:
     return result;
   }
 
-  int32_t read_blob(std::ifstream& file, const BlobHeader & header) {
+  int32_t Parser::read_blob(std::ifstream& file, const BlobHeader & header) {
     Blob blob;
 
     //is the size of the following blob sane
@@ -220,7 +189,7 @@ private:
     throw std::runtime_error("Unsupported blob data format");
   }
 
-  void parse_primitiveblock(int32_t sz, const Interest interest) {
+  void Parser::parse_primitiveblock(int32_t sz, const Interest interest) {
     //turn the blob bytes into a protobuf object
     PrimitiveBlock primblock;
     if (!primblock.ParseFromArray(unpack_buffer, sz))
@@ -275,13 +244,13 @@ private:
           const Way& w = primitive_group.ways(i);
 
           uint64_t ref = 0;
-          std::vector<uint64_t> refs;
+          std::vector<uint64_t> nodes(w.refs_size());
           for (int j = 0; j < w.refs_size(); ++j) {
             ref += w.refs(j);
-            refs.push_back(ref);
+            nodes.push_back(ref);
           }
           uint64_t id = w.id();
-          callback.way_callback(id, get_tags<Way>(w, primblock), refs);
+          callback.way_callback(id, get_tags<Way>(w, primblock), nodes);
         }
       }
 
@@ -290,18 +259,15 @@ private:
         for (int i = 0; i < primitive_group.relations_size(); ++i) {
           const Relation& rel = primitive_group.relations(i);
           uint64_t id = 0;
-          References refs;
+          std::vector<Member> members(rel.memids_size());
           for (int l = 0; l < rel.memids_size(); ++l) {
             id += rel.memids(l);
-            refs.emplace_back(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l)));
+            members.emplace_back(rel.types(l), id, primblock.stringtable().s(rel.roles_sid(l)));
           }
-          callback.relation_callback(rel.id(), get_tags<Relation>(rel, primblock), refs);
+          callback.relation_callback(rel.id(), get_tags<Relation>(rel, primblock), members);
         }
       }
     }
   }
-};
 
 }
-
-#endif //__OSMPBFPARSER__

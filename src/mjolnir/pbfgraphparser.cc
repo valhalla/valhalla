@@ -1,9 +1,7 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 
-// Use open source PBF reader from:
-//     https://github.com/CanalTP/libosmpbfreader
-#include "osmpbfreader.h"
+#include "mjolnir/osmpbfparser.h"
 
 #include <future>
 #include <utility>
@@ -127,11 +125,11 @@ struct graph_callback : public OSMPBF::Callback {
     }
   }
 
-  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &refs) {
+  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) {
 
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
-    if (refs.size() < 2) {
+    if (nodes.size() < 2) {
       return;
     }
 
@@ -144,28 +142,28 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Add the refs to the node reference list
     uint32_t idx = osmdata_.noderefs.size();
-    for (const auto ref : refs) {
-      osmdata_.noderefs.push_back(ref);
+    for (const auto node : nodes) {
+      osmdata_.noderefs.push_back(node);
     }
 
     // Construct OSMWay and set the node ref index and count
     OSMWay w(osmid);
     w.set_noderef_index(idx);
-    w.set_node_count(refs.size());
+    w.set_node_count(nodes.size());
 
     // Mark the nodes that we will care about when processing nodes
-    for (const auto ref : refs) {
-      if(shape_.IsUsed(ref)) {
-        intersection_.set(ref);
+    for (const auto node : nodes) {
+      if(shape_.IsUsed(node)) {
+        intersection_.set(node);
         ++osmdata_.edge_count;
       }
       else {
         ++osmdata_.node_count;
       }
-      shape_.set(ref);
+      shape_.set(node);
     }
-    intersection_.set(refs.front());
-    intersection_.set(refs.back());
+    intersection_.set(nodes.front());
+    intersection_.set(nodes.back());
     osmdata_.edge_count += 2;
 
     float default_speed;
@@ -482,7 +480,7 @@ struct graph_callback : public OSMPBF::Callback {
     osmdata_.ways.push_back(std::move(w));
   }
 
-  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const OSMPBF::References &refs) {
+  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
     // Get tags
     Tags results = lua_.TransformInLua(OSMType::kRelation, tags);
     if (results.size() == 0)
@@ -588,12 +586,12 @@ struct graph_callback : public OSMPBF::Callback {
 
       std::string direction;
 
-      for (const auto& ref : refs) {
+      for (const auto& member : members) {
 
-        if (ref.role.empty() || ref.role == "forward" || ref.role == "backward")
+        if (member.role.empty() || member.role == "forward" || member.role == "backward")
           continue;
 
-        direction = ref.role;
+        direction = member.role;
 
         boost::algorithm::to_lower(direction);
         direction[0] = std::toupper(direction[0]);
@@ -605,26 +603,26 @@ struct graph_callback : public OSMPBF::Callback {
             || boost::starts_with(direction, "West (")) || direction == "North"
             || direction == "South" || direction == "East"
             || direction == "West") {
-          auto iter = osmdata_.way_ref.find(ref.member_id);
+          auto iter = osmdata_.way_ref.find(member.member_id);
           if (iter != osmdata_.way_ref.end())
-            osmdata_.way_ref[ref.member_id] = iter->second + ";" + reference + "|"
+            osmdata_.way_ref[member.member_id] = iter->second + ";" + reference + "|"
                 + direction;
           else
-            osmdata_.way_ref[ref.member_id] = reference + "|" + direction;
+            osmdata_.way_ref[member.member_id] = reference + "|" + direction;
         }
       }
     }
     else if (isRestriction && hasRestriction) {
 
-      for (const auto& ref : refs) {
+      for (const auto& member : members) {
 
         // from and to must be of type 1(way).  via must be of type 0(node)
-        if (ref.role == "from" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
-          from_way_id = ref.member_id;
-        else if (ref.role == "to" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
-          restriction.set_to(ref.member_id);
-        else if (ref.role == "via" && ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
-          restriction.set_via(ref.member_id);
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+          from_way_id = member.member_id;
+        else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY)
+          restriction.set_to(member.member_id);
+        else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE)
+          restriction.set_via(member.member_id);
       }
 
       // Add the restriction to the list.  For now only support simple restrictions.

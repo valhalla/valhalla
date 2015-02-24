@@ -1,10 +1,7 @@
 
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
-
-// Use open source PBF reader from:
-//     https://github.com/CanalTP/libosmpbfreader
-#include "osmpbfreader.h"
+#include "mjolnir/osmpbfparser.h"
 
 #include <future>
 #include <utility>
@@ -64,7 +61,7 @@ struct admin_callback : public OSMPBF::Callback {
     }
   }
 
-  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &refs) {
+  void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) {
 
     // Check if it is in the list of ways used by relations
     if (!ways_.IsUsed(osmid)) {
@@ -80,23 +77,23 @@ struct admin_callback : public OSMPBF::Callback {
 
     // Add the refs to the node reference list
     uint32_t idx = osmdata_.noderefs.size();
-    for (const auto ref : refs) {
-      osmdata_.noderefs.push_back(ref);
+    for (const auto node : nodes) {
+      osmdata_.noderefs.push_back(node);
       ++osmdata_.node_count;
       // Mark the nodes that we will care about when processing nodes
-      shape_.set(ref);
+      shape_.set(node);
     }
 
     // Construct OSMWay and set the node ref index and count
     OSMWay w(osmid);
     w.set_noderef_index(idx);
-    w.set_node_count(refs.size());
+    w.set_node_count(nodes.size());
 
     // Add the way to the list
     osmdata_.ways.push_back(std::move(w));
   }
 
-  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const OSMPBF::References &refs) {
+  void relation_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
     // Get tags
     auto results = lua_.TransformInLua(OSMType::kRelation, tags);
     if (results.size() == 0)
@@ -115,16 +112,16 @@ struct admin_callback : public OSMPBF::Callback {
     }
 
     uint32_t idx = memberids_.size();
-    for (const auto& ref : refs) {
+    for (const auto& member : members) {
 
-      if (ref.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-        ways_.set(ref.member_id);
-        memberids_.push_back(ref.member_id);
+      if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        ways_.set(member.member_id);
+        memberids_.push_back(member.member_id);
       }
     }
 
     admin.set_member_index(idx);
-    admin.set_member_count(refs.size());
+    admin.set_member_count(members.size());
 
     admins_.push_back(std::move(admin));
   }
