@@ -451,6 +451,11 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
+  -- TODO access
+  if (kv["hov"] and kv["hov"] != "no") or kv["hov:lanes"] or kv["hov:minimum"] then
+    kv["hov"] = "true"
+  end
+
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
