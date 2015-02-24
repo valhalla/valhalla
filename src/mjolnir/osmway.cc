@@ -427,6 +427,36 @@ bool OSMWay::bridge() const {
   return attributes_.fields.bridge;
 }
 
+// Set seasonal flag.
+void OSMWay::set_seasonal(const bool seasonal) {
+  attributes_.fields.seasonal = seasonal;
+}
+
+// Get the seasonal flag.
+bool OSMWay::seasonal() const {
+  return attributes_.fields.seasonal;
+}
+
+// Set hov flag.
+void OSMWay::set_hov(const bool hov) {
+  attributes_.fields.hov = hov;
+}
+
+// Get the seasonal flag.
+bool OSMWay::hov() const {
+  return attributes_.fields.hov;
+}
+
+// Set drive_on_right flag.
+void OSMWay::set_drive_on_right(const bool drive_on_right) {
+  attributes_.fields.drive_on_right = drive_on_right;
+}
+
+// Get the drive on right flag.
+bool OSMWay::drive_on_right() const {
+  return attributes_.fields.drive_on_right;
+}
+
 //Sets the bike network mask
 void OSMWay::set_bike_network(const uint32_t bikenetwork) {
   attributes_.fields.bikenetwork = bikenetwork;

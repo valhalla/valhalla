@@ -372,6 +372,10 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_toll(tag.second == "true" ? true : false);
       else if (tag.first == "bridge")
         w.set_bridge(tag.second == "true" ? true : false);
+      else if (tag.first == "seasonal")
+        w.set_seasonal(tag.second == "true" ? true : false);
+      else if (tag.first == "hov")
+        w.set_seasonal(tag.second == "true" ? true : false);
 
       else if (tag.first == "bike_network_mask")
         w.set_bike_network(std::stoi(tag.second));
@@ -450,6 +454,9 @@ struct graph_callback : public OSMPBF::Callback {
     //If no speed has been set by a user, assign a speed based on highway tag.
     if (!has_speed)
       w.set_speed(default_speed);
+
+// TODO  For now...drive on right.
+    w.set_drive_on_right(true);
 
     // Delete the name from from name field if it exists in the ref.
     if (!name.empty() && w.ref_index()) {
