@@ -528,12 +528,12 @@ bool OnewayPairEdgesExist(const GraphId& nodeid,
       continue;
     }
 
-    // Get the edge and way
+    // Get the edge and way.
     const Edge& edge = edges[idx];
     const OSMWay &w = ways[edge.wayindex_];
 
-    // Skip if this has matching way Id
-    if (w.way_id() == wayid) {
+    // Skip if this has matching way Id or a link (ramps/turn channel)
+    if (w.way_id() == wayid || edge.attributes.link) {
       continue;
     }
 
@@ -576,7 +576,8 @@ bool IsIntersectionInternal(const GraphId& startnode, const GraphId& endnode,
     return false;
   }
 
-  // Each node must have a pair of oneways (one inbound and one outbound)
+  // Each node must have a pair of oneways (one inbound and one outbound).
+  // Exclude links (ramps/turn channels)
   if (!OnewayPairEdgesExist(startnode, node1, edgeindex, wayid, edges, ways) ||
       !OnewayPairEdgesExist(endnode, node2, edgeindex, wayid, edges, ways)) {
     return false;
@@ -829,6 +830,7 @@ void BuildTileSet(
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
         uint32_t n = 0;
+        uint32_t driveable = 0;
         RoadClass bestclass = RoadClass::kOther;
         std::vector<DirectedEdgeBuilder> directededges;
         for (auto edgeindex : node.edges) {
@@ -856,6 +858,12 @@ void BuildTileSet(
             // ERROR!!!
             LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
               % w.way_id() % edgeindex %  edge.sourcenode_  % edge.targetnode_ % nodeid).str());
+          }
+
+          // Increment driveable count if edge is driveable in either direction
+          if (edge.attributes.driveableforward ||
+              edge.attributes.driveablereverse) {
+            driveable++;
           }
 
           // Check for not_thru edge (only on low importance edges)
@@ -898,7 +906,7 @@ void BuildTileSet(
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
-          bestclass = std::min(bestclass, directededge.importance());
+          bestclass = std::min(bestclass, directededge.classification());
 
           // Check for updated ref from relations.
           std::string ref;
@@ -940,9 +948,10 @@ void BuildTileSet(
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         NodeInfoBuilder nodebuilder(node_ll, directededgecount,
-                                    node.edge_count(), bestclass,
-                                    node.access_mask(), node.type(),
-                                    (node.edge_count() == 1), node.traffic_signal());
+                                    node.edge_count(), driveable,
+                                    bestclass, node.access_mask(), node.type(),
+                                    (node.edge_count() == 1),
+                                    node.traffic_signal());
 
         directededgecount += node.edge_count();
 
