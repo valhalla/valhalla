@@ -39,6 +39,7 @@ libvalhalla_baldr.la
 test-suite.log
 test-driver
 test/location
+test/directededge
 test/graphid
 test/tilehierarchy
 test/graphtile
