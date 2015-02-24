@@ -109,8 +109,19 @@ struct graph_callback : public OSMPBF::Callback {
           n.set_type(NodeType::kBollard);
         }
       }
+      else if (tag.first == "toll_booth") {
+        if (tag.second == "true") {
+          if (!intersection_.IsUsed(osmid)) {
+            intersection_.set(osmid);
+            ++osmdata_.edge_count;
+          }
+          n.set_type(NodeType::kTollBooth);
+        }
+      }
       else if (tag.first == "access_mask")
         n.set_access_mask(std::stoi(tag.second));
+      else if (tag.first == "payment_mask")
+        n.set_payment_mask(std::stoi(tag.second));
     }
 
     // Set the intersection flag (relies on ways being processed first to set
