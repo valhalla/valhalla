@@ -190,15 +190,15 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     float dist2dest = nextlabel.distance();
     uint32_t level  = node.level();
 
-    // Count upward transitions (counted on the level transitioned from)
+    // Check hierarchy. Count upward transitions (counted on the level
+    // transitioned from). Do not expand based on hierarchy level based on
+    // number of upward transitions and distance to the destination
     if (nextlabel.trans_up()) {
       hierarchy_limits_[level+1].up_transition_count++;
     }
-
-    // Do not expand based on hierarchy level based on number of upward
-    // transitions and distance to the destination
-    if (hierarchy_limits_[level].StopExpanding(dist2dest))
+    if (hierarchy_limits_[level].StopExpanding(dist2dest)) {
       continue;
+    }
 
     // Skip if tile not found (can happen with regional data sets).
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
@@ -225,8 +225,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
       // Skip any transition edges that are not allowed.
-      if ((directededge->trans_up() && costing->AllowTransitions() &&
-          !hierarchy_limits_[level].AllowUpwardTransition(dist2dest)) ||
+      if ((directededge->trans_up() && (!costing->AllowTransitions() ||
+          !hierarchy_limits_[level].AllowUpwardTransition(dist2dest))) ||
           (directededge->trans_down() &&
           !hierarchy_limits_[level].AllowDownwardTransition(dist2dest))) {
         continue;

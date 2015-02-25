@@ -175,19 +175,9 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  // Do not allow uturns
-  if (uturn) {
-    return false;
-  }
-
-  // Do not allow transition onto not-thru edges except near the destination
-  if (edge->not_thru() && dist2dest > not_thru_distance_) {
-    return false;
-  }
-
-  // Do not allow upward transitions (always stay at local level)
-  // TODO - may want to revisit allowing transitions?
-  if (edge->trans_up()) {
+  // Do not allow uturns or transition onto not-thru edges (except near
+  // the destination)
+  if (uturn || (edge->not_thru() && dist2dest > not_thru_distance_)) {
     return false;
   }
 

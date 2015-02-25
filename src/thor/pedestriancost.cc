@@ -107,26 +107,10 @@ PedestrianCost::~PedestrianCost() {
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint32_t,
                              const bool uturn, const float dist2dest) const {
-  // Check pedestrian access
-  if (!(edge->forwardaccess() & kPedestrianAccess)) {
-    return false;
-  }
-
-  // Do not allow uturns
-  if (uturn) {
-    return false;
-  }
-
-  // Do not allow transition onto not-thru edges except near the destination
-  if (edge->not_thru() && dist2dest > not_thru_distance_) {
-    return false;
-  }
-
-  // Do not allow upward transitions (always stay at local level)
-  if (edge->trans_up()) {
-    return false;
-  }
-  return true;
+  // Return false if no pedestrian access. Disallow uturns or transition
+  // onto not-thru edges (except near the destination)
+  return ((edge->forwardaccess() & kPedestrianAccess) && !uturn &&
+          !(edge->not_thru() && dist2dest > not_thru_distance_));
 }
 
 // Check if access is allowed at the specified node.
