@@ -905,8 +905,11 @@ void BuildTileSet(
           if (!forward && node.traffic_signal())
             has_signal = true;
           // traffic signal exists at a non-intersection node
+          // forward signal must exist if forward direction and vice versa.
+          // if forward and backward signal flags are not set then only set for oneways.
           else if (edge.attributes.traffic_signal) {
-            if ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal))
+            if ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal) ||
+                (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal))
               has_signal = true;
           }
 
