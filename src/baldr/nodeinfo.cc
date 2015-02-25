@@ -113,18 +113,73 @@ const uint64_t NodeInfo::internal_version() {
 
   NodeInfo ni;
 
+  ni.access_ = {};
+  ni.admin_ = {};
+  ni.attributes_ = {};
+  ni.intersection_ = IntersectionType::kFalse;
+  ni.stop_id_ = 0;
+  ni.type_ = {};
+
   uint64_t seed = 0;
   boost::hash_combine(seed, ni.latlng_);
 
   //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
   ni.attributes_.edge_index_ = ~ni.attributes_.edge_index_;
   boost::hash_combine(seed,ffs(ni.attributes_.edge_index_+1)-1);
-
   ni.attributes_.edge_count_ = ~ni.attributes_.edge_count_;
   boost::hash_combine(seed, ffs(ni.attributes_.edge_count_+1)-1);
-
   ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
   boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
+
+  // Access
+  ni.access_.fields.car  = ~ni.access_.fields.car;
+  boost::hash_combine(seed,ffs(ni.access_.fields.car+1)-1);
+  ni.access_.fields.pedestrian  = ~ni.access_.fields.pedestrian;
+  boost::hash_combine(seed,ffs(ni.access_.fields.pedestrian+1)-1);
+  ni.access_.fields.bicycle  = ~ni.access_.fields.bicycle;
+  boost::hash_combine(seed,ffs(ni.access_.fields.bicycle+1)-1);
+  ni.access_.fields.truck  = ~ni.access_.fields.truck;
+  boost::hash_combine(seed,ffs(ni.access_.fields.truck+1)-1);
+  ni.access_.fields.emergency  = ~ni.access_.fields.emergency;
+  boost::hash_combine(seed,ffs(ni.access_.fields.emergency+1)-1);
+  ni.access_.fields.taxi  = ~ni.access_.fields.taxi;
+  boost::hash_combine(seed,ffs(ni.access_.fields.taxi+1)-1);
+  ni.access_.fields.horse  = ~ni.access_.fields.horse;
+  boost::hash_combine(seed,ffs(ni.access_.fields.horse+1)-1);
+  ni.access_.fields.hov  = ~ni.access_.fields.hov;
+  boost::hash_combine(seed,ffs(ni.access_.fields.hov+1)-1);
+
+  boost::hash_combine(seed,ni.intersection_);
+
+  ni.admin_.admin_index = ~ni.admin_.admin_index;
+  boost::hash_combine(seed,ffs(ni.admin_.admin_index+1)-1);
+  ni.admin_.timezone = ~ni.admin_.timezone;
+  boost::hash_combine(seed, ffs(ni.admin_.timezone+1)-1);
+  ni.admin_.dst = ~ni.admin_.dst;
+  boost::hash_combine(seed, ffs(ni.admin_.dst+1)-1);
+  ni.admin_.spare = ~ni.admin_.spare;
+  boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
+
+  ni.type_.density = ~ni.type_.density;
+  boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
+  ni.type_.type = ~ni.type_.type;
+  boost::hash_combine(seed,ffs(ni.type_.type+1)-1);
+  ni.type_.local_driveable = ~ni.type_.local_driveable;
+  boost::hash_combine(seed,ffs(ni.type_.local_driveable+1)-1);
+  ni.type_.end = ~ni.type_.end;
+  boost::hash_combine(seed,ffs(ni.type_.end+1)-1);
+  ni.type_.parent = ~ni.type_.parent;
+  boost::hash_combine(seed,ffs(ni.type_.parent+1)-1);
+  ni.type_.child = ~ni.type_.child;
+  boost::hash_combine(seed,ffs(ni.type_.child+1)-1);
+  ni.type_.mode_change = ~ni.type_.mode_change;
+  boost::hash_combine(seed,ffs(ni.type_.mode_change+1)-1);
+  ni.type_.traffic_signal = ~ni.type_.traffic_signal;
+  boost::hash_combine(seed,ffs(ni.type_.traffic_signal+1)-1);
+  ni.type_.spare = ~ni.type_.spare;
+  boost::hash_combine(seed,ffs(ni.type_.spare+1)-1);
+
+  boost::hash_combine(seed,ni.stop_id_);
 
   boost::hash_combine(seed,sizeof(NodeInfo));
 
