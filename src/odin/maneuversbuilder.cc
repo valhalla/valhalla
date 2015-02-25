@@ -19,8 +19,30 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Create the maneuvers
   std::list<Maneuver> maneuvers = Produce();
 
+#ifdef LOGGING_LEVEL_TRACE
+  int man_id = 1;
+  LOG_TRACE("############################################");
+  LOG_TRACE("MANEUVERS");
+  for (Maneuver maneuver : maneuvers) {
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(man_id++) + ":  ");
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+  }
+#endif
+
   // Combine maneuvers
   Combine(maneuvers);
+
+#ifdef LOGGING_LEVEL_TRACE
+  int combined_man_id = 1;
+  LOG_TRACE("############################################");
+  LOG_TRACE("COMBINED MANEUVERS");
+  for (Maneuver maneuver : maneuvers) {
+    LOG_TRACE("---------------------------------------------");
+    LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
+  }
+#endif
 
   return maneuvers;
 }
@@ -63,7 +85,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto* next_edge = trip_path_->GetNextEdge(i);
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(i) + ":  ");
-    //LOG_TRACE(std::string("  prev_edge=") + (prev_edge ? prev_edge->ToString() : "NONE"));
+    LOG_TRACE(std::string("  curr_edge_UNIT_TEST=") + (curr_edge ? curr_edge->ToUnitTestString() : "NONE"));
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
@@ -87,7 +109,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
         + std::string("    left_count=") + std::to_string(left_count));
     LOG_TRACE(std::string("    right_similar_count=") + std::to_string(right_similar_count)
         + std::string("    left_similar_count=") + std::to_string(left_similar_count));
-    //LOG_TRACE(std::string("  next_edge=") + (next_edge ? next_edge->ToString() : "NONE"));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -106,6 +127,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   auto* curr_edge = trip_path_->GetCurrEdge(0);
   LOG_TRACE("---------------------------------------------");
   LOG_TRACE(std::string("0") + ":  ");
+  LOG_TRACE(std::string("  curr_edge_UNIT_TEST=") + (curr_edge ? curr_edge->ToUnitTestString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto* node = trip_path_->GetEnhancedNode(0);
   for (size_t y = 0; y < node->GetIntersectingEdgesCount(); ++y) {
