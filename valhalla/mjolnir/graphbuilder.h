@@ -48,8 +48,11 @@ struct Edge {
     uint32_t importance       : 3;
     uint32_t driveableforward : 1;
     uint32_t driveablereverse : 1;
+    uint32_t traffic_signal   : 1;
+    uint32_t forward_signal   : 1;
+    uint32_t backward_signal  : 1;
     uint32_t link             : 1;
-    uint32_t spare            : 10;
+    uint32_t spare            : 7;
   };
   EdgeAttributes attributes;
 
@@ -77,6 +80,10 @@ struct Edge {
     attributes.driveableforward = way.auto_forward();
     attributes.driveablereverse = way.auto_backward();
     attributes.link = way.link();
+    attributes.traffic_signal = false;
+    attributes.forward_signal = false;
+    attributes.backward_signal = false;
+
   }
 
  private:

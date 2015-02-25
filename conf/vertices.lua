@@ -130,6 +130,14 @@ function nodes_proc (kv, nokeys)
     kv["bicycle_rental"] = "true"
   end
 
+  if kv["traffic_signals:direction"] == "forward" then
+    kv["forward_signal"] = "true"
+  end
+
+  if kv["traffic_signals:direction"] == "backward" then
+    kv["backward_signal"] = "true"
+  end
+ 
   --store a mask denoting access
   kv["access_mask"] = bit32.bor(auto, bike, foot)
 

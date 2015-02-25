@@ -226,6 +226,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
           edge = Edge(graphid, wayindex, latlngs_.size()-1, way);
           GetNode(graphid).AddEdge(edgeindex, way.link());
         }
+      } else if (osmnode.traffic_signal()) { // if this edge has a signal not at a intersection
+        edge.attributes.traffic_signal = true;
+        edge.attributes.forward_signal = osmnode.forward_signal();
+        edge.attributes.backward_signal = osmnode.backward_signal();
       }
     }
   }
@@ -896,9 +900,22 @@ void BuildTileSet(
             simplerestrictions++;
           }
 
+          bool has_signal = false;
+          // traffic signal exists at an intersection node
+          if (!forward && node.traffic_signal())
+            has_signal = true;
+          // traffic signal exists at a non-intersection node
+          // forward signal must exist if forward direction and vice versa.
+          // if forward and backward signal flags are not set then only set for oneways.
+          else if (edge.attributes.traffic_signal) {
+            if ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal) ||
+                (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal))
+              has_signal = true;
+          }
+
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, target, forward, edgelengths[n],
-                        speed, use, not_thru, internal, rc, n, restrictions);
+                        speed, use, not_thru, internal, rc, n, has_signal, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
