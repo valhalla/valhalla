@@ -229,7 +229,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
       } else if (osmnode.traffic_signal()) { // if this edge has a signal not at a intersection
         edge.attributes.traffic_signal = true;
         edge.attributes.forward_signal = osmnode.forward_signal();
-        edge.attributes.backward_signal = osmnode.forward_signal();
+        edge.attributes.backward_signal = osmnode.backward_signal();
       }
     }
   }
