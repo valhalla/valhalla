@@ -46,6 +46,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/dynamiccost.h \
 	valhalla/thor/edgelabel.h \
 	valhalla/thor/edgestatus.h \
+	valhalla/thor/hierarchylimits.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pedestriancost.h \
 	valhalla/thor/trippathbuilder.h 
