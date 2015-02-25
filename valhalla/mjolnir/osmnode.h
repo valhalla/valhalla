@@ -23,9 +23,10 @@ struct NodeAttributes {
   uint32_t name           : 1;
   uint32_t intersection   : 1;
   uint32_t traffic_signal : 1;
+  uint32_t forward_signal : 1;
   uint32_t non_link_edge  : 1;
   uint32_t link_edge      : 1;
-  uint32_t spare          : 6;
+  uint32_t spare          : 5;
 };
 
 /**
@@ -147,6 +148,16 @@ class OSMNode {
   bool traffic_signal() const;
 
   /**
+   * Set forward_signal flag.
+   */
+  void set_forward_signal(const bool forward_signal);
+
+  /**
+   * Get the forward_signal flag.
+   */
+  bool forward_signal() const;
+
+  /**
    * Get the attributes.
    * @return  Returns the attributes.
    */
@@ -164,9 +175,9 @@ class OSMNode {
   bool operator < (const OSMNode& other) const {
     return osmid_ < other.osmid_;
   }
-
- protected:
   uint64_t osmid_;
+ protected:
+
 
   // Lat,lng of the node
   OSMLatLng latlng_;
