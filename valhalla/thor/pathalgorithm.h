@@ -14,6 +14,7 @@
 #include <valhalla/thor/dynamiccost.h>
 #include <valhalla/thor/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/hierarchylimits.h>
 
 namespace valhalla {
 namespace thor {
@@ -47,6 +48,8 @@ class PathAlgorithm {
   void Clear();
 
  protected:
+  // Hierarchy limits. TODO - need global contant of max # of levels
+  HierarchyLimits hierarchy_limits_[8];
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

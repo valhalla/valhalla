@@ -7,8 +7,12 @@
 
 using namespace valhalla::baldr;
 
+// TODO: make a class that extends std::exception, with messages and
+// error codes and return the appropriate error codes
+
 namespace {
 
+constexpr float    kMaxDistance = std::numeric_limits<float>::max();
 constexpr uint32_t kBucketCount = 20000;
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
@@ -54,7 +58,8 @@ namespace thor {
 
 // Default constructor
 PathAlgorithm::PathAlgorithm()
-    : edgelabel_index_(0),
+    : hierarchy_limits_{},
+      edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
       best_destination_{kInvalidLabel, std::numeric_limits<float>::max()}{
@@ -106,6 +111,28 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_ = new AdjacencyList(mincost, range, bucketsize);
   edgestatus_ = new EdgeStatus();
+
+  // Reset any hierarchy transition counts
+  for (auto& level : hierarchy_limits_) {
+    level.up_transition_count = 0;
+  }
+
+  // TODO - initialize hierarchy limits based on config/# of tries. Set up
+  // defaults...
+  hierarchy_limits_[0].max_up_transitions    = 0;
+  hierarchy_limits_[0].expansion_within_dist = kMaxDistance;
+  hierarchy_limits_[0].upward_until_dist     = 0.0f;
+  hierarchy_limits_[0].downward_within_dist  = 10000.0f;
+
+  hierarchy_limits_[1].max_up_transitions    = 250;
+  hierarchy_limits_[1].expansion_within_dist = 10000.0f;
+  hierarchy_limits_[1].upward_until_dist     = 10000.0f;
+  hierarchy_limits_[1].downward_within_dist  = 5000.0f;
+
+  hierarchy_limits_[2].max_up_transitions    = 50;
+  hierarchy_limits_[2].expansion_within_dist = 5000.0f;
+  hierarchy_limits_[2].upward_until_dist     = 5000.0f;
+  hierarchy_limits_[2].downward_within_dist  = kMaxDistance;
 }
 
 // Calculate best path.
@@ -127,24 +154,21 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   SetOrigin(graphreader, origin, costing, loop_edge);
   SetDestination(graphreader, dest, costing);
 
-  // Counts of transitions to upper levels (TEST - TODO better design!)
-  uint32_t upto1count = 0;
-  uint32_t upto0count = 0;
-
   // Find shortest path
   const GraphTile* tile;
   GraphId edgeid;
   while (true) {
-    // Get next element from adjacency list. Check that it is valid.
-    // TODO: make a class that extends std::exception, with messages and
-    // error codes and return the appropriate one here
+    // Get next element from adjacency list. Check that it is valid. An
+    // invalid label indicates there are no edges that can be expanded.
     uint32_t next_label_index = adjacencylist_->Remove(edgelabels_);
     if (next_label_index == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
       if(best_destination_.first != kInvalidLabel)
         return FormPath(best_destination_.first, graphreader, loop_edge);
+
       // We didn't find any destination edge
-      LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabel_index_));
+      LOG_ERROR("Route failed after iterations = " +
+                   std::to_string(edgelabel_index_));
       throw std::runtime_error("No path could be found for input");
     }
 
@@ -164,26 +188,17 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // to the destination.
     GraphId node    = nextlabel.endnode();
     float dist2dest = nextlabel.distance();
+    uint32_t level  = node.level();
 
-    // Do not expand based on hierarchy level?
-    // TODO - come up with rule sets/options/config
+    // Count upward transitions (counted on the level transitioned from)
     if (nextlabel.trans_up()) {
-      if (node.level() == 0) {
-        upto0count++;
-      } else if (node.level() == 1) {
-        upto1count++;
-      }
+      hierarchy_limits_[level+1].up_transition_count++;
     }
 
-    // Stop expanding the local level once 50 transitions have been made
-    if (dist2dest > 10000.0f && node.level() == 2 && upto1count > 50) {
+    // Do not expand based on hierarchy level based on number of upward
+    // transitions and distance to the destination
+    if (hierarchy_limits_[level].StopExpanding(dist2dest))
       continue;
-    }
-
-    // Stop expanding arterial level once 250 transitions have been made
-    if (dist2dest > 50000.0f && node.level() == 1 && upto0count > 250) {
-      continue;
-    }
 
     // Skip if tile not found (can happen with regional data sets).
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
@@ -209,6 +224,14 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
+      // Skip any transition edges that are not allowed.
+      if ((directededge->trans_up() && costing->AllowTransitions() &&
+          !hierarchy_limits_[level].AllowUpwardTransition(dist2dest)) ||
+          (directededge->trans_down() &&
+          !hierarchy_limits_[level].AllowDownwardTransition(dist2dest))) {
+        continue;
+      }
+
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
