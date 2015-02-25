@@ -267,11 +267,48 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(type_);
   man_str += " | street_names_=";
   man_str += street_names_.ToString();
+  // TODO begin_street_names_
   man_str += " | distance_=";
   man_str += std::to_string(distance_);
-  // TODO - others
-  //man_str += " | TBD=";
-  //man_str += TBD;
+  man_str += " | time=";
+  man_str += std::to_string(time_);
+  man_str += " | turn_degree=";
+  man_str += std::to_string(turn_degree_);
+  man_str += " | begin_relative_direction=";
+  man_str += std::to_string(static_cast<int>(begin_relative_direction_));
+  man_str += " | begin_cardinal_direction=";
+  man_str += std::to_string(begin_cardinal_direction_);
+  man_str += " | begin_heading=";
+  man_str += std::to_string(begin_heading_);
+  man_str += " | end_heading=";
+  man_str += std::to_string(end_heading_);
+  man_str += " | begin_node_index=";
+  man_str += std::to_string(begin_node_index_);
+  man_str += " | end_node_index=";
+  man_str += std::to_string(end_node_index_);
+  man_str += " | begin_shape_index=";
+  man_str += std::to_string(begin_shape_index_);
+  man_str += " | end_shape_index=";
+  man_str += std::to_string(end_shape_index_);
+  man_str += " | ramp=";
+  man_str += std::to_string(ramp_);
+  man_str += " | ferry=";
+  man_str += std::to_string(ferry_);
+  man_str += " | rail_ferry=";
+  man_str += std::to_string(rail_ferry_);
+  man_str += " | roundabout=";
+  man_str += std::to_string(roundabout_);
+  man_str += " | portions_toll=";
+  man_str += std::to_string(portions_toll_);
+  man_str += " | portions_unpaved=";
+  man_str += std::to_string(portions_unpaved_);
+  man_str += " | portions_highway=";
+  man_str += std::to_string(portions_highway_);
+  man_str += " | internal_intersection=";
+  man_str += std::to_string(internal_intersection_);
+  // TODO
+  //man_str += " | signs=";
+  //man_str += signs_.ToString();
 
   return man_str;
 }
