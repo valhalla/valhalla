@@ -175,9 +175,9 @@ class OSMNode {
   bool operator < (const OSMNode& other) const {
     return osmid_ < other.osmid_;
   }
-  uint64_t osmid_;
- protected:
 
+ protected:
+  uint64_t osmid_;
 
   // Lat,lng of the node
   OSMLatLng latlng_;
