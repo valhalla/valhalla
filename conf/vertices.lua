@@ -131,9 +131,11 @@ function nodes_proc (kv, nokeys)
   end
 
   if kv["traffic_signals:direction"] == "forward" then
-    kv["signal_forward"] = "true"
-  elseif kv["traffic_signals:direction"] == "backward" then
-    kv["signal_forward"] = "false"
+    kv["forward_signal"] = "true"
+  end
+
+  if kv["traffic_signals:direction"] == "backward" then
+    kv["backward_signal"] = "true"
   end
  
   --store a mask denoting access

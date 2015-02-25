@@ -229,6 +229,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
       } else if (osmnode.traffic_signal()) { // if this edge has a signal not at a intersection
         edge.attributes.traffic_signal = true;
         edge.attributes.forward_signal = osmnode.forward_signal();
+        edge.attributes.backward_signal = osmnode.forward_signal();
       }
     }
   }
@@ -905,10 +906,8 @@ void BuildTileSet(
             has_signal = true;
           // traffic signal exists at a non-intersection node
           else if (edge.attributes.traffic_signal) {
-            if (forward && edge.attributes.forward_signal)
+            if ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal))
               has_signal = true;
-            else if (!forward && !edge.attributes.forward_signal)
-              has_signal = false;
           }
 
           // Add a directed edge and get a reference to it

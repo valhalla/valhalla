@@ -73,8 +73,11 @@ struct graph_callback : public OSMPBF::Callback {
       if (tag.first == "highway") {
         n.set_traffic_signal(tag.second == "traffic_signals" ? true : false);
       }
-      else if (tag.first == "signal_forward") {
+      else if (tag.first == "forward_signal") {
         n.set_forward_signal(tag.second == "true" ? true : false);
+      }
+      else if (tag.first == "backward_signal") {
+        n.set_backward_signal(tag.second == "true" ? true : false);
       }
       else if (is_highway_junction && (tag.first == "exit_to")) {
         bool hasTag = (tag.second.length() ? true : false);

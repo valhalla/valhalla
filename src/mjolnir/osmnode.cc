@@ -122,6 +122,16 @@ bool OSMNode::forward_signal() const {
   return attributes_.forward_signal;
 }
 
+// Set backward_signal flag.
+void OSMNode::set_backward_signal(const bool backward_signal) {
+  attributes_.backward_signal = backward_signal;
+}
+
+// Get the backward_signal flag.
+bool OSMNode::backward_signal() const {
+  return attributes_.backward_signal;
+}
+
 // Get the attributes value.
 const NodeAttributes& OSMNode::attributes() const {
   return attributes_;
