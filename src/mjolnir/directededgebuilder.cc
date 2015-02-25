@@ -293,6 +293,11 @@ void DirectedEdgeBuilder::set_use(const Use use) {
   attributes_.use = static_cast<uint8_t>(use);
 }
 
+// Set the speed type (see graphconstants.h)
+void DirectedEdgeBuilder::set_speed_type(const SpeedType speed_type) {
+  attributes_.speed_type = static_cast<uint8_t>(speed_type);
+}
+
 // Set all forward access modes to true (used for transition edges)
 void DirectedEdgeBuilder::set_all_forward_access() {
   forwardaccess_.v = kAllAccess;
