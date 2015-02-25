@@ -21,6 +21,13 @@ class AutoCost : public DynamicCost {
   virtual ~AutoCost();
 
   /**
+   * Does the costing allow hierarchy transitions. Auto costing will allow
+   * transitions by default.
+   * @return  Returns true if the costing model allows hierarchy transitions).
+   */
+   virtual bool AllowTransitions() const;
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -110,38 +117,37 @@ AutoCost::AutoCost()
 AutoCost::~AutoCost() {
 }
 
+// Auto costing will allow hierarchy transitions by default.
+bool AutoCost::AllowTransitions() const {
+  return true;
+}
+
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint32_t restriction, const bool uturn,
                        const float dist2dest) const {
-  // Check for simple turn restrictions.
-  if (restriction & (1 << edge->localedgeidx())) {
+  // Check access and simple turn restrictions
+  if (!(edge->forwardaccess() & kAutoAccess) ||
+     (restriction & (1 << edge->localedgeidx()))) {
     return false;
   }
 
-  // TODO - test and add options for hierarchy transitions
-  // Allow upward transitions except when close to the destination
-  if (edge->trans_up()) {
-    return (edge->endnode().level() == 0) ?
-          dist2dest > 50000.0f : dist2dest > 10000.0f;
-  }
-
-  // Allow downward transitions only when near the destination
-  if (edge->trans_down()) {
-    return (edge->endnode().level() == 1) ?
-          dist2dest < 50000.0f : dist2dest < 10000.0f;
-  }
-
-  // Skip shortcut edges when near the destination
+  // Skip shortcut edges when near the destination.
+  // TODO - do not think this is needed!
   if (edge->shortcut() && dist2dest < 10000.0f)
     return false;
 
-  // Do not allow Uturns or entering no-thru edges.
-  // TODO - evaluate later!
-  if (uturn || (edge->not_thru() && dist2dest > 5000.0)) {
+  // Do not allow Uturns. TODO - evaluate later! - Uturns on different
+  // hierarchy levels present problems. May want to set implied turn
+  // restrictions
+  if (uturn)
+    return false;
+
+  // Do not allow entering not-thru edges except near the destination.
+  if (edge->not_thru() && dist2dest > not_thru_distance_) {
     return false;
   }
-  return (edge->forwardaccess() & kAutoAccess);
+  return true;
 }
 
 // Check if access is allowed at the specified node.

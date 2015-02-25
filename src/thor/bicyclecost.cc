@@ -168,18 +168,26 @@ BicycleCost::~BicycleCost() {
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint32_t restriction, const bool uturn,
                           const float dist2dest) const {
-  // Bicycles should obey vehicular turn restrictions
-  // Check for simple turn restrictions.
-  if (restriction & (1 << edge->localedgeidx())) {
+  // Check bicycle access and turn restrictions. Bicycles should obey
+  // vehicular turn restrictions.
+  if (!(edge->forwardaccess() & kBicycleAccess) ||
+      (restriction & (1 << edge->localedgeidx()))) {
+    return false;
+  }
+
+  // Do not allow uturns
+  if (uturn) {
+    return false;
+  }
+
+  // Do not allow transition onto not-thru edges except near the destination
+  if (edge->not_thru() && dist2dest > not_thru_distance_) {
     return false;
   }
 
   // Do not allow upward transitions (always stay at local level)
-  // Check access. Also do not allow Uturns or entering no-thru edges
   // TODO - may want to revisit allowing transitions?
-  // TODO - configure distance for prohibiting not_thru edges
-  if (edge->trans_up() || !(edge->forwardaccess() & kBicycleAccess) ||
-     (edge->not_thru() && dist2dest > 5000.0)){
+  if (edge->trans_up()) {
     return false;
   }
 
