@@ -43,6 +43,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   std::string ToString() const;
 
+  std::string ToUnitTestString() const;
+
  protected:
   EnhancedTripPath_Edge();
 

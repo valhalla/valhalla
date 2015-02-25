@@ -90,7 +90,7 @@ bool EnhancedTripPath_Edge::IsHighway() const {
 
 std::string EnhancedTripPath_Edge::ToString() const {
   std::string str;
-  str.reserve(128);
+  str.reserve(256);
 
   str += "name=";
   if (name_size() == 0) {
@@ -206,6 +206,138 @@ std::string EnhancedTripPath_Edge::ToString() const {
     }
 
   }
+
+  return str;
+}
+
+std::string EnhancedTripPath_Edge::ToUnitTestString() const {
+  std::string str;
+  str.reserve(128);
+
+  str += "{ ";
+  bool is_first = true;
+  for (const auto& name : this->name()) {
+    if (is_first)
+      is_first = false;
+    else
+      str += ", ";
+    str += "\"";
+    str += name;
+    str += "\"";
+  }
+  str += " }";
+
+  str += ", ";
+  str += std::to_string(length());
+
+  str += ", ";
+  str += std::to_string(speed());
+
+  str += ", TripPath_RoadClass_";
+  str +=
+      TripPath_RoadClass_descriptor()->FindValueByNumber(road_class())->name();
+
+  str += ", ";
+  str += std::to_string(begin_heading());
+
+  str += ", ";
+  str += std::to_string(end_heading());
+
+  str += ", ";
+  str += std::to_string(begin_shape_index());
+
+  str += ", ";
+  str += std::to_string(end_shape_index());
+
+  str += ", TripPath_Driveability_";
+  str += TripPath_Driveability_descriptor()->FindValueByNumber(driveability())
+      ->name();
+
+  str += ", ";
+  str += std::to_string(ramp());
+
+  str += ", ";
+  str += std::to_string(turn_channel());
+
+  str += ", ";
+  str += std::to_string(ferry());
+
+  str += ", ";
+  str += std::to_string(rail_ferry());
+
+  str += ", ";
+  str += std::to_string(toll());
+
+  str += ", ";
+  str += std::to_string(unpaved());
+
+  str += ", ";
+  str += std::to_string(tunnel());
+
+  str += ", ";
+  str += std::to_string(bridge());
+
+  str += ", ";
+  str += std::to_string(roundabout());
+
+  str += ", ";
+  str += std::to_string(internal_intersection());
+
+  //  str += ", ";
+  //  str += std::to_string(end_node_index());
+
+  // Process exits, if needed
+  str += ", { ";
+  is_first = true;
+  for (const auto& number : this->sign().exit_number()) {
+    if (is_first)
+      is_first = false;
+    else
+      str += ", ";
+    str += "\"";
+    str += number;
+    str += "\"";
+  }
+  str += " }";
+
+  str += ", { ";
+  is_first = true;
+  for (const auto& branch : this->sign().exit_branch()) {
+    if (is_first)
+      is_first = false;
+    else
+      str += ", ";
+    str += "\"";
+    str += branch;
+    str += "\"";
+  }
+  str += " }";
+
+  str += ", { ";
+  is_first = true;
+  for (const auto& toward : this->sign().exit_toward()) {
+    if (is_first)
+      is_first = false;
+    else
+      str += ", ";
+    str += "\"";
+    str += toward;
+    str += "\"";
+  }
+  str += " }";
+
+  str += ", { ";
+  is_first = true;
+  for (const auto& name : this->sign().exit_name()) {
+    if (is_first)
+      is_first = false;
+    else
+      str += ", ";
+    str += "\"";
+    str += name;
+    str += "\"";
+  }
+  str += " }";
 
   return str;
 }
