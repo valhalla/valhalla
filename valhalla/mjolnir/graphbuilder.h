@@ -51,7 +51,7 @@ struct Edge {
     uint32_t traffic_signal   : 1;
     uint32_t forward_signal   : 1;
     uint32_t link             : 1;
-    uint32_t spare            : 9;
+    uint32_t spare            : 8;
   };
   EdgeAttributes attributes;
 
