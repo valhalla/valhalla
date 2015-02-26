@@ -176,22 +176,18 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     }
 
     uint32_t count = 0;
-    std::string geom;
-    uint64_t nodeid,old,lastid;
-    bool has_data = false, reverse = false;
+    uint64_t nodeid,lastid;
+    bool has_data, reverse;
 
     for (const auto admin : osmdata.admins_) {
 
       lastid = 0;
-      has_data = false;
-      // setting up values / binding
-      geom = "POLYGON((";
+      std::vector<PointLL> shape;
+      has_data = true;
 
       for (size_t i = 0; i < admin.member_count(); i++) {
 
         const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
-        //const auto& iter = osmdata.admin_ways_.find(memberid);
-
         const OSMWay* w = osmdata.GetWay(memberid);
 
         // A relation may be included in an extract but it's members may not.
@@ -202,15 +198,22 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         }
 
         reverse = false;
-
         nodeid = osmdata.noderefs[w->noderef_index()];
 
         size_t j = w->node_count() - 1;
-
         if (osmdata.noderefs[w->noderef_index()] ==
-            osmdata.noderefs[w->noderef_index() + j] && has_data) {
+            osmdata.noderefs[w->noderef_index() + j] && shape.size()) {
 
+          std::string geom;
+          for (const auto& ll : shape) {
+            if (!geom.empty())
+              geom += ", ";
+            else geom = "POLYGON((";
+            geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
+          }
           geom += "))";
+
+          std::cout << geom << std::endl;
 
           count++;
           sqlite3_reset (stmt);
@@ -223,39 +226,26 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           if (ret != SQLITE_DONE && ret != SQLITE_ROW)
             LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
 
-          geom = "POLYGON((";
-
-          has_data = false;
+          std::vector<PointLL>().swap(shape);
 
         }
 
         j = 0;
-        if (lastid != 0 && lastid != nodeid) {
+        if (shape.size() && lastid != nodeid) {
           reverse = true;
           j = w->node_count() - 1;
 
-          if (lastid != osmdata.noderefs[w->noderef_index() + j])
-            std::cout << old << " " << memberid << std::endl;
-
+          // Should first added member's shape be reversed?
+          if (lastid != osmdata.noderefs[w->noderef_index() + j] && i == 1)
+            std::reverse(shape.begin(), shape.end());
         }
 
         bool done = false;
-
         while (!done) {
-
           nodeid = osmdata.noderefs[w->noderef_index() + j];
-
           const OSMNode& osmnode = *osmdata.GetNode(nodeid);
-
           lastid = nodeid;
-
-          const PointLL& ll = osmnode.latlng();
-
-          if (has_data)
-            geom += ", ";
-          geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
-          has_data = true;
-
+          shape.push_back(osmnode.latlng());
           if (reverse) {
             j--;
             if (j == -1)
@@ -266,13 +256,19 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
               done = true;
           }
         }
-        old = memberid;
       }
 
-      geom += "))";
-
-      if (!has_data)
+      if (!has_data || !shape.size())
         continue;
+
+      std::string geom;
+      for (const auto& ll : shape) {
+        if (!geom.empty())
+          geom += ", ";
+        else geom = "POLYGON((";
+        geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
+      }
+      geom += "))";
 
       count++;
       sqlite3_reset (stmt);
