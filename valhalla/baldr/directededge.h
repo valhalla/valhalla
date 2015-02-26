@@ -16,7 +16,7 @@ constexpr uint8_t kMcn = 8;   // Part of mountain bicycle network
 constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 16777215;   // 2^24 bytes
+constexpr uint32_t kMaxEdgeInfoOffset = 33554431;   // 2^25 bytes
 
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
@@ -354,7 +354,7 @@ class DirectedEdge {
   // Data offsets and flags for extended data. Where a flag exists the actual
   // data can be indexed by the directed edge Id within the tile.
   struct DataOffsets {
-    uint32_t edgeinfo_offset   : 24; // Offset to edge data.
+    uint32_t edgeinfo_offset   : 25; // Offset to edge data.
     uint32_t access_conditions :  1; // General restriction or access
                                      // condition
     uint32_t start_ttr         :  1; // Directed edge starts a simple timed
@@ -364,7 +364,7 @@ class DirectedEdge {
     uint32_t end_mer           :  1; // Directed edge ends a multi-edge
                                      // restriction
     uint32_t exitsign          :  1; // Does this directed edge have exit signs
-    uint32_t spare             :  3;
+    uint32_t spare             :  2;
   };
   DataOffsets dataoffsets_;
 
