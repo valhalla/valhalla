@@ -233,12 +233,15 @@ RouteHandler::RouteHandler(const std::string& config, const boost::python::dict&
   factory.Register("auto", valhalla::thor::CreateAutoCost);
   factory.Register("bicycle", valhalla::thor::CreateBicycleCost);
   factory.Register("pedestrian", valhalla::thor::CreatePedestrianCost);
-  //get the costing method
-  std::string costing_method = boost::python::extract<std::string>(boost::python::str(dict_request["costing_method"]));
-  cost_ = factory.Create(costing_method);
-  //get the config for the graph reader
+
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config, pt);
+
+  //get the costing method
+  std::string costing_method = boost::python::extract<std::string>(boost::python::str(dict_request["costing_method"]));
+  cost_ = factory.Create(costing_method, pt.get_child("thor"));
+
+  //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(pt.get_child("mjolnir.hierarchy")));
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
