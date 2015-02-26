@@ -18,6 +18,8 @@ class StreetNames : public std::list<StreetName> {
 
   std::string ToString() const;
 
+  std::string ToUnitTestString() const;
+
   StreetNames FindCommonStreetNames(StreetNames other_street_names) const;
 
   StreetNames FindCommonBaseNames(StreetNames other_street_names) const;

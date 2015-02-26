@@ -31,6 +31,23 @@ std::string StreetNames::ToString() const {
   return name_string;
 }
 
+std::string StreetNames::ToUnitTestString() const {
+  std::string name_string;
+  bool is_first = true;
+  name_string += "{ ";
+  for (auto& street_name : *this) {
+    if (is_first)
+      is_first = false;
+    else
+      name_string += ", ";
+    name_string += "\"";
+    name_string += street_name.value();
+    name_string += "\"";
+  }
+  name_string += " }";
+  return name_string;
+}
+
 StreetNames StreetNames::FindCommonStreetNames(
     StreetNames other_street_names) const {
   StreetNames common_street_names;
