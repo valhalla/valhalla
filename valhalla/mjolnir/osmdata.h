@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 
+#include <valhalla/mjolnir/osmadmin.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/osmrestriction.h>
@@ -46,6 +47,7 @@ struct OSMData {
 
   // Map that stores all the nodes read. Indexed by OSM node Id.
   std::vector<OSMNode> nodes;
+
 //  OSMNodeMap nodes;
 
   // Map that stores all the ref info on a node
@@ -66,13 +68,28 @@ struct OSMData {
   // Names
   UniqueNames name_offset_map;
 
-  // Map that stores all the nodes read
- std::unordered_map<uint64_t, OSMNode> admin_nodes;
+  // Vector of all the admin member/way ids.
+  std::vector<uint64_t> memberids_;
 
-  OSMNode GetNode(const uint64_t osmid) const {
-    OSMNode test(osmid, 0.0f, 0.0f);
-    auto it = std::equal_range(nodes.begin(), nodes.end(), test);
-    return *(it.first);
+  // Vector of admins.
+  std::vector<OSMAdmin> admins_;
+
+  const OSMWay* GetWay(const uint64_t osmid) const {
+    OSMWay target(osmid);
+    auto it = std::lower_bound(ways.begin(), ways.end(), target);
+    if(it == ways.end() || *it != target)
+      return nullptr;
+    return &*it;
+
+  }
+
+  const OSMNode* GetNode(const uint64_t osmid) const {
+    OSMNode target(osmid, 0.f, 0.f);
+    auto it = std::lower_bound(nodes.begin(), nodes.end(), target);
+    if(it == nodes.end() || *it != target)
+      return nullptr;
+    return &*it;
+
   }
 
 };

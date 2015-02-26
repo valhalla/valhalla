@@ -465,6 +465,42 @@ class OSMWay {
   bool bridge() const;
 
   /**
+   * Set seasonal flag.
+   * @param  seasonal   Is this seasonal?
+   */
+  void set_seasonal(const bool seasonal);
+
+  /**
+   * Get the seasonal flag.
+   * @return  Returns seasonal flag.
+   */
+  bool seasonal() const;
+
+  /**
+   * Set hov flag.
+   * @param  hov   Is this hov?
+   */
+  void set_hov(const bool hov);
+
+  /**
+   * Get the hov flag.
+   * @return  Returns hov flag.
+   */
+  bool hov() const;
+
+  /**
+   * Set drive_on_right flag.
+   * @param  drive_on_right   Is a country that we drive on the right?
+   */
+  void set_drive_on_right(const bool drive_on_right);
+
+  /**
+   * Get the drive on right flag.
+   * @return  Returns drive on right flag.
+   */
+  bool drive_on_right() const;
+
+  /**
    * Sets the bike network.
    * @param  bike_network Mask of the bike networks (ncn/rcn/lcn).
    */
@@ -536,6 +572,18 @@ class OSMWay {
                                     const UniqueNames& ref_offset_map,
                                     const UniqueNames& name_offset_map) const;
 
+  //for sorting we purposely only care about the id
+  //so that you can search for a node without more info
+  bool operator == (const OSMWay& other) const {
+    return osmwayid_ == other.osmwayid_;
+  }
+  bool operator != (const OSMWay& other) const {
+    return osmwayid_ != other.osmwayid_;
+  }
+  bool operator < (const OSMWay& other) const {
+    return osmwayid_ < other.osmwayid_;
+  }
+
  private:
   // OSM way Id
   uint64_t osmwayid_;
@@ -587,9 +635,12 @@ class OSMWay {
       uint32_t tunnel           :1;
       uint32_t toll             :1;
       uint32_t bridge           :1;
+      uint32_t seasonal         :1;
+      uint32_t hov              :1;
+      uint32_t drive_on_right   :1;
       uint32_t bikenetwork      :4;
       uint32_t exit             :1;
-      uint32_t spare            :4;
+      uint32_t spare            :1;
     } fields;
     uint32_t v;
   };

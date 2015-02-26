@@ -117,7 +117,7 @@ default_speed = {
 [1] = 90,
 [2] = 75,
 [3] = 60,
-[4] = 40,
+[4] = 50,
 [5] = 40,
 [6] = 20,
 [7] = 30
@@ -144,11 +144,11 @@ no_thru_traffic = {
 }
 
 use = {
-["parking_aisle"] = 3,
 ["driveway"] = 4,
 ["alley"] = 5,
-["emergency_access"] = 6,
-["drive-through"] = 7
+["parking_aisle"] = 6,
+["emergency_access"] = 7,
+["drive-through"] = 8
 }
 
 motor_vehicle = {
@@ -235,6 +235,7 @@ toll = {
 ["true"] = "true",
 ["false"] = "false",
 ["1"] = "true",
+["interval"] = "true",
 ["snowmobile"] = "true"
 }
 
@@ -285,6 +286,16 @@ function filter_tags_generic(kv)
     for k,v in pairs(forward) do
       kv[k] = v
     end
+
+    --check for auto_forward overrides
+    kv["auto_forward"] = motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorcar"]] or kv["auto_forward"]
+
+    --check for ped overrides
+    kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
+
+    --check for bike_forward overrides
+    kv["bike_forward"] = bicycle[kv["bicycle"]] or bicycle[kv["cycleway"]] or kv["bike_forward"]
+
   else
     --if its a ferry and these tags dont show up we want to set them to true 
     local default_val = tostring(ferry)
@@ -374,25 +385,25 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] == "steps" then
-    use = 8 --steps/stairs
+    use = 26 --steps/stairs
   elseif kv["highway"] == "track" then
-    use = 11 
+    use = 3 
   elseif kv["highway"] == nil then 
     use = 0
   elseif kv["highway"] then
     --favor bicycles
     if kv["highway"] == "cycleway" then
-        use = 1
+        use = 20
     elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
-       use = 1
+       use = 20
     --favor pedestrians
     elseif kv["highway"] == "footway" or kv["highway"] == "pedestrian" then 
-       use = 2
+       use = 25
     elseif kv["pedestrian"] == "true" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
-       use = 2
+       use = 25
     end
   elseif use == nil and kv["service"] then
-    use = 12 --other
+    use = 63 --other
   else 
     use = 0 --general road, no special use
   end
@@ -434,6 +445,17 @@ function filter_tags_generic(kv)
   end
   kv["lanes"] = lane_count
   kv["bridge"] = bridge[kv["bridge"]] or "false"
+  
+  -- TODO access:conditional
+  if kv["seasonal"] and kv["seasonal"] ~= "no" then
+    kv["seasonal"] = "true"
+  end
+
+  -- TODO access
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+    kv["hov"] = "true"
+  end
+
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]

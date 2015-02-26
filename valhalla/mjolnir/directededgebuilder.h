@@ -57,91 +57,35 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_edgeinfo_offset(const uint32_t offset);
 
   /**
-   * Sets the length of the edge in meters.
-   * @param  length  Length of the edge in meters.
+   * Set the access conditions flag.
+   * @param  access  True if the directed edge has general access conditions,
+   *                 false if not.
    */
-  void set_length(const uint32_t length);
+  void set_access_conditions(const bool access);
 
   /**
-   * Sets the intersection internal flag.
-   * @param  internal  true if the edge is internal to an intersection. This
-   *          is derived from OSM and used for doubly digitized intersections
+   * Set the flag indicating this directed edge starts a simple, timed turn
+   * restriction (from one edge to another).
+   * @param  ttr   True if this edge starts a simple, timed turn restriction.
    */
-  void set_internal(const bool internal);
+  void start_ttr(const bool ttr);
 
   /**
-   * Sets the car access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  car      Is car access allowed?
+   * Set the flag indicating this directed edge starts a multi-edge turn
+   * restriction. These are restrictions from one edge to another via one or
+   * more edges. Can include times.
+   * @param  mer  Ttrue if this edge starts a multi-edge restriction.
    */
-  void set_caraccess(const bool forward, const bool car);
+  void start_mer(const bool mer);
 
   /**
-   * Sets the taxi access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  taxi     Is taxi access allowed?
+   * Set the flag indicating this directed edge ends a multi-edge turn
+   * restriction. These are restrictions from one edge to another via one
+   * or more edges. This is the end edge of such a restriction.
+   * Can include times.
+   * @param  mer  True if this edge starts a multi-edge restriction.
    */
-  void set_taxiaccess(const bool forward, const bool taxi);
-
-  /**
-   * Sets the truck access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  truck    Is truck access allowed?
-   */
-  void set_truckaccess(const bool forward, const bool truck);
-
-  /**
-   * Sets the pedestrian access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  pedestrian  Is pedestrian access allowed?
-   */
-  void set_pedestrianaccess(const bool forward, const bool pedestrian);
-
-  /**
-   * Sets the bicycle access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  bicycle  Is bicycle access allowed?
-   */
-  void set_bicycleaccess(const bool forward, const bool bicycle);
-
-  /**
-   * Sets the emergency access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  emergency  Is emergency access allowed?
-   */
-  void set_emergencyaccess(const bool forward, const bool emergency);
-
-  /**
-   * Sets the horse access of the edge in each direction.
-   * @param  forward  Set access for forward direction if true, otherwise
-   *                  setting access for reverse direction.
-   * @param  horse    Is horse access allowed?
-   */
-  void set_horseaccess(const bool forward, const bool horse);
-
-  /**
-   * Sets the ferry flag.
-   * @param  ferry    Is ferry?
-   */
-  void set_ferry(const bool ferry);
-
-  /**
-   * Sets the rail ferry flag.
-   * @param  railferry    Is rail ferry?  Example: chunnel.
-   */
-  void set_railferry(const bool railferry);
-
-  /**
-   * Sets the toll flag.
-   * @param  toll    Is toll?
-   */
-  void set_toll(const bool toll);
+  void end_mer(const bool mer);
 
   /**
    * Sets the exit sign flag.
@@ -150,40 +94,100 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_exitsign(const bool exit);
 
   /**
-   * Sets the destination only (private) flag.
-   * @param  destonly     Is private (access to destination only)?
+   * Sets the length of the edge in meters.
+   * @param  length  Length of the edge in meters.
+   */
+  void set_length(const uint32_t length);
+
+  /**
+   * Sets the elevation factor (0-16) for the edge. TODO.
+   * @param  factor  Elevation factor.
+   */
+  void set_elevation(const uint32_t factor);
+
+  /**
+   * Sets the curvature factor (0-16) for the edge. TODO.
+   * @param  factor  Curvature factor.
+   */
+  void set_curvature(const uint32_t factor);
+
+  /**
+   * Set the flag indicating driving is on the right hand side of the road
+   * along this edge?
+   * @param rsd  True if this edge uses right-side driving, false if
+   *             left-side driving.
+   */
+  void set_drive_on_right(const bool rsd);
+
+  /**
+   * Sets the flag indicating this edge is a ferry (or part of a ferry).
+   * @param  ferry  True if this edge is a ferry, false if not.
+   */
+  void set_ferry(const bool ferry);
+
+  /**
+   * Sets the flag indicating this edge is a rail ferry (or part of a
+   * rail ferry). Example is the EuroTunnel (Channel Tunnel).
+   * @param  ferry  True if this edge is a rail ferry, false if not.
+   */
+  void set_railferry(const bool railferry);
+
+  /**
+   * Sets the flag indicating this edge has a toll or is it part of
+   * a toll road.
+   * @param  toll  True if this edge is part of a toll road, false if not.
+   */
+  void set_toll(const bool toll);
+
+  /**
+   * Sets the flag indicating this edge has seasonal access.
+   * @param  seasonal  True if this edge has seasonal access, false if not.
+   */
+  void set_seasonal(const bool seasonal);
+
+  /**
+   * Sets the destination only (private) flag. This indicates the edge should
+   * allow access only to locations that are destinations and not allow
+   * "through" traffic
+   * @param  destonly  True if the edge is private (allows access to
+   *                   destination only), false if not.
    */
   void set_dest_only(const bool destonly);
 
   /**
-   * Sets the tunnel flag.
-   * @param  tunnel   Is tunnel?
+   * Sets the flag indicating this edge has is a tunnel of part of a tunnel.
+   * @param  tunnel   True if the edge is a tunnel, false if not.
    */
   void set_tunnel(const bool tunnel);
 
   /**
-   * Sets the bridge flag.
-   * @param  bridge   Is bridge?
+   * Sets the flag indicating this edge has is a bridge of part of a bridge.
+   * @param  bridge   True if the edge is a bridge, false if not.
    */
   void set_bridge(const bool bridge);
 
   /**
-   * Sets the roundabout flag.
-   * @param  roundabout   Is roundabout?
+   * Sets the flag indicating the edge is part of a roundabout.
+   * @param  roundabout  True if the edge is part of a roundabout, false if not.
    */
   void set_roundabout(const bool roundabout);
 
   /**
-   * Sets the surface.
-   * @param  surface   Smoothness.
+   * Sets the flag indicating the edge is unreachable by driving. This can
+   * happen if a driveable edge is surrounded by pedestrian only edges (e.g.
+   * in a city center) or is not properly connected to other edges.
+   * @param  unreachable  True if the edge is unreachable by driving,
+   *                      false if not.
    */
-  void set_surface(const Surface surface);
+  void set_unreachable(const bool unreachable);
 
   /**
-    * Sets the cycle lane.
-    * @param  cyclelane   Type of cycle lane.
-    */
-  void set_cyclelane(const CycleLane cyclelane);
+   * Sets the flag indicating a traffic signal is present at the end of
+   * this edge.
+   * @param  signal  True if a traffic signal exists at the end of this edge,
+   *                 false if not.
+   */
+  void set_traffic_signal(const bool signal);
 
   /**
    * Set the flag for whether this edge represents a transition up one level
@@ -246,40 +250,17 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_opp_index(const uint32_t opp_index);
 
   /**
-   * Sets the number of lanes
-   * @param  lanecount  Number of lanes
-  */
-  void set_lanecount(const uint32_t lanecount);
+    * Sets the type of cycle lane (if any) present on this edge.
+    * @param  cyclelane   Type of cycle lane.
+    */
+  void set_cyclelane(const CycleLane cyclelane);
 
   /**
-   * Sets the bike network mask
-   * @param  bikenetwork Bike network mask.
+   * Sets the bike network mask indicating which (if any) bicycle networks are
+   * along this edge. See baldr/directededge.h for definitions.
+   * @param  bikenetwork  Bicycle network mask.
   */
   void set_bikenetwork(const uint32_t bikenetwork);
-
-  /**
-   * Sets the road class.
-   * @param  roadclass  Road class.
-   */
-  void set_importance(const RoadClass roadclass);
-
-  /**
-   * Sets the link tag.
-   * @param  link       Link.  Ramp or turn channel.
-   */
-  void set_link(const uint8_t link);
-
-  /**
-   * Sets the use.
-   * @param  use        Use.  Something like "form of way."
-   */
-  void set_use(const Use use);
-
-  /**
-   * Sets the speed in KPH.
-   * @param  speed  Speed in KPH.
-  */
-  void set_speed(const float speed);
 
   /**
    * Set the index of the directed edge on the local level of the graph
@@ -290,6 +271,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_localedgeidx(const uint32_t idx);
 
   /**
+   * Sets the number of lanes
+   * @param  lanecount  Number of lanes
+   */
+  void set_lanecount(const uint32_t lanecount);
+
+  /**
    * Set simple turn restrictions from the end of this directed edge.
    * These are turn restrictions from one edge to another that apply to
    * all vehicles, at all times.
@@ -297,6 +284,126 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    *          of outbound directed edges that are restricted.
    */
   void set_restrictions(const uint32_t mask);
+
+  /**
+   * Sets the specialized use type of this edge.
+   * @param  use  Use of this edge.
+   */
+  void set_use(const Use use);
+
+  /**
+   * Set the speed type (see graphconstants.h)
+   * @param  speed_type  Returns the speed type.
+   */
+  void set_speed_type(const SpeedType speed_type);
+
+  /**
+   * Set all forward access modes to true (used for transition edges)
+   */
+  void set_all_forward_access();
+
+  /**
+   * Sets the car access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  car      Is car access allowed?
+   */
+  void set_caraccess(const bool forward, const bool car);
+
+  /**
+   * Sets the taxi access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  taxi     Is taxi access allowed?
+   */
+  void set_taxiaccess(const bool forward, const bool taxi);
+
+  /**
+   * Sets the truck access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  truck    Is truck access allowed?
+   */
+  void set_truckaccess(const bool forward, const bool truck);
+
+  /**
+   * Sets the pedestrian access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  pedestrian  Is pedestrian access allowed?
+   */
+  void set_pedestrianaccess(const bool forward, const bool pedestrian);
+
+  /**
+   * Sets the bicycle access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  bicycle  Is bicycle access allowed?
+   */
+  void set_bicycleaccess(const bool forward, const bool bicycle);
+
+  /**
+   * Sets the emergency access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  emergency  Is emergency access allowed?
+   */
+  void set_emergencyaccess(const bool forward, const bool emergency);
+
+  /**
+   * Sets the horse access of the edge in the specified direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  horse    Is horse access allowed?
+   */
+  void set_horseaccess(const bool forward, const bool horse);
+
+  /**
+   * Sets the high occupancy vehicle (HOV) access of the edge in the specified
+   * direction.
+   * @param  forward  Set access for forward direction if true, otherwise
+   *                  setting access for reverse direction.
+   * @param  hov    Is HOV access allowed?
+   */
+  void set_hovaccess(const bool forward, const bool hov);
+
+  /**
+   * Sets the speed in KPH.
+   * @param  speed  Speed in KPH.
+  */
+  void set_speed(const float speed);
+
+  /**
+   * Sets the classification (importance) of this edge.
+   * @param  roadclass  Road class.
+   */
+  void set_classification(const RoadClass roadclass);
+
+  /**
+   * Sets the surface type (see baldr/graphconstants.h). This is a general
+   * indication of smoothness.
+   * @param  surface   Surface type.
+   */
+  void set_surface(const Surface surface);
+
+  /**
+   * Sets the link flag indicating the edge is part of a link or connection
+   * (ramp or turn channel).
+   * @param  link  True if the edge is part of a link.
+   */
+  void set_link(const uint8_t link);
+
+  /**
+   * Sets the intersection internal flag indicating the edge is "internal"
+   * to an intersection. This is derived from OSM based on geometry of an
+   * of nearby edges and is used for routing behavior on doubly digitized
+   * intersections.
+   * @param  internal  True if the edge is internal to an intersection.
+   */
+  void set_internal(const bool internal);
+
+  // TODO - intersection transitions
+
 };
 
 }

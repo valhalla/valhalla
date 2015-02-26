@@ -1,13 +1,15 @@
 #include <string>
 #include <vector>
-#include <cstdio>
-#include <iostream>
 
 #include "pbfgraphbuilder.h"
 #include "mjolnir/pbfadminparser.h"
-#include "mjolnir/osmadmin.h"
-#include "config.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/hierarchybuilder.h"
+#include "mjolnir/graphoptimizer.h"
+#include "config.h"
+
+#include <sqlite3.h>
+#include <spatialite.h>
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
@@ -18,9 +20,6 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
-
-#include <sqlite3.h>
-#include <spatialite.h>
 
 #include <valhalla/midgard/logging.h>
 
@@ -89,12 +88,14 @@ bool ParseArguments(int argc, char *argv[]) {
 }
 
 /**
- * Parse PBF into the supplied data structures
+ * Build admins from protocol buffer input.
  */
-void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
-                const std::vector<std::string>& input_files) {
-  PBFAdminParser parser(pt);
-  OSMData osmdata = parser.Load(input_files);
+void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
+               const std::vector<std::string>& input_files) {
+
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the PBFParser class
+  OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
 
   std::string dir = pt.get<std::string>("admin.admin_dir");
   std::string db_name = pt.get<std::string>("admin.db_name");
@@ -107,231 +108,206 @@ void ParsePBFSaveToDb(const boost::property_tree::ptree& pt,
 
   spatialite_init(0);
 
-  sqlite3 *db_handle;
-  sqlite3_stmt *stmt;
-  uint32_t ret;
-  char *err_msg = NULL;
-  std::string sql;
+    sqlite3 *db_handle;
+    sqlite3_stmt *stmt;
+    uint32_t ret;
+    char *err_msg = NULL;
+    std::string sql;
 
-  ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + database);
-    sqlite3_close(db_handle);
-    db_handle = NULL;
-    return;
-  }
+    ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("cannot open " + database);
+      sqlite3_close(db_handle);
+      db_handle = NULL;
+      return;
+    }
 
-  // loading SpatiaLite as an extension
-  sqlite3_enable_load_extension(db_handle, 1);
-  sql = "SELECT load_extension('libspatialite.so')";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("load_extension() error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  LOG_INFO("SpatiaLite loaded as an extension");
+    // loading SpatiaLite as an extension
+    sqlite3_enable_load_extension(db_handle, 1);
+    sql = "SELECT load_extension('libspatialite.so')";
+    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("load_extension() error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+      return;
+    }
+    LOG_INFO("SpatiaLite loaded as an extension");
 
-  /* creating an admin POLYGON table */
-  sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
-  sql += "id INTEGER NOT NULL PRIMARY KEY,";
-  sql += "name TEXT NOT NULL)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  /* creating a POLYGON Geometry column */
-  sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'POLYGON', 'XY')";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  LOG_INFO("Created admin table.");
+    /* creating an admin POLYGON table */
+    sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
+    sql += "id INTEGER NOT NULL PRIMARY KEY,";
+    sql += "name TEXT NOT NULL)";
+    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+      return;
+    }
+    /* creating a POLYGON Geometry column */
+    sql = "SELECT AddGeometryColumn('admins', ";
+    sql += "'geom', 4326, 'POLYGON', 'XY')";
+    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+      return;
+    }
+    LOG_INFO("Created admin table.");
 
-  /*
-   * inserting some POLYGONs
-   * this time too we'll use a Prepared Statement
-   */
-  sql = "INSERT INTO admins (id, name, geom) ";
-  sql += "VALUES (?, ?, GeomFromText(?, 4326))";
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
-  }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-  }
+    /*
+     * inserting some POLYGONs
+     * this time too we'll use a Prepared Statement
+     */
+    sql = "INSERT INTO admins (id, name, geom) ";
+    sql += "VALUES (?, ?, GeomFromText(?, 4326))";
+    ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("SQL error: " + sql);
+      LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    }
+    ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+    }
 
-  uint32_t count = 0;
-  std::string geom;
-  uint64_t nodeid,old,lastid = 0;
-  bool has_data = false, reverse = false;
+    uint32_t count = 0;
+    std::string geom;
+    uint64_t nodeid,old,lastid;
+    bool has_data = false, reverse = false;
 
-  for (const auto admin : parser.admins_) {
+    for (const auto admin : osmdata.admins_) {
 
-    lastid = 0;
-    has_data = false;
-    // setting up values / binding
-    geom = "POLYGON((";
+      lastid = 0;
+      has_data = false;
+      // setting up values / binding
+      geom = "POLYGON((";
 
-    for (size_t i = 0; i < admin.member_count(); i++) {
+      for (size_t i = 0; i < admin.member_count(); i++) {
 
-      const uint64_t &memberid = parser.memberids_[admin.member_index() + i];
-      const auto& iter = parser.admin_ways_.find(memberid);
+        const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
+        //const auto& iter = osmdata.admin_ways_.find(memberid);
 
-      // A relation may be included in an extract but it's members may not.
-      // Example:  PA extract can contain a NY relation.
-      if (iter == parser.admin_ways_.end()) {
-        has_data = false;
-        break;
-      }
+        const OSMWay* w = osmdata.GetWay(memberid);
 
-      const OSMWay &w  = iter->second;
-
-      reverse = false;
-
-      nodeid = osmdata.noderefs[w.noderef_index()];
-
-      size_t j = w.node_count() - 1;
-
-      if (osmdata.noderefs[w.noderef_index()] ==
-          osmdata.noderefs[w.noderef_index() + j] && has_data) {
-
-        geom += "))";
-
-        count++;
-        sqlite3_reset (stmt);
-        sqlite3_clear_bindings (stmt);
-        sqlite3_bind_int (stmt, 1, count);
-        sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
-        sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
-        /* performing INSERT INTO */
-        ret = sqlite3_step (stmt);
-        if (ret != SQLITE_DONE && ret != SQLITE_ROW)
-          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-
-        std::cout << geom << std::endl;
-
-
-        geom = "POLYGON((";
-
-        has_data = false;
-
-      }
-
-      j = 0;
-      if (lastid != 0 && lastid != nodeid) {
-        reverse = true;
-        j = w.node_count() - 1;
-
-        if (lastid != osmdata.noderefs[w.noderef_index() + j])
-          std::cout << old << " " << memberid << std::endl;
-
-      }
-
-      bool done = false;
-
-      while (!done) {
-
-        nodeid = osmdata.noderefs[w.noderef_index() + j];
-
-        const auto& iter = osmdata.admin_nodes.find(nodeid);
-
-       // OSMNode osmnode = osmdata.GetNode(nodeid);
-
-        // TODO
-        if (iter == osmdata.admin_nodes.end())
-        {
+        // A relation may be included in an extract but it's members may not.
+        // Example:  PA extract can contain a NY relation.
+        if (w == nullptr) {
           has_data = false;
           break;
         }
 
-        lastid = nodeid;
+        reverse = false;
 
-        const auto& osmnode = iter->second;
+        nodeid = osmdata.noderefs[w->noderef_index()];
 
-        const PointLL& ll = osmnode.latlng();
+        size_t j = w->node_count() - 1;
 
-        if (has_data)
-          geom += ", ";
-        geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
-        has_data = true;
+        if (osmdata.noderefs[w->noderef_index()] ==
+            osmdata.noderefs[w->noderef_index() + j] && has_data) {
 
-        if (reverse) {
-          j--;
-          if (j == -1)
-            done = true;
-        } else {
-          j++;
-          if (j == w.node_count())
-            done = true;
+          geom += "))";
+
+          count++;
+          sqlite3_reset (stmt);
+          sqlite3_clear_bindings (stmt);
+          sqlite3_bind_int (stmt, 1, count);
+          sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
+          sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
+          /* performing INSERT INTO */
+          ret = sqlite3_step (stmt);
+          if (ret != SQLITE_DONE && ret != SQLITE_ROW)
+            LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+
+          geom = "POLYGON((";
+
+          has_data = false;
+
         }
+
+        j = 0;
+        if (lastid != 0 && lastid != nodeid) {
+          reverse = true;
+          j = w->node_count() - 1;
+
+          if (lastid != osmdata.noderefs[w->noderef_index() + j])
+            std::cout << old << " " << memberid << std::endl;
+
+        }
+
+        bool done = false;
+
+        while (!done) {
+
+          nodeid = osmdata.noderefs[w->noderef_index() + j];
+
+          const OSMNode& osmnode = *osmdata.GetNode(nodeid);
+
+          lastid = nodeid;
+
+          const PointLL& ll = osmnode.latlng();
+
+          if (has_data)
+            geom += ", ";
+          geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
+          has_data = true;
+
+          if (reverse) {
+            j--;
+            if (j == -1)
+              done = true;
+          } else {
+            j++;
+            if (j == w->node_count())
+              done = true;
+          }
+        }
+        old = memberid;
       }
-      old = memberid;
+
+      geom += "))";
+
+      if (!has_data)
+        continue;
+
+      count++;
+      sqlite3_reset (stmt);
+      sqlite3_clear_bindings (stmt);
+      sqlite3_bind_int (stmt, 1, count);
+      sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
+      sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
+      /* performing INSERT INTO */
+      ret = sqlite3_step (stmt);
+      if (ret == SQLITE_DONE || ret == SQLITE_ROW)
+        continue;
+      LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+
+    }
+    sqlite3_finalize (stmt);
+    ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free (err_msg);
+      sqlite3_close (db_handle);
+
+    }
+    LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
+
+    sql = "SELECT CreateSpatialIndex('admins', 'geom')";
+    ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free (err_msg);
+      sqlite3_close (db_handle);
+      return;
     }
 
-    geom += "))";
-
-    if (!has_data)
-      continue;
-
-    count++;
-    sqlite3_reset (stmt);
-    sqlite3_clear_bindings (stmt);
-    sqlite3_bind_int (stmt, 1, count);
-    sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
-    sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
-    /* performing INSERT INTO */
-    ret = sqlite3_step (stmt);
-    if (ret == SQLITE_DONE || ret == SQLITE_ROW)
-      continue;
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-
-  }
-  sqlite3_finalize (stmt);
-  ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
+    LOG_INFO("Created spatial index");
     sqlite3_close (db_handle);
-
-  }
-  LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
-
-  sql = "SELECT CreateSpatialIndex('admins', 'geom')";
-  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free (err_msg);
-    sqlite3_close (db_handle);
-    return;
-  }
-
-  LOG_INFO("Created spatial index");
-  sqlite3_close (db_handle);
-}
-
-/**
- * Build admins from protocol buffer input.
- */
-void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
-               const std::vector<std::string>& input_files) {
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  ParsePBFSaveToDb(pt, input_files);
 }
 
 int main(int argc, char** argv) {
@@ -354,7 +330,19 @@ int main(int argc, char** argv) {
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){
     BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
-  }
+  }/*else if("postgres"){
+    //TODO
+    if (v.first == "host")
+      host = v.second.get_value<std::string>();
+    else if (v.first == "port")
+      port = v.second.get_value<unsigned int>();
+    else if (v.first == "username")
+      username = v.second.get_value<std::string>();
+    else if (v.first == "password")
+      password = v.second.get_value<std::string>();
+    else
+      return false;  //unknown value;
+  }*/
 
   return EXIT_SUCCESS;
 }
