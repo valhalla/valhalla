@@ -20,6 +20,7 @@ void write_config(const std::string& filename) {
   try {
   file.open(filename, std::ios_base::trunc);
   file << "{ \
+      \"thor\": {}, \
       \"mjolnir\": { \
         \"input\": { \
           \"type\": \"protocolbuffer\" \
