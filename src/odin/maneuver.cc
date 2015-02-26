@@ -61,6 +61,10 @@ const StreetNames& Maneuver::begin_street_names() const {
   return begin_street_names_;
 }
 
+StreetNames* Maneuver::mutable_begin_street_names() {
+  return &begin_street_names_;
+}
+
 void Maneuver::set_begin_street_names(const StreetNames& begin_street_names) {
   begin_street_names_ = begin_street_names;
 }
@@ -261,54 +265,156 @@ bool Maneuver::HasExitNameSign() const {
 
 std::string Maneuver::ToString() const {
   std::string man_str;
-  man_str.reserve(128);
+  man_str.reserve(256);
 
   man_str += "type_=";
   man_str += std::to_string(type_);
+
   man_str += " | street_names_=";
   man_str += street_names_.ToString();
-  // TODO begin_street_names_
+
+  man_str += " | begin_street_names=";
+  man_str += begin_street_names_.ToString();
+
   man_str += " | distance_=";
   man_str += std::to_string(distance_);
+
   man_str += " | time=";
   man_str += std::to_string(time_);
+
   man_str += " | turn_degree=";
   man_str += std::to_string(turn_degree_);
+
   man_str += " | begin_relative_direction=";
   man_str += std::to_string(static_cast<int>(begin_relative_direction_));
+
   man_str += " | begin_cardinal_direction=";
   man_str += std::to_string(begin_cardinal_direction_);
+
   man_str += " | begin_heading=";
   man_str += std::to_string(begin_heading_);
+
   man_str += " | end_heading=";
   man_str += std::to_string(end_heading_);
+
   man_str += " | begin_node_index=";
   man_str += std::to_string(begin_node_index_);
+
   man_str += " | end_node_index=";
   man_str += std::to_string(end_node_index_);
+
   man_str += " | begin_shape_index=";
   man_str += std::to_string(begin_shape_index_);
+
   man_str += " | end_shape_index=";
   man_str += std::to_string(end_shape_index_);
+
   man_str += " | ramp=";
   man_str += std::to_string(ramp_);
+
   man_str += " | ferry=";
   man_str += std::to_string(ferry_);
+
   man_str += " | rail_ferry=";
   man_str += std::to_string(rail_ferry_);
+
   man_str += " | roundabout=";
   man_str += std::to_string(roundabout_);
+
   man_str += " | portions_toll=";
   man_str += std::to_string(portions_toll_);
+
   man_str += " | portions_unpaved=";
   man_str += std::to_string(portions_unpaved_);
+
   man_str += " | portions_highway=";
   man_str += std::to_string(portions_highway_);
+
   man_str += " | internal_intersection=";
   man_str += std::to_string(internal_intersection_);
-  // TODO
-  //man_str += " | signs=";
-  //man_str += signs_.ToString();
+
+  man_str += " | ";
+  man_str += signs_.ToString();
+
+  return man_str;
+}
+
+std::string Maneuver::ToUnitTestString() const {
+  const std::string delim = ", ";
+  std::string man_str;
+  man_str.reserve(256);
+
+  man_str += "TripDirections_Maneuver_Type_";
+  man_str += TripDirections_Maneuver_Type_descriptor()->FindValueByNumber(type_)
+      ->name();
+
+  man_str += delim;
+  man_str += street_names_.ToUnitTestString();
+
+  man_str += delim;
+  man_str += begin_street_names_.ToUnitTestString();
+
+  man_str += delim;
+  man_str += std::to_string(distance_);
+
+  man_str += delim;
+  man_str += std::to_string(time_);
+
+  man_str += delim;
+  man_str += std::to_string(turn_degree_);
+
+  man_str += delim;
+  man_str += relative_direction_string_.find(static_cast<int>(begin_relative_direction_))->second;
+
+  man_str += delim;
+  man_str += "TripDirections_Maneuver_CardinalDirection_";
+  man_str += TripDirections_Maneuver_CardinalDirection_descriptor()
+      ->FindValueByNumber(begin_cardinal_direction_)->name();
+
+  man_str += delim;
+  man_str += std::to_string(begin_heading_);
+
+  man_str += delim;
+  man_str += std::to_string(end_heading_);
+
+  man_str += delim;
+  man_str += std::to_string(begin_node_index_);
+
+  man_str += delim;
+  man_str += std::to_string(end_node_index_);
+
+  man_str += delim;
+  man_str += std::to_string(begin_shape_index_);
+
+  man_str += delim;
+  man_str += std::to_string(end_shape_index_);
+
+  man_str += delim;
+  man_str += std::to_string(ramp_);
+
+  man_str += delim;
+  man_str += std::to_string(ferry_);
+
+  man_str += delim;
+  man_str += std::to_string(rail_ferry_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_);
+
+  man_str += delim;
+  man_str += std::to_string(portions_toll_);
+
+  man_str += delim;
+  man_str += std::to_string(portions_unpaved_);
+
+  man_str += delim;
+  man_str += std::to_string(portions_highway_);
+
+  man_str += delim;
+  man_str += std::to_string(internal_intersection_);
+
+  man_str += delim;
+  man_str += signs_.ToUnitTestString();
 
   return man_str;
 }
