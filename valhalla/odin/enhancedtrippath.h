@@ -43,8 +43,16 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   std::string ToString() const;
 
+  std::string ToParameterString() const;
+
  protected:
   EnhancedTripPath_Edge();
+
+  std::string ListToString(
+      const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+
+  std::string ListToParameterString(
+      const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
 
 };
 

@@ -1,4 +1,5 @@
 #include "odin/sign.h"
+#include "odin/util.h"
 
 namespace valhalla {
 namespace odin {
@@ -19,6 +20,18 @@ uint32_t Sign::consecutive_count() const {
 
 void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
+}
+
+std::string Sign::ToParameterString() const {
+  const std::string delim = ", ";
+  std::string str;
+  str += "{ ";
+  str += GetQuotedString(text_);
+  str += delim;
+  str += GetQuotedString(std::to_string(consecutive_count_));
+  str += " }";
+
+  return str;
 }
 
 }

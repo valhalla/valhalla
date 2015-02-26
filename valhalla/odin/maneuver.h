@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_MANEUVER_H_
 
 #include <string>
+#include <unordered_map>
 
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/odin/streetnames.h>
@@ -35,6 +36,7 @@ class Maneuver {
   bool HasStreetNames() const;
 
   const StreetNames& begin_street_names() const;
+  StreetNames* mutable_begin_street_names();
   void set_begin_street_names(const StreetNames& begin_street_names);
 
   const std::string& instruction() const;
@@ -109,6 +111,8 @@ class Maneuver {
 
   std::string ToString() const;
 
+  std::string ToParameterString() const;
+
  protected:
   TripDirections_Maneuver_Type type_;
   StreetNames street_names_;
@@ -136,6 +140,8 @@ class Maneuver {
   Signs signs_;
 
   // TODO notes
+
+  static const std::unordered_map<int, std::string> relative_direction_string_;
 
 };
 

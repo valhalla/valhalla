@@ -58,7 +58,8 @@ nobase_include_HEADERS = \
 	valhalla/odin/streetname.h \
 	valhalla/odin/streetnames.h \
 	valhalla/odin/sign.h \
-	valhalla/odin/signs.h
+	valhalla/odin/signs.h \
+	valhalla/odin/util.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
@@ -70,7 +71,8 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/streetname.cc \
 	src/odin/streetnames.cc \
 	src/odin/sign.cc \
-	src/odin/signs.cc
+	src/odin/signs.cc \
+	src/odin/util.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
 

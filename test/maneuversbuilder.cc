@@ -3,6 +3,8 @@
 #include "valhalla/odin/maneuversbuilder.h"
 #include <valhalla/midgard/util.h>
 
+#include <string>
+
 using namespace std;
 using namespace valhalla::odin;
 
@@ -17,6 +19,10 @@ class ManeuversBuilderTest : public ManeuversBuilder {
 
   ManeuversBuilderTest(EnhancedTripPath* etp)
       : ManeuversBuilder(etp) {
+  }
+
+  void Combine(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::Combine(maneuvers);
   }
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
@@ -321,6 +327,774 @@ void TestDetermineRelativeDirection() {
 
 }
 
+void TryCombine(ManeuversBuilderTest& mbTest, std::list<Maneuver>& maneuvers,
+                std::list<Maneuver>& expected_maneuvers) {
+  mbTest.Combine(maneuvers);
+
+  if (maneuvers.size() != expected_maneuvers.size())
+    throw std::runtime_error("Incorrect maneuver count");
+  for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
+      man != maneuvers.end(); ++man, ++expected_man) {
+    if (man->type() != expected_man->type())
+      throw std::runtime_error("Incorrect maneuver type");
+    if (man->distance() != expected_man->distance())
+      throw std::runtime_error("Incorrect maneuver distance");
+    if (man->time() != expected_man->time())
+      throw std::runtime_error("Incorrect maneuver time");
+  }
+}
+
+void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
+                  float length, float speed, TripPath_RoadClass road_class,
+                  ::google::protobuf::uint32 begin_heading,
+                  ::google::protobuf::uint32 end_heading,
+                  ::google::protobuf::uint32 begin_shape_index,
+                  ::google::protobuf::uint32 end_shape_index,
+                  TripPath_Driveability driveability, bool ramp,
+                  bool turn_channel, bool ferry, bool rail_ferry, bool toll,
+                  bool unpaved, bool tunnel, bool bridge, bool roundabout,
+                  bool internal_intersection,
+                  ::google::protobuf::uint32 end_node_index,
+                  std::vector<std::string> exit_numbers,
+                  std::vector<std::string> exit_branches,
+                  std::vector<std::string> exit_towards,
+                  std::vector<std::string> exit_names) {
+  for (auto& name : names) {
+    edge->add_name(name);
+  }
+  edge->set_length(length);
+  edge->set_speed(speed);
+  edge->set_road_class(road_class);
+  edge->set_begin_heading(begin_heading);
+  edge->set_end_heading(end_heading);
+  edge->set_begin_shape_index(begin_shape_index);
+  edge->set_end_shape_index(end_shape_index);
+  edge->set_driveability(driveability);
+  edge->set_ramp(ramp);
+  edge->set_turn_channel(turn_channel);
+  edge->set_ferry(ferry);
+  edge->set_rail_ferry(rail_ferry);
+  edge->set_toll(toll);
+  edge->set_unpaved(unpaved);
+  edge->set_tunnel(tunnel);
+  edge->set_bridge(bridge);
+  edge->set_roundabout(roundabout);
+  edge->set_internal_intersection(internal_intersection);
+  edge->set_end_node_index(end_node_index);
+  TripPath_Sign* sign = edge->mutable_sign();
+  for (auto& exit_number : exit_numbers) {
+    sign->add_exit_number(exit_number);
+  }
+  for (auto& exit_branch : exit_branches) {
+    sign->add_exit_branch(exit_branch);
+  }
+  for (auto& exit_toward : exit_towards) {
+    sign->add_exit_toward(exit_toward);
+  }
+  for (auto& exit_name : exit_names) {
+    sign->add_exit_name(exit_name);
+  }
+}
+
+void PopulateManeuver(
+    Maneuver& maneuver, TripDirections_Maneuver_Type type,
+    std::vector<std::string> street_names,
+    std::vector<std::string> begin_street_names, float distance, uint32_t time,
+    uint32_t turn_degree, Maneuver::RelativeDirection begin_relative_direction,
+    TripDirections_Maneuver_CardinalDirection begin_cardinal_direction,
+    uint32_t begin_heading, uint32_t end_heading, uint32_t begin_node_index,
+    uint32_t end_node_index, uint32_t begin_shape_index,
+    uint32_t end_shape_index, bool ramp, bool ferry, bool rail_ferry,
+    bool roundabout, bool portions_toll, bool portions_unpaved,
+    bool portions_highway, bool internal_intersection,
+    std::vector<std::vector<std::string>> exit_numbers,
+    std::vector<std::vector<std::string>> exit_branches,
+    std::vector<std::vector<std::string>> exit_towards,
+    std::vector<std::vector<std::string>> exit_names) {
+
+  maneuver.set_type(type);
+
+  // street_names
+  StreetNames* street_name_list = maneuver.mutable_street_names();
+  for (auto& street_name : street_names)
+    street_name_list->emplace_back(street_name);
+
+  // begin_street_names
+  StreetNames* begin_street_name_list = maneuver.mutable_begin_street_names();
+  for (auto& begin_street_name : begin_street_names)
+    begin_street_name_list->emplace_back(begin_street_name);
+
+  maneuver.set_distance(distance);
+  maneuver.set_time(time);
+  maneuver.set_turn_degree(turn_degree);
+  maneuver.set_begin_relative_direction(begin_relative_direction);
+  maneuver.set_begin_cardinal_direction(begin_cardinal_direction);
+  maneuver.set_begin_heading(begin_heading);
+  maneuver.set_end_heading(end_heading);
+  maneuver.set_begin_node_index(begin_node_index);
+  maneuver.set_end_node_index(end_node_index);
+  maneuver.set_begin_shape_index(begin_shape_index);
+  maneuver.set_end_shape_index(end_shape_index);
+  maneuver.set_ramp(ramp);
+  maneuver.set_ferry(ferry);
+  maneuver.set_rail_ferry(rail_ferry);
+  maneuver.set_roundabout(roundabout);
+  maneuver.set_portions_toll(portions_toll);
+  maneuver.set_portions_unpaved(portions_unpaved);
+  maneuver.set_portions_highway(portions_highway);
+  maneuver.set_internal_intersection(internal_intersection);
+
+  // exit_numbers
+  std::vector<Sign>* exit_number_list = maneuver.mutable_signs()
+      ->mutable_exit_number_list();
+  for (auto& sign_items : exit_numbers) {
+    exit_number_list->emplace_back(sign_items[0]);
+    Sign& sign = exit_number_list->back();
+    sign.set_consecutive_count(std::stoi(sign_items[1]));
+  }
+
+  // exit_branches,
+  std::vector<Sign>* exit_branch_list = maneuver.mutable_signs()
+      ->mutable_exit_branch_list();
+  for (auto& sign_items : exit_branches) {
+    exit_branch_list->emplace_back(sign_items[0]);
+    Sign& sign = exit_branch_list->back();
+    sign.set_consecutive_count(std::stoi(sign_items[1]));
+  }
+
+  //  exit_towards,
+  std::vector<Sign>* exit_toward_list = maneuver.mutable_signs()
+      ->mutable_exit_toward_list();
+  for (auto& sign_items : exit_towards) {
+    exit_toward_list->emplace_back(sign_items[0]);
+    Sign& sign = exit_toward_list->back();
+    sign.set_consecutive_count(std::stoi(sign_items[1]));
+  }
+
+  //  exit_names
+  std::vector<Sign>* exit_name_list = maneuver.mutable_signs()
+      ->mutable_exit_name_list();
+  for (auto& sign_items : exit_names) {
+    exit_name_list->emplace_back(sign_items[0]);
+    Sign& sign = exit_name_list->back();
+    sign.set_consecutive_count(std::stoi(sign_items[1]));
+  }
+
+}
+
+void TestLeftInternalStraightCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743", "PA 341 Truck" }, 0.033835,
+               60.000000, TripPath_RoadClass_kSecondary, 158, 180, 0, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.181000, 60.000000,
+               TripPath_RoadClass_kSecondary, 187, 192, 3, 8,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:2
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.079000, 60.000000,
+               TripPath_RoadClass_kSecondary, 196, 196, 8, 10,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:3
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.160000, 60.000000,
+               TripPath_RoadClass_kSecondary, 198, 198, 10, 13,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:4 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.013000, 50.000000, TripPath_RoadClass_kSecondary,
+               118, 118, 13, 14, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, { }, { }, { }, { });
+
+  // node:5
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.073000, 50.000000, TripPath_RoadClass_kSecondary,
+               127, 127, 14, 15, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, { }, { "PA 283 East" }, { "Lancaster" }, { });
+
+  // node:6
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.432000, 50.000000, TripPath_RoadClass_kSecondary,
+               127, 130, 15, 20, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  // node:7
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "PA 283 East" }, 0.176467, 105.000000,
+               TripPath_RoadClass_kMotorway, 134, 134, 20, 22,
+               TripPath_Driveability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Hershey Road", "PA 743 South" },
+                   { }, 0.453835, 28, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 158, 198,
+                   0, 4, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.013000, 1, 280, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 118,
+                   118, 4, 5, 13, 14, 1, 0, 0, 0, 0, 0, 0, 1, { }, { }, { },
+                   { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kRampStraight, { },
+                   { }, 0.505000, 36, 9,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 127,
+                   130, 5, 7, 14, 20, 1, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 283 East", "0" } },
+                   { { "Lancaster", "0" } }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kMerge, {
+                       "PA 283 East" },
+                   { }, 0.176467, 6, 4,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 134,
+                   134, 7, 8, 20, 22, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { },
+                   { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver5 = maneuvers.back();
+  PopulateManeuver(maneuver5, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8,
+                   22, 22, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Hershey Road", "PA 743 South" },
+                   { }, 0.453835, 28, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 158, 198,
+                   0, 4, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kRampLeft,
+                   { }, { }, 0.518000, 37, 289,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 127,
+                   130, 4, 7, 13, 20, 1, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 283 East", "0" } },
+                   { { "Lancaster", "0" } }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3, TripDirections_Maneuver_Type_kMerge, {
+                       "PA 283 East" },
+                   { }, 0.176467, 6, 4,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 134,
+                   134, 7, 8, 20, 22, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { },
+                   { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver4 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver4,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 8, 8,
+                   22, 22, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
+void TestStraightInternalLeftCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "PA 283 West" }, 0.511447, 105.000000,
+               TripPath_RoadClass_kMotorway, 315, 316, 0, 3,
+               TripPath_Driveability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.397000, 50.000000, TripPath_RoadClass_kSecondary,
+               322, 330, 3, 12, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, { }, { "PA 743" },
+               { "Hershey", "Elizabethtown" }, { });
+
+  // node:2
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.050000, 50.000000, TripPath_RoadClass_kSecondary,
+               308, 292, 12, 17, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, { }, { "PA 743 South" }, { "Elizabethtown" },
+               { });
+
+  // node:3 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { }, 0.012000, 50.000000, TripPath_RoadClass_kSecondary,
+               289, 289, 17, 18, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
+               0, 0, 0, 0, 1, 0, { }, { }, { }, { });
+
+  // node:4
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.160000, 60.000000,
+               TripPath_RoadClass_kSecondary, 198, 198, 18, 21,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:5
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.084000, 60.000000,
+               TripPath_RoadClass_kSecondary, 199, 198, 21, 23,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:6
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.113000, 60.000000,
+               TripPath_RoadClass_kSecondary, 198, 198, 23, 24,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:7
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.129000, 60.000000,
+               TripPath_RoadClass_kSecondary, 196, 196, 24, 25,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:8
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Hershey Road", "PA 743 North" }, 0.000000, 60.000000,
+               TripPath_RoadClass_kSecondary, 22, 19, 25, 25,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "PA 283 West" },
+                   { }, 0.511447, 18, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 315,
+                   316, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kExitRight, { }, { },
+                   0.397000, 29, 6, Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 322,
+                   330, 1, 2, 3, 12, 1, 0, 0, 0, 0, 0, 0, 0, { }, { { "PA 743",
+                       "0" } },
+                   { { "Hershey", "0" }, { "Elizabethtown", "0" } }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kRampLeft, { }, { },
+                   0.050000, 4, 338, Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 308,
+                   292, 2, 3, 12, 17, 1, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 743 South", "0" } },
+                   { { "Elizabethtown", "0" } }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.012000, 1, 357, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 289, 289, 3,
+                   4, 17, 18, 1, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver5 = maneuvers.back();
+  PopulateManeuver(maneuver5, TripDirections_Maneuver_Type_kLeft, {
+                       "Hershey Road", "PA 743 South" },
+                   { }, 0.486000, 30, 269, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 198, 19, 4,
+                   9, 18, 25, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver6 = maneuvers.back();
+  PopulateManeuver(maneuver6, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9,
+                   25, 25, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "PA 283 West" },
+                   { }, 0.511447, 18, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 315,
+                   316, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kExitRight,
+                   { }, { }, 0.397000, 29, 6,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 322,
+                   330, 1, 2, 3, 12, 1, 0, 0, 0, 0, 0, 0, 0, { }, { { "PA 743",
+                       "0" } },
+                   { { "Hershey", "0" }, { "Elizabethtown", "0" } }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3, TripDirections_Maneuver_Type_kRampLeft,
+                   { }, { }, 0.050000, 4, 338,
+                   Maneuver::RelativeDirection::kKeepLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 308,
+                   292, 2, 3, 12, 17, 1, 0, 0, 0, 0, 0, 0, 0, { }, { {
+                       "PA 743 South", "0" } },
+                   { { "Elizabethtown", "0" } }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver4 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver4, TripDirections_Maneuver_Type_kLeft, {
+                       "Hershey Road", "PA 743 South" },
+                   { }, 0.498000, 31, 266, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 198, 19, 3,
+                   9, 17, 25, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver5 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver5,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 9, 9,
+                   25, 25, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
+void TestStraightInternalLeftInternalCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.056148, 72.000000,
+               TripPath_RoadClass_kSecondary, 26, 24, 0, 2,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.081000, 72.000000,
+               TripPath_RoadClass_kSecondary, 24, 24, 2, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:2 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.017000, 72.000000,
+               TripPath_RoadClass_kSecondary, 25, 25, 3, 4,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:3 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Snowden River Parkway" }, 0.030000, 60.000000,
+               TripPath_RoadClass_kSecondary, 291, 291, 4, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:4
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Patuxent Woods Drive" }, 0.059840, 40.000000,
+               TripPath_RoadClass_kTertiaryUnclassified, 292, 270, 5, 8,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Broken Land Parkway" },
+                   { }, 0.137148, 7, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 26, 24,
+                   0, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.047000, 3, 1, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 25,
+                   291, 2, 4, 3, 5, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kContinue, {
+                       "Patuxent Woods Drive" },
+                   { }, 0.059840, 5, 1,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 292, 270, 4,
+                   5, 5, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 5, 5,
+                   8, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Broken Land Parkway" },
+                   { }, 0.137148, 7, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 26, 24,
+                   0, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kLeft, {
+                       "Patuxent Woods Drive" },
+                   { }, 0.106840, 8, 268, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 292, 270, 2,
+                   5, 3, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 5, 5,
+                   8, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
+void TestStraightInternalStraightCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.120902,
+               80.000000, TripPath_RoadClass_kTrunk, 59, 94, 0, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.086000,
+               80.000000, TripPath_RoadClass_kTrunk, 94, 94, 5, 8,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:2 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.018000,
+               90.000000, TripPath_RoadClass_kTrunk, 96, 96, 8, 9,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:3
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.099000,
+               80.000000, TripPath_RoadClass_kTrunk, 94, 95, 9, 12,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:4
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.774000,
+               80.000000, TripPath_RoadClass_kTrunk, 96, 88, 12, 28,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:5
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.123000,
+               80.000000, TripPath_RoadClass_kTrunk, 90, 90, 28, 32,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:6
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.009000,
+               80.000000, TripPath_RoadClass_kTrunk, 86, 86, 32, 33,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:7 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.015000,
+               72.000000, TripPath_RoadClass_kTrunk, 93, 93, 33, 34,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:8
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.077000,
+               72.000000, TripPath_RoadClass_kTrunk, 90, 90, 34, 35,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:9
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.217965,
+               72.000000, TripPath_RoadClass_kTrunk, 90, 89, 35, 40,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 0.206902, 9, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 59, 94,
+                   0, 2, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.018000, 1, 2, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 96, 96, 2,
+                   3, 8, 9, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kContinue, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 1.005000, 45, 358,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 94, 86, 3,
+                   7, 9, 33, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.015000, 1, 7, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 93, 93, 7,
+                   8, 33, 34, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver5 = maneuvers.back();
+  PopulateManeuver(maneuver5, TripDirections_Maneuver_Type_kContinue, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 0.294965, 15, 357,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 90, 89, 8,
+                   10, 34, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver6 = maneuvers.back();
+  PopulateManeuver(maneuver6, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 10,
+                   10, 40, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 1.539867, 71, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 59, 10,
+                   0, 10, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 10,
+                   10, 40, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
 }
 
 int main() {
@@ -337,6 +1111,18 @@ int main() {
 
   // DetermineRelativeDirection
   suite.test(TEST_CASE(TestDetermineRelativeDirection));
+
+  // LeftInternalStraightCombine
+  suite.test(TEST_CASE(TestLeftInternalStraightCombine));
+
+  // StraightInternalLeftCombine
+  suite.test(TEST_CASE(TestStraightInternalLeftCombine));
+
+  // StraightInternalLeftInternalCombine
+  suite.test(TEST_CASE(TestStraightInternalLeftInternalCombine));
+
+  // StraightInternalStraightCombine
+  suite.test(TEST_CASE(TestStraightInternalStraightCombine));
 
   return suite.tear_down();
 }
