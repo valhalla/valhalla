@@ -12,7 +12,6 @@ using namespace valhalla::baldr;
 
 namespace {
 
-constexpr float    kMaxDistance = std::numeric_limits<float>::max();
 constexpr uint32_t kBucketCount = 20000;
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
@@ -58,8 +57,7 @@ namespace thor {
 
 // Default constructor
 PathAlgorithm::PathAlgorithm()
-    : hierarchy_limits_{},
-      edgelabel_index_(0),
+    : edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
       best_destination_{kInvalidLabel, std::numeric_limits<float>::max()}{
@@ -112,27 +110,9 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   adjacencylist_ = new AdjacencyList(mincost, range, bucketsize);
   edgestatus_ = new EdgeStatus();
 
-  // Reset any hierarchy transition counts
-  for (auto& level : hierarchy_limits_) {
-    level.up_transition_count = 0;
-  }
-
-  // TODO - initialize hierarchy limits based on config/# of tries. Set up
-  // defaults...
-  hierarchy_limits_[0].max_up_transitions    = 0;
-  hierarchy_limits_[0].expansion_within_dist = kMaxDistance;
-  hierarchy_limits_[0].upward_until_dist     = 0.0f;
-  hierarchy_limits_[0].downward_within_dist  = 10000.0f;
-
-  hierarchy_limits_[1].max_up_transitions    = 250;
-  hierarchy_limits_[1].expansion_within_dist = 10000.0f;
-  hierarchy_limits_[1].upward_until_dist     = 10000.0f;
-  hierarchy_limits_[1].downward_within_dist  = 5000.0f;
-
-  hierarchy_limits_[2].max_up_transitions    = 50;
-  hierarchy_limits_[2].expansion_within_dist = 5000.0f;
-  hierarchy_limits_[2].upward_until_dist     = 5000.0f;
-  hierarchy_limits_[2].downward_within_dist  = kMaxDistance;
+  // Get hierarchy limits from the costing. Get a copy since we increment
+  // transition counts (i.e., this is not a const reference).
+  hierarchy_limits_ = costing->GetHierarchyLimits();
 }
 
 // Calculate best path.
