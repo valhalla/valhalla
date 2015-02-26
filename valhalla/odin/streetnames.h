@@ -18,7 +18,7 @@ class StreetNames : public std::list<StreetName> {
 
   std::string ToString() const;
 
-  std::string ToUnitTestString() const;
+  std::string ToParameterString() const;
 
   StreetNames FindCommonStreetNames(StreetNames other_street_names) const;
 

@@ -22,7 +22,7 @@ void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
 }
 
-std::string Sign::ToUnitTestString() const {
+std::string Sign::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
   str += "{ ";

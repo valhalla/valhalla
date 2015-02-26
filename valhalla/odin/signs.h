@@ -42,12 +42,12 @@ class Signs {
 
   std::string ToString() const;
 
-  std::string ToUnitTestString() const;
+  std::string ToParameterString() const;
 
  protected:
   const std::string ListToString(const std::vector<Sign>& signs) const;
 
-  const std::string ListToUnitTestString(const std::vector<Sign>& signs) const;
+  const std::string ListToParameterString(const std::vector<Sign>& signs) const;
 
   std::vector<Sign> exit_number_list_;
   std::vector<Sign> exit_branch_list_;

@@ -27,7 +27,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
     LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-    LOG_TRACE(std::string("  maneuver_UNIT_TEST=") + maneuver.ToUnitTestString());
+    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
   }
 #endif
 
@@ -42,7 +42,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
     LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
-    LOG_TRACE(std::string("  maneuver_UNIT_TEST=") + maneuver.ToUnitTestString());
+    LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
   }
 #endif
 
@@ -87,7 +87,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto* next_edge = trip_path_->GetNextEdge(i);
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(i) + ":  ");
-    LOG_TRACE(std::string("  curr_edge_UNIT_TEST=") + (curr_edge ? curr_edge->ToUnitTestString() : "NONE"));
+    LOG_TRACE(std::string("  curr_edge_PARAMETERS=") + (curr_edge ? curr_edge->ToParameterString() : "NONE"));
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(
             GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading())));
@@ -129,7 +129,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   auto* curr_edge = trip_path_->GetCurrEdge(0);
   LOG_TRACE("---------------------------------------------");
   LOG_TRACE(std::string("0") + ":  ");
-  LOG_TRACE(std::string("  curr_edge_UNIT_TEST=") + (curr_edge ? curr_edge->ToUnitTestString() : "NONE"));
+  LOG_TRACE(std::string("  curr_edge_PARAMETERS=") + (curr_edge ? curr_edge->ToParameterString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto* node = trip_path_->GetEnhancedNode(0);
   for (size_t y = 0; y < node->GetIntersectingEdgesCount(); ++y) {

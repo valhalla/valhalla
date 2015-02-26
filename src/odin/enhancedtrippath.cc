@@ -174,12 +174,12 @@ std::string EnhancedTripPath_Edge::ToString() const {
   return str;
 }
 
-std::string EnhancedTripPath_Edge::ToUnitTestString() const {
+std::string EnhancedTripPath_Edge::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
   str.reserve(128);
 
-  str += ListToUnitTestString(this->name());
+  str += ListToParameterString(this->name());
 
   str += delim;
   str += std::to_string(length());
@@ -243,16 +243,16 @@ std::string EnhancedTripPath_Edge::ToUnitTestString() const {
   str += std::to_string(end_node_index());
 
   str += delim;
-  str += ListToUnitTestString(this->sign().exit_number());
+  str += ListToParameterString(this->sign().exit_number());
 
   str += delim;
-  str += ListToUnitTestString(this->sign().exit_branch());
+  str += ListToParameterString(this->sign().exit_branch());
 
   str += delim;
-  str += ListToUnitTestString(this->sign().exit_toward());
+  str += ListToParameterString(this->sign().exit_toward());
 
   str += delim;
-  str += ListToUnitTestString(this->sign().exit_name());
+  str += ListToParameterString(this->sign().exit_name());
 
   return str;
 }
@@ -272,7 +272,7 @@ std::string EnhancedTripPath_Edge::ListToString(
   return str;
 }
 
-std::string EnhancedTripPath_Edge::ListToUnitTestString(
+std::string EnhancedTripPath_Edge::ListToParameterString(
     const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
   std::string str;
 

@@ -355,7 +355,7 @@ std::string Maneuver::ToString() const {
   return man_str;
 }
 
-std::string Maneuver::ToUnitTestString() const {
+std::string Maneuver::ToParameterString() const {
   const std::string delim = ", ";
   std::string man_str;
   man_str.reserve(256);
@@ -365,10 +365,10 @@ std::string Maneuver::ToUnitTestString() const {
       ->name();
 
   man_str += delim;
-  man_str += street_names_.ToUnitTestString();
+  man_str += street_names_.ToParameterString();
 
   man_str += delim;
-  man_str += begin_street_names_.ToUnitTestString();
+  man_str += begin_street_names_.ToParameterString();
 
   man_str += delim;
   man_str += std::to_string(distance_);
@@ -431,7 +431,7 @@ std::string Maneuver::ToUnitTestString() const {
   man_str += std::to_string(internal_intersection_);
 
   man_str += delim;
-  man_str += signs_.ToUnitTestString();
+  man_str += signs_.ToParameterString();
 
   return man_str;
 }

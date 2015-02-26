@@ -93,20 +93,20 @@ std::string Signs::ToString() const {
   return signs_string;
 }
 
-std::string Signs::ToUnitTestString() const {
+std::string Signs::ToParameterString() const {
   const std::string delim = ", ";
   std::string signs_string;
 
-  signs_string += ListToUnitTestString(exit_number_list_);
+  signs_string += ListToParameterString(exit_number_list_);
 
   signs_string += delim;
-  signs_string += ListToUnitTestString(exit_branch_list_);
+  signs_string += ListToParameterString(exit_branch_list_);
 
   signs_string += delim;
-  signs_string += ListToUnitTestString(exit_toward_list_);
+  signs_string += ListToParameterString(exit_toward_list_);
 
   signs_string += delim;
-  signs_string += ListToUnitTestString(exit_name_list_);
+  signs_string += ListToParameterString(exit_name_list_);
 
   return signs_string;
 }
@@ -122,7 +122,7 @@ const std::string Signs::ListToString(const std::vector<Sign>& signs) const {
   return sign_string;
 }
 
-const std::string Signs::ListToUnitTestString(
+const std::string Signs::ListToParameterString(
     const std::vector<Sign>& signs) const {
   const std::string delim = ", ";
   std::string sign_string;
@@ -133,7 +133,7 @@ const std::string Signs::ListToUnitTestString(
       is_first = false;
     else
       sign_string += delim;
-    sign_string += sign.ToUnitTestString();
+    sign_string += sign.ToParameterString();
   }
   sign_string += " }";
 

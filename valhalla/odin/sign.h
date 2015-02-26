@@ -32,7 +32,7 @@ class Sign {
    */
   void set_consecutive_count(uint32_t consecutive_count);
 
-  std::string ToUnitTestString() const;
+  std::string ToParameterString() const;
 
  protected:
   std::string text_;

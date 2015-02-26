@@ -111,7 +111,7 @@ class Maneuver {
 
   std::string ToString() const;
 
-  std::string ToUnitTestString() const;
+  std::string ToParameterString() const;
 
  protected:
   TripDirections_Maneuver_Type type_;

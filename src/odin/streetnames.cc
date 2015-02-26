@@ -31,7 +31,7 @@ std::string StreetNames::ToString() const {
   return name_string;
 }
 
-std::string StreetNames::ToUnitTestString() const {
+std::string StreetNames::ToParameterString() const {
   std::string name_string;
   bool is_first = true;
   name_string += "{ ";
