@@ -74,14 +74,6 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
  protected:
   EnhancedTripPath_Node();
-
-  static bool IsSimilarTurnDegree(uint32_t path_turn_degree,
-                                  uint32_t intersecting_turn_degree,
-                                  bool is_right,
-                                  uint32_t turn_degree_threshold = 30);
-
-  bool last_node_;
-
 };
 
 }
