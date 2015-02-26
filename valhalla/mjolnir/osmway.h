@@ -525,6 +525,18 @@ class OSMWay {
   bool exit() const;
 
   /**
+   * Sets the tagged_speed flag.
+   * @param  tagged_speed  User specified speed?
+   */
+  void set_tagged_speed(const bool tagged_speed);
+
+  /**
+   * Get the tagged_speed flag.
+   * @return  Returns tagged_speed flag.
+   */
+  bool tagged_speed() const;
+
+  /**
    * Get the road class.
    * @return  Returns road class.
    */
@@ -628,7 +640,7 @@ class OSMWay {
       uint32_t drive_on_right   :1;
       uint32_t bikenetwork      :4;
       uint32_t exit             :1;
-      uint32_t spare            :1;
+      uint32_t tagged_speed     :1;
     } fields;
     uint32_t v;
   };

@@ -45,6 +45,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_restrictions(restrictions);
   set_traffic_signal(signal);
 
+  set_speed_type(way.tagged_speed() ? SpeedType::kTagged : SpeedType::kClassified);
+
   // Set forward flag and access (based on direction)
   set_forward(forward);
   set_caraccess(forward, way.auto_forward());
