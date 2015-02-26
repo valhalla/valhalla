@@ -35,9 +35,6 @@ class Sign {
   std::string ToUnitTestString() const;
 
  protected:
-  // TODO - add to util
-  std::string GetQuotedString(const std::string& item) const;
-
   std::string text_;
   uint32_t consecutive_count_;
 

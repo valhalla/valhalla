@@ -1,4 +1,5 @@
 #include "odin/sign.h"
+#include "odin/util.h"
 
 namespace valhalla {
 namespace odin {
@@ -30,14 +31,6 @@ std::string Sign::ToUnitTestString() const {
   str += GetQuotedString(std::to_string(consecutive_count_));
   str += " }";
 
-  return str;
-}
-
-std::string Sign::GetQuotedString(const std::string& item) const {
-  std::string str;
-  str += "\"";
-  str += item;
-  str += "\"";
   return str;
 }
 
