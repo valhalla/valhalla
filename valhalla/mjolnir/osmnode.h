@@ -15,17 +15,19 @@ using OSMLatLng = std::pair<float, float>;
 
 // Node attributes. Shared by OSMNode and GraphBuilder Node.
 struct NodeAttributes {
-  uint32_t access_mask    : 8;
-  uint32_t payment_mask   : 8;
-  uint32_t type           : 3;
-  uint32_t exit_to        : 1;
-  uint32_t ref            : 1;
-  uint32_t name           : 1;
-  uint32_t intersection   : 1;
-  uint32_t traffic_signal : 1;
-  uint32_t non_link_edge  : 1;
-  uint32_t link_edge      : 1;
-  uint32_t spare          : 6;
+  uint32_t access_mask      : 8;
+  uint32_t payment_mask     : 8;
+  uint32_t type             : 3;
+  uint32_t exit_to          : 1;
+  uint32_t ref              : 1;
+  uint32_t name             : 1;
+  uint32_t intersection     : 1;
+  uint32_t traffic_signal   : 1;
+  uint32_t forward_signal   : 1;
+  uint32_t backward_signal  : 1;
+  uint32_t non_link_edge    : 1;
+  uint32_t link_edge        : 1;
+  uint32_t spare            : 4;
 };
 
 /**
@@ -145,6 +147,26 @@ class OSMNode {
    * Get the traffic_signal flag.
    */
   bool traffic_signal() const;
+
+  /**
+   * Set forward_signal flag.
+   */
+  void set_forward_signal(const bool forward_signal);
+
+  /**
+   * Get the forward_signal flag.
+   */
+  bool forward_signal() const;
+
+  /**
+   * Set backward_signal flag.
+   */
+  void set_backward_signal(const bool backward_signal);
+
+  /**
+   * Get the backward_signal flag.
+   */
+  bool backward_signal() const;
 
   /**
    * Get the attributes.

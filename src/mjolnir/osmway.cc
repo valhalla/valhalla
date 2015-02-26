@@ -477,6 +477,16 @@ bool OSMWay::exit() const {
   return attributes_.fields.exit;
 }
 
+// Sets the tagged_speed flag.
+void  OSMWay::set_tagged_speed(const bool tagged_speed) {
+  attributes_.fields.tagged_speed = tagged_speed;
+}
+
+// Get the tagged_speed flag.
+bool  OSMWay::tagged_speed() const {
+  return attributes_.fields.tagged_speed;
+}
+
 // Get the road class.
 RoadClass OSMWay::road_class() const {
   return static_cast<RoadClass>(classification_.fields.road_class);

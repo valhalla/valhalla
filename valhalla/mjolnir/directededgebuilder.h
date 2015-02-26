@@ -41,7 +41,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
                       const float speed, const baldr::Use use,
                       const bool not_thru,  const bool internal,
                       const baldr::RoadClass rc, const uint32_t localidx,
-                      const uint32_t restrictions);
+                      const bool signal, const uint32_t restrictions);
 
   /**
    * Set the end node of this directed edge.
