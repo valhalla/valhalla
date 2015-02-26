@@ -4,6 +4,7 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 
+#include "odin/util.h"
 #include "odin/enhancedtrippath.h"
 
 using namespace valhalla::midgard;
@@ -20,7 +21,6 @@ EnhancedTripPath::EnhancedTripPath() {
 EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
   EnhancedTripPath_Node* node =
       static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
-  node->set_last_node(IsLastNodeIndex(node_index));
   return node;
 }
 
@@ -295,31 +295,17 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Node
 
-bool EnhancedTripPath_Node::last_node() const {
-  return last_node_;
-}
-
-void EnhancedTripPath_Node::set_last_node(bool last_node) {
-  last_node_ = last_node;
-}
-
 bool EnhancedTripPath_Node::HasIntersectingEdges() const {
-  // Last index is special since the edges do not include a path edge
-  if (last_node_)
-    return (edge().size() > 0);
   return (edge().size() > 1);
 }
 
 size_t EnhancedTripPath_Node::GetIntersectingEdgesCount() const {
-  if (last_node_)
-    return (edge().size());
-  return (edge().size() - 1);
+  return ((edge().size() > 0) ? (edge().size() - 1) : 0);
 }
 
 EnhancedTripPath_Edge* EnhancedTripPath_Node::GetIntersectingEdge(
     size_t index) {
-  return static_cast<EnhancedTripPath_Edge*>(mutable_edge(
-      last_node_ ? index : ++index));
+  return static_cast<EnhancedTripPath_Edge*>(mutable_edge(++index));
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
@@ -330,8 +316,8 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   left_count = 0;
   left_similar_count = 0;
 
-  // No turn at last node - just return
-  if (last_node_)
+  // No turn - just return
+  if (edge_size() == 0)
     return;
 
   uint32_t path_turn_degree = GetTurnDegree(from_heading,
@@ -343,17 +329,15 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
       if ((intersecting_turn_degree > path_turn_degree)
           || (intersecting_turn_degree < 180)) {
         ++right_count;
-        if (EnhancedTripPath_Node::IsSimilarTurnDegree(path_turn_degree,
-                                                       intersecting_turn_degree,
-                                                       true)) {
+        if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
+                                true)) {
           ++right_similar_count;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           && (intersecting_turn_degree > 180)) {
         ++left_count;
-        if (EnhancedTripPath_Node::IsSimilarTurnDegree(path_turn_degree,
-                                                       intersecting_turn_degree,
-                                                       false)) {
+        if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
+                                false)) {
           ++left_similar_count;
         }
       }
@@ -361,37 +345,20 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
       if ((intersecting_turn_degree > path_turn_degree)
           && (intersecting_turn_degree < 180)) {
         ++right_count;
-        if (EnhancedTripPath_Node::IsSimilarTurnDegree(path_turn_degree,
-                                                       intersecting_turn_degree,
-                                                       true)) {
+        if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
+                                true)) {
           ++right_similar_count;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           || (intersecting_turn_degree > 180)) {
         ++left_count;
-        if (EnhancedTripPath_Node::IsSimilarTurnDegree(path_turn_degree,
-                                                       intersecting_turn_degree,
-                                                       false)) {
+        if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
+                                false)) {
           ++left_similar_count;
         }
       }
     }
   }
-}
-
-bool EnhancedTripPath_Node::IsSimilarTurnDegree(
-    uint32_t path_turn_degree, uint32_t intersecting_turn_degree, bool is_right,
-    uint32_t turn_degree_threshold) {
-  int32_t turn_degree_delta = 0;
-  if (is_right) {
-    turn_degree_delta = (((intersecting_turn_degree - path_turn_degree) + 360)
-        % 360);
-  } else {
-    turn_degree_delta = (((path_turn_degree - intersecting_turn_degree) + 360)
-        % 360);
-  }
-
-  return (turn_degree_delta <= turn_degree_threshold);
 }
 
 }

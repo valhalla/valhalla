@@ -16,7 +16,6 @@ void TryCalculateRightLeftIntersectingEdgeCounts(
   uint32_t left_count = 0;
   uint32_t left_similar_count = 0;
 
-  node->set_last_node(false);
   node->CalculateRightLeftIntersectingEdgeCounts(from_heading, right_count,
                                                  right_similar_count,
                                                  left_count,
