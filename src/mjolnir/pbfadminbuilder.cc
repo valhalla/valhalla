@@ -10,6 +10,26 @@
 
 #include <sqlite3.h>
 #include <spatialite.h>
+/* Need to know which geos version we have to work out which headers to include */
+#include <geos/version.h>
+
+#include <geos/geom/GeometryFactory.h>
+#include <geos/geom/CoordinateSequenceFactory.h>
+#include <geos/geom/Geometry.h>
+#include <geos/geom/LineString.h>
+#include <geos/geom/LinearRing.h>
+#include <geos/geom/MultiLineString.h>
+#include <geos/geom/Polygon.h>
+#include <geos/geom/MultiPolygon.h>
+#include <geos/geom/Point.h>
+#include <geos/io/WKTReader.h>
+#include <geos/io/WKTWriter.h>
+#include <geos/util/GEOSException.h>
+#include <geos/opLinemerge.h>
+using namespace geos::geom;
+using namespace geos::io;
+using namespace geos::util;
+using namespace geos::operation::linemerge;
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
@@ -85,6 +105,104 @@ bool ParseArguments(int argc, char *argv[]) {
   }
 
   return false;
+}
+
+std::string GetWkt(const std::vector<PointLL>& shape) {
+
+  GeometryFactory gf;
+  std::auto_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
+
+  std::string wkt;
+
+  try {
+    for (const auto& ll : shape) {
+      Coordinate c;
+      c.x = ll.lng();
+      c.y = ll.lat();
+      coords->add(c, 0);
+    }
+
+    typedef std::auto_ptr<Geometry> geom_ptr;
+    geom_ptr geom;
+    if (coords->getSize() >= 4 && (coords->getAt(coords->getSize() - 1).equals2D(coords->getAt(0)))) {
+      std::auto_ptr<LinearRing> shell(gf.createLinearRing(coords.release()));
+      geom = geom_ptr(gf.createPolygon(shell.release(), new std::vector<Geometry *>));
+      if (!geom->isValid()) {
+        LOG_ERROR("Error: Invalid Polygon.");
+      }
+      geom->normalize(); // Fix direction of ring
+    } else {
+
+      std::auto_ptr<std::vector<Geometry*> > lines(new std::vector<Geometry*>);
+
+
+      if (coords->getSize() > 1) {
+          geom = geom_ptr(gf.createLineString(coords.release()));
+          lines->push_back(geom.release());
+      }
+
+      geom_ptr mline (gf.createMultiLineString(lines.release()));
+      LineMerger merger;
+      merger.add(mline.get());
+      std::auto_ptr<std::vector<LineString *> > merged(merger.getMergedLineStrings());
+      WKTWriter writer;
+
+      struct polygondata
+      {
+          Polygon*        polygon;
+          LinearRing*     ring;
+          double          area;
+          int             iscontained;
+          unsigned        containedbyid;
+      };
+
+      // Procces ways into lines or simple polygon list
+       polygondata* polys = new polygondata[merged->size()];
+
+       unsigned totalpolys = 0;
+       for (unsigned i=0 ;i < merged->size(); ++i)
+       {
+           std::auto_ptr<LineString> pline ((*merged ) [i]);
+           if (pline->getNumPoints() > 3 && pline->isClosed())
+           {
+               polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
+               polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
+               polys[totalpolys].area = polys[totalpolys].polygon->getArea();
+               polys[totalpolys].iscontained = 0;
+               polys[totalpolys].containedbyid = 0;
+               if (polys[totalpolys].area > 0.0)
+                   totalpolys++;
+               else {
+                   delete(polys[totalpolys].polygon);
+                   delete(polys[totalpolys].ring);
+               }
+           }
+       }
+
+       return wkt;
+
+    }
+
+    wkt = WKTWriter().write(geom.get());
+
+    return wkt;
+  }
+  catch (std::bad_alloc&)
+  {
+    std::cerr << std::endl << "Exception caught processing way. You are likelly running out of memory." << std::endl;
+    std::cerr << "Try in slim mode, using -s parameter." << std::endl;
+  }
+  catch (std::runtime_error& e)
+  {
+    //std::cerr << std::endl << "Exception caught processing way: " << e.what() << std::endl;
+  }
+  catch (...)
+  {
+    std::cerr << std::endl << "Exception caught processing way" << std::endl;
+  }
+
+  return wkt;
+
 }
 
 /**
@@ -176,7 +294,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     }
 
     uint32_t count = 0;
-    uint64_t nodeid,lastid;
+    uint64_t nodeid,firstid,lastid;
     bool has_data, reverse;
 
     for (const auto admin : osmdata.admins_) {
@@ -201,8 +319,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         nodeid = osmdata.noderefs[w->noderef_index()];
 
         size_t j = w->node_count() - 1;
-        if (osmdata.noderefs[w->noderef_index()] ==
-            osmdata.noderefs[w->noderef_index() + j] && shape.size()) {
+        // write out poly if is now closed or if next is inner or outer poly
+        if (!shape.empty() &&
+            ((firstid == lastid ) ||
+             (osmdata.noderefs[w->noderef_index()] == osmdata.noderefs[w->noderef_index() + j]))) {
 
           std::string geom;
           for (const auto& ll : shape) {
@@ -213,18 +333,21 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           }
           geom += "))";
 
-          std::cout << geom << std::endl;
+//          geom = GetWkt(shape);
 
-          count++;
-          sqlite3_reset (stmt);
-          sqlite3_clear_bindings (stmt);
-          sqlite3_bind_int (stmt, 1, count);
-          sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
-          sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
-          /* performing INSERT INTO */
-          ret = sqlite3_step (stmt);
-          if (ret != SQLITE_DONE && ret != SQLITE_ROW)
-            LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+          if (!geom.empty()) {
+            count++;
+            sqlite3_reset (stmt);
+            sqlite3_clear_bindings (stmt);
+            sqlite3_bind_int (stmt, 1, count);
+            sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
+            sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
+            /* performing INSERT INTO */
+            ret = sqlite3_step (stmt);
+            if (ret != SQLITE_DONE && ret != SQLITE_ROW)
+              LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+          }
+         // std::cout << GetWkt(shape) << std::endl;
 
           std::vector<PointLL>().swap(shape);
 
@@ -245,6 +368,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           nodeid = osmdata.noderefs[w->noderef_index() + j];
           const OSMNode& osmnode = *osmdata.GetNode(nodeid);
           lastid = nodeid;
+
+          if (shape.empty())
+            firstid = nodeid;
+
           shape.push_back(osmnode.latlng());
           if (reverse) {
             j--;
@@ -270,6 +397,14 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       }
       geom += "))";
 
+    //  std::cout << GetWkt(shape) << std::endl;
+
+    //  geom = GetWkt(shape);
+
+      if (geom.empty())
+        continue;
+
+
       count++;
       sqlite3_reset (stmt);
       sqlite3_clear_bindings (stmt);
@@ -278,8 +413,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       sqlite3_bind_text (stmt, 3, geom.c_str(), geom.length(), SQLITE_STATIC);
       /* performing INSERT INTO */
       ret = sqlite3_step (stmt);
-      if (ret == SQLITE_DONE || ret == SQLITE_ROW)
+      if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+        std::vector<PointLL>().swap(shape);
         continue;
+      }
       LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
 
     }
