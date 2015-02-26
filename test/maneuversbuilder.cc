@@ -821,6 +821,118 @@ void TestStraightInternalLeftCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
+void TestStraightInternalLeftInternalCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.056148, 72.000000,
+               TripPath_RoadClass_kSecondary, 26, 24, 0, 2,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.081000, 72.000000,
+               TripPath_RoadClass_kSecondary, 24, 24, 2, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:2 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Broken Land Parkway" }, 0.017000, 72.000000,
+               TripPath_RoadClass_kSecondary, 25, 25, 3, 4,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:3 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Snowden River Parkway" }, 0.030000, 60.000000,
+               TripPath_RoadClass_kSecondary, 291, 291, 4, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:4
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Patuxent Woods Drive" }, 0.059840, 40.000000,
+               TripPath_RoadClass_kTertiaryUnclassified, 292, 270, 5, 8,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Broken Land Parkway" },
+                   { }, 0.137148, 7, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 26, 24,
+                   0, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.047000, 3, 1, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 25,
+                   291, 2, 4, 3, 5, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kContinue, {
+                       "Patuxent Woods Drive" },
+                   { }, 0.059840, 5, 1,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 292, 270, 4,
+                   5, 5, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 5, 5,
+                   8, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Broken Land Parkway" },
+                   { }, 0.137148, 7, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 26, 24,
+                   0, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kLeft, {
+                       "Patuxent Woods Drive" },
+                   { }, 0.106840, 8, 268, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 292, 270, 2,
+                   5, 3, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 5, 5,
+                   8, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
 
 }
 
@@ -844,6 +956,9 @@ int main() {
 
   // StraightInternalLeftCombine
   suite.test(TEST_CASE(TestStraightInternalLeftCombine));
+
+  // StraightInternalLeftInternalCombine
+  suite.test(TEST_CASE(TestStraightInternalLeftInternalCombine));
 
   return suite.tear_down();
 }
