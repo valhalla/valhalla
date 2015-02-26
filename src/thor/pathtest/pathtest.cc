@@ -33,8 +33,6 @@ namespace bpo = boost::program_options;
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::shared_ptr<DynamicCost> cost) {
-LOG_INFO("Sizeof GraphTileHeader = " + std::to_string(sizeof(GraphTileHeader)));
-
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -131,7 +129,7 @@ int main(int argc, char *argv[]) {
       "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "type,t",
       boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian")
+      "Route Type: auto|bicycle|pedestrian|auto-shorter")
   // positional arguments
   ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -184,12 +182,13 @@ int main(int argc, char *argv[]) {
   // Figure out the route type
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
+  factory.Register("auto-shorter", CreateAutoShorterCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
 
   for (auto & c : routetype)
     c = std::tolower(c);
-  std::shared_ptr<DynamicCost> cost = factory.Create(routetype);
+  std::shared_ptr<DynamicCost> cost = factory.Create(routetype, pt.get_child("thor"));
 
   LOG_INFO("routetype: " + routetype);
 
