@@ -6,6 +6,8 @@
 #include <valhalla/loki/search.h>
 #include <memory>
 
+#include <valhalla/thor/hierarchylimits.h>
+
 namespace valhalla {
 namespace thor {
 
@@ -21,7 +23,7 @@ namespace thor {
  */
 class DynamicCost {
  public:
-  DynamicCost();
+  DynamicCost(const boost::property_tree::ptree& pt);
 
   virtual ~DynamicCost();
 
@@ -102,7 +104,16 @@ class DynamicCost {
    */
   virtual const loki::EdgeFilter GetFilter() const = 0;
 
+  /**
+   * Gets the hierarchy limits.
+   * @return  Returns the hierarchy limits.
+   */
+  std::vector<HierarchyLimits>& GetHierarchyLimits();
+
  protected:
+  // Hierarchy limits.
+  std::vector<HierarchyLimits> hierarchy_limits_;
+
   // Distance from the destination within which "not_thru" roads are
   // considered. All costing methods exclude such roads except when close
   // to the destination
