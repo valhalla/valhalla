@@ -21,5 +21,25 @@ void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
 }
 
+std::string Sign::ToUnitTestString() const {
+  const std::string delim = ", ";
+  std::string str;
+  str += "{ ";
+  str += GetQuotedString(text_);
+  str += delim;
+  str += GetQuotedString(std::to_string(consecutive_count_));
+  str += " }";
+
+  return str;
+}
+
+std::string Sign::GetQuotedString(const std::string& item) const {
+  std::string str;
+  str += "\"";
+  str += item;
+  str += "\"";
+  return str;
+}
+
 }
 }
