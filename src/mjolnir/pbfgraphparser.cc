@@ -186,7 +186,6 @@ struct graph_callback : public OSMPBF::Callback {
     osmdata_.edge_count += 2;
 
     float default_speed;
-    bool has_speed = false;
     bool has_surface = true;
     std::string name;
 
@@ -306,7 +305,7 @@ struct graph_callback : public OSMPBF::Callback {
 
       else if (tag.first == "speed") {
         w.set_speed(std::stof(tag.second));
-        has_speed = true;
+        w.set_tagged_speed(true);
       }
 
       else if (tag.first == "default_speed")
@@ -469,7 +468,7 @@ struct graph_callback : public OSMPBF::Callback {
     }
 
     //If no speed has been set by a user, assign a speed based on highway tag.
-    if (!has_speed)
+    if (!w.tagged_speed())
       w.set_speed(default_speed);
 
 // TODO  For now...drive on right.
