@@ -19,7 +19,7 @@ class CostFactory {
  public:
   typedef std::shared_ptr<cost_t> cost_ptr_t;
   //TODO: might want to have some configurable params to each cost type
-  typedef cost_ptr_t (*factory_function_t)(/*pt::ptree const& config*/);
+  typedef cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree& config);
 
   /**
    * Constructor
@@ -40,17 +40,17 @@ class CostFactory {
 
   /**
    * Make a cost from its name
-   *
    * @param name    the name of the cost to create
-   * TODO: add configuration for the cost options
+   * @param config  Property tree with configuration / cost options
    */
-  cost_ptr_t Create(const std::string& name/*, pt::ptree const& config*/) const {
+  cost_ptr_t Create(const std::string& name,
+                    const boost::property_tree::ptree& config) const {
     auto itr = factory_funcs_.find(name);
     if (itr == factory_funcs_.end()) {
       throw std::runtime_error("Unrecognized cost name: " + name);
     }
     //create the cost using the function pointer
-    return itr->second();
+    return itr->second(config);
   }
 
  private:

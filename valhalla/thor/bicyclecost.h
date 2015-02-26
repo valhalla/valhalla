@@ -8,9 +8,9 @@ namespace thor {
 
 /**
  * Create a bicyclecost
- *
+ * @param  config  Property tree with configuration / options.
  */
-cost_ptr_t CreateBicycleCost(/*pt::ptree const& config*/);
+cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config);
 
 }
 }
