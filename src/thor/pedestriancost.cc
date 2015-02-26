@@ -10,7 +10,12 @@ namespace thor {
  */
 class PedestrianCost : public DynamicCost {
  public:
-  PedestrianCost();
+  /**
+   * Constructor. Configuration / options for pedestrian costing are provided
+   * via a property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  PedestrianCost(const boost::property_tree::ptree& config);
 
   virtual ~PedestrianCost();
 
@@ -92,11 +97,11 @@ class PedestrianCost : public DynamicCost {
 };
 
 // Constructor
-PedestrianCost::PedestrianCost()
-    : DynamicCost(),
+PedestrianCost::PedestrianCost(const boost::property_tree::ptree& config)
+    : DynamicCost(config),
       walkingspeed_(5.1f),
       favorwalkways_(0.9f) {
-  //TODO: load up stuff from ptree config
+  // TODO: parse pedestrian configuration from ptree config
 }
 
 // Destructor
@@ -154,8 +159,8 @@ float PedestrianCost::UnitSize() const {
   return 2.0f;
 }
 
-cost_ptr_t CreatePedestrianCost(/*pt::ptree const& config*/){
-  return std::make_shared<PedestrianCost>();
+cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<PedestrianCost>(config);
 }
 
 }

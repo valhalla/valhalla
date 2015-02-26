@@ -12,7 +12,7 @@ namespace thor {
  * Create a pedestriancost
  *
  */
-cost_ptr_t CreatePedestrianCost(/*pt::ptree const& config*/);
+cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config);
 
 }
 }

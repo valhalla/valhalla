@@ -12,11 +12,18 @@ namespace valhalla {
 namespace thor {
 
 /**
- * Derived class providing dynamic edge costing for pedestrian routes.
+ * Derived class providing dynamic edge costing for "direct" auto routes. This
+ * is a route that is generally shortest time but uses route hierarchies that
+ * can result in slightly longer routes that avoid shortcuts on residential
+ * roads.
  */
 class AutoCost : public DynamicCost {
  public:
-  AutoCost();
+  /**
+   * Construct auto costing. Pass in configuration using property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  AutoCost(const boost::property_tree::ptree& config);
 
   virtual ~AutoCost();
 
@@ -104,8 +111,8 @@ class AutoCost : public DynamicCost {
 
 
 // Constructor
-AutoCost::AutoCost()
-    : DynamicCost() {
+AutoCost::AutoCost(const boost::property_tree::ptree& config)
+    : DynamicCost(config) {
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
   for (uint32_t s = 1; s < 255; s++) {
@@ -169,16 +176,13 @@ float AutoCost::Seconds(const DirectedEdge* edge) const {
   return edge->length() * speedfactor_[edge->speed()];
 }
 
-/**
- * Get the cost factor for A* heuristics. This factor is multiplied
- * with the distance to the destination to produce an estimate of the
- * minimum cost to the destination. The A* heuristic must underestimate the
- * cost to the destination. So a time based estimate based on speed should
- * assume the maximum speed is used to the destination such that the time
- * estimate is less than the least possible time along roads.
- */
+// Get the cost factor for A* heuristics. This factor is multiplied
+// with the distance to the destination to produce an estimate of the
+// minimum cost to the destination. The A* heuristic must underestimate the
+// cost to the destination. So a time based estimate based on speed should
+// assume the maximum speed is used to the destination such that the time
+// estimate is less than the least possible time along roads.
 float AutoCost::AStarCostFactor() const {
-  // This should be multiplied by the maximum speed expected.
   return speedfactor_[120];
 }
 
@@ -187,8 +191,71 @@ float AutoCost::UnitSize() const {
   return 1.0f;
 }
 
-cost_ptr_t CreateAutoCost(/*pt::ptree const& config*/) {
-  return std::make_shared<AutoCost>();
+cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<AutoCost>(config);
+}
+
+/**
+ * Derived class providing dynamic edge costing for pedestrian routes.
+ */
+class AutoShorterCost : public AutoCost {
+ public:
+  /**
+   * Construct auto costing for shorter (not absolute shortest) path.
+   * Pass in configuration using property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  AutoShorterCost(const boost::property_tree::ptree& config);
+
+  virtual ~AutoShorterCost();
+
+  /**
+   * Get the cost given a directed edge.
+   * @param edge  Pointer to a directed edge.
+   * @return  Returns the cost to traverse the edge.
+   */
+   virtual float Get(const baldr::DirectedEdge* edge) const;
+
+   /**
+    * Get the cost factor for A* heuristics. This factor is multiplied
+    * with the distance to the destination to produce an estimate of the
+    * minimum cost to the destination. The A* heuristic must underestimate the
+    * cost to the destination. So a time based estimate based on speed should
+    * assume the maximum speed is used to the destination such that the time
+    * estimate is less than the least possible time along roads.
+    */
+   virtual float AStarCostFactor() const;
+
+ protected:
+  float adjspeedfactor_[256];
+};
+
+
+// Constructor
+AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& config)
+    : AutoCost(config) {
+  // Create speed cost table that reduces the impact of speed
+  adjspeedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
+  for (uint32_t s = 1; s < 255; s++) {
+    adjspeedfactor_[s] = (kSecPerHour * 0.001f) / sqrtf(static_cast<float>(s));
+  }
+}
+
+// Destructor
+AutoShorterCost::~AutoShorterCost() {
+}
+
+// Get the cost to traverse the edge in seconds.
+float AutoShorterCost::Get(const DirectedEdge* edge) const {
+  return edge->length() * adjspeedfactor_[edge->speed()];
+}
+
+float AutoShorterCost::AStarCostFactor() const {
+  return adjspeedfactor_[120];
+}
+
+cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<AutoShorterCost>(config);
 }
 
 }

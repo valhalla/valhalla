@@ -48,8 +48,8 @@ class PathAlgorithm {
   void Clear();
 
  protected:
-  // Hierarchy limits. TODO - need global contant of max # of levels
-  HierarchyLimits hierarchy_limits_[8];
+  // Hierarchy limits.
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

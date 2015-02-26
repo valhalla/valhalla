@@ -19,7 +19,12 @@ constexpr float kBicycleNetworkFactor = 0.8f;
  */
 class BicycleCost : public DynamicCost {
  public:
-  BicycleCost();
+  /**
+   * Constructor. Configuration / options for bicycle costing are provided
+   * via a property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  BicycleCost(const boost::property_tree::ptree& config);
 
   virtual ~BicycleCost();
 
@@ -151,8 +156,8 @@ class BicycleCost : public DynamicCost {
 // TODO - how to handle time/speed for estimating time on path
 
 // Constructor
-BicycleCost::BicycleCost()
-    : DynamicCost(),
+BicycleCost::BicycleCost(const boost::property_tree::ptree& config)
+    : DynamicCost(config),
       speed_(25.0f),
       bicycletype_(BicycleType::kRoad),
       smooth_surface_factor_(0.9f),
@@ -273,8 +278,8 @@ float BicycleCost::UnitSize() const {
   return 2.0f;
 }
 
-cost_ptr_t CreateBicycleCost(/*pt::ptree const& config*/){
-  return std::make_shared<BicycleCost>();
+cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<BicycleCost>(config);
 }
 
 }
