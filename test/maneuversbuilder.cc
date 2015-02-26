@@ -934,6 +934,167 @@ void TestStraightInternalLeftInternalCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
+void TestStraightInternalStraightCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.120902,
+               80.000000, TripPath_RoadClass_kTrunk, 59, 94, 0, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.086000,
+               80.000000, TripPath_RoadClass_kTrunk, 94, 94, 5, 8,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:2 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.018000,
+               90.000000, TripPath_RoadClass_kTrunk, 96, 96, 8, 9,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:3
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.099000,
+               80.000000, TripPath_RoadClass_kTrunk, 94, 95, 9, 12,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:4
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.774000,
+               80.000000, TripPath_RoadClass_kTrunk, 96, 88, 12, 28,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:5
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.123000,
+               80.000000, TripPath_RoadClass_kTrunk, 90, 90, 28, 32,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:6
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.009000,
+               80.000000, TripPath_RoadClass_kTrunk, 86, 86, 32, 33,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:7 INTERNAL_INTERSECTION
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.015000,
+               72.000000, TripPath_RoadClass_kTrunk, 93, 93, 33, 34,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:8
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.077000,
+               72.000000, TripPath_RoadClass_kTrunk, 90, 90, 34, 35,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:9
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.217965,
+               72.000000, TripPath_RoadClass_kTrunk, 90, 89, 35, 40,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 0.206902, 9, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 59, 94,
+                   0, 2, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.018000, 1, 2, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 96, 96, 2,
+                   3, 8, 9, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kContinue, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 1.005000, 45, 358,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 94, 86, 3,
+                   7, 9, 33, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kNone, { }, { },
+                   0.015000, 1, 7, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 93, 93, 7,
+                   8, 33, 34, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver5 = maneuvers.back();
+  PopulateManeuver(maneuver5, TripDirections_Maneuver_Type_kContinue, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 0.294965, 15, 357,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 90, 89, 8,
+                   10, 34, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver6 = maneuvers.back();
+  PopulateManeuver(maneuver6, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 10,
+                   10, 40, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "MD 43 East", "White Marsh Boulevard" },
+                   { }, 1.539867, 71, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 59, 10,
+                   0, 10, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2,
+                   TripDirections_Maneuver_Type_kDestination, { }, { },
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 10,
+                   10, 40, 40, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
 }
 
 int main() {
@@ -959,6 +1120,9 @@ int main() {
 
   // StraightInternalLeftInternalCombine
   suite.test(TEST_CASE(TestStraightInternalLeftInternalCombine));
+
+  // StraightInternalStraightCombine
+  suite.test(TEST_CASE(TestStraightInternalStraightCombine));
 
   return suite.tear_down();
 }
