@@ -5,6 +5,22 @@
 namespace valhalla {
 namespace odin {
 
+const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ =
+    { { static_cast<int>(Maneuver::RelativeDirection::kNone),
+        "Maneuver::RelativeDirection::kNone" }, {
+        static_cast<int>(Maneuver::RelativeDirection::kKeepStraight),
+        "Maneuver::RelativeDirection::kKeepStraight" }, {
+        static_cast<int>(Maneuver::RelativeDirection::kKeepRight),
+        "Maneuver::RelativeDirection::kKeepRight" }, {
+        static_cast<int>(Maneuver::RelativeDirection::kRight),
+        "Maneuver::RelativeDirection::kRight" }, {
+        static_cast<int>(Maneuver::RelativeDirection::KReverse),
+        "Maneuver::RelativeDirection::KReverse" }, {
+        static_cast<int>(Maneuver::RelativeDirection::kLeft),
+        "Maneuver::RelativeDirection::kLeft" }, {
+        static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
+        "Maneuver::RelativeDirection::kKeepLeft" } };
+
 Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone),
       distance_(0.0f),
@@ -364,7 +380,8 @@ std::string Maneuver::ToUnitTestString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str += relative_direction_string_.find(static_cast<int>(begin_relative_direction_))->second;
+  man_str += Maneuver::relative_direction_string_.find(
+      static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
   man_str += "TripDirections_Maneuver_CardinalDirection_";

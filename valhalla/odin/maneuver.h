@@ -141,22 +141,7 @@ class Maneuver {
 
   // TODO notes
 
-  const std::unordered_map<int, std::string> relative_direction_string_ =
-      {
-          { static_cast<int>(RelativeDirection::kNone),
-              "Maneuver::RelativeDirection::kNone" }, {
-              static_cast<int>(RelativeDirection::kKeepStraight),
-              "Maneuver::RelativeDirection::kKeepStraight" }, {
-              static_cast<int>(RelativeDirection::kKeepRight),
-              "Maneuver::RelativeDirection::kKeepRight" }, {
-              static_cast<int>(RelativeDirection::kRight),
-              "Maneuver::RelativeDirection::kRight" }, {
-              static_cast<int>(RelativeDirection::KReverse),
-              "Maneuver::RelativeDirection::KReverse" }, {
-              static_cast<int>(RelativeDirection::kLeft),
-              "Maneuver::RelativeDirection::kLeft" }, {
-              static_cast<int>(RelativeDirection::kKeepLeft),
-              "Maneuver::RelativeDirection::kKeepLeft" } };
+  static const std::unordered_map<int, std::string> relative_direction_string_;
 
 };
 
