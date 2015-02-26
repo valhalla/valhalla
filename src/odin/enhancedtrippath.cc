@@ -96,14 +96,7 @@ std::string EnhancedTripPath_Edge::ToString() const {
   if (name_size() == 0) {
     str += "unnamed";
   } else {
-    bool is_first = true;
-    for (const auto& name : this->name()) {
-      if (is_first)
-        is_first = false;
-      else
-        str += "/";
-      str += name;
-    }
+    str += ListToString(this->name());
   }
 
   str += " | length=";
@@ -166,175 +159,132 @@ std::string EnhancedTripPath_Edge::ToString() const {
   // Process exits, if needed
   if (this->has_sign()) {
     str += " | exit.number=";
-    bool is_first = true;
-    for (const auto& number : this->sign().exit_number()) {
-      if (is_first)
-        is_first = false;
-      else
-        str += "/";
-      str += number;
-    }
+    str += ListToString(this->sign().exit_number());
 
     str += " | exit.branch=";
-    is_first = true;
-    for (const auto& branch : this->sign().exit_branch()) {
-      if (is_first)
-        is_first = false;
-      else
-        str += "/";
-      str += branch;
-    }
+    str += ListToString(this->sign().exit_branch());
 
     str += " | exit.toward=";
-    is_first = true;
-    for (const auto& toward : this->sign().exit_toward()) {
-      if (is_first)
-        is_first = false;
-      else
-        str += "/";
-      str += toward;
-    }
+    str += ListToString(this->sign().exit_toward());
 
     str += " | exit.name=";
-    is_first = true;
-    for (const auto& name : this->sign().exit_name()) {
-      if (is_first)
-        is_first = false;
-      else
-        str += "/";
-      str += name;
-    }
-
+    str += ListToString(this->sign().exit_name());
   }
 
   return str;
 }
 
 std::string EnhancedTripPath_Edge::ToUnitTestString() const {
+  const std::string delim = ", ";
   std::string str;
   str.reserve(128);
 
-  str += "{ ";
-  bool is_first = true;
-  for (const auto& name : this->name()) {
-    if (is_first)
-      is_first = false;
-    else
-      str += ", ";
-    str += "\"";
-    str += name;
-    str += "\"";
-  }
-  str += " }";
+  str += ListToUnitTestString(this->name());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(length());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(speed());
 
-  str += ", TripPath_RoadClass_";
+  str += delim;
+  str += "TripPath_RoadClass_";
   str +=
       TripPath_RoadClass_descriptor()->FindValueByNumber(road_class())->name();
 
-  str += ", ";
+  str += delim;
   str += std::to_string(begin_heading());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(end_heading());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(begin_shape_index());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(end_shape_index());
 
-  str += ", TripPath_Driveability_";
+  str += delim;
+  str += "TripPath_Driveability_";
   str += TripPath_Driveability_descriptor()->FindValueByNumber(driveability())
       ->name();
 
-  str += ", ";
+  str += delim;
   str += std::to_string(ramp());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(turn_channel());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(ferry());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(rail_ferry());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(toll());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(unpaved());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(tunnel());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(bridge());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(roundabout());
 
-  str += ", ";
+  str += delim;
   str += std::to_string(internal_intersection());
 
-  //  str += ", ";
-  //  str += std::to_string(end_node_index());
+  str += delim;
+  str += std::to_string(end_node_index());
 
-  // Process exits, if needed
-  str += ", { ";
-  is_first = true;
-  for (const auto& number : this->sign().exit_number()) {
+  str += delim;
+  str += ListToUnitTestString(this->sign().exit_number());
+
+  str += delim;
+  str += ListToUnitTestString(this->sign().exit_branch());
+
+  str += delim;
+  str += ListToUnitTestString(this->sign().exit_toward());
+
+  str += delim;
+  str += ListToUnitTestString(this->sign().exit_name());
+
+  return str;
+}
+
+std::string EnhancedTripPath_Edge::ListToString(
+    const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
+  std::string str;
+
+  bool is_first = true;
+  for (const auto& item : string_list) {
     if (is_first)
       is_first = false;
     else
-      str += ", ";
-    str += "\"";
-    str += number;
-    str += "\"";
+      str += "/";
+    str += item;
   }
-  str += " }";
+  return str;
+}
 
-  str += ", { ";
-  is_first = true;
-  for (const auto& branch : this->sign().exit_branch()) {
+std::string EnhancedTripPath_Edge::ListToUnitTestString(
+    const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const {
+  std::string str;
+
+  str += "{ ";
+  bool is_first = true;
+  for (const auto& item : string_list) {
     if (is_first)
       is_first = false;
     else
       str += ", ";
     str += "\"";
-    str += branch;
-    str += "\"";
-  }
-  str += " }";
-
-  str += ", { ";
-  is_first = true;
-  for (const auto& toward : this->sign().exit_toward()) {
-    if (is_first)
-      is_first = false;
-    else
-      str += ", ";
-    str += "\"";
-    str += toward;
-    str += "\"";
-  }
-  str += " }";
-
-  str += ", { ";
-  is_first = true;
-  for (const auto& name : this->sign().exit_name()) {
-    if (is_first)
-      is_first = false;
-    else
-      str += ", ";
-    str += "\"";
-    str += name;
+    str += item;
     str += "\"";
   }
   str += " }";

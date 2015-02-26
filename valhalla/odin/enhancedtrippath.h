@@ -48,6 +48,12 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
  protected:
   EnhancedTripPath_Edge();
 
+  std::string ListToString(
+      const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+
+  std::string ListToUnitTestString(
+      const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
+
 };
 
 class EnhancedTripPath_Node : public TripPath_Node {
