@@ -7,8 +7,6 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-// TODO - validation of incoming data!
-
 // Default constructor
 DirectedEdgeBuilder::DirectedEdgeBuilder()
   : DirectedEdge() {
