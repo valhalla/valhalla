@@ -19,9 +19,7 @@ EnhancedTripPath::EnhancedTripPath() {
 }
 
 EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
-  EnhancedTripPath_Node* node =
-      static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
-  return node;
+  return static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
 }
 
 EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index,
