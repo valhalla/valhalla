@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
 #include "odin/maneuversbuilder.h"
@@ -45,6 +46,17 @@ std::list<Maneuver> ManeuversBuilder::Build() {
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
   }
 #endif
+
+//#ifdef LOGGING_LEVEL_DEBUG
+//  LOG_DEBUG("############################################");
+//  LOG_DEBUG("LOCATION");
+//  for (::valhalla::odin::TripPath_Location loc : trip_path_->location()) {
+//    LOG_DEBUG(std::string("  lat=") + std::to_string(loc.ll().lat()));
+//    LOG_DEBUG(std::string("  lng=") + std::to_string(loc.ll().lng()));
+//    LOG_DEBUG(std::string("  street=") + loc.street());
+//  }
+//  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(trip_path_->shape());
+//#endif
 
   return maneuvers;
 }
@@ -98,6 +110,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       LOG_TRACE(std::string("    prev2int_turn_degree=") + std::to_string(
               GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
     }
+    LOG_TRACE(std::string("  node=") + node->ToString());
     uint32_t right_count;
     uint32_t right_similar_count;
     uint32_t left_count;
