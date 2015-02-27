@@ -71,7 +71,6 @@ message TripPath {
     repeated Edge edge = 1;           // first one is the outbound path edge
     optional bool gate = 2;
     optional bool toll_booth = 3;
-    optional uint32 accepted_payment = 4;
   }
   
   optional uint64 trip_id = 1;

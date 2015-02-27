@@ -369,9 +369,6 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | toll_booth=";
   str += std::to_string(toll_booth());
 
-  str += " | accepted_payment=";
-  str += std::to_string(accepted_payment());
-
   return str;
 }
 
