@@ -93,7 +93,7 @@ enum class Use : uint8_t {
   kAlley = 5,             // Service road - limited route use
   kParkingAisle = 6,      // Access roads in parking areas
   kEmergencyAccess = 7,   // Emergency vehicles only
-  kDriveThru = 8,         // Commerical drive-thru (banks/fast-food)
+  kDriveThru = 8,         // Commercial drive-thru (banks/fast-food)
   kCuldesac = 9,          // Cul-de-sac (edge that forms a loop and is only
                           // connected at one node to another edge.
 
