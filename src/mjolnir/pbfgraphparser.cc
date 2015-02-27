@@ -126,8 +126,11 @@ struct graph_callback : public OSMPBF::Callback {
       }
       else if (tag.first == "access_mask")
         n.set_access_mask(std::stoi(tag.second));
+
+      /* TODO: payment type.
       else if (tag.first == "payment_mask")
         n.set_payment_mask(std::stoi(tag.second));
+      */
     }
 
     // Set the intersection flag (relies on ways being processed first to set
