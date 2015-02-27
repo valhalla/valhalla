@@ -129,7 +129,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
+    auto trip_edge = AddTripEdge(pathedges.front().id(), edge, trip_path.add_node(), tile,
+                                 tile->node(startnode), end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
     trip_path.add_node();
@@ -175,7 +176,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto is_first_edge = edge_itr == pathedges.begin();
     auto is_last_edge = edge_itr == pathedges.end() - 1;
     float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge, trip_node, graphtile, length_pct);
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge, trip_node, graphtile,
+                                           graphtile->node(startnode), length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -236,7 +238,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             connectededge->trans_up() || connectededge->trans_down()) {
           continue;
         }
-        AddTripEdge(edgeid, connectededge, trip_node, tile);
+        AddTripEdge(edgeid, connectededge, trip_node, tile, nodeinfo);
       }
     }
 
@@ -287,7 +289,12 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
+                                            const NodeInfo* nodeinfo,
                                             const float length_percentage) {
+
+  trip_node->set_gate(nodeinfo->type() == NodeType::kGate ? true : false);
+  trip_node->set_toll_booth(nodeinfo->type() == NodeType::kTollBooth ? true : false);
+
   TripPath_Edge* trip_edge = trip_node->add_edge();
 
   // Get the edgeinfo and list of names - add to the trip edge.
