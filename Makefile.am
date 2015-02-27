@@ -54,6 +54,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/edgeinfobuilder.h \
 	valhalla/mjolnir/uniquenames.h \
 	valhalla/mjolnir/graphbuilder.h \
+	valhalla/mjolnir/graphenhancer.h \
 	valhalla/mjolnir/graphoptimizer.h \
 	valhalla/mjolnir/hierarchybuilder.h \
         valhalla/mjolnir/idtable.h \
@@ -79,6 +80,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc \
 	src/mjolnir/graphbuilder.cc \
+	src/mjolnir/graphenhancer.cc \
 	src/mjolnir/graphoptimizer.cc \
 	src/mjolnir/hierarchybuilder.cc \
         src/mjolnir/idtable.cc \
