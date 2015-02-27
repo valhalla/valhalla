@@ -265,7 +265,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     }
     /* creating a POLYGON Geometry column */
     sql = "SELECT AddGeometryColumn('admins', ";
-    sql += "'geom', 4326, 'POLYGON', 'XY')";
+    sql += "'geom', 4326, 'MULTILINESTRING', 'XY')";
     ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
     if (ret != SQLITE_OK) {
       LOG_ERROR("Error: " + std::string(err_msg));
@@ -273,6 +273,18 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       sqlite3_close(db_handle);
       return;
     }
+
+    /* creating a POLYGON Geometry column */
+        sql = "SELECT AddGeometryColumn('admins', ";
+        sql += "'poly', 4326, 'POLYGON', 'XY')";
+        ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+        if (ret != SQLITE_OK) {
+          LOG_ERROR("Error: " + std::string(err_msg));
+          sqlite3_free(err_msg);
+          sqlite3_close(db_handle);
+          return;
+        }
+
     LOG_INFO("Created admin table.");
 
     /*
@@ -296,17 +308,44 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     uint32_t count = 0;
     uint64_t nodeid,firstid,lastid;
     bool has_data, reverse;
+    std::string geom;
 
     for (const auto admin : osmdata.admins_) {
 
       lastid = 0;
       std::vector<PointLL> shape;
       has_data = true;
+      geom = "";
 
       for (size_t i = 0; i < admin.member_count(); i++) {
 
+        if (!shape.empty()) {
+          std::string tmp;
+          for (const auto& ll : shape) {
+            if (!tmp.empty())
+              tmp += ", ";
+
+            tmp += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
+          }
+          tmp = "(" + tmp + ")";
+          if (geom.empty())
+            geom = "MULTILINESTRING(";
+          else geom += ", ";
+          geom += tmp;
+
+          std::vector<PointLL>().swap(shape);
+
+        }
+
+
         const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
         const OSMWay* w = osmdata.GetWay(memberid);
+
+        if (15459379 == memberid)
+        {
+          has_data = true;
+          std::cout << " text" << std::endl;
+        }
 
         // A relation may be included in an extract but it's members may not.
         // Example:  PA extract can contain a NY relation.
@@ -320,22 +359,24 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
         size_t j = w->node_count() - 1;
         // write out poly if is now closed or if next is inner or outer poly
-        if (!shape.empty() &&
-            ((firstid == lastid ) ||
-             (osmdata.noderefs[w->noderef_index()] == osmdata.noderefs[w->noderef_index() + j]))) {
+        //if (!shape.empty() &&
+          if ((firstid == lastid ) ||
+              (osmdata.noderefs[w->noderef_index()] == osmdata.noderefs[w->noderef_index() + j])) {
 
-          std::string geom;
+ /*         std::string geom;
           for (const auto& ll : shape) {
             if (!geom.empty())
               geom += ", ";
             else geom = "POLYGON((";
             geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
           }
-          geom += "))";
+          geom += "))";*/
 
 //          geom = GetWkt(shape);
 
-          if (!geom.empty()) {
+          geom += ")";
+
+        //  if (!geom.empty()) {
             count++;
             sqlite3_reset (stmt);
             sqlite3_clear_bindings (stmt);
@@ -346,10 +387,13 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
             ret = sqlite3_step (stmt);
             if (ret != SQLITE_DONE && ret != SQLITE_ROW)
               LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          }
+       //   }
          // std::cout << GetWkt(shape) << std::endl;
 
+            //std::cout << admin.name() << " " << geom << std::endl;
+
           std::vector<PointLL>().swap(shape);
+          geom = "";
 
         }
 
@@ -388,7 +432,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       if (!has_data || !shape.size())
         continue;
 
-      std::string geom;
+/*      std::string geom;
       for (const auto& ll : shape) {
         if (!geom.empty())
           geom += ", ";
@@ -396,14 +440,27 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         geom += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
       }
       geom += "))";
+*/
+      if (!shape.empty()) {
+        std::string tmp;
+        for (const auto& ll : shape) {
+          if (!tmp.empty())
+            tmp += ", ";
 
-    //  std::cout << GetWkt(shape) << std::endl;
+          tmp += std::to_string(ll.lng()) + " " + std::to_string(ll.lat());
+        }
+        tmp = "(" + tmp + ")";
+        if (geom.empty())
+          geom = "MULTILINESTRING(";
+        else geom += ", ";
+        geom += tmp;
 
-    //  geom = GetWkt(shape);
+        std::vector<PointLL>().swap(shape);
 
-      if (geom.empty())
-        continue;
+      }
+      geom += ")";
 
+     // std::cout << admin.name() << " " << geom << std::endl;
 
       count++;
       sqlite3_reset (stmt);
@@ -429,6 +486,17 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     }
     LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
+
+    /* creating a POLYGON Geometry column */
+        sql = "Update admins set poly = ";
+        sql += "BuildArea(LineMerge(geom))";
+        ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+        if (ret != SQLITE_OK) {
+          LOG_ERROR("Error: " + std::string(err_msg));
+          sqlite3_free(err_msg);
+          sqlite3_close(db_handle);
+          return;
+        }
 
     sql = "SELECT CreateSpatialIndex('admins', 'geom')";
     ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
