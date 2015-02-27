@@ -7,6 +7,8 @@
 
 #include "odin/maneuversbuilder.h"
 
+#include "boost/format.hpp"
+
 using namespace valhalla::midgard;
 
 namespace valhalla {
@@ -47,16 +49,22 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   }
 #endif
 
-//#ifdef LOGGING_LEVEL_DEBUG
-//  LOG_DEBUG("############################################");
-//  LOG_DEBUG("LOCATION");
-//  for (::valhalla::odin::TripPath_Location loc : trip_path_->location()) {
-//    LOG_DEBUG(std::string("  lat=") + std::to_string(loc.ll().lat()));
-//    LOG_DEBUG(std::string("  lng=") + std::to_string(loc.ll().lng()));
-//    LOG_DEBUG(std::string("  street=") + loc.street());
-//  }
-//  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(trip_path_->shape());
-//#endif
+#ifdef LOGGING_LEVEL_DEBUG
+  std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(
+      trip_path_->shape());
+  if (shape.empty() || (trip_path_->node_size() < 2))
+    throw std::runtime_error("Error - No shape or invalid node count");
+  PointLL first_point = shape.at(0);
+  PointLL last_point = shape.at(shape.size() - 1);
+  std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
+  auto last_node_index = (trip_path_->node_size() - 2);
+  std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(last_node_index)->name(0);
+  LOG_DEBUG(
+      (boost::format(
+              "ROUTE_REQUEST|-o \"%1$.6f,%2$.6f,stop,%3%\" -d \"%4$.6f,%5$.6f,stop,%6%\" -t auto --config ../conf/valhalla.json")
+          % first_point.lat() % first_point.lng() % first_name
+          % last_point.lat() % last_point.lng() % last_name).str());
+#endif
 
   return maneuvers;
 }
