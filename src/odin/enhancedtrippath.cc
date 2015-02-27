@@ -359,6 +359,22 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
+std::string EnhancedTripPath_Node::ToString() const {
+  std::string str;
+  str.reserve(256);
+
+  str += "gate=";
+  str += std::to_string(gate());
+
+  str += " | toll_booth=";
+  str += std::to_string(toll_booth());
+
+  str += " | accepted_payment=";
+  str += std::to_string(accepted_payment());
+
+  return str;
+}
+
 }
 }
 

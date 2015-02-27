@@ -72,6 +72,8 @@ class EnhancedTripPath_Node : public TripPath_Node {
       uint32_t& right_similar_count, uint32_t& left_count,
       uint32_t& left_similar_count) const;
 
+  std::string ToString() const;
+
  protected:
   EnhancedTripPath_Node();
 };
