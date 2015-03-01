@@ -64,11 +64,10 @@ float PointLL::Distance(const PointLL& ll2) const {
     return (float)(acos(cosb) * kRadEarthMeters);
 }
 
-float PointLL::Length(const std::vector<PointLL>& pts) const {
-  float length = 0;
-  for (unsigned int i = 0, n = pts.size(); i < n - 1; i++) {
+float PointLL::Length(const std::vector<PointLL>& pts) {
+  float length = 0.f;
+  for (unsigned int i = 0; i < pts.size() - 1; ++i)
     length += pts[i].Distance(pts[i + 1]);
-  }
   return length;
 }
 
