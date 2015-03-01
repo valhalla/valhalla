@@ -292,7 +292,7 @@ class GraphBuilder {
   /**
    * Update road class / importance of links (ramps)
    */
-  void ReclassifyLinks(const WayVector& ways);
+  void ReclassifyLinks(const std::string& ways_file);
 
   /**
    * Get the best classification for any non-link edges from a node.
@@ -334,13 +334,10 @@ class GraphBuilder {
   uint32_t level_;
   TileHierarchy tile_hierarchy_;
 
-  // Vector to hold shape of edges. Each edge indexes into the vector
-  std::vector<OSMLatLng> latlngs_;
-
-  // Map of OSM node Ids to GraphIds
+  // Map of OSM node Ids to GraphIds, for sparse objects like exits,
   std::unordered_map<uint64_t, GraphId> nodes_;
 
-  // Map that stores all the refereence info on a node
+  // Map that stores all the reference info on a node
   std::unordered_map<baldr::GraphId, std::string> node_ref_;
 
   // Map that stores all the exit to info on a node
@@ -350,6 +347,7 @@ class GraphBuilder {
   std::unordered_map<baldr::GraphId, std::string> node_name_;
 
   // Stores all the edges
+  //TODO: send this to file to save ram
   std::vector<Edge> edges_;
 
   // A place to keep each tile's nodes so that various threads can

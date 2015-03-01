@@ -94,7 +94,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // relations are defined within the PBFParser class
   OSMData osmdata = PBFAdminParser::Parse(pt, input_files);
 
-  // TODO: save to sqlite.
+  // TODO: save to sqlite, may need to change how/what the sequence stores
+  // in the way_node_reference to be more amenable to ripping out entire
+  // relations worth of shape. just blame kevin ;o)
 }
 
 int main(int argc, char** argv) {

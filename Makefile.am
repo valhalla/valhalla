@@ -66,6 +66,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
         valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
+	valhalla/mjolnir/sequence.h \
 	valhalla/mjolnir/signbuilder.h \
         valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
