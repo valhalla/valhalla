@@ -16,7 +16,6 @@ using OSMLatLng = std::pair<float, float>;
 // Node attributes. Shared by OSMNode and GraphBuilder Node.
 struct NodeAttributes {
   uint32_t access_mask      : 8;
-  uint32_t payment_mask     : 8;
   uint32_t type             : 3;
   uint32_t exit_to          : 1;
   uint32_t ref              : 1;
@@ -75,12 +74,12 @@ class OSMNode {
   /**
     * Set payment mask.
     */
-   void set_payment_mask(const uint32_t payment_mask);
+   // void set_payment_mask(const uint32_t payment_mask);
 
    /**
     * Get the payment mask.
     */
-   uint32_t payment_mask() const;
+   // uint32_t payment_mask() const;
 
   /**
    * Sets the type.
