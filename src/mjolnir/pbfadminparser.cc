@@ -54,21 +54,25 @@ struct admin_callback : public OSMPBF::Callback {
     if (results.size() == 0)
       return;
 
-    // find a node we need to update
+    //find a node we need to update
     OSMWayNodeReference wnr;
-    auto element = (*way_nodes_)[current_way_node_index_];
-    while((wnr = element).node_id != osmid)
-      element = (*way_nodes_)[++current_way_node_index_];
-    // update all the nodes that match it
-    while((wnr = element).node_id == osmid) {
-      wnr.node.lng = static_cast<float>(lng);
-      wnr.node.lat = static_cast<float>(lat);
-      element = wnr;
-      element = (*way_nodes_)[++current_way_node_index_];
-    }
+    sequence<OSMWayNodeReference>::sequence_element element =(*way_nodes_)[current_way_node_index_];
+    while(current_way_node_index_ < way_nodes_->size() && (wnr = element = (*way_nodes_)[current_way_node_index_++]).node_id != osmid);
+    //we found the first one
+    if(current_way_node_index_ < way_nodes_->size()) {
+      //update all the nodes that match it
+      do {
+        wnr.node.lng = static_cast<float>(lng);
+        wnr.node.lat = static_cast<float>(lat);
+        element = wnr;
+      } while(current_way_node_index_ < way_nodes_->size() && (wnr = element = (*way_nodes_)[current_way_node_index_++]).node_id == osmid);
 
-    if (++osmdata_.osm_node_count % 5000000 == 0) {
-      LOG_INFO("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
+      if (++osmdata_.osm_node_count % 5000000 == 0) {
+        LOG_INFO("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
+      }
+    }//if we hit the end of the nodes and didnt find it that is a problem
+    else {
+      LOG_ERROR("Didn't find OSMWayNode for node id: " + std::to_string(osmid));
     }
   }
 

@@ -20,11 +20,11 @@ class test_graph_builder : public GraphBuilder {
 void ExitToTest() {
   GraphId nodeid(1111, 2, 1);
   Node node;
-  OSMWay way;
+  OSMWay way{};
   std::unordered_map<GraphId, std::string> map_ref;
   std::unordered_map<GraphId, std::string> map_name;
   std::unordered_map<GraphId, std::string> map_exit_to;
-  OSMData osmdata;
+  OSMData osmdata{};
 
   node.set_exit_to(true);
 
