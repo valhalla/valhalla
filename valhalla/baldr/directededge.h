@@ -480,6 +480,8 @@ class DirectedEdge {
   };
   StopImpact stopimpact_;
 
+  uint32_t spare;
+
   // TODO - fields for describing intersection transitions
   struct IntersectionTransition {
     uint64_t spare           : 64;
