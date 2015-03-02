@@ -212,6 +212,12 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
+      // Skip shortcut edges when near the destination.
+      // TODO - do not think this is needed - moved this out of autocost.
+      // If needed should base it on a hierarchy limit...
+      if (directededge->shortcut() && dist2dest < 10000.0f)
+        continue;
+
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
