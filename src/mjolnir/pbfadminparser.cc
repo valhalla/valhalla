@@ -208,13 +208,12 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   // methods can use it.
   OSMData osmdata{"admin_ways.bn", "admin_way_node_ref.bn"};
   admin_callback callback(pt, osmdata);
-  OSMPBF::Parser parser(callback);
 
   // Parse each input file for relations
   auto t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::RELATIONS);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
   }
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
   LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
@@ -228,7 +227,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
     new sequence<OSMWayNode>(osmdata.way_node_references_file, true, false));
   for (const auto& input_file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::WAYS);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
   }
   callback.reset(nullptr, nullptr);
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
@@ -259,7 +258,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   for (const auto& input_file : input_files) {
     callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false, false));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::NODES);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
   callback.reset(nullptr, nullptr);
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();

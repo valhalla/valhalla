@@ -733,7 +733,6 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   graph_callback callback(pt, osmdata);
   callback.reset(new sequence<OSMWay>(osmdata.ways_file, true, false),
     new sequence<OSMWayNode>(osmdata.way_node_references_file, true, false));
-  OSMPBF::Parser parser(callback);
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   // Parse the ways and find all node Ids needed (those that are part of a
@@ -741,7 +740,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Parsing ways...")
   for (const auto& input_file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::WAYS);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
   }
   callback.reset(nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
@@ -750,7 +749,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Parsing relations...")
   for (const auto& input_file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::RELATIONS);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
 
@@ -777,7 +776,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     //because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false, false));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    parser.parse(input_file, OSMPBF::Interest::NODES);
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
   callback.reset(nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");

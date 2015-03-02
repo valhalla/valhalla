@@ -68,26 +68,9 @@ struct Callback {
 //the parser used to get data out of the osmpbf file
 class Parser {
  public:
-  //initialize the parser with a callback bundle
-  Parser(Callback& callback);
-  //deallocate buffers
-  virtual ~Parser();
+  Parser() = delete;
   //parse the pbf file for the things you are interested in
-  virtual void parse(const std::string& filename, const Interest interest);
-  //sort the nodes ways and relations by id
-  static void sort(const std::string& filename);
-
- protected:
-  Callback& callback;
-  char* buffer;
-  char* unpack_buffer;
-
-  //read the header for the next blob
-  BlobHeader read_header(std::ifstream& file, bool& finished);
-  //read the blob associated with this header
-  int32_t read_blob(std::ifstream& file, const BlobHeader& header);
-  //parse the primitives out of the blob
-  void parse_primitiveblock(int32_t sz, const Interest interest);
+  static void parse(const std::string& filename, const Interest interest, Callback& callback);
 };
 
 }
