@@ -729,7 +729,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   unsigned int threads = std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  OSMData osmdata{"ways.bn", "way_node_ref.bn"};
+  OSMData osmdata{"ways.bin", "way_node_ref.bin"};
   graph_callback callback(pt, osmdata);
   callback.reset(new sequence<OSMWay>(osmdata.ways_file, true, false),
     new sequence<OSMWayNode>(osmdata.way_node_references_file, true, false));

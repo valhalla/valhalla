@@ -1,3 +1,6 @@
+#ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
+#define VALHALLA_MJOLNIR_SEQUENCE_H_
+
 #include <fstream>
 #include <string>
 #include <vector>
@@ -22,6 +25,7 @@ namespace mjolnir{
 template <class T>
 struct sequence_element {
  public:
+  //static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
   sequence_element() = delete;
   sequence_element(T* base): base(base), pos(-1) {}
   sequence_element(std::shared_ptr<std::fstream> file, size_t pos): base(nullptr), file(file), pos(pos) {}
@@ -62,7 +66,7 @@ struct sequence_element {
 template <class T>
 struct sequence {
  public:
-  static_assert(std::is_pod<T>::value, "sequence_writer requires POD types for now");
+  //static_assert(std::is_pod<T>::value, "sequence requires POD types for now");
   static const size_t npos = -1;
 
   sequence() = delete;
@@ -306,3 +310,5 @@ struct sequence {
 
 }
 }
+
+#endif //VALHALLA_MJOLNIR_SEQUENCE_H_
