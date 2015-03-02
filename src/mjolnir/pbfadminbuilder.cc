@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 
-#include "pbfgraphbuilder.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
