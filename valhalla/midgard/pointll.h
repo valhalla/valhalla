@@ -73,7 +73,7 @@ class PointLL : public Point2 {
    * @param  pts  List of lat,lng points.
    * @return  Returns the length in meters
    */
-  float Length(const std::vector<PointLL>& pts) const;
+  static float Length(const std::vector<PointLL>& pts);
 
   /**
    * Calculates the curvature using this position and 2 others. Found by
