@@ -90,11 +90,22 @@ void TestSetSimpleDirectionalManeuverType() {
   TrySetSimpleDirectionalManeuverType(158,
                                       TripDirections_Maneuver_Type_kSharpRight);
   // Sharp right upper bound
-  TrySetSimpleDirectionalManeuverType(180,
+  TrySetSimpleDirectionalManeuverType(169,
                                       TripDirections_Maneuver_Type_kSharpRight);
 
+  // TODO: TripDirections_Maneuver_Type_kUturnLeft for now; update later
+  // Reverse lower bound
+  TrySetSimpleDirectionalManeuverType(170,
+                                      TripDirections_Maneuver_Type_kUturnLeft);
+  // Reverse middle
+  TrySetSimpleDirectionalManeuverType(180,
+                                      TripDirections_Maneuver_Type_kUturnLeft);
+  // Reverse upper bound
+  TrySetSimpleDirectionalManeuverType(190,
+                                      TripDirections_Maneuver_Type_kUturnLeft);
+
   // Sharp left lower bound
-  TrySetSimpleDirectionalManeuverType(181,
+  TrySetSimpleDirectionalManeuverType(191,
                                       TripDirections_Maneuver_Type_kSharpLeft);
   // Sharp left middle
   TrySetSimpleDirectionalManeuverType(203,
