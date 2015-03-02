@@ -22,6 +22,7 @@ void TestGetType() {
   TryGetType(350, Turn::Type::kStraight);
   // Straight middle
   TryGetType(0, Turn::Type::kStraight);
+  TryGetType(360, Turn::Type::kStraight);
   // Straight upper bound
   TryGetType(10, Turn::Type::kStraight);
 
@@ -36,6 +37,8 @@ void TestGetType() {
   TryGetType(45, Turn::Type::kRight);
   // Right middle
   TryGetType(90, Turn::Type::kRight);
+  TryGetType(450, Turn::Type::kRight);
+  TryGetType(810, Turn::Type::kRight);
   // Right upper bound
   TryGetType(135, Turn::Type::kRight);
 
