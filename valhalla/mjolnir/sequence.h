@@ -18,10 +18,52 @@
 namespace valhalla{
 namespace mjolnir{
 
+//a read/writeable object within the sequence, accessed either through memory or file
+template <class T>
+struct sequence_element {
+ public:
+  sequence_element() = delete;
+  sequence_element(T* base): base(base), pos(-1) {}
+  sequence_element(std::shared_ptr<std::fstream> file, size_t pos): base(nullptr), file(file), pos(pos) {}
+  sequence_element& operator=(const sequence_element& other) {
+    base = other.base;
+    file = other.file;
+    pos = other.pos;
+    return *this;
+  }
+  sequence_element& operator=(const T& other) {
+    if(base) {
+      *base = other;
+      return *this;
+    }
+
+    file->seekg(pos);
+    file->write(static_cast<const char*>(static_cast<const void*>(&other)), sizeof(T));
+    return *this;
+  }
+  operator T() {
+    if(base)
+      return *base;
+
+    T result;
+    file->seekg(pos);
+    file->read(static_cast<char*>(static_cast<void*>(&result)), sizeof(T));
+    return result;
+  }
+  T operator*() {
+    return operator T();
+  }
+ protected:
+  T* base;
+  std::shared_ptr<std::fstream> file;
+  size_t pos;
+};
+
 template <class T>
 struct sequence {
  public:
   static_assert(std::is_pod<T>::value, "sequence_writer requires POD types for now");
+  static const size_t npos = -1;
 
   sequence() = delete;
 
@@ -61,8 +103,9 @@ struct sequence {
       flush();
   }
 
-  //search for an object using binary search
+  //search for an object using binary search O(logn)
   //assumes the file was written in sorted order
+  //the predicate should be something like a less than or greater than check
   bool find(T& target, const std::function<bool (const T&, const T&)>& predicate) {
     flush();
     //if no elements we are done
@@ -98,6 +141,21 @@ struct sequence {
     }
     //didn't find it
     return false;
+  }
+
+  //finds the first matching object by scanning O(n)
+  //assumes nothing about the order of the file
+  //the predicate should be something like an equality check
+  size_t find_first_of(const T& target, const std::function<bool (const T&, const T&)>& predicate, size_t start_index = 0) {
+    flush();
+    //keep looking while we have stuff to look at
+    while(start_index < element_count) {
+      T candidate = mmap_handle ? *(static_cast<const T*>(mmap_handle) + start_index) : (*this)[start_index];
+      if(predicate(target, candidate))
+        return start_index;
+      ++start_index;
+    }
+    return npos;
   }
 
   //sort the file based on the predicate
@@ -206,51 +264,13 @@ struct sequence {
     return element_count + write_buffer.size();
   }
 
-  //a read/writeable object within the sequence, accessed either through memory or file
-  struct sequence_element {
-   public:
-    sequence_element() = delete;
-    sequence_element(T* base): base(base), pos(-1) {}
-    sequence_element(std::shared_ptr<std::fstream> file, size_t pos): base(nullptr), file(file), pos(pos) {}
-    sequence_element& operator=(const sequence_element& other) {
-      base = other.base;
-      file = other.file;
-      pos = other.pos;
-      return *this;
-    }
-    sequence_element& operator=(const T& other) {
-      if(base) {
-        *base = other;
-        return *this;
-      }
-
-      file->seekg(pos);
-      file->write(static_cast<const char*>(static_cast<const void*>(&other)), sizeof(T));
-      return *this;
-    }
-    operator T() {
-      if(base)
-        return *base;
-
-      T result;
-      file->seekg(pos);
-      file->read(static_cast<char*>(static_cast<void*>(&result)), sizeof(T));
-      return result;
-    }
-    T operator*() {
-      return operator T();
-    }
-   protected:
-    T* base;
-    std::shared_ptr<std::fstream> file;
-    size_t pos;
-  };
-
   //write/read at certain index
-  sequence_element operator[](size_t index) {
+  sequence_element<T> operator[](size_t index) {
     //dump to file and make an element
     flush();
-    return sequence_element(file, index * sizeof(T));
+    if(mmap_handle)
+      return sequence_element<T>(static_cast<T*>(mmap_handle) + index);
+    return sequence_element<T>(file, index * sizeof(T));
   }
 
  protected:

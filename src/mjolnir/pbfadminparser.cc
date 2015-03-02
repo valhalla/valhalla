@@ -22,7 +22,12 @@ using namespace valhalla::mjolnir;
 
 namespace {
 // Will throw an error if this is exceeded. Then we can increase.
-const uint64_t kMaxOSMNodeId = 4000000000;
+constexpr uint64_t kMaxOSMNodeId = 4000000000;
+
+// Node equality
+const auto WayNodeEquals = [](const OSMWayNodeReference& a, const OSMWayNodeReference& b) {
+  return a.node_id == b.node_id;
+};
 
 struct admin_callback : public OSMPBF::Callback {
  public:
@@ -31,7 +36,7 @@ struct admin_callback : public OSMPBF::Callback {
   virtual ~admin_callback() {}
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata), current_way_node_index_(0) {
+      : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata) {
 
     // Initialize Lua based on config
     lua_.SetLuaNodeScript(pt.get<std::string>("admintagtransform.node_script"));
@@ -41,6 +46,8 @@ struct admin_callback : public OSMPBF::Callback {
     lua_.SetLuaRelationScript(pt.get<std::string>("admintagtransform.relation_script"));
     lua_.SetLuaRelationFunc(pt.get<std::string>("admintagtransform.relation_function"));
     lua_.OpenLib();
+
+    current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
   }
 
   void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {
@@ -54,25 +61,31 @@ struct admin_callback : public OSMPBF::Callback {
     if (results.size() == 0)
       return;
 
+    //unsorted extracts are just plain nasty, so they can bugger off!
+    if(osmid < last_node_)
+      throw std::runtime_error("Detected unsorted input data");
+    last_node_ = osmid;
+
     //find a node we need to update
-    OSMWayNodeReference wnr;
-    sequence<OSMWayNodeReference>::sequence_element element =(*way_nodes_)[current_way_node_index_];
-    while(current_way_node_index_ < way_nodes_->size() && (wnr = element = (*way_nodes_)[current_way_node_index_++]).node_id != osmid);
+    current_way_node_index_ = way_nodes_->find_first_of(OSMWayNodeReference{osmid}, WayNodeEquals, current_way_node_index_);
     //we found the first one
     if(current_way_node_index_ < way_nodes_->size()) {
       //update all the nodes that match it
-      do {
-        wnr.node.lng = static_cast<float>(lng);
-        wnr.node.lat = static_cast<float>(lat);
-        element = wnr;
-      } while(current_way_node_index_ < way_nodes_->size() && (wnr = element = (*way_nodes_)[current_way_node_index_++]).node_id == osmid);
+      OSMWayNodeReference way_node;
+      sequence_element<OSMWayNodeReference> element = (*way_nodes_)[current_way_node_index_];
+      while(current_way_node_index_ < way_nodes_->size() && (way_node = element = (*way_nodes_)[current_way_node_index_]).node_id == osmid) {
+        way_node.node.lng = static_cast<float>(lng);
+        way_node.node.lat = static_cast<float>(lat);
+        element = way_node;
+        ++current_way_node_index_;
+      }
 
       if (++osmdata_.osm_node_count % 5000000 == 0) {
         LOG_INFO("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
       }
     }//if we hit the end of the nodes and didnt find it that is a problem
     else {
-      LOG_ERROR("Didn't find OSMWayNode for node id: " + std::to_string(osmid));
+      throw std::runtime_error("Didn't find OSMWayNode for node id: " + std::to_string(osmid));
     }
   }
 
@@ -82,7 +95,6 @@ struct admin_callback : public OSMPBF::Callback {
     if (!members_.IsUsed(osmid)) {
       return;
     }
-    ++osmdata_.osm_way_count;
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
@@ -90,6 +102,11 @@ struct admin_callback : public OSMPBF::Callback {
     if (results.size() == 0) {
       return;
     }
+
+    //unsorted extracts are just plain nasty, so they can bugger off!
+    if(osmid < last_way_)
+      throw std::runtime_error("Detected unsorted input data");
+    last_way_ = osmid;
 
     // Add the refs to the node reference list
     for (size_t i = 0; i < nodes.size(); ++i) {
@@ -100,6 +117,8 @@ struct admin_callback : public OSMPBF::Callback {
       // Mark the nodes that we will care about when processing nodes
       shape_.set(node);
     }
+    ++osmdata_.osm_way_count;
+    osmdata_.osm_way_node_count += nodes.size();
 
     // Construct OSMWay and set the node ref index and count
     OSMWay w{osmid};
@@ -115,7 +134,12 @@ struct admin_callback : public OSMPBF::Callback {
     if (results.size() == 0)
       return;
 
-    OSMAdmin admin(osmid);
+    //unsorted extracts are just plain nasty, so they can bugger off!
+    if(osmid < last_relation_)
+      throw std::runtime_error("Detected unsorted input data");
+    last_relation_ = osmid;
+
+    OSMAdmin admin{osmid};
     uint64_t from_way_id = 0;
 
     for (const auto& tag : results) {
@@ -170,6 +194,7 @@ struct admin_callback : public OSMPBF::Callback {
   // When updating the references with the node information we keep the last index we looked at
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
+  uint64_t last_node_, last_way_, last_relation_;
 
 };
 
@@ -188,6 +213,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Parse each input file for relations
   auto t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
+    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     parser.parse(input_file, OSMPBF::Interest::RELATIONS);
   }
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
@@ -201,6 +227,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   callback.reset(new sequence<OSMWay>(osmdata.ways_file, true, false),
     new sequence<OSMWayNodeReference>(osmdata.way_node_references_file, true, false));
   for (const auto& input_file : input_files) {
+    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     parser.parse(input_file, OSMPBF::Interest::WAYS);
   }
   callback.reset(nullptr, nullptr);
@@ -215,8 +242,8 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Sorting osm way node references by node id");
   t = std::chrono::high_resolution_clock::now();
   {
-    sequence<OSMWayNodeReference> refs(osmdata.way_node_references_file, false, true);
-    refs.sort(
+    sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+    way_nodes.sort(
       [](const OSMWayNodeReference& a, const OSMWayNodeReference& b){
         return a.node_id < b.node_id;
       }
@@ -225,12 +252,13 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
   LOG_INFO("Sorting osm way node references took " + std::to_string(msecs) + " ms");
 
-
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
   t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
+    callback.reset(nullptr, new sequence<OSMWayNodeReference>(osmdata.way_node_references_file, false, false));
+    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     parser.parse(input_file, OSMPBF::Interest::NODES);
   }
   callback.reset(nullptr, nullptr);
@@ -243,8 +271,8 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Sorting osm way node references by way index and node shape index");
   t = std::chrono::high_resolution_clock::now();
   {
-    sequence<OSMWayNodeReference> refs(osmdata.way_node_references_file, false, true);
-    refs.sort(
+    sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+    way_nodes.sort(
       [](const OSMWayNodeReference& a, const OSMWayNodeReference& b){
         if(a.way_index == b.way_index) {
           //TODO: if its equal we have screwed something up, should we check and throw here?

@@ -8,23 +8,6 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-OSMAdmin::OSMAdmin()
-  : memberid_index_(0), memberid_count_(0), admin_level_(0),
-    osmrelationid_(std::numeric_limits<uint64_t>::max()) {
-
-  name_= "";
-}
-
-OSMAdmin::OSMAdmin(uint64_t id)
-  : memberid_index_(0), memberid_count_(0), admin_level_(0) {
-
-  osmrelationid_ = id;
-  name_= "";
-}
-
-OSMAdmin::~OSMAdmin() {
-}
-
 // Set admin id.
 void OSMAdmin::set_admin_id(const uint64_t id) {
   osmrelationid_ = id;

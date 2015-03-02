@@ -262,7 +262,6 @@ int main() {
   suite.test(TEST_CASE(TestRemovableBollards));
   suite.test(TEST_CASE(TestBicycleTrafficSignals));
   suite.test(TEST_CASE(TestExits));
-
   suite.test(TEST_CASE(TestWays));
 
   return suite.tear_down();
