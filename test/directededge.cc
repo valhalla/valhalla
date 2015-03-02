@@ -5,16 +5,17 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 32 bytes. Since there are still "spare" bits
+// Expected size is 48 bytes. Since there are still "spare" bits
 // we want to alert if somehow any change grows this structure size
-constexpr size_t kDirectedEdgeExpectedSize = 32;
+constexpr size_t kDirectedEdgeExpectedSize = 48;
 
 namespace {
 
   void test_sizeof() {
     if (sizeof(DirectedEdge) != kDirectedEdgeExpectedSize)
       throw std::runtime_error("DirectedEdge size should be " +
-                std::to_string(kDirectedEdgeExpectedSize) + " bytes");
+                std::to_string(kDirectedEdgeExpectedSize) + " bytes" +
+                " but is " + std::to_string(sizeof(DirectedEdge)));
   }
 
 }

@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-//#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/turn.h>
 
 namespace valhalla {
 namespace baldr {
@@ -29,6 +29,9 @@ constexpr float kMaxSpeed = 255.0f;
 
 // Maximum lane count
 constexpr uint32_t kMaxLaneCount = 15;
+
+// Maximum stop impact
+constexpr uint32_t kMaxStopImpact = 7;
 
 // Maximum elevation and curvature factors.
 constexpr uint32_t kMaxElevationFactor = 15;
@@ -238,8 +241,7 @@ class DirectedEdge {
 
   /**
    * Get the index of the opposing directed edge at the end node of this
-   * directed edge. Can be used to find the start node of this directed edge
-   * and to detect U-turns.
+   * directed edge. Can be used to find the start node of this directed edge.
    * @return  Returns the index of the opposing directed edge at the end node
    *          of this directed edge.
    */
@@ -293,6 +295,15 @@ class DirectedEdge {
   SpeedType speed_type() const;
 
   /**
+   * Get the index of the opposing directed edge on the local hierarchy level
+   * at the end node of this directed edge. Only stored for the first 8 edges
+   * so it can be used for edge transition costing.
+   * @return  Returns the index of the opposing directed edge on the local
+   *          hierarchy level at end node of this directed edge.
+   */
+  uint32_t opp_local_idx() const;
+
+  /**
    * Get the access modes in the forward direction (bit field).
    */
   uint8_t forwardaccess() const;
@@ -338,6 +349,30 @@ class DirectedEdge {
    * @return  Returns true if the edge is internal to an intersection.
    */
   bool internal() const;
+
+  /**
+   * Gets the turn type given the prior edge's local index
+   * (index of the inbound edge).
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @return  Returns the turn type (see turn.h)
+   */
+  Turn::Type turntype(const uint32_t localidx) const;
+
+  /**
+   * Is there a consistent name between this edge and the
+   * prior edge given its local index (index of the inbound edge).
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @return  Returns true if there is a consistent name, false if not.
+   */
+  bool consistent_name(const uint32_t localidx) const;
+
+  /**
+   * Get the stop impact when transitioning from the prior edge (given
+   * by the local index of the corresponding inbound edge at the node).
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @return  Returns the relative stop impact from low (0) to high (7).
+   */
+  uint32_t stopimpact(const uint32_t localidx) const;
 
   // TODO - intersection transitions
 
@@ -406,7 +441,8 @@ class DirectedEdge {
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
     uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
-    uint64_t spare          : 7;
+    uint64_t opp_local_idx  : 3;  // Opposing local edge index (for costing)
+    uint64_t spare          : 4;
   };
   Attributes attributes_;
 
@@ -430,9 +466,25 @@ class DirectedEdge {
   };
   Classification classification_;
 
-  // TODO - turn restrictions, costs,
+  // Turn types between edges
+  struct TurnTypes {
+    uint32_t turntype        : 24; // Turn type
+    uint32_t consistent_name :  8; // Name consistency between edges
+  };
+  TurnTypes turntypes_;
+
+  // Stop impact among edges
+  struct StopImpact {
+    uint32_t stopimpact      : 24; // Stop impact between edges
+    uint32_t spare           :  8;
+  };
+  StopImpact stopimpact_;
+
+  uint32_t spare;
+
+  // TODO - fields for describing intersection transitions
   struct IntersectionTransition {
-    uint32_t spare:         32;
+    uint64_t spare           : 64;
   };
   IntersectionTransition transitions_;
 };

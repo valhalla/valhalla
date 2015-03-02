@@ -13,6 +13,8 @@ DirectedEdge::DirectedEdge()
       speed_(0),
       classification_{},
       attributes_{},
+      turntypes_{},
+      stopimpact_{},
       transitions_{} {
 }
 
@@ -210,6 +212,13 @@ SpeedType DirectedEdge::speed_type() const {
   return static_cast<SpeedType>(attributes_.speed_type);
 }
 
+// Get the index of the opposing directed edge on the local hierarchy level
+// at the end node of this directed edge. Only stored for the first 8 edges
+// so it can be used for edge transition costing.
+uint32_t DirectedEdge::opp_local_idx() const {
+  return attributes_.opp_local_idx;
+}
+
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
   return forwardaccess_.v;
@@ -251,6 +260,26 @@ bool DirectedEdge::link() const {
 // Gets the intersection internal flag.
 bool DirectedEdge::internal() const {
   return classification_.internal;
+}
+
+// Gets the turn type given the prior edge's local index
+Turn::Type DirectedEdge::turntype(const uint32_t localidx) const {
+  // Turn type is 3 bits per index
+  return static_cast<Turn::Type>(turntypes_.turntype & (7 << (localidx * 3)));
+}
+
+// Is there a consistent name between this edge and the
+// prior edge given its local index (index of the inbound edge).
+bool DirectedEdge::consistent_name(const uint32_t localidx) const {
+  // Consistent name is 1 bit - starts at 24th bit
+  return (turntypes_.turntype & (1 << (24 + localidx)));
+}
+
+// Get the stop impact when transitioning from the prior edge (given
+// by the local index of the corresponding inbound edge at the node).
+uint32_t DirectedEdge::stopimpact(const uint32_t localidx) const {
+  // Stop impact is 3 bits per index
+  return (stopimpact_.stopimpact & (7 << (localidx * 3)));
 }
 
 // Get the internal version. Used for data validity checks.
@@ -341,6 +370,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.use+1)-1);
   de.attributes_.speed_type = ~de.attributes_.speed_type;
   boost::hash_combine(seed,ffs(de.attributes_.speed_type+1)-1);
+  de.attributes_.opp_local_idx = ~de.attributes_.opp_local_idx;
+  boost::hash_combine(seed,ffs(de.attributes_.opp_local_idx+1)-1);
 
   // Access
   de.forwardaccess_.fields.car  = ~de.forwardaccess_.fields.car;
@@ -372,6 +403,16 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.classification_.link+1)-1);
   de.classification_.internal = ~de.classification_.internal;
   boost::hash_combine(seed,ffs(de.classification_.internal+1)-1);
+
+  // Turn types
+  de.turntypes_.turntype = ~de.turntypes_.turntype;
+  boost::hash_combine(seed,ffs(de.turntypes_.turntype+1)-1);
+  de.turntypes_.consistent_name = ~de.turntypes_.consistent_name;
+  boost::hash_combine(seed,ffs(de.turntypes_.consistent_name+1)-1);
+
+  // Stop impact
+  de.stopimpact_.stopimpact = ~de.stopimpact_.stopimpact;
+  boost::hash_combine(seed,ffs(de.stopimpact_.stopimpact+1)-1);
 
   // IntersectionTransition (TODO)
 
