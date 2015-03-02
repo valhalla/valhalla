@@ -44,10 +44,17 @@ void TestGetType() {
   // Sharp right middle
   TryGetType(158, Turn::Type::kSharpRight);
   // Sharp right upper bound
-  TryGetType(180, Turn::Type::kSharpRight);
+  TryGetType(169, Turn::Type::kSharpRight);
+
+  // Reverse lower bound
+  TryGetType(170, Turn::Type::kReverse);
+  // Reverse middle
+  TryGetType(180, Turn::Type::kReverse);
+  // Reverse upper bound
+  TryGetType(190, Turn::Type::kReverse);
 
   // Sharp left lower bound
-  TryGetType(181, Turn::Type::kSharpLeft);
+  TryGetType(191, Turn::Type::kSharpLeft);
   // Sharp left middle
   TryGetType(203, Turn::Type::kSharpLeft);
   // Sharp left upper bound
