@@ -30,7 +30,7 @@ class Turn {
    * then Turn::Type::kRight is returned.
    *
    * @param  turn_degree  the specified turn degree that is used to determine
-   *                      the returned type.
+   *                      the returned type. Expected range is 0 to 359.
    * @return the turn type based on the specified turn degree.
    */
   static Turn::Type GetType(uint32_t turn_degree);
