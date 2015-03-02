@@ -22,6 +22,8 @@ class Turn {
     kSlightLeft = 7
   };
 
+  Turn() = delete;
+
   /**
    * Returns the turn type based on the specified turn degree.
    * For example, if 90 is supplied for the turn_degree,
@@ -33,8 +35,6 @@ class Turn {
    */
   static Turn::Type GetType(uint32_t turn_degree);
 
- protected:
-  Turn();
 };
 
 }
