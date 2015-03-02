@@ -139,11 +139,6 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  // Skip shortcut edges when near the destination.
-  // TODO - do not think this is needed!
-  if (edge->shortcut() && dist2dest < 10000.0f)
-    return false;
-
   // Do not allow Uturns. TODO - evaluate later! - Uturns on different
   // hierarchy levels present problems. May want to set implied turn
   // restrictions
