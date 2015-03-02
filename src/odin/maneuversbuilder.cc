@@ -4,12 +4,14 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/turn.h>
 
 #include "odin/maneuversbuilder.h"
 
 #include "boost/format.hpp"
 
 using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
@@ -583,21 +585,40 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
 }
 
 void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
-  uint32_t turn_degree = maneuver.turn_degree();
-  if ((turn_degree > 349) || (turn_degree < 11)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
-  } else if ((turn_degree > 10) && (turn_degree < 45)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
-  } else if ((turn_degree > 44) && (turn_degree < 136)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kRight);
-  } else if ((turn_degree > 135) && (turn_degree < 181)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kSharpRight);
-  } else if ((turn_degree > 180) && (turn_degree < 225)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kSharpLeft);
-  } else if ((turn_degree > 224) && (turn_degree < 316)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kLeft);
-  } else if ((turn_degree > 315) && (turn_degree < 350)) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+  switch (Turn::GetType(maneuver.turn_degree())) {
+    case Turn::Type::kStraight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+      break;
+    }
+    case Turn::Type::kSlightRight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+      break;
+    }
+    case Turn::Type::kRight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kRight);
+      break;
+    }
+    case Turn::Type::kSharpRight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kSharpRight);
+      break;
+    }
+    case Turn::Type::kReverse: {
+      // TODO: figure this out
+      maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+      break;
+    }
+    case Turn::Type::kSharpLeft: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kSharpLeft);
+      break;
+    }
+    case Turn::Type::kLeft: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kLeft);
+      break;
+    }
+    case Turn::Type::kSlightLeft: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+      break;
+    }
   }
 }
 
