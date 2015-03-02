@@ -50,7 +50,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/pathlocation.h \
 	valhalla/baldr/sign.h \
         valhalla/baldr/signinfo.h \
-	valhalla/baldr/tilehierarchy.h
+	valhalla/baldr/tilehierarchy.h \
+	valhalla/baldr/turn.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
@@ -63,7 +64,8 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/pathlocation.cc \
 	src/baldr/sign.cc \
         src/baldr/signinfo.cc \
-	src/baldr/tilehierarchy.cc
+	src/baldr/tilehierarchy.cc \
+	src/baldr/turn.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
@@ -74,7 +76,8 @@ check_PROGRAMS = \
 	test/graphid \
 	test/tilehierarchy \
 	test/graphtile \
-	test/nodeinfo
+	test/nodeinfo \
+	test/turn
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -93,6 +96,9 @@ test_graphtile_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_nodeinfo_SOURCES = test/nodeinfo.cc test/test.cc
 test_nodeinfo_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_nodeinfo_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_turn_SOURCES = test/turn.cc test/test.cc
+test_turn_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_turn_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)

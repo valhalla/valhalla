@@ -1,10 +1,12 @@
 #include "baldr/turn.h"
+#include <stdexcept>
 
 namespace valhalla {
 namespace baldr {
 
 // Returns the turn type based on the specified turn degree.
-Turn::Type GetType(uint32_t turn_degree) {
+Turn::Type Turn::GetType(uint32_t turn_degree) {
+  turn_degree %= 360;
   if ((turn_degree > 349) || (turn_degree < 11)) {
     return Turn::Type::kStraight;
   } else if ((turn_degree > 10) && (turn_degree < 45)) {
@@ -22,10 +24,7 @@ Turn::Type GetType(uint32_t turn_degree) {
   } else if ((turn_degree > 315) && (turn_degree < 350)) {
     return Turn::Type::kSlightLeft;
   }
-}
-
-// Constructor
-Turn::Turn() {
+  throw std::runtime_error("Turn degree out of range");
 }
 
 }

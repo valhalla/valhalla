@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#include <valhalla/midgard/util.h>
-
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace baldr {
 
@@ -26,14 +22,19 @@ class Turn {
     kSlightLeft = 7
   };
 
+  Turn() = delete;
+
   /**
    * Returns the turn type based on the specified turn degree.
+   * For example, if 90 is supplied for the turn_degree,
+   * then Turn::Type::kRight is returned.
+   *
+   * @param  turn_degree  the specified turn degree that is used to determine
+   *                      the returned type. Expected range is 0 to 359.
    * @return the turn type based on the specified turn degree.
    */
   static Turn::Type GetType(uint32_t turn_degree);
 
- protected:
-  Turn();
 };
 
 }
