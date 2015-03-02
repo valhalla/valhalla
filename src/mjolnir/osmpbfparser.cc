@@ -270,4 +270,8 @@ namespace OSMPBF {
     }
   }
 
+  void Parser::sort(const std::string& filename) {
+    //TODO:
+  }
+
 }

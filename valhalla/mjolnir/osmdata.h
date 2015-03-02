@@ -25,7 +25,7 @@ enum class OSMType : uint8_t {
     kRelation
  };
 
-struct OSMWayNodeReference {
+struct OSMWayNode {
   uint64_t node_id;
   size_t way_index;
   size_t way_shape_node_index;

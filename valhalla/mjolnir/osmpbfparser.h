@@ -74,6 +74,8 @@ class Parser {
   virtual ~Parser();
   //parse the pbf file for the things you are interested in
   virtual void parse(const std::string& filename, const Interest interest);
+  //sort the nodes ways and relations by id
+  static void sort(const std::string& filename);
 
  protected:
   Callback& callback;

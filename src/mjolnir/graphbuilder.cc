@@ -136,7 +136,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
   GraphId graphid;
   //TODO: try with mmap turned on at some point
   sequence<OSMWay> ways(osmdata.ways_file, false, false);
-  sequence<OSMWayNodeReference> references(osmdata.way_node_references_file, false, false);
+  sequence<OSMWayNode> references(osmdata.way_node_references_file, false, false);
 
   //for each way traversed via the node refs
   size_t current_way_node_index = 0;
@@ -166,10 +166,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
 
     // Iterate through the nodes of the way and add lat,lng to the current
     // way until a node with > 1 uses is found.
-    while(++current_way_node_index < references.size()) {
+    while(current_way_node_index < references.size()) {
       //check if we are done with this way, ie we are started on the next way
-      const auto way_node = *references[current_way_node_index];
-      if(first_way_node.way_index == way_node.way_index)
+      const auto way_node = *references[++current_way_node_index];
+      if(first_way_node.way_index != way_node.way_index)
         break;
 
       // Increment the count for this edge
@@ -751,7 +751,7 @@ void BuildTileSet(
 
   // TODO: try using mmap here for speed up
   sequence<OSMWay> ways(osmdata.ways_file, false, false);
-  sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, false);
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge

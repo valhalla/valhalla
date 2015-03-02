@@ -50,12 +50,12 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-const auto node_predicate = [](const OSMWayNodeReference& a, const OSMWayNodeReference& b) {
+const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node_id < b.node_id;
 };
 
-OSMNode GetNode(uint64_t node_id, sequence<OSMWayNodeReference>& way_nodes) {
-  OSMWayNodeReference target{node_id};
+OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
+  OSMWayNode target{node_id};
   if(!way_nodes.find(target, node_predicate))
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
   return target.node;
@@ -77,7 +77,7 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
-  sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
   way_nodes.sort(node_predicate);
 
   //We split set the uses at bollards and gates.
@@ -114,7 +114,7 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"});
-  sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
   way_nodes.sort(node_predicate);
 
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
@@ -129,7 +129,7 @@ void Exits(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"});
-  sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(33698177, way_nodes);
@@ -194,7 +194,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"});
-  sequence<OSMWayNodeReference> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
   way_nodes.sort(node_predicate);
 
   //When we support finding bike rentals, this test will need updated.
