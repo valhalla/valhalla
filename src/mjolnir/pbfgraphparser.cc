@@ -704,6 +704,8 @@ struct graph_callback : public OSMPBF::Callback {
   OSMData& osmdata_;
 
   // Mark the OSM Node Ids used by ways
+  // TODO: remove interesection_ as you already know it if you
+  // encounter more than one consecutive OSMWayNode with the same id
   IdTable shape_, intersection_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)

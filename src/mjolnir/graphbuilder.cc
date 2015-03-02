@@ -164,13 +164,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     // to the list.
     Edge edge(graphid, first_way_node.way_index, current_way_node_index, way);
 
-    // Iterate through the nodes of the way and add lat,lng to the current
-    // way until a node with > 1 uses is found.
+    // Iterate through the nodes of the way until we find an intersection
     while(current_way_node_index < references.size()) {
       //check if we are done with this way, ie we are started on the next way
       const auto way_node = *references[++current_way_node_index];
-      if(first_way_node.way_index != way_node.way_index)
-        break;
 
       // Increment the count for this edge
       edge.attributes.llcount++;
@@ -203,6 +200,10 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
           startnodeid = way_node.node_id;
           edge = Edge(graphid, way_node.way_index, current_way_node_index, way);
           GetNode(graphid).AddEdge(edgeindex, way.link());
+        }// This was the last shape point in a dead end way so go to the next
+        else {
+          ++current_way_node_index;
+          break;
         }
       }// if this edge has a signal not at a intersection
       else if (way_node.node.traffic_signal()) {
@@ -210,9 +211,6 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
         edge.attributes.forward_signal = way_node.node.forward_signal();
         edge.attributes.backward_signal = way_node.node.backward_signal();
       }
-
-      // next node index
-
     }
   }
 
@@ -755,18 +753,18 @@ void BuildTileSet(
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  auto EdgeShape = [&way_nodes](uint32_t idx, const uint32_t count) {
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
     std::vector<PointLL> shape;
     shape.reserve(count);
-    for (uint32_t i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.lng, node.lat);
     }
     return shape;
   };
 
-  // Get the lat,lng of the start of the edge
-  auto GetLL = [&way_nodes] (const uint32_t idx) {
+  // Get the lat,lng of the node
+  const auto GetLL = [&way_nodes] (const size_t idx) {
     auto node = (*way_nodes[idx]).node;
     return PointLL(node.lng, node.lat);
   };
@@ -783,7 +781,6 @@ void BuildTileSet(
       GraphTileBuilder graphtile;
 
       // Iterate through the nodes
-      uint32_t n = 0;
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
       GraphId nodeid = tile_start->first.Tile_Base();
@@ -806,6 +803,7 @@ void BuildTileSet(
 
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
+        uint32_t n = 0;
         uint32_t driveable = 0;
         RoadClass bestclass = RoadClass::kOther;
         std::vector<DirectedEdgeBuilder> directededges;
