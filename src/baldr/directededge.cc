@@ -265,7 +265,9 @@ bool DirectedEdge::internal() const {
 // Gets the turn type given the prior edge's local index
 Turn::Type DirectedEdge::turntype(const uint32_t localidx) const {
   // Turn type is 3 bits per index
-  return static_cast<Turn::Type>(turntypes_.turntype & (7 << (localidx * 3)));
+  uint32_t shift = localidx * 3;
+  return static_cast<Turn::Type>(
+      ((turntypes_.turntype & (7 << shift))) >> shift);
 }
 
 // Is there a consistent name between this edge and the
@@ -279,7 +281,8 @@ bool DirectedEdge::consistent_name(const uint32_t localidx) const {
 // by the local index of the corresponding inbound edge at the node).
 uint32_t DirectedEdge::stopimpact(const uint32_t localidx) const {
   // Stop impact is 3 bits per index
-  return (stopimpact_.stopimpact & (7 << (localidx * 3)));
+  uint32_t shift = localidx * 3;
+  return (stopimpact_.stopimpact & (7 << shift)) >> shift;
 }
 
 // Get the internal version. Used for data validity checks.
