@@ -7,29 +7,15 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-OSMNode::OSMNode()
-    : osmid_(0),
-      latlng_{},
-      attributes_{} {
-}
-
-OSMNode::OSMNode(const uint64_t osmid, const float lng, const float lat)
-    : osmid_(osmid),
-      latlng_{lng, lat},
-      attributes_{} {
-}
-
-OSMNode::~OSMNode() {
-}
-
 // Sets the lat,lng.
 void OSMNode::set_latlng(const std::pair<float, float>& ll) {
-  latlng_ = ll;
+  lng = ll.first;
+  lat = ll.second;
 }
 
 // Gets the lat,lng.
-const std::pair<float, float>& OSMNode::latlng() const {
-  return latlng_;
+std::pair<float, float> OSMNode::latlng() const {
+  return std::make_pair(lng, lat);
 }
 
 // Set access mask.

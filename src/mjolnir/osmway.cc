@@ -5,62 +5,14 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+
+constexpr uint32_t kMaxNodesPerWay = 65535;
+
+}
+
 namespace valhalla {
 namespace mjolnir {
-
-OSMWay::OSMWay()
-    : noderef_index_(0),
-      nodecount_(0),
-      ref_index_(0),
-      int_ref_index_(0),
-      name_index_(0),
-      name_en_index_(0),
-      alt_name_index_(0),
-      official_name_index_(0),
-      destination_index_(0),
-      destination_ref_index_(0),
-      destination_ref_to_index_(0),
-      destination_street_index_(0),
-      destination_street_to_index_(0),
-      junction_ref_index_(0),
-      bike_national_ref_index_(0),
-      bike_regional_ref_index_(0),
-      bike_local_ref_index_(0),
-      osmwayid_(std::numeric_limits<uint64_t>::max()) {
-
-  attributes_.v = {0};
-  classification_.v = {0};
-  speed_ = static_cast<unsigned char>(0.0f);
-}
-
-OSMWay::OSMWay(uint64_t id)
-    : noderef_index_(0),
-      nodecount_(0),
-      ref_index_(0),
-      int_ref_index_(0),
-      name_index_(0),
-      name_en_index_(0),
-      alt_name_index_(0),
-      official_name_index_(0),
-      destination_index_(0),
-      destination_ref_index_(0),
-      destination_ref_to_index_(0),
-      destination_street_index_(0),
-      destination_street_to_index_(0),
-      junction_ref_index_(0),
-      bike_national_ref_index_(0),
-      bike_regional_ref_index_(0),
-      bike_local_ref_index_(0) {
-
-  osmwayid_ = id;
-
-  attributes_.v = {0};
-  classification_.v = {0};
-  speed_ = static_cast<unsigned char>(0.0f);
-}
-
-OSMWay::~OSMWay() {
-}
 
 // Set way id.
 void OSMWay::set_way_id(const uint64_t id) {
@@ -70,16 +22,6 @@ void OSMWay::set_way_id(const uint64_t id) {
 // Get the way id
 uint64_t OSMWay::way_id() const {
   return osmwayid_;
-}
-
-// Set the index into the node references
-void OSMWay::set_noderef_index(const uint32_t idx) {
-  noderef_index_ = idx;
-}
-
-// Get the index into the node references
-uint32_t OSMWay::noderef_index() const {
-  return noderef_index_;
 }
 
 // Set the number of nodes for this way.

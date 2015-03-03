@@ -1,8 +1,6 @@
 #include <string>
 #include <vector>
 
-#include "pbfgraphbuilder.h"
-
 #include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -119,11 +117,6 @@ int main(int argc, char** argv) {
     auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
-
-  LOG_INFO("Sizeof OSMWay = " + std::to_string(sizeof(OSMWay)));
-  LOG_INFO("Sizeof OSMNode = " + std::to_string(sizeof(OSMNode)));
-  LOG_INFO("Sizeof Edge = " + std::to_string(sizeof(Edge)));
-  LOG_INFO("Sizeof Node = " + std::to_string(sizeof(Node)));
 
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");

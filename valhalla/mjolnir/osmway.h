@@ -11,27 +11,8 @@
 namespace valhalla {
 namespace mjolnir {
 
-constexpr uint32_t kMaxNodesPerWay = 65535;
-
 // OSM way
-class OSMWay {
- public:
-
-  /**
-   * Constructor
-   */
-  OSMWay();
-
-  /**
-   * Constructor given a way id.
-   * @param   id  way id
-   */
-  OSMWay(uint64_t id);
-
-  /**
-   * Destructor
-   */
-  ~OSMWay();
+struct OSMWay {
 
   /**
    * Set way id.
@@ -44,18 +25,6 @@ class OSMWay {
    * @return  Returns way id.
    */
   uint64_t way_id() const;
-
-  /**
-   * Set the index into the node references
-   * @param  idx  Index into the noderefs for this way's node Ids
-   */
-  void set_noderef_index(const uint32_t idx);
-
-  /**
-   * Get the index into the node references
-   * @return  Returns the index into the noderefs for this way's node Ids.
-   */
-  uint32_t noderef_index() const;
 
   /**
    * Set the number of nodes for this way.
@@ -584,12 +553,8 @@ class OSMWay {
                                     const UniqueNames& ref_offset_map,
                                     const UniqueNames& name_offset_map) const;
 
- private:
   // OSM way Id
   uint64_t osmwayid_;
-
-  // Index into the list of nodes
-  uint32_t noderef_index_;
 
   // Reference name (highway numbers)
   uint32_t ref_index_;
@@ -613,7 +578,6 @@ class OSMWay {
   uint32_t bike_national_ref_index_;
   uint32_t bike_regional_ref_index_;
   uint32_t bike_local_ref_index_;
-
 
   // Way attributes
   union WayAttributes {
@@ -646,7 +610,6 @@ class OSMWay {
   };
   WayAttributes attributes_;
 
-  // Can we save space by making this smaller?
   uint16_t nodecount_;
 
   union Classification {
