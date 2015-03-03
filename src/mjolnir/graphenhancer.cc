@@ -177,7 +177,7 @@ bool GraphEnhancer::IsUnreachable(DirectedEdgeBuilder& directededge) {
   // Only check driveable edges. If already on a higher class road consider
   // the edge reachable
   if (!(directededge.forwardaccess() & kAutoAccess) ||
-       directededge.classification() < RoadClass::kTertiaryUnclassified) {
+       directededge.classification() < RoadClass::kTertiary) {
     return false;
   }
 
@@ -206,7 +206,7 @@ bool GraphEnhancer::IsUnreachable(DirectedEdgeBuilder& directededge) {
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       if ((diredge->forwardaccess() & kAutoAccess)) {
-        if (diredge->classification() < RoadClass::kTertiaryUnclassified) {
+        if (diredge->classification() < RoadClass::kTertiary) {
           return false;
         }
 
@@ -316,7 +316,7 @@ uint32_t GraphEnhancer::GetStopImpact(const uint32_t from, const uint32_t to,
                        const DirectedEdge* edges, const uint32_t count) {
   // Get the highest classification of other roads at the intersection
   const DirectedEdge* edge = &edges[0];
-  RoadClass bestrc = RoadClass::kOther;
+  RoadClass bestrc = RoadClass::kServiceOther;
   for (uint32_t i = 0; i < count; i++, edge++) {
     // Check the road if it is driveable TO the intersection and not
     // either of the 2 edges (from or to)

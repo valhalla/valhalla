@@ -223,7 +223,7 @@ struct graph_callback : public OSMPBF::Callback {
             w.set_road_class(RoadClass::kResidential);
             break;
           default:
-            w.set_road_class(RoadClass::kOther);
+            w.set_road_class(RoadClass::kServiceOther);
             break;
         }
       }
