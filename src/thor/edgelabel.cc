@@ -35,6 +35,9 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
   // the prior edge restriction mask is used.
   attributes_.restrictions = (edge->trans_up() || edge->trans_down()) ?
         restrictions : edge->restrictions();
+
+  // Set the opposing local index.
+  attributes_.opp_local_idx = edge->opp_local_idx();
 }
 
 // Destructor
@@ -103,6 +106,13 @@ bool EdgeLabel::trans_down() const {
 // turn restriction onto the directed edge with matching local edge index.
 uint32_t EdgeLabel::restrictions() const {
   return attributes_.restrictions;
+}
+
+// Get the opposing local index. This is the index of the incoming edge
+// (on the local hierarchy) at the end node of the predecessor directed
+// edge. This is used for edge transition costs.
+uint32_t EdgeLabel::opp_local_idx() const {
+  return attributes_.opp_local_idx;
 }
 
 // Operator for sorting.
