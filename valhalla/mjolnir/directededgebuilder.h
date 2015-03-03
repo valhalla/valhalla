@@ -298,6 +298,15 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_speed_type(const SpeedType speed_type);
 
   /**
+    * Set the index of the opposing directed edge on the local hierarchy level
+    * at the end node of this directed edge. Only stored for the first 8 edges
+    * so it can be used for edge transition costing.
+    * @param localidx  The index of the opposing directed edge on the local
+    *                  hierarchy level at end node of this directed edge.
+    */
+  void set_opp_local_idx(const uint32_t localidx);
+
+  /**
    * Set all forward access modes to true (used for transition edges)
    */
   void set_all_forward_access();
@@ -401,6 +410,30 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  internal  True if the edge is internal to an intersection.
    */
   void set_internal(const bool internal);
+
+  /**
+   * Sets the turn type given the prior edge's local index
+   * (index of the inbound edge).
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @param  turntype  Turn type (see TODO)
+   */
+  void set_turntype(const uint32_t localidx, const Turn::Type turntype);
+
+  /**
+   * Set the consistent name flag between this edge and the
+   * prior edge given its local index (index of the inbound edge).
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @param  consistent  true if there is a consistent name, false if not.
+   */
+  void set_consistent_name(const uint32_t localidx, const bool consistent);
+
+  /**
+   * Set the stop impact when transitioning from the prior edge (given
+   * by the local index of the corresponding inbound edge at the node).
+   * @param  localidx    Local index at the node of the inbound edge.
+   * @param  stopimpact  Relative stop impact from low (0) to high (7).
+   */
+  void set_stopimpact(const uint32_t localidx, const uint32_t stopimpact);
 
   // TODO - intersection transitions
 
