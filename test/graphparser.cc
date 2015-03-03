@@ -197,29 +197,20 @@ void BicycleTrafficSignals(const std::string& config_file) {
   sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
   way_nodes.sort(node_predicate);
 
+  auto node = GetNode(42439096, way_nodes);
+  if (!node.intersection() || !node.traffic_signal())
+    throw std::runtime_error("Traffic Signal test failed.");
+/*
   //When we support finding bike rentals, this test will need updated.
-  auto node = GetNode(3146484929, way_nodes);
-  //  if (node != osmdata.nodes.end())
-  //    throw std::runtime_error("Bike rental test failed.");
-  /*else {
-    if (node.intersection())
-      throw std::runtime_error("Bike rental not marked as intersection.");
-  }*/
+  node = GetNode(3146484929, way_nodes);
+  if (node.intersection())
+    throw std::runtime_error("Bike rental not marked as intersection.");
 
   //When we support finding shops that rent bikes, this test will need updated.
   node = GetNode(2592264881, way_nodes);
-  //  if (node != osmdata.nodes.end())
-  //    throw std::runtime_error("Bike rental at a shop test failed.");
-  /*else {
-    if (node.second.intersection())
-      throw std::runtime_error("Bike rental at a shop not marked as intersection.");
-  }*/
-
-  node = GetNode(42439096, way_nodes);
-
-  if (!node.intersection() || !node.traffic_signal())
-    throw std::runtime_error("Traffic Signal test failed.");
-
+  if (node.intersection())
+    throw std::runtime_error("Bike rental at a shop not marked as intersection.");
+*/
 }
 
 void DoConfig() {
