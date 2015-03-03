@@ -44,6 +44,7 @@ test/graphid
 test/tilehierarchy
 test/graphtile
 test/nodeinfo
+test/turn
 test/*.log
 test/*.trs
 
