@@ -137,6 +137,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   // Find shortest path
   const GraphTile* tile;
   GraphId edgeid;
+  float unitsize = costing->UnitSize();
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -226,15 +227,16 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
-      // Set the has_shortcuts flag if a shortcut was taken
-      has_shortcuts |= directededge->shortcut();
-
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusType edgestatus = edgestatus_->Get(edgeid);
       if (edgestatus == kPermanent) {
         continue;
       }
+
+      // Set the has_shortcuts flag if a shortcut was taken
+      // TODO - really need bit masks for shortcuts and their superseded edges!
+      has_shortcuts |= directededge->shortcut();
 
       // Get cost
       float cost = currentcost + costing->Get(directededge);
@@ -246,7 +248,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         // the difference in the real costs (the A* heuristic doesn't change)
         uint32_t prior_label_index = GetPriorEdgeLabel(edgeid);
         if (prior_label_index != kInvalidLabel) {
-          if (cost < edgelabels_[prior_label_index].truecost()) {
+          // Reduce if cost difference is outside the costing unit size
+          if (cost < edgelabels_[prior_label_index].truecost() - unitsize) {
             float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
             float newsortcost = prior_sort_cost -
                     (edgelabels_[prior_label_index].truecost() - cost);
@@ -256,6 +259,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
             adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
                     prior_sort_cost);
           }
+        } else {
+          // TODO - should never see this, but EdgeStatus failures caused it
+          LOG_ERROR("GetPriorEdgeLabel failed!");
         }
         continue;
       }
