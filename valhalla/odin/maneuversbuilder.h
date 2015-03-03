@@ -27,6 +27,11 @@ class ManeuversBuilder {
       std::list<Maneuver>::iterator curr_man,
       std::list<Maneuver>::iterator next_man, bool start_man);
 
+  std::list<Maneuver>::iterator CombineTurnChannelManeuver(
+      std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
+      std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man, bool start_man);
+
   std::list<Maneuver>::iterator CombineSameNameStraightManeuver(
       std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
       std::list<Maneuver>::iterator next_man);
