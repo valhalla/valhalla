@@ -874,7 +874,7 @@ void TestStraightInternalLeftInternalCombine() {
   node = path.add_node();
   edge = node->add_edge();
   PopulateEdge(edge, { "Patuxent Woods Drive" }, 0.059840, 40.000000,
-               TripPath_RoadClass_kTertiaryUnclassified, 292, 270, 5, 8,
+               TripPath_RoadClass_kTertiary, 292, 270, 5, 8,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                { }, { }, { }, { });
 
