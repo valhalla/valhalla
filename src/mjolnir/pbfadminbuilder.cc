@@ -313,6 +313,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     for (const auto admin : osmdata.admins_) {
 
       lastid = 0;
+      firstid = 0;
       std::vector<PointLL> shape;
       has_data = true;
       geom = "";
@@ -341,7 +342,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
         const OSMWay* w = osmdata.GetWay(memberid);
 
-        if (15459379 == memberid)
+        if (48655290 == memberid || 166291097 == memberid || 15459455 == memberid || memberid == 135087541)
         {
           has_data = true;
           std::cout << " text" << std::endl;
@@ -360,7 +361,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         size_t j = w->node_count() - 1;
         // write out poly if is now closed or if next is inner or outer poly
         //if (!shape.empty() &&
-          if ((firstid == lastid ) ||
+          if ((firstid == lastid && firstid != 0) ||
               (osmdata.noderefs[w->noderef_index()] == osmdata.noderefs[w->noderef_index() + j])) {
 
  /*         std::string geom;
@@ -373,6 +374,14 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           geom += "))";*/
 
 //          geom = GetWkt(shape);
+
+ //         const OSMNode& b_osmnode = *osmdata.GetNode(osmdata.noderefs[w->noderef_index()]);
+ //         const OSMNode& e_osmnode = *osmdata.GetNode(osmdata.noderefs[w->noderef_index() + j]);
+
+/*          if ((firstid == lastid && firstid != 0) &&
+             ((!geom.find(b_osmnode.latlng().first) && !geom.find(b_osmnode.latlng().second)) ||
+              (!geom.find(e_osmnode.latlng().first) && !geom.find(e_osmnode.latlng().second)))) {
+*/
 
           geom += ")";
 
@@ -394,17 +403,22 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
           std::vector<PointLL>().swap(shape);
           geom = "";
+          lastid = 0;
+          firstid = 0;
 
         }
+       //   }
 
         j = 0;
-        if (shape.size() && lastid != nodeid) {
+       if (firstid != 0 && lastid != nodeid) {
           reverse = true;
           j = w->node_count() - 1;
 
           // Should first added member's shape be reversed?
-          if (lastid != osmdata.noderefs[w->noderef_index() + j] && i == 1)
+          if (lastid != osmdata.noderefs[w->noderef_index() + j] && i == 1) {
             std::reverse(shape.begin(), shape.end());
+            firstid = lastid;
+          }
         }
 
         bool done = false;
@@ -413,7 +427,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           const OSMNode& osmnode = *osmdata.GetNode(nodeid);
           lastid = nodeid;
 
-          if (shape.empty())
+          if (firstid == 0)
             firstid = nodeid;
 
           shape.push_back(osmnode.latlng());
@@ -429,7 +443,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         }
       }
 
-      if (!has_data || !shape.size())
+      if (!has_data) //|| !shape.size())
         continue;
 
 /*      std::string geom;
@@ -458,6 +472,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         std::vector<PointLL>().swap(shape);
 
       }
+
+      if (geom.empty())
+        continue;
+
       geom += ")";
 
      // std::cout << admin.name() << " " << geom << std::endl;
