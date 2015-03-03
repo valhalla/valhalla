@@ -153,7 +153,7 @@ void Exits(const std::string& config_file) {
 
 }
 
-void Ways(const std::string& config_file) {
+void Baltimore(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
@@ -186,6 +186,37 @@ void Ways(const std::string& config_file) {
   if (way.auto_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
       way.auto_backward() != false || way.bike_backward() != false) {
     throw std::runtime_error("Access is not set correctly for way 49641455.");
+  }
+
+  // Oneway test.  Make sure auto backward is set for ways where oneway=no.
+  way = GetWay(192573108, ways);
+  if (way.auto_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true) {
+    throw std::runtime_error("Forward/Backward/Pedestrian access is not set correctly for way 192573108.");
+  }
+
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  way_nodes.sort(node_predicate);
+  auto node = GetNode(49473254, way_nodes);
+
+  if (!node.intersection() || node.type() != NodeType::kTollBooth)
+    throw std::runtime_error("Toll Booth 49473254 test failed.");
+
+  auto res = osmdata.restrictions.equal_range(98040438);
+
+  if (res.first == osmdata.restrictions.end())
+    throw std::runtime_error("Failed to find 98040438 restrictions.");
+
+  for (auto r = res.first; r != res.second; ++r) {
+    if (r->second.to() == 6003340) {
+      if (r->second.via() != 2123388822 || r->second.type() != RestrictionType::kNoLeftTurn)
+        throw std::runtime_error("98040438 restriction test failed for to: 6003340");
+    }
+    else if (r->second.to() == 98040438) {
+      if (r->second.via() != 2123388822 || r->second.type() != RestrictionType::kNoUTurn)
+        throw std::runtime_error("98040438 restriction test failed for to: 98040438");
+    }
+    else throw std::runtime_error("98040438 restriction test failed.");
   }
 }
 
@@ -238,9 +269,9 @@ void TestExits() {
   Exits("test/test_config");
 }
 
-void TestWays() {
+void TestBaltimoreArea() {
   //write the tiles with it
-  Ways("test/test_config");
+  Baltimore("test/test_config");
 }
 
 }
@@ -253,7 +284,7 @@ int main() {
   suite.test(TEST_CASE(TestRemovableBollards));
   suite.test(TEST_CASE(TestBicycleTrafficSignals));
   suite.test(TEST_CASE(TestExits));
-  suite.test(TEST_CASE(TestWays));
+  suite.test(TEST_CASE(TestBaltimoreArea));
 
   return suite.tear_down();
 }
