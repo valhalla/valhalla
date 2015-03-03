@@ -192,8 +192,19 @@ struct graph_callback : public OSMPBF::Callback {
     bool has_surface = true;
     std::string name;
 
+    if (osmid == 171861008 || osmid == 5303316)
+    {
+      std::cout << "osmid: " << osmid << std::endl;
+    }
+
+
     // Process tags
     for (const auto& tag : results) {
+
+      if (osmid == 171861008 || osmid == 5303316)
+      {
+        std::cout << "tag: " << tag.first << " " << tag.second << std::endl;
+      }
 
       if (tag.first == "road_class") {
 
