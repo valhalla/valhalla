@@ -48,8 +48,8 @@ namespace {
     id = h.GetGraphId(PointLL(-76.5, 40.5), 2);
     if(id.level() != 2 || id.tileid() != (522 * 1440) + 414 || id.id() != 0)
       throw runtime_error("Expected different graph id for this location");
-    if(h.levels().begin()->second.importance != RoadClass::kOther)
-      throw runtime_error("Importance should be set to other");
+    if(h.levels().begin()->second.importance != RoadClass::kServiceOther)
+      throw runtime_error("Importance should be set to service/other");
     if((++h.levels().begin())->second.importance != RoadClass::kTrunk)
       throw runtime_error("Importance should be set to trunk");
   }

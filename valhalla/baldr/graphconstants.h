@@ -44,15 +44,16 @@ enum class RoadClass : uint8_t {
   kTrunk = 1,
   kPrimary = 2,
   kSecondary = 3,
-  kTertiaryUnclassified = 4,
-  kResidential = 5,
-  kService = 6,
-  kOther = 7
+  kTertiary = 4,
+  kUnclassified = 5,
+  kResidential = 6,
+  kServiceOther = 7,
 };
 const std::unordered_map<std::string, RoadClass> stringToRoadClass =
   { {"Motorway", RoadClass::kMotorway}, {"Trunk", RoadClass::kTrunk}, {"Primary", RoadClass::kPrimary},
-    {"Secondary", RoadClass::kSecondary}, {"TertiaryUnclassified", RoadClass::kTertiaryUnclassified},
-    {"Residential", RoadClass::kResidential}, {"Service", RoadClass::kService}, {"Other", RoadClass::kOther}
+    {"Secondary", RoadClass::kSecondary}, {"Tertiary", RoadClass::kTertiary},
+    {"Unclassified", RoadClass::kUnclassified},{"Residential", RoadClass::kResidential},
+    {"ServiceOther", RoadClass::kServiceOther}
   };
 
 // Maximum length in meters of an internal intersection edge

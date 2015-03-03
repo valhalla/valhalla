@@ -9,7 +9,7 @@ TileHierarchy::TileLevel::TileLevel(const boost::property_tree::ptree& pt):
   level = pt.get<uint8_t>("level");
   name = pt.get<std::string>("name");
   //if not provided default to everything
-  std::string cutoff = pt.get<std::string>("importance_cutoff", "Other");
+  std::string cutoff = pt.get<std::string>("importance_cutoff", "ServiceOther");
   std::unordered_map<std::string, RoadClass>::const_iterator kv = stringToRoadClass.find(cutoff);
   if(kv == stringToRoadClass.end())
     throw std::runtime_error(cutoff + ": is not a valid value for importance_cutoff");
