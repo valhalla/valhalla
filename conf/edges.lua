@@ -341,7 +341,7 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "true"
       end
     end
-  elseif oneway_norm == nil then
+  elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
     if kv["bike_backward"] == "false" then
       kv["bike_backward"] = kv["bike_forward"]
