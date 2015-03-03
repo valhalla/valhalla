@@ -298,6 +298,19 @@ void DirectedEdgeBuilder::set_speed_type(const SpeedType speed_type) {
   attributes_.speed_type = static_cast<uint8_t>(speed_type);
 }
 
+// Set the index of the opposing directed edge on the local hierarchy level
+// at the end node of this directed edge. Only stored for the first 8 edges
+// so it can be used for edge transition costing.
+void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
+  if (idx > kMaxOppLocalIdx) {
+    LOG_ERROR("Exceeding max opposing local index: " + std::to_string(idx));
+    attributes_.opp_local_idx = kMaxOppLocalIdx;
+  } else {
+    attributes_.opp_local_idx = idx;
+  }
+}
+
+
 // Set all forward access modes to true (used for transition edges)
 void DirectedEdgeBuilder::set_all_forward_access() {
   forwardaccess_.v = kAllAccess;
@@ -412,6 +425,37 @@ void DirectedEdgeBuilder::set_link(const uint8_t link) {
 // Sets the intersection internal flag.
 void DirectedEdgeBuilder::set_internal(const bool internal) {
   classification_.internal = internal;
+}
+
+// Sets the turn type given the prior edge's local index
+// (index of the inbound edge).
+void DirectedEdgeBuilder::set_turntype(const uint32_t localidx,
+                                       const Turn::Type turntype) {
+  turntypes_.turntype |= (static_cast<uint32_t>(turntype) << (localidx * 3));
+}
+
+// Set the consistent name flag between this edge and the
+// prior edge given its local index (index of the inbound edge).
+void DirectedEdgeBuilder::set_consistent_name(const uint32_t localidx,
+                                              const bool consistent) {
+  if (consistent) {
+    turntypes_.turntype |= (1 << (24 + localidx));
+  } else {
+    // Unset the flag - is that needed?
+  }
+}
+
+// Set the stop impact when transitioning from the prior edge (given
+// by the local index of the corresponding inbound edge at the node).
+
+void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
+                                         const uint32_t stopimpact) {
+  if (stopimpact > kMaxStopImpact) {
+    LOG_ERROR("Exceeding maximum stop impact: " + std::to_string(stopimpact));
+    stopimpact_.stopimpact |= (kMaxStopImpact << (localidx * 3));
+  } else {
+    stopimpact_.stopimpact |= (stopimpact << (localidx * 3));
+  }
 }
 
 }
