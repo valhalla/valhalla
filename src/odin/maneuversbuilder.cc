@@ -186,6 +186,10 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       StreetNames common_base_names = curr_man->street_names()
           .FindCommonBaseNames(next_man->street_names());
 
+      // Get the begin edge of the next maneuver
+      auto* next_man_begin_edge = trip_path_->GetCurrEdge(
+          next_man->begin_node_index());
+
       // Combine current internal maneuver with next maneuver
       if (curr_man->internal_intersection() && (curr_man != next_man)) {
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
@@ -194,13 +198,23 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         maneuvers_have_been_combined = true;
         ++next_man;
       }
+      // Combine current turn channel maneuver with next maneuver
+      else if (curr_man->turn_channel() && (curr_man != next_man)) {
+        curr_man = CombineTurnChannelManeuver(maneuvers, prev_man, curr_man,
+                                              next_man,
+                                              (curr_man == maneuvers.begin()));
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
       // NOTE: Logic may have to be adjusted depending on testing
       // Maybe not intersecting forward link
       // Maybe first edge in next is internal
       // Maybe no signs
       // Combine the 'same name straight' next maneuver with the current maneuver
+      // if begin edge of next maneuver is not a turn channel
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
+          && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
           && !common_base_names.empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
@@ -234,6 +248,45 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
   // Set relative direction
   next_man->set_begin_relative_direction(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
+
+  // Add distance
+  next_man->set_distance(next_man->distance() + curr_man->distance());
+
+  // Add time
+  next_man->set_time(next_man->time() + curr_man->time());
+
+  // TODO - heading?
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  // Set maneuver type to 'none' so the type will be processed again
+  next_man->set_type(TripDirections_Maneuver_Type_kNone);
+  SetManeuverType(*(next_man));
+
+  return maneuvers.erase(curr_man);
+}
+
+std::list<Maneuver>::iterator ManeuversBuilder::CombineTurnChannelManeuver(
+    std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
+    std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man, bool start_man) {
+
+  if (start_man) {
+    // Determine turn degree current maneuver and next maneuver
+    next_man->set_turn_degree(
+        GetTurnDegree(curr_man->end_heading(), next_man->begin_heading()));
+  } else {
+    // Determine turn degree based on previous maneuver and next maneuver
+    next_man->set_turn_degree(
+        GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
+  }
+
+  // Set relative direction
+  next_man->set_begin_relative_direction(curr_man->begin_relative_direction());
 
   // Add distance
   next_man->set_distance(next_man->distance() + curr_man->distance());
@@ -358,6 +411,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_ramp(true);
   }
 
+  // Turn Channel
+  if (prev_edge->turn_channel()) {
+    maneuver.set_turn_channel(true);
+  }
+
   // Ferry
   if (prev_edge->ferry()) {
     maneuver.set_ferry(true);
@@ -373,7 +431,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_roundabout(true);
   }
 
-  // Internal_Intersection
+  // Internal Intersection
   if (prev_edge->internal_intersection()) {
     maneuver.set_internal_intersection(true);
   }
@@ -500,6 +558,11 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
     LOG_TRACE("INTERNAL_INTERSECTION");
   }
+  // Process Turn Channel
+  else if (maneuver.turn_channel()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kNone);
+    LOG_TRACE("TURN_CHANNNEL");
+  }
   // Process exit
   else if (maneuver.ramp()
       && (prev_edge->IsHighway() || maneuver.HasExitNumberSign())) {
@@ -588,6 +651,27 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
   switch (Turn::GetType(maneuver.turn_degree())) {
     case Turn::Type::kStraight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+      if (trip_path_) {
+        auto* man_begin_edge = trip_path_->GetCurrEdge(
+            maneuver.begin_node_index());
+
+        ////////////////////////////////////////////////////////////////////
+        // If the maneuver begin edge is a turn channel
+        // and the relative direction is not a keep straight
+        // then set as slight right based on a relative keep right direction
+        //  OR  set as slight left based on a relative keep left direction
+        if (man_begin_edge && man_begin_edge->turn_channel()
+            && (maneuver.begin_relative_direction()
+                != Maneuver::RelativeDirection::kKeepStraight)) {
+          if (maneuver.begin_relative_direction()
+              == Maneuver::RelativeDirection::kKeepRight) {
+            maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+          } else if (maneuver.begin_relative_direction()
+              == Maneuver::RelativeDirection::kKeepLeft) {
+            maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+          }
+        }
+      }
       break;
     }
     case Turn::Type::kSlightRight: {
@@ -657,6 +741,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return false;
   } else if (prev_edge->internal_intersection()
       && maneuver.internal_intersection()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process simple turn channel
+  if (prev_edge->turn_channel() && !maneuver.turn_channel()) {
+    return false;
+  } else if (!prev_edge->turn_channel()
+      && maneuver.turn_channel()) {
+    return false;
+  } else if (prev_edge->turn_channel()
+      && maneuver.turn_channel()) {
     return true;
   }
 

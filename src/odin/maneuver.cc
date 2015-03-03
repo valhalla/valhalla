@@ -36,6 +36,7 @@ Maneuver::Maneuver()
       begin_shape_index_(0),
       end_shape_index_(0),
       ramp_(false),
+      turn_channel_(false),
       ferry_(false),
       rail_ferry_(false),
       roundabout_(false),
@@ -195,6 +196,14 @@ void Maneuver::set_ramp(bool ramp) {
   ramp_ = ramp;
 }
 
+bool Maneuver::turn_channel() const {
+  return turn_channel_;
+}
+
+void Maneuver::set_turn_channel(bool turn_channel) {
+  turn_channel_ = turn_channel;
+}
+
 bool Maneuver::ferry() const {
   return ferry_;
 }
@@ -328,6 +337,9 @@ std::string Maneuver::ToString() const {
   man_str += " | ramp=";
   man_str += std::to_string(ramp_);
 
+  man_str += " | turn_channel=";
+  man_str += std::to_string(turn_channel_);
+
   man_str += " | ferry=";
   man_str += std::to_string(ferry_);
 
@@ -408,6 +420,9 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(ramp_);
+
+  man_str += delim;
+  man_str += std::to_string(turn_channel_);
 
   man_str += delim;
   man_str += std::to_string(ferry_);
