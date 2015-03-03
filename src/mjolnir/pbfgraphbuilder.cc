@@ -3,6 +3,7 @@
 
 #include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphoptimizer.h"
 #include "config.h"
@@ -134,6 +135,12 @@ int main(int argc, char** argv) {
     else
       return false;  //unknown value;
   }*/
+
+  // Enhance the local level of the graph. This adds information to the local
+  // level that is usable across all levels (density, administrative
+  // information (and country based attribution), edge transition logic, etc.
+  GraphEnhancer enhancer(pt.get_child("mjolnir.hierarchy"));
+  enhancer.Enhance();
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.

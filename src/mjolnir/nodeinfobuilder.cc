@@ -98,6 +98,10 @@ void NodeInfoBuilder::set_dst(const bool dst) {
 
 // Set the relative density
 void NodeInfoBuilder::set_density(const uint32_t density) {
+  if (density > kMaxDensity) {
+    LOG_INFO("Exceeding max. density: " + std::to_string(density));
+    type_.local_driveable = kMaxDensity;
+  }
   type_.density = density;
 }
 

@@ -28,16 +28,6 @@ uint32_t OSMNode::access_mask() const {
   return attributes_.access_mask;
 }
 
-// Set payment mask.
-void OSMNode::set_payment_mask(const uint32_t payment_mask) {
-  attributes_.payment_mask = payment_mask;
-}
-
-// Get the payment mask.
-uint32_t OSMNode::payment_mask()const {
-   return attributes_.payment_mask;
-}
-
 // Set the exit to flag
 void OSMNode::set_exit_to(const bool exit_to) {
   attributes_.exit_to = exit_to;

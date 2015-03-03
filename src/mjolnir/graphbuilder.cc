@@ -463,7 +463,7 @@ bool IsNoThroughEdge(const GraphId& startnode, const GraphId& endnode,
                 edge.targetnode_ : edge.sourcenode_;
       if (nextendnode == startnode ||
           edge.attributes.importance <=
-          static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
+          static_cast<uint32_t>(RoadClass::kTertiary)) {
         return false;
       }
 
@@ -614,8 +614,10 @@ float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
       return 65.0f;
     } else if (rc == RoadClass::kSecondary) {
       return 50.0f;
-    } else if (rc == RoadClass::kTertiaryUnclassified) {
+    } else if (rc == RoadClass::kTertiary) {
       return 40.0f;
+    } else if (rc == RoadClass::kUnclassified) {
+      return 35.0f;
     } else {
       return 25.0f;
     }
@@ -811,7 +813,7 @@ void BuildTileSet(
         // of outbound edges from this node.
         uint32_t n = 0;
         uint32_t driveable = 0;
-        RoadClass bestclass = RoadClass::kOther;
+        RoadClass bestclass = RoadClass::kServiceOther;
         std::vector<DirectedEdgeBuilder> directededges;
         for (auto edgeindex : node.edges) {
           // Get the edge and way
@@ -853,7 +855,7 @@ void BuildTileSet(
           // Check for not_thru edge (only on low importance edges)
           bool not_thru = false;
           if (edge.attributes.importance >
-              static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
+              static_cast<uint32_t>(RoadClass::kTertiary)) {
             not_thru = IsNoThroughEdge(source, target, edgeindex, nodes, edges);
           }
 
