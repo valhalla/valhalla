@@ -39,6 +39,7 @@ hierarchybuilder
 *.lo
 .libs/
 libvalhalla_mjolnir.la
+*.bin
 
 # tests
 test-suite.log
