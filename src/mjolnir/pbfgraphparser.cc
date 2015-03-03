@@ -654,9 +654,8 @@ struct graph_callback : public OSMPBF::Callback {
       }
 
       // Add the restriction to the list.  For now only support simple restrictions.
-      if (from_way_id != 0 && restriction.via() && restriction.to()) {
+      if (from_way_id != 0 && restriction.via() && restriction.to())
         osmdata_.restrictions.insert(RestrictionsMap::value_type(from_way_id, restriction));
-      }
     }
   }
 
