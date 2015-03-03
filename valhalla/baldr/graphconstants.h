@@ -47,7 +47,7 @@ enum class RoadClass : uint8_t {
   kTertiary = 4,
   kUnclassified = 5,
   kResidential = 6,
-  kServiceOther = 7,
+  kServiceOther = 7
 };
 const std::unordered_map<std::string, RoadClass> stringToRoadClass =
   { {"Motorway", RoadClass::kMotorway}, {"Trunk", RoadClass::kTrunk}, {"Primary", RoadClass::kPrimary},
