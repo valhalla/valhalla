@@ -34,7 +34,7 @@ void make_tile() {
     \"tile_dir\": \"test/tiles\", \
     \"levels\": [ \
       {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"TertiaryUnclassified\"}, \
+      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
       {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
     ] \
   }";
