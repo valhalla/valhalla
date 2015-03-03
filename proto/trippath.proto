@@ -37,10 +37,10 @@ message TripPath {
     kTrunk = 1;
     kPrimary = 2;
     kSecondary = 3;
-    kTertiaryUnclassified = 4;
-    kResidential = 5;
-    kService = 6;
-    kOther = 7;
+    kTertiary = 4;
+    kUnclassified = 5;
+    kResidential = 6;
+    kServiceOther = 7;
   }
   
   message Edge {
