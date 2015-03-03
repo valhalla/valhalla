@@ -161,15 +161,17 @@ enum class DOW : uint8_t {
   kSaturday,
 };
 
-// TODO - add comment and explicit values
+// Restriction types. If a restriction exists this value will be set.
+// Restrictions with "Only" will restrict all turns not adhering to the
+// only "to" road of the restriction.
 enum class RestrictionType : uint8_t {
-  kNoLeftTurn,
-  kNoRightTurn,
-  kNoStraightOn,
-  kNoUTurn,
-  kOnlyRightTurn,
-  kOnlyLeftTurn,
-  kOnlyStraightOn
+  kNoLeftTurn = 0,
+  kNoRightTurn = 1,
+  kNoStraightOn = 2,
+  kNoUTurn = 3,
+  kOnlyRightTurn = 4,
+  kOnlyLeftTurn = 5,
+  kOnlyStraightOn = 6
 };
 
 }
