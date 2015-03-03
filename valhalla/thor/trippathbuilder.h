@@ -49,7 +49,6 @@ class TripPathBuilder {
                                           const baldr::DirectedEdge* directededge,
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
-                                          const baldr::NodeInfo* nodeinfo,
                                           const float length_percentage = 1.f);
 };
 
