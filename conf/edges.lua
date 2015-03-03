@@ -43,10 +43,9 @@ road_class = {
 ["secondary_link"] = 3,
 ["tertiary"] = 4, 
 ["tertiary_link"] = 4, 
-["unclassified"] = 4, 
-["residential"] = 5, 
-["residential_link"] = 5, 
-["service"] = 6 
+["unclassified"] = 5, 
+["residential"] = 6, 
+["residential_link"] = 6
 }
 
 restriction = {
@@ -341,7 +340,7 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "true"
       end
     end
-  elseif oneway_norm == nil then
+  elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
     if kv["bike_backward"] == "false" then
       kv["bike_backward"] = kv["bike_forward"]
@@ -374,7 +373,7 @@ function filter_tags_generic(kv)
     road_class = 2 --TODO:  can we weight based on ferry types?
   elseif kv["highway"] == nil and kv["railway"] then
     road_class = 2 --TODO:  can we weight based on rail types?    
-  elseif road_class == nil then
+  elseif road_class == nil then --service and other = 7
     road_class = 7
   end 
   
