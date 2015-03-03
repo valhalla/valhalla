@@ -213,14 +213,14 @@ struct graph_callback : public OSMPBF::Callback {
           case RoadClass::kSecondary:
             w.set_road_class(RoadClass::kSecondary);
             break;
-          case RoadClass::kTertiaryUnclassified:
-            w.set_road_class(RoadClass::kTertiaryUnclassified);
+          case RoadClass::kTertiary:
+            w.set_road_class(RoadClass::kTertiary);
+            break;
+          case RoadClass::kUnclassified:
+            w.set_road_class(RoadClass::kUnclassified);
             break;
           case RoadClass::kResidential:
             w.set_road_class(RoadClass::kResidential);
-            break;
-          case RoadClass::kService:
-            w.set_road_class(RoadClass::kService);
             break;
           default:
             w.set_road_class(RoadClass::kOther);
@@ -439,18 +439,18 @@ struct graph_callback : public OSMPBF::Callback {
         case RoadClass::kMotorway:
         case RoadClass::kTrunk:
         case RoadClass::kPrimary:
-        case RoadClass::kTertiaryUnclassified:
+        case RoadClass::kTertiary:
+        case RoadClass::kUnclassified:
         case RoadClass::kResidential:
-        case RoadClass::kService:
           w.set_surface(Surface::kPavedSmooth);
           break;
         default:
           switch (w.use()) {
-
           case Use::kFootway:
           case Use::kTrack:
             w.set_surface(Surface::kPath);
             break;
+          case Use::kRoad:
           case Use::kParkingAisle:
           case Use::kDriveway:
           case Use::kAlley:
