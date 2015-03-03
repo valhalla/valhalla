@@ -541,7 +541,7 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "ref") {
         ref = tag.second;
       }
-      else if (tag.first == "restriction") {
+      else if (tag.first == "restriction" && !tag.second.empty()) {
         RestrictionType type = (RestrictionType) std::stoi(tag.second);
 
         switch (type) {
