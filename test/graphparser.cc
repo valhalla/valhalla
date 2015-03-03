@@ -278,7 +278,7 @@ void TestBaltimoreArea() {
 
 int main() {
 
-  // Test data BB is as follows:
+  // Test data BBs are as follows:
   // Rome:        <bounds minlat="41.8957000" minlon="12.4820400" maxlat="41.8973400" maxlon="12.4855600"/>
   // NYC:         <bounds minlat="40.7330200" minlon="-74.0136900" maxlat="40.7396900" maxlon="-73.9996000"/>
   // Baltimore:   <bounds minlat="39.2586000" minlon="-76.6081000" maxlat="39.3065000" maxlon="-76.5288000"/>
