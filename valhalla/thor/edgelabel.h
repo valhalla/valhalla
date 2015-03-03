@@ -127,6 +127,14 @@ class EdgeLabel {
   uint32_t restrictions() const;
 
   /**
+   * Get the opposing local index. This is the index of the incoming edge
+   * (on the local hierarchy) at the end node of the predecessor directed
+   * edge. This is used for edge transition costs.
+   * @return  Returns the local index of the incoming edge.
+   */
+  uint32_t opp_local_idx() const;
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
@@ -161,11 +169,12 @@ class EdgeLabel {
    *               that are restricted (simple turn restrictions)
    */
   struct Attributes {
-    uint32_t uturn_index  : 5;
-    uint32_t trans_up     : 1;
-    uint32_t trans_down   : 1;
-    uint32_t restrictions : 7;
-    uint32_t spare        : 18;
+    uint32_t uturn_index   : 5;
+    uint32_t trans_up      : 1;
+    uint32_t trans_down    : 1;
+    uint32_t restrictions  : 7;
+    uint32_t opp_local_idx : 4;
+    uint32_t spare         : 14;
   };
   Attributes attributes_;
 
