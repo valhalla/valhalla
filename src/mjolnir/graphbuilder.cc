@@ -26,10 +26,6 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-uint32_t simplerestrictions = 0;
-uint32_t timedrestrictions = 0;
-uint32_t turnchannelcount = 0;
-
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
@@ -86,13 +82,6 @@ void GraphBuilder::Build(OSMData& osmdata) {
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
-
-  // Log statistics and issues
-  stats_->Log();
-
-  LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
-  LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
-  LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
 }
 
 // Add a node to the appropriate tile.
@@ -305,7 +294,8 @@ void GraphBuilder::ReclassifyLinks(const std::string& ways_file) {
       GraphId nodeid(tile.first.tileid(), tile.first.level(), 0);
       if (node.link_edge() && node.non_link_edge()) {
         // Get the highest classification of non-link edges at this node
-        uint32_t beststartrc = GetBestNonLinkClass(node, edges);
+        std::vector<uint32_t> endrc;
+        endrc.push_back(GetBestNonLinkClass(node, edges));
 
         // Expand from all link edges
         for (auto startedgeindex : node.edges) {
@@ -325,12 +315,11 @@ void GraphBuilder::ReclassifyLinks(const std::string& ways_file) {
 
           // If the first end node contains a non-link edge we compute the best
           // classification. If not we add the end node to the expand set.
-          uint32_t bestendrc = kAbsurdRoadClass;
           GraphId endnode = (startedge.sourcenode_ == nodeid) ?
               startedge.targetnode_ : startedge.sourcenode_;
           Node& firstendnode = GetNode(endnode);
           if (firstendnode.non_link_edge()) {
-            bestendrc = GetBestNonLinkClass(firstendnode, edges);
+            endrc.push_back(GetBestNonLinkClass(firstendnode, edges));
           } else {
             expandset.insert(endnode);
           }
@@ -343,13 +332,15 @@ void GraphBuilder::ReclassifyLinks(const std::string& ways_file) {
             // from the starting node
             if (expandset.empty()) {
               // Make sure this connects...
-              if (bestendrc == kAbsurdRoadClass)  {
+              if (endrc.size() < 2)  {
                 stats_->AddIssue(kUnconnectedLinkEdge, GraphId(),
                                (*ways[startedge.wayindex_]).way_id(), 0);
               } else {
-                // Set to the lower of the 2 best road classes (start and end).
-                // Apply this to each of the link edges
-                uint32_t rc = std::max(beststartrc, bestendrc);
+                // Set to the value of the 2nd best road class of all
+                // connections. This protects against downgrading links
+                // when branches occur.
+                std::sort(endrc.begin(), endrc.end());
+                uint32_t rc = endrc[1];
                 for (auto idx : linkedgeindexes) {
                   sequence_element<Edge> element = edges[idx];
                   auto edge = *element;
@@ -390,10 +381,7 @@ void GraphBuilder::ReclassifyLinks(const std::string& ways_file) {
               // If the end node contains any non-links find the best
               // classification - do not expand from this node
               if (endnd.non_link_edge()) {
-                uint32_t rc = GetBestNonLinkClass(endnd, edges);
-                if (rc < bestendrc) {
-                  bestendrc = rc;
-                }
+                endrc.push_back(GetBestNonLinkClass(endnd, edges));
               } else if (visitedset.find(nextendnode) == visitedset.end()) {
                 // Add to the expand set if not in the visited set
                 expandset.insert(nextendnode);
@@ -594,7 +582,6 @@ Use GetLinkUse(const uint32_t edgeindex, const RoadClass rc,
         return Use::kRamp;
       }
     }
-    turnchannelcount++;
     return Use::kTurnChannel;
   }
   else {
@@ -604,7 +591,7 @@ Use GetLinkUse(const uint32_t edgeindex, const RoadClass rc,
 
 float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
   if (use == Use::kTurnChannel) {
-    return spd * 1.25f;
+    return spd * 0.9f;
   } else if (use == Use::kRamp) {
     if (rc == RoadClass::kMotorway) {
       return 95.0f;
@@ -672,7 +659,8 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
                  GraphTileBuilder& graphtile,
                  const GraphId& endnode, sequence<Edge>& edges,
                  const std::unordered_map<GraphId, std::vector<Node> >& nodes,
-                 const OSMData& osmdata, sequence<OSMWay>& ways) {
+                 const OSMData& osmdata, sequence<OSMWay>& ways,
+                 DataQuality& stats) {
   auto res = osmdata.restrictions.equal_range(wayid);
   if (res.first == osmdata.restrictions.end()) {
     return 0;
@@ -684,7 +672,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
   for (auto r = res.first; r != res.second; ++r) {
     if (r->second.via_graphid() == endnode) {
       if (r->second.day_on() != DOW::kNone) {
-        timedrestrictions++;
+        stats.timedrestrictions++;
       } else {
         trs.push_back(r->second);
       }
@@ -748,7 +736,9 @@ void BuildTileSet(
     const std::unordered_map<baldr::GraphId, std::string>& node_ref,
     const std::unordered_map<baldr::GraphId, std::string>& node_exit_to,
     const std::unordered_map<baldr::GraphId, std::string>& node_name,
-    std::promise<size_t>& result) {
+    std::promise<DataQuality>& result) {
+
+  DataQuality stats;
 
   std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
@@ -856,11 +846,17 @@ void BuildTileSet(
           if (edge.attributes.importance >
               static_cast<uint32_t>(RoadClass::kTertiary)) {
             not_thru = IsNoThroughEdge(source, target, edgeindex, nodes, edges);
+            if (not_thru) {
+              stats.not_thru_count++;
+            }
           }
 
           // Test if an internal intersection edge
-          bool internal = IsIntersectionInternal(source, target, edgeindex, w.way_id(), length, nodes, edges, ways);
-
+          bool internal = IsIntersectionInternal(source, target, edgeindex,
+                         w.way_id(), length, nodes, edges, ways);
+          if (internal) {   // TODO - move stats to GraphOptimizer
+            stats.internalcount++;
+          }
           // If link is set test to see if we can infer that the edge
           // is a turn channel. Update speed for link edges.
           float speed = w.speed();
@@ -870,15 +866,28 @@ void BuildTileSet(
 //            if (use != Use::kNone) {
 //              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
  //           }
-            use   = GetLinkUse(edgeindex, rc, length, edge.sourcenode_, edge.targetnode_, nodes, edges);
+            use   = GetLinkUse(edgeindex, rc, length, edge.sourcenode_,
+                               edge.targetnode_, nodes, edges);
+            if (use == Use::kTurnChannel) {
+              stats.turnchannelcount++;
+            }
             speed = UpdateLinkSpeed(use, rc, w.speed());
+          }
+
+          // Infer cul-de-sac if a road edge is a loop and is low
+          // classification. TODO - do we need length limit?
+          if (use == Use::kRoad && source == target &&
+              rc > RoadClass::kTertiary) {
+            use = Use::kCuldesac;
+            stats.culdesaccount++;        // TODO - move stats to GraphOptimizer...
           }
 
           // Handle simple turn restrictions that originate from this
           // directed edge
-          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(), idx, graphtile, target, edges, nodes, osmdata, ways);
+          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(), idx,
+                      graphtile, target, edges, nodes, osmdata, ways, stats);
           if (restrictions != 0) {
-            simplerestrictions++;
+            stats.simplerestrictions++;
           }
 
           bool has_signal = false;
@@ -931,9 +940,6 @@ void BuildTileSet(
           // Increment the directed edge index within the tile
           idx++;
           n++;
-
-          // Add to general statistics
-//          (*stats).AddStats(tile_start->first, directededge);
         }
 
         // Set the node lat,lng, index of the first outbound edge, and the
@@ -952,6 +958,9 @@ void BuildTileSet(
 
         // Increment nodeid
         nodeid++;
+
+        // Increment the counts in the histogram
+        stats.node_counts[directededges.size()]++;
       }
 
       // Write the actual tile to disk
@@ -969,7 +978,7 @@ void BuildTileSet(
     }
   }
   // Let the main thread see how this thread faired
-  result.set_value(written);
+  result.set_value(stats);
 }
 
 }
@@ -1166,7 +1175,7 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) 
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(threads_);
   // A place to hold the results of those threads, be they exceptions or otherwise
-  std::vector<std::promise<size_t> > results(threads.size());
+  std::vector<std::promise<DataQuality> > results(threads.size());
   // Divvy up the work
   size_t floor = tilednodes_.size() / threads.size();
   size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
@@ -1194,12 +1203,22 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) 
     thread->join();
   }
 
+  // Sum all the simple stats
+  DataQuality stats;
+  for (auto& result : results) {
+    stats.AddStatistics(result.get_future().get());
+  }
+  stats.LogStatistics();
+
   // Check all of the outcomes
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
       auto pass_fail = result.get_future().get();
       //TODO: print out stats about how many tiles or bytes were written by the thread?
+
+      // Log statistics and issues
+      result.get_future().get().LogIssues();
     }
     catch(std::exception& e) {
       //TODO: throw further up the chain?
