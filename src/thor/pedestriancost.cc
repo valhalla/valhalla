@@ -71,10 +71,10 @@ class PedestrianCost : public DynamicCost {
    * purposes. The A* method uses an approximate bucket sort, and this value
    * is used to size the buckets used for sorting. For example, for time
    * based costs one might compute costs in seconds and consider any time
-   * within 1.5 seconds of each other as being equal (for sorting purposes).
+   * within 2 seconds of each other as being equal (for sorting purposes).
    * @return  Returns the unit size for sorting.
    */
-  virtual float UnitSize() const;
+  virtual uint32_t UnitSize() const;
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -154,9 +154,9 @@ float PedestrianCost::AStarCostFactor() const {
   return (favorwalkways_ < 1.0f) ? favorwalkways_ : 1.0f;
 }
 
-float PedestrianCost::UnitSize() const {
+uint32_t PedestrianCost::UnitSize() const {
   // Consider anything within 2 m to be same cost
-  return 2.0f;
+  return 2;
 }
 
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
