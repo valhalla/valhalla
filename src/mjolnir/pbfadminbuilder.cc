@@ -129,8 +129,119 @@ int polygondata_comparearea(const void* vp1, const void* vp2)
 }
 } // anonymous namespace
 
-std::vector<std::string> GetWkts(const std::vector<PointLL>& shape) {
+std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
   std::vector<std::string> wkts;
+
+  GeometryFactory gf;
+
+  LineMerger merger;
+  merger.add(mline.get());
+  std::unique_ptr<std::vector<LineString *> > merged(merger.getMergedLineStrings());
+  WKTWriter writer;
+
+  // Procces ways into lines or simple polygon list
+  polygondata* polys = new polygondata[merged->size()];
+
+  unsigned totalpolys = 0;
+  for (unsigned i=0 ;i < merged->size(); ++i) {
+    std::unique_ptr<LineString> pline ((*merged ) [i]);
+    if (pline->getNumPoints() > 3 && pline->isClosed()) {
+      polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
+      polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
+      polys[totalpolys].area = polys[totalpolys].polygon->getArea();
+      polys[totalpolys].iscontained = 0;
+      polys[totalpolys].containedbyid = 0;
+      if (polys[totalpolys].area > 0.0)
+        totalpolys++;
+      else {
+        delete(polys[totalpolys].polygon);
+        delete(polys[totalpolys].ring);
+      }
+    }
+  }
+
+  if (totalpolys) {
+    qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
+
+    unsigned toplevelpolygons = 0;
+    int istoplevelafterall;
+
+    for (unsigned i=0 ;i < totalpolys; ++i) {
+      if (polys[i].iscontained != 0)
+        continue;
+
+      toplevelpolygons++;
+
+      for (unsigned j=i+1; j < totalpolys; ++j) {
+        // Does polygon[i] contain the smaller polygon[j]?
+            if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
+              // are we in a [i] contains [k] contains [j] situation
+              // which would actually make j top level
+              istoplevelafterall = 0;
+              for (unsigned k=i+1; k < j; ++k) {
+                if (polys[k].iscontained && polys[k].containedbyid == i &&
+                    polys[k].polygon->contains(polys[j].polygon)) {
+                  istoplevelafterall = 1;
+                  break;
+                }
+              }
+              if (istoplevelafterall == 0) {
+                polys[j].iscontained = 1;
+                polys[j].containedbyid = i;
+              }
+            }
+      }
+    }
+    // polys now is a list of polygons tagged with which ones are inside each other
+
+    // List of polygons for multipolygon
+    std::unique_ptr<std::vector<Geometry*> > polygons(new std::vector<Geometry*>);
+    // Make a multipolygon if required
+    /*if (toplevelpolygons > 1)
+            {
+              std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
+              if (!multipoly->isValid()) {
+                multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
+              }
+              multipoly->normalize();
+
+              if (multipoly->isValid())
+                wkts.push_back(writer.write(multipoly.get()));
+            }*/
+    // For each top level polygon create a new polygon including any holes
+    for (unsigned i=0 ;i < totalpolys; ++i) {
+      if (polys[i].iscontained != 0)
+        continue;
+
+      // List of holes for this top level polygon
+      std::unique_ptr<std::vector<Geometry*> > interior(new std::vector<Geometry*>);
+      for (unsigned j=i+1; j < totalpolys; ++j) {
+        if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
+          interior->push_back(polys[j].ring);
+      }
+
+      Polygon* poly(gf.createPolygon(polys[i].ring, interior.release()));
+      poly->normalize();
+      polygons->push_back(poly);
+    }
+
+    for(unsigned i=0; i<toplevelpolygons; i++) {
+      Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
+      if (!poly->isValid()) {
+        poly = dynamic_cast<Geometry*>(poly->buffer(0));
+        poly->normalize();
+      }
+      if (poly->isValid())
+        wkts.push_back(writer.write(poly));
+
+      delete(poly);
+    }
+  }
+
+  for (unsigned i=0; i < totalpolys; ++i)
+    delete(polys[i].polygon);
+
+  delete[](polys);
 
   return wkts;
 }
@@ -234,7 +345,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     for (const auto admin : osmdata.admins_) {
 
-      std::vector<std::string> wkts;
       std::unique_ptr<Geometry> geom;
       std::unique_ptr<std::vector<Geometry*> > lines(new std::vector<Geometry*>);
       has_data = true;
@@ -250,8 +360,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           has_data = false;
           break;
         }
-
-        std::vector<PointLL> shape;
 
         std::unique_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
         size_t j = 0;
@@ -281,114 +389,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       if (has_data) {
 
         std::unique_ptr<Geometry> mline (gf.createMultiLineString(lines.release()));
-        LineMerger merger;
-        merger.add(mline.get());
-        std::unique_ptr<std::vector<LineString *> > merged(merger.getMergedLineStrings());
-        WKTWriter writer;
-
-        // Procces ways into lines or simple polygon list
-        polygondata* polys = new polygondata[merged->size()];
-
-        unsigned totalpolys = 0;
-        for (unsigned i=0 ;i < merged->size(); ++i) {
-          std::unique_ptr<LineString> pline ((*merged ) [i]);
-          if (pline->getNumPoints() > 3 && pline->isClosed()) {
-            polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
-            polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
-            polys[totalpolys].area = polys[totalpolys].polygon->getArea();
-            polys[totalpolys].iscontained = 0;
-            polys[totalpolys].containedbyid = 0;
-            if (polys[totalpolys].area > 0.0)
-              totalpolys++;
-            else {
-              delete(polys[totalpolys].polygon);
-              delete(polys[totalpolys].ring);
-            }
-          }
-        }
-
-        if (totalpolys) {
-          qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
-
-          unsigned toplevelpolygons = 0;
-          int istoplevelafterall;
-
-          for (unsigned i=0 ;i < totalpolys; ++i) {
-            if (polys[i].iscontained != 0)
-              continue;
-
-            toplevelpolygons++;
-
-            for (unsigned j=i+1; j < totalpolys; ++j) {
-              // Does polygon[i] contain the smaller polygon[j]?
-              if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
-                // are we in a [i] contains [k] contains [j] situation
-                // which would actually make j top level
-                istoplevelafterall = 0;
-                for (unsigned k=i+1; k < j; ++k) {
-                  if (polys[k].iscontained && polys[k].containedbyid == i &&
-                      polys[k].polygon->contains(polys[j].polygon)) {
-                    istoplevelafterall = 1;
-                    break;
-                  }
-                }
-                if (istoplevelafterall == 0) {
-                  polys[j].iscontained = 1;
-                  polys[j].containedbyid = i;
-                }
-              }
-            }
-          }
-          // polys now is a list of polygons tagged with which ones are inside each other
-
-          // List of polygons for multipolygon
-           std::unique_ptr<std::vector<Geometry*> > polygons(new std::vector<Geometry*>);
-          // Make a multipolygon if required
-          /*if (toplevelpolygons > 1)
-          {
-            std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
-            if (!multipoly->isValid()) {
-              multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-            }
-            multipoly->normalize();
-
-            if (multipoly->isValid())
-              wkts.push_back(writer.write(multipoly.get()));
-          }*/
-          // For each top level polygon create a new polygon including any holes
-          for (unsigned i=0 ;i < totalpolys; ++i) {
-            if (polys[i].iscontained != 0)
-              continue;
-
-            // List of holes for this top level polygon
-            std::unique_ptr<std::vector<Geometry*> > interior(new std::vector<Geometry*>);
-            for (unsigned j=i+1; j < totalpolys; ++j) {
-              if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
-                interior->push_back(polys[j].ring);
-            }
-
-            Polygon* poly(gf.createPolygon(polys[i].ring, interior.release()));
-            poly->normalize();
-            polygons->push_back(poly);
-          }
-
-          for(unsigned i=0; i<toplevelpolygons; i++) {
-            Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
-            if (!poly->isValid()) {
-              poly = dynamic_cast<Geometry*>(poly->buffer(0));
-              poly->normalize();
-            }
-            if (poly->isValid())
-              wkts.push_back(writer.write(poly));
-
-            delete(poly);
-          }
-        }
-
-        for (unsigned i=0; i < totalpolys; ++i)
-          delete(polys[i].polygon);
-
-        delete[](polys);
+        std::vector<std::string> wkts = GetWkts(mline);
 
         for (const auto& wkt : wkts) {
 
@@ -404,6 +405,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
             continue;
           }
           LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+          LOG_ERROR("sqlite3_step() error: " + std::string(wkt));
 
         }
       }// has data
