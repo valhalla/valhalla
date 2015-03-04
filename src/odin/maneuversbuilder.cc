@@ -736,6 +736,7 @@ TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDir
   } else if ((heading > 293) && (heading < 337)) {
     return TripDirections_Maneuver_CardinalDirection_kNorthWest;
   }
+  throw std::runtime_error("Turn degree out of range for cardinal direction.");
 }
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
