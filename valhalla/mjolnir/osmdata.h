@@ -26,10 +26,9 @@ enum class OSMType : uint8_t {
  };
 
 struct OSMWayNode {
-  uint64_t node_id;
+  OSMNode node;
   size_t way_index;
   size_t way_shape_node_index;
-  OSMNode node;
 };
 
 /**

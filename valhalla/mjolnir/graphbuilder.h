@@ -259,8 +259,7 @@ class GraphBuilder {
    * Add a new node to the tile (based on the OSM node lat,lng). Return
    * the GraphId of the node.
    */
-  GraphId AddNodeToTile(const uint64_t osmnodeid, const OSMNode& osmnode,
-                        const uint32_t edgeindex, const bool link);
+  GraphId AddNodeToTile(const OSMNode& osmnode, const uint32_t edgeindex, const bool link);
 
   /**
    * Get a reference to a node given its graph Id.

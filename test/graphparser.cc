@@ -51,11 +51,11 @@ void write_config(const std::string& filename) {
 }
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node_id < b.node_id;
+  return a.node.osmid < b.node.osmid;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  OSMWayNode target{node_id};
+  OSMWayNode target{{node_id}};
   if(!way_nodes.find(target, node_predicate))
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
   return target.node;

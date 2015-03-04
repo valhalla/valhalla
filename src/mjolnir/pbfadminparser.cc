@@ -26,7 +26,7 @@ constexpr uint64_t kMaxOSMNodeId = 4000000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node_id == b.node_id;
+  return a.node.osmid == b.node.osmid;
 };
 
 struct admin_callback : public OSMPBF::Callback {
@@ -73,7 +73,8 @@ struct admin_callback : public OSMPBF::Callback {
       //update all the nodes that match it
       OSMWayNode way_node;
       sequence_element<OSMWayNode> element = (*way_nodes_)[current_way_node_index_];
-      while(current_way_node_index_ < way_nodes_->size() && (way_node = element = (*way_nodes_)[current_way_node_index_]).node_id == osmid) {
+      while(current_way_node_index_ < way_nodes_->size() && (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid == osmid) {
+        way_node.node.osmid = osmid;
         way_node.node.lng = static_cast<float>(lng);
         way_node.node.lat = static_cast<float>(lat);
         element = way_node;
@@ -112,7 +113,7 @@ struct admin_callback : public OSMPBF::Callback {
     for (size_t i = 0; i < nodes.size(); ++i) {
       const auto& node = nodes[i];
       //keep the node
-      way_nodes_->push_back({node, ways_->size(), i});
+      way_nodes_->push_back({{node}, ways_->size(), i});
       ++osmdata_.node_count;
       // Mark the nodes that we will care about when processing nodes
       shape_.set(node);
@@ -244,7 +245,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
     sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
     way_nodes.sort(
       [](const OSMWayNode& a, const OSMWayNode& b){
-        return a.node_id < b.node_id;
+        return a.node.osmid < b.node.osmid;
       }
     );
   }

@@ -85,8 +85,7 @@ void GraphBuilder::Build(OSMData& osmdata) {
 }
 
 // Add a node to the appropriate tile.
-GraphId GraphBuilder::AddNodeToTile(const uint64_t osmnodeid,
-                                    const OSMNode& osmnode,
+GraphId GraphBuilder::AddNodeToTile(const OSMNode& osmnode,
                                     const uint32_t edgeindex,
                                     const bool link) {
   // Get the tile
@@ -99,7 +98,7 @@ GraphId GraphBuilder::AddNodeToTile(const uint64_t osmnodeid,
 
   // Set the GraphId for this OSM node.
   GraphId graphid(id.tileid(), id.level(), tile.size() - 1);
-  nodes_[osmnodeid] = graphid;
+  nodes_[osmnode.osmid] = graphid;
   return graphid;
 }
 
@@ -123,7 +122,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
   uint32_t edgeindex = 0;
   uint64_t startnodeid;
   GraphId graphid;
-  //TODO: try with mmap turned on at some point
+  //so we can read ways and nodes and write edges
   sequence<OSMWay> ways(osmdata.ways_file, false);
   sequence<OSMWayNode> references(osmdata.way_node_references_file, false);
   sequence<Edge> edges(edges_file_, true);
@@ -136,14 +135,11 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
     const auto first_way_node_index = current_way_node_index;
     const auto way = *ways[first_way_node.way_index];
 
-    // Get the OSM node information for the first node of the way
-    startnodeid = first_way_node.node_id;
-
     // If a graph Node exists add an edge to it, otherwise construct a
     // graph Node with an initial edge and add it to the appropriate tile.
     auto it = nodes_.find(startnodeid);
     if (it == nodes_.end()) {
-      graphid = AddNodeToTile(startnodeid, first_way_node.node, edgeindex, way.link());
+      graphid = AddNodeToTile(first_way_node.node, edgeindex, way.link());
     }
     else {
       graphid = it->second;
@@ -169,11 +165,11 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
         // End the current edge and add its edge index to the node
         // If a graph node exists add an edge to it, otherwise construct a
         // graph node, add an edge and add it to the map
-        auto it = nodes_.find(way_node.node_id);
+        auto it = nodes_.find(way_node.node.osmid);
         if (it == nodes_.end()) {
-          graphid = AddNodeToTile(way_node.node_id, way_node.node, edgeindex, way.link());
+          graphid = AddNodeToTile(way_node.node, edgeindex, way.link());
         }// Add the edgeindex to the node (unless this is a loop with same start and end node Ids)
-        else if (startnodeid != way_node.node_id) {
+        else if (startnodeid != way_node.node.osmid) {
           graphid = it->second;
           GetNode(graphid).AddEdge(edgeindex, way.link());
         }
@@ -188,7 +184,7 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
         // Start a new edge if this is not the last node in the way.
         // We can reuse the index of the latlng added above
         if (current_way_node_index - first_way_node_index < way.node_count() - 1) {
-          startnodeid = way_node.node_id;
+          startnodeid = way_node.node.osmid;
           edge = Edge::make_edge(graphid, way_node.way_index, current_way_node_index, way);
           GetNode(graphid).AddEdge(edgeindex, way.link());
         }// This was the last shape point in a dead end way so go to the next
