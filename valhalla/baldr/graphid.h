@@ -97,6 +97,9 @@ union GraphId {
 
   bool operator !=(const GraphId& rhs) const;
 
+  // cast operator
+  operator uint64_t() const;
+
   struct Fields {
     //the tile id
     uint64_t tileid :24;

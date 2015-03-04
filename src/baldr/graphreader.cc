@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-//#include <boost/filesystem/operations.hpp>
+#include <sys/stat.h>
 
 namespace valhalla {
 namespace baldr {
@@ -18,9 +18,13 @@ GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-//  return boost::filesystem::exists(boost::filesystem::path(
-//      GraphTile::Filename(tile_hierarchy_.tile_dir(), graphid)));
-  return true;  // TODO! do we need this?
+  return DoesTileExist(tile_hierarchy_, graphid);
+}
+bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid) {
+  std::string file_location = tile_hierarchy.tile_dir() + "/" +
+    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
+  struct stat buffer;
+  return stat(file_location.c_str(), &buffer) == 0;
 }
 
 // Get a pointer to a graph tile object given a GraphId.
@@ -47,6 +51,11 @@ const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
   return GetGraphTile(pointll, tile_hierarchy_.levels().rbegin()->second.level);
 }
+
+const TileHierarchy& GraphReader::GetTileHierarchy() const {
+  return tile_hierarchy_;
+}
+
 
 }
 }
