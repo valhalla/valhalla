@@ -556,12 +556,12 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   // Process Internal Intersection
   if (maneuver.internal_intersection()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
-    LOG_TRACE("INTERNAL_INTERSECTION");
+    LOG_TRACE("ManeuverType=INTERNAL_INTERSECTION");
   }
   // Process Turn Channel
   else if (maneuver.turn_channel()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
-    LOG_TRACE("TURN_CHANNNEL");
+    LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
   // Process exit
   else if (maneuver.ramp()
@@ -585,7 +585,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
       }
-    }LOG_TRACE("EXIT");
+    }LOG_TRACE("ManeuverType=EXIT");
   }
   // Process on ramp
   else if (maneuver.ramp() && !prev_edge->IsHighway()) {
@@ -612,37 +612,37 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
       }
-    }LOG_TRACE("RAMP");
+    }LOG_TRACE("ManeuverType=RAMP");
   }
   // Process merge
   else if (curr_edge->IsHighway() && prev_edge->ramp()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
-    LOG_TRACE("MERGE");
+    LOG_TRACE("ManeuverType=MERGE");
   }
   // Process enter roundabout
   else if (maneuver.roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
-    LOG_TRACE("ROUNDABOUT_ENTER");
+    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
   }
   // Process exit roundabout
   else if (prev_edge->roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
-    LOG_TRACE("ROUNDABOUT_EXIT");
+    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
   // Process enter ferry
   else if (maneuver.ferry() || maneuver.rail_ferry()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryEnter);
-    LOG_TRACE("FERRY_ENTER");
+    LOG_TRACE("ManeuverType=FERRY_ENTER");
   }
   // Process exit ferry
   else if (prev_edge->ferry() || prev_edge->rail_ferry()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryExit);
-    LOG_TRACE("FERRY_EXIT");
+    LOG_TRACE("ManeuverType=FERRY_EXIT");
   }
   // Process simple direction
   else {
     SetSimpleDirectionalManeuverType(maneuver);
-    LOG_TRACE("SIMPLE");
+    LOG_TRACE("ManeuverType=SIMPLE");
   }
 
 }
@@ -872,6 +872,11 @@ Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
     return Maneuver::RelativeDirection::kLeft;
   else
     return Maneuver::RelativeDirection::kNone;
+}
+
+bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
+  // TODO: use admin of node to return proper value
+  return true;
 }
 
 }
