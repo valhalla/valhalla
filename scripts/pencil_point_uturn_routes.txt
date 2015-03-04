@@ -1,0 +1,3 @@
+-o "40.066372,-76.343605,stop,Plaza Boulevard" -d "40.066429,-76.343727,stop,Plaza Boulevard" -t auto --config ../conf/valhalla.json
+-o "38.736004,-77.275780,stop,Silverbrook Road" -d "38.736103,-77.275597,stop,Silverbrook Road" -t auto --config ../conf/valhalla.json
+-o "39.518887,-104.765953,stop,East Main Street" -d "39.519028,-104.766121,stop,East Main Street" -t auto --config ../conf/valhalla.json

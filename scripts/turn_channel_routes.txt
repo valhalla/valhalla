@@ -1,0 +1,8 @@
+-o "40.052568,-76.323001,stop,Harrisburg Pike" -d "40.054587,-76.322930,stop,Dillerville Road" -t auto --config ../conf/valhalla.json
+-o "40.053466,-76.324813,stop,Harrisburg Pike" -d "40.052676,-76.324613,stop,North President Avenue" -t auto --config ../conf/valhalla.json
+-o "39.176428,-76.848774,stop,Broken Land Parkway" -d "39.177361,-76.846891,stop,Snowden River Parkway" -t auto --config ../conf/valhalla.json
+-o "39.176961,-76.845072,stop,Snowden River Parkway" -d "39.179991,-76.847419,stop,Broken Land Parkway" -t auto --config ../conf/valhalla.json
+-o "39.379791,-76.473976,stop,MD 43 East" -d "39.378258,-76.472176,stop,Perry Hall Boulevard" -t auto --config ../conf/valhalla.json
+-o "39.378300,-76.471939,stop,Perry Hall Boulevard" -d "39.379501,-76.469460,stop,MD 43 East" -t auto --config ../conf/valhalla.json
+-o "39.379707,-76.469414,stop,MD 43 West" -d "39.381020,-76.471443,stop,Perry Hall Boulevard" -t auto --config ../conf/valhalla.json
+-o "39.381054,-76.471718,stop,Perry Hall Boulevard" -d "39.380028,-76.474113,stop,MD 43 West" -t auto --config ../conf/valhalla.json

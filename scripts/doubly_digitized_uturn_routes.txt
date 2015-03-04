@@ -1,0 +1,7 @@
+-o "40.306282,-76.805679,stop,Jonestown Road" -d "40.306358,-76.805786,stop,Jonestown Road" -t auto --config ../conf/valhalla.json
+-o "39.963654,-75.171616,stop,Spring Garden Street" -d "39.963776,-75.171631,stop,Spring Garden Street" -t auto --config ../conf/valhalla.json
+-o "40.574783,-73.987137,stop,Surf Avenue" -d "40.574711,-73.987061,stop,Surf Avenue" -t auto --config ../conf/valhalla.json
+-o "38.735542,-77.279182,stop,Silverbrook Road" -d "38.735443,-77.279137,stop,Silverbrook Road" -t auto --config ../conf/valhalla.json
+-o "38.786160,-77.650200,stop,Stonewall Shops Square" -d "38.786144,-77.650337,stop,Stonewall Shops Square" -t auto --config ../conf/valhalla.json
+-o "39.496216,-76.328972,stop,MD 24" -d "39.496120,-76.329254,stop,MD 24" -t auto --config ../conf/valhalla.json
+-o "39.738953,-105.153786,stop,Cole Blvd" -d "39.738953,-105.153603,stop,Cole Blvd" -t auto --config ../conf/valhalla.json
