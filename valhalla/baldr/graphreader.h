@@ -32,12 +32,6 @@ class GraphReader {
   GraphReader(const TileHierarchy& th);
 
   /**
-   * Test if tile exists
-   * @param  graphid  GraphId of the tile to test (tile id and level).
-   */
-  bool DoesTileExist(const GraphId& graphid) const;
-
-  /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile
@@ -59,10 +53,15 @@ class GraphReader {
    */
   const GraphTile* GetGraphTile(const PointLL& pointll);
 
+  /**
+   * Get the tile hierarchy used in this graph reader
+   * @return hierarchy
+   */
+  const TileHierarchy& GetTileHierarchy() const;
+
  protected:
   // Information about where the tiles are kept
-  // TODO: make this const
-  TileHierarchy tile_hierarchy_;
+  const TileHierarchy tile_hierarchy_;
 
   // The actual cached GraphTile objects
   std::unordered_map<GraphId, GraphTile> tilecache_;

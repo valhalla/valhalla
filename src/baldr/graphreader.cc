@@ -16,13 +16,6 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt):GraphReader(Tile
 GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
 }
 
-// Method to test if tile exists
-bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-//  return boost::filesystem::exists(boost::filesystem::path(
-//      GraphTile::Filename(tile_hierarchy_.tile_dir(), graphid)));
-  return true;  // TODO! do we need this?
-}
-
 // Get a pointer to a graph tile object given a GraphId.
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   // Check if the level/tileid combination is in the cache
@@ -47,6 +40,11 @@ const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll, const uint8_t
 const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
   return GetGraphTile(pointll, tile_hierarchy_.levels().rbegin()->second.level);
 }
+
+const TileHierarchy& GraphReader::GetTileHierarchy() const {
+  return tile_hierarchy_;
+}
+
 
 }
 }
