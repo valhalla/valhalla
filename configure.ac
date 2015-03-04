@@ -48,6 +48,13 @@ if test "x$SQLITE3_VERSION" = "x"; then
   AC_MSG_ERROR(['libsqlite-dev' version >= 3.0.0 is required.  Please install libsqlite-dev.]) 
 fi 
 
+# Check for Geos library
+AX_LIB_GEOS(3.0.0)
+if test "x$GEOS_VERSION" = "x"
+then
+  AC_MSG_ERROR(['geos' version >= 3.0.0 is required.  Please install geos.]);
+fi
+
 # spatialite needed for admin info
 PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 4.1.1], , AC_MSG_ERROR(['libspatialite-dev' version >= 4.1.1 is required.  Please install libspatialite-dev.]))
 
