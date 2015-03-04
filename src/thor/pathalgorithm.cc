@@ -105,7 +105,7 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
-  float bucketsize = costing->UnitSize();
+  uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
   adjacencylist_ = new AdjacencyList(mincost, range, bucketsize);
   edgestatus_ = new EdgeStatus();

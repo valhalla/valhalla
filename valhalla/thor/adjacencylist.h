@@ -32,9 +32,10 @@ class AdjacencyList {
    *                   to create the initial range for bucket sorting.
    * @param range      Cost (sort cost) range for double buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
+   *                   Must be an integer value.
    */
   AdjacencyList(const float mincost, const float range,
-                const float bucketsize);
+                const uint32_t bucketsize);
 
   /**
    * Destructor.
