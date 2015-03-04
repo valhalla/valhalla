@@ -87,10 +87,10 @@ class DynamicCost {
    * purposes. The A* method uses an approximate bucket sort, and this value
    * is used to size the buckets used for sorting. For example, for time
    * based costs one might compute costs in seconds and consider any time
-   * within 1.5 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting.
+   * within 2 seconds of each other as being equal (for sorting purposes).
+   * @return  Returns the unit size for sorting (must be an integer value).
    */
-  virtual float UnitSize() const = 0;
+  virtual uint32_t UnitSize() const = 0;
 
   /**
    * Set the distance from the destination where "not_thru" edges are allowed.

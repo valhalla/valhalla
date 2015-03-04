@@ -88,10 +88,10 @@ class AutoCost : public DynamicCost {
    * purposes. The A* method uses an approximate bucket sort, and this value
    * is used to size the buckets used for sorting. For example, for time
    * based costs one might compute costs in seconds and consider any time
-   * within 1.5 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting.
+   * within 2 seconds of each other as being equal (for sorting purposes).
+   * @return  Returns the unit size for sorting (must be integer value).
    */
-  virtual float UnitSize() const;
+  virtual uint32_t UnitSize() const;
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -181,9 +181,9 @@ float AutoCost::AStarCostFactor() const {
   return speedfactor_[120];
 }
 
-float AutoCost::UnitSize() const {
+uint32_t AutoCost::UnitSize() const {
   // Consider anything within 1 sec to be same cost
-  return 1.0f;
+  return 1;
 }
 
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {

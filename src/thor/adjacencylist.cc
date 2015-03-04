@@ -16,11 +16,13 @@ AdjacencyList::AdjacencyList()
 // Constructor with bucket sizes and range.
 AdjacencyList::AdjacencyList(const float mincost,
                              const float range,
-                             const float bucketsize) {
-  mincost_ = mincost;
-  currentcost_ = mincost_;
+                             const uint32_t bucketsize) {
+  // Adjust min cost to be the start of a bucket
+  uint32_t c = static_cast<uint32_t>(mincost);
+  currentcost_ = (c - (c % bucketsize));
+  mincost_ = currentcost_;
   bucketrange_ = range;
-  bucketsize_ = bucketsize;
+  bucketsize_ = static_cast<float>(bucketsize);
 
   // Set the maximum cost (above this goes into the overflow bucket)
   maxcost_ = mincost + bucketrange_;

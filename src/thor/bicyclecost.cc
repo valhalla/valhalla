@@ -82,10 +82,10 @@ class BicycleCost : public DynamicCost {
    * purposes. The A* method uses an approximate bucket sort, and this value
    * is used to size the buckets used for sorting. For example, for time
    * based costs one might compute costs in seconds and consider any time
-   * within 1.5 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting.
+   * within 2 seconds of each other as being equal (for sorting purposes).
+   * @return  Returns the unit size for sorting (must be integer value)
    */
-  virtual float UnitSize() const;
+  virtual uint32_t UnitSize() const;
 
  protected:
   enum class BicycleType {
@@ -273,9 +273,9 @@ float BicycleCost::AStarCostFactor() const {
   return 0.0f;
 }
 
-float BicycleCost::UnitSize() const {
+uint32_t BicycleCost::UnitSize() const {
   // Consider anything within 2 meters to be same cost
-  return 2.0f;
+  return 2;
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
