@@ -135,9 +135,9 @@ void GraphBuilder::ConstructEdges(const OSMData& osmdata, const float tilesize) 
   uint64_t startnodeid;
   GraphId graphid;
   //TODO: try with mmap turned on at some point
-  sequence<OSMWay> ways(osmdata.ways_file, false, false);
-  sequence<OSMWayNode> references(osmdata.way_node_references_file, false, false);
-  sequence<Edge> edges(edges_file_, true, false);
+  sequence<OSMWay> ways(osmdata.ways_file, false);
+  sequence<OSMWayNode> references(osmdata.way_node_references_file, false);
+  sequence<Edge> edges(edges_file_, true);
 
   //for each way traversed via the node refs
   size_t current_way_node_index = 0;
@@ -293,8 +293,8 @@ void GraphBuilder::ReclassifyLinks(const std::string& ways_file) {
   std::unordered_set<GraphId> visitedset;  // Set of visited nodes
   std::unordered_set<GraphId> expandset;   // Set of nodes to expand
   std::list<uint32_t> linkedgeindexes;     // Edge indexes to reclassify
-  sequence<OSMWay> ways(ways_file, false, false);
-  sequence<Edge> edges(edges_file_, false, false);
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<Edge> edges(edges_file_, false);
 
   for (const auto& tile : tilednodes_) {
     if (tile.second.size() == 0) {
@@ -750,14 +750,13 @@ void BuildTileSet(
     const std::unordered_map<baldr::GraphId, std::string>& node_name,
     std::promise<size_t>& result) {
 
-  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream()
-        << std::this_thread::get_id()).str();
+  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
 
   // TODO: try using mmap here for speed up
-  sequence<OSMWay> ways(osmdata.ways_file, false, false);
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, false);
-  sequence<Edge> edges(edges_file, false, false);
+  sequence<OSMWay> ways(osmdata.ways_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<Edge> edges(edges_file, false);
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -1184,9 +1183,9 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) 
     std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-      new std::thread(BuildTileSet, tile_start, tile_end, tilednodes_,
-                      edges_file_, tile_hierarchy_, osmdata, node_ref_,
-                      node_exit_to_, node_name_, std::ref(results[i]))
+      new std::thread(BuildTileSet, tile_start, tile_end, std::cref(tilednodes_),
+          std::cref(edges_file_), std::cref(tile_hierarchy_), std::cref(osmdata), std::cref(node_ref_),
+          std::cref(node_exit_to_), std::cref(node_name_), std::ref(results[i]))
     );
   }
 

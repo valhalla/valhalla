@@ -77,7 +77,7 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
   way_nodes.sort(node_predicate);
 
   //We split set the uses at bollards and gates.
@@ -114,7 +114,7 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
   way_nodes.sort(node_predicate);
 
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
@@ -129,7 +129,7 @@ void Exits(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(33698177, way_nodes);
@@ -158,7 +158,7 @@ void Baltimore(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"});
-  sequence<OSMWay> ways(osmdata.ways_file, false, true);
+  sequence<OSMWay> ways(osmdata.ways_file, false);
   ways.sort(way_predicate);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
@@ -225,7 +225,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(42439096, way_nodes);

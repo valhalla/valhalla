@@ -223,8 +223,8 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Parse the ways. Find all node Ids needed. Shrink the OSM ways vector
   // and the OSM node reference vector (list of nodes that the ways include).
   t = std::chrono::high_resolution_clock::now();
-  callback.reset(new sequence<OSMWay>(osmdata.ways_file, true, false),
-    new sequence<OSMWayNode>(osmdata.way_node_references_file, true, false));
+  callback.reset(new sequence<OSMWay>(osmdata.ways_file, true),
+    new sequence<OSMWayNode>(osmdata.way_node_references_file, true));
   for (const auto& input_file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
@@ -241,7 +241,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Sorting osm way node references by node id");
   t = std::chrono::high_resolution_clock::now();
   {
-    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
     way_nodes.sort(
       [](const OSMWayNode& a, const OSMWayNode& b){
         return a.node_id < b.node_id;
@@ -256,7 +256,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
   t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
-    callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false, false));
+    callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
@@ -270,7 +270,7 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Sorting osm way node references by way index and node shape index");
   t = std::chrono::high_resolution_clock::now();
   {
-    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
     way_nodes.sort(
       [](const OSMWayNode& a, const OSMWayNode& b){
         if(a.way_index == b.way_index) {
