@@ -81,6 +81,10 @@ bool GraphId::operator !=(const GraphId& rhs) const {
   return value != rhs.value;
 }
 
+GraphId::operator uint64_t() const {
+  return value;
+}
+
 std::ostream& operator<<(std::ostream& os, const GraphId& id)
 {
     return os << id.fields.level << '/' << id.fields.tileid << '/' << id.fields.id;
