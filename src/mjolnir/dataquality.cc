@@ -66,7 +66,7 @@ void DataQuality::LogStatistics() const {
 }
 
 // Logs statistics and issues
-void DataQuality::LogIssues() {
+void DataQuality::LogIssues() const {
   // Log the duplicate ways - sort by number of duplicate edges
 
   uint32_t duplicates = 0;

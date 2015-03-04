@@ -67,7 +67,7 @@ class DataQuality {
   /**
    * Log issues.
    */
-  void LogIssues();
+  void LogIssues() const;
 
   // Public - simple stats
   uint32_t not_thru_count;

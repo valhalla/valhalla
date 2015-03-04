@@ -1174,8 +1174,10 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
 void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) const {
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(threads_);
-  // A place to hold the results of those threads, be they exceptions or otherwise
+
+  // Hold the results (DataQuality/stats) for the threads
   std::vector<std::promise<DataQuality> > results(threads.size());
+
   // Divvy up the work
   size_t floor = tilednodes_.size() / threads.size();
   size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
@@ -1203,27 +1205,21 @@ void GraphBuilder::BuildLocalTiles(const uint8_t level, const OSMData& osmdata) 
     thread->join();
   }
 
-  // Sum all the simple stats
+  // Check all of the outcomes and accumulate stats
   DataQuality stats;
-  for (auto& result : results) {
-    stats.AddStatistics(result.get_future().get());
-  }
-  stats.LogStatistics();
-
-  // Check all of the outcomes
   for (auto& result : results) {
     // If something bad went down this will rethrow it
     try {
-      auto pass_fail = result.get_future().get();
-      //TODO: print out stats about how many tiles or bytes were written by the thread?
-
-      // Log statistics and issues
-      result.get_future().get().LogIssues();
+      // Add statistics and log issues on this thread
+      const auto& stat = result.get_future().get();
+      stats.AddStatistics(stat);
+      stat.LogIssues();
     }
     catch(std::exception& e) {
       //TODO: throw further up the chain?
     }
   }
+  stats.LogStatistics();
 }
 
 
