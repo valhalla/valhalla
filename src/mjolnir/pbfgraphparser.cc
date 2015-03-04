@@ -734,8 +734,8 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   OSMData osmdata{"ways.bin", "way_node_ref.bin"};
   graph_callback callback(pt, osmdata);
-  callback.reset(new sequence<OSMWay>(osmdata.ways_file, true, false),
-    new sequence<OSMWayNode>(osmdata.way_node_references_file, true, false));
+  callback.reset(new sequence<OSMWay>(osmdata.ways_file, true),
+    new sequence<OSMWayNode>(osmdata.way_node_references_file, true));
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
   // Parse the ways and find all node Ids needed (those that are part of a
@@ -761,7 +761,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   //using much mem, the scoping makes sure to let it go when done sorting
   LOG_INFO("Sorting osm way node references by node id...");
   {
-    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
     way_nodes.sort(
       [](const OSMWayNode& a, const OSMWayNode& b){
         return a.node_id < b.node_id;
@@ -777,7 +777,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   for (const auto& input_file : input_files) {
     //each time we parse nodes we have to run through the way nodes file from the beginning because
     //because osm node ids are only sorted at the single pbf file level
-    callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false, false));
+    callback.reset(nullptr, new sequence<OSMWayNode>(osmdata.way_node_references_file, false));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
@@ -788,7 +788,7 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   //so we line them first by way index then by shape index of the node
   LOG_INFO("Sorting osm way node references by way index and node shape index...");
   {
-    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+    sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
     way_nodes.sort(
       [](const OSMWayNode& a, const OSMWayNode& b){
         if(a.way_index == b.way_index) {

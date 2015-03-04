@@ -73,7 +73,7 @@ struct sequence {
 
   sequence(const sequence&) = delete;
 
-  sequence(const std::string& file_name, bool create = false, bool use_mmap = false, size_t write_buffer_size = 1024 * 1024 * 32 / sizeof(T)):
+  sequence(const std::string& file_name, bool create = false, bool use_mmap = true, size_t write_buffer_size = 1024 * 1024 * 32 / sizeof(T)):
     file(new std::fstream(file_name, std::ios_base::binary | std::ios_base::in | std::ios_base::out | (create ? std::ios_base::trunc : std::ios_base::ate))),
     file_name(file_name), mmap_handle(nullptr) {
 
