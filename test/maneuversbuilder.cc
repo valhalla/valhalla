@@ -51,8 +51,11 @@ void TrySetSimpleDirectionalManeuverType(
   Maneuver maneuver;
   maneuver.set_turn_degree(turn_degree);
   mbTest.SetSimpleDirectionalManeuverType(maneuver);
-  if (maneuver.type() != expected)
-    throw std::runtime_error("Incorrect maneuver type");
+  if (maneuver.type() != expected) {
+    throw std::runtime_error(
+        "Incorrect maneuver type for turn degree="
+            + std::to_string(turn_degree));
+  }
 }
 
 void TestSetSimpleDirectionalManeuverType() {
@@ -93,10 +96,13 @@ void TestSetSimpleDirectionalManeuverType() {
   TrySetSimpleDirectionalManeuverType(169,
                                       TripDirections_Maneuver_Type_kSharpRight);
 
-  // TODO: TripDirections_Maneuver_Type_kUturnLeft for now; update later
+  // Right side of street driving
   // Reverse lower bound
   TrySetSimpleDirectionalManeuverType(170,
-                                      TripDirections_Maneuver_Type_kUturnLeft);
+                                      TripDirections_Maneuver_Type_kUturnRight);
+  // Reverse middle
+  TrySetSimpleDirectionalManeuverType(179,
+                                      TripDirections_Maneuver_Type_kUturnRight);
   // Reverse middle
   TrySetSimpleDirectionalManeuverType(180,
                                       TripDirections_Maneuver_Type_kUturnLeft);

@@ -687,8 +687,19 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
       break;
     }
     case Turn::Type::kReverse: {
-      // TODO: figure this out
-      maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+      if (IsRightSideOfStreetDriving()) {
+        if (maneuver.turn_degree() < 180) {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        } else {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        }
+      } else {
+        if (maneuver.turn_degree() > 180) {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        } else {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        }
+      }
       break;
     }
     case Turn::Type::kSharpLeft: {
