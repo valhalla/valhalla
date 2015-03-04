@@ -48,9 +48,10 @@ class DataQuality {
   DataQuality();
 
   /**
-   * Add statistics for a directed edge.
+   * Add statistics (accumulate from several DataQuality objects)
+   * @param  stats  Data quality object to add to stats
    */
-  void AddStats(const baldr::GraphId& tileid, const baldr::DirectedEdge& edge);
+  void AddStatistics(const DataQuality& stats);
 
   /**
    * Adds an issue.
@@ -59,14 +60,25 @@ class DataQuality {
                 const uint64_t wayid1, const uint64_t wayid2);
 
   /**
-   * Log.
+   * Log simple statistics.
    */
-  void Log();
+  void LogStatistics() const;
 
-protected:
-  uint32_t not_thru_count_;
-  uint32_t internal_count_;
+  /**
+   * Log issues.
+   */
+  void LogIssues();
 
+  // Public - simple stats
+  uint32_t not_thru_count;
+  uint32_t simplerestrictions;
+  uint32_t timedrestrictions;
+  uint32_t turnchannelcount;
+  uint32_t internalcount;
+  uint32_t culdesaccount;
+  uint32_t node_counts[128];
+
+ protected:
   // Unconnected links
   std::unordered_set<uint64_t> unconnectedlinks_;
 

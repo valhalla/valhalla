@@ -9,18 +9,25 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : not_thru_count_(0),
-      internal_count_(0) {
+    : not_thru_count(0),
+      simplerestrictions(0),
+      timedrestrictions(0),
+      turnchannelcount(0),
+      internalcount(0),
+      culdesaccount(0),
+      node_counts{} {
 }
 
-// Add statistics
-void DataQuality::AddStats(const GraphId& tileid,
-                           const DirectedEdge& directededge) {
-  if (directededge.not_thru()) {
-    not_thru_count_++;
-  }
-  if (directededge.internal()) {
-    internal_count_++;
+// Add statistics (accumulate from several DataQuality objects)
+void DataQuality::AddStatistics(const DataQuality& stats) {
+  not_thru_count     += stats.not_thru_count;
+  simplerestrictions += stats.simplerestrictions;
+  timedrestrictions  += stats.timedrestrictions;
+  turnchannelcount   += stats.turnchannelcount;
+  internalcount      += stats.internalcount;
+  culdesaccount      += stats.culdesaccount;
+  for (uint32_t i = 0; i < 128; i++) {
+    node_counts[i] += stats.node_counts[i];
   }
 }
 
@@ -43,10 +50,23 @@ void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid
 }
 
 // Logs statistics and issues
-void DataQuality::Log() {
-  LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count_));
-  LOG_INFO("Internal edgecount = " + std::to_string(internal_count_));
+void DataQuality::LogStatistics() const {
+  LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count));
+  LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
+  LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
+  LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
+  LOG_INFO("Internal Intersection Edge Count = " + std::to_string(internalcount));
+  LOG_INFO("Cul-de-Sac Count = " + std::to_string(culdesaccount));
+  LOG_INFO("Node edge count histogram:");
+  for (uint32_t i = 0; i < 128; i++) {
+    if (node_counts[i] > 0) {
+      LOG_INFO(std::to_string(i) + ": " + std::to_string(node_counts[i]));
+    }
+  }
+}
 
+// Logs statistics and issues
+void DataQuality::LogIssues() {
   // Log the duplicate ways - sort by number of duplicate edges
 
   uint32_t duplicates = 0;
@@ -63,7 +83,7 @@ void DataQuality::Log() {
   // Sort by edgecount and write to separate file
   std::ofstream dupfile;
   std::sort(dups.begin(), dups.end());
-  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::trunc);
+  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::app);
   dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
   for (const auto& dupway : dups) {
     dupfile << dupway.wayid1 << "," << dupway.wayid2 << ","
