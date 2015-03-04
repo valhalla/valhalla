@@ -21,12 +21,14 @@
 #include <geos/geom/MultiLineString.h>
 #include <geos/geom/Polygon.h>
 #include <geos/geom/MultiPolygon.h>
+#include <geos/geom/Point.h>
 #include <geos/io/WKTReader.h>
 #include <geos/io/WKTWriter.h>
 #include <geos/util/GEOSException.h>
 #include <geos/opLinemerge.h>
 using namespace geos::geom;
 using namespace geos::io;
+using namespace geos::util;
 using namespace geos::operation::linemerge;
 
 // For OSM pbf reader
@@ -130,147 +132,6 @@ int polygondata_comparearea(const void* vp1, const void* vp2)
 std::vector<std::string> GetWkts(const std::vector<PointLL>& shape) {
   std::vector<std::string> wkts;
 
-  GeometryFactory gf;
-
-  try {
-
-    std::vector<std::string> wkts;
-    std::unique_ptr<Geometry> geom;
-    std::unique_ptr<std::vector<Geometry*> > lines(new std::vector<Geometry*>);
-    std::unique_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
-
-    for (const auto& ll : shape) {
-
-      Coordinate c;
-      c.x = ll.lng();
-      c.y = ll.lat();
-      coords->add(c, 0);
-    }
-
-    if (coords->getSize() > 1) {
-      geom = std::unique_ptr<Geometry>(gf.createLineString(coords.release()));
-      lines->emplace_back(geom.release());
-    }
-
-    std::unique_ptr<Geometry> mline (gf.createMultiLineString(lines.release()));
-    LineMerger merger;
-    merger.add(mline.get());
-    std::unique_ptr<std::vector<LineString *> > merged(merger.getMergedLineStrings());
-    WKTWriter writer;
-
-    // Procces ways into lines or simple polygon list
-    polygondata* polys = new polygondata[merged->size()];
-
-    unsigned totalpolys = 0;
-    for (unsigned i=0 ;i < merged->size(); ++i) {
-      std::unique_ptr<LineString> pline ((*merged ) [i]);
-      if (pline->getNumPoints() > 3 && pline->isClosed()) {
-        polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
-        polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
-        polys[totalpolys].area = polys[totalpolys].polygon->getArea();
-        polys[totalpolys].iscontained = 0;
-        polys[totalpolys].containedbyid = 0;
-        if (polys[totalpolys].area > 0.0)
-          totalpolys++;
-        else {
-          delete(polys[totalpolys].polygon);
-          delete(polys[totalpolys].ring);
-        }
-      }
-    }
-
-    if (totalpolys) {
-      qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
-
-      unsigned toplevelpolygons = 0;
-      int istoplevelafterall;
-
-      for (unsigned i=0 ;i < totalpolys; ++i) {
-        if (polys[i].iscontained != 0)
-          continue;
-
-        toplevelpolygons++;
-
-        for (unsigned j=i+1; j < totalpolys; ++j) {
-          // Does polygon[i] contain the smaller polygon[j]?
-              if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
-                // are we in a [i] contains [k] contains [j] situation
-                // which would actually make j top level
-                istoplevelafterall = 0;
-                for (unsigned k=i+1; k < j; ++k) {
-                  if (polys[k].iscontained && polys[k].containedbyid == i &&
-                      polys[k].polygon->contains(polys[j].polygon)) {
-                    istoplevelafterall = 1;
-                    break;
-                  }
-                }
-                if (istoplevelafterall == 0) {
-                  polys[j].iscontained = 1;
-                  polys[j].containedbyid = i;
-                }
-              }
-        }
-      }
-      // polys now is a list of polygons tagged with which ones are inside each other
-
-      // List of polygons for multipolygon
-      std::unique_ptr<std::vector<Geometry*> > polygons(new std::vector<Geometry*>);
-      // Make a multipolygon if required
-      if (toplevelpolygons > 1)
-      {
-        std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
-        if (!multipoly->isValid()) {
-          multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-        }
-        multipoly->normalize();
-
-        if (multipoly->isValid())
-          wkts.emplace_back(writer.write(multipoly.get()));
-      }
-      // For each top level polygon create a new polygon including any holes
-      /* for (unsigned i=0 ;i < totalpolys; ++i) {
-            if (polys[i].iscontained != 0) continue;
-
-            // List of holes for this top level polygon
-            std::unique_ptr<std::vector<Geometry*> > interior(new std::vector<Geometry*>);
-            for (unsigned j=i+1; j < totalpolys; ++j) {
-              if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
-                interior->emplace_back(polys[j].ring);
-            }
-
-            Polygon* poly(gf.createPolygon(polys[i].ring, interior.release()));
-            poly->normalize();
-            polygons->emplace_back(poly);
-          }
-
-          for(unsigned i=0; i<toplevelpolygons; i++) {
-            Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
-            if (!poly->isValid()) {
-              poly = dynamic_cast<Geometry*>(poly->buffer(0));
-              poly->normalize();
-            }
-            if (poly->isValid())
-              wkts.emplace_back(writer.write(poly));
-
-            delete(poly);
-          }*/
-    }
-
-    for (unsigned i=0; i < totalpolys; ++i)
-      delete(polys[i].polygon);
-
-    delete[](polys);
-
-  }
-  catch (std::exception& e)
-  {
-    LOG_ERROR("Standard exception processing relation: " + std::string(e.what()));
-  }
-  catch (...)
-  {
-    LOG_ERROR("Exception caught processing relations.");
-  }
-
   return wkts;
 }
 
@@ -335,7 +196,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   /* creating a POLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'MULTIPOLYGON', 'XY')";
+  sql += "'geom', 4326, 'POLYGON', 'XY')";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -367,53 +228,197 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   uint32_t count = 0;
   uint64_t nodeid;
   bool has_data;
+  GeometryFactory gf;
 
-  for (const auto admin : osmdata.admins_) {
+  try {
 
-    for (size_t i = 0; i < admin.member_count(); i++) {
+    for (const auto admin : osmdata.admins_) {
 
-      const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
-      const OSMWay* w = osmdata.GetWay(memberid);
+      std::vector<std::string> wkts;
+      std::unique_ptr<Geometry> geom;
+      std::unique_ptr<std::vector<Geometry*> > lines(new std::vector<Geometry*>);
+      has_data = true;
 
-      // A relation may be included in an extract but it's members may not.
-      // Example:  PA extract can contain a NY relation.
-      if (w == nullptr) {
-        has_data = false;
-        break;
-      }
+      for (size_t i = 0; i < admin.member_count(); i++) {
 
-      std::vector<PointLL> shape;
-      size_t j = 0;
+        const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
+        const OSMWay* w = osmdata.GetWay(memberid);
 
-      bool done = false;
-      while (!done) {
-        nodeid = osmdata.noderefs[w->noderef_index() + j];
-        const OSMNode& osmnode = *osmdata.GetNode(nodeid);
-
-        shape.emplace_back(osmnode.latlng());
-        j++;
-
-        if (j == w->node_count())
-          done = true;
-      }
-      std::vector<std::string> wkts = GetWkts(shape);
-      for (const auto& wkt : wkts) {
-
-        count++;
-        sqlite3_reset (stmt);
-        sqlite3_clear_bindings (stmt);
-        sqlite3_bind_int (stmt, 1, count);
-        sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
-        sqlite3_bind_text (stmt, 3, wkt.c_str(), wkt.length(), SQLITE_STATIC);
-        /* performing INSERT INTO */
-        ret = sqlite3_step (stmt);
-        if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-          continue;
+        // A relation may be included in an extract but it's members may not.
+        // Example:  PA extract can contain a NY relation.
+        if (w == nullptr) {
+          has_data = false;
+          break;
         }
-        LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-      }
-    }
+
+        std::vector<PointLL> shape;
+
+        std::unique_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
+        size_t j = 0;
+
+        bool done = false;
+        while (!done) {
+          nodeid = osmdata.noderefs[w->noderef_index() + j];
+          const OSMNode& osmnode = *osmdata.GetNode(nodeid);
+
+          Coordinate c;
+          c.x = osmnode.latlng().first;
+          c.y = osmnode.latlng().second;
+          coords->add(c, 0);
+          j++;
+
+          if (j == w->node_count())
+            done = true;
+        }
+
+        if (coords->getSize() > 1) {
+          geom = std::unique_ptr<Geometry>(gf.createLineString(coords.release()));
+          lines->push_back(geom.release());
+        }
+
+      } // member loop
+
+      if (has_data) {
+
+        std::unique_ptr<Geometry> mline (gf.createMultiLineString(lines.release()));
+        LineMerger merger;
+        merger.add(mline.get());
+        std::unique_ptr<std::vector<LineString *> > merged(merger.getMergedLineStrings());
+        WKTWriter writer;
+
+        // Procces ways into lines or simple polygon list
+        polygondata* polys = new polygondata[merged->size()];
+
+        unsigned totalpolys = 0;
+        for (unsigned i=0 ;i < merged->size(); ++i) {
+          std::unique_ptr<LineString> pline ((*merged ) [i]);
+          if (pline->getNumPoints() > 3 && pline->isClosed()) {
+            polys[totalpolys].polygon = gf.createPolygon(gf.createLinearRing(pline->getCoordinates()),0);
+            polys[totalpolys].ring = gf.createLinearRing(pline->getCoordinates());
+            polys[totalpolys].area = polys[totalpolys].polygon->getArea();
+            polys[totalpolys].iscontained = 0;
+            polys[totalpolys].containedbyid = 0;
+            if (polys[totalpolys].area > 0.0)
+              totalpolys++;
+            else {
+              delete(polys[totalpolys].polygon);
+              delete(polys[totalpolys].ring);
+            }
+          }
+        }
+
+        if (totalpolys) {
+          qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
+
+          unsigned toplevelpolygons = 0;
+          int istoplevelafterall;
+
+          for (unsigned i=0 ;i < totalpolys; ++i) {
+            if (polys[i].iscontained != 0)
+              continue;
+
+            toplevelpolygons++;
+
+            for (unsigned j=i+1; j < totalpolys; ++j) {
+              // Does polygon[i] contain the smaller polygon[j]?
+              if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
+                // are we in a [i] contains [k] contains [j] situation
+                // which would actually make j top level
+                istoplevelafterall = 0;
+                for (unsigned k=i+1; k < j; ++k) {
+                  if (polys[k].iscontained && polys[k].containedbyid == i &&
+                      polys[k].polygon->contains(polys[j].polygon)) {
+                    istoplevelafterall = 1;
+                    break;
+                  }
+                }
+                if (istoplevelafterall == 0) {
+                  polys[j].iscontained = 1;
+                  polys[j].containedbyid = i;
+                }
+              }
+            }
+          }
+          // polys now is a list of polygons tagged with which ones are inside each other
+
+          // List of polygons for multipolygon
+           std::unique_ptr<std::vector<Geometry*> > polygons(new std::vector<Geometry*>);
+          // Make a multipolygon if required
+          /*if (toplevelpolygons > 1)
+          {
+            std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
+            if (!multipoly->isValid()) {
+              multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
+            }
+            multipoly->normalize();
+
+            if (multipoly->isValid())
+              wkts.push_back(writer.write(multipoly.get()));
+          }*/
+          // For each top level polygon create a new polygon including any holes
+          for (unsigned i=0 ;i < totalpolys; ++i) {
+            if (polys[i].iscontained != 0)
+              continue;
+
+            // List of holes for this top level polygon
+            std::unique_ptr<std::vector<Geometry*> > interior(new std::vector<Geometry*>);
+            for (unsigned j=i+1; j < totalpolys; ++j) {
+              if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
+                interior->push_back(polys[j].ring);
+            }
+
+            Polygon* poly(gf.createPolygon(polys[i].ring, interior.release()));
+            poly->normalize();
+            polygons->push_back(poly);
+          }
+
+          for(unsigned i=0; i<toplevelpolygons; i++) {
+            Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
+            if (!poly->isValid()) {
+              poly = dynamic_cast<Geometry*>(poly->buffer(0));
+              poly->normalize();
+            }
+            if (poly->isValid())
+              wkts.push_back(writer.write(poly));
+
+            delete(poly);
+          }
+        }
+
+        for (unsigned i=0; i < totalpolys; ++i)
+          delete(polys[i].polygon);
+
+        delete[](polys);
+
+        for (const auto& wkt : wkts) {
+
+          count++;
+          sqlite3_reset (stmt);
+          sqlite3_clear_bindings (stmt);
+          sqlite3_bind_int (stmt, 1, count);
+          sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
+          sqlite3_bind_text (stmt, 3, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+          /* performing INSERT INTO */
+          ret = sqlite3_step (stmt);
+          if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+            continue;
+          }
+          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+
+        }
+      }// has data
+    }// admins
   }
+  catch (std::exception& e)
+  {
+    LOG_ERROR("Standard exception processing relation: " + std::string(e.what()));
+  }
+  catch (...)
+  {
+    LOG_ERROR("Exception caught processing relations.");
+  }
+
+
 
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
