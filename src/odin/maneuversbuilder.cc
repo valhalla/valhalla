@@ -31,8 +31,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   for (Maneuver maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
   }
 #endif
 
@@ -46,8 +46,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   for (Maneuver maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
   }
 #endif
 
