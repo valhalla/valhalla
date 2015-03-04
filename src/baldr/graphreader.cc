@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-//#include <boost/filesystem/operations.hpp>
+#include <sys/stat.h>
 
 namespace valhalla {
 namespace baldr {
@@ -14,6 +14,17 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt):GraphReader(Tile
 }
 
 GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
+}
+
+// Method to test if tile exists
+bool GraphReader::DoesTileExist(const GraphId& graphid) const {
+  return DoesTileExist(tile_hierarchy_, graphid);
+}
+bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid) {
+  std::string file_location = tile_hierarchy.tile_dir() + "/" +
+    GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
+  struct stat buffer;
+  return stat(file_location.c_str(), &buffer) == 0;
 }
 
 // Get a pointer to a graph tile object given a GraphId.
