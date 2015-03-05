@@ -108,6 +108,7 @@ class Maneuver {
 
   bool internal_intersection() const;
   void set_internal_intersection(bool internal_intersection);
+  bool HasUsableInternalIntersectionName() const;
 
   const Signs& signs() const;
   Signs* mutable_signs();
