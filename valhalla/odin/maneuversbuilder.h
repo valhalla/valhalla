@@ -62,6 +62,8 @@ class ManeuversBuilder {
 
   bool IsRightSideOfStreetDriving() const;
 
+  bool UsableInternalIntersectionName(Maneuver& maneuver, int node_index) const;
+
   EnhancedTripPath* trip_path_;
 
 };

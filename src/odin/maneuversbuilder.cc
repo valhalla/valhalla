@@ -1,12 +1,18 @@
-#include <iostream>
-#include <stdexcept>
-
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/turn.h>
+#include <proto/tripdirections.pb.h>
+#include <odin/maneuversbuilder.h>
+#include <odin/signs.h>
+#include <odin/streetnames.h>
 
-#include "odin/maneuversbuilder.h"
+#include <iostream>
+#include <algorithm>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "boost/format.hpp"
 
@@ -212,9 +218,11 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Maybe no signs
       // Combine the 'same name straight' next maneuver with the current maneuver
       // if begin edge of next maneuver is not a turn channel
+      // and the next maneuver is not an internal intersection maneuver
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && !next_man->internal_intersection()
           && !common_base_names.empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
@@ -245,6 +253,11 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
         GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
   }
 
+  // Set the cross street names
+  if (curr_man->HasUsableInternalIntersectionName()) {
+    next_man->set_cross_street_names(
+        std::move(*(curr_man->mutable_street_names())));
+  }
   // Set relative direction
   next_man->set_begin_relative_direction(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
@@ -442,15 +455,17 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
 void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
-  // Set the begin and end shape index
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
 
   // Street names
-  // TODO - improve
-  if (!maneuver.internal_intersection() && maneuver.street_names().empty()) {
+  // Set if street names are empty and maneuver is not internal intersection
+  // or usable internal intersection name exists
+  if ((maneuver.street_names().empty() && !maneuver.internal_intersection())
+      || UsableInternalIntersectionName(maneuver, node_index)) {
     auto* names = maneuver.mutable_street_names();
+    names->clear();
     for (const auto& name : prev_edge->name()) {
-      names->push_back(name);
+      names->emplace_back(name);
     }
   }
 
@@ -822,6 +837,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return true;
   }
 
+  // TODO: add logic for 'T' and pencil point u-turns
+
   StreetNames prev_edge_names(prev_edge->name());
 
   // Process same names
@@ -890,6 +907,33 @@ bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
   // TODO: use admin of node to return proper value
   return true;
 }
+
+bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver,
+                                                      int node_index) const {
+  auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+  auto* prev_prev_edge = trip_path_->GetPrevEdge(node_index, 2);
+  uint32_t prev_prev_2prev_turn_degree = 0;
+  if (prev_prev_edge) {
+    prev_prev_2prev_turn_degree = GetTurnDegree(prev_prev_edge->end_heading(),
+                                                prev_edge->begin_heading());
+  }
+  Maneuver::RelativeDirection relative_direction =
+      ManeuversBuilder::DetermineRelativeDirection(prev_prev_2prev_turn_degree);
+
+  // Criteria for usable internal intersection name:
+  // The maneuver is an internal intersection
+  // Left turn for right side of the street driving
+  // Right turn for left side of the street driving
+  if (maneuver.internal_intersection()
+      && ((IsRightSideOfStreetDriving()
+          && (relative_direction == Maneuver::RelativeDirection::kLeft))
+          || (!IsRightSideOfStreetDriving()
+              && (relative_direction == Maneuver::RelativeDirection::kRight)))) {
+    return true;
+  }
+  return false;
+}
+
 
 }
 }
