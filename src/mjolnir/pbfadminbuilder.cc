@@ -64,13 +64,13 @@ bool ParseArguments(int argc, char *argv[]) {
       "\n");
 
   options.add_options()
-          ("help,h", "Print this help message.")
-          ("version,v", "Print the version of this software.")
-          ("config,c",
-              boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
-              "Path to the json configuration file.")
-              // positional arguments
-              ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
+              ("help,h", "Print this help message.")
+              ("version,v", "Print the version of this software.")
+              ("config,c",
+                  boost::program_options::value<boost::filesystem::path>(&config_file_path)->required(),
+                  "Path to the json configuration file.")
+                  // positional arguments
+                  ("input_files", boost::program_options::value<std::vector<std::string> >(&input_files)->multitoken());
 
   bpo::positional_options_description pos_options;
   pos_options.add("input_files", 16);
@@ -82,8 +82,8 @@ bool ParseArguments(int argc, char *argv[]) {
 
   } catch (std::exception &e) {
     std::cerr << "Unable to parse command line options because: " << e.what()
-          << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
-          << "\n";
+              << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
+              << "\n";
     return false;
   }
 
@@ -174,22 +174,22 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
 
       for (unsigned j=i+1; j < totalpolys; ++j) {
         // Does polygon[i] contain the smaller polygon[j]?
-            if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
-              // are we in a [i] contains [k] contains [j] situation
-              // which would actually make j top level
-              istoplevelafterall = 0;
-              for (unsigned k=i+1; k < j; ++k) {
-                if (polys[k].iscontained && polys[k].containedbyid == i &&
-                    polys[k].polygon->contains(polys[j].polygon)) {
-                  istoplevelafterall = 1;
-                  break;
-                }
-              }
-              if (istoplevelafterall == 0) {
-                polys[j].iscontained = 1;
-                polys[j].containedbyid = i;
-              }
+        if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
+          // are we in a [i] contains [k] contains [j] situation
+          // which would actually make j top level
+          istoplevelafterall = 0;
+          for (unsigned k=i+1; k < j; ++k) {
+            if (polys[k].iscontained && polys[k].containedbyid == i &&
+                polys[k].polygon->contains(polys[j].polygon)) {
+              istoplevelafterall = 1;
+              break;
             }
+          }
+          if (istoplevelafterall == 0) {
+            polys[j].iscontained = 1;
+            polys[j].containedbyid = i;
+          }
+        }
       }
     }
     // polys now is a list of polygons tagged with which ones are inside each other
@@ -214,30 +214,15 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
       polygons->push_back(poly);
     }
 
-    // Make a multipolygon if required
-   // if (toplevelpolygons >= 1) {
-      std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
-      if (!multipoly->isValid()) {
-        multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-      }
-      multipoly->normalize();
+    // Make a multipolygon
+    std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
+    if (!multipoly->isValid()) {
+      multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
+    }
+    multipoly->normalize();
 
-      if (multipoly->isValid())
-        wkts.push_back(writer.write(multipoly.get()));
- /*   }
-    else {
-      for(unsigned i=0; i<toplevelpolygons; i++)
-      {
-        Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
-        if (!poly->isValid()) {
-          poly = dynamic_cast<Geometry*>(poly->buffer(0));
-          poly->normalize();
-        }
-        if (poly->isValid())
-          wkts.push_back(writer.write(poly));
-        delete(poly);
-      }
-    }*/
+    if (multipoly->isValid())
+      wkts.push_back(writer.write(multipoly.get()));
   }
 
   for (unsigned i=0; i < totalpolys; ++i)
@@ -306,7 +291,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close(db_handle);
     return;
   }
-  /* creating a POLYGON Geometry column */
+  /* creating a MULTIPOLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
   sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
@@ -320,7 +305,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   LOG_INFO("Created admin table.");
 
   /*
-   * inserting some POLYGONs
+   * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
   sql = "INSERT INTO admins (id, name, geom) ";
@@ -421,8 +406,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   {
     LOG_ERROR("Exception caught processing relations.");
   }
-
-
 
   sqlite3_finalize (stmt);
   ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
