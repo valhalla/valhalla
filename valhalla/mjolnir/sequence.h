@@ -21,48 +21,6 @@
 namespace valhalla{
 namespace mjolnir{
 
-//a read/writeable object within the sequence, accessed either through memory or file
-template <class T>
-struct sequence_element {
- public:
-  //static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
-  sequence_element() = delete;
-  sequence_element(T* base): base(base), pos(-1) {}
-  sequence_element(std::shared_ptr<std::fstream> file, size_t pos): base(nullptr), file(file), pos(pos) {}
-  sequence_element& operator=(const sequence_element& other) {
-    base = other.base;
-    file = other.file;
-    pos = other.pos;
-    return *this;
-  }
-  sequence_element& operator=(const T& other) {
-    if(base) {
-      *base = other;
-      return *this;
-    }
-
-    file->seekg(pos);
-    file->write(static_cast<const char*>(static_cast<const void*>(&other)), sizeof(T));
-    return *this;
-  }
-  operator T() {
-    if(base)
-      return *base;
-
-    T result;
-    file->seekg(pos);
-    file->read(static_cast<char*>(static_cast<void*>(&result)), sizeof(T));
-    return result;
-  }
-  T operator*() {
-    return operator T();
-  }
- protected:
-  T* base;
-  std::shared_ptr<std::fstream> file;
-  size_t pos;
-};
-
 template <class T>
 struct sequence {
  public:
@@ -250,6 +208,29 @@ struct sequence {
     file->open(file_name, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
   }
 
+  //perform an volatile operation on all the items of this sequence
+  void transform(const std::function<void (T&)>& predicate) {
+    flush();
+    for(size_t i = 0; i < element_count; ++i) {
+      //grab the element
+      auto element = at(i);
+      //grab the underlying item
+      auto item = *element;
+      //transform it
+      predicate(item);
+      //put it back
+      element = item;
+    }
+  }
+
+  //perform a non-volatile operation on all the items of this sequence
+  void enumerate(const std::function<void (const T&)>& predicate) {
+    flush();
+    //grab each element and do something with it
+    for(size_t i = 0; i < element_count; ++i)
+      predicate(*at(i));
+  }
+
   //force writing whatever we have in the write_buffer to file
   void flush() {
     if(write_buffer.size()) {
@@ -268,13 +249,107 @@ struct sequence {
     return element_count + write_buffer.size();
   }
 
-  //write/read at certain index
-  sequence_element<T> operator[](size_t index) {
+  //a read/writeable object within the sequence, accessed either through memory or file
+  struct iterator {
+    friend class sequence;
+   public:
+    //static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
+    iterator() = delete;
+    iterator& operator=(const iterator& other) {
+      parent = other.parent;
+      index = other.index;
+      return *this;
+    }
+    iterator& operator=(const T& other) {
+      if(parent->mmap_handle) {
+        (static_cast<T*>(parent->mmap_handle) + index) = other;
+        return *this;
+      }
+
+      parent->file->seekg(index * sizeof(T));
+      parent->file->write(static_cast<const char*>(static_cast<const void*>(&other)), sizeof(T));
+      return *this;
+    }
+    operator T() {
+      if(parent->mmap_handle)
+        return *(static_cast<T*>(parent->mmap_handle) + index);
+
+      T result;
+      parent->file->seekg(index * sizeof(T));
+      parent->file->read(static_cast<char*>(static_cast<void*>(&result)), sizeof(T));
+      return result;
+    }
+    T operator*() {
+      return operator T();
+    }
+    iterator& operator++() {
+      parent->flush();
+      ++index;
+      return *this;
+    }
+    iterator operator++() {
+      parent->flush();
+      auto other = *this;
+      ++index;
+      return other;
+    }
+    iterator& operator--() {
+      parent->flush();
+      --index;
+      return *this;
+    }
+    iterator operator--() {
+      parent->flush();
+      auto other = *this;
+      --index;
+      return other;
+    }
+    bool operator==(const iterator& other) const {
+      return parent == other.parent && index == other.index;
+    }
+    size_t operator-(const iterator& other) const {
+      return index - other.index;
+    }
+    size_t position() const {
+      return index;
+    }
+   protected:
+    iterator(sequence* parent, size_t offset): parent(parent), index(index) {}
+    sequence* parent;
+    size_t index;
+  };
+
+  iterator at(size_t index) {
     //dump to file and make an element
     flush();
-    if(mmap_handle)
-      return sequence_element<T>(static_cast<T*>(mmap_handle) + index);
-    return sequence_element<T>(file, index * sizeof(T));
+    return iterator(this, index);
+  }
+
+  //write/read at certain index
+  iterator operator[](size_t index) {
+    return at(index);
+  }
+
+  //write/read at the beginning
+  T front() {
+    return *at(0);
+  }
+
+  //write/read at the end
+  T back() {
+    flush();
+    return *iterator(this, element_count - 1);
+  }
+
+  //first iterator
+  iterator begin() {
+    return at(0);
+  }
+
+  //invalid end iterator
+  iterator end() {
+    flush();
+    return iterator(this, element_count);
   }
 
  protected:

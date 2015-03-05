@@ -32,8 +32,8 @@ namespace mjolnir {
  * with less than 2 uses become a shape point (lat,lng) along the edge.
  */
 struct Edge {
-  // GraphId of the source (start) node of the edge
-  baldr::GraphId sourcenode_;
+  // index of the source (start) node of the edge
+  uint32_t sourcenode_;
 
   // Index into the list of OSM way information
   uint32_t wayindex_;
@@ -55,8 +55,8 @@ struct Edge {
   };
   EdgeAttributes attributes;
 
-  // GraphId of the target (end) node of the edge
-  baldr::GraphId targetnode_;
+  // index of the target (end) node of the edge
+  uint32_t targetnode_;
 
 
   /**
@@ -66,7 +66,7 @@ struct Edge {
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
    */
-  static Edge make_edge(const baldr::GraphId& sourcenode, const uint32_t wayindex,
+  static Edge make_edge(const uint32_t sourcenode, const uint32_t wayindex,
        const uint32_t llindex, const OSMWay& way) {
     Edge e{sourcenode, wayindex, llindex};
     e.attributes.llcount = 1;
@@ -83,146 +83,22 @@ struct Edge {
  * Node within the graph
  */
 struct Node {
-  // List of edges connected to the node
-  std::list<uint32_t> edges;
+  //the underlying osm node and attributes
+  OSMNode node;
+  //the graph edge that this node starts
+  uint32_t start_of;
+  //the graph edge that this node ends
+  uint32_t end_of;
+  //the graphid of the node
+  GraphId graph_id;
 
-  // Node attributes
-  NodeAttributes attributes;
-
-  /**
-   * Constructor.
-   */
-  Node()
-      : attributes{} {
+  bool is_start() const {
+    return start_of != - 1;
+  }
+  bool is_end() const {
+    return end_of != - 1;
   }
 
-  /**
-   * Constructor with arguments
-   */
-  Node(const NodeAttributes& attr, const uint32_t edgeindex, const bool link)
-      : attributes(attr) {
-    AddEdge(edgeindex, link);
-  }
-
-  /**
-   * Add an edge. Set flags to indicate a link and/or non-link edge
-   * exists at the node.
-   * @param  edgeindex  Index in the list of edges.
-   * @param  link       Flag indicating whether this edge is a link
-   *                    (highway=*_link)
-   */
-  void AddEdge(const uint32_t edgeindex, const bool link) {
-    if (link) {
-      attributes.link_edge = true;
-    } else {
-      attributes.non_link_edge = true;
-    }
-
-    // TODO - could insert into the list based on importance and
-    // driveablity?
-    edges.push_back(edgeindex);
-  }
-
-  /**
-   * Get the number of edges beginning or ending at the node.
-   * @return  Returns the number of edges.
-   */
-  uint32_t edge_count() const {
-    return edges.size();
-  }
-
-  /**
-   * Set the exit to flag
-   */
-  void set_exit_to(const bool exit_to) {
-    attributes.exit_to = exit_to;
-  }
-
-  /**
-   * Get the exit to flag
-   */
-  bool exit_to() const {
-    return attributes.exit_to;
-  }
-
-  /**
-   * Set the ref flag
-   */
-  void set_ref(const bool ref)  {
-    attributes.ref = ref;
-  }
-
-  /**
-   * Get the ref flag
-   */
-  bool ref() const {
-    return attributes.ref;
-  }
-
-  /**
-   * Get the name flag
-   */
-  bool name() const  {
-    return attributes.name;
-  }
-
-  /**
-   * Set access mask.
-   */
-  void set_access_mask(const uint32_t access_mask) {
-    attributes.access_mask = access_mask;
-  }
-
-  /**
-   * Get the access mask.
-   */
-  uint32_t access_mask() const {
-    return attributes.access_mask;
-  }
-
-  /**
-   * Set the node type.
-   */
-  void set_type(const NodeType type) {
-    attributes.type = static_cast<uint8_t>(type);
-  }
-
-  /**
-   * Get the node type.
-   */
-  NodeType type() const {
-    return static_cast<baldr::NodeType>(attributes.type);
-  }
-
-  /**
-   * Set traffic_signal flag.
-   */
-  void set_traffic_signal(const bool traffic_signal) {
-    attributes.traffic_signal = traffic_signal;
-  }
-
-  /**
-   * Get the traffic_signal flag.
-   */
-  bool traffic_signal() const {
-    return attributes.traffic_signal;
-  }
-
-  /**
-   * Get the non-link edge flag. True if any connected edge is not a
-   * highway=*_link.
-   */
-  bool non_link_edge() const {
-    return attributes.non_link_edge;
-  }
-
-  /**
-   * Get the non-link edge flag. True if any connected edge is a
-   * highway=*_link.
-   */
-  bool link_edge() const  {
-    return attributes.link_edge;
-  }
 };
 
 /**
@@ -271,20 +147,12 @@ class GraphBuilder {
   /**
    * Update road class / importance of links (ramps)
    */
-  void ReclassifyLinks(const std::string& ways_file);
-
-  /**
-   * Get the best classification for any non-link edges from a node.
-   * @param  node  Node - gets outbound edges from this node.
-   * @param  edges The file backed list of edges in the graph.
-   * @return  Returns the best (most important) classification
-   */
-  uint32_t GetBestNonLinkClass(const Node& node, sequence<Edge>& edges) const;
+  void ReclassifyLinks(const std::string& ways_file, DataQuality& stats);
 
   /**
    * Build tiles representing the local graph
    */
-  void BuildLocalTiles(const uint8_t level, const OSMData& osmdata) const;
+  void BuildLocalTiles(const uint8_t level, const OSMData& osmdata, const std::map<GraphId, size_t>& tiles, DataQuality& stats) const;
 
   static std::string GetRef(const std::string& way_ref,
                             const std::string& relation_ref);
@@ -314,27 +182,11 @@ class GraphBuilder {
   uint32_t level_;
   TileHierarchy tile_hierarchy_;
 
-  // Map of OSM node Ids to GraphIds, for sparse objects like exits,
-  std::unordered_map<uint64_t, GraphId> nodes_;
+  //stores all the graph nodes in this file
+  std::string nodes_file_;
 
-  // Map that stores all the reference info on a node
-  std::unordered_map<baldr::GraphId, std::string> node_ref_;
-
-  // Map that stores all the exit to info on a node
-  std::unordered_map<baldr::GraphId, std::string> node_exit_to_;
-
-  // Map that stores all the name info on a node
-  std::unordered_map<baldr::GraphId, std::string> node_name_;
-
-  // Stores all the edges in this file
+  // Stores all the graph edges in this file
   std::string edges_file_;
-
-  // A place to keep each tile's nodes so that various threads can
-  // write various tiles asynchronously
-  std::unordered_map<GraphId, std::vector<Node> > tilednodes_;
-
-  // Data quality / statistics.
-  std::unique_ptr<DataQuality> stats_;
 
   // How many threads to run
   const unsigned int threads_;

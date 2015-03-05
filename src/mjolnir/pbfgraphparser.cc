@@ -157,7 +157,7 @@ struct graph_callback : public OSMPBF::Callback {
     if(current_way_node_index_ < way_nodes_->size()) {
       //update all the nodes that match it
       OSMWayNode way_node;
-      sequence_element<OSMWayNode> element = (*way_nodes_)[current_way_node_index_];
+      sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
       while(current_way_node_index_ < way_nodes_->size() && (way_node = element = (*way_nodes_)[current_way_node_index_]).node.osmid == osmid) {
         way_node.node = n;
         element = way_node;
