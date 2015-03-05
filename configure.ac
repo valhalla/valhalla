@@ -56,7 +56,7 @@ then
 fi
 
 # spatialite needed for admin info
-PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 4.1.1], , AC_MSG_ERROR(['libspatialite-dev' version >= 4.1.1 is required.  Please install libspatialite-dev.]))
+PKG_CHECK_MODULES([LIBSPATIALITE], [spatialite >= 3.0.0], , AC_MSG_ERROR(['libspatialite-dev' version >= 3.0.0 is required.  Please install libspatialite-dev.]))
 
 # check pkg-config packaged packages.
 PKG_CHECK_MODULES([DEPS], [protobuf >= 2.4.0])
