@@ -3,9 +3,12 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <list>
 
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/graphconstants.h>
+
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {
@@ -28,16 +31,16 @@ struct OSMAdmin {
   uint64_t admin_id() const;
 
   /**
-   * Set the index into the member id
-   * @param  idx  Index into the members for this admin's member Ids
+   * Set the ways list.
+   * @param  ways   Ways for this admin.
    */
-  void set_member_index(const uint32_t idx);
+  void set_ways(const std::list<uint64_t> ways);
 
   /**
-   * Get the index into the member ids
-   * @return  Returns the index into the members for this admin's member Ids
+   * Get the ways for this admin.
+   * @return  Returns the ways for this admin
    */
-  uint32_t member_index() const;
+  std::list<uint64_t> ways() const;
 
   /**
    * Set the number of members/ways for this admin.
@@ -77,8 +80,8 @@ struct OSMAdmin {
   // OSM admin/relation id
   uint64_t osmrelationid_;
 
-  // Index into the list of ways/member ids
-  uint32_t memberid_index_;
+  // List of ways/member ids
+  std::list<uint64_t> ways_;
 
   // Count of members.
   uint16_t memberid_count_;
