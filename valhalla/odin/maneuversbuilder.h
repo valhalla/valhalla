@@ -60,6 +60,10 @@ class ManeuversBuilder {
   static Maneuver::RelativeDirection DetermineRelativeDirection(
       uint32_t turn_degree);
 
+  bool IsRightSideOfStreetDriving() const;
+
+  bool UsableInternalIntersectionName(Maneuver& maneuver, int node_index) const;
+
   EnhancedTripPath* trip_path_;
 
 };

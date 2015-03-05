@@ -32,12 +32,19 @@ class Maneuver {
   StreetNames* mutable_street_names();
   void set_street_names(const StreetNames& street_names);
   void set_street_names(StreetNames&& street_names);
-
   bool HasStreetNames() const;
 
   const StreetNames& begin_street_names() const;
   StreetNames* mutable_begin_street_names();
   void set_begin_street_names(const StreetNames& begin_street_names);
+  void set_begin_street_names(StreetNames&& begin_street_names);
+  bool HasBeginStreetNames() const;
+
+  const StreetNames& cross_street_names() const;
+  StreetNames* mutable_cross_street_names();
+  void set_cross_street_names(const StreetNames& cross_street_names);
+  void set_cross_street_names(StreetNames&& cross_street_names);
+  bool HasCrossStreetNames() const;
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
@@ -102,6 +109,7 @@ class Maneuver {
 
   bool internal_intersection() const;
   void set_internal_intersection(bool internal_intersection);
+  bool HasUsableInternalIntersectionName() const;
 
   const Signs& signs() const;
   Signs* mutable_signs();
@@ -120,6 +128,7 @@ class Maneuver {
   TripDirections_Maneuver_Type type_;
   StreetNames street_names_;
   StreetNames begin_street_names_;
+  StreetNames cross_street_names_;
   std::string instruction_;
   float distance_;
   uint32_t time_;

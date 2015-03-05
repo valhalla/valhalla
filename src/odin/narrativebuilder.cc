@@ -173,8 +173,10 @@ void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
   text_instruction += FormTurnTypeInstruction(maneuver.type());
   text_instruction += " U-turn";
 
-  // TODO - add intersecting street name
-  // i.e. "at Main Street"
+  if (maneuver.HasCrossStreetNames()) {
+    text_instruction += " at ";
+    text_instruction += maneuver.cross_street_names().ToString();
+  }
 
   if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";

@@ -1,12 +1,18 @@
-#include <iostream>
-#include <stdexcept>
-
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/turn.h>
+#include <proto/tripdirections.pb.h>
+#include <odin/maneuversbuilder.h>
+#include <odin/signs.h>
+#include <odin/streetnames.h>
 
-#include "odin/maneuversbuilder.h"
+#include <iostream>
+#include <algorithm>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "boost/format.hpp"
 
@@ -31,8 +37,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   for (Maneuver maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
   }
 #endif
 
@@ -46,8 +52,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   for (Maneuver maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
-    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
+    LOG_TRACE(std::string("  maneuver=") + maneuver.ToString());
   }
 #endif
 
@@ -212,9 +218,11 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Maybe no signs
       // Combine the 'same name straight' next maneuver with the current maneuver
       // if begin edge of next maneuver is not a turn channel
+      // and the next maneuver is not an internal intersection maneuver
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
+          && !next_man->internal_intersection()
           && !common_base_names.empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
@@ -245,6 +253,11 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
         GetTurnDegree(prev_man->end_heading(), next_man->begin_heading()));
   }
 
+  // Set the cross street names
+  if (curr_man->HasUsableInternalIntersectionName()) {
+    next_man->set_cross_street_names(
+        std::move(*(curr_man->mutable_street_names())));
+  }
   // Set relative direction
   next_man->set_begin_relative_direction(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
@@ -442,15 +455,17 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
 void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
-  // Set the begin and end shape index
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
 
   // Street names
-  // TODO - improve
-  if (!maneuver.internal_intersection() && maneuver.street_names().empty()) {
+  // Set if street names are empty and maneuver is not internal intersection
+  // or usable internal intersection name exists
+  if ((maneuver.street_names().empty() && !maneuver.internal_intersection())
+      || UsableInternalIntersectionName(maneuver, node_index)) {
     auto* names = maneuver.mutable_street_names();
+    names->clear();
     for (const auto& name : prev_edge->name()) {
-      names->push_back(name);
+      names->emplace_back(name);
     }
   }
 
@@ -556,12 +571,12 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   // Process Internal Intersection
   if (maneuver.internal_intersection()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
-    LOG_TRACE("INTERNAL_INTERSECTION");
+    LOG_TRACE("ManeuverType=INTERNAL_INTERSECTION");
   }
   // Process Turn Channel
   else if (maneuver.turn_channel()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
-    LOG_TRACE("TURN_CHANNNEL");
+    LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
   // Process exit
   else if (maneuver.ramp()
@@ -585,7 +600,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
       }
-    }LOG_TRACE("EXIT");
+    }LOG_TRACE("ManeuverType=EXIT");
   }
   // Process on ramp
   else if (maneuver.ramp() && !prev_edge->IsHighway()) {
@@ -612,37 +627,37 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
       }
-    }LOG_TRACE("RAMP");
+    }LOG_TRACE("ManeuverType=RAMP");
   }
   // Process merge
   else if (curr_edge->IsHighway() && prev_edge->ramp()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
-    LOG_TRACE("MERGE");
+    LOG_TRACE("ManeuverType=MERGE");
   }
   // Process enter roundabout
   else if (maneuver.roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
-    LOG_TRACE("ROUNDABOUT_ENTER");
+    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
   }
   // Process exit roundabout
   else if (prev_edge->roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
-    LOG_TRACE("ROUNDABOUT_EXIT");
+    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
   // Process enter ferry
   else if (maneuver.ferry() || maneuver.rail_ferry()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryEnter);
-    LOG_TRACE("FERRY_ENTER");
+    LOG_TRACE("ManeuverType=FERRY_ENTER");
   }
   // Process exit ferry
   else if (prev_edge->ferry() || prev_edge->rail_ferry()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryExit);
-    LOG_TRACE("FERRY_EXIT");
+    LOG_TRACE("ManeuverType=FERRY_EXIT");
   }
   // Process simple direction
   else {
     SetSimpleDirectionalManeuverType(maneuver);
-    LOG_TRACE("SIMPLE");
+    LOG_TRACE("ManeuverType=SIMPLE");
   }
 
 }
@@ -687,8 +702,19 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
       break;
     }
     case Turn::Type::kReverse: {
-      // TODO: figure this out
-      maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+      if (IsRightSideOfStreetDriving()) {
+        if (maneuver.turn_degree() < 180) {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        } else {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        }
+      } else {
+        if (maneuver.turn_degree() > 180) {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        } else {
+          maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        }
+      }
       break;
     }
     case Turn::Type::kSharpLeft: {
@@ -725,6 +751,7 @@ TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDir
   } else if ((heading > 293) && (heading < 337)) {
     return TripDirections_Maneuver_CardinalDirection_kNorthWest;
   }
+  throw std::runtime_error("Turn degree out of range for cardinal direction.");
 }
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
@@ -810,6 +837,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return true;
   }
 
+  // TODO: add logic for 'T' and pencil point u-turns
+
   StreetNames prev_edge_names(prev_edge->name());
 
   // Process same names
@@ -873,6 +902,38 @@ Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
   else
     return Maneuver::RelativeDirection::kNone;
 }
+
+bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
+  // TODO: use admin of node to return proper value
+  return true;
+}
+
+bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver,
+                                                      int node_index) const {
+  auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+  auto* prev_prev_edge = trip_path_->GetPrevEdge(node_index, 2);
+  uint32_t prev_prev_2prev_turn_degree = 0;
+  if (prev_prev_edge) {
+    prev_prev_2prev_turn_degree = GetTurnDegree(prev_prev_edge->end_heading(),
+                                                prev_edge->begin_heading());
+  }
+  Maneuver::RelativeDirection relative_direction =
+      ManeuversBuilder::DetermineRelativeDirection(prev_prev_2prev_turn_degree);
+
+  // Criteria for usable internal intersection name:
+  // The maneuver is an internal intersection
+  // Left turn for right side of the street driving
+  // Right turn for left side of the street driving
+  if (maneuver.internal_intersection()
+      && ((IsRightSideOfStreetDriving()
+          && (relative_direction == Maneuver::RelativeDirection::kLeft))
+          || (!IsRightSideOfStreetDriving()
+              && (relative_direction == Maneuver::RelativeDirection::kRight)))) {
+    return true;
+  }
+  return false;
+}
+
 
 }
 }
