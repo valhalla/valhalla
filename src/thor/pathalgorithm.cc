@@ -137,7 +137,6 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   // Find shortest path
   const GraphTile* tile;
   GraphId edgeid;
-  float unitsize = costing->UnitSize();
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
@@ -188,7 +187,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Set temp variables here. EdgeLabel is not good inside the loop
     // below since the edgelabel list is modified
-    uint32_t currentcost = nextlabel.truecost();
+    float currentcost    = nextlabel.truecost();
     uint32_t uturn_index = nextlabel.uturn_index();
     uint32_t restriction = nextlabel.restrictions();
 
@@ -249,7 +248,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         uint32_t prior_label_index = GetPriorEdgeLabel(edgeid);
         if (prior_label_index != kInvalidLabel) {
           // Reduce if cost difference is outside the costing unit size
-          if (cost < edgelabels_[prior_label_index].truecost() - unitsize) {
+          if (cost < edgelabels_[prior_label_index].truecost()) {
             float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
             float newsortcost = prior_sort_cost -
                     (edgelabels_[prior_label_index].truecost() - cost);
