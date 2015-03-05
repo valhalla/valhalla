@@ -38,6 +38,12 @@ class Maneuver {
   const StreetNames& begin_street_names() const;
   StreetNames* mutable_begin_street_names();
   void set_begin_street_names(const StreetNames& begin_street_names);
+  void set_begin_street_names(StreetNames&& begin_street_names);
+
+  const StreetNames& cross_street_names() const;
+  StreetNames* mutable_cross_street_names();
+  void set_cross_street_names(const StreetNames& cross_street_names);
+  void set_cross_street_names(StreetNames&& cross_street_names);
 
   const std::string& instruction() const;
   void set_instruction(const std::string& instruction);
@@ -120,6 +126,7 @@ class Maneuver {
   TripDirections_Maneuver_Type type_;
   StreetNames street_names_;
   StreetNames begin_street_names_;
+  StreetNames cross_street_names_;
   std::string instruction_;
   float distance_;
   uint32_t time_;

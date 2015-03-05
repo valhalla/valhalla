@@ -86,6 +86,26 @@ void Maneuver::set_begin_street_names(const StreetNames& begin_street_names) {
   begin_street_names_ = begin_street_names;
 }
 
+void Maneuver::set_begin_street_names(StreetNames&& begin_street_names) {
+  begin_street_names_ = std::move(begin_street_names);
+}
+
+const StreetNames& Maneuver::cross_street_names() const {
+  return cross_street_names_;
+}
+
+StreetNames* Maneuver::mutable_cross_street_names() {
+  return &cross_street_names_;
+}
+
+void Maneuver::set_cross_street_names(const StreetNames& cross_street_names) {
+  cross_street_names_ = cross_street_names;
+}
+
+void Maneuver::set_cross_street_names(StreetNames&& cross_street_names) {
+  cross_street_names_ = std::move(cross_street_names);
+}
+
 const std::string& Maneuver::instruction() const {
   return instruction_;
 }
@@ -301,6 +321,12 @@ std::string Maneuver::ToString() const {
   man_str += " | begin_street_names=";
   man_str += begin_street_names_.ToString();
 
+  man_str += " | cross_street_names=";
+  man_str += cross_street_names_.ToString();
+
+  man_str += " | instruction=";
+  man_str += instruction_;
+
   man_str += " | distance_=";
   man_str += std::to_string(distance_);
 
@@ -381,6 +407,12 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += begin_street_names_.ToParameterString();
+
+  man_str += delim;
+  man_str += cross_street_names_.ToParameterString();
+
+  man_str += delim;
+  man_str += instruction_;
 
   man_str += delim;
   man_str += std::to_string(distance_);
