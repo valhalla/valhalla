@@ -71,7 +71,7 @@ void Maneuver::set_street_names(StreetNames&& street_names) {
 }
 
 bool Maneuver::HasStreetNames() const {
-  return (street_names_.size() > 0);
+  return (!street_names_.empty());
 }
 
 const StreetNames& Maneuver::begin_street_names() const {
@@ -90,6 +90,10 @@ void Maneuver::set_begin_street_names(StreetNames&& begin_street_names) {
   begin_street_names_ = std::move(begin_street_names);
 }
 
+bool Maneuver::HasBeginStreetNames() const {
+  return (!begin_street_names_.empty());
+}
+
 const StreetNames& Maneuver::cross_street_names() const {
   return cross_street_names_;
 }
@@ -104,6 +108,10 @@ void Maneuver::set_cross_street_names(const StreetNames& cross_street_names) {
 
 void Maneuver::set_cross_street_names(StreetNames&& cross_street_names) {
   cross_street_names_ = std::move(cross_street_names);
+}
+
+bool Maneuver::HasCrossStreetNames() const {
+  return (!cross_street_names_.empty());
 }
 
 const std::string& Maneuver::instruction() const {
