@@ -18,14 +18,14 @@ uint64_t OSMAdmin::admin_id() const {
   return osmrelationid_;
 }
 
-// Set the index into the member id
-void OSMAdmin::set_member_index(const uint32_t idx) {
-  memberid_index_ = idx;
+// Set the ways list.
+void OSMAdmin::set_ways(const std::list<uint64_t> ways) {
+  ways_ = ways;
 }
 
-// Get the index into the member ids
-uint32_t OSMAdmin::member_index() const {
-  return memberid_index_;
+// Get the ways for this admin.
+std::list<uint64_t> OSMAdmin::ways() const {
+  return ways_;
 }
 
 // Set the number of members/ways for this admin.

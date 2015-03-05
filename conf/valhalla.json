@@ -27,6 +27,10 @@
       "relation_script": "conf/admins.lua",
       "relation_function": "rels_proc"
     },
+    "admin": {
+      "admin_dir": "/data/valhalla",
+      "db_name": "admin.sqlite"
+    },
     "logging": {
       "type": "std_out",
       "color": true
