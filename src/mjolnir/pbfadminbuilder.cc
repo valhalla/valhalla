@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 
-#include "pbfgraphbuilder.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
@@ -335,14 +334,13 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       std::unique_ptr<std::vector<Geometry*> > lines(new std::vector<Geometry*>);
       has_data = true;
 
-      for (size_t i = 0; i < admin.member_count(); i++) {
+      for (const auto memberid : admin.ways()) {
 
-        const uint64_t &memberid = osmdata.memberids_[admin.member_index() + i];
-        const OSMWay* w = osmdata.GetWay(memberid);
+        auto itr = osmdata.way_map.find(memberid);
 
         // A relation may be included in an extract but it's members may not.
         // Example:  PA extract can contain a NY relation.
-        if (w == nullptr) {
+        if (itr == osmdata.way_map.end()) {
           has_data = false;
           break;
         }
@@ -350,19 +348,15 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         std::unique_ptr<CoordinateSequence> coords(gf.getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
         size_t j = 0;
 
-        bool done = false;
-        while (!done) {
-          nodeid = osmdata.noderefs[w->noderef_index() + j];
-          const OSMNode& osmnode = *osmdata.GetNode(nodeid);
+        for (const auto ref_id :itr->second) {
+
+          const PointLL ll = osmdata.shape_map.at(ref_id);
 
           Coordinate c;
-          c.x = osmnode.latlng().first;
-          c.y = osmnode.latlng().second;
+          c.x = ll.lng();
+          c.y = ll.lat();
           coords->add(c, 0);
-          j++;
 
-          if (j == w->node_count())
-            done = true;
         }
 
         if (coords->getSize() > 1) {
@@ -425,7 +419,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close (db_handle);
     return;
   }
-
   LOG_INFO("Created spatial index");
   sqlite3_close (db_handle);
 }

@@ -1,10 +1,9 @@
 #include <string>
 #include <vector>
 
-#include "pbfgraphbuilder.h"
-
 #include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphoptimizer.h"
 #include "config.h"
@@ -88,21 +87,6 @@ bool ParseArguments(int argc, char *argv[]) {
   return false;
 }
 
-/**
- * Build local graph from protocol buffer input.
- */
-void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
-               const std::vector<std::string>& input_files) {
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  auto osm_data = PBFGraphParser::Parse(pt, input_files);
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder graphbuilder(pt);
-  graphbuilder.Build(osm_data);
-}
-
 int main(int argc, char** argv) {
 
   if (!ParseArguments(argc, argv))
@@ -119,15 +103,16 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  LOG_INFO("Sizeof OSMWay = " + std::to_string(sizeof(OSMWay)));
-  LOG_INFO("Sizeof OSMNode = " + std::to_string(sizeof(OSMNode)));
-  LOG_INFO("Sizeof Edge = " + std::to_string(sizeof(Edge)));
-  LOG_INFO("Sizeof Node = " + std::to_string(sizeof(Node)));
-
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt.get_child("mjolnir"), input_files);
+    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+    // relations are defined within the PBFParser class
+    auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files);
+
+    // Build the graph using the OSMNodes and OSMWays from the parser
+    GraphBuilder graphbuilder(pt.get_child("mjolnir"));
+    graphbuilder.Build(osm_data);
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
@@ -141,6 +126,11 @@ int main(int argc, char** argv) {
     else
       return false;  //unknown value;
   }*/
+
+  // Enhance the local level of the graph. This adds information to the local
+  // level that is usable across all levels (density, administrative
+  // information (and country based attribution), edge transition logic, etc.
+  GraphEnhancer::Enhance(pt.get_child("mjolnir.hierarchy"));
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.

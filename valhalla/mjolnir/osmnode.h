@@ -10,10 +10,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-// Internal storage of lat,lng
-using OSMLatLng = std::pair<float, float>;
-
-// Node attributes. Shared by OSMNode and GraphBuilder Node.
 struct NodeAttributes {
   uint32_t access_mask      : 8;
   uint32_t type             : 3;
@@ -32,34 +28,19 @@ struct NodeAttributes {
 /**
  * OSM node information. Result of parsing an OSM node.
  */
-class OSMNode {
- public:
-  /**
-   * Constructor
-   */
-  OSMNode();
-
-  /**
-   * Constructor given a lng,lat
-   */
-  OSMNode(const uint64_t osmid, const float lng, const float lat);
-
-  /**
-   * Destructor.
-   */
-  ~OSMNode();
+struct OSMNode {
 
   /**
    * Sets the lat,lng.
    * @param  ll  Lat,lng of the node.
    */
-  void set_latlng(const OSMLatLng& ll);
+  void set_latlng(const std::pair<float, float>& ll);
 
   /**
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  const OSMLatLng& latlng() const;
+  std::pair<float, float> latlng() const;
 
   /**
    * Set access mask.
@@ -173,26 +154,10 @@ class OSMNode {
    */
   const NodeAttributes& attributes() const;
 
-
-  //for sorting we purposely only care about the id
-  //so that you can search for a node without more info
-  bool operator == (const OSMNode& other) const {
-    return osmid_ == other.osmid_;
-  }
-  bool operator != (const OSMNode& other) const {
-    return osmid_ != other.osmid_;
-  }
-  bool operator < (const OSMNode& other) const {
-    return osmid_ < other.osmid_;
-  }
-
- protected:
-  uint64_t osmid_;
-
   // Lat,lng of the node
-  OSMLatLng latlng_;
+  float lng, lat;
 
-  // Node attributes
+  // Node attributes. Shared by OSMNode and GraphBuilder Node.
   NodeAttributes attributes_;
 };
 

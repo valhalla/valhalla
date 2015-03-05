@@ -43,22 +43,19 @@ road_class = {
 ["secondary_link"] = 3,
 ["tertiary"] = 4, 
 ["tertiary_link"] = 4, 
-["unclassified"] = 4, 
-["residential"] = 5, 
-["residential_link"] = 5, 
-["service"] = 6 
+["unclassified"] = 5, 
+["residential"] = 6, 
+["residential_link"] = 6
 }
 
 restriction = {
-["no_left_turn"] = 1,
-["no_right_turn"] = 2,
-["no_straight_on"] = 3,
-["no_u_turn"] = 4,
-["only_right_turn"] = 5,
-["only_left_turn"] = 6,
-["only_straight_on"] = 7,
-["no_entry"] = 8,
-["no_exit"]  = 9
+["no_left_turn"] = 0,
+["no_right_turn"] = 1,
+["no_straight_on"] = 2,
+["no_u_turn"] = 3,
+["only_right_turn"] = 4,
+["only_left_turn"] = 5,
+["only_straight_on"] = 6
 }
 
 dow = {
@@ -119,8 +116,8 @@ default_speed = {
 [3] = 60,
 [4] = 50,
 [5] = 40,
-[6] = 20,
-[7] = 30
+[6] = 30,
+[7] = 20
 }
 
 access = {
@@ -341,7 +338,7 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "true"
       end
     end
-  elseif oneway_norm == nil then
+  elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
     if kv["bike_backward"] == "false" then
       kv["bike_backward"] = kv["bike_forward"]
@@ -374,7 +371,7 @@ function filter_tags_generic(kv)
     road_class = 2 --TODO:  can we weight based on ferry types?
   elseif kv["highway"] == nil and kv["railway"] then
     road_class = 2 --TODO:  can we weight based on rail types?    
-  elseif road_class == nil then
+  elseif road_class == nil then --service and other = 7
     road_class = 7
   end 
   
@@ -515,32 +512,34 @@ function rels_proc (kv, nokeys)
      if kv["type"] == "restriction" then
 
        local restrict = restriction[kv["restriction"]]
-       if restrict == nil then
-         kv["restriction"] = 0
-       else
+       if restrict ~= nil then
          kv["restriction"] = restrict
+
+         if kv["day_on"] or kv["day_off"] then
+
+           local day_on = dow[kv["day_on"]]
+           if day_on == nil then
+             kv["day_on"] = 0
+           else
+             kv["day_on"] = day_on
+           end
+
+           local day_off = dow[kv["day_off"]]
+           if day_off == nil then
+             kv["day_off"] = 0
+           else
+             kv["day_off"] = day_off
+           end
+         end
+       else
+         return 1, kv
        end
+       return 0, kv
+     else
+       kv["day_on"] = 0
+       kv["day_off"] = 0
+       return 0, kv
      end
-     
-     if kv["day_on"] or kv["day_off"] then
-    
-       local day_on = dow[kv["day_on"]]
-       if day_on == nil then
-         kv["day_on"] = 0
-       else
-         kv["day_on"] = day_on
-       end
-
-       local day_off = dow[kv["day_off"]]
-       if day_off == nil then
-         kv["day_off"] = 0
-       else
-         kv["day_off"] = day_off
-       end
-
-     end 
-
-     return 0, kv
   end
 
   return 1, kv

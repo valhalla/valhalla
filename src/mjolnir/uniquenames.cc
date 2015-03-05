@@ -57,7 +57,6 @@ size_t UniqueNames::Size() const {
 void UniqueNames::Log() const {
   LOG_INFO("Number of names: " + std::to_string(Size()));
   LOG_INFO("Number of indexes: " + std::to_string(indexes_.size()));
-  LOG_INFO("sizeof nameiter = " +  std::to_string(sizeof(nameiter)));
 }
 
 }

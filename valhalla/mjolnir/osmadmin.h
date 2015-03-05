@@ -13,24 +13,7 @@ namespace mjolnir {
 constexpr uint32_t kMaxMembersPerAdmin = 65535;
 
 // OSM Admin
-class OSMAdmin {
- public:
-
-  /**
-   * Constructor
-   */
-  OSMAdmin();
-
-  /**
-   * Constructor given a way id.
-   * @param   id  way id
-   */
-  OSMAdmin(uint64_t id);
-
-  /**
-   * Destructor
-   */
-  ~OSMAdmin();
+struct OSMAdmin {
 
   /**
    * Set admin id.
@@ -90,9 +73,6 @@ class OSMAdmin {
    * @return  Returns admin level.
    */
   uint32_t admin_level() const;
-
-
- private:
 
   // OSM admin/relation id
   uint64_t osmrelationid_;

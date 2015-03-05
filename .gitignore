@@ -39,11 +39,13 @@ hierarchybuilder
 *.lo
 .libs/
 libvalhalla_mjolnir.la
+*.bin
 
 # tests
 test-suite.log
 test-driver
 test/test_config
+test/directededgebuilder
 test/edgeinfobuilder
 test/uniquenames
 test/idtable

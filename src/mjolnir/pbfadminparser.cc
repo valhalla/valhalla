@@ -2,6 +2,10 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 #include "mjolnir/osmpbfparser.h"
+#include "mjolnir/sequence.h"
+#include "mjolnir/osmadmin.h"
+#include "mjolnir/luatagtransform.h"
+#include "mjolnir/idtable.h"
 
 #include <future>
 #include <utility>
@@ -10,9 +14,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/mjolnir/osmadmin.h>
-#include <valhalla/mjolnir/luatagtransform.h>
-#include <valhalla/mjolnir/idtable.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::midgard;
@@ -21,7 +22,12 @@ using namespace valhalla::mjolnir;
 
 namespace {
 // Will throw an error if this is exceeded. Then we can increase.
-const uint64_t kMaxOSMNodeId = 4000000000;
+constexpr uint64_t kMaxOSMNodeId = 4000000000;
+
+// Node equality
+const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
+  return a.node_id == b.node_id;
+};
 
 struct admin_callback : public OSMPBF::Callback {
  public:
@@ -30,7 +36,7 @@ struct admin_callback : public OSMPBF::Callback {
   virtual ~admin_callback() {}
   // Construct PBFAdminParser based on properties file and input PBF extract
   admin_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
-      : shape_(kMaxOSMNodeId), ways_(kMaxOSMNodeId), osmdata_(osmdata) {
+  : shape_(kMaxOSMNodeId), members_(kMaxOSMNodeId), osmdata_(osmdata) {
 
     // Initialize Lua based on config
     lua_.SetLuaNodeScript(pt.get<std::string>("admintagtransform.node_script"));
@@ -48,37 +54,29 @@ struct admin_callback : public OSMPBF::Callback {
       return;
     }
 
-    // Create a new node and set its attributes
-    osmdata_.nodes.emplace_back(osmid, lng, lat);
+    ++osmdata_.osm_node_count;
 
-    if (osmdata_.nodes.size() % 5000000 == 0) {
-      LOG_INFO("Processed " + std::to_string(osmdata_.nodes.size()) + " nodes on ways");
+    osmdata_.shape_map.emplace(osmid, PointLL(lng,lat));
+
+    if (osmdata_.shape_map.size() % 500000 == 0) {
+      LOG_INFO("Processed " + std::to_string(osmdata_.shape_map.size()) + " nodes on ways");
     }
   }
 
   void way_callback(uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<uint64_t> &nodes) {
 
     // Check if it is in the list of ways used by relations
-    if (!ways_.IsUsed(osmid)) {
+    if (!members_.IsUsed(osmid)) {
       return;
     }
 
-    // Add the refs to the node reference list
-    uint32_t idx = osmdata_.noderefs.size();
     for (const auto node : nodes) {
-      osmdata_.noderefs.push_back(node);
       ++osmdata_.node_count;
       // Mark the nodes that we will care about when processing nodes
       shape_.set(node);
     }
 
-    // Construct OSMWay and set the node ref index and count
-    OSMWay w(osmid);
-    w.set_noderef_index(idx);
-    w.set_node_count(nodes.size());
-
-    // Add the way to the list
-    osmdata_.ways.push_back(std::move(w));
+    osmdata_.way_map.emplace(osmid,std::list<uint64_t>(nodes.begin(), nodes.end()));
   }
 
   void relation_callback(const uint64_t osmid, const OSMPBF::Tags &tags, const std::vector<OSMPBF::Member> &members) {
@@ -87,8 +85,7 @@ struct admin_callback : public OSMPBF::Callback {
     if (results.size() == 0)
       return;
 
-    OSMAdmin admin(osmid);
-    uint64_t from_way_id = 0;
+    OSMAdmin admin{osmid};
 
     for (const auto& tag : results) {
 
@@ -99,32 +96,30 @@ struct admin_callback : public OSMPBF::Callback {
 
     }
 
-    uint32_t idx = osmdata_.memberids_.size();
-    uint32_t count = 0;
+    std::list<uint64_t> member_ids;
 
     for (const auto& member : members) {
 
       if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-        ways_.set(member.member_id);
-        osmdata_.memberids_.push_back(member.member_id);
-        count++;
+        members_.set(member.member_id);
+        member_ids.push_back(member.member_id);
+        ++osmdata_.osm_way_count;
       }
     }
 
-    admin.set_member_index(idx);
-    admin.set_member_count(count);
+    admin.set_ways(member_ids);
 
     osmdata_.admins_.push_back(std::move(admin));
   }
 
-// Lua Tag Transformation class
-LuaTagTransform lua_;
+  // Lua Tag Transformation class
+  LuaTagTransform lua_;
 
-// Mark the OSM Ids used by the ways and relations
-IdTable shape_, ways_;
+  // Mark the OSM Ids used by the ways and relations
+  IdTable shape_, members_;
 
-// Pointer to all the OSM data (for use by callbacks)
-OSMData& osmdata_;
+  // Pointer to all the OSM data (for use by callbacks)
+  OSMData& osmdata_;
 
 };
 
@@ -136,53 +131,41 @@ namespace mjolnir {
 OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
-  OSMData osmdata{};
+  OSMData osmdata{"admin_ways.bn", "admin_way_node_ref.bn"};
   admin_callback callback(pt, osmdata);
-  OSMPBF::Parser parser(callback);
 
-  // Parse each input file - first pass
+  // Parse each input file for relations
+  auto t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
-    // Parse relations.
-    auto t1 = std::chrono::high_resolution_clock::now();
-    parser.parse(input_file, OSMPBF::Interest::RELATIONS);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Admin count = " + std::to_string(callback.osmdata_.admins_.size()));
-    LOG_INFO("Member/ways count = " + std::to_string(callback.osmdata_.memberids_.size()));
-
-    // Parse the ways. Find all node Ids needed. Shrink the OSM ways vector
-    // and the OSM node reference vector (list of nodes that the ways include).
-    t1 = std::chrono::high_resolution_clock::now();
-    parser.parse(input_file, OSMPBF::Interest::WAYS);
-    osmdata.ways.shrink_to_fit();
-    osmdata.noderefs.shrink_to_fit();
-    t2 = std::chrono::high_resolution_clock::now();
-    msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Admin ways count = " + std::to_string(osmdata.ways.size()));
-    LOG_INFO("Number of noderefs = " + std::to_string(osmdata.noderefs.size()));
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
   }
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
+  LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Admin count = " + std::to_string(osmdata.admins_.size()));
+  LOG_INFO("Member/ways count = " + std::to_string(osmdata.osm_way_count));
+
+
+  // Parse the ways.
+  t = std::chrono::high_resolution_clock::now();
+  for (const auto& input_file : input_files) {
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
+  }
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
+  LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Admin ways count = " + std::to_string(osmdata.way_map.size()));
+  LOG_INFO("Number of noderefs = " + std::to_string(osmdata.node_count));
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
-  // TODO: we know how many knows we expect, stop early once we have that many
+  LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
+  t = std::chrono::high_resolution_clock::now();
   for (const auto& input_file : input_files) {
-    auto t1 = std::chrono::high_resolution_clock::now();
-    LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-    osmdata.nodes.reserve(osmdata.node_count);
-    parser.parse(input_file, OSMPBF::Interest::NODES);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Nodes included on Admin ways, count = " + std::to_string(osmdata.nodes.size()));
+    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
+  LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Nodes included on Admin ways, count = " + std::to_string(osmdata.osm_node_count));
 
-  // Sort the OSM ways vector by OSM Id
-  std::sort(osmdata.ways.begin(), osmdata.ways.end());
-
-  // Sort the OSM nodes vector by OSM Id
-  std::sort(osmdata.nodes.begin(), osmdata.nodes.end());
 
   // Return OSM data
   return osmdata;

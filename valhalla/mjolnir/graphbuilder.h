@@ -19,8 +19,8 @@
 #include <valhalla/mjolnir/osmdata.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/sequence.h>
 #include <valhalla/mjolnir/dataquality.h>
-
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 
 namespace valhalla {
@@ -35,14 +35,13 @@ struct Edge {
   // GraphId of the source (start) node of the edge
   baldr::GraphId sourcenode_;
 
-  // GraphId of the target (end) node of the edge
-  baldr::GraphId targetnode_;
-
   // Index into the list of OSM way information
   uint32_t wayindex_;
 
+  // Index of the first lat,lng into the GraphBuilder latlngs
+  uint32_t llindex_;
+
   // Attributes needed to sort the edges
-  // Note - this doesn't change the size of the structure...
   struct EdgeAttributes {
     uint32_t llcount          : 16;
     uint32_t importance       : 3;
@@ -56,8 +55,9 @@ struct Edge {
   };
   EdgeAttributes attributes;
 
-  // Index of the first lat,lng into the GraphBuilder latlngs
-  uint32_t llindex_;
+  // GraphId of the target (end) node of the edge
+  baldr::GraphId targetnode_;
+
 
   /**
    * Construct a new edge. Target node and additional lat,lngs will
@@ -65,38 +65,18 @@ struct Edge {
    * @param sourcenode   Start node of the edge
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
-   * @param importance   Importance (classification) of the edge
-   * @param driveforward Auto use in the forward direction of the edge
-   * @param drivereverse Auto use in the reverse direction of the edge
    */
-  Edge(const baldr::GraphId& sourcenode, const uint32_t wayindex,
-       const uint32_t llindex, const OSMWay& way)
-      : sourcenode_(sourcenode),
-        targetnode_{},
-        wayindex_(wayindex),
-        llindex_(llindex) {
-    attributes.llcount = 1;
-    attributes.importance = static_cast<uint32_t>(way.road_class());
-    attributes.driveableforward = way.auto_forward();
-    attributes.driveablereverse = way.auto_backward();
-    attributes.link = way.link();
-    attributes.traffic_signal = false;
-    attributes.forward_signal = false;
-    attributes.backward_signal = false;
-
+  static Edge make_edge(const baldr::GraphId& sourcenode, const uint32_t wayindex,
+       const uint32_t llindex, const OSMWay& way) {
+    Edge e{sourcenode, wayindex, llindex};
+    e.attributes.llcount = 1;
+    e.attributes.importance = static_cast<uint32_t>(way.road_class());
+    e.attributes.driveableforward = way.auto_forward();
+    e.attributes.driveablereverse = way.auto_backward();
+    e.attributes.link = way.link();
+    return e;
   }
 
- private:
-  /**
-   * Default constructor
-   */
-  Edge()
-      : sourcenode_{},
-        targetnode_{},
-        attributes{},
-        wayindex_(0),
-        llindex_(0) {
-  }
 };
 
 /**
@@ -292,14 +272,15 @@ class GraphBuilder {
   /**
    * Update road class / importance of links (ramps)
    */
-  void ReclassifyLinks(const WayVector& ways);
+  void ReclassifyLinks(const std::string& ways_file);
 
   /**
    * Get the best classification for any non-link edges from a node.
    * @param  node  Node - gets outbound edges from this node.
+   * @param  edges The file backed list of edges in the graph.
    * @return  Returns the best (most important) classification
    */
-  uint32_t GetBestNonLinkClass(const Node& node) const;
+  uint32_t GetBestNonLinkClass(const Node& node, sequence<Edge>& edges) const;
 
   /**
    * Build tiles representing the local graph
@@ -334,13 +315,10 @@ class GraphBuilder {
   uint32_t level_;
   TileHierarchy tile_hierarchy_;
 
-  // Vector to hold shape of edges. Each edge indexes into the vector
-  std::vector<OSMLatLng> latlngs_;
-
-  // Map of OSM node Ids to GraphIds
+  // Map of OSM node Ids to GraphIds, for sparse objects like exits,
   std::unordered_map<uint64_t, GraphId> nodes_;
 
-  // Map that stores all the refereence info on a node
+  // Map that stores all the reference info on a node
   std::unordered_map<baldr::GraphId, std::string> node_ref_;
 
   // Map that stores all the exit to info on a node
@@ -349,8 +327,8 @@ class GraphBuilder {
   // Map that stores all the name info on a node
   std::unordered_map<baldr::GraphId, std::string> node_name_;
 
-  // Stores all the edges
-  std::vector<Edge> edges_;
+  // Stores all the edges in this file
+  std::string edges_file_;
 
   // A place to keep each tile's nodes so that various threads can
   // write various tiles asynchronously
