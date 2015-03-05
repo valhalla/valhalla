@@ -429,7 +429,9 @@ std::string Maneuver::ToParameterString() const {
   man_str += cross_street_names_.ToParameterString();
 
   man_str += delim;
+  man_str += "\"";
   man_str += instruction_;
+  man_str += "\"";
 
   man_str += delim;
   man_str += std::to_string(distance_);
