@@ -196,26 +196,15 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
 
     // List of polygons for multipolygon
     std::unique_ptr<std::vector<Geometry*> > polygons(new std::vector<Geometry*>);
-    // Make a multipolygon if required
-    /*if (toplevelpolygons > 1)
-            {
-              std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
-              if (!multipoly->isValid()) {
-                multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-              }
-              multipoly->normalize();
 
-              if (multipoly->isValid())
-                wkts.push_back(writer.write(multipoly.get()));
-            }*/
     // For each top level polygon create a new polygon including any holes
     for (unsigned i=0 ;i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0)
-        continue;
+      if (polys[i].iscontained != 0) continue;
 
       // List of holes for this top level polygon
       std::unique_ptr<std::vector<Geometry*> > interior(new std::vector<Geometry*>);
-      for (unsigned j=i+1; j < totalpolys; ++j) {
+      for (unsigned j=i+1; j < totalpolys; ++j)
+      {
         if (polys[j].iscontained == 1 && polys[j].containedbyid == i)
           interior->push_back(polys[j].ring);
       }
@@ -225,17 +214,30 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
       polygons->push_back(poly);
     }
 
-    for(unsigned i=0; i<toplevelpolygons; i++) {
-      Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
-      if (!poly->isValid()) {
-        poly = dynamic_cast<Geometry*>(poly->buffer(0));
-        poly->normalize();
+    // Make a multipolygon if required
+   // if (toplevelpolygons >= 1) {
+      std::unique_ptr<Geometry> multipoly(gf.createMultiPolygon(polygons.release()));
+      if (!multipoly->isValid()) {
+        multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
       }
-      if (poly->isValid())
-        wkts.push_back(writer.write(poly));
+      multipoly->normalize();
 
-      delete(poly);
-    }
+      if (multipoly->isValid())
+        wkts.push_back(writer.write(multipoly.get()));
+ /*   }
+    else {
+      for(unsigned i=0; i<toplevelpolygons; i++)
+      {
+        Geometry* poly = dynamic_cast<Geometry*>(polygons->at(i));
+        if (!poly->isValid()) {
+          poly = dynamic_cast<Geometry*>(poly->buffer(0));
+          poly->normalize();
+        }
+        if (poly->isValid())
+          wkts.push_back(writer.write(poly));
+        delete(poly);
+      }
+    }*/
   }
 
   for (unsigned i=0; i < totalpolys; ++i)
@@ -304,10 +306,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close(db_handle);
     return;
   }
-
   /* creating a POLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'POLYGON', 'XY')";
+  sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -323,7 +324,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * this time too we'll use a Prepared Statement
    */
   sql = "INSERT INTO admins (id, name, geom) ";
-  sql += "VALUES (?, ?, GeomFromText(?, 4326))";
+  sql += "VALUES (?, ?, CastToMulti(GeomFromText(?, 4326)))";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -406,6 +407,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           }
           LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
           LOG_ERROR("sqlite3_step() error: " + std::string(wkt));
+          LOG_ERROR("sqlite3_step() error: " + std::string(admin.name()));
 
         }
       }// has data
