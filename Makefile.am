@@ -99,7 +99,7 @@ libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPP
 libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ 
 
 #distributed executables
-bin_PROGRAMS = \ 
+bin_PROGRAMS = \
 	pbfgraphbuilder \
 	pbfadminbuilder
 
