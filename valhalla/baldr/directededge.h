@@ -362,12 +362,11 @@ class DirectedEdge {
   Turn::Type turntype(const uint32_t localidx) const;
 
   /**
-   * Is there a consistent name between this edge and the
-   * prior edge given its local index (index of the inbound edge).
-   * @param  localidx  Local index at the node of the inbound edge.
-   * @return  Returns true if there is a consistent name, false if not.
+   * Is there an edge to the left, in between the from edge and this edge.
+   * @param localidx  Local index at the node of the inbound edge.
+   * @return  Returns true if there is an edge to the left, false if not.
    */
-  bool consistent_name(const uint32_t localidx) const;
+  bool edge_to_left(const uint32_t localidx) const;
 
   /**
    * Get the stop impact when transitioning from the prior edge (given
@@ -377,7 +376,12 @@ class DirectedEdge {
    */
   uint32_t stopimpact(const uint32_t localidx) const;
 
-  // TODO - intersection transitions
+  /**
+   * Is there an edge to the right, in between the from edge and this edge.
+   * @param localidx  Local index at the node of the inbound edge.
+   * @return  Returns true if there is an edge to the right, false if not.
+   */
+  bool edge_to_right(const uint32_t localidx) const;
 
   /**
    * Get the computed version of DirectedEdge attributes.
@@ -471,26 +475,22 @@ class DirectedEdge {
 
   // Turn types between edges
   struct TurnTypes {
-    uint32_t turntype        : 24; // Turn type
-    uint32_t consistent_name :  8; // Name consistency between edges
+    uint32_t turntype      : 24; // Turn type (see graphconstants.h)
+    uint32_t edge_to_left  :  8; // Is there an edge to the left (between the
+                                 // "from edge" and this edge)
   };
   TurnTypes turntypes_;
 
   // Stop impact among edges
   struct StopImpact {
     uint32_t stopimpact      : 24; // Stop impact between edges
-    uint32_t spare           :  8;
+    uint32_t edge_to_right   :  8; // Is there an edge to the right (between
+                                   // "from edge" and this edge)
   };
   StopImpact stopimpact_;
 
-  // TODO - can use this for extra edge transition logic if needed
+  // Spare
   uint32_t spare;
-
-  // TODO - fields for describing intersection transitions
-  struct IntersectionTransition {
-    uint64_t spare           : 64;
-  };
-  IntersectionTransition transitions_;
 };
 
 }

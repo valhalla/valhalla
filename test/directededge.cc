@@ -5,9 +5,9 @@
 using namespace std;
 using namespace valhalla::baldr;
 
-// Expected size is 48 bytes. Since there are still "spare" bits
+// Expected size is 40 bytes. Since there are still "spare" bits
 // we want to alert if somehow any change grows this structure size
-constexpr size_t kDirectedEdgeExpectedSize = 48;
+constexpr size_t kDirectedEdgeExpectedSize = 40;
 
 namespace {
 
