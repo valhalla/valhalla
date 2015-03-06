@@ -38,7 +38,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
-    LOG_ERROR("EXCEEDING kMaxEncodedShapeSize: " +
+    LOG_ERROR("Exceeding  max encoded shape size: " +
               std::to_string(eib.encoded_shape_.size()));
     item.fields.encoded_shape_size = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {
