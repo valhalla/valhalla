@@ -48,6 +48,9 @@ class PathAlgorithm {
   void Clear();
 
  protected:
+  // Allow transitions (set from the costing model)
+  bool allow_transitions_;
+
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;
 
@@ -81,6 +84,18 @@ class PathAlgorithm {
       const std::shared_ptr<DynamicCost>& costing);
 
   /**
+   * Handle transition edges. Will add any that are allowed to the
+   * adjacency list.
+   * @param level      Current hierarchy level
+   * @param edge       Directed edge (a transition edge)
+   * @param pred       Predecessor information
+   * @param predindex  Predecessor index in the edge labels.
+   */
+  void HandleTransitionEdge(const uint32_t level,const baldr::GraphId& edgeid,
+                      const baldr::DirectedEdge* edge,
+                      const EdgeLabel& pred, const uint32_t predindex);
+
+  /**
    * Add edges at the origin to the adjacency list
    */
   void SetOrigin(baldr::GraphReader& graphreader, const baldr::PathLocation& origin,
@@ -102,10 +117,15 @@ class PathAlgorithm {
 
   /**
    * Form the path from the adjacency list.
-   * TODO - support partial distances at origin/destination
+   * @param   dest  Index in the edge labels of the destination edge.
+   * @param   graphreader  Graph tile reader
+   * @param   loop   GraphId representing the loop edge (invalid if none)
+   * @return  Returns a list of GraphIds representing the directed edges
+   *          along the path - ordered from origin to destination.
    */
   std::vector<baldr::GraphId> FormPath(const uint32_t dest,
-                                       baldr::GraphReader& graphreader, const baldr::GraphId& loop);
+                                       baldr::GraphReader& graphreader,
+                                       const baldr::GraphId& loop);
 
   /**
    * TODO - are we keeping these?
