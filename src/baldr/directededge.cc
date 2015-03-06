@@ -15,7 +15,7 @@ DirectedEdge::DirectedEdge()
       attributes_{},
       turntypes_{},
       stopimpact_{},
-      transitions_{} {
+      spare() {
 }
 
 // Gets the end node of this directed edge.
@@ -270,11 +270,9 @@ Turn::Type DirectedEdge::turntype(const uint32_t localidx) const {
       ((turntypes_.turntype & (7 << shift))) >> shift);
 }
 
-// Is there a consistent name between this edge and the
-// prior edge given its local index (index of the inbound edge).
-bool DirectedEdge::consistent_name(const uint32_t localidx) const {
-  // Consistent name is 1 bit - starts at 24th bit
-  return (turntypes_.turntype & (1 << (24 + localidx)));
+// Is there an edge to the left, in between the from edge and this edge.
+bool DirectedEdge::edge_to_left(const uint32_t localidx) const {
+  return (turntypes_.edge_to_left & (1 << localidx));
 }
 
 // Get the stop impact when transitioning from the prior edge (given
@@ -283,6 +281,11 @@ uint32_t DirectedEdge::stopimpact(const uint32_t localidx) const {
   // Stop impact is 3 bits per index
   uint32_t shift = localidx * 3;
   return (stopimpact_.stopimpact & (7 << shift)) >> shift;
+}
+
+// Is there an edge to the right, in between the from edge and this edge.
+bool DirectedEdge::edge_to_right(const uint32_t localidx) const {
+  return (stopimpact_.edge_to_right & (1 << localidx));
 }
 
 // Get the internal version. Used for data validity checks.
@@ -410,14 +413,14 @@ const uint64_t DirectedEdge::internal_version() {
   // Turn types
   de.turntypes_.turntype = ~de.turntypes_.turntype;
   boost::hash_combine(seed,ffs(de.turntypes_.turntype+1)-1);
-  de.turntypes_.consistent_name = ~de.turntypes_.consistent_name;
-  boost::hash_combine(seed,ffs(de.turntypes_.consistent_name+1)-1);
+  de.turntypes_.edge_to_left = ~de.turntypes_.edge_to_left;
+  boost::hash_combine(seed,ffs(de.turntypes_.edge_to_left+1)-1);
 
   // Stop impact
   de.stopimpact_.stopimpact = ~de.stopimpact_.stopimpact;
   boost::hash_combine(seed,ffs(de.stopimpact_.stopimpact+1)-1);
-
-  // IntersectionTransition (TODO)
+  de.stopimpact_.edge_to_right = ~de.stopimpact_.edge_to_right;
+  boost::hash_combine(seed,ffs(de.stopimpact_.edge_to_right+1)-1);
 
   boost::hash_combine(seed,sizeof(DirectedEdge));
 

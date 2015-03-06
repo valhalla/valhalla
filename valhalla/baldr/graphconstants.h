@@ -38,6 +38,14 @@ union Access {
   uint8_t v;
 };
 
+// Edge driveability (auto)
+enum class Driveability {
+  kNone = 0,        // Edge is not driveable in either direction
+  kForward = 1,     // Edge is driveable in the forward direction
+  kBackward = 2,    // Edge is driveable in the backward direction
+  kBoth = 3         // Edge is driveable in both directions
+};
+
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
   kMotorway = 0,
