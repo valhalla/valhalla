@@ -70,7 +70,7 @@ class EdgeInfo {
 
       uint32_t name_count          :4;
       uint32_t encoded_shape_size  :16;
-      uint32_t spar                :12;
+      uint32_t spare               :12;
     } fields;
     uint32_t value;
   };
