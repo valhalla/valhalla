@@ -1,6 +1,10 @@
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>
 
+namespace {
+const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
+}
+
 namespace valhalla {
 namespace baldr {
 
@@ -11,7 +15,8 @@ NodeInfo::NodeInfo()
       intersection_(IntersectionType::kFalse),
       type_{},
       admin_{},
-      stop_id_(0) {
+      stop_{},
+      headings_(0) {
 }
 
 // Get the latitude, longitude
@@ -60,6 +65,13 @@ bool NodeInfo::dst() const {
   return admin_.dst;
 }
 
+// Get the driveability of the local directed edge given a local
+// edge index.
+Driveability NodeInfo::local_driveability(const uint32_t localidx) const {
+  uint32_t s = localidx * 2;     // 2 bits per index
+  return static_cast<Driveability>((type_.local_driveability & (3 << s)) >> s);
+}
+
 // Get the relative density at the node.
 uint32_t NodeInfo::density() const {
   return type_.density;
@@ -105,7 +117,30 @@ bool NodeInfo::traffic_signal() const {
 // Gets the transit stop Id. This is used for schedule lookups
 // and possibly queries to a transit service.
 uint32_t NodeInfo::stop_id() const {
-  return stop_id_;
+  return stop_.stop_id;
+}
+
+// Get the name consistency between a pair of local edges. This is limited
+// to the first 8 local edge indexes.
+bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
+  if (from == to) {
+    return true;
+  } else if (from < to) {
+    return (to > kMaxLocalDriveable) ? false :
+        (stop_.name_consistency & 1 << (ContinuityLookup[from] + (to-from-1)));
+  } else {
+    return (from > kMaxLocalDriveable) ? false :
+        (stop_.name_consistency & 1 << (ContinuityLookup[to] + (from-to-1)));
+  }
+}
+
+// Get the heading of the local edge given its local index. Supports
+// up to 8 local edges. Headings are stored rounded off to 2 degree
+// values.
+uint32_t NodeInfo::heading(const uint32_t localidx) const {
+  // Make sure everything is 64 bit!
+  uint64_t shift = localidx * 8;     // 8 bits per index
+  return ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * 2;
 }
 
 // Get the hash_value
@@ -117,7 +152,7 @@ const uint64_t NodeInfo::internal_version() {
   ni.admin_ = {};
   ni.attributes_ = {};
   ni.intersection_ = IntersectionType::kFalse;
-  ni.stop_id_ = 0;
+  ni.stop_ = {};
   ni.type_ = {};
 
   uint64_t seed = 0;
@@ -160,6 +195,8 @@ const uint64_t NodeInfo::internal_version() {
   ni.admin_.spare = ~ni.admin_.spare;
   boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
 
+  ni.type_.local_driveability = ~ni.type_.local_driveability;
+  boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
   ni.type_.density = ~ni.type_.density;
   boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
   ni.type_.type = ~ni.type_.type;
@@ -176,10 +213,10 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed,ffs(ni.type_.mode_change+1)-1);
   ni.type_.traffic_signal = ~ni.type_.traffic_signal;
   boost::hash_combine(seed,ffs(ni.type_.traffic_signal+1)-1);
-  ni.type_.spare = ~ni.type_.spare;
-  boost::hash_combine(seed,ffs(ni.type_.spare+1)-1);
 
-  boost::hash_combine(seed,ni.stop_id_);
+  boost::hash_combine(seed,ni.stop_.stop_id);
+
+  boost::hash_combine(seed,ni.headings_);
 
   boost::hash_combine(seed,sizeof(NodeInfo));
 

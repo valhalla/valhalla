@@ -7,9 +7,9 @@ using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-// Expected size is 24 bytes. Since there are still "spare" bits
+// Expected size is 32 bytes. Since there are still "spare" bits
 // we want to alert if somehow any change grows this structure size
-constexpr size_t kNodeInfoExpectedSize = 24;
+constexpr size_t kNodeInfoExpectedSize = 32;
 
 namespace {
 

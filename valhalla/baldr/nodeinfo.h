@@ -11,11 +11,11 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxTileEdgeCount = 4194303;   // 2^22 directed edges
-constexpr uint32_t kMaxEdgesPerNode  = 127;       // Maximum edges per node
-constexpr uint32_t kMaxLocalDriveable = 15;       // Max. count of driveable
+constexpr uint32_t kMaxTileEdgeCount  = 4194303;  // 2^22 directed edges
+constexpr uint32_t kMaxEdgesPerNode   = 127;      // Maximum edges per node
+constexpr uint32_t kMaxLocalDriveable = 7;        // Max. index of driveable
                                                   // edges on local level
-constexpr uint32_t kMaxDensity = 15;              // Maximum node density
+constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 
 /**
  * Information held for each node within the graph. The graph uses a forward
@@ -88,6 +88,14 @@ class NodeInfo {
   bool dst() const;
 
   /**
+   * Get the driveability of the local directed edge given a local
+   * edge index.
+   * @param  localidx  Local edge index.
+   * @return Returns driveability (see graphconstants.h)
+   */
+  Driveability local_driveability(const uint32_t localidx) const;
+
+  /**
    * Get the relative density (TODO - define) at the node.
    * @return  Returns relative density (0-15).
    */
@@ -145,6 +153,25 @@ class NodeInfo {
   uint32_t stop_id() const;
 
   /**
+   * Get the name consistency between a pair of local edges. This is limited
+   * to the first 8 local edge indexes.
+   * @param  from  Local index of the from edge.
+   * @param  to    Local index of the to edge.
+   * @return  Returns true if names are consistent, false if not (or if from
+   *          or to index exceeds max).
+   */
+  bool name_consistency(const uint32_t from, const uint32_t to) const;
+
+  /**
+   * Get the heading of the local edge given its local index. Supports
+   * up to 8 local edges. Headings are stored rounded off to 2 degree
+   * values.
+   * @param  localidx  Local edge index.
+   * @return Returns heading relative to N (0-360 degrees).
+   */
+  uint32_t heading(const uint32_t localidx) const;
+
+  /**
    * Get the computed version of NodeInfo attributes.
    * @return   Returns internal version.
    */
@@ -181,20 +208,28 @@ class NodeInfo {
 
   // Node type
   struct NodeTypeInfo {
-    uint32_t density          : 4; // Density (population? edges?)
-    uint32_t type             : 4; // Node type
-    uint32_t local_driveable  : 4; // Number of driveable edges on local level
-    uint32_t end              : 1; // End node (only connects to 1 edge)
-    uint32_t parent           : 1; // Is this a parent node
-    uint32_t child            : 1; // Is this a child node
-    uint32_t mode_change      : 1; // Mode change allowed?
-    uint32_t traffic_signal   : 1; // Traffic signal
-    uint32_t spare            : 15;
+    uint32_t local_driveability : 16; // Driveability of up to 8 local edges
+    uint32_t density            : 4;  // Density (population? edges?)
+    uint32_t type               : 4;  // Node type
+    uint32_t local_driveable    : 3;  // # of driveable edges on local level
+    uint32_t end                : 1;  // End node (only connects to 1 edge)
+    uint32_t parent             : 1;  // Is this a parent node
+    uint32_t child              : 1;  // Is this a child node
+    uint32_t mode_change        : 1;  // Mode change allowed?
+    uint32_t traffic_signal     : 1;  // Traffic signal
+
   };
   NodeTypeInfo type_;
 
   // Transit stop Id
-  uint32_t stop_id_;
+  union NodeStop {
+    uint32_t stop_id;
+    uint32_t name_consistency;
+  };
+  NodeStop stop_;
+
+  // Headings of up to 8 local edges (rounded to nearest 2 degrees)
+  uint64_t headings_;
 };
 
 }
