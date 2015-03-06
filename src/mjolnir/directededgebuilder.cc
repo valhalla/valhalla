@@ -302,9 +302,9 @@ void DirectedEdgeBuilder::set_speed_type(const SpeedType speed_type) {
 // at the end node of this directed edge. Only stored for the first 8 edges
 // so it can be used for edge transition costing.
 void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
-  if (idx > kMaxOppLocalIdx) {
-    LOG_ERROR("Exceeding max opposing local index: " + std::to_string(idx));
-    attributes_.opp_local_idx = kMaxOppLocalIdx;
+  if (idx > kMaxEdgesPerNode) {
+    LOG_ERROR("Exceeding max edges in opposing local index: " + std::to_string(idx));
+    attributes_.opp_local_idx = kMaxEdgesPerNode;
   } else {
     attributes_.opp_local_idx = idx;
   }
