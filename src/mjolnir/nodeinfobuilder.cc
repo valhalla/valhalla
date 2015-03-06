@@ -211,8 +211,9 @@ void NodeInfoBuilder::set_heading(const uint32_t localidx, const float heading) 
    } else if (localidx > kMaxLocalDriveable) {
      LOG_WARN("Local index exceeds max in set_heading, skip");
    } else {
-     // Has to be 64 bit!
-     uint32_t hdg = static_cast<uint32_t>((heading * 0.5f) + 0.5f);
+     // Has to be 64 bit! Round values above 359 to 0 degrees.
+     uint32_t hdg = (heading > 359.0) ?
+                     0 : static_cast<uint32_t>((heading * 0.5f) + 0.5f);
      headings_ |= static_cast<uint64_t>(hdg) << static_cast<uint64_t>(localidx * 8);
    }
 }
