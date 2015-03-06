@@ -58,8 +58,7 @@ void write_tiles(const std::string& config_file) {
   auto osmdata = valhalla::mjolnir::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
   valhalla::mjolnir::GraphBuilder builder(conf.get_child("mjolnir"));
   builder.Build(osmdata);
-  valhalla::mjolnir::GraphEnhancer enhancer(conf.get_child("mjolnir.hierarchy"));
-  enhancer.Enhance();
+  valhalla::mjolnir::GraphEnhancer::Enhance(conf.get_child("mjolnir.hierarchy"));
   valhalla::mjolnir::GraphOptimizer graphoptimizer(conf.get_child("mjolnir.hierarchy"));
   graphoptimizer.Optimize();
 }
