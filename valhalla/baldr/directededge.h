@@ -33,9 +33,6 @@ constexpr uint32_t kMaxLaneCount = 15;
 // Number of edges considered for edge transitions
 constexpr uint32_t kNumberOfEdgeTransitions = 8;
 
-// Maximum opposing local edge index
-constexpr uint32_t kMaxOppLocalIdx = 15;
-
 // Maximum stop impact
 constexpr uint32_t kMaxStopImpact = 7;
 
@@ -447,8 +444,8 @@ class DirectedEdge {
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
     uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
-    uint64_t opp_local_idx  : 4;  // Opposing local edge index (for costing)
-    uint64_t spare          : 3;
+    uint64_t opp_local_idx  : 7;  // Opposing local edge index (for costing
+                                  // and Uturn detection)
   };
   Attributes attributes_;
 
