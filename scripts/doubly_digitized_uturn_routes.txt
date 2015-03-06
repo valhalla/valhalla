@@ -5,3 +5,4 @@
 -o "38.786160,-77.650200,stop,Stonewall Shops Square" -d "38.786144,-77.650337,stop,Stonewall Shops Square" -t auto --config ../conf/valhalla.json
 -o "39.496216,-76.328972,stop,MD 24" -d "39.496120,-76.329254,stop,MD 24" -t auto --config ../conf/valhalla.json
 -o "39.738953,-105.153786,stop,Cole Blvd" -d "39.738953,-105.153603,stop,Cole Blvd" -t auto --config ../conf/valhalla.json
+-o "39.308140,-76.532784,stop,Pulaski Highway" -d "39.308372,-76.532722,stop,Pulaski Highway" -t auto --config ../conf/valhalla.json
