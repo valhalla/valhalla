@@ -129,7 +129,7 @@ class EdgeLabel {
   /**
    * Get the opposing local index. This is the index of the incoming edge
    * (on the local hierarchy) at the end node of the predecessor directed
-   * edge. This is used for edge transition costs.
+   * edge. This is used for edge transition costs and Uturn detection.
    * @return  Returns the local index of the incoming edge.
    */
   uint32_t opp_local_idx() const;
@@ -167,14 +167,17 @@ class EdgeLabel {
    * trans_down:  Was the prior edge a transition down to a lower level
    * restrictions: Bit mask of edges (by local edge index at the end node)
    *               that are restricted (simple turn restrictions)
+   * opp_local_idx: Index at the end node of the opposing local edge. This
+   *                value can be compared to the directed edge local_edge_idx
+   *                for edge transition costing and Uturn detection.
    */
   struct Attributes {
-    uint32_t uturn_index   : 5;
+    uint32_t uturn_index   : 7;
     uint32_t trans_up      : 1;
     uint32_t trans_down    : 1;
     uint32_t restrictions  : 7;
-    uint32_t opp_local_idx : 4;
-    uint32_t spare         : 14;
+    uint32_t opp_local_idx : 7;
+    uint32_t spare         : 9;
   };
   Attributes attributes_;
 

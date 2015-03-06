@@ -26,17 +26,11 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       truecost_(cost),
       sortcost_(sortcost),
       distance_(dist) {
-  endnode_                 = edge->endnode();
-  attributes_.uturn_index  = edge->opp_index();
-  attributes_.trans_up     = edge->trans_up();
-  attributes_.trans_down   = edge->trans_down();
-
-  // Set the simple restrictions mask. If the edge is a transition edge
-  // the prior edge restriction mask is used.
-  attributes_.restrictions = (edge->trans_up() || edge->trans_down()) ?
-        restrictions : edge->restrictions();
-
-  // Set the opposing local index.
+  endnode_                  = edge->endnode();
+  attributes_.uturn_index   = edge->opp_index();
+  attributes_.trans_up      = edge->trans_up();
+  attributes_.trans_down    = edge->trans_down();
+  attributes_.restrictions  = restrictions;
   attributes_.opp_local_idx = edge->opp_local_idx();
 }
 
