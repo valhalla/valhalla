@@ -57,7 +57,8 @@ namespace thor {
 
 // Default constructor
 PathAlgorithm::PathAlgorithm()
-    : edgelabel_index_(0),
+    : allow_transitions_(false),
+      edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
       best_destination_{kInvalidLabel, std::numeric_limits<float>::max()}{
@@ -112,7 +113,8 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing->GetHierarchyLimits();
+  allow_transitions_ = costing->AllowTransitions();
+  hierarchy_limits_  = costing->GetHierarchyLimits();
 }
 
 // Calculate best path.
@@ -136,12 +138,11 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
   // Find shortest path
   const GraphTile* tile;
-  GraphId edgeid;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t next_label_index = adjacencylist_->Remove(edgelabels_);
-    if (next_label_index == kInvalidLabel) {
+    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    if (predindex == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
       if(best_destination_.first != kInvalidLabel)
         return FormPath(best_destination_.first, graphreader, loop_edge);
@@ -152,13 +153,14 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       throw std::runtime_error("No path could be found for input");
     }
 
-    // Remove label from adjacency list, mark it as done
-    const EdgeLabel& nextlabel = edgelabels_[next_label_index];
-    RemoveFromAdjMap(nextlabel.edgeid());
-    edgestatus_->Set(nextlabel.edgeid(), kPermanent);
+    // Remove label from adjacency list, mark it as done - copy the EdgeLabel
+    // for use in costing
+    EdgeLabel pred = edgelabels_[predindex];
+    RemoveFromAdjMap(pred.edgeid());
+    edgestatus_->Set(pred.edgeid(), kPermanent);
 
     // Check for completion. Form path and return if complete.
-    if (IsComplete(next_label_index)) {
+    if (IsComplete(predindex)) {
       return FormPath(best_destination_.first, graphreader, loop_edge);
     }
 
@@ -166,14 +168,14 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Get the end node of the prior directed edge and the current distance
     // to the destination.
-    GraphId node    = nextlabel.endnode();
-    float dist2dest = nextlabel.distance();
+    GraphId node    = pred.endnode();
+    float dist2dest = pred.distance();
     uint32_t level  = node.level();
 
     // Check hierarchy. Count upward transitions (counted on the level
     // transitioned from). Do not expand based on hierarchy level based on
     // number of upward transitions and distance to the destination
-    if (nextlabel.trans_up()) {
+    if (pred.trans_up()) {
       hierarchy_limits_[level+1].up_transition_count++;
     }
     if (hierarchy_limits_[level].StopExpanding(dist2dest)) {
@@ -185,12 +187,6 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       continue;
     }
 
-    // Set temp variables here. EdgeLabel is not good inside the loop
-    // below since the edgelabel list is modified
-    float currentcost    = nextlabel.truecost();
-    uint32_t uturn_index = nextlabel.uturn_index();
-    uint32_t restriction = nextlabel.restrictions();
-
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
@@ -199,16 +195,15 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Expand from end node. Identify if this node has shortcut edges
     // (they occur first so just check the first directed edge).
-    edgeid.Set(node.tileid(), node.level(), nodeinfo->edge_index());
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
-      // Skip any transition edges that are not allowed.
-      if ((directededge->trans_up() && (!costing->AllowTransitions() ||
-          !hierarchy_limits_[level].AllowUpwardTransition(dist2dest))) ||
-          (directededge->trans_down() &&
-          !hierarchy_limits_[level].AllowDownwardTransition(dist2dest))) {
+      // Handle transition edges they either get skipped or added to the
+      // adjacency list using the predecessor info
+      if (directededge->trans_up() || directededge->trans_down()) {
+        HandleTransitionEdge(level, edgeid, directededge, pred,  predindex);
         continue;
       }
 
@@ -221,8 +216,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Skip any superseded edges if edges include shortcuts. Also skip
       // if no access is allowed to this edge (based on costing method)
       if ((has_shortcuts && directededge->superseded()) ||
-          !costing->Allowed(directededge, restriction,
-                    (i == uturn_index), dist2dest)) {
+          !costing->Allowed(directededge, pred,  (i == pred.uturn_index()))) {
         continue;
       }
 
@@ -234,11 +228,13 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       }
 
       // Set the has_shortcuts flag if a shortcut was taken
-      // TODO - really need bit masks for shortcuts and their superseded edges!
+      // TODO - do we need bit masks for shortcuts and their superseded edges?
       has_shortcuts |= directededge->shortcut();
 
       // Get cost
-      float cost = currentcost + costing->Get(directededge);
+      Cost edgecost = costing->EdgeCost(directededge) +
+                      costing->TransitionCost(directededge, nodeinfo, pred);
+      float cost = pred.truecost() + edgecost.cost;
 
       // Check if already in adjacency list
       if (edgestatus == kTemporary) {
@@ -253,8 +249,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
             float newsortcost = prior_sort_cost -
                     (edgelabels_[prior_label_index].truecost() - cost);
             // TODO - do we need to update trans_up/trans_down?
-            edgelabels_[prior_label_index].Update(next_label_index, cost,
-                    newsortcost);
+            edgelabels_[prior_label_index].Update(predindex, cost, newsortcost);
             adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
                     prior_sort_cost);
           }
@@ -275,8 +270,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float sortcost = cost + astarheuristic_.Get(dist);
 
       // Add edge label
-      edgelabels_.emplace_back(EdgeLabel(next_label_index, edgeid,
-               directededge, cost, sortcost, dist, restriction));
+      edgelabels_.emplace_back(EdgeLabel(predindex, edgeid, directededge, cost,
+                        sortcost, dist, directededge->restrictions()));
 
       // Add to the adjacency list, add to the map of edges in the adj. list
       adjacencylist_->Add(edgelabel_index_, sortcost);
@@ -289,6 +284,31 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   // Failure! Return empty list of edges
   std::vector<GraphId> empty;
   return empty;
+}
+
+void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
+                    const GraphId& edgeid, const DirectedEdge* edge,
+                    const EdgeLabel& pred, const uint32_t predindex) {
+  // Skip any transition edges that are not allowed.
+  if (!allow_transitions_ ||
+      (edge->trans_up() &&
+       !hierarchy_limits_[level].AllowUpwardTransition(pred.distance())) ||
+      (edge->trans_down() &&
+       !hierarchy_limits_[level].AllowDownwardTransition(pred.distance()))) {
+    return;
+  }
+
+  // Allow the transition edge. Add it to the adjacency list using the
+  // predecessor information. Transition edges have no length.
+  edgelabels_.emplace_back(EdgeLabel(predindex, edgeid,
+                edge, pred.truecost(), pred.sortcost(), pred.distance(),
+                pred.restrictions()));
+
+  // Add to the adjacency list, add to the map of edges in the adj. list
+  adjacencylist_->Add(edgelabel_index_, pred.sortcost());
+  adjlistedges_[edgeid] = edgelabel_index_;
+  edgestatus_->Set(edgeid, kTemporary);
+  edgelabel_index_++;
 }
 
 // Add an edge at the origin to the adjacency list
@@ -306,7 +326,8 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const auto node_id = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id)->endnode();
     const auto tile = graphreader.GetGraphTile(node_id);
     const auto node_info = tile->node(node_id);
-    loop_edge_cost = costing->Get(tile->directededge(loop_edge_id)) * (1.f - origin.edges().front().dist);
+    loop_edge_cost = costing->EdgeCost(tile->directededge(loop_edge_id)).cost *
+                        (1.f - origin.edges().front().dist);
     //keep information about all the edges leaving the end of this edge
     for(uint32_t edge_index = node_info->edge_index(); edge_index < node_info->edge_index() + node_info->edge_count(); ++edge_index) {
       if(!costing->GetFilter()(tile->directededge(edge_index))) {
@@ -324,7 +345,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get cost and sort cost
-    float cost = costing->Get(directededge) * (1.f - edge.dist) + loop_edge_cost;
+    float cost = costing->EdgeCost(directededge).cost * (1.f - edge.dist) + loop_edge_cost;
     float sortcost = cost + heuristic;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -339,10 +360,11 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 // Add a destination edge
 void PathAlgorithm::SetDestination(GraphReader& graphreader, const PathLocation& dest, const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
+  float seconds = 0.0f;
   for (const auto& edge : dest.edges()) {
     // Keep the id and the cost to traverse the partial distance
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = costing->Get(tile->directededge(edge.id)) * edge.dist;
+    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)).cost * edge.dist;
   }
 }
 
