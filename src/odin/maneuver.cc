@@ -43,7 +43,9 @@ Maneuver::Maneuver()
       portions_toll_(false),
       portions_unpaved_(false),
       portions_highway_(false),
-      internal_intersection_(false) {
+      internal_intersection_(false),
+      internal_right_turn_count_(0),
+      internal_left_turn_count_(0) {
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -325,6 +327,23 @@ bool Maneuver::HasExitNameSign() const {
   return signs_.HasExitName();
 }
 
+uint32_t Maneuver::internal_right_turn_count() const {
+  return internal_right_turn_count_;
+}
+
+void Maneuver::set_internal_right_turn_count(
+    uint32_t internal_right_turn_count) {
+  internal_right_turn_count_ = internal_right_turn_count;
+}
+
+uint32_t Maneuver::internal_left_turn_count() const {
+  return internal_left_turn_count_;
+}
+
+void Maneuver::set_internal_left_turn_count(uint32_t internal_left_turn_count) {
+  internal_left_turn_count_ = internal_left_turn_count;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -406,6 +425,12 @@ std::string Maneuver::ToString() const {
 
   man_str += " | ";
   man_str += signs_.ToString();
+
+  man_str += " | internal_right_turn_count=";
+  man_str += std::to_string(internal_right_turn_count_);
+
+  man_str += " | internal_left_turn_count=";
+  man_str += std::to_string(internal_left_turn_count_);
 
   return man_str;
 }
@@ -498,6 +523,12 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += signs_.ToParameterString();
+
+  man_str += delim;
+  man_str += std::to_string(internal_right_turn_count_);
+
+  man_str += delim;
+  man_str += std::to_string(internal_left_turn_count_);
 
   return man_str;
 }

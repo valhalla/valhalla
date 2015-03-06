@@ -120,6 +120,12 @@ class Maneuver {
   bool HasExitTowardSign() const;
   bool HasExitNameSign() const;
 
+  uint32_t internal_right_turn_count() const;
+  void set_internal_right_turn_count(uint32_t internal_right_turn_count);
+
+  uint32_t internal_left_turn_count() const;
+  void set_internal_left_turn_count(uint32_t internal_left_turn_count);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -151,6 +157,8 @@ class Maneuver {
   bool portions_highway_;
   bool internal_intersection_;
   Signs signs_;
+  uint32_t internal_right_turn_count_;
+  uint32_t internal_left_turn_count_;
 
   // TODO notes
 
