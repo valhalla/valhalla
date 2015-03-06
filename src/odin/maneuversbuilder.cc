@@ -61,7 +61,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(
       trip_path_->shape());
   if (shape.empty() || (trip_path_->node_size() < 2))
-    throw std::runtime_error("Error - No shape or invalid node count");
+  throw std::runtime_error("Error - No shape or invalid node count");
   PointLL first_point = shape.at(0);
   PointLL last_point = shape.at(shape.size() - 1);
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
@@ -222,8 +222,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
-          && !next_man->internal_intersection()
-          && !common_base_names.empty()) {
+          && !next_man->internal_intersection() && !common_base_names.empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
@@ -258,6 +257,11 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
     next_man->set_cross_street_names(
         std::move(*(curr_man->mutable_street_names())));
   }
+
+  // Set the right and left internal turn counts
+  next_man->set_internal_right_turn_count(curr_man->internal_right_turn_count());
+  next_man->set_internal_left_turn_count(curr_man->internal_left_turn_count());
+
   // Set relative direction
   next_man->set_begin_relative_direction(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
@@ -468,6 +472,9 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
       names->emplace_back(name);
     }
   }
+
+  // Update the internal turn count
+  UpdateInternalTurnCount(maneuver, node_index);
 
   // Distance
   maneuver.set_distance(maneuver.distance() + prev_edge->length());
@@ -702,7 +709,13 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
       break;
     }
     case Turn::Type::kReverse: {
-      if (IsRightSideOfStreetDriving()) {
+      if (maneuver.internal_left_turn_count()
+          > maneuver.internal_right_turn_count()) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+      } else if (maneuver.internal_right_turn_count()
+          > maneuver.internal_left_turn_count()) {
+        maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+      } else if (IsRightSideOfStreetDriving()) {
         if (maneuver.turn_degree() < 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
         } else {
@@ -775,11 +788,9 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   // Process simple turn channel
   if (prev_edge->turn_channel() && !maneuver.turn_channel()) {
     return false;
-  } else if (!prev_edge->turn_channel()
-      && maneuver.turn_channel()) {
+  } else if (!prev_edge->turn_channel() && maneuver.turn_channel()) {
     return false;
-  } else if (prev_edge->turn_channel()
-      && maneuver.turn_channel()) {
+  } else if (prev_edge->turn_channel() && maneuver.turn_channel()) {
     return true;
   }
 
@@ -934,6 +945,27 @@ bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver,
   return false;
 }
 
+void ManeuversBuilder::UpdateInternalTurnCount(Maneuver& maneuver,
+                                               int node_index) const {
+  auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+  auto* prev_prev_edge = trip_path_->GetPrevEdge(node_index, 2);
+  uint32_t prev_prev_2prev_turn_degree = 0;
+  if (prev_prev_edge) {
+    prev_prev_2prev_turn_degree = GetTurnDegree(prev_prev_edge->end_heading(),
+                                                prev_edge->begin_heading());
+  }
+  Maneuver::RelativeDirection relative_direction =
+      ManeuversBuilder::DetermineRelativeDirection(prev_prev_2prev_turn_degree);
+
+  if (relative_direction == Maneuver::RelativeDirection::kRight) {
+    maneuver.set_internal_right_turn_count(
+        maneuver.internal_right_turn_count() + 1);
+  }
+  if (relative_direction == Maneuver::RelativeDirection::kLeft) {
+    maneuver.set_internal_left_turn_count(
+        maneuver.internal_left_turn_count() + 1);
+  }
+}
 
 }
 }
