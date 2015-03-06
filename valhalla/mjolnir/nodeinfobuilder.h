@@ -97,6 +97,15 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_dst(const bool dst);
 
   /**
+   * Set the driveability of the local directed edge given a local
+   * edge index.
+   * @param  localidx  Local edge index.
+   * @param  d         Driveability (see graphconstants.h)
+   */
+  void set_local_driveability(const uint32_t localidx,
+                              const baldr::Driveability d);
+
+  /**
    * Set the relative density
    * @param  density  density.
    */
@@ -152,6 +161,24 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    */
   void set_stop_id(const uint32_t stop_id);
 
+  /**
+   * Set the name consistency between a pair of local edges. This is limited
+   * to the first 8 local edge indexes.
+   * @param  from  Local index of the from edge.
+   * @param  to    Local index of the to edge.
+   * @param  c     Are names consistent between the 2 edges?
+   */
+  void set_name_consistency(const uint32_t from, const uint32_t to,
+                            const bool c);
+
+  /**
+   * Set the heading of the local edge given its local index. Supports
+   * up to 8 local edges. Headings are stored rounded off to 2 degree
+   * values.
+   * @param  localidx  Local edge index.
+   * @param  heading   Heading relative to N (0-360 degrees).
+   */
+  void set_heading(const uint32_t localidx, const float heading);
 };
 
 }
