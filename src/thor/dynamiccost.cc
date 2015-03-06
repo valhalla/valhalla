@@ -23,6 +23,21 @@ bool DynamicCost::AllowTransitions() const {
   return false;
 }
 
+// Returns the cost to make the transition from the predecessor edge.
+// Defaults to 0. Costing models that wish to include edge transition
+// costs (i.e., intersection/turn costs) must override this method.
+Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
+                                 const NodeInfo* node,
+                                 const EdgeLabel& pred) const {
+  return Cost(0.0f, 0.0f);
+}
+
+// Get the general unit size that can be considered as equal for sorting
+// purposes. Defaults to 1 (second).
+uint32_t DynamicCost::UnitSize() const {
+  return kDefaultUnitSize;
+}
+
 // Gets the hierarchy limits.
 std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;

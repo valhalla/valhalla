@@ -9,7 +9,7 @@ namespace thor {
 
 // Cost of traversing an edge with steps. Make this high but not impassible.
 // Equal to about 0.5km.
-constexpr float kBicycleStepsCost = 500.0f;
+const Cost kBicycleStepsCost = { 500.0f, 30.0f };
 
 // How much to favor bicycle networks
 constexpr float kBicycleNetworkFactor = 0.8f;
@@ -33,17 +33,13 @@ class BicycleCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param edge      Pointer to a directed edge.
-   * @param restriction Restriction mask. Identifies the edges at the end
-   *                  node onto which turns are restricted at all times.
-   *                  This mask is compared to the next edge's localedgeidx.
-   * @param uturn     Is this a Uturn?
-   * @param dist2dest Distance to the destination.
+   * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const uint32_t restriction, const bool uturn,
-                       const float dist2dest) const;
+                       const EdgeLabel& pred,
+                       const bool uturn) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -54,18 +50,26 @@ class BicycleCost : public DynamicCost {
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
-   * Get the cost given a directed edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the cost to traverse the edge.
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Get(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
   /**
-   * Returns the time (in seconds) to traverse the edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the time in seconds to traverse the edge.
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) const;
+// TODO - add logic for transition costs!
+//  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+//                               const baldr::NodeInfo* node,
+//                               const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -76,16 +80,6 @@ class BicycleCost : public DynamicCost {
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const;
-
-  /**
-   * Get the general unit size that can be considered as equal for sorting
-   * purposes. The A* method uses an approximate bucket sort, and this value
-   * is used to size the buckets used for sorting. For example, for time
-   * based costs one might compute costs in seconds and consider any time
-   * within 2 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting (must be integer value)
-   */
-  virtual uint32_t UnitSize() const;
 
  protected:
   enum class BicycleType {
@@ -171,18 +165,19 @@ BicycleCost::~BicycleCost() {
 
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
-                          const uint32_t restriction, const bool uturn,
-                          const float dist2dest) const {
+                          const EdgeLabel& pred,
+                          const bool uturn) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions.
   if (!(edge->forwardaccess() & kBicycleAccess) ||
-      (restriction & (1 << edge->localedgeidx()))) {
+      (pred.restrictions() & (1 << edge->localedgeidx()))) {
     return false;
   }
 
   // Do not allow uturns or transition onto not-thru edges (except near
   // the destination)
-  if (uturn || (edge->not_thru() && dist2dest > not_thru_distance_)) {
+  if (uturn ||   // pred.opp_local_idx() == edge->localedgeidx() ||
+     (edge->not_thru() && pred.distance() > not_thru_distance_)) {
     return false;
   }
 
@@ -204,60 +199,56 @@ bool BicycleCost::Allowed(const baldr::NodeInfo* node) const {
   return (node->access() & kBicycleAccess);
 }
 
-// Get the cost to traverse the edge in seconds.
-float BicycleCost::Get(const DirectedEdge* edge) const {
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
   // If this is a step - use a high fixed cost so steps are generally avoided.
-  if (edge->use() == Use::kSteps) {
-    return kBicycleStepsCost;
-  }
+   if (edge->use() == Use::kSteps) {
+     return kBicycleStepsCost;
+   }
 
-  // Alter cost based on desirability of cycling on this edge.
-  // Based on several factors: type of bike, rider propensity
-  // to ride on roads, surface, use, and presence of bike lane
-  // or part of bike network
-  float factor = 1.0f;
+   // Alter cost based on desirability of cycling on this edge.
+   // Based on several factors: type of bike, rider propensity
+   // to ride on roads, surface, use, and presence of bike lane
+   // or part of bike network
+   float factor = 1.0f;
 
-  // Surface factor
-  float surface_factor = smooth_surface_factor_ + (bicycle_surface_factor_ *
-          static_cast<uint32_t>(edge->surface()));
-  factor *= surface_factor;
+   // Surface factor
+   float surface_factor = smooth_surface_factor_ + (bicycle_surface_factor_ *
+           static_cast<uint32_t>(edge->surface()));
+   factor *= surface_factor;
 
-  // Favor dedicated cycleways (favor more if rider for riders not wanting
-  // to use roadways! Footways with cycle access - favor unless the rider
-  // wants to favor use of roads
-  if (edge->use() == Use::kCycleway) {
-    factor *= 0.65f;
-  } else if (edge->use() == Use::kFootway) {
-    // Cyclists who favor using roads want to avoid footways. A value of
-    // 0.5 for useroads_ will result in no difference using footway
-    factor *= 0.75f + (useroads_ * 0.5f);
-  } else {
-    if (edge->cyclelane() == CycleLane::kNone) {
-      // No cycle lane exists, base the factor on auto speed on the road.
-      // Roads < 65 kph are neutral. Start avoiding based on speed above this.
-      // TODO - may want to avoid very low speed edges, alleys/service?
-      float speedfactor = (edge->speed() < 65.0f) ? 1.0f :
-            (1.0f + (edge->speed() - 65.0f) * (1.0f - useroads_) * 0.05f);
-      factor *= speedfactor;
-    } else {
-      // A cycle lane exists. Favor separated lanes more than dedicated
-      // and shared use.
-      float laneusefactor = 0.75f + useroads_ * 0.05f;
-      factor *= (laneusefactor + static_cast<uint32_t>(edge->cyclelane()) * 0.1f);
-    }
-  }
+   // Favor dedicated cycleways (favor more if rider for riders not wanting
+   // to use roadways! Footways with cycle access - favor unless the rider
+   // wants to favor use of roads
+   if (edge->use() == Use::kCycleway) {
+     factor *= 0.65f;
+   } else if (edge->use() == Use::kFootway) {
+     // Cyclists who favor using roads want to avoid footways. A value of
+     // 0.5 for useroads_ will result in no difference using footway
+     factor *= 0.75f + (useroads_ * 0.5f);
+   } else {
+     if (edge->cyclelane() == CycleLane::kNone) {
+       // No cycle lane exists, base the factor on auto speed on the road.
+       // Roads < 65 kph are neutral. Start avoiding based on speed above this.
+       // TODO - may want to avoid very low speed edges, alleys/service?
+       float speedfactor = (edge->speed() < 65.0f) ? 1.0f :
+             (1.0f + (edge->speed() - 65.0f) * (1.0f - useroads_) * 0.05f);
+       factor *= speedfactor;
+     } else {
+       // A cycle lane exists. Favor separated lanes more than dedicated
+       // and shared use.
+       float laneusefactor = 0.75f + useroads_ * 0.05f;
+       factor *= (laneusefactor + static_cast<uint32_t>(edge->cyclelane()) * 0.1f);
+     }
+   }
 
-  // Slightly favor bicycle networks.
-  // TODO - do we need to differentiate between types of network?
-  if (edge->bikenetwork() > 0) {
-    factor *= kBicycleNetworkFactor;
-  }
-  return edge->length() * factor;
-}
-
-float BicycleCost::Seconds(const DirectedEdge* edge) const {
-  // TODO - what to use for speed?
-  return edge->length() / speed_;
+   // Slightly favor bicycle networks.
+   // TODO - do we need to differentiate between types of network?
+   if (edge->bikenetwork() > 0) {
+     factor *= kBicycleNetworkFactor;
+   }
+   return Cost(edge->length() * factor, edge->length() / speed_);
 }
 
 /**
@@ -271,11 +262,6 @@ float BicycleCost::Seconds(const DirectedEdge* edge) const {
 float BicycleCost::AStarCostFactor() const {
   // TODO - compute the most favorable weighting possible
   return 0.0f;
-}
-
-uint32_t BicycleCost::UnitSize() const {
-  // Consider anything within 2 meters to be same cost
-  return 2;
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {

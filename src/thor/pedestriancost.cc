@@ -1,5 +1,7 @@
 #include "thor/pedestriancost.h"
 
+#include <valhalla/midgard/constants.h>
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -24,15 +26,13 @@ class PedestrianCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param edge      Pointer to a directed edge.
-   * @param restriction Turn restrictions (not applicable for pedestrians)
-   * @param uturn     Is this a Uturn?
-   * @param dist2dest Distance to the destination.
+   * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const uint32_t restriction, const bool uturn,
-                       const float dist2dest) const;
+                       const EdgeLabel& pred,
+                       const bool uturn) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -43,18 +43,26 @@ class PedestrianCost : public DynamicCost {
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
-   * Get the cost given a directed edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the cost to traverse the edge.
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Get(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
   /**
-   * Returns the time (in seconds) to traverse the edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the time in seconds to traverse the edge.
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) const;
+// TODO - add logic for transition costs!
+//  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+//                               const baldr::NodeInfo* node,
+//                               const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -67,12 +75,7 @@ class PedestrianCost : public DynamicCost {
   virtual float AStarCostFactor() const;
 
   /**
-   * Get the general unit size that can be considered as equal for sorting
-   * purposes. The A* method uses an approximate bucket sort, and this value
-   * is used to size the buckets used for sorting. For example, for time
-   * based costs one might compute costs in seconds and consider any time
-   * within 2 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting.
+   * Override unit size since walking costs are higher range of vales
    */
   virtual uint32_t UnitSize() const;
 
@@ -92,16 +95,19 @@ class PedestrianCost : public DynamicCost {
   // Walking speed (default to 5.1 km / hour)
   float walkingspeed_;
 
+  float speedfactor_;
+
   // Favor walkways and paths? (default to 0.9f)
   float favorwalkways_;
 };
 
 // Constructor
+// TODO: parse pedestrian configuration from ptree config
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& config)
     : DynamicCost(config),
       walkingspeed_(5.1f),
       favorwalkways_(0.9f) {
-  // TODO: parse pedestrian configuration from ptree config
+  speedfactor_ = (kSecPerHour * 0.001f) / walkingspeed_;
 }
 
 // Destructor
@@ -110,12 +116,13 @@ PedestrianCost::~PedestrianCost() {
 
 // Check if access is allowed on the specified edge.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
-                             const uint32_t,
-                             const bool uturn, const float dist2dest) const {
+                             const EdgeLabel& pred,
+                             const bool uturn) const {
   // Return false if no pedestrian access. Disallow uturns or transition
   // onto not-thru edges (except near the destination)
-  return ((edge->forwardaccess() & kPedestrianAccess) && !uturn &&
-          !(edge->not_thru() && dist2dest > not_thru_distance_));
+  return ((edge->forwardaccess() & kPedestrianAccess) &&
+          !uturn &&
+          !(edge->not_thru() && pred.distance() > not_thru_distance_));
 }
 
 // Check if access is allowed at the specified node.
@@ -123,23 +130,17 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
   return (node->access() & kPedestrianAccess);
 }
 
-// Get the cost to traverse the edge
-float PedestrianCost::Get(const DirectedEdge* edge) const {
-  // TODO - slightly avoid steps?
-
-  // Slightly favor walkways/paths.
-  if (edge->use() == Use::kFootway)
-    return edge->length() * favorwalkways_;
-
-  return edge->length();
-
-}
-
-// Returns the time (in seconds) to traverse the edge.
-float PedestrianCost::Seconds(const baldr::DirectedEdge* edge) const {
-  // meters * 3600 sec/hr / 1000 m/km)
-  return (edge->length() * 3.6f) / walkingspeed_;
-}
+// Returns the cost to traverse the edge and an estimate of the actual time
+// (in seconds) to traverse the edge.
+Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  // Slightly favor walkways/paths. TODO - penalize stairs
+  float sec = edge->length() * speedfactor_;
+  if (edge->use() == Use::kFootway) {
+    return Cost(sec * favorwalkways_, sec);
+  } else {
+    return Cost(sec, sec);
+  }
+};
 
 /**
  * Get the cost factor for A* heuristics. This factor is multiplied
@@ -151,14 +152,13 @@ float PedestrianCost::Seconds(const baldr::DirectedEdge* edge) const {
  */
 float PedestrianCost::AStarCostFactor() const {
   // Use the factor to favor walkways/paths if < 1.0f
-  return (favorwalkways_ < 1.0f) ? favorwalkways_ : 1.0f;
+  return (favorwalkways_ < 1.0f) ? favorwalkways_ * speedfactor_ : speedfactor_;
 }
 
+//  Override unit size since walking costs are higher range of values
 uint32_t PedestrianCost::UnitSize() const {
-  // Consider anything within 2 m to be same cost
-  return 2;
+  return 5;
 }
-
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
   return std::make_shared<PedestrianCost>(config);
 }
