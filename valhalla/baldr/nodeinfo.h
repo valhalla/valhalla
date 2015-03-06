@@ -15,7 +15,7 @@ constexpr uint32_t kMaxTileEdgeCount = 4194303;   // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode  = 127;       // Maximum edges per node
 constexpr uint32_t kMaxLocalDriveable = 15;       // Max. count of driveable
                                                   // edges on local level
-constexpr uint32_t kMaxDensity = 32;              // Maximum node density
+constexpr uint32_t kMaxDensity = 15;              // Maximum node density
 
 /**
  * Information held for each node within the graph. The graph uses a forward
