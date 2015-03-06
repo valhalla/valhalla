@@ -272,7 +272,7 @@ struct sequence {
     }
     operator T() {
       if(parent->mmap_handle)
-        return *(static_cast<T*>(parent->mmap_handle) + index);
+        return *(static_cast<const T*>(parent->mmap_handle) + index);
 
       T result;
       parent->file->seekg(index * sizeof(T));
@@ -287,22 +287,44 @@ struct sequence {
       ++index;
       return *this;
     }
-    iterator operator++() {
+    iterator operator++(int) {
       parent->flush();
       auto other = *this;
       ++index;
       return other;
+    }
+    iterator& operator+=(size_t offset) {
+      parent->flush();
+      index += offset;
+      return *this;
+    }
+    iterator operator+(size_t offset) {
+      parent->flush();
+      auto other = *this;
+      other.index += offset;
+      return *this;
     }
     iterator& operator--() {
       parent->flush();
       --index;
       return *this;
     }
-    iterator operator--() {
+    iterator operator--(int) {
       parent->flush();
       auto other = *this;
       --index;
       return other;
+    }
+    iterator& operator-=(size_t offset) {
+      parent->flush();
+      index -= offset;
+      return *this;
+    }
+    iterator operator-(size_t offset) {
+      parent->flush();
+      auto other = *this;
+      other.index -= offset;
+      return *this;
     }
     bool operator==(const iterator& other) const {
       return parent == other.parent && index == other.index;

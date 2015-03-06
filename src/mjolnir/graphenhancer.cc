@@ -133,7 +133,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdgeBuilder& d
     }
 
     // Get all driveable edges from the node on the expandlist
-    const GraphId& expandnode = *expandset.cbegin();
+    const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
     lock.lock();
@@ -192,9 +192,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll, fl
   AABB2 bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
              Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
-if (tilelist.size() > 4) {
-  std::cout << "Tilelist size = " << tilelist.size() << std::endl;
-}
+
   // For all tiles needed to find nodes within the radius...find nodes within
   // the radius and add lengths of directed edges
   float roadlengths = 0.0f;
@@ -204,6 +202,8 @@ if (tilelist.size() > 4) {
     lock.lock();
     const GraphTile* newtile = reader.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
+    if(!newtile)
+      continue;
     const auto start_node = newtile->node(0);
     const auto end_node   = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
@@ -236,7 +236,7 @@ if (tilelist.size() > 4) {
   localdensity = (localroadlengths * 0.0005f) / localkm2;
   if (density > maxdensity)
      maxdensity = density;
-  return static_cast<uint32_t>((density / 24.0f) * 16.0f);
+  return static_cast<uint32_t>((density / 32.0f) * 16.0f);
 
 /**
   LOG_INFO("LL: " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()) +
