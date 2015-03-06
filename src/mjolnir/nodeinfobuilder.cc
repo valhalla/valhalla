@@ -3,6 +3,27 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+
+const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
+
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @param len  Length of each element within the bit field.
+ * @return  Returns an updated value for the bit field.
+ */
+uint32_t OverwriteBits(const uint32_t dst, const uint32_t src,
+                       const uint32_t pos, const uint32_t len) {
+  uint32_t shift = (pos * len);
+  uint32_t mask  = (((uint32_t)1 << len) - 1) << shift;
+  return (dst & ~mask) | (src << shift);
+}
+
+}
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -18,7 +39,8 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const uint32_t access,
                                  const NodeType type,
                                  const bool end,
-                                 const bool traffic_signal) {
+                                 const bool traffic_signal)
+    : NodeInfo() {
   set_latlng(ll);
   set_edge_index(edge_index);
   set_edge_count(edge_count);
@@ -28,16 +50,6 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
   set_type(type);
   set_end(end);
   set_traffic_signal(traffic_signal);
-
-  // Not populated yet.
-  set_admin_index(0);
-  set_timezone(0);
-  set_dst(false);
-  set_density(0);
-  set_parent(false);
-  set_child(false);
-  set_mode_change(false);
-  set_stop_id(0);
 }
 
 // Sets the latitude and longitude.
@@ -96,13 +108,26 @@ void NodeInfoBuilder::set_dst(const bool dst) {
   admin_.dst = dst;
 }
 
+// Set the driveability of the local directed edge given a local
+// edge index.
+void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
+                                             const Driveability d) {
+  if (localidx > kMaxLocalDriveable) {
+    LOG_WARN("Exceeding max local index on set_local_driveability - skip");
+  } else {
+    type_.local_driveability = OverwriteBits(type_.local_driveability,
+                 static_cast<uint32_t>(d), localidx, 2);
+  }
+}
+
 // Set the relative density
 void NodeInfoBuilder::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
     LOG_WARN("Exceeding max. density: " + std::to_string(density));
-    type_.local_driveable = kMaxDensity;
+    type_.density = kMaxDensity;
+  } else {
+    type_.density = density;
   }
-  type_.density = density;
 }
 
 // Set the node type.
@@ -115,8 +140,9 @@ void NodeInfoBuilder::set_local_driveable(const uint32_t n) {
   if (n > kMaxLocalDriveable) {
     LOG_INFO("Exceeding max. local driveable count: " + std::to_string(n));
     type_.local_driveable = kMaxLocalDriveable;
+  } else {
+    type_.local_driveable = n;
   }
-  type_.local_driveable = n;
 }
 
 // Set the dead-end node flag.
@@ -148,7 +174,47 @@ void NodeInfoBuilder::set_traffic_signal(const bool traffic_signal) {
 
 // Set the transit stop Id.
 void NodeInfoBuilder::set_stop_id(const uint32_t stop_id) {
-  stop_id_ = stop_id;
+  stop_.stop_id = stop_id;
+}
+
+/**
+ * Set the name consistency between a pair of local edges. This is limited
+ * to the first 8 local edge indexes.
+ * @param  from  Local index of the from edge.
+ * @param  to    Local index of the to edge.
+ * @param  c     Are names consistent between the 2 edges?
+ */
+void NodeInfoBuilder::set_name_consistency(const uint32_t from,
+                                           const uint32_t to,
+                                           const bool c) {
+  if (from == to) {
+    return;
+  } else if (from > kMaxLocalDriveable || to > kMaxLocalDriveable) {
+    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
+  } else {
+    if (from < to) {
+      stop_.name_consistency = OverwriteBits(stop_.name_consistency, c,
+                   (ContinuityLookup[from] + (to-from-1)), 1);
+    } else {
+      stop_.name_consistency = OverwriteBits(stop_.name_consistency, c,
+                   (ContinuityLookup[to] + (from-to-1)), 1);
+    }
+  }
+}
+
+// Set the heading of the local edge given its local index. Supports
+// up to 8 local edges. Headings are stored rounded off to 2 degree
+// values.
+void NodeInfoBuilder::set_heading(const uint32_t localidx, const float heading) {
+   if (heading < 0.0f || heading > 360.0f) {
+     LOG_ERROR("Heading outside range (0-360) in set_heading");
+   } else if (localidx > kMaxLocalDriveable) {
+     LOG_WARN("Local index exceeds max in set_heading, skip");
+   } else {
+     // Has to be 64 bit!
+     uint32_t hdg = static_cast<uint32_t>((heading * 0.5f) + 0.5f);
+     headings_ |= static_cast<uint64_t>(hdg) << static_cast<uint64_t>(localidx * 8);
+   }
 }
 
 }
