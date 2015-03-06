@@ -56,10 +56,7 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Road density.
  */
-// Update speed - especially for classified speeds (those without max_speed
-// tags).  TODO (add admin)
-void UpdateSpeed(DirectedEdgeBuilder& directededge,
-                                const float density) {
+void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
   // If speed is assigned from an OSM max_speed tag we only update it based
   // on surface type.
   if (directededge.speed_type() == SpeedType::kTagged) {
@@ -98,7 +95,6 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge,
     // Modify speed based on surface
   }
 }
-
 
 /**
  * Tests if the directed edge is unreachable by driving. If a driveable
@@ -319,19 +315,21 @@ void ProcessEdgeTransitions(const uint32_t idx,
     // Get stop impact
     uint32_t stopimpact = GetStopImpact(k, idx, edges, ntrans);
     directededge.set_stopimpact(k, stopimpact);
+
+    // TODO: Set the edge_to_left and edge_to_right flags
   }
 }
 
 /**
  * Get the index of the opposing edge at the end node. This is
  * on the local hierarchy (before adding transition and shortcut edges).
- * @param  startnode    Start node of the directed edge.
+ * @param  endnodetile   Graph tile at the end node.
+ * @param  startnode     Start node of the directed edge.
  * @param  directededge  Directed edge to match.
  */
-// Get the index of the opposing edge at the end node. This is
-// on the local hierarchy (before adding transition and shortcut edges).
-uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile, const GraphId& startnode,
-                                             const DirectedEdge& edge) {
+uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
+                              const GraphId& startnode,
+                              const DirectedEdge& edge) {
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
   const NodeInfo* nodeinfo = endnodetile->node(endnode.id());
@@ -341,13 +339,12 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile, const GraphId& start
   const DirectedEdge* directededge = endnodetile->directededge(
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // End node must match the start node
     if (directededge->endnode() == startnode &&
         directededge->length() == edge.length()) {
       return i;
     }
   }
-  return 15;
+  return kMaxEdgesPerNode;
 }
 
 // We make sure to lock on reading and writing because we dont want to race
@@ -402,7 +399,8 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
       // Enhance node attributes (TODO - admin, timezone)
       nodeinfo.set_density(density);
 
-      // Get headings of the edges
+      // Get headings of the edges - set in NodeInfo. Set driveability info
+      // on the node as well.
       uint32_t count = nodeinfo.edge_count();
       uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
       uint32_t heading[ntrans];
@@ -412,6 +410,22 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
+
+        // Set heading in NodeInfo. TODO - what if 2 edges have nearly the
+        // same heading - should one be "adjusted" so the relative direction
+        // is maintained.
+        nodeinfo.set_heading(j, heading[j]);
+
+        // Set driveability
+        Driveability driveability;
+        if (directededge.forwardaccess() & kAutoAccess) {
+          driveability = (directededge.reverseaccess() & kAutoAccess) ?
+              Driveability::kBoth : Driveability::kForward;
+        } else {
+          driveability = (directededge.reverseaccess() & kAutoAccess) ?
+                        Driveability::kBackward : Driveability::kNone;
+        }
+        nodeinfo.set_local_driveability(j, driveability);
       }
 
       // Go through directed edges and update data
@@ -428,6 +442,8 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
         if (j < kNumberOfEdgeTransitions) {
           ProcessEdgeTransitions(j, directededge, edges, ntrans, heading);
         }
+
+        // TODO - name continuity - set in NodeInfo
 
         // Set unreachable (driving) flag
         if (IsUnreachable(reader, lock, directededge)) {
