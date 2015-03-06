@@ -236,7 +236,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll, fl
   localdensity = (localroadlengths * 0.0005f) / localkm2;
   if (density > maxdensity)
      maxdensity = density;
-  return static_cast<uint32_t>((density / 24.0f) * 16.0f);
+  return static_cast<uint32_t>((density / 32.0f) * 16.0f);
 
 /**
   LOG_INFO("LL: " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()) +
