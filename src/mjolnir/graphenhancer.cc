@@ -133,7 +133,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdgeBuilder& d
     }
 
     // Get all driveable edges from the node on the expandlist
-    const GraphId& expandnode = *expandset.cbegin();
+    const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
     lock.lock();
