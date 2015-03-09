@@ -13,8 +13,8 @@ namespace baldr {
 
 constexpr uint32_t kMaxTileEdgeCount  = 4194303;  // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode   = 127;      // Maximum edges per node
-constexpr uint32_t kMaxLocalDriveable = 7;        // Max. index of driveable
-                                                  // edges on local level
+constexpr uint32_t kMaxLocalEdgeIndex = 7;        // Max. index of edges on
+                                                  // local level
 constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 
 /**
@@ -108,10 +108,10 @@ class NodeInfo {
   NodeType type() const;
 
   /**
-   * Get the number of driveable edges on the local level.
-   * @return  Returns the number of driveable edges on the local level.
+   * Get the number of edges on the local level (up to kMaxLocalEdgeIndex+1).
+   * @return  Returns the number of edges on the local level.
    */
-  uint32_t local_driveable() const;
+  uint32_t local_edge_count() const;
 
   /**
    * Is this a dead-end node that connects to only one edge?
@@ -208,10 +208,12 @@ class NodeInfo {
 
   // Node type
   struct NodeTypeInfo {
-    uint32_t local_driveability : 16; // Driveability of up to 8 local edges
+    uint32_t local_driveability : 16; // Driveability for local edges (up to
+                                      // kMaxLocalEdgeIndex+1 edges)
     uint32_t density            : 4;  // Density (population? edges?)
     uint32_t type               : 4;  // Node type
-    uint32_t local_driveable    : 3;  // # of driveable edges on local level
+    uint32_t local_edge_count   : 3;  // # of edges on local level (up to
+                                      // kMaxLocalEdgeIndex+1)
     uint32_t end                : 1;  // End node (only connects to 1 edge)
     uint32_t parent             : 1;  // Is this a parent node
     uint32_t child              : 1;  // Is this a child node
@@ -228,7 +230,8 @@ class NodeInfo {
   };
   NodeStop stop_;
 
-  // Headings of up to 8 local edges (rounded to nearest 2 degrees)
+  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
+  // nearest 2 degrees)
   uint64_t headings_;
 };
 
