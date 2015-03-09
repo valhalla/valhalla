@@ -34,7 +34,6 @@ NodeInfoBuilder::NodeInfoBuilder()
 NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const uint32_t edge_index,
                                  const uint32_t edge_count,
-                                 const uint32_t driveable,
                                  const RoadClass rc,
                                  const uint32_t access,
                                  const NodeType type,
@@ -45,7 +44,6 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
   set_edge_index(edge_index);
   set_edge_count(edge_count);
   set_bestrc(rc);
-  set_local_driveable(driveable);
   set_access(access);
   set_type(type);
   set_end(end);
@@ -112,7 +110,7 @@ void NodeInfoBuilder::set_dst(const bool dst) {
 // edge index.
 void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
                                              const Driveability d) {
-  if (localidx > kMaxLocalDriveable) {
+  if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index on set_local_driveability - skip");
   } else {
     type_.local_driveability = OverwriteBits(type_.local_driveability,
@@ -135,13 +133,16 @@ void NodeInfoBuilder::set_type(const NodeType type) {
   type_.type =  static_cast<uint8_t>(type);
 }
 
-// Set the number of driveable edges on the local level.
-void NodeInfoBuilder::set_local_driveable(const uint32_t n) {
-  if (n > kMaxLocalDriveable) {
-    LOG_INFO("Exceeding max. local driveable count: " + std::to_string(n));
-    type_.local_driveable = kMaxLocalDriveable;
+// Set the number of driveable edges on the local level. Subtract 1 so
+// a value up to kMaxLocalEdgeIndex+1 can be stored.
+void NodeInfoBuilder::set_local_edge_count(const uint32_t n) {
+  if (n > kMaxLocalEdgeIndex+1) {
+    LOG_INFO("Exceeding max. local edge count: " + std::to_string(n));
+    type_.local_edge_count = kMaxLocalEdgeIndex;
+  } else if (n == 0) {
+    LOG_ERROR("Node with 0 local edges found");
   } else {
-    type_.local_driveable = n;
+    type_.local_edge_count = n - 1;
   }
 }
 
@@ -189,7 +190,7 @@ void NodeInfoBuilder::set_name_consistency(const uint32_t from,
                                            const bool c) {
   if (from == to) {
     return;
-  } else if (from > kMaxLocalDriveable || to > kMaxLocalDriveable) {
+  } else if (from > kMaxLocalEdgeIndex || to > kMaxLocalEdgeIndex) {
     LOG_WARN("Local index exceeds max in set_name_consistency, skip");
   } else {
     if (from < to) {
@@ -208,7 +209,7 @@ void NodeInfoBuilder::set_name_consistency(const uint32_t from,
 void NodeInfoBuilder::set_heading(const uint32_t localidx, const float heading) {
    if (heading < 0.0f || heading > 360.0f) {
      LOG_ERROR("Heading outside range (0-360) in set_heading");
-   } else if (localidx > kMaxLocalDriveable) {
+   } else if (localidx > kMaxLocalEdgeIndex) {
      LOG_WARN("Local index exceeds max in set_heading, skip");
    } else {
      // Has to be 64 bit! Round values above 359 to 0 degrees.

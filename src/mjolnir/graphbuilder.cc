@@ -782,7 +782,6 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
         uint32_t n = 0;
-        uint32_t driveable = 0;
         RoadClass bestclass = RoadClass::kServiceOther;
         std::vector<DirectedEdgeBuilder> directededges;
         for (const auto& edge_pair : bundle.edges) {
@@ -807,10 +806,6 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
             source = edge.targetnode_;
             target = edge.sourcenode_;
           }
-
-          // Increment driveable count if edge is driveable in either direction
-          if (edge.attributes.driveableforward || edge.attributes.driveablereverse)
-            driveable++;
 
           // Check for not_thru edge (only on low importance edges)
           bool not_thru = false;
@@ -905,8 +900,8 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         NodeInfoBuilder nodebuilder(node_ll, directededgecount,
-                                    bundle.edges.size(), driveable,
-                                    bestclass, node.access_mask(), node.type(),
+                                    bundle.edges.size(), bestclass,
+                                    node.access_mask(), node.type(),
                                     (bundle.edges.size() == 1),
                                     node.traffic_signal());
 
