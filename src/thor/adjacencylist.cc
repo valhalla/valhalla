@@ -28,7 +28,7 @@ AdjacencyList::AdjacencyList(const float mincost,
   maxcost_ = mincost + bucketrange_;
 
   // Allocate the low-level buckets
-  bucketcount_ = (range / bucketsize_);
+  bucketcount_ = (range / bucketsize_) + 1;
   buckets_.resize(bucketcount_);
   currentbucket_ = buckets_.begin();
 
