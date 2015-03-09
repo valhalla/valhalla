@@ -38,8 +38,7 @@ class BicycleCost : public DynamicCost {
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const bool uturn) const;
+                       const EdgeLabel& pred) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -165,19 +164,14 @@ BicycleCost::~BicycleCost() {
 
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
-                          const EdgeLabel& pred,
-                          const bool uturn) const {
+                          const EdgeLabel& pred) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
-  // vehicular turn restrictions.
+  // vehicular turn restrictions. Disallow Uturns. Do not allow entering
+  // not-thru edges except near the destination.
   if (!(edge->forwardaccess() & kBicycleAccess) ||
-      (pred.restrictions() & (1 << edge->localedgeidx()))) {
-    return false;
-  }
-
-  // Do not allow uturns or transition onto not-thru edges (except near
-  // the destination)
-  if (uturn ||   // pred.opp_local_idx() == edge->localedgeidx() ||
-     (edge->not_thru() && pred.distance() > not_thru_distance_)) {
+      (pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+      (edge->not_thru() && pred.distance() > not_thru_distance_)) {
     return false;
   }
 
@@ -202,7 +196,7 @@ bool BicycleCost::Allowed(const baldr::NodeInfo* node) const {
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge) const {
-  // If this is a step - use a high fixed cost so steps are generally avoided.
+  // Stairs/steps - use a high fixed cost so they are generally avoided.
    if (edge->use() == Use::kSteps) {
      return kBicycleStepsCost;
    }

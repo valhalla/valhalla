@@ -76,10 +76,8 @@ class DynamicCost {
    * @param  pred  Predecessor edge information.
    * @return  Returns true if access is allowed, false if not.
    */
-// TODO - remove Uturn and handle with local index and opp local index...
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const bool uturn) const = 0;
+                       const EdgeLabel& pred) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can

@@ -31,8 +31,7 @@ class PedestrianCost : public DynamicCost {
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const bool uturn) const;
+                       const EdgeLabel& pred) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -116,12 +115,11 @@ PedestrianCost::~PedestrianCost() {
 
 // Check if access is allowed on the specified edge.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
-                             const EdgeLabel& pred,
-                             const bool uturn) const {
-  // Return false if no pedestrian access. Disallow uturns or transition
-  // onto not-thru edges (except near the destination)
+                             const EdgeLabel& pred) const {
+  // Return false if no pedestrian access. Disallow Uturns or entering
+  // not-thru edges except near the destination.
   return ((edge->forwardaccess() & kPedestrianAccess) &&
-          !uturn &&
+           pred.opp_local_idx() != edge->localedgeidx()  &&
           !(edge->not_thru() && pred.distance() > not_thru_distance_));
 }
 
@@ -157,7 +155,7 @@ float PedestrianCost::AStarCostFactor() const {
 
 //  Override unit size since walking costs are higher range of values
 uint32_t PedestrianCost::UnitSize() const {
-  return 5;
+  return 2;
 }
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
   return std::make_shared<PedestrianCost>(config);
