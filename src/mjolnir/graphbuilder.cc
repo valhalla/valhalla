@@ -111,14 +111,16 @@ struct Node {
 struct node_bundle : Node {
   size_t node_count;
   std::list<std::pair<Edge, size_t> > edges;
-  node_bundle(const Node& other):Node(other){node_count = 1;}
+  node_bundle(const Node& other):Node(other), node_count(0){}
 };
 node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequence<Node>& nodes, sequence<Edge>& edges) {
-  //for each node with the same id (duplicate)
+  //copy out the first nodes attributes (as they are the correctly merged one)
   auto itr = node_itr;
   node_bundle bundle(*itr);
   Node node;
-  for(++itr; itr != nodes.end() && (node = *itr).node.osmid == bundle.node.osmid; ++itr) {
+  //for each node with the same id (duplicate)
+  for(; itr != nodes.end() && (node = *itr).node.osmid == bundle.node.osmid; ++itr) {
+    ++bundle.node_count;
     if(node.is_start()) {
       auto edge_itr = edges[node.start_of];
       auto edge = *edge_itr;
@@ -130,25 +132,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       bundle.edges.emplace_back(edge, edge_itr.position());
     }
   }
-  bundle.node_count = itr - node_itr;
   return bundle;
-}
-
-/**
- * Get the best classification for any non-link edges from a node.
- * @param  edges The file backed list of edges in the graph.
- * @return  Returns the best (most important) classification
- */
-// Gets the most important class among the node's edges
-uint32_t GetBestNonLinkClass(const std::list<std::pair<Edge, size_t> >& edges) {
-  uint32_t bestrc = kAbsurdRoadClass;
-  for (const auto& edge : edges) {
-    if (!edge.first.attributes.link) {
-      if (edge.first.attributes.importance < bestrc)
-        bestrc = edge.first.attributes.importance;
-    }
-  }
-  return bestrc;
 }
 
 /**
@@ -185,9 +169,7 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
       if(node_index == 0 || node.graph_id != (--tiles.end())->first) {
         tiles.insert({node.graph_id, node_index});
         node.graph_id.fields.id = 0;
-        //we have just went through a run of duplicates run back over them
-        if(node_index != 0)
-          runback = true;
+        runback = true;
       }//but is it a new node
       else if(last_node.node.osmid != node.node.osmid) {
         node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
@@ -204,7 +186,7 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
           node.node.attributes_.link_edge = last_node.node.attributes_.link_edge || edge.attributes.link;
           node.node.attributes_.non_link_edge = last_node.node.attributes_.non_link_edge || !edge.attributes.link;
         }
-        //if this node marks the end of an edge, go tell the dge where the node is
+        //if this node marks the end of an edge, go tell the edge where the node is
         if(node.is_end()) {
           auto element = edges[node.end_of];
           auto edge = *element;
@@ -215,12 +197,9 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
         }
       }
 
-      //if we just finished a run update the first nodes attributes and start another run
-      if(runback) {
-        auto run_itr = nodes[run_index];
-        auto run_node = *run_itr;
-        run_node = last_node;
-        run_itr = run_node;
+      //if we just finished a run update the first node attributes and start another run
+      if(runback && node_index != 0) {
+        nodes[run_index] = last_node;
         run_index = node_index;
       }
 
@@ -250,7 +229,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
   sequence<Edge> edges(edges_file, true);
   sequence<Node> nodes(nodes_file, true);
 
-  //for each way traversed via the node refs
+  //for each way traversed via the nodes
   size_t current_way_node_index = 0;
   while (current_way_node_index < way_nodes.size()) {
     //grab the way and its first node
@@ -263,8 +242,9 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
     Edge edge = Edge::make_edge(nodes.size(), first_way_node.way_index, current_way_node_index, way);
 
     //remember this node as starting this edge
-    first_way_node.node.attributes_.link_edge = first_way_node.node.attributes_.link_edge || way.link();
-    nodes.push_back({first_way_node.node, static_cast<uint32_t>(ways.size()), static_cast<uint32_t>(-1), graph_id_predicate(first_way_node.node)});
+    first_way_node.node.attributes_.link_edge = way.link();
+    first_way_node.node.attributes_.non_link_edge = !way.link();
+    nodes.push_back({first_way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(first_way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while(current_way_node_index < way_nodes.size()) {
@@ -281,8 +261,9 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
         edge.targetnode_ = nodes.size();
 
         //remember this node as ending this edge
-        way_node.node.attributes_.link_edge = way_node.node.attributes_.link_edge || way.link();
-        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(ways.size()), graph_id_predicate(way_node.node)});
+        way_node.node.attributes_.link_edge = way.link();
+        way_node.node.attributes_.non_link_edge = !way.link();
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
 
         // Add the edge to the list of edges
         edges.push_back(edge);
@@ -293,7 +274,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
           edge = Edge::make_edge(nodes.size(), way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
-          node.start_of = ways.size();
+          node.start_of = edges.size();
           element = node;
         }// This was the last shape point in the way
         else {
@@ -313,6 +294,24 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
 }
 
 
+/**
+ * Get the best classification for any non-link edges from a node.
+ * @param  edges The file backed list of edges in the graph.
+ * @return  Returns the best (most important) classification
+ */
+// Gets the most important class among the node's edges
+uint32_t GetBestNonLinkClass(const std::list<std::pair<Edge, size_t> >& edges) {
+  uint32_t bestrc = kAbsurdRoadClass;
+  for (const auto& edge : edges) {
+    if (!edge.first.attributes.link) {
+      if (edge.first.attributes.importance < bestrc)
+        bestrc = edge.first.attributes.importance;
+    }
+  }
+  return bestrc;
+}
+
+
 // Reclassify links (ramps and turn channels).
 void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file, const std::string& edges_file, DataQuality& stats) {
   LOG_INFO("Reclassifying link graph edges...")
@@ -321,19 +320,17 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
   std::unordered_set<size_t> visitedset;  // Set of visited nodes
   std::unordered_set<size_t> expandset;   // Set of nodes to expand
   std::list<size_t> linkedgeindexes;     // Edge indexes to reclassify
-  std::vector<uint32_t> endrc;           //
+  std::set<uint32_t> endrc;           //
   sequence<OSMWay> ways(ways_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
   //try to expand
   auto expand = [&expandset, &endrc, &nodes, &edges] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
-    // If the first end node contains a non-link edge we compute the best
-    // classification. If not we add the end node to the expand set.
     auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
-    auto end_node = (*end_node_itr).node;
-    if (end_node.attributes_.non_link_edge) {
-      endrc.push_back(GetBestNonLinkClass(collect_node_edges(end_node_itr, nodes, edges).edges));
+    auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
+    if (end_node_bundle.node.attributes_.non_link_edge) {
+      endrc.insert(GetBestNonLinkClass(end_node_bundle.edges));
     } else {
       expandset.insert(end_node_itr.position());
     }
@@ -341,18 +338,22 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
 
   //for each node
   sequence<Node>::iterator node_itr = nodes.begin();
+  uint32_t edge_count = 0;
   while (node_itr != nodes.end()) {
     //amalgamate all the node duplicates into one and the edges that connect to it
     //this moves the iterator for you
     auto bundle = collect_node_edges(node_itr, nodes, edges);
-    const auto& node = bundle.node;
-    if (node.attributes_.link_edge && node.attributes_.non_link_edge) {
+
+    // If the node has a both links and non links at it
+    if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
       // Get the highest classification of non-link edges at this node
+
       endrc.clear();
-      endrc.push_back(GetBestNonLinkClass(bundle.edges));
+      endrc.insert(GetBestNonLinkClass(bundle.edges));
 
       // Expand from all link edges
       for (const auto& startedge : bundle.edges) {
+        edge_count++;
         // Get the edge information. Skip non-link edges
         if (!startedge.first.attributes.link) {
           continue;
@@ -366,6 +367,8 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
         // Add start edge to list of links edges to potentially reclassify
         linkedgeindexes.push_back(startedge.second);
 
+        // If the first end node contains a non-link edge we compute the best
+        // classification. If not we add the end node to the expand set.
         expand(startedge.first, node_itr);
 
         // Expand edges until all paths reach a node that has a non-link
@@ -376,15 +379,14 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
           // from the starting node
           if (expandset.empty()) {
             // Make sure this connects...
-            if (endrc.size() < 2)  {
-              stats.AddIssue(kUnconnectedLinkEdge, GraphId(),
-                             (*ways[startedge.first.wayindex_]).way_id(), 0);
-            } else {
+            if (endrc.size() < 2) {
+              stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.first.wayindex_]).way_id(), 0);
+            }
+            else {
               // Set to the value of the 2nd best road class of all
               // connections. This protects against downgrading links
               // when branches occur.
-              std::sort(endrc.begin(), endrc.end());
-              uint32_t rc = endrc[1];
+              uint32_t rc = *(++endrc.cbegin());
               for (auto idx : linkedgeindexes) {
                 sequence<Edge>::iterator element = edges[idx];
                 auto edge = *element;
