@@ -26,7 +26,7 @@ constexpr uint64_t kMaxOSMNodeId = 4000000000;
 
 // Node equality
 const auto WayNodeEquals = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node_id == b.node_id;
+  return a.node.osmid == b.node.osmid;
 };
 
 struct admin_callback : public OSMPBF::Callback {

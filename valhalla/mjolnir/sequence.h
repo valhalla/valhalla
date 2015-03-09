@@ -262,7 +262,7 @@ struct sequence {
     }
     iterator& operator=(const T& other) {
       if(parent->mmap_handle) {
-        (static_cast<T*>(parent->mmap_handle) + index) = other;
+        *(static_cast<T*>(parent->mmap_handle) + index) = other;
         return *this;
       }
 
@@ -328,6 +328,9 @@ struct sequence {
     }
     bool operator==(const iterator& other) const {
       return parent == other.parent && index == other.index;
+    }
+    bool operator!=(const iterator& other) const {
+      return index != other.index || parent != other.parent;
     }
     size_t operator-(const iterator& other) const {
       return index - other.index;
