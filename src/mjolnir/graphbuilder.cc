@@ -123,15 +123,11 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       auto edge_itr = edges[node.start_of];
       auto edge = *edge_itr;
       bundle.edges.emplace_back(edge, edge_itr.position());
-      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
     if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
       bundle.edges.emplace_back(edge, edge_itr.position());
-      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
   }
   bundle.node_count = itr - node_itr;
