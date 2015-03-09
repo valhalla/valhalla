@@ -116,7 +116,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_type(const baldr::NodeType type);
 
   /**
-   * Set the number of edges on the local level (up to kMaxLocalEdgeInfo).
+   * Set the number of edges on the local level (up to kMaxLocalEdgeInfo+1).
    * @param  n  Number of edges on the local level.
    */
   void set_local_edge_count(const uint32_t n);

@@ -133,13 +133,16 @@ void NodeInfoBuilder::set_type(const NodeType type) {
   type_.type =  static_cast<uint8_t>(type);
 }
 
-// Set the number of driveable edges on the local level.
+// Set the number of driveable edges on the local level. Subtract 1 so
+// a value up to kMaxLocalEdgeIndex+1 can be stored.
 void NodeInfoBuilder::set_local_edge_count(const uint32_t n) {
-  if (n > kMaxLocalEdgeIndex) {
+  if (n > kMaxLocalEdgeIndex+1) {
     LOG_INFO("Exceeding max. local edge count: " + std::to_string(n));
     type_.local_edge_count = kMaxLocalEdgeIndex;
+  } else if (n == 0) {
+    LOG_ERROR("Node with 0 local edges found");
   } else {
-    type_.local_edge_count = n;
+    type_.local_edge_count = n - 1;
   }
 }
 
