@@ -420,12 +420,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_turntype(const uint32_t localidx, const Turn::Type turntype);
 
   /**
-   * Set the consistent name flag between this edge and the
-   * prior edge given its local index (index of the inbound edge).
+   * Set the flag indicating there is an edge to the left, in between
+   * the from edge and this edge.
    * @param  localidx  Local index at the node of the inbound edge.
-   * @param  consistent  true if there is a consistent name, false if not.
+   * @param  left      True if there is an edge to the left, false if not.
    */
-  void set_consistent_name(const uint32_t localidx, const bool consistent);
+  void set_edge_to_left(const uint32_t localidx, const bool left);
 
   /**
    * Set the stop impact when transitioning from the prior edge (given
@@ -435,7 +435,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   void set_stopimpact(const uint32_t localidx, const uint32_t stopimpact);
 
-  // TODO - intersection transitions
+  /**
+   * Set the flag indicating there is an edge to the right, in between
+   * the from edge and this edge.
+   * @param  localidx  Local index at the node of the inbound edge.
+   * @param  right     True if there is an edge to the right, false if not.
+   */
+  void set_edge_to_right(const uint32_t localidx, const bool right);
 
 };
 

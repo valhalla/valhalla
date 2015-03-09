@@ -170,7 +170,8 @@ class HierarchyBuilder {
   uint32_t ConnectEdges(const baldr::GraphId& basenode,
                         const baldr::GraphId& edgeid,
                         std::vector<midgard::PointLL>& shape,
-                        baldr::GraphId& nodeb);
+                        baldr::GraphId& nodeb,
+                        uint32_t& opp_local_idx);
 
   /*
    * Check if the edge is an entering matched edge of a contracted node.

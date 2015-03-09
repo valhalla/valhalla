@@ -135,37 +135,30 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   admin_callback callback(pt, osmdata);
 
   // Parse each input file for relations
-  auto t = std::chrono::high_resolution_clock::now();
+  LOG_INFO("Parsing relations...")
   for (const auto& input_file : input_files) {
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
   }
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
-  LOG_INFO("Parsing relations took " + std::to_string(msecs) + " ms");
-  LOG_INFO("Admin count = " + std::to_string(osmdata.admins_.size()));
-  LOG_INFO("Member/ways count = " + std::to_string(osmdata.osm_way_count));
+  LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) + " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
 
   // Parse the ways.
-  t = std::chrono::high_resolution_clock::now();
+  LOG_INFO("Parsing ways...");
   for (const auto& input_file : input_files) {
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
   }
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
-  LOG_INFO("Parsing ways took " + std::to_string(msecs) + " ms");
-  LOG_INFO("Admin ways count = " + std::to_string(osmdata.way_map.size()));
-  LOG_INFO("Number of noderefs = " + std::to_string(osmdata.node_count));
+  LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " + std::to_string(osmdata.node_count) + " nodes");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
-  LOG_INFO("Parsing nodes but only keeping " + std::to_string(osmdata.node_count));
-  t = std::chrono::high_resolution_clock::now();
+  LOG_INFO("Parsing nodes...");
   for (const auto& input_file : input_files) {
     OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
   }
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-t).count();
-  LOG_INFO("Parsing nodes took " + std::to_string(msecs) + " ms");
-  LOG_INFO("Nodes included on Admin ways, count = " + std::to_string(osmdata.osm_node_count));
+  LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
+  //done with pbf
+  OSMPBF::Parser::free();
 
   // Return OSM data
   return osmdata;

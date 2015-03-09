@@ -2,6 +2,24 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/logging.h>
 
+namespace {
+
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @param len  Length of each element within the bit field.
+ * @return  Returns an updated value for the bit field.
+ */
+uint32_t OverwriteBits(const uint32_t dst, const uint32_t src,
+                       const uint32_t pos, const uint32_t len) {
+  uint32_t shift = (pos * len);
+  uint32_t mask  = (((uint32_t)1 << len) - 1) << shift;
+  return (dst & ~mask) | (src << shift);
+}
+}
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -43,7 +61,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_restrictions(restrictions);
   set_traffic_signal(signal);
 
-  set_speed_type(way.tagged_speed() ? SpeedType::kTagged : SpeedType::kClassified);
+  set_speed_type(way.tagged_speed() ?
+        SpeedType::kTagged : SpeedType::kClassified);
 
   // Set forward flag and access (based on direction)
   set_forward(forward);
@@ -431,30 +450,49 @@ void DirectedEdgeBuilder::set_internal(const bool internal) {
 // (index of the inbound edge).
 void DirectedEdgeBuilder::set_turntype(const uint32_t localidx,
                                        const Turn::Type turntype) {
-  turntypes_.turntype |= (static_cast<uint32_t>(turntype) << (localidx * 3));
+  if (localidx > kMaxLocalDriveable) {
+    LOG_WARN("Exceeding max local index in set_turntype. Skipping");
+  } else {
+    turntypes_.turntype = OverwriteBits(turntypes_.turntype,
+                   static_cast<uint32_t>(turntype), localidx, 3);
+  }
 }
 
-// Set the consistent name flag between this edge and the
-// prior edge given its local index (index of the inbound edge).
-void DirectedEdgeBuilder::set_consistent_name(const uint32_t localidx,
-                                              const bool consistent) {
-  if (consistent) {
-    turntypes_.turntype |= (1 << (24 + localidx));
+// Set the flag indicating there is an edge to the left, in between
+// the from edge and this edge.
+void DirectedEdgeBuilder::set_edge_to_left(const uint32_t localidx,
+                                           const bool left) {
+  if (localidx > kMaxLocalDriveable) {
+    LOG_WARN("Exceeding max local index in set_edge_to_left. Skipping");
   } else {
-    // Unset the flag - is that needed?
+    turntypes_.edge_to_left = OverwriteBits(turntypes_.edge_to_left,
+                                          left, localidx, 1);
   }
 }
 
 // Set the stop impact when transitioning from the prior edge (given
 // by the local index of the corresponding inbound edge at the node).
-
 void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
                                          const uint32_t stopimpact) {
   if (stopimpact > kMaxStopImpact) {
     LOG_ERROR("Exceeding maximum stop impact: " + std::to_string(stopimpact));
-    stopimpact_.stopimpact |= (kMaxStopImpact << (localidx * 3));
+    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact,
+                                           kMaxStopImpact, localidx, 3);
   } else {
-    stopimpact_.stopimpact |= (stopimpact << (localidx * 3));
+    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact, stopimpact,
+                                           localidx, 3);
+  }
+}
+
+// Set the flag indicating there is an edge to the right, in between
+// the from edge and this edge.
+void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
+                                            const bool right) {
+  if (localidx > kMaxLocalDriveable) {
+    LOG_WARN("Exceeding max local index in set_edge_to_right. Skipping");
+  } else {
+    stopimpact_.edge_to_right = OverwriteBits(stopimpact_.edge_to_right,
+                                right, localidx, 1);
   }
 }
 
