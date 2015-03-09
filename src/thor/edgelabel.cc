@@ -20,18 +20,19 @@ EdgeLabel::EdgeLabel()
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const DirectedEdge* edge, const float cost,
                      const float sortcost, const float dist,
-                     const uint32_t restrictions)
+                     const uint32_t restrictions,
+                     const uint32_t opp_local_idx)
     : predecessor_(predecessor),
       edgeid_(edgeid),
+      endnode_(edge->endnode()),
       truecost_(cost),
       sortcost_(sortcost),
       distance_(dist) {
-  endnode_                  = edge->endnode();
-  attributes_.uturn_index   = edge->opp_index();
+  attributes_.opp_local_idx = opp_local_idx;
+  attributes_.restrictions  = restrictions;
   attributes_.trans_up      = edge->trans_up();
   attributes_.trans_down    = edge->trans_down();
-  attributes_.restrictions  = restrictions;
-  attributes_.opp_local_idx = edge->opp_local_idx();
+  attributes_.shortcut      = edge->shortcut();
 }
 
 // Destructor
@@ -81,9 +82,17 @@ float EdgeLabel::distance() const {
   return distance_;
 }
 
-// Get the Uturn index
-uint32_t EdgeLabel::uturn_index() const {
-  return attributes_.uturn_index;
+// Get the opposing local index. This is the index of the incoming edge
+// (on the local hierarchy) at the end node of the predecessor directed
+// edge. This is used for edge transition costs and Uturn detection.
+uint32_t EdgeLabel::opp_local_idx() const {
+  return attributes_.opp_local_idx;
+}
+
+// Get the restriction mask at the end node. Each bit set to 1 indicates a
+// turn restriction onto the directed edge with matching local edge index.
+uint32_t EdgeLabel::restrictions() const {
+  return attributes_.restrictions;
 }
 
 // Get the transition up flag.
@@ -96,17 +105,9 @@ bool EdgeLabel::trans_down() const {
   return attributes_.trans_down;
 }
 
-// Get the restriction mask at the end node. Each bit set to 1 indicates a
-// turn restriction onto the directed edge with matching local edge index.
-uint32_t EdgeLabel::restrictions() const {
-  return attributes_.restrictions;
-}
-
-// Get the opposing local index. This is the index of the incoming edge
-// (on the local hierarchy) at the end node of the predecessor directed
-// edge. This is used for edge transition costs.
-uint32_t EdgeLabel::opp_local_idx() const {
-  return attributes_.opp_local_idx;
+// Get the shortcut flag.
+bool EdgeLabel::shortcut() const {
+  return attributes_.shortcut;
 }
 
 // Operator for sorting.
