@@ -28,7 +28,6 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  ll  Lat,lng position of the node.
    * @param  edge_index     The GraphId of the first outbound edge.
    * @param  edge_count     The number of outbound directed edges.
-   * @param  driveable      Number of driveable edges (either direction)
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
@@ -37,10 +36,9 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    *
    */
   NodeInfoBuilder(const std::pair<float, float>& ll, const uint32_t edge_index,
-                  const uint32_t edge_count, const uint32_t driveable,
-                  const baldr::RoadClass rc, const uint32_t access,
-                  const baldr::NodeType type, const bool end,
-                  const bool traffic_signal);
+                  const uint32_t edge_count, const baldr::RoadClass rc,
+                  const uint32_t access, const baldr::NodeType type,
+                  const bool end, const bool traffic_signal);
 
   /**
    * Sets the latitude and longitude.
@@ -118,10 +116,10 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_type(const baldr::NodeType type);
 
   /**
-   * Set the number of driveable edges on the local level.
-   * @param  n  Number of driveable edges on the local level.
+   * Set the number of edges on the local level (up to kMaxLocalEdgeInfo).
+   * @param  n  Number of edges on the local level.
    */
-  void set_local_driveable(const uint32_t n);
+  void set_local_edge_count(const uint32_t n);
 
   /**
    * Set the dead-end node flag.
