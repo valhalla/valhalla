@@ -483,6 +483,7 @@ void HierarchyBuilder::AddShortcutEdges(
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
+      uint32_t opp_local_idx = 0;
       GraphId next_edge_id = base_edge_id;
       while (tilednodes_[nodeb.tileid()][nodeb.id()].contract) {
         // Get base node and the contracted node
@@ -508,7 +509,8 @@ void HierarchyBuilder::AddShortcutEdges(
 
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level).
-        length += ConnectEdges(basenode, next_edge_id, shape, nodeb);
+        length += ConnectEdges(basenode, next_edge_id, shape,
+                               nodeb, opp_local_idx);
       }
 
       // Add the edge info. Use length to match edge in case multiple edges
@@ -523,6 +525,10 @@ void HierarchyBuilder::AddShortcutEdges(
       // the direction is forward otherwise the prior edge was the one stored
       // in the forward direction
       newedge.set_forward(added);
+
+      // Shortcut edge has the opp_local_idx of the last directed edge in
+      // the shortcut chain
+      newedge.set_opp_local_idx(opp_local_idx);
 
       // Update the length and end node
       newedge.set_length(length);
@@ -555,10 +561,12 @@ if (nodea.level() == 0) {
 uint32_t HierarchyBuilder::ConnectEdges(const GraphId& basenode,
                                      const GraphId& edgeid,
                                      std::vector<PointLL>& shape,
-                                     GraphId& nodeb) {
-  // Get the tile and directed edge
+                                     GraphId& nodeb,
+                                     uint32_t& opp_local_idx) {
+  // Get the tile and directed edge. Set the opp_local_idx
   const GraphTile* tile = graphreader_.GetGraphTile(basenode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
+  opp_local_idx = directededge->opp_local_idx();
 
   // Get the shape for this edge and append to the shortcut's shape
   std::vector<PointLL> edgeshape = tile->edgeinfo(
