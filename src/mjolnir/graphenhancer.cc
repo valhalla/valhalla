@@ -404,7 +404,8 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
       uint32_t count = nodeinfo.edge_count();
       uint32_t ntrans = std::min(count, kNumberOfEdgeTransitions);
       uint32_t heading[ntrans];
-      for (uint32_t j = 0, n = nodeinfo.edge_count(); j < ntrans; j++) {
+      nodeinfo.set_local_edge_count(ntrans);
+      for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdgeBuilder& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
         auto shape = tile->edgeinfo(directededge.edgeinfo_offset())->shape();
         if (!directededge.forward())

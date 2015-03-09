@@ -450,7 +450,7 @@ void DirectedEdgeBuilder::set_internal(const bool internal) {
 // (index of the inbound edge).
 void DirectedEdgeBuilder::set_turntype(const uint32_t localidx,
                                        const Turn::Type turntype) {
-  if (localidx > kMaxLocalDriveable) {
+  if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_turntype. Skipping");
   } else {
     turntypes_.turntype = OverwriteBits(turntypes_.turntype,
@@ -462,7 +462,7 @@ void DirectedEdgeBuilder::set_turntype(const uint32_t localidx,
 // the from edge and this edge.
 void DirectedEdgeBuilder::set_edge_to_left(const uint32_t localidx,
                                            const bool left) {
-  if (localidx > kMaxLocalDriveable) {
+  if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_left. Skipping");
   } else {
     turntypes_.edge_to_left = OverwriteBits(turntypes_.edge_to_left,
@@ -488,7 +488,7 @@ void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
 // the from edge and this edge.
 void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
                                             const bool right) {
-  if (localidx > kMaxLocalDriveable) {
+  if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_right. Skipping");
   } else {
     stopimpact_.edge_to_right = OverwriteBits(stopimpact_.edge_to_right,
