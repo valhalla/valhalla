@@ -435,7 +435,9 @@ void PopulateManeuver(
     std::vector<std::vector<std::string>> exit_numbers,
     std::vector<std::vector<std::string>> exit_branches,
     std::vector<std::vector<std::string>> exit_towards,
-    std::vector<std::vector<std::string>> exit_names) {
+    std::vector<std::vector<std::string>> exit_names,
+    uint32_t internal_right_turn_count  = 0, uint32_t internal_left_turn_count =
+        0) {
 
   maneuver.set_type(type);
 
@@ -512,6 +514,8 @@ void PopulateManeuver(
     sign.set_consecutive_count(std::stoi(sign_items[1]));
   }
 
+  maneuver.set_internal_right_turn_count(internal_right_turn_count);
+  maneuver.set_internal_left_turn_count(internal_left_turn_count);
 }
 
 void TestLeftInternalStraightCombine() {
@@ -1256,6 +1260,122 @@ void TestLeftInternalUturnCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
+void TestLeftInternalUturnProperDirectionCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Pulaski Highway", "US 40 East" }, 0.067483, 75.000000,
+               TripPath_RoadClass_kPrimary, 48, 52, 0, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1 TURN_CHANNNEL
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Moravia Park Drive" }, 0.019000, 60.000000,
+               TripPath_RoadClass_kSecondary, 317, 317, 3, 4,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:2
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "US 40 West", "Pulaski Highway" }, 0.045000, 90.000000,
+               TripPath_RoadClass_kTrunk, 229, 229, 4, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:3
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Pulaski Highway", "US 40 West" }, 0.000000, 75.000000,
+               TripPath_RoadClass_kPrimary, 229, 229, 5, 5,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Pulaski Highway", "US 40 East" },
+                   { }, { }, "", 0.067483, 3, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 48, 52,
+                   0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, {
+                       "Moravia Park Drive" },
+                   { }, { }, "", 0.019000, 1, 265,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 317,
+                   317, 1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { },
+                   { }, 0, 1);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kLeft, {
+                       "US 40 West", "Pulaski Highway" },
+                   { }, { }, "", 0.045000, 2, 272,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 229,
+                   229, 2, 4, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, { }, "", 0.000000, 0, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0);
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Pulaski Highway", "US 40 East" },
+                   { }, { }, "", 0.067483, 3, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 48, 52,
+                   0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kUturnLeft,
+                   { "US 40 West", "Pulaski Highway" }, { }, {
+                       "Moravia Park Drive" },
+                   "", 0.064000, 3, 177, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 229,
+                   229, 1, 4, 3, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3,
+                   TripDirections_Maneuver_Type_kDestination, { }, { }, { }, "",
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0);
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
 void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   TripPath path;
   TripPath_Node* node;
@@ -1376,6 +1496,121 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
                    0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
                    TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 5, 5,
                    9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { });
+
+  TryCombine(mbTest, maneuvers, expected_maneuvers);
+}
+
+void TestInternalPencilPointUturnProperDirectionCombine() {
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Stonewall Shops Square" }, 0.027386, 40.000000,
+               TripPath_RoadClass_kUnclassified, 352, 343, 0, 2,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  // node:1 TURN_CHANNNEL
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Old Carolina Road" }, 0.019000, 50.000000,
+               TripPath_RoadClass_kTertiary, 331, 331, 2, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:2
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Stonewall Shops Square" }, 0.021000, 50.000000,
+               TripPath_RoadClass_kTertiary, 187, 187, 3, 4,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+               { }, { }, { }, { });
+
+  // node:3
+  node = path.add_node();
+  edge = node->add_edge();
+  PopulateEdge(edge, { "Stonewall Shops Square" }, 0.025240, 40.000000,
+               TripPath_RoadClass_kUnclassified, 162, 149, 4, 6,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { });
+
+  ManeuversBuilderTest mbTest(static_cast<EnhancedTripPath*>(&path));
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Stonewall Shops Square" },
+                   { }, { }, "", 0.027386, 2, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 352, 343,
+                   0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kNone, {
+                       "Stonewall Shops Square" },
+                   { }, { }, "", 0.040000, 3, 348,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 331,
+                   187, 1, 3, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1, { }, { }, { },
+                   { }, 0, 1);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kSlightLeft, {
+                       "Stonewall Shops Square" },
+                   { }, { }, "", 0.025240, 2, 335,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 162, 149,
+                   3, 4, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, { }, "", 0.000000, 0, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0);
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "Stonewall Shops Square" },
+                   { }, { }, "", 0.027386, 2, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 352, 343,
+                   0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kUturnLeft,
+                   { "Stonewall Shops Square" }, { }, { }, "", 0.065240, 5, 179,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 162, 149,
+                   1, 4, 2, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   1);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3,
+                   TripDirections_Maneuver_Type_kDestination, { }, { }, { }, "",
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0);
 
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
@@ -1512,9 +1747,15 @@ int main() {
   // LeftInternalUturnCombine
   suite.test(TEST_CASE(TestLeftInternalUturnCombine));
 
+  // LeftInternalUturnProperDirectionCombine
+  suite.test(TEST_CASE(TestLeftInternalUturnProperDirectionCombine));
+
   // StraightInternalLeftInternalStraightInternalUturnCombine
   suite.test(
       TEST_CASE(TestStraightInternalLeftInternalStraightInternalUturnCombine));
+
+  // InternalPencilPointUturnProperDirectionCombine
+  suite.test(TEST_CASE(TestInternalPencilPointUturnProperDirectionCombine));
 
   // SimpleRightTurnChannelCombine
   suite.test(TEST_CASE(TestSimpleRightTurnChannelCombine));
