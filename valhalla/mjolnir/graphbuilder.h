@@ -40,6 +40,10 @@ class GraphBuilder {
    */
   static void Build(const boost::property_tree::ptree& pt, OSMData& osmdata);
 
+  static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
+
+  static std::vector<SignInfo> CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata);
+
 };
 
 }

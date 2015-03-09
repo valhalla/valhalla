@@ -77,7 +77,7 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   //We split set the uses at bollards and gates.
@@ -114,7 +114,7 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
@@ -129,7 +129,7 @@ void Exits(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(33698177, way_nodes);
@@ -195,7 +195,7 @@ void Baltimore(const std::string& config_file) {
     throw std::runtime_error("Forward/Backward/Pedestrian access is not set correctly for way 192573108.");
   }
 
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false, true);
   way_nodes.sort(node_predicate);
   auto node = GetNode(49473254, way_nodes);
 
@@ -225,7 +225,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::json_parser::read_json(config_file, conf);
 
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(42439096, way_nodes);

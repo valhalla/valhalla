@@ -730,188 +730,6 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
   return mask;
 }
 
-
-// Get highway refs from relations
-std::string GetRef(const std::string& way_ref, const std::string& relation_ref) {
-  bool found = false;
-  std::string refs;
-  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
-  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
-  for (auto& ref : way_refs) {
-    found = false;
-    for (const auto& refdir : refdirs) {
-      std::vector<std::string> tmp = GetTagTokens(refdir,'|'); // US 51|north
-      if (tmp.size() == 2) {
-        if (tmp[0] == ref) { // US 51 == US 51
-          if (!refs.empty())
-            refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
-          else
-            refs = ref + " " + tmp[1];
-          found = true;
-          break;
-        }
-      }
-    }
-
-    if (!found) {   // no direction found in relations for this ref
-      if (!refs.empty())
-        refs += ";" + ref;
-      else
-        refs = ref;
-    }
-  }
-  return refs;
-}
-
-std::vector<SignInfo> CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata) {
-
-  std::vector<SignInfo> exit_list;
-
-  ////////////////////////////////////////////////////////////////////////////
-  // NUMBER
-
-  // Exit sign number
-  if (way.junction_ref_index() != 0) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.ref_offset_map.name(way.junction_ref_index()));
-  }  else if (node.ref()) {
-    exit_list.emplace_back(Sign::Type::kExitNumber,
-            osmdata.node_ref.find(node.osmid)->second);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // BRANCH
-
-  bool has_branch = false;
-
-  // Exit sign branch refs
-  if (way.destination_ref_index() != 0) {
-    has_branch = true;
-    std::vector<std::string> branch_refs = GetTagTokens(
-        osmdata.ref_offset_map.name(way.destination_ref_index()));
-    for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
-    }
-  }
-
-  // Exit sign branch road names
-  if (way.destination_street_index() != 0) {
-    has_branch = true;
-    std::vector<std::string> branch_streets = GetTagTokens(
-        osmdata.name_offset_map.name(way.destination_street_index()));
-    for (auto& branch_street : branch_streets) {
-      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // TOWARD
-
-  bool has_toward = false;
-
-  // Exit sign toward refs
-  if (way.destination_ref_to_index() != 0) {
-    has_toward = true;
-    std::vector<std::string> toward_refs = GetTagTokens(
-        osmdata.ref_offset_map.name(way.destination_ref_to_index()));
-    for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
-    }
-  }
-
-  // Exit sign toward streets
-  if (way.destination_street_to_index() != 0) {
-    has_toward = true;
-    std::vector<std::string> toward_streets = GetTagTokens(
-        osmdata.name_offset_map.name(way.destination_street_to_index()));
-    for (auto& toward_street : toward_streets) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
-    }
-  }
-
-  // Exit sign toward locations
-  if (way.destination_index() != 0) {
-    has_toward = true;
-    std::vector<std::string> toward_names = GetTagTokens(
-        osmdata.name_offset_map.name(way.destination_index()));
-    for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Process exit_to only if other branch or toward info does not exist
-  if (!has_branch && !has_toward) {
-    if (node.exit_to()) {
-
-      std::string tmp;
-      std::size_t pos;
-      std::vector<std::string> exit_tos = GetTagTokens(
-          osmdata.node_exit_to.find(node.osmid)->second);
-      for (auto& exit_to : exit_tos) {
-
-        tmp = exit_to;
-
-        boost::algorithm::to_lower(tmp);
-
-        //remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "to ")) {
-            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(3));
-            continue;
-        }
-        //remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "toward ")) {
-            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(7));
-            continue;
-        }
-
-        std::size_t found = tmp.find(" to ");
-
-        //Default to kToward if found twice or "toward" found as well; otherwise, <branch> to <toward>
-        //For example:  I 95 to I 695
-        if (found != std::string::npos &&
-           (tmp.find(" to ",found+4) == std::string::npos && tmp.find(" toward ") == std::string::npos)) {
-
-            exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
-
-            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+4));
-            continue;
-        }
-
-        found = tmp.find(" toward ");
-
-        //Default to kToward if found twice or "to" found as well; otherwise, <branch> toward <toward>
-        //For example:  I 95 to I 695
-        if (found != std::string::npos &&
-            (tmp.find(" toward ",found+8) == std::string::npos && tmp.find(" to ") == std::string::npos)) {
-
-          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
-
-          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+8));
-          continue;
-        }
-
-        //default to toward.
-        exit_list.emplace_back(Sign::Type::kExitToward, exit_to);
-      }
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // NAME
-
-  // Exit sign name
-  if (node.name()) {
-    std::vector<std::string> names = GetTagTokens(
-            osmdata.node_name.find(node.osmid)->second);
-    for (auto& name : names) {
-      exit_list.emplace_back(Sign::Type::kExitName, name);
-    }
-  }
-
-  return exit_list;
-}
-
 void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
     std::map<GraphId, size_t>::const_iterator tile_start, std::map<GraphId, size_t>::const_iterator tile_end,
@@ -1058,7 +876,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
           auto iter = osmdata.way_ref.find(w.way_id());
           if (iter != osmdata.way_ref.end()) {
             if (w.ref_index() != 0)
-              ref = GetRef(osmdata.ref_offset_map.name(w.ref_index()),iter->second);
+              ref = GraphBuilder::GetRef(osmdata.ref_offset_map.name(w.ref_index()),iter->second);
           }
 
           // Add edge info to the tile and set the offset in the directed edge
@@ -1071,7 +889,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // TODO - Also, we will have to deal with non ramp signs
           // Any exits for this directed edge? is auto and oneway?
-          std::vector<SignInfo> exits = CreateExitSignInfoList(node, w, osmdata);
+          std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(node, w, osmdata);
           if (!exits.empty() && directededge.forwardaccess()
                && directededge.use() == Use::kRamp) {
             graphtile.AddSigns(idx, exits);
@@ -1211,6 +1029,188 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
   BuildLocalTiles(level, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
 
   stats.LogStatistics();
+}
+
+
+// Get highway refs from relations
+std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& relation_ref) {
+  bool found = false;
+  std::string refs;
+  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
+  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
+  for (auto& ref : way_refs) {
+    found = false;
+    for (const auto& refdir : refdirs) {
+      std::vector<std::string> tmp = GetTagTokens(refdir,'|'); // US 51|north
+      if (tmp.size() == 2) {
+        if (tmp[0] == ref) { // US 51 == US 51
+          if (!refs.empty())
+            refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
+          else
+            refs = ref + " " + tmp[1];
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) {   // no direction found in relations for this ref
+      if (!refs.empty())
+        refs += ";" + ref;
+      else
+        refs = ref;
+    }
+  }
+  return refs;
+}
+
+std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata) {
+
+  std::vector<SignInfo> exit_list;
+
+  ////////////////////////////////////////////////////////////////////////////
+  // NUMBER
+
+  // Exit sign number
+  if (way.junction_ref_index() != 0) {
+    exit_list.emplace_back(Sign::Type::kExitNumber,
+            osmdata.ref_offset_map.name(way.junction_ref_index()));
+  }  else if (node.ref()) {
+    exit_list.emplace_back(Sign::Type::kExitNumber,
+            osmdata.node_ref.find(node.osmid)->second);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // BRANCH
+
+  bool has_branch = false;
+
+  // Exit sign branch refs
+  if (way.destination_ref_index() != 0) {
+    has_branch = true;
+    std::vector<std::string> branch_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.destination_ref_index()));
+    for (auto& branch_ref : branch_refs) {
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
+    }
+  }
+
+  // Exit sign branch road names
+  if (way.destination_street_index() != 0) {
+    has_branch = true;
+    std::vector<std::string> branch_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_index()));
+    for (auto& branch_street : branch_streets) {
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // TOWARD
+
+  bool has_toward = false;
+
+  // Exit sign toward refs
+  if (way.destination_ref_to_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.destination_ref_to_index()));
+    for (auto& toward_ref : toward_refs) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
+    }
+  }
+
+  // Exit sign toward streets
+  if (way.destination_street_to_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_to_index()));
+    for (auto& toward_street : toward_streets) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
+    }
+  }
+
+  // Exit sign toward locations
+  if (way.destination_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_names = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_index()));
+    for (auto& toward_name : toward_names) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Process exit_to only if other branch or toward info does not exist
+  if (!has_branch && !has_toward) {
+    if (node.exit_to()) {
+
+      std::string tmp;
+      std::size_t pos;
+      std::vector<std::string> exit_tos = GetTagTokens(
+          osmdata.node_exit_to.find(node.osmid)->second);
+      for (auto& exit_to : exit_tos) {
+
+        tmp = exit_to;
+
+        boost::algorithm::to_lower(tmp);
+
+        //remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
+        if (boost::starts_with(tmp, "to ")) {
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(3));
+            continue;
+        }
+        //remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
+        if (boost::starts_with(tmp, "toward ")) {
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(7));
+            continue;
+        }
+
+        std::size_t found = tmp.find(" to ");
+
+        //Default to kToward if found twice or "toward" found as well; otherwise, <branch> to <toward>
+        //For example:  I 95 to I 695
+        if (found != std::string::npos &&
+           (tmp.find(" to ",found+4) == std::string::npos && tmp.find(" toward ") == std::string::npos)) {
+
+            exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
+
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+4));
+            continue;
+        }
+
+        found = tmp.find(" toward ");
+
+        //Default to kToward if found twice or "to" found as well; otherwise, <branch> toward <toward>
+        //For example:  I 95 to I 695
+        if (found != std::string::npos &&
+            (tmp.find(" toward ",found+8) == std::string::npos && tmp.find(" to ") == std::string::npos)) {
+
+          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
+
+          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+8));
+          continue;
+        }
+
+        //default to toward.
+        exit_list.emplace_back(Sign::Type::kExitToward, exit_to);
+      }
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // NAME
+
+  // Exit sign name
+  if (node.name()) {
+    std::vector<std::string> names = GetTagTokens(
+            osmdata.node_name.find(node.osmid)->second);
+    for (auto& name : names) {
+      exit_list.emplace_back(Sign::Type::kExitName, name);
+    }
+  }
+
+  return exit_list;
 }
 
 }
