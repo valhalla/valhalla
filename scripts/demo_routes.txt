@@ -8,3 +8,6 @@
 -o "40.4416941,-79.9900861,stop,,,Pittsburgh,PA" -d "40.03813,-76.3056686,stop,,,Lancaster,PA" -t auto --config ../conf/valhalla.json
 -o "40.2854881,-76.6506001,stop,,,Hershey,PA" -d "40.794026,-77.8606975,stop,,,State College,PA" -t auto --config ../conf/valhalla.json
 -o "40.794026,-77.8606975,stop,,,State College,PA" -d "40.2854881,-76.6506001,stop,,,Hershey,PA" -t auto --config ../conf/valhalla.json
+-o "40.298355,-76.822388,stop,Jonestown Road" -d "40.378578,-76.658173,stop,Bow Creek Road" -t auto --config ../conf/valhalla.json
+-o "40.298355,-76.822395,stop,Jonestown Road" -d "40.307674,-76.849991,stop,North Progress Avenue" -t auto --config ../conf/valhalla.json
+-o "39.168583,-76.840843,stop,MD 32 West" -d "39.177990,-76.851074,stop,Patuxent Woods Drive" -t auto --config ../conf/valhalla.json
