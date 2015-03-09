@@ -131,12 +131,15 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
+  float mindist = astarheuristic_.GetDistance(origin.vertex());
 
   // Initialize the origin and destination locations
   SetOrigin(graphreader, origin, costing, loop_edge);
   SetDestination(graphreader, dest, costing);
 
   // Find shortest path
+  uint32_t nc = 0;       // Count of iterations with no convergence
+                         // towards destination
   const GraphTile* tile;
   while (true) {
     // Get next element from adjacency list. Check that it is valid. An
@@ -147,10 +150,11 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       if(best_destination_.first != kInvalidLabel)
         return FormPath(best_destination_.first, graphreader, loop_edge);
 
-      // We didn't find any destination edge
+      // We didn't find any destination edge - return empty list of edges
       LOG_ERROR("Route failed after iterations = " +
                    std::to_string(edgelabel_index_));
-      throw std::runtime_error("No path could be found for input");
+ //     throw std::runtime_error("No path could be found for input");
+      return { };
     }
 
     // Remove label from adjacency list, mark it as done - copy the EdgeLabel
@@ -164,13 +168,20 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       return FormPath(best_destination_.first, graphreader, loop_edge);
     }
 
-    // TODO - do we need to terminate fruitless searches? YES
-
     // Get the end node of the prior directed edge and the current distance
     // to the destination.
     GraphId node    = pred.endnode();
     float dist2dest = pred.distance();
     uint32_t level  = node.level();
+
+    // Check that distance is converging towards the destination. Return route
+    // failure if no convergence for TODO iterations
+    if (dist2dest < mindist) {
+      mindist = dist2dest;
+      nc = 0;
+    } else if (nc++ > 500000) {
+      return {};
+    }
 
     // Check hierarchy. Count upward transitions (counted on the level
     // transitioned from). Do not expand based on hierarchy level based on
@@ -194,10 +205,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
     }
 
     // Expand from end node. Identify if this node has shortcut edges
-    // (they occur first so just check the first directed edge).
+    bool has_shortcuts = false;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    bool has_shortcuts = false;
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
                 i++, directededge++, edgeid++) {
       // Handle transition edges they either get skipped or added to the
@@ -234,7 +244,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Get cost
       Cost edgecost = costing->EdgeCost(directededge) +
                       costing->TransitionCost(directededge, nodeinfo, pred);
-      float cost = pred.truecost() + edgecost.cost;
+      float cost = pred.cost() + edgecost.cost;
 
       // Check if already in adjacency list
       if (edgestatus == kTemporary) {
@@ -244,18 +254,15 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         uint32_t prior_label_index = GetPriorEdgeLabel(edgeid);
         if (prior_label_index != kInvalidLabel) {
           // Reduce if cost difference is outside the costing unit size
-          if (cost < edgelabels_[prior_label_index].truecost()) {
+          if (cost < edgelabels_[prior_label_index].cost()) {
             float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
             float newsortcost = prior_sort_cost -
-                    (edgelabels_[prior_label_index].truecost() - cost);
+                    (edgelabels_[prior_label_index].cost() - cost);
             // TODO - do we need to update trans_up/trans_down?
             edgelabels_[prior_label_index].Update(predindex, cost, newsortcost);
             adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
                     prior_sort_cost);
           }
-        } else {
-          // TODO - should never see this, but EdgeStatus failures caused it
-          LOG_ERROR("GetPriorEdgeLabel failed!");
         }
         continue;
       }
@@ -283,8 +290,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
   }
 
   // Failure! Return empty list of edges
-  std::vector<GraphId> empty;
-  return empty;
+  return {};
 }
 
 void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
@@ -302,7 +308,7 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   // Allow the transition edge. Add it to the adjacency list using the
   // predecessor information. Transition edges have no length.
   edgelabels_.emplace_back(EdgeLabel(predindex, edgeid,
-                edge, pred.truecost(), pred.sortcost(), pred.distance(),
+                edge, pred.cost(), pred.sortcost(), pred.distance(),
                 pred.restrictions(), pred.opp_local_idx()));
 
   // Add to the adjacency list, add to the map of edges in the adj. list
@@ -375,14 +381,14 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
   //grab the label
   const EdgeLabel& edge_label = edgelabels_[edge_label_index];
   //if we've already found a destination and the search's current edge is more costly to get to, we are done
-  if(best_destination_.first != kInvalidLabel && edge_label.truecost() > best_destination_.second)
+  if(best_destination_.first != kInvalidLabel && edge_label.cost() > best_destination_.second)
     return true;
   //check if its a destination
   auto p = destinations_.find(edge_label.edgeid());
   //it is indeed one of the possible destination edges
   if(p != destinations_.end()) {
     //if we didnt have another destination yet or this one is better
-    auto cost = edge_label.truecost() + p->second;
+    auto cost = edge_label.cost() + p->second;
     if(best_destination_.first == kInvalidLabel || cost < best_destination_.second){
       best_destination_.first = edge_label_index;
       best_destination_.second = cost;
@@ -399,7 +405,7 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
 std::vector<baldr::GraphId> PathAlgorithm::FormPath(const uint32_t dest,
                      GraphReader& graphreader, const GraphId& loop_edge) {
   // TODO - leave in for now!
-  LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].truecost()) +
+  LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].cost()) +
            "  Iterations = " + std::to_string(edgelabel_index_));
 
   // Return path on local level...
