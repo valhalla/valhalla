@@ -39,17 +39,13 @@ class AutoCost : public DynamicCost {
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters.
-   * @param edge      Pointer to a directed edge.
-   * @param restriction Restriction mask. Identifies the edges at the end
-   *                  node onto which turns are restricted at all times.
-   *                  This mask is compared to the next edge's localedgeidx.
-   * @param uturn     Is this a Uturn?
-   * @param dist2dest Distance to the destination.
+   * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const uint32_t restriction, const bool uturn,
-                       const float dist2dest) const;
+                       const EdgeLabel& pred,
+                       const bool uturn) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -60,18 +56,25 @@ class AutoCost : public DynamicCost {
   virtual bool Allowed(const baldr::NodeInfo* node) const;
 
   /**
-   * Get the cost given a directed edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the cost to traverse the edge.
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge  Pointer to a directed edge.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Get(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
   /**
-   * Returns the time (in seconds) to traverse the edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the time in seconds to traverse the edge.
+   * Returns the cost to make the transition from the predecessor edge.
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  edge  Directed edge (the to edge)
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns the cost and time (seconds)
    */
-  virtual float Seconds(const baldr::DirectedEdge* edge) const;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -82,16 +85,6 @@ class AutoCost : public DynamicCost {
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const;
-
-  /**
-   * Get the general unit size that can be considered as equal for sorting
-   * purposes. The A* method uses an approximate bucket sort, and this value
-   * is used to size the buckets used for sorting. For example, for time
-   * based costs one might compute costs in seconds and consider any time
-   * within 2 seconds of each other as being equal (for sorting purposes).
-   * @return  Returns the unit size for sorting (must be integer value).
-   */
-  virtual uint32_t UnitSize() const;
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -131,22 +124,21 @@ bool AutoCost::AllowTransitions() const {
 
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
-                       const uint32_t restriction, const bool uturn,
-                       const float dist2dest) const {
+                       const EdgeLabel& pred,
+                       const bool uturn) const {
   // Check access and simple turn restrictions
   if (!(edge->forwardaccess() & kAutoAccess) ||
-     (restriction & (1 << edge->localedgeidx()))) {
+     (pred.restrictions() & (1 << edge->localedgeidx()))) {
     return false;
   }
 
-  // Do not allow Uturns. TODO - evaluate later! - Uturns on different
-  // hierarchy levels present problems. May want to set implied turn
-  // restrictions
-  if (uturn)
+  // Do not allow Uturns. TODO - issues with hierarchy transitions
+  // and shortcuts!
+  if (uturn)  // pred.opp_local_idx() == edge->localedgeidx())
     return false;
 
   // Do not allow entering not-thru edges except near the destination.
-  if (edge->not_thru() && dist2dest > not_thru_distance_) {
+  if (edge->not_thru() && pred.distance() > not_thru_distance_) {
     return false;
   }
   return true;
@@ -157,18 +149,22 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
   return (node->access() & kAutoAccess);
 }
 
-// Get the cost to traverse the edge in seconds.
-float AutoCost::Get(const DirectedEdge* edge) const {
+// Get the cost to traverse the edge in seconds
+Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
 #ifdef LOGGING_LEVEL_WARN
-  if (edge->speed() > 150) {
+  if (edge->speed() > 120) {
     LOG_WARN("Speed = " + std::to_string(edge->speed()));
   }
 #endif
-  return edge->length() * speedfactor_[edge->speed()];
+  float sec = (edge->length() * speedfactor_[edge->speed()]);
+  return Cost(sec, sec);
 }
 
-float AutoCost::Seconds(const DirectedEdge* edge) const {
-  return edge->length() * speedfactor_[edge->speed()];
+// Returns the time (in seconds) to make the transition from the predecessor
+Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
+                               const baldr::NodeInfo* node,
+                               const EdgeLabel& pred) const {
+  return Cost(0.0f, 0.0f);
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
@@ -179,11 +175,6 @@ float AutoCost::Seconds(const DirectedEdge* edge) const {
 // estimate is less than the least possible time along roads.
 float AutoCost::AStarCostFactor() const {
   return speedfactor_[120];
-}
-
-uint32_t AutoCost::UnitSize() const {
-  // Consider anything within 1 sec to be same cost
-  return 1;
 }
 
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
@@ -205,11 +196,13 @@ class AutoShorterCost : public AutoCost {
   virtual ~AutoShorterCost();
 
   /**
-   * Get the cost given a directed edge.
-   * @param edge  Pointer to a directed edge.
-   * @return  Returns the cost to traverse the edge.
-   */
-   virtual float Get(const baldr::DirectedEdge* edge) const;
+    * Returns the cost to traverse the edge and an estimate of the actual time
+    * (in seconds) to traverse the edge.
+    * @param  edge     Pointer to a directed edge.
+    * @param  seconds  (OUT) - elapsed time in seconds to traverse the edge
+    * @return  Returns the cost to traverse the edge.
+    */
+   virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
 
    /**
     * Get the cost factor for A* heuristics. This factor is multiplied
@@ -240,9 +233,16 @@ AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& config)
 AutoShorterCost::~AutoShorterCost() {
 }
 
-// Get the cost to traverse the edge in seconds.
-float AutoShorterCost::Get(const DirectedEdge* edge) const {
-  return edge->length() * adjspeedfactor_[edge->speed()];
+/**
+ * Returns the cost to traverse the edge and an estimate of the actual time
+ * (in seconds) to traverse the edge.
+ * @param  edge     Pointer to a directed edge.
+ * @param  seconds  (OUT) - elapsed time in seconds to traverse the edge
+ * @return  Returns the cost to traverse the edge.
+ */
+Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+  return Cost(edge->length() * adjspeedfactor_[edge->speed()],
+              edge->length() * speedfactor_[edge->speed()]);
 }
 
 float AutoShorterCost::AStarCostFactor() const {
