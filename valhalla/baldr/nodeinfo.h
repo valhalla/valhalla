@@ -108,7 +108,7 @@ class NodeInfo {
   NodeType type() const;
 
   /**
-   * Get the number of edges on the local level (up to kMaxLocalEdgeIndex).
+   * Get the number of edges on the local level (up to kMaxLocalEdgeIndex+1).
    * @return  Returns the number of edges on the local level.
    */
   uint32_t local_edge_count() const;
@@ -209,11 +209,11 @@ class NodeInfo {
   // Node type
   struct NodeTypeInfo {
     uint32_t local_driveability : 16; // Driveability for local edges (up to
-                                      // kMaxLocalEdgeIndex
+                                      // kMaxLocalEdgeIndex+1 edges)
     uint32_t density            : 4;  // Density (population? edges?)
     uint32_t type               : 4;  // Node type
     uint32_t local_edge_count   : 3;  // # of edges on local level (up to
-                                      // kMaxLocalEdgeIndex)
+                                      // kMaxLocalEdgeIndex+1)
     uint32_t end                : 1;  // End node (only connects to 1 edge)
     uint32_t parent             : 1;  // Is this a parent node
     uint32_t child              : 1;  // Is this a child node
@@ -230,7 +230,7 @@ class NodeInfo {
   };
   NodeStop stop_;
 
-  // Headings of up to kMaxLocalEdgeIndex local edges (rounded to
+  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
   // nearest 2 degrees)
   uint64_t headings_;
 };

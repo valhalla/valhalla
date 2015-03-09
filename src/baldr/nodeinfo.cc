@@ -82,9 +82,10 @@ NodeType NodeInfo::type() const {
   return static_cast<NodeType>(type_.type);
 }
 
-// Get the number of edges on the local level (up to kMaxLocalEdgeIndex).
+// Get the number of edges on the local level. We add 1 to allow up to
+// up to kMaxLocalEdgeIndex + 1.
 uint32_t NodeInfo::local_edge_count() const {
-  return type_.local_edge_count;
+  return type_.local_edge_count + 1;
 }
 
 // Is this a dead-end node that connects to only one edge?
