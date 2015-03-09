@@ -68,6 +68,13 @@ class DynamicCost {
   virtual bool AllowTransitions() const;
 
   /**
+   * Does the costing method allow multiple passes (with relaxed
+   * hierarchy limits).
+   * @return  Returns true if the costing model allows multiple passes.
+   */
+  virtual bool AllowMultiPass() const;
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
@@ -148,6 +155,16 @@ class DynamicCost {
    * @return  Returns the hierarchy limits.
    */
   std::vector<HierarchyLimits>& GetHierarchyLimits();
+
+  /**
+   * Relax hierarchy limits.
+   */
+  void RelaxHierarchyLimits(const float factor);
+
+  /**
+   * Reset hierarchy limits.
+   */
+  void ResetHierarchyLimits();
 
  protected:
   // Hierarchy limits.

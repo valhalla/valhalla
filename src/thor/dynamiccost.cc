@@ -1,4 +1,5 @@
 #include "thor/dynamiccost.h"
+#include <valhalla/thor/hierarchylimits.h>
 
 using namespace valhalla::baldr;
 
@@ -23,6 +24,13 @@ bool DynamicCost::AllowTransitions() const {
   return false;
 }
 
+// Does the costing method allow multiple passes (with relaxed hierarchy
+// limits). Defaults to false. Costing methods that wish to allow multiple
+// passes with relaxed hierarchy transitions must override this method.
+bool DynamicCost::AllowMultiPass() const {
+  return false;
+}
+
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
@@ -41,6 +49,13 @@ uint32_t DynamicCost::UnitSize() const {
 // Gets the hierarchy limits.
 std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
+}
+
+// Relax hierarchy limits.
+void DynamicCost::RelaxHierarchyLimits(const float factor) {
+  for (auto& hierarchy : hierarchy_limits_) {
+    hierarchy.Relax(factor);
+  }
 }
 
 // Set the distance from the destination where "not_thru" edges are allowed.
