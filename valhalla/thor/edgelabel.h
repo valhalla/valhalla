@@ -78,7 +78,7 @@ class EdgeLabel {
    * Get the cost from the origin to this directed edge.
    * @return  Returns the cost (units are based on the costing method).
    */
-  float truecost() const;
+  float cost() const;
 
   /**
    * Get the sort cost from the origin to this directed edge. The sort
@@ -151,8 +151,8 @@ class EdgeLabel {
   // edge
   baldr::GraphId endnode_;
 
-  // Cost (time, distance, etc.)
-  float truecost_;
+  // Cost (time, distance, etc.) along the path to this edge
+  float cost_;
 
   // Sort cost - includes A* heuristic
   float sortcost_;

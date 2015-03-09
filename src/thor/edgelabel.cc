@@ -10,7 +10,7 @@ namespace thor {
 EdgeLabel::EdgeLabel()
     : predecessor_(kInvalidLabel),
       edgeid_(GraphId()),
-      truecost_(0.0f),
+      cost_(0.0f),
       sortcost_(0.0f),
       distance_(0.0f),
       attributes_{} {
@@ -25,7 +25,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
-      truecost_(cost),
+      cost_(cost),
       sortcost_(sortcost),
       distance_(dist) {
   attributes_.opp_local_idx = opp_local_idx;
@@ -43,7 +43,7 @@ EdgeLabel::~EdgeLabel() {
 void EdgeLabel::Update(const uint32_t predecessor, const float cost,
                        const float sortcost) {
   predecessor_ = predecessor;
-  truecost_ = cost;
+  cost_ = cost;
   sortcost_ = sortcost;
 }
 
@@ -72,9 +72,9 @@ void EdgeLabel::SetSortCost(float sortcost) {
 sortcost_ = sortcost;
 }
 
-// Get the true cost.
-float EdgeLabel::truecost() const {
-  return truecost_;
+// Get the cost from the origin to this directed edge.
+float EdgeLabel::cost() const {
+  return cost_;
 }
 
 // Get the distance to the destination.

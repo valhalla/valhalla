@@ -11,6 +11,9 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace thor {
 
+// Maximum speed expected - this is used for the A* heuristic
+constexpr uint32_t kMaxSpeedKph = 140;
+
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
  * is a route that is generally shortest time but uses route hierarchies that
@@ -33,6 +36,13 @@ class AutoCost : public DynamicCost {
    * @return  Returns true if the costing model allows hierarchy transitions).
    */
    virtual bool AllowTransitions() const;
+
+  /**
+   * Does the costing method allow multiple passes (with relaxed hierarchy
+   * limits).
+   * @return  Returns true if the costing model allows multiple passes.
+   */
+  virtual bool AllowMultiPass() const;
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -121,6 +131,12 @@ bool AutoCost::AllowTransitions() const {
   return true;
 }
 
+// Does the costing method allow multiple passes (with relaxed hierarchy
+// limits).
+bool AutoCost::AllowMultiPass() const {
+  return true;
+}
+
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
@@ -147,7 +163,7 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const DirectedEdge* edge) const {
 #ifdef LOGGING_LEVEL_WARN
-  if (edge->speed() > 120) {
+  if (edge->speed() > kMaxSpeedKph) {
     LOG_WARN("Speed = " + std::to_string(edge->speed()));
   }
 #endif
@@ -169,7 +185,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float AutoCost::AStarCostFactor() const {
-  return speedfactor_[120];
+  return speedfactor_[kMaxSpeedKph];
 }
 
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
