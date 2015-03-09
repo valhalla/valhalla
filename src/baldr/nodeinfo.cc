@@ -82,9 +82,9 @@ NodeType NodeInfo::type() const {
   return static_cast<NodeType>(type_.type);
 }
 
-// Get the number of driveable edges on the local level.
-uint32_t NodeInfo::local_driveable() const {
-  return type_.local_driveable;
+// Get the number of edges on the local level (up to kMaxLocalEdgeIndex).
+uint32_t NodeInfo::local_edge_count() const {
+  return type_.local_edge_count;
 }
 
 // Is this a dead-end node that connects to only one edge?
@@ -121,15 +121,15 @@ uint32_t NodeInfo::stop_id() const {
 }
 
 // Get the name consistency between a pair of local edges. This is limited
-// to the first 8 local edge indexes.
+// to the first kMaxLocalEdgeIndex local edge indexes.
 bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
   if (from == to) {
     return true;
   } else if (from < to) {
-    return (to > kMaxLocalDriveable) ? false :
+    return (to > kMaxLocalEdgeIndex) ? false :
         (stop_.name_consistency & 1 << (ContinuityLookup[from] + (to-from-1)));
   } else {
-    return (from > kMaxLocalDriveable) ? false :
+    return (from > kMaxLocalEdgeIndex) ? false :
         (stop_.name_consistency & 1 << (ContinuityLookup[to] + (from-to-1)));
   }
 }
@@ -201,8 +201,8 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
   ni.type_.type = ~ni.type_.type;
   boost::hash_combine(seed,ffs(ni.type_.type+1)-1);
-  ni.type_.local_driveable = ~ni.type_.local_driveable;
-  boost::hash_combine(seed,ffs(ni.type_.local_driveable+1)-1);
+  ni.type_.local_edge_count = ~ni.type_.local_edge_count;
+  boost::hash_combine(seed,ffs(ni.type_.local_edge_count+1)-1);
   ni.type_.end = ~ni.type_.end;
   boost::hash_combine(seed,ffs(ni.type_.end+1)-1);
   ni.type_.parent = ~ni.type_.parent;
