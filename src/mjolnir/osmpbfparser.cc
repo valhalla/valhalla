@@ -260,9 +260,12 @@ void Parser::parse(const std::string& filename, const Interest interest, Callbac
   }
 
   //done with protobuf and buffers
-  google::protobuf::ShutdownProtobufLibrary();
   delete [] buffer;
   delete [] unpack_buffer;
+}
+
+void Parser::free() {
+  google::protobuf::ShutdownProtobufLibrary();
 }
 
 }
