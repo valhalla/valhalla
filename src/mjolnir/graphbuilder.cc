@@ -1026,7 +1026,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
   ReclassifyLinks(osmdata.ways_file, nodes_file, edges_file, stats);
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
-  BuildLocalTiles(level, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
+  BuildLocalTiles(threads, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
 
   stats.LogStatistics();
 }
