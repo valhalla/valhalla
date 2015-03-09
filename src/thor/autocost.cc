@@ -44,8 +44,7 @@ class AutoCost : public DynamicCost {
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const bool uturn) const;
+                       const EdgeLabel& pred) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -124,18 +123,14 @@ bool AutoCost::AllowTransitions() const {
 
 // Check if access is allowed on the specified edge.
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred,
-                       const bool uturn) const {
-  // Check access and simple turn restrictions
+                       const EdgeLabel& pred) const {
+  // Check access, simple turn restrictions, and Uturns.
+  // TODO - perhaps allow Uturns at dead-end nodes?
   if (!(edge->forwardaccess() & kAutoAccess) ||
+      pred.opp_local_idx() == edge->localedgeidx() ||
      (pred.restrictions() & (1 << edge->localedgeidx()))) {
     return false;
   }
-
-  // Do not allow Uturns. TODO - issues with hierarchy transitions
-  // and shortcuts!
-  if (uturn)  // pred.opp_local_idx() == edge->localedgeidx())
-    return false;
 
   // Do not allow entering not-thru edges except near the destination.
   if (edge->not_thru() && pred.distance() > not_thru_distance_) {
