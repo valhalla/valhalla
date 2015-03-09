@@ -22,7 +22,7 @@ namespace valhalla{
 namespace mjolnir{
 
 template <class T>
-struct sequence {
+class sequence {
  public:
   //static_assert(std::is_pod<T>::value, "sequence requires POD types for now");
   static const size_t npos = -1;
@@ -228,7 +228,7 @@ struct sequence {
     flush();
     //grab each element and do something with it
     for(size_t i = 0; i < element_count; ++i)
-      predicate(*at(i));
+      predicate(*(at(i)));
   }
 
   //force writing whatever we have in the write_buffer to file
@@ -272,7 +272,7 @@ struct sequence {
     }
     operator T() {
       if(parent->mmap_handle)
-        return *(static_cast<const T*>(parent->mmap_handle) + index);
+        return *(static_cast<T*>(parent->mmap_handle) + index);
 
       T result;
       parent->file->seekg(index * sizeof(T));
@@ -339,7 +339,7 @@ struct sequence {
       return index;
     }
    protected:
-    iterator(sequence* parent, size_t offset): parent(parent), index(index) {}
+    iterator(sequence* base, size_t offset): parent(base), index(offset) {}
     sequence* parent;
     size_t index;
   };

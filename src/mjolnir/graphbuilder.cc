@@ -246,7 +246,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
   GraphId graphid;
   //so we can read ways and nodes and write edges
   sequence<OSMWay> ways(osmdata.ways_file, false);
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   sequence<Edge> edges(edges_file, true);
   sequence<Node> nodes(nodes_file, true);
 
@@ -921,7 +921,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
   LOG_INFO("Thread " + thread_id + " started");
 
   sequence<OSMWay> ways(osmdata.ways_file, false);
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
