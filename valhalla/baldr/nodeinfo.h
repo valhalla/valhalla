@@ -17,6 +17,11 @@ constexpr uint32_t kMaxLocalEdgeIndex = 7;        // Max. index of edges on
                                                   // local level
 constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 
+// Heading shrink factor to reduce max heading of 359 to 255
+constexpr float kHeadingShrinkFactor = (255.f/359.f);
+// Heading expand factor to increase max heading of 255 to 359
+constexpr float kHeadingExpandFactor = (359.f/255.f);
+
 /**
  * Information held for each node within the graph. The graph uses a forward
  * star structure: nodes point to the first outbound directed edge and each
