@@ -109,6 +109,14 @@ struct HierarchyLimits {
   bool AllowDownwardTransition(const float dist) const {
     return dist < downward_within_dist;
   }
+
+  void Relax(const float factor) {
+    up_transition_count *= factor;
+    max_up_transitions *= factor;
+    expansion_within_dist *= factor;
+    upward_until_dist *= factor;
+    downward_within_dist *= factor;
+  }
 };
 
 }
