@@ -75,10 +75,12 @@ check_PROGRAMS = \
 	test/point2 \
 	test/distanceapproximator \
 	test/aabb2 \
+	test/obb2 \
 	test/linesegment2 \
 	test/vector2 \
 	test/polyline2 \
 	test/pointll \
+	test/ellipse \
 	test/encode \
 	test/tiles \
 	test/util
@@ -91,6 +93,9 @@ test_distanceapproximator_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_m
 test_aabb2_SOURCES = test/aabb2.cc test/test.cc
 test_aabb2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_aabb2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
+test_obb2_SOURCES = test/obb2.cc test/test.cc
+test_obb2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_obb2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
 test_linesegment2_SOURCES = test/linesegment2.cc test/test.cc
 test_linesegment2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_linesegment2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
@@ -103,6 +108,9 @@ test_polyline2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
 test_pointll_SOURCES = test/pointll.cc test/test.cc
 test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_pointll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
+test_ellipse_SOURCES = test/ellipse.cc test/test.cc
+test_ellipse_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_ellipse_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
 test_encode_SOURCES = test/encode.cc test/test.cc
 test_encode_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_encode_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la

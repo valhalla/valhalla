@@ -8,11 +8,13 @@
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/util.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
- * Ellipse
+ * Ellipse. Methods to construct an ellipse, test if a line segment intersects,
+ * an axis-aligned bounding box intersects, and whether a point is within the
+ * ellipse.
  */
 class Ellipse {
  public:
@@ -23,8 +25,9 @@ class Ellipse {
 
   /**
    * Constructor given bounding rectangle and a rotation.
-   * @param  p1   One corner point of the bounding rectangle
-   * @param
+   * @param  p1     One corner point of the bounding rectangle
+   * @param  p2     Another corner point of the bounding rectangle.
+   * @param  angle  Angle of rotation
    */
   Ellipse(const Point2& p1, const Point2& p2, float angle);
 
@@ -36,7 +39,7 @@ class Ellipse {
    * @param    pt1      OUT - second intersection point (if it exists)
    * @return   Returns the number of intersection points (0, 1, or 2).
    */
-  unsigned int Intersect(const LineSegment2& seg, Point2& pt0,
+  uint32_t Intersect(const LineSegment2& seg, Point2& pt0,
                          Point2& pt1) const;
 
   /**
