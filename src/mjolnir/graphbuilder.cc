@@ -5,6 +5,7 @@
 #include <future>
 #include <utility>
 #include <thread>
+#include <set>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -125,11 +126,15 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       auto edge_itr = edges[node.start_of];
       auto edge = *edge_itr;
       bundle.edges.emplace_back(edge, edge_itr.position());
+      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
     if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
       bundle.edges.emplace_back(edge, edge_itr.position());
+      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
   }
   return bundle;
@@ -153,10 +158,9 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
     }
   );
   //run through the sorted nodes, going back to the edges they reference and updating each edge
-  //to point to the first (out of the duplicates) nodes index accumulate the edge link attributes
-  //and apply them to the first node, at the end of this there will be tons of nodes that no edges
-  //reference, but we need them because they are the means by which we know what edges connect to
-  //a given node from the nodes perspective
+  //to point to the first (out of the duplicates) nodes index. at the end of this there will be
+  //tons of nodes that no edges reference, but we need them because they are the means by which
+  //we know what edges connect to a given node from the nodes perspective
   sequence<Edge> edges(edges_file, false);
   uint32_t run_index = 0;
   uint32_t node_index = 0;
@@ -164,43 +168,34 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   std::map<GraphId, size_t> tiles;
   nodes.transform(
     [&nodes, &edges, &run_index, &node_index, &last_node, &tiles](Node& node) {
-      bool runback = false;
       //remember if this was a new tile
       if(node_index == 0 || node.graph_id != (--tiles.end())->first) {
         tiles.insert({node.graph_id, node_index});
         node.graph_id.fields.id = 0;
-        runback = true;
-      }//but is it a new node
-      else if(last_node.node.osmid != node.node.osmid) {
-        node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
-        runback = true;
-      }//its not new so just carry along the important stuff
+        run_index = node_index;
+      }//update the ways to point to the right node
       else {
-        node.graph_id.fields.id = last_node.graph_id.fields.id;
-        //if this node marks the start of an edge, go tell the edge where the node is
+        //but is it a new node
+        if(last_node.node.osmid != node.node.osmid) {
+          node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
+          run_index = node_index;
+        }//not new keep the same graphid
+        else
+          node.graph_id.fields.id = last_node.graph_id.fields.id;
+        //if this node marks the start of an edge, go tell the edge where the first node in the series is
         if(node.is_start()) {
           auto element = edges[node.start_of];
           auto edge = *element;
           edge.sourcenode_ = run_index;
           element = edge;
-          node.node.attributes_.link_edge = last_node.node.attributes_.link_edge || edge.attributes.link;
-          node.node.attributes_.non_link_edge = last_node.node.attributes_.non_link_edge || !edge.attributes.link;
         }
-        //if this node marks the end of an edge, go tell the edge where the node is
+        //if this node marks the end of an edge, go tell the edge where the first node in the series is
         if(node.is_end()) {
           auto element = edges[node.end_of];
           auto edge = *element;
           edge.targetnode_ = run_index;
           element = edge;
-          node.node.attributes_.link_edge = last_node.node.attributes_.link_edge || edge.attributes.link;
-          node.node.attributes_.non_link_edge = last_node.node.attributes_.non_link_edge || !edge.attributes.link;
         }
-      }
-
-      //if we just finished a run update the first node attributes and start another run
-      if(runback && node_index != 0) {
-        nodes[run_index] = last_node;
-        run_index = node_index;
       }
 
       //next node
@@ -271,7 +266,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
           startnodeid = way_node.node.osmid;
-          edge = Edge::make_edge(nodes.size(), way_node.way_index, current_way_node_index, way);
+          edge = Edge::make_edge(nodes.size() - 1, way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size();
@@ -320,113 +315,101 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
   std::unordered_set<size_t> visitedset;  // Set of visited nodes
   std::unordered_set<size_t> expandset;   // Set of nodes to expand
   std::list<size_t> linkedgeindexes;     // Edge indexes to reclassify
-  std::set<uint32_t> endrc;           //
+  std::multiset<uint32_t> endrc;           //
   sequence<OSMWay> ways(ways_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
+  std::set<size_t> indices;
 
   //try to expand
-  auto expand = [&expandset, &endrc, &nodes, &edges] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
+  auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
     auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
     auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
     if (end_node_bundle.node.attributes_.non_link_edge) {
       endrc.insert(GetBestNonLinkClass(end_node_bundle.edges));
-    } else {
+    } else if (visitedset.find(end_node_itr.position()) == visitedset.end()){
       expandset.insert(end_node_itr.position());
     }
   };
 
   //for each node
   sequence<Node>::iterator node_itr = nodes.begin();
-  uint32_t edge_count = 0;
   while (node_itr != nodes.end()) {
-    //amalgamate all the node duplicates into one and the edges that connect to it
-    //this moves the iterator for you
-    auto bundle = collect_node_edges(node_itr, nodes, edges);
-
     // If the node has a both links and non links at it
+    auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
       // Get the highest classification of non-link edges at this node
-
       endrc.clear();
       endrc.insert(GetBestNonLinkClass(bundle.edges));
 
       // Expand from all link edges
       for (const auto& startedge : bundle.edges) {
-        edge_count++;
         // Get the edge information. Skip non-link edges
         if (!startedge.first.attributes.link) {
           continue;
         }
 
-        // Clear the sets and edge list
-        visitedset.clear();
-        expandset.clear();
-        linkedgeindexes.clear();
-
-        // Add start edge to list of links edges to potentially reclassify
-        linkedgeindexes.push_back(startedge.second);
-
-        // If the first end node contains a non-link edge we compute the best
-        // classification. If not we add the end node to the expand set.
+        // Clear the visited set and start expanding at the end of this edge
+        visitedset = {};
+        expandset = {};
+        linkedgeindexes = { startedge.second };
         expand(startedge.first, node_itr);
 
         // Expand edges until all paths reach a node that has a non-link
-        for (uint32_t n = 0; n < 512; n++) {
-          // Once expand list is empty - mark all link edges encountered
-          // with the specified classification / importance and break out
-          // of this loop (can still expand other ramp edges
-          // from the starting node
-          if (expandset.empty()) {
-            // Make sure this connects...
-            if (endrc.size() < 2) {
-              stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.first.wayindex_]).way_id(), 0);
-            }
-            else {
-              // Set to the value of the 2nd best road class of all
-              // connections. This protects against downgrading links
-              // when branches occur.
-              uint32_t rc = *(++endrc.cbegin());
-              for (auto idx : linkedgeindexes) {
-                sequence<Edge>::iterator element = edges[idx];
-                auto edge = *element;
-                if (rc > edge.attributes.importance) {
-                  edge.attributes.importance = rc;
-                  element = edge;
-                  count++;
-                }
-              }
-            }
-            break;
-          }
-
-          // Get the node off of the expand list and add it to the visited list
-          auto expandnode = *expandset.begin();
+        while (!expandset.empty()) {
+          // Expand all edges from this node and pop from expand set
+          auto expand_node_itr = nodes[*expandset.begin()];
+          auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+          visitedset.insert(expand_node_itr.position());
           expandset.erase(expandset.begin());
-          visitedset.insert(expandnode);
-
-          // Expand all edges from this node
-          auto expanded = collect_node_edges(nodes[expandnode], nodes, edges);
           for (const auto& expandededge : expanded.edges) {
             // Do not allow use of the start edge
             if (expandededge.second == startedge.second) {
               continue;
             }
-
             // Add this edge (it should be a link edge) and get its end node
             if (!expandededge.first.attributes.link) {
               LOG_ERROR("Expanding onto non-link edge!");
               continue;
             }
-            expand(expandededge.first, nodes[expandnode]);
+            expand(expandededge.first, expand_node_itr);
           }
         }
+
+        // Once expand list is empty - mark all link edges encountered
+        // with the specified classification / importance and break out
+        // of this loop (can still expand other ramp edges
+        // from the starting node
+        // Make sure this connects...
+        if (endrc.size() < 2) {
+          stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.first.wayindex_]).way_id(), 0);
+        }
+        else {
+          // Set to the value of the 2nd best road class of all
+          // connections. This protects against downgrading links
+          // when branches occur.
+          uint32_t rc = *(++endrc.cbegin());
+          for (auto idx : linkedgeindexes) {
+            sequence<Edge>::iterator element = edges[idx];
+            auto edge = *element;
+            if (rc > edge.attributes.importance) {
+              edge.attributes.importance = rc;
+              element = edge;
+              indices.insert(idx);
+              count++;
+            }
+          }
+        }
+
       }
     }
 
     //go to the next node
     node_itr += bundle.node_count;
   }
+
+  for(const auto& b : indices)
+    LOG_INFO(std::to_string(b));
 
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
@@ -1015,12 +998,12 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
 
   // Line up the nodes and then re-map the edges that the edges to them
   auto tiles = SortGraph(nodes_file, edges_file, tile_hierarchy, level);
-  //TODO: a bunch of node osm id associations for restrictions, node_ref, node_exit_to, node_name
 
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
   ReclassifyLinks(osmdata.ways_file, nodes_file, edges_file, stats);
+  exit(0);
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
