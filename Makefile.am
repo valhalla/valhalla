@@ -80,6 +80,7 @@ check_PROGRAMS = \
 	test/vector2 \
 	test/polyline2 \
 	test/pointll \
+	test/ellipse \
 	test/encode \
 	test/tiles \
 	test/util
@@ -107,6 +108,9 @@ test_polyline2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
 test_pointll_SOURCES = test/pointll.cc test/test.cc
 test_pointll_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_pointll_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
+test_ellipse_SOURCES = test/ellipse.cc test/test.cc
+test_ellipse_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_ellipse_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
 test_encode_SOURCES = test/encode.cc test/test.cc
 test_encode_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_encode_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
