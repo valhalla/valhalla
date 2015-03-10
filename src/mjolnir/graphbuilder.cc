@@ -297,12 +297,10 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
 // Gets the most important class among the node's edges
 uint32_t GetBestNonLinkClass(const std::list<std::pair<Edge, size_t> >& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
-  for (const auto& edge : edges) {
-    if (!edge.first.attributes.link) {
+  for (const auto& edge : edges)
+    if (!edge.first.attributes.link)
       if (edge.first.attributes.importance < bestrc)
         bestrc = edge.first.attributes.importance;
-    }
-  }
   return bestrc;
 }
 
@@ -319,7 +317,7 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
   sequence<OSMWay> ways(ways_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
-  std::set<size_t> indices;
+  //std::set<size_t> indices;
 
   //try to expand
   auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
@@ -339,8 +337,7 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
       // Get the highest classification of non-link edges at this node
-      endrc.clear();
-      endrc.insert(GetBestNonLinkClass(bundle.edges));
+      endrc = { GetBestNonLinkClass(bundle.edges) };
 
       // Expand from all link edges
       for (const auto& startedge : bundle.edges) {
@@ -395,7 +392,7 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
             if (rc > edge.attributes.importance) {
               edge.attributes.importance = rc;
               element = edge;
-              indices.insert(idx);
+              //indices.insert(idx);
               count++;
             }
           }
@@ -408,8 +405,8 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
     node_itr += bundle.node_count;
   }
 
-  for(const auto& b : indices)
-    LOG_INFO(std::to_string(b));
+  /*for(const auto& b : indices)
+    LOG_INFO(std::to_string(b));*/
 
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
@@ -536,11 +533,8 @@ bool IsIntersectionInternal(const size_t startnode, const size_t endnode,
  * Get the use for a link (either a kRamp or kTurnChannel)
  * TODO - validate logic with some real world cases.
  */
-Use GetLinkUse(const size_t edgeindex, const RoadClass rc,
-               const float length, const size_t startnode,
-               const size_t endnode,
-               sequence<Node>& nodes,
-               sequence<Edge>& edges) {
+Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
+               const float length, sequence<Node>& nodes, sequence<Edge>& edges) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
   if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
@@ -554,21 +548,21 @@ Use GetLinkUse(const size_t edgeindex, const RoadClass rc,
   // Both end nodes have to connect to a non-link edge. If either end node
   // connects only to "links" this likely indicates a split or fork,
   // which are not so prevalent in turn channels.
-  auto startnode_itr = nodes[startnode];
+  auto startnode_itr = nodes[edge_pair.first.sourcenode_];
   auto startnd = collect_node_edges(startnode_itr, nodes, edges);
-  auto endnode_itr = nodes[endnode];
+  auto endnode_itr = nodes[edge_pair.first.targetnode_];
   auto endnd = collect_node_edges(endnode_itr, nodes, edges);
   if (startnd.node.attributes_.non_link_edge && endnd.node.attributes_.non_link_edge) {
     // If either end node connects to another link then still
     // call it a ramp. So turn channels are very short and ONLY connect
     // to non-link edges without any exit signs.
     for (const auto& edge : startnd.edges) {
-      if (edge.second != edgeindex && edge.first.attributes.link) {
+      if (edge.second != edge_pair.second && edge.first.attributes.link) {
         return Use::kRamp;
       }
     }
     for (const auto& edge : endnd.edges) {
-      if (edge.second != edgeindex && edge.first.attributes.link) {
+      if (edge.second != edge_pair.second && edge.first.attributes.link) {
         return Use::kRamp;
       }
     }
@@ -601,7 +595,7 @@ float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
   }
   return spd;
 }
-
+/*
 struct DuplicateEdgeInfo {
   uint32_t edgeindex;
   uint32_t length;
@@ -612,7 +606,7 @@ struct DuplicateEdgeInfo {
         length(l) {
   }
 };
-/*
+
 void CheckForDuplicates(const GraphId& nodeid, const Node& node,
                 const std::vector<uint32_t>& edgelengths,
                 const std::unordered_map<GraphId, std::vector<Node>>& nodes,
@@ -646,7 +640,6 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
 }
 */
 uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
-                 GraphTileBuilder& graphtile,
                  const size_t endnode, sequence<Node>& nodes, sequence<Edge>& edges,
                  const OSMData& osmdata, sequence<OSMWay>& ways,
                  DataQuality& stats) {
@@ -657,9 +650,11 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
 
   // Edge is the from edge of a restriction. Find all TRs (if any)
   // through the target (end) node of this directed edge.
+  auto node_itr = nodes[endnode];
+  auto node = *node_itr;
   std::vector<OSMRestriction> trs;
   for (auto r = res.first; r != res.second; ++r) {
-    if (r->second.via_graphid() == endnode) {
+    if (r->second.via() == node.node.osmid) {
       if (r->second.day_on() != DOW::kNone) {
         stats.timedrestrictions++;
       } else {
@@ -673,7 +668,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgein
 
   // Get the way Ids of the edges at the endnode
   std::vector<uint64_t> wayids;
-  auto bundle = collect_node_edges(nodes[endnode], nodes, edges);
+  auto bundle = collect_node_edges(node_itr, nodes, edges);
   for (const auto& edge : bundle.edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
   }
@@ -751,7 +746,6 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
-      GraphId nodeid = tile_start->first.Tile_Base();
       //for each node in the tile
       sequence<Node>::iterator node_itr = nodes[tile_start->second];
       while (node_itr != nodes.end()) {
@@ -812,7 +806,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
           RoadClass rc = static_cast<RoadClass>(edge.attributes.importance);
           Use use = w.use();
           if (w.link()) {
-            use = GetLinkUse(edge_pair.second, rc, length, edge.sourcenode_, edge.targetnode_, nodes, edges);
+            use = GetLinkUse(edge_pair, rc, length, nodes, edges);
             if (use == Use::kTurnChannel)
               stats.turnchannelcount++;
             speed = UpdateLinkSpeed(use, rc, w.speed());
@@ -828,7 +822,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
           // Handle simple turn restrictions that originate from this
           // directed edge
           uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(), idx,
-                      graphtile, target, nodes, edges, osmdata, ways, stats);
+            target, nodes, edges, osmdata, ways, stats);
           if (restrictions != 0)
             stats.simplerestrictions++;
 
@@ -895,11 +889,11 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
 
-        // Increment nodeid
-        nodeid++;
-
         // Increment the counts in the histogram
         stats.node_counts[directededges.size()]++;
+
+        // Next node in the tile
+        node_itr += bundle.node_count;
       }
 
       // Write the actual tile to disk
@@ -1003,7 +997,6 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
   // edge list needs to be modified
   DataQuality stats;
   ReclassifyLinks(osmdata.ways_file, nodes_file, edges_file, stats);
-  exit(0);
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
