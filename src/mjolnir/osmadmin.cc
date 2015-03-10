@@ -58,5 +58,15 @@ uint32_t OSMAdmin::admin_level() const {
   return admin_level_;
 }
 
+// Set drive on right.
+void OSMAdmin::set_drive_on_right(const bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
+}
+
+// Get the drive on right flag.
+bool OSMAdmin::drive_on_right() const {
+  return drive_on_right_;
+}
+
 }
 }
