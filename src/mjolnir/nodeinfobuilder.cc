@@ -1,6 +1,6 @@
 #include "mjolnir/nodeinfobuilder.h"
 #include <valhalla/midgard/logging.h>
-#include <math.h>
+#include <cmath>
 
 using namespace valhalla::baldr;
 
@@ -211,7 +211,7 @@ void NodeInfoBuilder::set_heading(uint32_t localidx, uint32_t heading) {
     LOG_WARN("Local index exceeds max in set_heading, skip");
   } else {
     // Has to be 64 bit!
-    uint64_t hdg = static_cast<uint64_t>(round(
+    uint64_t hdg = static_cast<uint64_t>(std::round(
         (heading % 360) * kHeadingShrinkFactor));
     headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
   }
