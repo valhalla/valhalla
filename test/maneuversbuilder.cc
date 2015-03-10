@@ -246,7 +246,7 @@ void TryDetermineRelativeDirection_Maneuver(
   node = path.add_node();
   node->add_edge()->set_begin_heading(curr_heading);
   for (auto intersecting_heading : intersecting_headings)
-    node->add_edge()->set_begin_heading(intersecting_heading);
+    node->add_intersecting_edge()->set_begin_heading(intersecting_heading);
 
   // node:2 dummy last node
   node = path.add_node();

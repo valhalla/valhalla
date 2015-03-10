@@ -15,9 +15,6 @@ namespace odin {
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath
 
-EnhancedTripPath::EnhancedTripPath() {
-}
-
 EnhancedTripPath_Node* EnhancedTripPath::GetEnhancedNode(const int node_index) {
   return static_cast<EnhancedTripPath_Node*>(mutable_node(node_index));
 }
@@ -70,9 +67,6 @@ int EnhancedTripPath::GetLastNodeIndex() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
-
-EnhancedTripPath_Edge::EnhancedTripPath_Edge() {
-}
 
 bool EnhancedTripPath_Edge::IsUnnamed() const {
   if (name_size() == 0)
@@ -291,19 +285,39 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// EnhancedTripPath_IntersectingEdge
+
+std::string EnhancedTripPath_IntersectingEdge::ToString() const {
+  std::string str;
+  str.reserve(128);
+
+  str += "begin_heading=";
+  str += std::to_string(begin_heading());
+
+  str += " | driveability=";
+  str += std::to_string(driveability());
+
+  str += " | prev_name_consistency=";
+  str += std::to_string(prev_name_consistency());
+
+  str += " | curr_name_consistency=";
+  str += std::to_string(curr_name_consistency());
+
+  return str;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Node
 
 bool EnhancedTripPath_Node::HasIntersectingEdges() const {
-  return (edge().size() > 1);
+  return (intersecting_edge_size() > 0);
 }
 
-size_t EnhancedTripPath_Node::GetIntersectingEdgesCount() const {
-  return ((edge().size() > 0) ? (edge().size() - 1) : 0);
-}
-
-EnhancedTripPath_Edge* EnhancedTripPath_Node::GetIntersectingEdge(
+EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(
     size_t index) {
-  return static_cast<EnhancedTripPath_Edge*>(mutable_edge(++index));
+  return static_cast<EnhancedTripPath_IntersectingEdge*>(mutable_intersecting_edge(
+      index));
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
@@ -320,9 +334,9 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
 
   uint32_t path_turn_degree = GetTurnDegree(from_heading,
                                             edge(0).begin_heading());
-  for (size_t i = 1; i <= GetIntersectingEdgesCount(); ++i) {
-    uint32_t intersecting_turn_degree = GetTurnDegree(from_heading,
-                                                      edge(i).begin_heading());
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    uint32_t intersecting_turn_degree = GetTurnDegree(
+        from_heading, intersecting_edge(i).begin_heading());
     if (path_turn_degree > 180) {
       if ((intersecting_turn_degree > path_turn_degree)
           || (intersecting_turn_degree < 180)) {
