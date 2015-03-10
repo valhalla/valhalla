@@ -43,7 +43,7 @@ test/point2
 test/linesegment2
 test/distanceapproximator
 test/aabb2
-test/bb2
+test/obb2
 test/vector2
 test/polyline2
 test/pointll
