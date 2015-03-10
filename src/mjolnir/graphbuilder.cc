@@ -214,7 +214,6 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
 
   // Iterate through the OSM ways
   uint32_t edgeindex = 0;
-  uint64_t startnodeid;
   GraphId graphid;
   //so we can read ways and nodes and write edges
   sequence<OSMWay> ways(osmdata.ways_file, false);
@@ -239,6 +238,9 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
     first_way_node.node.attributes_.non_link_edge = !way.link();
     nodes.push_back({first_way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(first_way_node.node)});
 
+    //remember the id of last node we saw to detect looping
+    uint64_t last_id = first_way_node.node.osmid;
+
     // Iterate through the nodes of the way until we find an intersection
     while(current_way_node_index < way_nodes.size()) {
       //check if we are done with this way, ie we are started on the next way
@@ -250,25 +252,21 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
       // If a is an intersection or the end of the way
       // it's a node of the road network graph
       if (way_node.node.intersection()) {
-        //remember that this edge ends here
-        edge.targetnode_ = nodes.size();
 
-        //remember this node as ending this edge
+        edge.targetnode_ = nodes.size();
         way_node.node.attributes_.link_edge = way.link();
         way_node.node.attributes_.non_link_edge = !way.link();
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
-
-        // Add the edge to the list of edges
         edges.push_back(edge);
 
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
-          startnodeid = way_node.node.osmid;
           edge = Edge::make_edge(nodes.size() - 1, way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size();
           element = node;
+          last_id = way_node.node.osmid;
         }// This was the last shape point in the way
         else {
           ++current_way_node_index;
