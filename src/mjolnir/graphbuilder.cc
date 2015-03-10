@@ -639,10 +639,10 @@ void CheckForDuplicates(const GraphId& nodeid, const Node& node,
   }
 }
 */
-uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const uint32_t edgeindex,
-                 const size_t endnode, sequence<Node>& nodes, sequence<Edge>& edges,
-                 const OSMData& osmdata, sequence<OSMWay>& ways,
-                 DataQuality& stats) {
+uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
+    sequence<Node>& nodes, sequence<Edge>& edges, const OSMData& osmdata,
+    sequence<OSMWay>& ways, DataQuality& stats) {
+
   auto res = osmdata.restrictions.equal_range(wayid);
   if (res.first == osmdata.restrictions.end()) {
     return 0;
@@ -746,9 +746,10 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
+      size_t tile_node_count = 0;
       //for each node in the tile
-      sequence<Node>::iterator node_itr = nodes[tile_start->second];
-      while (node_itr != nodes.end()) {
+      auto node_itr = nodes[tile_start->second];
+      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_start->first.Tile_Base()) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -821,11 +822,10 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
 
           // Handle simple turn restrictions that originate from this
           // directed edge
-          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(), idx,
+          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(),
             target, nodes, edges, osmdata, ways, stats);
           if (restrictions != 0)
             stats.simplerestrictions++;
-
 
           // traffic signal exists at an intersection node
           // OR
@@ -883,6 +883,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
                                     node.access_mask(), node.type(),
                                     (bundle.edges.size() == 1),
                                     node.traffic_signal());
+        tile_node_count++;
 
         directededgecount += bundle.edges.size();
 
@@ -900,7 +901,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
+      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes %4%") % thread_id % tile_start->first % graphtile.size() % tile_node_count).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
