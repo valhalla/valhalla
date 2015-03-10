@@ -44,6 +44,7 @@ test/linesegment2
 test/distanceapproximator
 test/aabb2
 test/obb2
+test/ellipse
 test/vector2
 test/polyline2
 test/pointll
