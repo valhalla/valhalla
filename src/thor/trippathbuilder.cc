@@ -213,8 +213,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //
     //Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
     //Each letter represents the edge info.
-    //So at node 2, we will store the edge info for D first and then
-    //the edge info for B, C, E, F, and G (order not important.)  We need to make sure
+    //So at node 2, we will store the edge info for D and we will store the
+    //intersecting edge info for B, C, E, F, and G.  We need to make sure
     //that we don't store the edge info from A and D again.  Also, do not store transition edges.
     //
     //     (X)    (3)   (X)
