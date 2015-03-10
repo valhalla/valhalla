@@ -67,10 +67,18 @@ message TripPath {
     optional Sign sign = 21;
   }
   
+  message IntersectingEdge {
+    optional uint32 begin_heading = 1;       // 0-359
+    optional Driveability driveability = 2;
+    optional bool prev_name_consistency = 3;
+    optional bool curr_name_consistency = 4;
+  }
+  
   message Node {
-    repeated Edge edge = 1;           // first one is the outbound path edge
-    optional bool gate = 2;
-    optional bool toll_booth = 3;
+    repeated Edge edge = 1;           // TODO: switch from repeated to optional
+    repeated IntersectingEdge intersecting_edge = 2; 
+    optional bool gate = 3;
+    optional bool toll_booth = 4;
   }
   
   optional uint64 trip_id = 1;
