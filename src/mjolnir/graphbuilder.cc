@@ -173,29 +173,27 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
         tiles.insert({node.graph_id, node_index});
         node.graph_id.fields.id = 0;
         run_index = node_index;
-      }//update the ways to point to the right node
-      else {
-        //but is it a new node
-        if(last_node.node.osmid != node.node.osmid) {
-          node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
-          run_index = node_index;
-        }//not new keep the same graphid
-        else
-          node.graph_id.fields.id = last_node.graph_id.fields.id;
-        //if this node marks the start of an edge, go tell the edge where the first node in the series is
-        if(node.is_start()) {
-          auto element = edges[node.start_of];
-          auto edge = *element;
-          edge.sourcenode_ = run_index;
-          element = edge;
-        }
-        //if this node marks the end of an edge, go tell the edge where the first node in the series is
-        if(node.is_end()) {
-          auto element = edges[node.end_of];
-          auto edge = *element;
-          edge.targetnode_ = run_index;
-          element = edge;
-        }
+      }//but is it a new node
+      else if(last_node.node.osmid != node.node.osmid) {
+        node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
+        run_index = node_index;
+      }//not new keep the same graphid
+      else
+        node.graph_id.fields.id = last_node.graph_id.fields.id;
+
+      //if this node marks the start of an edge, go tell the edge where the first node in the series is
+      if(node.is_start()) {
+        auto element = edges[node.start_of];
+        auto edge = *element;
+        edge.sourcenode_ = run_index;
+        element = edge;
+      }
+      //if this node marks the end of an edge, go tell the edge where the first node in the series is
+      if(node.is_end()) {
+        auto element = edges[node.end_of];
+        auto edge = *element;
+        edge.targetnode_ = run_index;
+        element = edge;
       }
 
       //next node
@@ -417,16 +415,14 @@ bool IsNoThroughEdge(const size_t startnode, const size_t endnode,
              const size_t startedgeindex, sequence<Node>& nodes, sequence<Edge>& edges) {
   // Add the end node Id to the set of nodes to expand
   std::unordered_set<size_t> visitedset;
-  std::unordered_set<size_t> expandset;
-  expandset.insert(endnode);
+  std::unordered_set<size_t> expandset = {endnode};
 
   // Expand edges until exhausted, the maximum number of expansions occur,
   // or end up back at the starting node. No node can be visited twice.
   for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
     // If expand list is exhausted this is "not thru"
-    if (expandset.empty()) {
+    if (expandset.empty())
       return true;
-    }
 
     // Get the node off of the expand list and add it to the visited list.
     // Expand edges from this node.
@@ -435,24 +431,19 @@ bool IsNoThroughEdge(const size_t startnode, const size_t endnode,
     visitedset.emplace(node_index);
     auto bundle = collect_node_edges(nodes[node_index], nodes, edges);
     for (const auto& edge_pair : bundle.edges) {
-      if (edge_pair.second == startedgeindex) {
-        // Do not allow use of the start edge
+      // Do not allow use of the start edge
+      if (edge_pair.second == startedgeindex)
         continue;
-      }
 
       // Return false if we have returned back to the start node or we
       // encounter a tertiary road (or better)
-      auto nextendnode = static_cast<size_t>(edge_pair.first.sourcenode_ == node_index ?
-          edge_pair.first.targetnode_ : edge_pair.first.sourcenode_);
-      if (nextendnode == startnode ||
-          edge_pair.first.attributes.importance <= static_cast<uint32_t>(RoadClass::kTertiary)) {
+      auto nextendnode = edge_pair.first.sourcenode_ == node_index ? edge_pair.first.targetnode_ : edge_pair.first.sourcenode_;
+      if (nextendnode == startnode || edge_pair.first.attributes.importance <= static_cast<uint32_t>(RoadClass::kTertiary))
         return false;
-      }
 
       // Add to the expand set if not in the visited set
-      if (visitedset.find(nextendnode) == visitedset.end()) {
+      if (visitedset.find(nextendnode) == visitedset.end())
         expandset.insert(nextendnode);
-      }
     }
   }
   return false;
@@ -746,7 +737,6 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
-      size_t tile_node_count = 0;
       //for each node in the tile
       auto node_itr = nodes[tile_start->second];
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_start->first.Tile_Base()) {
@@ -775,17 +765,10 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
 
           // Determine orientation along the edge (forward or reverse between
           // the 2 nodes). Check for edge error.
-          bool forward;
-          size_t source, target;
-          if (edge.sourcenode_ == node_itr.position()) {
-            forward = true;
-            source = edge.sourcenode_;
-            target = edge.targetnode_;
-          } else {
-            forward = false;
-            source = edge.targetnode_;
-            target = edge.sourcenode_;
-          }
+          bool forward = edge.sourcenode_ == node_itr.position();
+          size_t source = edge.sourcenode_, target = edge.targetnode_;
+          if (!forward)
+            std::swap(source, target);
 
           // Check for not_thru edge (only on low importance edges)
           bool not_thru = false;
@@ -883,7 +866,6 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
                                     node.access_mask(), node.type(),
                                     (bundle.edges.size() == 1),
                                     node.traffic_signal());
-        tile_node_count++;
 
         directededgecount += bundle.edges.size();
 
@@ -901,7 +883,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes %4%") % thread_id % tile_start->first % graphtile.size() % tile_node_count).str());
+      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
