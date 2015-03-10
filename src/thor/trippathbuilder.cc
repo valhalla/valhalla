@@ -1,11 +1,13 @@
 #include <ostream>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 #include "thor/trippathbuilder.h"
 
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/signinfo.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
@@ -139,6 +141,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Iterate through path edges
   uint32_t prior_opp_index;
+  uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
   for (auto edge_itr = pathedges.begin(); edge_itr != pathedges.end(); ++edge_itr) {
     const GraphId& edge = *edge_itr;
@@ -240,6 +243,19 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         }
         AddTripEdge(edgeid, connectededge, trip_node, tile);
       }
+
+      for (uint32_t edge_idx = 0; edge_idx < nodeinfo->local_edge_count();
+          ++edge_idx) {
+        // If the edge index is the previous local edge or the current local edge
+        // then skip it
+        if ((edge_idx == prior_opp_local_index)
+            || (edge_idx == directededge->localedgeidx())) {
+          continue;
+        }
+        AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
+                                directededge->localedgeidx(), nodeinfo,
+                                trip_node);
+      }
     }
 
     // Set the endnode of this directed edge as the startnode of the next edge.
@@ -247,6 +263,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     // Save the index of the opposing directed edge at the end node
     prior_opp_index = directededge->opp_index();
+    prior_opp_local_index = directededge->opp_local_idx();
   }
 
   // Add the last node
@@ -279,6 +296,19 @@ TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
       return TripPath_RoadClass_kResidential;
     case RoadClass::kServiceOther:
       return TripPath_RoadClass_kServiceOther;
+  }
+}
+
+TripPath_Driveability GetTripPathDriveability(Driveability driveability) {
+  switch (driveability) {
+    case Driveability::kNone:
+      return TripPath_Driveability_kNone;
+    case Driveability::kForward:
+      return TripPath_Driveability_kForward;
+    case Driveability::kBackward:
+      return TripPath_Driveability_kBackward;
+    case Driveability::kBoth:
+      return TripPath_Driveability_kBoth;
   }
 }
 
@@ -404,6 +434,31 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   trip_edge->set_internal_intersection(directededge->internal());
 
   return trip_edge;
+}
+
+void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
+                                              uint32_t prev_edge_index,
+                                              uint32_t curr_edge_index,
+                                              const baldr::NodeInfo* nodeinfo,
+                                              odin::TripPath_Node* trip_node) {
+
+  TripPath_IntersectingEdge* itersecting_edge =
+      trip_node->add_intersecting_edge();
+
+  // Set the heading for the intersecting edge
+  itersecting_edge->set_begin_heading(nodeinfo->heading(edge_index));
+
+  // Set the driveability flag for the intersecting edge
+  itersecting_edge->set_driveability(
+      GetTripPathDriveability(nodeinfo->local_driveability(edge_index)));
+
+  // Set the previous/intersecting edge name consistency
+  itersecting_edge->set_prev_name_consistency(
+      nodeinfo->name_consistency(prev_edge_index, edge_index));
+
+  // Set the current/intersecting edge name consistency
+  itersecting_edge->set_curr_name_consistency(
+      nodeinfo->name_consistency(curr_edge_index, edge_index));
 }
 
 }
