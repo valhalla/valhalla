@@ -1,5 +1,6 @@
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>
+#include <cmath>
 
 namespace {
 const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
@@ -140,8 +141,9 @@ bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
   // Make sure everything is 64 bit!
   uint64_t shift = localidx * 8;     // 8 bits per index
-  return static_cast<uint32_t>(((headings_
-      & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor);
+  return static_cast<uint32_t>(std::round(
+      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift)
+          * kHeadingExpandFactor));
 }
 
 // Get the hash_value
