@@ -1,5 +1,6 @@
 #include "mjolnir/nodeinfobuilder.h"
 #include <valhalla/midgard/logging.h>
+#include <math.h>
 
 using namespace valhalla::baldr;
 
@@ -204,19 +205,16 @@ void NodeInfoBuilder::set_name_consistency(const uint32_t from,
 }
 
 // Set the heading of the local edge given its local index. Supports
-// up to 8 local edges. Headings are stored rounded off to 2 degree
-// values.
-void NodeInfoBuilder::set_heading(const uint32_t localidx, const float heading) {
-   if (heading < 0.0f || heading > 360.0f) {
-     LOG_ERROR("Heading outside range (0-360) in set_heading");
-   } else if (localidx > kMaxLocalEdgeIndex) {
-     LOG_WARN("Local index exceeds max in set_heading, skip");
-   } else {
-     // Has to be 64 bit! Round values above 359 to 0 degrees.
-     uint32_t hdg = (heading > 359.0) ?
-                     0 : static_cast<uint32_t>((heading * 0.5f) + 0.5f);
-     headings_ |= static_cast<uint64_t>(hdg) << static_cast<uint64_t>(localidx * 8);
-   }
+// up to 8 local edges. Headings are reduced to 8 bits.
+void NodeInfoBuilder::set_heading(uint32_t localidx, uint32_t heading) {
+  if (localidx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_heading, skip");
+  } else {
+    // Has to be 64 bit!
+    uint64_t hdg = static_cast<uint64_t>(round(
+        (heading % 360) * kHeadingShrinkFactor));
+    headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
+  }
 }
 
 }
