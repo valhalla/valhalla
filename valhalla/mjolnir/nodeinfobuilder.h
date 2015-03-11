@@ -171,12 +171,11 @@ class NodeInfoBuilder : public baldr::NodeInfo {
 
   /**
    * Set the heading of the local edge given its local index. Supports
-   * up to 8 local edges. Headings are stored rounded off to 2 degree
-   * values.
+   * up to 8 local edges. Headings are reduced to 8 bits.
    * @param  localidx  Local edge index.
-   * @param  heading   Heading relative to N (0-360 degrees).
+   * @param  heading   Heading relative to N (0-359 degrees).
    */
-  void set_heading(const uint32_t localidx, const float heading);
+  void set_heading(uint32_t localidx, uint32_t heading);
 };
 
 }

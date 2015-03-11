@@ -84,6 +84,7 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
       }
     }
 
+    // TODO
     // Modify speed
     if (directededge.classification() == RoadClass::kMotorway ||
         directededge.classification() == RoadClass::kTrunk) {
@@ -100,11 +101,13 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
  * Tests if the directed edge is unreachable by driving. If a driveable
  * edge cannot reach higher class roads and a search cannot expand after
  * a set number of iterations the edge is considered unreachable.
+ * @param  reader        Graph reader
+ * @param  lock          Mutex for locking while tiles are retrieved
  * @param  directededge  Directed edge to test.
  * @return  Returns true if the edge is found to be unreachable.
  */
-// Test is an edge is unreachable by driving.
-bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdgeBuilder& directededge) {
+bool IsUnreachable(GraphReader& reader, std::mutex& lock,
+                   DirectedEdgeBuilder& directededge) {
   // Only check driveable edges. If already on a higher class road consider
   // the edge reachable
   if (!(directededge.forwardaccess() & kAutoAccess) ||
@@ -112,7 +115,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdgeBuilder& d
     return false;
   }
 
-  // Add the end node to the exmapnd list
+  // Add the end node to the expand list
   std::unordered_set<GraphId> visitedset;  // Set of visited nodes
   std::unordered_set<GraphId> expandset;   // Set of nodes to expand
   expandset.insert(directededge.endnode());
@@ -154,21 +157,27 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdgeBuilder& d
   return false;
 }
 
-
 /**
  * Get the road density around the specified lat,lng position. This is a
- * value from 0-15 indicating a relative road density. THis can be used
+ * value from 0-15 indicating a relative road density. This can be used
  * in costing methods to help avoid dense, urban areas.
+ * @param  reader        Graph reader
+ * @param  lock          Mutex for locking while tiles are retrieved
  * @param  ll            Lat,lng position
- * @param  localdensity (OUT) Local road density (within a smaller radius) -
+ * @param  localdensity  (OUT) Local road density (within a smaller radius) -
  *                       might be useful for speed assignment. Units are
  *                       km of road per square kilometer
+ * @param  maxdensity    (OUT) max density found
+ * @param  tiles         Tiling (for getting list of required tiles)
+ * @param  local_level   Level of the local tiles.
  * @return  Returns the relative road density (0-15) - higher values are
  *          more dense.
  */
-// Get the node density. Computes road density (km/km squared) with
-// 5 km of the node. TODO - make this a constant or configurable?
-uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll, float& localdensity, float& maxdensity, Tiles tiles, uint8_t local_level) {
+uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
+                    float& localdensity, float& maxdensity, Tiles tiles,
+                    uint8_t local_level) {
+  // TODO - create constants for the radii we want to use
+
   // Specify radius in km  but turn into meters since internal lengths are m
   float radius = 5.0f;
   float km2 = kPi * radius * radius;
@@ -233,12 +242,6 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll, fl
   if (density > maxdensity)
      maxdensity = density;
   return static_cast<uint32_t>((density / 32.0f) * 16.0f);
-
-/**
-  LOG_INFO("LL: " + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()) +
-                     " density= " + std::to_string(density) + " km/km2");
-                 + " localdensity= " + std::to_string(localdensity) + " km/km2");
-*/
 }
 
 /**
@@ -259,11 +262,13 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll, fl
  * than the others. There is almost certainly a stop (stop sign, traffic
  * light) and longer waits are likely when a low class road crosses
  * a higher class road. Special cases occur for links (ramps/turn channels).
+ * @param  from  Index of the from directed edge.
+ * @param  to    Index of the to directed edge.
+ * @param  edges Directed edges outbound from a node.
+ * @param  count Number of outbound directed edges to consider.
  * @return  Returns stop impact ranging from 0 (no likely impact) to
  *          7 - large impact.
  */
-// Gets the stop likelihoood / impact for the transition between 2 edges
-// at an intersection
 uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
                        const DirectedEdge* edges, const uint32_t count) {
   // Get the highest classification of other roads at the intersection
@@ -295,28 +300,57 @@ uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
 
 /**
  * Process edge transitions from all other incoming edges onto the
- * specified directed edge.
- * @param  idx   Index of the directed edge - the to edge.
- * @param  directededge  Directed edge builder - set values.
- * @param  edge   Other directed edges at the node.
- * @param  ntrans  Number of transitions (either number of edges or max)
+ * specified outbound directed edge.
+ * @param  idx            Index of the directed edge - the to edge.
+ * @param  directededge   Directed edge builder - set values.
+ * @param  edge           Other directed edges at the node.
+ * @param  ntrans         Number of transitions (either number of edges or max)
  * @param  start_heading  Headings of directed edges.
  */
-// Process edge transitions at an intersection / node.
 void ProcessEdgeTransitions(const uint32_t idx,
           DirectedEdgeBuilder& directededge, const DirectedEdge* edges,
           const uint32_t ntrans, uint32_t* heading) {
-  for (uint32_t k = 0; k < ntrans; k++) {
+  for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
-    uint32_t degree = GetTurnDegree(((heading[k] + 180) % 360), heading[idx]);
-    directededge.set_turntype(k, Turn::GetType(degree));
+    uint32_t from_heading = ((heading[i] + 180) % 360);
+    uint32_t turn_degree  = GetTurnDegree(from_heading, heading[idx]);
+    directededge.set_turntype(i, Turn::GetType(turn_degree));
 
     // Get stop impact
-    uint32_t stopimpact = GetStopImpact(k, idx, edges, ntrans);
-    directededge.set_stopimpact(k, stopimpact);
+    uint32_t stopimpact = GetStopImpact(i, idx, edges, ntrans);
+    directededge.set_stopimpact(i, stopimpact);
 
-    // TODO: Set the edge_to_left and edge_to_right flags
+    // Set the edge_to_left and edge_to_right flags
+    uint32_t right_count = 0;
+    uint32_t left_count  = 0;
+    if (ntrans > 2) {
+      for (uint32_t j = 0; j < ntrans; ++j) {
+        // Skip the from and to edges
+        if (j == i || j == idx) {
+          continue;
+        }
+
+        // Get the turn degree from incoming edge i to j and check if right
+        // or left of the turn degree from incoming edge i onto idx
+        uint32_t degree = GetTurnDegree(from_heading, heading[j]);
+        if (turn_degree > 180) {
+          if (degree > turn_degree || degree < 180) {
+            ++right_count;
+          } else if (degree < turn_degree && degree > 180) {
+            ++left_count;
+          }
+        } else {
+          if (degree > turn_degree && degree < 180) {
+            ++right_count;
+          } else if (degree < turn_degree || degree > 180) {
+            ++left_count;
+          }
+        }
+      }
+    }
+    directededge.set_edge_to_left(i, (left_count > 0));
+    directededge.set_edge_to_right(i, (right_count > 0));
   }
 }
 

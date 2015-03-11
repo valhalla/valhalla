@@ -509,9 +509,10 @@ end
 function rels_proc (kv, nokeys)
   if (kv["type"] == "route" or kv["type"] == "restriction") then
 
+     local restrict = restriction[kv["restriction"]]
+
      if kv["type"] == "restriction" then
 
-       local restrict = restriction[kv["restriction"]]
        if restrict ~= nil then
          kv["restriction"] = restrict
 
@@ -535,9 +536,13 @@ function rels_proc (kv, nokeys)
          return 1, kv
        end
        return 0, kv
+  --has a restiction but type is not restriction...ignore
+     elseif restrict ~= nil then
+       return 1, kv
      else
-       kv["day_on"] = 0
-       kv["day_off"] = 0
+       kv["day_on"] = nil
+       kv["day_off"] = nil
+       kv["restriction"] = nil
        return 0, kv
      end
   end
