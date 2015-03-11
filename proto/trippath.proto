@@ -75,7 +75,7 @@ message TripPath {
   }
   
   message Node {
-    repeated Edge edge = 1;           // TODO: switch from repeated to optional
+    optional Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2; 
     optional bool gate = 3;
     optional bool toll_booth = 4;

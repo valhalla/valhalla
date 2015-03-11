@@ -23,8 +23,7 @@ EnhancedTripPath_Edge* EnhancedTripPath::GetPrevEdge(const int node_index,
                                                      int delta) {
   int index = node_index - delta;
   if (IsValidNodeIndex(index))
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge(
-        0));
+    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
   else
     return nullptr;
 }
@@ -37,8 +36,7 @@ EnhancedTripPath_Edge* EnhancedTripPath::GetNextEdge(const int node_index,
                                                      int delta) {
   int index = node_index + delta;
   if (IsValidNodeIndex(index) && !IsLastNodeIndex(index))
-    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge(
-        0));
+    return static_cast<EnhancedTripPath_Edge*>(mutable_node(index)->mutable_edge());
   else
     return nullptr;
 }
@@ -329,11 +327,11 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   left_similar_count = 0;
 
   // No turn - just return
-  if (edge_size() == 0)
+  if (intersecting_edge_size() == 0)
     return;
 
   uint32_t path_turn_degree = GetTurnDegree(from_heading,
-                                            edge(0).begin_heading());
+                                            edge().begin_heading());
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
