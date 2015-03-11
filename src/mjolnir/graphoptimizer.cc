@@ -125,10 +125,10 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
   const DirectedEdge* directededge = tile->directededge(
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // End node must match the start node, shortcut flag must match
+    // End node must match the start node, shortcut (bool) must match
     // and lengths must be close...
     if (directededge->endnode() == startnode &&
-        edge.shortcut() == directededge->shortcut() &&
+        static_cast<bool>(edge.shortcut()) == static_cast<bool>(directededge->shortcut()) &&
         directededge->length() == edge.length()) {
       if (opp_index != absurd_index) {
         dupcount_++;
@@ -159,7 +159,7 @@ uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
         LOG_WARN("   No regular edges found from end node");
       }
     }
-    return 31;  // TODO - what value to return that will not impact routes?
+    return kMaxEdgesPerNode;
   }
   return opp_index;
 }

@@ -215,28 +215,6 @@ void DirectedEdgeBuilder::set_traffic_signal(const bool signal) {
   attributes_.traffic_signal = signal;
 }
 
-// Set the flag for whether this edge represents a transition up one level
-// in the hierarchy.
-void DirectedEdgeBuilder::set_trans_up(const bool trans_up) {
-  attributes_.trans_up = trans_up;
-}
-
-// Set the flag for whether this edge represents a transition down one level
-// in the hierarchy.
-void DirectedEdgeBuilder::set_trans_down(const bool trans_down) {
-  attributes_.trans_down = trans_down;
-}
-
-// Set the flag for whether this edge represents a shortcut between 2 nodes.
-void DirectedEdgeBuilder::set_shortcut(const bool shortcut) {
-  attributes_.shortcut = shortcut;
-}
-
-// Set the flag for whether this edge is superseded by a shortcut edge.
-void DirectedEdgeBuilder::set_superseded(const bool superseded) {
-  attributes_.superseded = superseded;
-}
-
 // Set the forward flag. Tells if this directed edge is stored forward
 // in edgeinfo (true) or reverse (false).
 void DirectedEdgeBuilder::set_forward(const bool forward) {
@@ -268,18 +246,6 @@ void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
     attributes_.bikenetwork = 0;
   } else {
     attributes_.bikenetwork = bikenetwork;
-  }
-}
-
-// Set the index of the directed edge on the local level of the graph
-// hierarchy. This is used for turn restrictions so the edges can be
-// identified on the different levels.
-void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
-  if (idx > kMaxEdgesPerNode) {
-    LOG_ERROR("Local Edge Index exceeds max: " + std::to_string(idx));
-    attributes_.localedgeidx = kMaxEdgesPerNode;
-  } else {
-    attributes_.localedgeidx = idx;
   }
 }
 
@@ -316,19 +282,6 @@ void DirectedEdgeBuilder::set_use(const Use use) {
 void DirectedEdgeBuilder::set_speed_type(const SpeedType speed_type) {
   attributes_.speed_type = static_cast<uint8_t>(speed_type);
 }
-
-// Set the index of the opposing directed edge on the local hierarchy level
-// at the end node of this directed edge. Only stored for the first 8 edges
-// so it can be used for edge transition costing.
-void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
-  if (idx > kMaxEdgesPerNode) {
-    LOG_ERROR("Exceeding max edges in opposing local index: " + std::to_string(idx));
-    attributes_.opp_local_idx = kMaxEdgesPerNode;
-  } else {
-    attributes_.opp_local_idx = idx;
-  }
-}
-
 
 // Set all forward access modes to true (used for transition edges)
 void DirectedEdgeBuilder::set_all_forward_access() {
@@ -495,6 +448,61 @@ void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
                                 right, localidx, 1);
   }
 }
+
+// Set the index of the directed edge on the local level of the graph
+// hierarchy. This is used for turn restrictions so the edges can be
+// identified on the different levels.
+void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
+  if (idx > kMaxEdgesPerNode) {
+    LOG_ERROR("Local Edge Index exceeds max: " + std::to_string(idx));
+    hierarchy_.localedgeidx = kMaxEdgesPerNode;
+  } else {
+    hierarchy_.localedgeidx = idx;
+  }
+}
+
+// Set the index of the opposing directed edge on the local hierarchy level
+// at the end node of this directed edge. Only stored for the first 8 edges
+// so it can be used for edge transition costing.
+void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
+  if (idx > kMaxEdgesPerNode) {
+    LOG_ERROR("Exceeding max edges in opposing local index: " + std::to_string(idx));
+    hierarchy_.opp_local_idx = kMaxEdgesPerNode;
+  } else {
+    hierarchy_.opp_local_idx = idx;
+  }
+}
+
+// Set the flag for whether this edge represents a shortcut between 2 nodes.
+void DirectedEdgeBuilder::set_shortcut(const uint32_t shortcut) {
+  if (shortcut > kMaxShortcutsFromNode) {
+    LOG_ERROR("Exceeding max shortcut edges from a node: " + std::to_string(shortcut));
+  } else {
+    hierarchy_.shortcut = (1 << (shortcut-1));
+  }
+}
+
+// Set the flag for whether this edge is superseded by a shortcut edge.
+void DirectedEdgeBuilder::set_superseded(const uint32_t superseded) {
+  if (superseded > kMaxShortcutsFromNode) {
+      LOG_ERROR("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
+  } else {
+    hierarchy_.superseded = (1 << (superseded-1));
+  }
+}
+
+// Set the flag for whether this edge represents a transition up one level
+// in the hierarchy.
+void DirectedEdgeBuilder::set_trans_up(const bool trans_up) {
+  hierarchy_.trans_up = trans_up;
+}
+
+// Set the flag for whether this edge represents a transition down one level
+// in the hierarchy.
+void DirectedEdgeBuilder::set_trans_down(const bool trans_down) {
+  hierarchy_.trans_down = trans_down;
+}
+
 
 }
 }
