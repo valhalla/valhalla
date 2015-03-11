@@ -475,7 +475,6 @@ void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
 
 // Set the flag for whether this edge represents a shortcut between 2 nodes.
 void DirectedEdgeBuilder::set_shortcut(const uint32_t shortcut) {
-  // TODO - check against max
   if (shortcut > kMaxShortcutsFromNode) {
     LOG_ERROR("Exceeding max shortcut edges from a node: " + std::to_string(shortcut));
   } else {
