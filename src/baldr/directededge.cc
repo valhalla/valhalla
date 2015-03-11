@@ -15,7 +15,7 @@ DirectedEdge::DirectedEdge()
       attributes_{},
       turntypes_{},
       stopimpact_{},
-      spare() {
+      hierarchy_() {
 }
 
 // Gets the end node of this directed edge.
@@ -136,26 +136,6 @@ bool DirectedEdge::traffic_signal() const {
   return attributes_.traffic_signal;
 }
 
-// Does this edge represent a transition up one level in the hierarchy.
-bool DirectedEdge::trans_up() const {
-  return attributes_.trans_up;
-}
-
-// Does this edge represent a transition down one level in the hierarchy.
-bool DirectedEdge::trans_down() const {
-  return attributes_.trans_down;
-}
-
-// Does this edge represent a shortcut between 2 nodes?
-bool DirectedEdge::shortcut() const {
- return attributes_.shortcut;
-}
-
-// Is this edge superseded by a shortcut edge?
-bool DirectedEdge::superseded() const {
-  return attributes_.superseded;
-}
-
 // Is this directed edge stored forward in edgeinfo (true) or
 // reverse (false).
 bool DirectedEdge::forward() const {
@@ -188,13 +168,6 @@ uint32_t DirectedEdge::lanecount() const {
   return attributes_.lanecount;
 }
 
-// Get the index of the directed edge on the local level of the graph
-// hierarchy. This is used for turn restrictions so the edges can be
-// identified on the different levels.
-uint32_t DirectedEdge::localedgeidx() const {
-  return attributes_.localedgeidx;
-}
-
 // Get the mask of simple turn restrictions from the end of this directed
 // edge. These are turn restrictions from one edge to another that apply to
 // all vehicles, at all times.
@@ -210,13 +183,6 @@ Use DirectedEdge::use() const {
 // Get the speed type (see graphconstants.h)
 SpeedType DirectedEdge::speed_type() const {
   return static_cast<SpeedType>(attributes_.speed_type);
-}
-
-// Get the index of the opposing directed edge on the local hierarchy level
-// at the end node of this directed edge. Only stored for the first 8 edges
-// so it can be used for edge transition costing.
-uint32_t DirectedEdge::opp_local_idx() const {
-  return attributes_.opp_local_idx;
 }
 
 // Get the access modes in the forward direction (bit field).
@@ -288,6 +254,42 @@ bool DirectedEdge::edge_to_right(const uint32_t localidx) const {
   return (stopimpact_.edge_to_right & (1 << localidx));
 }
 
+// Get the index of the directed edge on the local level of the graph
+// hierarchy. This is used for turn restrictions so the edges can be
+// identified on the different levels.
+uint32_t DirectedEdge::localedgeidx() const {
+  return hierarchy_.localedgeidx;
+}
+
+// Get the index of the opposing directed edge on the local hierarchy level
+// at the end node of this directed edge. Only stored for the first 8 edges
+// so it can be used for edge transition costing.
+uint32_t DirectedEdge::opp_local_idx() const {
+  return hierarchy_.opp_local_idx;
+}
+
+// Get the shortcut mask indicating the edge index that is superseded by
+// this shortcut (0 if not a shortcut)
+uint32_t DirectedEdge::shortcut() const {
+ return hierarchy_.shortcut;
+}
+
+// Get the mask of the shortcut edge that supersedes this edge. 0 indicates
+// no shortcut edge supersedes this edge.
+uint32_t DirectedEdge::superseded() const {
+  return hierarchy_.superseded;
+}
+
+// Does this edge represent a transition up one level in the hierarchy.
+bool DirectedEdge::trans_up() const {
+  return hierarchy_.trans_up;
+}
+
+// Does this edge represent a transition down one level in the hierarchy.
+bool DirectedEdge::trans_down() const {
+  return hierarchy_.trans_down;
+}
+
 // Get the internal version. Used for data validity checks.
 const uint64_t DirectedEdge::internal_version() {
   uint64_t seed = 0;
@@ -348,14 +350,6 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.unreachable+1)-1);
   de.attributes_.traffic_signal = ~de.attributes_.traffic_signal;
   boost::hash_combine(seed,ffs(de.attributes_.traffic_signal+1)-1);
-  de.attributes_.trans_up = ~de.attributes_.trans_up;
-  boost::hash_combine(seed,ffs(de.attributes_.trans_up+1)-1);
-  de.attributes_.trans_down = ~de.attributes_.trans_down;
-  boost::hash_combine(seed,ffs(de.attributes_.trans_down+1)-1);
-  de.attributes_.shortcut = ~de.attributes_.shortcut;
-  boost::hash_combine(seed,ffs(de.attributes_.shortcut+1)-1);
-  de.attributes_.superseded = ~de.attributes_.superseded;
-  boost::hash_combine(seed,ffs(de.attributes_.superseded+1)-1);
   de.attributes_.forward = ~de.attributes_.forward;
   boost::hash_combine(seed,ffs(de.attributes_.forward+1)-1);
   de.attributes_.not_thru = ~de.attributes_.not_thru;
@@ -366,8 +360,6 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.cycle_lane+1)-1);
   de.attributes_.bikenetwork = ~de.attributes_.bikenetwork;
   boost::hash_combine(seed,ffs(de.attributes_.bikenetwork+1)-1);
-  de.attributes_.localedgeidx = ~de.attributes_.localedgeidx;
-  boost::hash_combine(seed,ffs(de.attributes_.localedgeidx+1)-1);
   de.attributes_.lanecount = ~de.attributes_.lanecount;
   boost::hash_combine(seed,ffs(de.attributes_.lanecount+1)-1);
   de.attributes_.restrictions = ~de.attributes_.restrictions;
@@ -376,8 +368,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.use+1)-1);
   de.attributes_.speed_type = ~de.attributes_.speed_type;
   boost::hash_combine(seed,ffs(de.attributes_.speed_type+1)-1);
-  de.attributes_.opp_local_idx = ~de.attributes_.opp_local_idx;
-  boost::hash_combine(seed,ffs(de.attributes_.opp_local_idx+1)-1);
+  de.attributes_.spare = ~de.attributes_.spare;
+  boost::hash_combine(seed,ffs(de.attributes_.spare+1)-1);
 
   // Access
   de.forwardaccess_.fields.car  = ~de.forwardaccess_.fields.car;
@@ -421,6 +413,22 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.stopimpact_.stopimpact+1)-1);
   de.stopimpact_.edge_to_right = ~de.stopimpact_.edge_to_right;
   boost::hash_combine(seed,ffs(de.stopimpact_.edge_to_right+1)-1);
+
+  // Hierarchy and shortcut information
+  de.hierarchy_.localedgeidx = ~de.hierarchy_.localedgeidx;
+  boost::hash_combine(seed,ffs(de.hierarchy_.localedgeidx+1)-1);
+  de.hierarchy_.opp_local_idx = ~de.hierarchy_.opp_local_idx;
+  boost::hash_combine(seed,ffs(de.hierarchy_.opp_local_idx+1)-1);
+  de.hierarchy_.trans_up = ~de.hierarchy_.trans_up;
+  boost::hash_combine(seed,ffs(de.hierarchy_.trans_up+1)-1);
+  de.hierarchy_.trans_down = ~de.hierarchy_.trans_down;
+  boost::hash_combine(seed,ffs(de.hierarchy_.trans_down+1)-1);
+  de.hierarchy_.shortcut = ~de.hierarchy_.shortcut;
+  boost::hash_combine(seed,ffs(de.hierarchy_.shortcut+1)-1);
+  de.hierarchy_.superseded = ~de.hierarchy_.superseded;
+  boost::hash_combine(seed,ffs(de.hierarchy_.superseded+1)-1);
+  de.hierarchy_.spare = ~de.hierarchy_.spare;
+  boost::hash_combine(seed,ffs(de.hierarchy_.spare+1)-1);
 
   boost::hash_combine(seed,sizeof(DirectedEdge));
 

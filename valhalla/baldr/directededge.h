@@ -33,6 +33,9 @@ constexpr uint32_t kMaxLaneCount = 15;
 // Number of edges considered for edge transitions
 constexpr uint32_t kNumberOfEdgeTransitions = 8;
 
+// Maximum shortcuts edges from a node
+constexpr uint32_t kMaxShortcutsFromNode = 5;
+
 // Maximum stop impact
 constexpr uint32_t kMaxStopImpact = 7;
 
@@ -190,44 +193,6 @@ class DirectedEdge {
   bool traffic_signal() const;
 
   /**
-   * Does this edge represent a transition up one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An upward transition
-   * is a transition from a minor road hierarchy (local) to more major
-   * (arterial).
-   * @return  Returns true if the edge is a transition from a lower level
-   *          to a higher (false if not).
-   */
-  bool trans_up() const;
-
-  /**
-   * Does this edge represent a transition down one level in the hierarchy.
-   * Transition edges move between nodes in different levels of the
-   * hierarchy but have no length or other attribution. An downward transition
-   * is a transition from a major road hierarchy (highway) to more minor
-   * (arterial).
-   * @return  Returns true if the edge is a transition from an upper level
-   *          to a lower (false if not).
-   */
-  bool trans_down() const;
-
-  /**
-   * Does this edge represent a shortcut between 2 nodes? Shortcuts bypass
-   * nodes that only connect to lower levels in the hierarchy (other than the
-   * 1-2 higher level edges that superseded by the shortcut).
-   * @return  Returns true if this edge is a shortcut edge, false if not.
-   */
-  bool shortcut() const;
-
-  /**
-   * Is this edge superseded by a shortcut edge? Superseded edges can be
-   * skipped unless downward transitions are allowed.
-   * @return  Returns true if this edge is part of a shortcut edge, false
-   *          if not.
-   */
-  bool superseded() const;
-
-  /**
    * Is this directed edge stored forward in edgeinof (true) or
    * reverse (false).
    * @return  Returns true if stored forward, false if reverse.
@@ -263,14 +228,6 @@ class DirectedEdge {
   uint32_t bikenetwork() const;
 
   /**
-   * Get the index of the directed edge on the local level of the graph
-   * hierarchy. This is used for turn restrictions so the edges can be
-   * identified on the different levels.
-   * @return  Returns the index of the edge on the local level.
-   */
-  uint32_t localedgeidx() const;
-
-  /**
    * Get the number of lanes for this directed edge.
    * @return  Returns the number of lanes for this directed edge.
    */
@@ -296,15 +253,6 @@ class DirectedEdge {
    * @return  Returns the speed type.
    */
   SpeedType speed_type() const;
-
-  /**
-   * Get the index of the opposing directed edge on the local hierarchy level
-   * at the end node of this directed edge. Only stored for the first 8 edges
-   * so it can be used for edge transition costing.
-   * @return  Returns the index of the opposing directed edge on the local
-   *          hierarchy level at end node of this directed edge.
-   */
-  uint32_t opp_local_idx() const;
 
   /**
    * Get the access modes in the forward direction (bit field).
@@ -384,6 +332,63 @@ class DirectedEdge {
   bool edge_to_right(const uint32_t localidx) const;
 
   /**
+   * Get the index of the directed edge on the local level of the graph
+   * hierarchy. This is used for turn restrictions so the edges can be
+   * identified on the different levels.
+   * @return  Returns the index of the edge on the local level.
+   */
+  uint32_t localedgeidx() const;
+
+  /**
+   * Get the index of the opposing directed edge on the local hierarchy level
+   * at the end node of this directed edge. Only stored for the first 8 edges
+   * so it can be used for edge transition costing.
+   * @return  Returns the index of the opposing directed edge on the local
+   *          hierarchy level at end node of this directed edge.
+   */
+  uint32_t opp_local_idx() const;
+
+  /**
+   * Indicates the mask of the superseded edge bypassed by a shortcut.
+   * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
+   * (other than the 1-2 higher level edges that superseded by the shortcut).
+   * @return  Returns the shortcut mask of the matching superseded edge
+   *          outbound from the node. 0 indicates the edge is not a shortcut.
+   */
+  uint32_t shortcut() const;
+
+  /**
+   * Mask indicating the shortcut that supersedes this directed edge.
+   * Superseded edges can be skipped unless downward transitions are allowed.
+   * @return  Returns the mask of the matching shortcut edge that supersedes this
+   *          directed edge outbound from the node. 0 indicates the edge is not
+   *          superseded by a shortcut edge.
+   */
+  uint32_t superseded() const;
+
+  /**
+   * Does this edge represent a transition up one level in the hierarchy.
+   * Transition edges move between nodes in different levels of the
+   * hierarchy but have no length or other attribution. An upward transition
+   * is a transition from a minor road hierarchy (local) to more major
+   * (arterial).
+   * @return  Returns true if the edge is a transition from a lower level
+   *          to a higher (false if not).
+   */
+  bool trans_up() const;
+
+  /**
+   * Does this edge represent a transition down one level in the hierarchy.
+   * Transition edges move between nodes in different levels of the
+   * hierarchy but have no length or other attribution. An downward transition
+   * is a transition from a major road hierarchy (highway) to more minor
+   * (arterial).
+   * @return  Returns true if the edge is a transition from an upper level
+   *          to a lower (false if not).
+   */
+  bool trans_down() const;
+
+  /**
    * Get the computed version of DirectedEdge attributes.
    * @return   Returns internal version.
    */
@@ -432,24 +437,18 @@ class DirectedEdge {
     uint64_t roundabout     : 1;  // Edge is part of a roundabout
     uint64_t unreachable    : 1;  // Edge that is unreachable by driving
     uint64_t traffic_signal : 1;  // Traffic signal at end of the directed edge
-    uint64_t trans_up       : 1;  // Edge represents a transition up one
-                                  // level in the hierarchy
-    uint64_t trans_down     : 1;  // Transition down one level
-    uint64_t shortcut       : 1;  // Shortcut edge
-    uint64_t superseded     : 1;  // Edge is superseded by a shortcut
     uint64_t forward        : 1;  // Is the edge info forward or reverse
     uint64_t not_thru       : 1;  // Edge leads to "no-through" region
     uint64_t opp_index      : 7;  // Opposing directed edge index
     uint64_t cycle_lane     : 2;  // Does this edge have bicycle lanes?
     uint64_t bikenetwork    : 4;  // Edge that is part of a bicycle network
-    uint64_t localedgeidx   : 7;  // Index of the edge on the local level
-    uint32_t lanecount     :  4;  // Number of lanes
+
+    uint32_t lanecount      : 4;  // Number of lanes
     uint64_t restrictions   : 8;  // Restrictions - mask of local edge indexes
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
     uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
-    uint64_t opp_local_idx  : 7;  // Opposing local edge index (for costing
-                                  // and Uturn detection)
+    uint64_t spare          : 18;
   };
   Attributes attributes_;
 
@@ -489,8 +488,19 @@ class DirectedEdge {
   };
   StopImpact stopimpact_;
 
-  // Spare
-  uint32_t spare;
+  // Hierarchy transitions and shortcut information
+  struct Hierarchy {
+    uint32_t localedgeidx   : 7;  // Index of the edge on the local level
+    uint32_t opp_local_idx  : 7;  // Opposing local edge index (for costing
+                                  // and Uturn detection)
+    uint32_t shortcut       : 5;  // Shortcut edge (mask)
+    uint32_t superseded     : 5;  // Edge is superseded by a shortcut (mask)
+    uint32_t trans_up       : 1;  // Edge represents a transition up one
+                                  // level in the hierarchy
+    uint32_t trans_down     : 1;  // Transition down one level
+    uint32_t spare          : 6;
+  };
+  Hierarchy hierarchy_;
 };
 
 }
