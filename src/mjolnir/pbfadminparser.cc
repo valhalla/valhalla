@@ -93,7 +93,8 @@ struct admin_callback : public OSMPBF::Callback {
         admin.set_name(tag.second);
       else if (tag.first == "admin_level")
         admin.set_admin_level(std::stoi(tag.second));
-
+      else if (tag.first == "drive_on_right")
+        admin.set_drive_on_right(tag.second == "true" ? true : false);
     }
 
     std::list<uint64_t> member_ids;
@@ -131,7 +132,7 @@ namespace mjolnir {
 OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::vector<std::string>& input_files) {
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
-  OSMData osmdata{"admin_ways.bn", "admin_way_node_ref.bn"};
+  OSMData osmdata{};
   admin_callback callback(pt, osmdata);
 
   // Parse each input file for relations

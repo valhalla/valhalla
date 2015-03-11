@@ -77,6 +77,18 @@ struct OSMAdmin {
    */
   uint32_t admin_level() const;
 
+  /**
+   * Set drive on right.
+   * @param   drive_on_right
+   */
+  void set_drive_on_right(const bool drive_on_right);
+
+  /**
+   * Get the drive on right flag.
+   * @return  Drive on right?
+   */
+  bool drive_on_right() const;
+
   // OSM admin/relation id
   uint64_t osmrelationid_;
 
@@ -88,6 +100,8 @@ struct OSMAdmin {
 
   // Admin level.  2 = country; 4 = state.
   uint8_t admin_level_;
+
+  bool drive_on_right_;
 
   // Name of country or state/prov
   std::string name_;
