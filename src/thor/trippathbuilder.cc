@@ -140,7 +140,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   }
 
   // Iterate through path edges
-  uint32_t prior_opp_index;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
   for (auto edge_itr = pathedges.begin(); edge_itr != pathedges.end(); ++edge_itr) {
@@ -160,9 +159,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       // next iteration).
       startnode = directededge->endnode();
 
-      // TODO - how do we find the opposing edge to the incoming edge
-      // on the prior level?
-      prior_opp_index = kMaxEdgesPerNode + 1;
       continue;
     }
 
@@ -232,17 +228,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       const GraphTile* tile = graphreader.GetGraphTile(startnode);
       const NodeInfo* nodeinfo = tile->node(startnode);
       uint32_t edgeid = nodeinfo->edge_index();
-      const DirectedEdge* connectededge = tile->directededge( nodeinfo->edge_index());
-      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, connectededge++, edgeid++) {
-        // Skip the edge on the path and the incoming edge (this is the one
-        // with prior_opp_index from this node). Skip any transition
-        // edge.
-        if (edgeid == edge.id() || i == prior_opp_index ||
-            connectededge->trans_up() || connectededge->trans_down()) {
-          continue;
-        }
-        AddTripEdge(edgeid, connectededge, trip_node, tile);
-      }
 
       for (uint32_t edge_idx = 0; edge_idx < nodeinfo->local_edge_count();
           ++edge_idx) {
@@ -261,8 +246,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
-    // Save the index of the opposing directed edge at the end node
-    prior_opp_index = directededge->opp_index();
+    // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
   }
 
@@ -321,7 +305,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             const GraphTile* graphtile,
                                             const float length_percentage) {
 
-  TripPath_Edge* trip_edge = trip_node->add_edge();
+  TripPath_Edge* trip_edge = trip_node->mutable_edge();
 
   // Get the edgeinfo and list of names - add to the trip edge.
   std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
