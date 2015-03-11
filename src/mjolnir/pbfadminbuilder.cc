@@ -282,6 +282,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
   sql += "id INTEGER NOT NULL PRIMARY KEY,";
+  sql += "admin_level INTEGER NOT NULL,";
   sql += "name TEXT NOT NULL,";
   sql += "drive_on_right INTEGER NOT NULL)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
@@ -308,8 +309,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (id, name, drive_on_right, geom) ";
-  sql += "VALUES (?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
+  sql = "INSERT INTO admins (id, admin_level, name, drive_on_right, geom) ";
+  sql += "VALUES (?, ?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -378,9 +379,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           sqlite3_reset (stmt);
           sqlite3_clear_bindings (stmt);
           sqlite3_bind_int (stmt, 1, count);
-          sqlite3_bind_text (stmt, 2, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
-          sqlite3_bind_int (stmt, 3, admin.drive_on_right());
-          sqlite3_bind_text (stmt, 4, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+          sqlite3_bind_int (stmt, 2, admin.admin_level());
+          sqlite3_bind_text (stmt, 3, admin.name().c_str(), admin.name().length(), SQLITE_STATIC);
+          sqlite3_bind_int (stmt, 4, admin.drive_on_right());
+          sqlite3_bind_text (stmt, 5, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step (stmt);
           if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
@@ -422,6 +424,41 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
   LOG_INFO("Created spatial index");
+
+  sql = "CREATE INDEX IdxLevel ON admins (admin_level)";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+  LOG_INFO("Created Level index");
+
+  sql = "CREATE INDEX IdxDriveOnRight ON admins (drive_on_right)";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+  LOG_INFO("Created Drive On Right index");
+
+  sql = "update admins set drive_on_right = (select a.drive_on_right from admins";
+  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
+  sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
+  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
+  sql += "and admins.admin_level != a.admin_level and a.drive_on_right=0)";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+  LOG_INFO("Done updating drive on right column.");
+
   sqlite3_close (db_handle);
 }
 
