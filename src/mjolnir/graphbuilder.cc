@@ -128,8 +128,9 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       bundle.edges.emplace_back(edge, edge_itr.position());
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+
     }
-    //dont add it again if its a loop
+    //add loop edge only once
     if(node.is_end() && node.end_of != node.start_of) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
@@ -859,6 +860,15 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
             directededge.set_exitsign(true);
           }
 
+          // If this was a loop edge we need its twin because this node wont be encountered again
+          /*if(source == target) {
+            idx++;
+            n++;
+            auto flipped = directededge.flipped();
+            flipped.set_localedgeidx(n);
+            directededges.emplace_back();
+          }*/
+
           // Increment the directed edge index within the tile
           idx++;
           n++;
@@ -867,13 +877,10 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        NodeInfoBuilder nodebuilder(node_ll, directededgecount,
-                                    bundle.edges.size(), bestclass,
-                                    node.access_mask(), node.type(),
-                                    (bundle.edges.size() == 1),
-                                    node.traffic_signal());
+        NodeInfoBuilder nodebuilder(node_ll, directededgecount, n, bestclass, node.access_mask(),
+                                    node.type(), (n == 1), node.traffic_signal());
 
-        directededgecount += bundle.edges.size();
+        directededgecount += n;
 
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);

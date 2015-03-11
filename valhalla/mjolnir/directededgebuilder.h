@@ -443,6 +443,11 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   void set_edge_to_right(const uint32_t localidx, const bool right);
 
+  /**
+   * Creates the opposite orientation of the directed edge
+   */
+  DirectedEdgeBuilder flipped() const;
+
 };
 
 }

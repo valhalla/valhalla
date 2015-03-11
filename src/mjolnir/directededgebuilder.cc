@@ -2,6 +2,8 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/logging.h>
 
+#include <algorithm>
+
 namespace {
 
 /**
@@ -494,6 +496,13 @@ void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
     stopimpact_.edge_to_right = OverwriteBits(stopimpact_.edge_to_right,
                                 right, localidx, 1);
   }
+}
+
+DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {
+  auto other = *this;
+  std::swap(other.forwardaccess_, other.reverseaccess_);
+  other.attributes_.forward = !other.attributes_.forward;
+  return other;
 }
 
 }
