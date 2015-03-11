@@ -34,7 +34,7 @@ constexpr uint32_t kMaxLaneCount = 15;
 constexpr uint32_t kNumberOfEdgeTransitions = 8;
 
 // Maximum shortcuts edges from a node
-constexpr uint32_t kMaxShortcutsFromNode = 5;
+constexpr uint32_t kMaxShortcutsFromNode = 7;
 
 // Maximum stop impact
 constexpr uint32_t kMaxStopImpact = 7;
@@ -493,12 +493,12 @@ class DirectedEdge {
     uint32_t localedgeidx   : 7;  // Index of the edge on the local level
     uint32_t opp_local_idx  : 7;  // Opposing local edge index (for costing
                                   // and Uturn detection)
-    uint32_t shortcut       : 5;  // Shortcut edge (mask)
-    uint32_t superseded     : 5;  // Edge is superseded by a shortcut (mask)
+    uint32_t shortcut       : 7;  // Shortcut edge (mask)
+    uint32_t superseded     : 7;  // Edge is superseded by a shortcut (mask)
     uint32_t trans_up       : 1;  // Edge represents a transition up one
                                   // level in the hierarchy
     uint32_t trans_down     : 1;  // Transition down one level
-    uint32_t spare          : 6;
+    uint32_t spare          : 2;
   };
   Hierarchy hierarchy_;
 };
