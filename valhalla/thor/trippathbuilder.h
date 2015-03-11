@@ -37,7 +37,7 @@ class TripPathBuilder {
              const baldr::PathLocation& dest);
 
   /**
-   * Add trip edge. (TOD more comments)
+   * Add trip edge. (TODO more comments)
    * @param  idx  Index of the directed edge within the tile.
    * @param  directededge  Directed edge information.
    * @param  trip_node     Trip node to add the edge information to.
@@ -50,6 +50,21 @@ class TripPathBuilder {
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
                                           const float length_percentage = 1.f);
+
+  /**
+   * Add trip intersecting edge.
+   * @param  edge_index  Index of the local intersecting path edge at intersection.
+   * @param  prev_edge_index  Index of the local previous path edge at intersection.
+   * @param  curr_edge_index  Index of the local current path edge at intersection.
+   * @param  nodeinfo  Node information of the intersection.
+   * @param  trip_node  Trip node that will store the intersecting edge information.
+   */
+  static void AddTripIntersectingEdge(uint32_t edge_index,
+                                      uint32_t prev_edge_index,
+                                      uint32_t curr_edge_index,
+                                      const baldr::NodeInfo* nodeinfo,
+                                      odin::TripPath_Node* trip_node);
+
 };
 
 }
