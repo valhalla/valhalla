@@ -240,13 +240,13 @@ void TryDetermineRelativeDirection_Maneuver(
 
   // node:0
   node = path.add_node();
-  node->add_edge()->set_end_heading(prev_heading);
+  node->mutable_edge()->set_end_heading(prev_heading);
 
   // node:1
   node = path.add_node();
-  node->add_edge()->set_begin_heading(curr_heading);
+  node->mutable_edge()->set_begin_heading(curr_heading);
   for (auto intersecting_heading : intersecting_headings)
-    node->add_edge()->set_begin_heading(intersecting_heading);
+    node->add_intersecting_edge()->set_begin_heading(intersecting_heading);
 
   // node:2 dummy last node
   node = path.add_node();
@@ -526,7 +526,7 @@ void TestLeftInternalStraightCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743", "PA 341 Truck" }, 0.033835,
                60.000000, TripPath_RoadClass_kSecondary, 158, 180, 0, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -534,7 +534,7 @@ void TestLeftInternalStraightCombine() {
 
   // node:1
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.181000, 60.000000,
                TripPath_RoadClass_kSecondary, 187, 192, 3, 8,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -542,7 +542,7 @@ void TestLeftInternalStraightCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.079000, 60.000000,
                TripPath_RoadClass_kSecondary, 196, 196, 8, 10,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -550,7 +550,7 @@ void TestLeftInternalStraightCombine() {
 
   // node:3
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.160000, 60.000000,
                TripPath_RoadClass_kSecondary, 198, 198, 10, 13,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -558,28 +558,28 @@ void TestLeftInternalStraightCombine() {
 
   // node:4 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.013000, 50.000000, TripPath_RoadClass_kSecondary,
                118, 118, 13, 14, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 1, 0, { }, { }, { }, { });
 
   // node:5
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.073000, 50.000000, TripPath_RoadClass_kSecondary,
                127, 127, 14, 15, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, { }, { "PA 283 East" }, { "Lancaster" }, { });
 
   // node:6
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.432000, 50.000000, TripPath_RoadClass_kSecondary,
                127, 130, 15, 20, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, { }, { }, { }, { });
 
   // node:7
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "PA 283 East" }, 0.176467, 105.000000,
                TripPath_RoadClass_kMotorway, 134, 134, 20, 22,
                TripPath_Driveability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -687,7 +687,7 @@ void TestStraightInternalLeftCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "PA 283 West" }, 0.511447, 105.000000,
                TripPath_RoadClass_kMotorway, 315, 316, 0, 3,
                TripPath_Driveability_kForward, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -695,7 +695,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:1
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.397000, 50.000000, TripPath_RoadClass_kSecondary,
                322, 330, 3, 12, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, { }, { "PA 743" },
@@ -703,7 +703,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.050000, 50.000000, TripPath_RoadClass_kSecondary,
                308, 292, 12, 17, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, { }, { "PA 743 South" }, { "Elizabethtown" },
@@ -711,14 +711,14 @@ void TestStraightInternalLeftCombine() {
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.012000, 50.000000, TripPath_RoadClass_kSecondary,
                289, 289, 17, 18, TripPath_Driveability_kForward, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 1, 0, { }, { }, { }, { });
 
   // node:4
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.160000, 60.000000,
                TripPath_RoadClass_kSecondary, 198, 198, 18, 21,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -726,7 +726,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:5
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.084000, 60.000000,
                TripPath_RoadClass_kSecondary, 199, 198, 21, 23,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -734,7 +734,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:6
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.113000, 60.000000,
                TripPath_RoadClass_kSecondary, 198, 198, 23, 24,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -742,7 +742,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:7
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 South" }, 0.129000, 60.000000,
                TripPath_RoadClass_kSecondary, 196, 196, 24, 25,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -750,7 +750,7 @@ void TestStraightInternalLeftCombine() {
 
   // node:8
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Hershey Road", "PA 743 North" }, 0.000000, 60.000000,
                TripPath_RoadClass_kSecondary, 22, 19, 25, 25,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -878,7 +878,7 @@ void TestStraightInternalLeftInternalCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Broken Land Parkway" }, 0.056148, 72.000000,
                TripPath_RoadClass_kSecondary, 26, 24, 0, 2,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -886,7 +886,7 @@ void TestStraightInternalLeftInternalCombine() {
 
   // node:1
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Broken Land Parkway" }, 0.081000, 72.000000,
                TripPath_RoadClass_kSecondary, 24, 24, 2, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -894,7 +894,7 @@ void TestStraightInternalLeftInternalCombine() {
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Broken Land Parkway" }, 0.017000, 72.000000,
                TripPath_RoadClass_kSecondary, 25, 25, 3, 4,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -902,7 +902,7 @@ void TestStraightInternalLeftInternalCombine() {
 
   // node:3 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Snowden River Parkway" }, 0.030000, 60.000000,
                TripPath_RoadClass_kSecondary, 291, 291, 4, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -910,7 +910,7 @@ void TestStraightInternalLeftInternalCombine() {
 
   // node:4
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Patuxent Woods Drive" }, 0.059840, 40.000000,
                TripPath_RoadClass_kTertiary, 292, 270, 5, 8,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -997,7 +997,7 @@ void TestStraightInternalStraightCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.120902,
                80.000000, TripPath_RoadClass_kTrunk, 59, 94, 0, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1005,7 +1005,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:1
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.086000,
                80.000000, TripPath_RoadClass_kTrunk, 94, 94, 5, 8,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1013,7 +1013,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:2 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.018000,
                90.000000, TripPath_RoadClass_kTrunk, 96, 96, 8, 9,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1021,7 +1021,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:3
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.099000,
                80.000000, TripPath_RoadClass_kTrunk, 94, 95, 9, 12,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1029,7 +1029,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:4
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.774000,
                80.000000, TripPath_RoadClass_kTrunk, 96, 88, 12, 28,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1037,7 +1037,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:5
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.123000,
                80.000000, TripPath_RoadClass_kTrunk, 90, 90, 28, 32,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1045,7 +1045,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:6
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.009000,
                80.000000, TripPath_RoadClass_kTrunk, 86, 86, 32, 33,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1053,7 +1053,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:7 INTERNAL_INTERSECTION
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.015000,
                72.000000, TripPath_RoadClass_kTrunk, 93, 93, 33, 34,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1061,7 +1061,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:8
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.077000,
                72.000000, TripPath_RoadClass_kTrunk, 90, 90, 34, 35,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1069,7 +1069,7 @@ void TestStraightInternalStraightCombine() {
 
   // node:9
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.217965,
                72.000000, TripPath_RoadClass_kTrunk, 90, 89, 35, 40,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1163,7 +1163,7 @@ void TestLeftInternalUturnCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Jonestown Road", "US 22" }, 0.062923, 75.000000,
                TripPath_RoadClass_kPrimary, 36, 32, 0, 2,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1171,7 +1171,7 @@ void TestLeftInternalUturnCombine() {
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Devonshire Road" }, 0.013000, 50.000000,
                TripPath_RoadClass_kTertiary, 299, 299, 2, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1179,7 +1179,7 @@ void TestLeftInternalUturnCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Jonestown Road", "US 22" }, 0.059697, 75.000000,
                TripPath_RoadClass_kPrimary, 212, 221, 3, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1268,7 +1268,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Pulaski Highway", "US 40 East" }, 0.067483, 75.000000,
                TripPath_RoadClass_kPrimary, 48, 52, 0, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1276,7 +1276,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Moravia Park Drive" }, 0.019000, 60.000000,
                TripPath_RoadClass_kSecondary, 317, 317, 3, 4,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1284,7 +1284,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "US 40 West", "Pulaski Highway" }, 0.045000, 90.000000,
                TripPath_RoadClass_kTrunk, 229, 229, 4, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1292,7 +1292,7 @@ void TestLeftInternalUturnProperDirectionCombine() {
 
   // node:3
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Pulaski Highway", "US 40 West" }, 0.000000, 75.000000,
                TripPath_RoadClass_kPrimary, 229, 229, 5, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1384,7 +1384,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 24", "Vietnam Veterans Memorial Highway" }, 0.071404,
                89.000000, TripPath_RoadClass_kTrunk, 335, 334, 0, 2,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1392,7 +1392,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 24", "Vietnam Veterans Memorial Highway" }, 0.012000,
                89.000000, TripPath_RoadClass_kTrunk, 334, 334, 2, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1400,7 +1400,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Bel Air South Parkway" }, 0.025000, 48.000000,
                TripPath_RoadClass_kSecondary, 245, 245, 3, 4,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1408,7 +1408,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 
   // node:3
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 24", "Vietnam Veterans Memorial Highway" }, 0.012000,
                89.000000, TripPath_RoadClass_kTrunk, 153, 153, 4, 5,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1416,7 +1416,7 @@ void TestStraightInternalLeftInternalStraightInternalUturnCombine() {
 
   // node:4
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 24", "Vietnam Veterans Memorial Highway" }, 0.070695,
                89.000000, TripPath_RoadClass_kTrunk, 155, 156, 5, 9,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1508,7 +1508,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Stonewall Shops Square" }, 0.027386, 40.000000,
                TripPath_RoadClass_kUnclassified, 352, 343, 0, 2,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1516,7 +1516,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Old Carolina Road" }, 0.019000, 50.000000,
                TripPath_RoadClass_kTertiary, 331, 331, 2, 3,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1524,7 +1524,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Stonewall Shops Square" }, 0.021000, 50.000000,
                TripPath_RoadClass_kTertiary, 187, 187, 3, 4,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
@@ -1532,7 +1532,7 @@ void TestInternalPencilPointUturnProperDirectionCombine() {
 
   // node:3
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Stonewall Shops Square" }, 0.025240, 40.000000,
                TripPath_RoadClass_kUnclassified, 162, 149, 4, 6,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1623,7 +1623,7 @@ void TestSimpleRightTurnChannelCombine() {
   ///////////////////////////////////////////////////////////////////////////
   // node:0
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "MD 43 East", "White Marsh Boulevard" }, 0.091237,
                80.000000, TripPath_RoadClass_kTrunk, 59, 94, 0, 4,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1631,14 +1631,14 @@ void TestSimpleRightTurnChannelCombine() {
 
   // node:1 TURN_CHANNNEL
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { }, 0.142000, 113.000000, TripPath_RoadClass_kSecondary,
                105, 179, 4, 11, TripPath_Driveability_kBoth, 0, 1, 0, 0, 0, 0,
                0, 0, 0, 0, 0, { }, { }, { }, { });
 
   // node:2
   node = path.add_node();
-  edge = node->add_edge();
+  edge = node->mutable_edge();
   PopulateEdge(edge, { "Perry Hall Boulevard" }, 0.065867, 64.000000,
                TripPath_RoadClass_kSecondary, 188, 188, 11, 14,
                TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

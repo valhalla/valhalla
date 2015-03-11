@@ -14,8 +14,6 @@ class DirectionsBuilder {
  public:
   DirectionsBuilder();
 
-  TripDirections BuildSimple(TripPath& trip_path);
-
   TripDirections Build(TripPath& trip_path);
 
  protected:

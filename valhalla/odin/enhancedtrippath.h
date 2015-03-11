@@ -12,6 +12,7 @@ class EnhancedTripPath_Node;
 
 class EnhancedTripPath : public TripPath {
  public:
+  EnhancedTripPath() = delete;
 
   EnhancedTripPath_Node* GetEnhancedNode(const int node_index);
 
@@ -29,13 +30,11 @@ class EnhancedTripPath : public TripPath {
 
   int GetLastNodeIndex() const;
 
- protected:
-  EnhancedTripPath();
-
 };
 
 class EnhancedTripPath_Edge : public TripPath_Edge {
  public:
+  EnhancedTripPath_Edge() = delete;
 
   bool IsUnnamed() const;
 
@@ -46,7 +45,6 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
   std::string ToParameterString() const;
 
  protected:
-  EnhancedTripPath_Edge();
 
   std::string ListToString(
       const ::google::protobuf::RepeatedPtrField<::std::string>& string_list) const;
@@ -56,16 +54,22 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
 };
 
+class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
+ public:
+
+  EnhancedTripPath_IntersectingEdge() = delete;
+
+  std::string ToString() const;
+
+};
+
 class EnhancedTripPath_Node : public TripPath_Node {
  public:
-  bool last_node() const;
-  void set_last_node(bool last_node);
+  EnhancedTripPath_Node() = delete;
 
   bool HasIntersectingEdges() const;
 
-  size_t GetIntersectingEdgesCount() const;
-
-  EnhancedTripPath_Edge* GetIntersectingEdge(size_t index);
+  EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(
       uint32_t from_heading, uint32_t& right_count,
@@ -74,8 +78,6 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
   std::string ToString() const;
 
- protected:
-  EnhancedTripPath_Node();
 };
 
 }
