@@ -38,14 +38,24 @@ uint32_t OSMAdmin::member_count() const {
   return memberid_count_;
 }
 
-// Sets the name
-void OSMAdmin::set_name(const std::string& name) {
-  name_ = name;
+// Set the index for the name.
+void OSMAdmin::set_name_index(const uint32_t idx) {
+  name_index_ = idx;
 }
 
 // Get the name.
-const std::string& OSMAdmin::name() const {
-  return name_;
+uint32_t OSMAdmin::name_index() const {
+  return name_index_;
+}
+
+// Set the index for the name:en.
+void OSMAdmin::set_name_en_index(const uint32_t idx) {
+  name_en_index_ = idx;
+}
+
+// Get the name:en.
+uint32_t OSMAdmin::name_en_index() const {
+  return name_en_index_;
 }
 
 // Set admin level.

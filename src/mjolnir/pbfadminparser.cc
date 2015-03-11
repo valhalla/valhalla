@@ -88,9 +88,11 @@ struct admin_callback : public OSMPBF::Callback {
     OSMAdmin admin{osmid};
 
     for (const auto& tag : results) {
-
-      if (tag.first == "name")
-        admin.set_name(tag.second);
+      // TODO:  Store multiple all the names
+      if (tag.first == "name" && !tag.second.empty())
+        admin.set_name_index(osmdata_.name_offset_map.index(tag.second));
+      else if (tag.first == "name:en" && !tag.second.empty())
+        admin.set_name_en_index(osmdata_.name_offset_map.index(tag.second));
       else if (tag.first == "admin_level")
         admin.set_admin_level(std::stoi(tag.second));
       else if (tag.first == "drive_on_right")
@@ -107,6 +109,9 @@ struct admin_callback : public OSMPBF::Callback {
         ++osmdata_.osm_way_count;
       }
     }
+
+    if (admin.name_index() == admin.name_en_index())
+      admin.set_name_en_index(0);
 
     admin.set_ways(member_ids);
 
