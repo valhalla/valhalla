@@ -190,44 +190,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_traffic_signal(const bool signal);
 
   /**
-   * Set the flag for whether this edge represents a transition up one level
-   * in the hierarchy. Transition edges move between nodes in different levels
-   * of the hierarchy but have no length or other attribution. An upward
-   * transition is a transition from a minor road hierarchy (local) to more
-   * major (arterial).
-   * @param  trans_up  True if the edge is a transition from a lower level
-   *          to a higher (false if not).
-   */
-  void set_trans_up(const bool trans_up);
-
-   /**
-    * Set the flag for whether this edge represents a transition down one level
-    * in the hierarchy. Transition edges move between nodes in different levels
-    * of the hierarchy but have no length or other attribution. A downward
-    * transition is a transition from a major road hierarchy (highway) to more
-    * minor (arterial).
-    * @param   trans_down  True if the edge is a transition from an upper level
-    *          to a lower (false if not).
-    */
-   void set_trans_down(const bool trans_down);
-
-  /**
-   * Set the flag for whether this edge represents a shortcut between 2 nodes.
-   * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
-   * (other than the 1-2 higher level edges that superseded by the shortcut).
-   * @param  shortcut  True if this edge is a shortcut edge, false if not.
-   */
-  void set_shortcut(const bool shortcut);
-
-  /**
-   * Set the flag for whether this edge is superseded by a shortcut edge.
-   * Superseded edges can be skipped unless downward transitions are allowed.
-   * @param  superseded True if this edge is part of a shortcut edge, false
-  *          if not.
-  */
-  void set_superseded(const bool superseded);
-
-  /**
    * Set the forward flag. Tells if this directed edge is stored forward
    * in edgeinfo (true) or reverse (false).
    * @param  forward  Forward flag.
@@ -263,14 +225,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_bikenetwork(const uint32_t bikenetwork);
 
   /**
-   * Set the index of the directed edge on the local level of the graph
-   * hierarchy. This is used for turn restrictions so the edges can be
-   * identified on the different levels.
-   * @param idx The index of the edge on the local level.
-   */
-  void set_localedgeidx(const uint32_t idx);
-
-  /**
    * Sets the number of lanes
    * @param  lanecount  Number of lanes
    */
@@ -296,15 +250,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  speed_type  Returns the speed type.
    */
   void set_speed_type(const SpeedType speed_type);
-
-  /**
-    * Set the index of the opposing directed edge on the local hierarchy level
-    * at the end node of this directed edge. Only stored for the first 8 edges
-    * so it can be used for edge transition costing.
-    * @param localidx  The index of the opposing directed edge on the local
-    *                  hierarchy level at end node of this directed edge.
-    */
-  void set_opp_local_idx(const uint32_t localidx);
 
   /**
    * Set all forward access modes to true (used for transition edges)
@@ -442,6 +387,62 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  right     True if there is an edge to the right, false if not.
    */
   void set_edge_to_right(const uint32_t localidx, const bool right);
+
+  /**
+   * Set the index of the directed edge on the local level of the graph
+   * hierarchy. This is used for turn restrictions so the edges can be
+   * identified on the different levels.
+   * @param idx The index of the edge on the local level.
+   */
+  void set_localedgeidx(const uint32_t idx);
+
+  /**
+   * Set the index of the opposing directed edge on the local hierarchy level
+   * at the end node of this directed edge. Only stored for the first 8 edges
+   * so it can be used for edge transition costing.
+   * @param localidx  The index of the opposing directed edge on the local
+   *                  hierarchy level at end node of this directed edge.
+   */
+  void set_opp_local_idx(const uint32_t localidx);
+
+  /**
+   * Set the mask for whether this edge represents a shortcut between 2 nodes.
+   * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
+   * (other than the 1-2 higher level edges that superseded by the shortcut).
+   * @param  shortcut  Mask indicating the edge that is superseded by
+   *                   the shortcut. 0 if not a shortcut.
+   */
+  void set_shortcut(const uint32_t shortcut);
+
+  /**
+   * Set the mask for whether this edge is superseded by a shortcut edge.
+   * Superseded edges can be skipped unless downward transitions are allowed.
+   * @param  superseded  Mask that matches the shortcut that supersedes this
+   *                     directed edge. 0 if not superseded by a shortcut.
+   */
+  void set_superseded(const uint32_t superseded);
+
+  /**
+   * Set the flag for whether this edge represents a transition up one level
+   * in the hierarchy. Transition edges move between nodes in different levels
+   * of the hierarchy but have no length or other attribution. An upward
+   * transition is a transition from a minor road hierarchy (local) to more
+   * major (arterial).
+   * @param  trans_up  True if the edge is a transition from a lower level
+   *          to a higher (false if not).
+   */
+  void set_trans_up(const bool trans_up);
+
+  /**
+   * Set the flag for whether this edge represents a transition down one level
+   * in the hierarchy. Transition edges move between nodes in different levels
+   * of the hierarchy but have no length or other attribution. A downward
+   * transition is a transition from a major road hierarchy (highway) to more
+   * minor (arterial).
+   * @param   trans_down  True if the edge is a transition from an upper level
+   *          to a lower (false if not).
+   */
+  void set_trans_down(const bool trans_down);
 
 };
 

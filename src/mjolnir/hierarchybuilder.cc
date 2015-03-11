@@ -35,9 +35,8 @@ bool HierarchyBuilder::Build() {
     LOG_INFO("Build Hierarchy Level " + new_level->second.name
               + " Base Level is " + base_level->second.name);
 
-    // Clear the node map, contraction node map, and map of superseded edges
+    // Clear the node map and contraction node map
     nodemap_.clear();
-    supersededmap_.clear();
     contractions_.clear();
 
     // Size the vector for new tiles. Clear any nodes from these tiles
@@ -184,13 +183,6 @@ bool HierarchyBuilder::CanContract(const GraphTile* tile, const NodeInfo* nodein
       return false;
   }
 
-  // Mark the 2 edges entering the node (opposing) and 2 edges exiting
-  // (the directed edges) the node as "superseded"
-  supersededmap_[edges[match.first].value] = true;
-  supersededmap_[edges[match.second].value] = true;
-  supersededmap_[oppedge1.value] = true;
-  supersededmap_[oppedge2.value] = true;
-
   // Store the pairs of base edges entering and exiting this node
   EdgePairs edgepairs;
   edgepairs.edge1 = std::make_pair(oppedge1, edges[match.second]);
@@ -288,12 +280,6 @@ GraphId HierarchyBuilder::GetOpposingEdge(const GraphId& node,
   return GraphId(0, 0, 0);
 }
 
-// Is the edge superseded (used in a shortcut edge)?
-bool HierarchyBuilder::IsSuperseded(const baldr::GraphId& edge) const {
-  const auto& s = supersededmap_.find(edge.value);
-  return (s == supersededmap_.end()) ? false : true;
-}
-
 // Form tiles in the new level.
 void HierarchyBuilder::FormTilesInNewLevel(
     const TileHierarchy::TileLevel& base_level,
@@ -331,9 +317,10 @@ void HierarchyBuilder::FormTilesInNewLevel(
       node.set_edge_index(edgeindex);
 
       // Add shortcut edges first
+      std::unordered_map<uint32_t, uint32_t> shortcuts;
       std::vector<DirectedEdgeBuilder> directededges;
       AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                         directededges);
+                         directededges, shortcuts);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -377,8 +364,14 @@ void HierarchyBuilder::FormTilesInNewLevel(
                              added);
           newedge.set_edgeinfo_offset(edge_info_offset);
 
-          // Set the superseded flag
-          newedge.set_superseded(IsSuperseded(oldedgeid));
+          // Set the superseded mask - this is the shortcut mask that
+          // supersedes this edge (outbound from the node)
+          auto s = shortcuts.find(i);
+          if (s != shortcuts.end()) {
+            newedge.set_superseded(s->second);
+          } else {
+            newedge.set_superseded(0);
+          }
 
           // Add directed edge
           directededges.emplace_back(std::move(newedge));
@@ -421,12 +414,14 @@ void HierarchyBuilder::FormTilesInNewLevel(
 void HierarchyBuilder::AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
-    std::vector<DirectedEdgeBuilder>& directededges) {
+    std::vector<DirectedEdgeBuilder>& directededges,
+    std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       contractions_.find(nodea.value) : contractions_.end();
 
   // Iterate through directed edges of the base node
+  uint32_t shortcut = 0;
   GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(),
                        baseni->edge_index());
   for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
@@ -534,10 +529,13 @@ void HierarchyBuilder::AddShortcutEdges(
       newedge.set_length(length);
       newedge.set_endnode(nodeb);
 
-      // Set this as a shortcut edge. Remove superseded flag that may
-      // have been copied from base level directed edge
-      newedge.set_shortcut(true);
-      newedge.set_superseded(false);
+      // Set this as a shortcut edge. Add it to the shortcut map (associates
+      // the base edge index to the shortcut index). Remove superseded
+      // mask that may have been copied from base level directed edge
+      shortcuts[i] = shortcut;
+      newedge.set_shortcut(shortcut);
+      newedge.set_superseded(0);
+      shortcut++;
 
       if (newedge.exitsign()) {
         LOG_ERROR("Shortcut edge with exit signs");
@@ -551,7 +549,9 @@ if (nodea.level() == 0) {
 **/
 
       // Add directed edge
-      directededges.emplace_back(std::move(newedge));
+      if (shortcut <= kMaxShortcutsFromNode) {
+        directededges.emplace_back(std::move(newedge));
+      }
     }
   }
   shortcutcount_ += directededges.size();
