@@ -204,8 +204,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       continue;
     }
 
-    // Expand from end node. Identify if this node has shortcut edges
-    bool has_shortcuts = false;
+    // Expand from end node.
+    uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
@@ -223,9 +223,9 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       if (directededge->shortcut() && dist2dest < 10000.0f)
         continue;
 
-      // Skip any superseded edges if edges include shortcuts. Also skip
+      // Skip any superseded edges that match the shortcut mask. Also skip
       // if no access is allowed to this edge (based on costing method)
-      if ((has_shortcuts && directededge->superseded()) ||
+      if ((shortcuts & directededge->superseded()) ||
           !costing->Allowed(directededge, pred)) {
         continue;
       }
@@ -237,9 +237,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
-      // Set the has_shortcuts flag if a shortcut was taken
-      // TODO - do we need bit masks for shortcuts and their superseded edges?
-      has_shortcuts |= directededge->shortcut();
+      // Update the_shortcuts mask
+      shortcuts |= directededge->shortcut();
 
       // Get cost
       Cost edgecost = costing->EdgeCost(directededge) +
