@@ -39,9 +39,6 @@ constexpr uint32_t kAbsurdRoadClass = 777777;
  * with less than 2 uses become a shape point (lat,lng) along the edge.
  */
 struct Edge {
-  // index of the source (start) node of the edge
-  uint32_t sourcenode_;
-
   // Index into the list of OSM way information
   uint32_t wayindex_;
 
@@ -62,6 +59,9 @@ struct Edge {
   };
   EdgeAttributes attributes;
 
+  // index of the source (start) node of the edge
+  uint32_t sourcenode_;
+
   // index of the target (end) node of the edge
   uint32_t targetnode_;
 
@@ -73,9 +73,9 @@ struct Edge {
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
    */
-  static Edge make_edge(const uint32_t sourcenode, const uint32_t wayindex,
+  static Edge make_edge(const uint32_t wayindex,
        const uint32_t llindex, const OSMWay& way) {
-    Edge e{sourcenode, wayindex, llindex};
+    Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
     e.attributes.driveableforward = way.auto_forward();
@@ -129,7 +129,8 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
-    if(node.is_end()) {
+    //dont add it again if its a loop
+    if(node.is_end() && node.end_of != node.start_of) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
       bundle.edges.emplace_back(edge, edge_itr.position());
@@ -221,47 +222,54 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
   sequence<Edge> edges(edges_file, true);
   sequence<Node> nodes(nodes_file, true);
 
-  //for each way traversed via the nodes
+  // For each way traversed via the nodes
   size_t current_way_node_index = 0;
   while (current_way_node_index < way_nodes.size()) {
-    //grab the way and its first node
-    auto first_way_node = *way_nodes[current_way_node_index];
-    const auto way = *ways[first_way_node.way_index];
+    // Grab the way and its first node
+    auto way_node = *way_nodes[current_way_node_index];
+    const auto way = *ways[way_node.way_index];
     const auto first_way_node_index = current_way_node_index;
     const auto last_way_node_index = first_way_node_index + way.node_count() - 1;
 
-    //remember this edge starts here
-    Edge edge = Edge::make_edge(nodes.size(), first_way_node.way_index, current_way_node_index, way);
+    // Remember this edge starts here
+    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
 
-    //remember this node as starting this edge
-    first_way_node.node.attributes_.link_edge = way.link();
-    first_way_node.node.attributes_.non_link_edge = !way.link();
-    nodes.push_back({first_way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(first_way_node.node)});
+    // Remember this node as starting this edge
+    way_node.node.attributes_.link_edge = way.link();
+    way_node.node.attributes_.non_link_edge = !way.link();
+    nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
 
-    //remember the id of last node we saw to detect looping
-    uint64_t last_id = first_way_node.node.osmid;
+    // Remember the id of last node we saw to detect looping
+    uint64_t last_id = way_node.node.osmid;
 
     // Iterate through the nodes of the way until we find an intersection
     while(current_way_node_index < way_nodes.size()) {
-      //check if we are done with this way, ie we are started on the next way
-      auto way_node = *way_nodes[++current_way_node_index];
-
-      // Increment the count for this edge
+      // Get the next shape point on this edge
+      way_node = *way_nodes[++current_way_node_index];
       edge.attributes.llcount++;
 
-      // If a is an intersection or the end of the way
-      // it's a node of the road network graph
+      // If its an intersection or the end of the way it's a node of the road network graph
       if (way_node.node.intersection()) {
 
-        edge.targetnode_ = nodes.size();
+        // Finish off this edge
         way_node.node.attributes_.link_edge = way.link();
         way_node.node.attributes_.non_link_edge = !way.link();
-        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+        // If it a loop close it and possibly start a new node for next edge
+        if(way_node.node.osmid == last_id) {
+          sequence<Node>::iterator element = --nodes.end();
+          auto node = *element;
+          node.end_of = edges.size();
+          element = node;
+          if (current_way_node_index != last_way_node_index)
+            nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size() + 1), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
+        }// Its normal so just end the edge
+        else
+          nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
         edges.push_back(edge);
 
         // Start a new edge if this is not the last node in the way
         if (current_way_node_index != last_way_node_index) {
-          edge = Edge::make_edge(nodes.size() - 1, way_node.way_index, current_way_node_index, way);
+          edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
           sequence<Node>::iterator element = --nodes.end();
           auto node = *element;
           node.start_of = edges.size();
@@ -272,7 +280,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
           ++current_way_node_index;
           break;
         }
-      }// if this edge has a signal not at a intersection
+      }// If this edge has a signal not at a intersection
       else if (way_node.node.traffic_signal()) {
         edge.attributes.traffic_signal = true;
         edge.attributes.forward_signal = way_node.node.forward_signal();
