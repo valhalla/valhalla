@@ -111,7 +111,7 @@ struct Node {
 // collect all the edges that start or end at this node
 struct node_bundle : Node {
   size_t node_count;
-  std::list<std::pair<Edge, size_t> > edges;
+  std::unordered_map<size_t, Edge> edges; //no duplicates (so loops be damned!)
   node_bundle(const Node& other):Node(other), node_count(0){}
 };
 node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequence<Node>& nodes, sequence<Edge>& edges) {
@@ -125,16 +125,14 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
     if(node.is_start()) {
       auto edge_itr = edges[node.start_of];
       auto edge = *edge_itr;
-      bundle.edges.emplace_back(edge, edge_itr.position());
+      bundle.edges[node.start_of] = edge;
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
-
     }
-    //add loop edge only once
-    if(node.is_end() && node.end_of != node.start_of) {
+    if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
-      bundle.edges.emplace_back(edge, edge_itr.position());
+      bundle.edges[node.end_of] = edge;
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
     }
@@ -240,9 +238,6 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
     way_node.node.attributes_.non_link_edge = !way.link();
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
 
-    // Remember the id of last node we saw to detect looping
-    uint64_t last_id = way_node.node.osmid;
-
     // Iterate through the nodes of the way until we find an intersection
     while(current_way_node_index < way_nodes.size()) {
       // Get the next shape point on this edge
@@ -255,17 +250,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
         // Finish off this edge
         way_node.node.attributes_.link_edge = way.link();
         way_node.node.attributes_.non_link_edge = !way.link();
-        // If it a loop close it and possibly start a new node for next edge
-        if(way_node.node.osmid == last_id) {
-          sequence<Node>::iterator element = --nodes.end();
-          auto node = *element;
-          node.end_of = edges.size();
-          element = node;
-          if (current_way_node_index != last_way_node_index)
-            nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size() + 1), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
-        }// Its normal so just end the edge
-        else
-          nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
         edges.push_back(edge);
 
         // Start a new edge if this is not the last node in the way
@@ -275,7 +260,6 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
           auto node = *element;
           node.start_of = edges.size();
           element = node;
-          last_id = way_node.node.osmid;
         }// This was the last shape point in the way
         else {
           ++current_way_node_index;
@@ -300,12 +284,12 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
  * @return  Returns the best (most important) classification
  */
 // Gets the most important class among the node's edges
-uint32_t GetBestNonLinkClass(const std::list<std::pair<Edge, size_t> >& edges) {
+uint32_t GetBestNonLinkClass(const std::unordered_map<size_t, Edge>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges)
-    if (!edge.first.attributes.link)
-      if (edge.first.attributes.importance < bestrc)
-        bestrc = edge.first.attributes.importance;
+    if (!edge.second.attributes.link)
+      if (edge.second.attributes.importance < bestrc)
+        bestrc = edge.second.attributes.importance;
   return bestrc;
 }
 
@@ -347,15 +331,15 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
       // Expand from all link edges
       for (const auto& startedge : bundle.edges) {
         // Get the edge information. Skip non-link edges
-        if (!startedge.first.attributes.link) {
+        if (!startedge.second.attributes.link) {
           continue;
         }
 
         // Clear the visited set and start expanding at the end of this edge
         visitedset = {};
         expandset = {};
-        linkedgeindexes = { startedge.second };
-        expand(startedge.first, node_itr);
+        linkedgeindexes = { startedge.first };
+        expand(startedge.second, node_itr);
 
         // Expand edges until all paths reach a node that has a non-link
         while (!expandset.empty()) {
@@ -366,15 +350,15 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
           expandset.erase(expandset.begin());
           for (const auto& expandededge : expanded.edges) {
             // Do not allow use of the start edge
-            if (expandededge.second == startedge.second) {
+            if (expandededge.first == startedge.first) {
               continue;
             }
             // Add this edge (it should be a link edge) and get its end node
-            if (!expandededge.first.attributes.link) {
+            if (!expandededge.second.attributes.link) {
               LOG_ERROR("Expanding onto non-link edge!");
               continue;
             }
-            expand(expandededge.first, expand_node_itr);
+            expand(expandededge.second, expand_node_itr);
           }
         }
 
@@ -384,7 +368,7 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
         // from the starting node
         // Make sure this connects...
         if (endrc.size() < 2) {
-          stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.first.wayindex_]).way_id(), 0);
+          stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.second.wayindex_]).way_id(), 0);
         }
         else {
           // Set to the value of the 2nd best road class of all
@@ -439,13 +423,13 @@ bool IsNoThroughEdge(const size_t startnode, const size_t endnode,
     auto bundle = collect_node_edges(nodes[node_index], nodes, edges);
     for (const auto& edge_pair : bundle.edges) {
       // Do not allow use of the start edge
-      if (edge_pair.second == startedgeindex)
+      if (edge_pair.first == startedgeindex)
         continue;
 
       // Return false if we have returned back to the start node or we
       // encounter a tertiary road (or better)
-      auto nextendnode = edge_pair.first.sourcenode_ == node_index ? edge_pair.first.targetnode_ : edge_pair.first.sourcenode_;
-      if (nextendnode == startnode || edge_pair.first.attributes.importance <= static_cast<uint32_t>(RoadClass::kTertiary))
+      auto nextendnode = edge_pair.second.sourcenode_ == node_index ? edge_pair.second.targetnode_ : edge_pair.second.sourcenode_;
+      if (nextendnode == startnode || edge_pair.second.attributes.importance <= static_cast<uint32_t>(RoadClass::kTertiary))
         return false;
 
       // Add to the expand set if not in the visited set
@@ -472,11 +456,11 @@ bool OnewayPairEdgesExist(const node_bundle& bundle,
   bool inbound  = false;
   bool outbound = false;
   for (const auto edge_pair : bundle.edges) {
-    if (edge_pair.second == edgeindex)
+    if (edge_pair.first == edgeindex)
       continue;
 
     // Get the edge and way.
-    const Edge& edge = edge_pair.first;
+    const Edge& edge = edge_pair.second;
     const OSMWay &w = ways[edge.wayindex_];
 
     // Skip if this has matching way Id or a link (ramps/turn channel)
@@ -531,7 +515,7 @@ bool IsIntersectionInternal(const size_t startnode, const size_t endnode,
  * Get the use for a link (either a kRamp or kTurnChannel)
  * TODO - validate logic with some real world cases.
  */
-Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
+Use GetLinkUse(const std::pair<size_t, Edge>& edge_pair, const RoadClass rc,
                const float length, sequence<Node>& nodes, sequence<Edge>& edges) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
@@ -546,21 +530,21 @@ Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
   // Both end nodes have to connect to a non-link edge. If either end node
   // connects only to "links" this likely indicates a split or fork,
   // which are not so prevalent in turn channels.
-  auto startnode_itr = nodes[edge_pair.first.sourcenode_];
+  auto startnode_itr = nodes[edge_pair.second.sourcenode_];
   auto startnd = collect_node_edges(startnode_itr, nodes, edges);
-  auto endnode_itr = nodes[edge_pair.first.targetnode_];
+  auto endnode_itr = nodes[edge_pair.second.targetnode_];
   auto endnd = collect_node_edges(endnode_itr, nodes, edges);
   if (startnd.node.attributes_.non_link_edge && endnd.node.attributes_.non_link_edge) {
     // If either end node connects to another link then still
     // call it a ramp. So turn channels are very short and ONLY connect
     // to non-link edges without any exit signs.
     for (const auto& edge : startnd.edges) {
-      if (edge.second != edge_pair.second && edge.first.attributes.link) {
+      if (edge.first != edge_pair.first && edge.second.attributes.link) {
         return Use::kRamp;
       }
     }
     for (const auto& edge : endnd.edges) {
-      if (edge.second != edge_pair.second && edge.first.attributes.link) {
+      if (edge.first != edge_pair.first && edge.second.attributes.link) {
         return Use::kRamp;
       }
     }
@@ -668,7 +652,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   std::vector<uint64_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
   for (const auto& edge : bundle.edges) {
-    wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
+    wayids.push_back((*ways[edge.second.wayindex_]).osmwayid_);
   }
 
   // There are some cases where both ONLY and NO restriction types are
@@ -763,7 +747,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
         std::vector<DirectedEdgeBuilder> directededges;
         for (const auto& edge_pair : bundle.edges) {
           // Get the edge and way
-          const Edge& edge = edge_pair.first;
+          const Edge& edge = edge_pair.second;
           const OSMWay w = *ways[edge.wayindex_];
 
           // Get the shape for the edge and compute its length
@@ -780,13 +764,13 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
           // Check for not_thru edge (only on low importance edges)
           bool not_thru = false;
           if (edge.attributes.importance > static_cast<uint32_t>(RoadClass::kTertiary)) {
-            not_thru = IsNoThroughEdge(source, target, edge_pair.second, nodes, edges);
+            not_thru = IsNoThroughEdge(source, target, edge_pair.first, nodes, edges);
             if (not_thru)
               stats.not_thru_count++;
           }
 
           // Test if an internal intersection edge
-          bool internal = IsIntersectionInternal(source, target, edge_pair.second,
+          bool internal = IsIntersectionInternal(source, target, edge_pair.first,
                          w.way_id(), length, nodes, edges, ways);
           if (internal)
             stats.internalcount++;
@@ -845,7 +829,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(
-            edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id, shape,
+            edge_pair.first, (*nodes[source]).graph_id, (*nodes[target]).graph_id, shape,
             w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
             added);
           directededge.set_edgeinfo_offset(edge_info_offset);
