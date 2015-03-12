@@ -31,9 +31,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     // End node must match the start node, shortcut (bool) must match
-    // and lengths must be close...
+    // and lengths must match
     if (directededge->endnode() == startnode &&
-        static_cast<bool>(edge.shortcut()) == static_cast<bool>(directededge->shortcut()) &&
+        edge.is_shortcut() == directededge->is_shortcut() &&
         directededge->length() == edge.length()) {
       if (opp_index != absurd_index) {
         dupcount_++;
@@ -51,7 +51,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     uint32_t n = 0;
     directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      if (sc == directededge->shortcut() && directededge->shortcut()) {
+      if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
         LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
           % directededge->length() % directededge->endnode()).str());
         n++;
