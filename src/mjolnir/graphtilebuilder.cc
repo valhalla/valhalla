@@ -49,8 +49,14 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
             + (signs_builder_.size() * sizeof(SignBuilder)));
-    header_builder_.set_textlist_offset(
+    header_builder_.set_streetlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
+
+    header_builder_.set_admininfo_offset(
+        header_builder_.streetlist_offset() + street_list_offset_);
+
+    header_builder_.set_namelist_offset(
+        header_builder_.admininfo_offset() + admin_info_offset_);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
@@ -71,11 +77,17 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
-    // Write the names
-    SerializeTextListToOstream(file);
+    // Write the streets
+    SerializeStreetListToOstream(file);
 
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6%")
-      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_).str());
+    // Write the admin data
+    SerializeAdminInfosToOstream(file);
+
+    // Write the names
+    SerializeNameListToOstream(file);
+
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% streetlist offset = %6% admininfo offset = %7% namelist offset = %8%" )
+      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % street_list_offset_ % admin_info_offset_ % name_list_offset_).str());
 
     size_ = file.tellp();
     file.close();
@@ -117,9 +129,13 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
 
-    // Write the existing edgeinfo, and textlist
+    // Write the existing edgeinfo, and streetlist
     file.write(edgeinfo_, edgeinfo_size_);
-    file.write(textlist_, textlist_size_);
+    file.write(streetlist_, streetlist_size_);
+
+    // Write the existing admininfo, and textlist
+    file.write(admininfo_, admininfo_size_);
+    file.write(namelist_, namelist_size_);
 
     size_ = file.tellp();
     file.close();
@@ -162,9 +178,13 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
 
-    // Write the existing edgeinfo and textlist
+    // Write the existing edgeinfo, and streetlist
     file.write(edgeinfo_, edgeinfo_size_);
-    file.write(textlist_, textlist_size_);
+    file.write(streetlist_, streetlist_size_);
+
+    // Write the existing admininfo, and textlist
+    file.write(admininfo_, admininfo_size_);
+    file.write(namelist_, namelist_size_);
 
     size_ = file.tellp();
     file.close();
@@ -198,19 +218,19 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
     }
 
     // If nothing already used this sign text
-    auto existing_text_offset = text_offset_map.find(sign.text());
-    if (existing_text_offset == text_offset_map.end()) {
+    auto existing_text_offset = street_offset_map.find(sign.text());
+    if (existing_text_offset == street_offset_map.end()) {
       // Add name to text list
-      textlistbuilder_.emplace_back(sign.text());
+      streetlistbuilder_.emplace_back(sign.text());
 
       // Add sign to the list
-      signs_builder_.emplace_back(idx, sign.type(), text_list_offset_);
+      signs_builder_.emplace_back(idx, sign.type(), street_list_offset_);
 
       // Add text/offset pair to map
-      text_offset_map.emplace(sign.text(), text_list_offset_);
+      street_offset_map.emplace(sign.text(), street_list_offset_);
 
       // Update text offset value to length of string plus null terminator
-      text_list_offset_ += (sign.text().length() + 1);
+      street_list_offset_ += (sign.text().length() + 1);
     }
     else {
       // Name already exists. Add sign type and existing text offset to list
@@ -246,19 +266,19 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
 
       // If nothing already used this name
-      auto existing_text_offset = text_offset_map.find(name);
-      if (existing_text_offset == text_offset_map.end()) {
+      auto existing_text_offset = street_offset_map.find(name);
+      if (existing_text_offset == street_offset_map.end()) {
         // Add name to text list
-        textlistbuilder_.emplace_back(name);
+        streetlistbuilder_.emplace_back(name);
 
         // Add name offset to list
-        street_name_offset_list.emplace_back(text_list_offset_);
+        street_name_offset_list.emplace_back(street_list_offset_);
 
         // Add name/offset pair to map
-        text_offset_map.emplace(name, text_list_offset_);
+        street_offset_map.emplace(name, street_list_offset_);
 
         // Update text offset value to length of string plus null terminator
-        text_list_offset_ += (name.length() + 1);
+        street_list_offset_ += (name.length() + 1);
       } // Something was already using this name
       else {
         // Add existing offset to list
@@ -295,9 +315,23 @@ void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
 }
 
 // Serialize the text list
-void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
-  for (const auto& text : textlistbuilder_) {
-    out << text << '\0';
+void GraphTileBuilder::SerializeStreetListToOstream(std::ostream& out) {
+  for (const auto& street : streetlistbuilder_) {
+    out << street << '\0';
+  }
+}
+
+// Serialize the admin info list
+void GraphTileBuilder::SerializeAdminInfosToOstream(std::ostream& out) {
+  for (const auto& admininfo : admininfo_list_) {
+    out << admininfo;
+  }
+}
+
+// Serialize the text list
+void GraphTileBuilder::SerializeNameListToOstream(std::ostream& out) {
+  for (const auto& name : namelistbuilder_) {
+    out << name << '\0';
   }
 }
 

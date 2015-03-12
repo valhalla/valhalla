@@ -53,6 +53,8 @@ void GraphBuilder::Build(OSMData& osmdata) {
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
   LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
 
+
+
   // Create mappings of extended node info by GraphId rather than
   // OSM node Id.
   CreateNodeMaps(osmdata);
@@ -772,8 +774,21 @@ void BuildTileSet(
   // For each tile in the task
   bool added = false;
 
+
   for(; tile_start != tile_end; ++tile_start) {
     try {
+
+    //  const auto level = hierarchy.levels().find(tile_start->first.level());
+    //   if(level == hierarchy.levels().end())
+    //     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
+
+    //   AABB2 x = level->second.tiles.TileBounds();
+
+      // std::cout << "max " << x.maxpt().first << " " << x.maxpt().second << std::endl;
+
+      // std::cout << "min " << x.minpt().first << " " << x.minpt().second << std::endl;
+
+
       // What actually writes the tile
       GraphTileBuilder graphtile;
 
