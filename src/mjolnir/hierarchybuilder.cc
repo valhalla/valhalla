@@ -367,20 +367,14 @@ if (nodea.level() == 0) {
      % nodea % baseni->latlng().lat() % baseni->latlng().lng() % nodeb).str());
 }
 **/
-      // Add shortcut directed edge (if we have not reached max per node)
-      if (shortcut < kMaxShortcutsFromNode) {
-        // Add to the shortcut map (associates the base edge index to the
-        // shortcut index). Remove superseded mask that may have been copied
-        // from base level directed edge
-        shortcuts[i] = shortcut+1;
-        newedge.set_shortcut(shortcut+1);
-        newedge.set_superseded(0);
-        shortcut++;
-        directededges.emplace_back(std::move(newedge));
-      } else {
-        LOG_INFO("Skip adding shortcut at " + std::to_string(baseni->latlng().lat()) +
-                 "," + std::to_string(baseni->latlng().lng()));
-      }
+      // Add shortcut edge. Add to the shortcut map (associates the base edge
+      // index to the shortcut index).Remove superseded mask that may have
+      // been copied from base level directed edge
+      shortcuts[i] = shortcut+1;
+      newedge.set_shortcut(shortcut+1);
+      newedge.set_superseded(0);
+      directededges.emplace_back(std::move(newedge));
+      shortcut++;
     }
   }
   info.shortcutcount_ += directededges.size();
