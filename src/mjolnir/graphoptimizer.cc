@@ -7,21 +7,85 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
+
+namespace {
+
+// Get the GraphId of the opposing edge.
+uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
+    GraphReader& graphreader_, uint32_t& dupcount_) {
+
+  // Get the tile at the end node and get the node info
+  GraphId endnode = edge.endnode();
+  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
+  const NodeInfo* nodeinfo = tile->node(endnode.id());
+
+  // TODO - check if more than 1 edge has matching startnode and
+  // distance!
+
+  // Get the directed edges and return when the end node matches
+  // the specified node and length matches
+  constexpr uint32_t absurd_index = 777777;
+  uint32_t opp_index = absurd_index;
+  const DirectedEdge* directededge = tile->directededge(
+              nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // End node must match the start node, shortcut (bool) must match
+    // and lengths must be close...
+    if (directededge->endnode() == startnode &&
+        static_cast<bool>(edge.shortcut()) == static_cast<bool>(directededge->shortcut()) &&
+        directededge->length() == edge.length()) {
+      if (opp_index != absurd_index) {
+        dupcount_++;
+      }
+      opp_index = i;
+    }
+  }
+
+  if (opp_index == absurd_index) {
+    bool sc = edge.shortcut();
+    LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
+      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
+      % startnode % edge.endnode() % sc).str());
+
+    uint32_t n = 0;
+    directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+      if (sc == directededge->shortcut() && directededge->shortcut()) {
+        LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
+          % directededge->length() % directededge->endnode()).str());
+        n++;
+      }
+    }
+    if (n == 0) {
+      if (sc) {
+        LOG_WARN("   No Shortcut edges found from end node");
+      } else {
+        LOG_WARN("   No regular edges found from end node");
+      }
+    }
+    return kMaxEdgesPerNode;
+  }
+  return opp_index;
+}
+
+}
 
 namespace valhalla {
 namespace mjolnir {
 
-GraphOptimizer::GraphOptimizer(const boost::property_tree::ptree& pt)
-      : dupcount_(0),
-        tile_hierarchy_(pt),
-        graphreader_(tile_hierarchy_) {
+void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
 
+  // Number of possible duplicates
+  uint32_t dupcount_;
+
+  // Graphreader
+  GraphReader graphreader_(pt);
+  const auto& tile_hierarchy_ = graphreader_.GetTileHierarchy();
   // Make sure there are at least 2 levels!
-  if (tile_hierarchy_.levels().size() < 2)
+  if (graphreader_.GetTileHierarchy().levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
-}
 
-void GraphOptimizer::Optimize() {
   // Iterate through all levels and all tiles.
   // TODO - concurrency
   LOG_INFO("GraphOptimizer - validate tiles first");
@@ -89,7 +153,7 @@ void GraphOptimizer::Optimize() {
                                   nodeinfo.edge_index() + j);
 
           // Set the opposing edge index
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge));
+          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge, graphreader_, dupcount_));
           directededges.emplace_back(std::move(directededge));
         }
 
@@ -105,63 +169,6 @@ void GraphOptimizer::Optimize() {
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % level % dupcount_).str());
   }
-}
-
-// Get the GraphId of the opposing edge.
-uint32_t GraphOptimizer::GetOpposingEdgeIndex(const GraphId& startnode,
-                                              DirectedEdge& edge) {
-  // Get the tile at the end node and get the node info
-  GraphId endnode = edge.endnode();
-  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
-  const NodeInfo* nodeinfo = tile->node(endnode.id());
-
-  // TODO - check if more than 1 edge has matching startnode and
-  // distance!
-
-  // Get the directed edges and return when the end node matches
-  // the specified node and length matches
-  constexpr uint32_t absurd_index = 777777;
-  uint32_t opp_index = absurd_index;
-  const DirectedEdge* directededge = tile->directededge(
-              nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // End node must match the start node, shortcut (bool) must match
-    // and lengths must be close...
-    if (directededge->endnode() == startnode &&
-        static_cast<bool>(edge.shortcut()) == static_cast<bool>(directededge->shortcut()) &&
-        directededge->length() == edge.length()) {
-      if (opp_index != absurd_index) {
-        dupcount_++;
-      }
-      opp_index = i;
-    }
-  }
-
-  if (opp_index == absurd_index) {
-    bool sc = edge.shortcut();
-    LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
-      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
-      % startnode % edge.endnode() % sc).str());
-
-    uint32_t n = 0;
-    directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      if (sc == directededge->shortcut() && directededge->shortcut()) {
-        LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
-          % directededge->length() % directededge->endnode()).str());
-        n++;
-      }
-    }
-    if (n == 0) {
-      if (sc) {
-        LOG_WARN("   No Shortcut edges found from end node");
-      } else {
-        LOG_WARN("   No regular edges found from end node");
-      }
-    }
-    return kMaxEdgesPerNode;
-  }
-  return opp_index;
 }
 
 }

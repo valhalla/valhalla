@@ -26,34 +26,9 @@ namespace mjolnir {
 class GraphOptimizer {
  public:
   /**
-   * Constructor
-   */
-  GraphOptimizer(const boost::property_tree::ptree& pt);
-
-  /**
    * Optimize the graph tiles.
    */
-  void Optimize();
-
- protected:
-  // Number of possible duplicates
-  uint32_t dupcount_;
-
-  // Tile hierarchy/level information
-  baldr::TileHierarchy tile_hierarchy_;
-
-  // Graphreader
-  baldr::GraphReader graphreader_;
-
-  /**
-   * Get the opposing edge index for the specified edge. It is the index of
-   * the outbound directed edge from the end node of the specified directed
-   * edge that ends at the start node and has matching length.
-   * @param node   Start node.
-   * @param edge   Outbound directed edge.
-   * @return  Returns the index of the opposing edge at the end node.
-   */
-  uint32_t GetOpposingEdgeIndex(const GraphId& node, DirectedEdge& edge);
+  static void Optimize(const boost::property_tree::ptree& pt);
 };
 
 }
