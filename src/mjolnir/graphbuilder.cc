@@ -111,7 +111,8 @@ struct Node {
 // collect all the edges that start or end at this node
 struct node_bundle : Node {
   size_t node_count;
-  std::unordered_map<size_t, Edge> edges; //no duplicates (so loops be damned!)
+  //TODO: to enable two directed edges per loop edge turn this into an unordered_multimap or just a list of pairs
+  std::unordered_map<size_t, Edge> edges;
   node_bundle(const Node& other):Node(other), node_count(0){}
 };
 node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequence<Node>& nodes, sequence<Edge>& edges) {
@@ -844,7 +845,7 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
             directededge.set_exitsign(true);
           }
 
-          // If this was a loop edge we need its twin because this node wont be encountered again
+          //TODO: If this was a loop edge we need its twin because this node wont be encountered again
           /*if(source == target) {
             idx++;
             n++;
