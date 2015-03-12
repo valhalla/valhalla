@@ -33,7 +33,8 @@ constexpr uint32_t kMaxLaneCount = 15;
 // Number of edges considered for edge transitions
 constexpr uint32_t kNumberOfEdgeTransitions = 8;
 
-// Maximum shortcuts edges from a node
+// Maximum shortcuts edges from a node. More than this can be
+// added but this is the max. that can supersede an edge
 constexpr uint32_t kMaxShortcutsFromNode = 7;
 
 // Maximum stop impact
@@ -389,6 +390,13 @@ class DirectedEdge {
   bool trans_down() const;
 
   /**
+   * Is this edge a shortcut edge. If there are more than kMaxShortcutsFromNode
+   * shortcuts no mask is set but this flag is set to true.
+   * @return  Returns true if this edge is a shortcut.
+   */
+  bool is_shortcut() const;
+
+  /**
    * Get the computed version of DirectedEdge attributes.
    * @return   Returns internal version.
    */
@@ -498,7 +506,8 @@ class DirectedEdge {
     uint32_t trans_up       : 1;  // Edge represents a transition up one
                                   // level in the hierarchy
     uint32_t trans_down     : 1;  // Transition down one level
-    uint32_t spare          : 2;
+    uint32_t is_shortcut    : 1;  // True if this edge is a shortcut.
+    uint32_t spare          : 1;
   };
   Hierarchy hierarchy_;
 };
