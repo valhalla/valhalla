@@ -38,14 +38,24 @@ uint32_t OSMAdmin::member_count() const {
   return memberid_count_;
 }
 
-// Sets the name
-void OSMAdmin::set_name(const std::string& name) {
-  name_ = name;
+// Set the index for the name.
+void OSMAdmin::set_name_index(const uint32_t idx) {
+  name_index_ = idx;
 }
 
 // Get the name.
-const std::string& OSMAdmin::name() const {
-  return name_;
+uint32_t OSMAdmin::name_index() const {
+  return name_index_;
+}
+
+// Set the index for the name:en.
+void OSMAdmin::set_name_en_index(const uint32_t idx) {
+  name_en_index_ = idx;
+}
+
+// Get the name:en.
+uint32_t OSMAdmin::name_en_index() const {
+  return name_en_index_;
 }
 
 // Set admin level.
@@ -56,6 +66,16 @@ void OSMAdmin::set_admin_level(const uint32_t level) {
 // Get the admin level
 uint32_t OSMAdmin::admin_level() const {
   return admin_level_;
+}
+
+// Set drive on right.
+void OSMAdmin::set_drive_on_right(const bool drive_on_right) {
+  drive_on_right_ = drive_on_right;
+}
+
+// Get the drive on right flag.
+bool OSMAdmin::drive_on_right() const {
+  return drive_on_right_;
 }
 
 }

@@ -87,9 +87,6 @@ class HierarchyBuilder {
   // Mapping from base level node to new node
   std::unordered_map<uint64_t, baldr::GraphId> nodemap_;
 
-  // Mapping superseded edges
-  std::unordered_map<uint64_t, bool> supersededmap_;
-
   // Map of base edges forming potential shortcuts
   std::unordered_map<uint64_t, EdgePairs> contractions_;
 
@@ -139,13 +136,6 @@ class HierarchyBuilder {
   GraphId GetOpposingEdge(const GraphId& node, const DirectedEdge* edge);
 
   /**
-   * Is the edge superseded (used in a shortcut edge)?
-   * @param  edge   Base GraphId of the edge
-   * @return  Returns true if the edge is part of a shortcut, false if not.
-   */
-  bool IsSuperseded(const baldr::GraphId& edge) const;
-
-  /**
    * Form tiles in the new level
    * @param  base_level  Base level tile information
    * @param  new_level   Tile information for the new level.
@@ -162,7 +152,8 @@ class HierarchyBuilder {
                         const baldr::GraphTile* tile,
                         const baldr::RoadClass rcc,
                         GraphTileBuilder& tilebuilder,
-                        std::vector<DirectedEdgeBuilder>& directededges);
+                        std::vector<DirectedEdgeBuilder>& directededges,
+                        std::unordered_map<uint32_t, uint32_t>& shortcuts);
 
   /**
    * Connect edges on the shortcut. Appends shape.

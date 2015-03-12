@@ -54,16 +54,28 @@ struct OSMAdmin {
   uint32_t member_count() const;
 
   /**
-   * Sets the name
-   * @param  name   Name.
+   * Sets the index for name
+   * @param  idx  Index for the name.
    */
-  void set_name(const std::string& name);
+  void set_name_index(const uint32_t idx);
 
   /**
-   * Get the name.
-   * @return  Returns name.
+   * Get the name index.
+   * @return  Returns the index for the name.
    */
-  const std::string& name() const;
+  uint32_t name_index() const;
+
+  /**
+   * Sets the index for name:en
+   * @param  idx  Index for the English name.
+   */
+  void set_name_en_index(const uint32_t idx);
+
+  /**
+   * Get the name:en index.
+   * @return  Returns the index for the English name.
+   */
+  uint32_t name_en_index() const;
 
   /**
    * Set admin level.
@@ -77,11 +89,27 @@ struct OSMAdmin {
    */
   uint32_t admin_level() const;
 
+  /**
+   * Set drive on right.
+   * @param   drive_on_right
+   */
+  void set_drive_on_right(const bool drive_on_right);
+
+  /**
+   * Get the drive on right flag.
+   * @return  Drive on right?
+   */
+  bool drive_on_right() const;
+
   // OSM admin/relation id
   uint64_t osmrelationid_;
 
   // List of ways/member ids
   std::list<uint64_t> ways_;
+
+  // Names of country or state/prov
+  uint32_t name_index_;
+  uint32_t name_en_index_;
 
   // Count of members.
   uint16_t memberid_count_;
@@ -89,8 +117,8 @@ struct OSMAdmin {
   // Admin level.  2 = country; 4 = state.
   uint8_t admin_level_;
 
-  // Name of country or state/prov
-  std::string name_;
+  // drive on right side of the road in this country?
+  bool drive_on_right_;
 
 };
 
