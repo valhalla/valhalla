@@ -55,9 +55,9 @@ void write_tiles(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = valhalla::mjolnir::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
-  valhalla::mjolnir::GraphBuilder builder(conf.get_child("mjolnir"));
-  builder.Build(osmdata);
+  auto osmdata = valhalla::mjolnir::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"},
+      "test_ways_file.bin", "test_way_nodes_file.bin");
+  valhalla::mjolnir::GraphBuilder::Build(conf.get_child("mjolnir"), osmdata, "test_ways_file.bin", "test_way_nodes_file.bin");
   valhalla::mjolnir::GraphEnhancer::Enhance(conf.get_child("mjolnir.hierarchy"));
   valhalla::mjolnir::GraphOptimizer graphoptimizer(conf.get_child("mjolnir.hierarchy"));
   graphoptimizer.Optimize();
