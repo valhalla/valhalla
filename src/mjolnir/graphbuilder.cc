@@ -209,7 +209,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
 }
 
 // Construct edges in the graph and assign nodes to tiles.
-void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const std::string& edges_file, const float tilesize,
+void ConstructEdges(const OSMData& osmdata, const std::string& ways_file, const std::string& way_nodes_file,
+    const std::string& nodes_file, const std::string& edges_file, const float tilesize,
     const std::function<GraphId (const OSMNode&)>& graph_id_predicate) {
   LOG_INFO("Creating graph edges from ways...")
 
@@ -217,8 +218,8 @@ void ConstructEdges(const OSMData& osmdata, const std::string& nodes_file, const
   uint32_t edgeindex = 0;
   GraphId graphid;
   //so we can read ways and nodes and write edges
-  sequence<OSMWay> ways(osmdata.ways_file, false);
-  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, true);
   sequence<Node> nodes(nodes_file, true);
 
@@ -693,7 +694,8 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   return mask;
 }
 
-void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
+void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
+    const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
     std::map<GraphId, size_t>::const_iterator tile_start, std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
@@ -701,8 +703,8 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
   std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
 
-  sequence<OSMWay> ways(osmdata.ways_file, false);
-  sequence<OSMWayNode> way_nodes(osmdata.way_nodes_file, false);
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
@@ -895,7 +897,9 @@ void BuildTileSet(const std::string& nodes_file, const std::string& edges_file,
 }
 
 // Build tiles for the local graph hierarchy
-void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata, const std::string& nodes_file, const std::string& edges_file,
+void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
+  const std::string& ways_file, const std::string& way_nodes_file,
+  const std::string& nodes_file, const std::string& edges_file,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats) {
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
@@ -922,7 +926,8 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata, co
     std::advance(tile_end, tile_count);
     // Make the thread
     threads[i].reset(
-      new std::thread(BuildTileSet,  std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
+      new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
+                      std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
                       std::cref(osmdata), tile_start, tile_end, std::ref(results[i]))
     );
   }
@@ -955,7 +960,8 @@ namespace valhalla {
 namespace mjolnir {
 
 // Build the graph from the input
-void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata) {
+void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata,
+    const std::string& ways_file, const std::string& way_nodes_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
   TileHierarchy tile_hierarchy(pt.get_child("hierarchy"));
@@ -965,7 +971,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
   uint8_t level = tl->second.level;
 
   // Make the edges and nodes in the graph
-  ConstructEdges(osmdata, nodes_file, edges_file, tl->second.tiles.TileSize(),
+  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tl->second.tiles.TileSize(),
     [&tile_hierarchy, &level](const OSMNode& node) {
       return tile_hierarchy.GetGraphId({node.lng, node.lat}, level);
     }
@@ -977,10 +983,10 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
-  ReclassifyLinks(osmdata.ways_file, nodes_file, edges_file, stats);
+  ReclassifyLinks(ways_file, nodes_file, edges_file, stats);
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
-  BuildLocalTiles(threads, osmdata, nodes_file, edges_file, tiles, tile_hierarchy, stats);
+  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tiles, tile_hierarchy, stats);
 
   stats.LogStatistics();
 }
