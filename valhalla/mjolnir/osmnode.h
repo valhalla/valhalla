@@ -30,6 +30,15 @@ struct NodeAttributes {
  */
 struct OSMNode {
 
+  // The osm id of the node
+  uint64_t osmid;
+
+  // Lat,lng of the node
+  float lng, lat;
+
+  // Node attributes. Shared by OSMNode and GraphBuilder Node.
+  NodeAttributes attributes_;
+
   /**
    * Sets the lat,lng.
    * @param  ll  Lat,lng of the node.
@@ -153,12 +162,6 @@ struct OSMNode {
    * @return  Returns the attributes.
    */
   const NodeAttributes& attributes() const;
-
-  // Lat,lng of the node
-  float lng, lat;
-
-  // Node attributes. Shared by OSMNode and GraphBuilder Node.
-  NodeAttributes attributes_;
 };
 
 }

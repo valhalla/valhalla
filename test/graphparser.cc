@@ -51,11 +51,11 @@ void write_config(const std::string& filename) {
 }
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node_id < b.node_id;
+  return a.node.osmid < b.node.osmid;
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  OSMWayNode target{node_id};
+  OSMWayNode target{{node_id}};
   if(!way_nodes.find(target, node_predicate))
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
   return target.node;
@@ -76,8 +76,10 @@ void BollardsGates(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   //We split set the uses at bollards and gates.
@@ -113,8 +115,10 @@ void RemovableBollards(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/rome.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
@@ -128,8 +132,10 @@ void Exits(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/harrisburg.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(33698177, way_nodes);
@@ -157,8 +163,10 @@ void Baltimore(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"});
-  sequence<OSMWay> ways(osmdata.ways_file, false);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/baltimore.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
 
   // bike_forward and reverse is set to false by default.  Meaning defaults for
@@ -195,7 +203,7 @@ void Baltimore(const std::string& config_file) {
     throw std::runtime_error("Forward/Backward/Pedestrian access is not set correctly for way 192573108.");
   }
 
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false, true);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false, true);
   way_nodes.sort(node_predicate);
   auto node = GetNode(49473254, way_nodes);
 
@@ -224,8 +232,10 @@ void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
-  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"});
-  sequence<OSMWayNode> way_nodes(osmdata.way_node_references_file, false);
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/nyc.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
 
   auto node = GetNode(42439096, way_nodes);
