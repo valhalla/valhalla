@@ -30,10 +30,9 @@ enum class OSMType : uint8_t {
  };
 
 struct OSMWayNode {
-  uint64_t node_id;
+  OSMNode node;
   size_t way_index;
   size_t way_shape_node_index;
-  OSMNode node;
 };
 
 /**
@@ -41,12 +40,6 @@ struct OSMWayNode {
  * Populated by the PBF parser and sent into GraphBuilder.
  */
 struct OSMData {
-
-  // Stores all the ways that are part of the road network
-  std::string ways_file;
-  // Node references, contain the actual nodes associated to ways
-  std::string way_node_references_file;
-
   size_t osm_node_count;        // Count of osm nodes
   size_t osm_way_count;         // Count of osm ways
   size_t osm_way_node_count;    // Count of osm nodes on osm ways

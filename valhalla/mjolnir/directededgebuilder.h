@@ -389,7 +389,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_edge_to_right(const uint32_t localidx, const bool right);
 
   /**
-   * Set the index of the directed edge on the local level of the graph
+   * Creates the opposite orientation of the directed edge
+   */
+  DirectedEdgeBuilder flipped() const;
+
+
+  /** Set the index of the directed edge on the local level of the graph
    * hierarchy. This is used for turn restrictions so the edges can be
    * identified on the different levels.
    * @param idx The index of the edge on the local level.

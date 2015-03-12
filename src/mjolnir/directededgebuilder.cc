@@ -2,6 +2,8 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/logging.h>
 
+#include <algorithm>
+
 namespace {
 
 /**
@@ -449,6 +451,13 @@ void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
   }
 }
 
+DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {
+  auto other = *this;
+  std::swap(other.forwardaccess_, other.reverseaccess_);
+  other.attributes_.forward = !other.attributes_.forward;
+  return other;
+}
+
 // Set the index of the directed edge on the local level of the graph
 // hierarchy. This is used for turn restrictions so the edges can be
 // identified on the different levels.
@@ -502,7 +511,6 @@ void DirectedEdgeBuilder::set_trans_up(const bool trans_up) {
 void DirectedEdgeBuilder::set_trans_down(const bool trans_down) {
   hierarchy_.trans_down = trans_down;
 }
-
 
 }
 }

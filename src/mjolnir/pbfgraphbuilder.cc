@@ -108,11 +108,10 @@ int main(int argc, char** argv) {
   if(input_type == "protocolbuffer"){
     // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
     // relations are defined within the PBFParser class
-    auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files);
+    auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin", "way_nodes.bin");
 
     // Build the graph using the OSMNodes and OSMWays from the parser
-    GraphBuilder graphbuilder(pt.get_child("mjolnir"));
-    graphbuilder.Build(osm_data);
+    GraphBuilder::Build(pt.get_child("mjolnir"), osm_data, "ways.bin", "way_nodes.bin");
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
