@@ -381,6 +381,12 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
   return kMaxEdgesPerNode;
 }
 
+bool ConsistentNames(const std::vector<std::string> names1,
+                     const std::vector<std::string> names2) {
+  // TODO - make for real
+  return (!names1.empty() && (names1 == names2));
+}
+
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the done map as well
 void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
@@ -478,7 +484,16 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
           ProcessEdgeTransitions(j, directededge, edges, ntrans, heading);
         }
 
-        // TODO - name continuity - set in NodeInfo
+        // Name continuity - set in NodeInfo
+        for (uint32_t k = (j + 1); k < ntrans; k++) {
+          if (ConsistentNames(
+              tile->edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+              tile->edgeinfo(
+                  tilebuilder.directededge(nodeinfo.edge_index() + k)
+                      .edgeinfo_offset())->GetNames())) {
+            nodeinfo.set_name_consistency(j, k, true);
+          }
+        }
 
         // Set unreachable (driving) flag
         if (IsUnreachable(reader, lock, directededge)) {
