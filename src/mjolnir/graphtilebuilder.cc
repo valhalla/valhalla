@@ -307,6 +307,67 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   }
 }
 
+// Add admin
+uint32_t GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::string>& names) {
+
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
+  if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
+    // Add a new AdminInfo to the list and get a reference to it
+    admininfo_list_.emplace_back();
+    AdminInfoBuilder& admininfo = admininfo_list_.back();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Put each name's index into the chunk of bytes containing all the names
+    // in the tile
+    std::vector<uint32_t> name_offset_list;
+    name_offset_list.reserve(names.size());
+    for (const auto& name : names) {
+      // Skip blank names
+      if (name.empty()) {
+        continue;
+      }
+
+      // If nothing already used this name
+      auto existing_text_offset = name_offset_map.find(name);
+      if (existing_text_offset == name_offset_map.end()) {
+        // Add name to text list
+        namelistbuilder_.emplace_back(name);
+
+        // Add name offset to list
+        name_offset_list.emplace_back(name_list_offset_);
+
+        // Add name/offset pair to map
+        name_offset_map.emplace(name, name_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        name_list_offset_ += (name.length() + 1);
+      } // Something was already using this name
+      else {
+        // Add existing offset to list
+        name_offset_list.emplace_back(existing_text_offset->second);
+      }
+    }
+    admininfo.set_name_offset_list(name_offset_list);
+
+    // Add to the map
+    admin_info_offset_map.emplace(id,admin_info_offset_);
+
+    // Set current admin offset
+    uint32_t current_admin_offset = admin_info_offset_;
+
+    // Update edge offset for next item
+    admin_info_offset_ += admininfo.SizeOf();
+
+    // Return the offset to this edge info
+    return current_admin_offset;
+  }
+  else {
+    // Already have this edge - return the offset
+    return existing_admin_info_offset_item->second;
+  }
+}
+
+
 // Serialize the edge info list
 void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
   for (const auto& edgeinfo : edgeinfo_list_) {

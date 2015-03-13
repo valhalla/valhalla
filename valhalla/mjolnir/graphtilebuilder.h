@@ -111,6 +111,10 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
                        bool& added);
+  /**
+   * Add admin info to the tile.
+   */
+  uint32_t AddAdmin(const uint32_t id,const std::vector<std::string>& names);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -197,6 +201,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Admin info offset
   size_t admin_info_offset_ = 0;
+  std::unordered_map<uint32_t,size_t> admin_info_offset_map;
 
   // The admininfo list
   std::list<AdminInfoBuilder> admininfo_list_;
