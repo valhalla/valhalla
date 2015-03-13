@@ -70,7 +70,6 @@ class DataQuality {
   void LogIssues() const;
 
   // Public - simple stats
-  uint32_t not_thru_count;
   uint32_t simplerestrictions;
   uint32_t timedrestrictions;
   uint32_t turnchannelcount;

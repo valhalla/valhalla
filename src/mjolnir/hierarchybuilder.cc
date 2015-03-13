@@ -158,9 +158,10 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
+  // NOTE-this seems to cause issues on PA Tpke / Breezewood
   for (uint32_t i = 0; i < n; i++) {
     if (i != match.first && i != match.second) {
-      if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
+ //     if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
         return false;
     }
   }

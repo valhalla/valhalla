@@ -27,8 +27,6 @@ using namespace valhalla::mjolnir;
 
 
 namespace {
-// Number of tries when determining not thru edges
-constexpr uint32_t kMaxNoThruTries = 256;
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
@@ -402,46 +400,6 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
 
-// Test if this is a "not thru" edge. These are edges that enter a region that
-// has no exit other than the edge entering the region
-bool IsNoThroughEdge(const size_t startnode, const size_t endnode,
-             const size_t startedgeindex, sequence<Node>& nodes, sequence<Edge>& edges) {
-  // Add the end node Id to the set of nodes to expand
-  std::unordered_set<size_t> visitedset;
-  std::unordered_set<size_t> expandset = {endnode};
-
-  // Expand edges until exhausted, the maximum number of expansions occur,
-  // or end up back at the starting node. No node can be visited twice.
-  for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
-    // If expand list is exhausted this is "not thru"
-    if (expandset.empty())
-      return true;
-
-    // Get the node off of the expand list and add it to the visited list.
-    // Expand edges from this node.
-    const size_t node_index = *expandset.begin();
-    expandset.erase(expandset.begin());
-    visitedset.emplace(node_index);
-    auto bundle = collect_node_edges(nodes[node_index], nodes, edges);
-    for (const auto& edge_pair : bundle.edges) {
-      // Do not allow use of the start edge
-      if (edge_pair.first == startedgeindex)
-        continue;
-
-      // Return false if we have returned back to the start node or we
-      // encounter a tertiary road (or better)
-      auto nextendnode = edge_pair.second.sourcenode_ == node_index ? edge_pair.second.targetnode_ : edge_pair.second.sourcenode_;
-      if (nextendnode == startnode || edge_pair.second.attributes.importance <= static_cast<uint32_t>(RoadClass::kTertiary))
-        return false;
-
-      // Add to the expand set if not in the visited set
-      if (visitedset.find(nextendnode) == visitedset.end())
-        expandset.insert(nextendnode);
-    }
-  }
-  return false;
-}
-
 // Test if a pair of one-way edges exist at the node. One must be
 // inbound and one must be outbound. The current edge is skipped.
 
@@ -764,14 +722,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (!forward)
             std::swap(source, target);
 
-          // Check for not_thru edge (only on low importance edges)
-          bool not_thru = false;
-          if (edge.attributes.importance > static_cast<uint32_t>(RoadClass::kTertiary)) {
-            not_thru = IsNoThroughEdge(source, target, edge_pair.first, nodes, edges);
-            if (not_thru)
-              stats.not_thru_count++;
-          }
-
           // Test if an internal intersection edge
           bool internal = IsIntersectionInternal(source, target, edge_pair.first,
                          w.way_id(), length, nodes, edges, ways);
@@ -816,7 +766,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
-                        speed, use, not_thru, internal, rc, n, has_signal, restrictions);
+                        speed, use, false, internal, rc, n, has_signal, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
