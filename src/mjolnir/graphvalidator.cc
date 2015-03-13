@@ -1,5 +1,8 @@
-#include "mjolnir/graphoptimizer.h"
+
+#include "mjolnir/graphvalidator.h"
 #include "valhalla/mjolnir/graphtilebuilder.h"
+
+#include <valhalla/midgard/logging.h>
 
 #include <ostream>
 #include <set>
@@ -88,7 +91,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 namespace valhalla {
 namespace mjolnir {
 
-void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
+void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
   // Number of possible duplicates
   uint32_t dupcount_;
@@ -102,7 +105,7 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
 
   // Iterate through all levels and all tiles.
   // TODO - concurrency
-  LOG_INFO("GraphOptimizer - validate tiles first");
+  LOG_INFO("GraphValidator - validate signs first");
 
   // Validate signs
   for (auto tile_level :  tile_hierarchy_.levels()) {
@@ -132,7 +135,7 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
       }
     }
   }
-  LOG_INFO("Validation of tiles is done");
+  LOG_INFO("Validation signs is done. Validate connectivity.");
 
   for (auto tile_level :  tile_hierarchy_.levels()) {
     dupcount_ = 0;
@@ -180,10 +183,9 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
       }
 
       // Write the new file
-      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes,
-                         directededges);
+      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
     }
-
+    LOG_INFO("Validation of connectivity is done");
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % level % dupcount_).str());
   }

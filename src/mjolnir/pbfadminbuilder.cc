@@ -4,7 +4,6 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphoptimizer.h"
 #include "config.h"
 
 #include <sqlite3.h>
@@ -25,6 +24,7 @@
 #include <geos/io/WKTWriter.h>
 #include <geos/util/GEOSException.h>
 #include <geos/opLinemerge.h>
+
 using namespace geos::geom;
 using namespace geos::io;
 using namespace geos::util;

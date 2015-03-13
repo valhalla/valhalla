@@ -37,7 +37,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
-                   const bool not_thru,  const bool internal,
                    const RoadClass rc, const uint32_t localidx,
                    const bool signal, const uint32_t restrictions)
      :  DirectedEdge() {
@@ -57,8 +56,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_bikenetwork(way.bike_network());
   set_link(way.link());
   set_classification(rc);
-  set_not_thru(not_thru);
-  set_internal(internal);
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);

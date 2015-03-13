@@ -400,77 +400,6 @@ void ReclassifyLinks(const std::string& ways_file, const std::string& nodes_file
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
 
-// Test if a pair of one-way edges exist at the node. One must be
-// inbound and one must be outbound. The current edge is skipped.
-
-bool OnewayPairEdgesExist(const node_bundle& bundle,
-                          const size_t node_index,
-                          const uint32_t edgeindex,
-                          const uint64_t wayid,
-                          sequence<Edge>& edges,
-                          sequence<OSMWay>& ways) {
-  // Iterate through the edges from this node. Skip the one with
-  // the specified edgeindex
-  uint32_t idx;
-  bool forward;
-  bool inbound  = false;
-  bool outbound = false;
-  for (const auto edge_pair : bundle.edges) {
-    if (edge_pair.first == edgeindex)
-      continue;
-
-    // Get the edge and way.
-    const Edge& edge = edge_pair.second;
-    const OSMWay &w = ways[edge.wayindex_];
-
-    // Skip if this has matching way Id or a link (ramps/turn channel)
-    if (w.way_id() == wayid || edge.attributes.link)
-      continue;
-
-    // Check if edge is forward or reverse
-    forward = (edge.sourcenode_ == node_index);
-
-    // Check if this is oneway inbound
-    if ( (forward && !w.auto_forward() &&  w.auto_backward()) ||
-        (!forward &&  w.auto_forward() && !w.auto_backward())) {
-      inbound = true;
-    }
-
-    // Check if this is oneway outbound
-    if ( (forward &&  w.auto_forward() && !w.auto_backward()) ||
-        (!forward && !w.auto_forward() &&  w.auto_backward())) {
-      outbound = true;
-    }
-  }
-  return (inbound && outbound);
-}
-
-bool IsIntersectionInternal(const size_t startnode, const size_t endnode,
-                const uint32_t edgeindex, const uint64_t wayid, const float length,
-                sequence<Node>& nodes, sequence<Edge>& edges, sequence<OSMWay>& ways) {
-  // Limit the length of intersection internal edges
-  if (length > kMaxInternalLength)
-    return false;
-
-  // Both end nodes must connect to at least 3 edges
-  auto bundle1 = collect_node_edges(nodes[startnode], nodes, edges);
-  if (bundle1.edges.size() < 3)
-    return false;
-  auto bundle2 = collect_node_edges(nodes[endnode], nodes, edges);
-  if (bundle2.edges.size() < 3)
-    return false;
-
-  // Each node must have a pair of oneways (one inbound and one outbound).
-  // Exclude links (ramps/turn channels)
-  if (!OnewayPairEdgesExist(bundle1, startnode, edgeindex, wayid, edges, ways) ||
-      !OnewayPairEdgesExist(bundle2, endnode, edgeindex, wayid, edges, ways)) {
-    return false;
-  }
-
-  // Assume this is an intersection internal edge
-  return true;
-}
-
 /**
  * Get the use for a link (either a kRamp or kTurnChannel)
  * TODO - validate logic with some real world cases.
@@ -722,12 +651,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (!forward)
             std::swap(source, target);
 
-          // Test if an internal intersection edge
-          bool internal = IsIntersectionInternal(source, target, edge_pair.first,
-                         w.way_id(), length, nodes, edges, ways);
-          if (internal)
-            stats.internalcount++;
-
           // If link is set test to see if we can infer that the edge
           // is a turn channel. Update speed for link edges.
           float speed = w.speed();
@@ -766,7 +689,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
-                        speed, use, false, internal, rc, n, has_signal, restrictions);
+                        speed, use, rc, n, has_signal, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
