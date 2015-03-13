@@ -2,8 +2,6 @@
 #include "valhalla/baldr/streetname.h"
 #include "valhalla/baldr/streetnames.h"
 
-#include <google/protobuf/repeated_field.h>
-
 #include <vector>
 #include <algorithm>
 
