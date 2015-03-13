@@ -12,7 +12,6 @@ DataQuality::DataQuality()
     : simplerestrictions(0),
       timedrestrictions(0),
       turnchannelcount(0),
-      internalcount(0),
       culdesaccount(0),
       node_counts{} {
 }
@@ -22,7 +21,6 @@ void DataQuality::AddStatistics(const DataQuality& stats) {
   simplerestrictions += stats.simplerestrictions;
   timedrestrictions  += stats.timedrestrictions;
   turnchannelcount   += stats.turnchannelcount;
-  internalcount      += stats.internalcount;
   culdesaccount      += stats.culdesaccount;
   for (uint32_t i = 0; i < 128; i++) {
     node_counts[i] += stats.node_counts[i];
@@ -52,7 +50,6 @@ void DataQuality::LogStatistics() const {
   LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
   LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
   LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
-  LOG_INFO("Internal Intersection Edge Count = " + std::to_string(internalcount));
   LOG_INFO("Cul-de-Sac Count = " + std::to_string(culdesaccount));
   LOG_INFO("Node edge count histogram:");
   for (uint32_t i = 0; i < 128; i++) {
