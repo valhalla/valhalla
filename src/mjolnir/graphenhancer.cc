@@ -20,6 +20,7 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/streetnames.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
@@ -434,6 +435,13 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
   return kMaxEdgesPerNode;
 }
 
+bool ConsistentNames(const std::vector<std::string>& names1,
+                     const std::vector<std::string>& names2) {
+  StreetNames street_names1(names1);
+  StreetNames street_names2(names2);
+  return (!(street_names1.FindCommonBaseNames(street_names2).empty()));
+}
+
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the done map as well
 void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
@@ -531,7 +539,16 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
           ProcessEdgeTransitions(j, directededge, edges, ntrans, heading);
         }
 
-        // TODO - name continuity - set in NodeInfo
+        // Name continuity - set in NodeInfo
+        for (uint32_t k = (j + 1); k < ntrans; k++) {
+          if (ConsistentNames(
+              tile->edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+              tile->edgeinfo(
+                  tilebuilder.directededge(nodeinfo.edge_index() + k)
+                      .edgeinfo_offset())->GetNames())) {
+            nodeinfo.set_name_consistency(j, k, true);
+          }
+        }
 
         // Set unreachable (driving) flag
         if (IsUnreachable(reader, lock, directededge)) {
