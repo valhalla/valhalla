@@ -1,11 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
 #define VALHALLA_MJOLNIR_SEQUENCE_H_
 
-/*
-g++ sequence.cpp -o sequence -std=c++11 -O2
-./sequence 100000000
-*/
-
 #include <fstream>
 #include <string>
 #include <vector>
