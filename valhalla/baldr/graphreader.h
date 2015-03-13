@@ -64,8 +64,9 @@ class GraphReader {
    */
   void Clear();
 
-  /** Returns true if the cache is over committed with respect to the limit
-   * @return  true
+  /**
+   * Lets you know if the cache is too large
+   * @return true if the cache is over committed with respect to the limit
    */
   bool OverCommitted() const;
 
