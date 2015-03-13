@@ -5,26 +5,16 @@
 
 #include <google/protobuf/repeated_field.h>
 
-#include <valhalla/odin/streetname.h>
+#include <valhalla/baldr/streetnames.h>
 
 namespace valhalla {
 namespace odin {
 
-class StreetNames : public std::list<StreetName> {
+class StreetNames : public baldr::StreetNames {
  public:
   StreetNames();
 
   StreetNames(const ::google::protobuf::RepeatedPtrField<::std::string>& names);
-
-  std::string ToString() const;
-
-  std::string ToParameterString() const;
-
-  StreetNames FindCommonStreetNames(StreetNames other_street_names) const;
-
-  StreetNames FindCommonBaseNames(StreetNames other_street_names) const;
-
-  // TODO - add more functionality later
 
  protected:
 

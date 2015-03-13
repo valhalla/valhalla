@@ -2,6 +2,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/turn.h>
+#include <valhalla/baldr/streetnames.h>
 #include <proto/tripdirections.pb.h>
 #include <odin/maneuversbuilder.h>
 #include <odin/signs.h>
@@ -189,7 +190,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
 
     while (next_man != maneuvers.end()) {
       // Process common base names
-      StreetNames common_base_names = curr_man->street_names()
+      baldr::StreetNames common_base_names = curr_man->street_names()
           .FindCommonBaseNames(next_man->street_names());
 
       // Get the begin edge of the next maneuver
@@ -850,7 +851,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   // TODO: add logic for 'T' and pencil point u-turns
 
-  StreetNames prev_edge_names(prev_edge->name());
+  odin::StreetNames prev_edge_names(prev_edge->name());
 
   // Process same names
   if (maneuver.street_names() == prev_edge_names) {
@@ -858,7 +859,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   // Process common base names
-  StreetNames common_base_names = prev_edge_names.FindCommonBaseNames(
+  baldr::StreetNames common_base_names = prev_edge_names.FindCommonBaseNames(
       maneuver.street_names());
   if (!common_base_names.empty()) {
     maneuver.set_street_names(std::move(common_base_names));
