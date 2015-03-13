@@ -960,7 +960,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Build the graph from the input
-void GraphBuilder::Build(const boost::property_tree::ptree& pt, OSMData& osmdata,
+void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& osmdata,
     const std::string& ways_file, const std::string& way_nodes_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";

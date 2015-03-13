@@ -133,13 +133,11 @@ int main(int argc, char** argv) {
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder hierarchybuilder(pt.get_child("mjolnir.hierarchy"));
-  hierarchybuilder.Build();
+  HierarchyBuilder::Build(pt.get_child("mjolnir.hierarchy"));
 
   // Optimize the graph to add information that cannot be added until
   // full graph is formed.
-  GraphOptimizer graphoptimizer(pt.get_child("mjolnir.hierarchy"));
-  graphoptimizer.Optimize();
+  GraphOptimizer::Optimize(pt.get_child("mjolnir.hierarchy"));
 
   return EXIT_SUCCESS;
 }
