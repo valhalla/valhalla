@@ -5,8 +5,10 @@
 #include <unordered_map>
 
 #include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/odin/streetnames.h>
+#include <valhalla/baldr/streetnames.h>
 #include <valhalla/odin/signs.h>
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {

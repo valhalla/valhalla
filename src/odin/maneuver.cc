@@ -1,6 +1,10 @@
 #include <iostream>
 
 #include "odin/maneuver.h"
+#include <valhalla/baldr/streetnames.h>
+
+using namespace valhalla::odin;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace odin {
