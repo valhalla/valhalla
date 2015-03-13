@@ -36,6 +36,9 @@ namespace {
 // a secondary road then the edge is considered unreachable.
 constexpr uint32_t kUnreachableIterations = 20;
 
+// Number of tries when determining not thru edges
+constexpr uint32_t kMaxNoThruTries = 256;
+
 // Meters offset from start/end of shape for finding heading
 constexpr float kMetersOffsetForHeading = 30.0f;
 
@@ -43,10 +46,12 @@ constexpr float kMetersOffsetForHeading = 30.0f;
 struct enhancer_stats {
   float max_density; //(km/km2)
   uint32_t unreachable;
+  uint32_t not_thru;
   void operator()(const enhancer_stats& other) {
     if(max_density < other.max_density)
       max_density = other.max_density;
     unreachable += other.unreachable;
+    not_thru += other.not_thru;
   }
 };
 
@@ -153,6 +158,54 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock,
       }
     }
     n++;
+  }
+  return false;
+}
+
+// Test if this is a "not thru" edge. These are edges that enter a region that
+// has no exit other than the edge entering the region
+bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
+                   const GraphId& startnode,
+                   DirectedEdgeBuilder& directededge) {
+  // Add the end node to the expand list
+  std::unordered_set<GraphId> visitedset;  // Set of visited nodes
+  std::unordered_set<GraphId> expandset;   // Set of nodes to expand
+  expandset.insert(directededge.endnode());
+
+  // Expand edges until exhausted, the maximum number of expansions occur,
+  // or end up back at the starting node. No node can be visited twice.
+  for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
+    // If expand list is exhausted this is "not thru"
+    if (expandset.empty())
+      return true;
+
+    // Get the node off of the expand list and add it to the visited list.
+    // Expand edges from this node.
+    const GraphId expandnode = *expandset.cbegin();
+    expandset.erase(expandset.begin());
+    visitedset.insert(expandnode);
+    lock.lock();
+    const GraphTile* tile = reader.GetGraphTile(expandnode);
+    lock.unlock();
+    const NodeInfo* nodeinfo = tile->node(expandnode);
+    const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
+      // Do not allow use of the start edge
+      if (n == 0 && diredge->endnode() == startnode)
+        continue;
+
+      // Return false if we get back to the start node or hit an
+      // edge with higher classification
+      if (diredge->classification() < RoadClass::kTertiary ||
+          diredge->endnode() == startnode) {
+        return false;
+      }
+
+      // Add to the end node to expand set if not already visited set
+      if (visitedset.find(diredge->endnode()) == visitedset.end()) {
+        expandset.insert(diredge->endnode());
+      }
+    }
   }
   return false;
 }
@@ -486,6 +539,14 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
           stats.unreachable++;
         }
 
+        // Check for not_thru edge (only on low importance edges)
+        if (directededge.classification() > RoadClass::kTertiary) {
+          if (IsNotThruEdge(reader, lock, startnode, directededge)) {
+            directededge.set_not_thru(true);
+            stats.not_thru++;
+          }
+        }
+
         // Set the opposing index on the local level
         lock.lock();
         const GraphTile* endnodetile = reader.GetGraphTile(directededge.endnode());
@@ -557,6 +618,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
     }
   }
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
+  LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
 }
 
 }
