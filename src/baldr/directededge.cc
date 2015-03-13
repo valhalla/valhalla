@@ -290,6 +290,11 @@ bool DirectedEdge::trans_down() const {
   return hierarchy_.trans_down;
 }
 
+// Is this directed edge a shortcut?
+bool DirectedEdge::is_shortcut() const {
+  return hierarchy_.is_shortcut;
+}
+
 // Get the internal version. Used for data validity checks.
 const uint64_t DirectedEdge::internal_version() {
   uint64_t seed = 0;
@@ -427,6 +432,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.hierarchy_.shortcut+1)-1);
   de.hierarchy_.superseded = ~de.hierarchy_.superseded;
   boost::hash_combine(seed,ffs(de.hierarchy_.superseded+1)-1);
+  de.hierarchy_.is_shortcut = ~de.hierarchy_.is_shortcut;
+  boost::hash_combine(seed,ffs(de.hierarchy_.is_shortcut+1)-1);
   de.hierarchy_.spare = ~de.hierarchy_.spare;
   boost::hash_combine(seed,ffs(de.hierarchy_.spare+1)-1);
 

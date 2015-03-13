@@ -51,7 +51,9 @@ nobase_include_HEADERS = \
 	valhalla/baldr/sign.h \
         valhalla/baldr/signinfo.h \
 	valhalla/baldr/tilehierarchy.h \
-	valhalla/baldr/turn.h
+	valhalla/baldr/turn.h \
+	valhalla/baldr/streetname.h \
+	valhalla/baldr/streetnames.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
@@ -65,7 +67,9 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/sign.cc \
         src/baldr/signinfo.cc \
 	src/baldr/tilehierarchy.cc \
-	src/baldr/turn.cc
+	src/baldr/turn.cc \
+	src/baldr/streetname.cc \
+	src/baldr/streetnames.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
@@ -78,7 +82,9 @@ check_PROGRAMS = \
 	test/graphtile \
 	test/nodeinfo \
 	test/turn \
-	test/graphreader
+	test/graphreader \
+	test/streetname \
+	test/streetnames
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -103,7 +109,12 @@ test_turn_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_graphreader_SOURCES = test/graphreader.cc test/test.cc
 test_graphreader_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_graphreader_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
-
+test_streetname_SOURCES = test/streetname.cc test/test.cc
+test_streetname_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_streetname_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_streetnames_SOURCES = test/streetnames.cc test/test.cc
+test_streetnames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_streetnames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
