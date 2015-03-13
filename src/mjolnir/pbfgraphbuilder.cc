@@ -1,11 +1,11 @@
 #include <string>
 #include <vector>
 
+#include "../../valhalla/mjolnir/graphvalidator.h"
 #include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphoptimizer.h"
 #include "config.h"
 
 // For OSM pbf reader
@@ -135,9 +135,9 @@ int main(int argc, char** argv) {
   // (directed edges) are formed between nodes at adjacent levels.
   HierarchyBuilder::Build(pt.get_child("mjolnir.hierarchy"));
 
-  // Optimize the graph to add information that cannot be added until
+  // Validate the graph and add information that cannot be added until
   // full graph is formed.
-  GraphOptimizer::Optimize(pt.get_child("mjolnir.hierarchy"));
+  GraphValidator::Validate(pt.get_child("mjolnir.hierarchy"));
 
   return EXIT_SUCCESS;
 }

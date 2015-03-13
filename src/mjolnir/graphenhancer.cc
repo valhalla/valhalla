@@ -48,11 +48,13 @@ struct enhancer_stats {
   float max_density; //(km/km2)
   uint32_t unreachable;
   uint32_t not_thru;
+  uint32_t internalcount;
   void operator()(const enhancer_stats& other) {
     if(max_density < other.max_density)
       max_density = other.max_density;
     unreachable += other.unreachable;
     not_thru += other.not_thru;
+    internalcount += other.internalcount;
   }
 };
 
@@ -210,6 +212,101 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
   }
   return false;
 }
+
+// Test if a pair of one-way edges exist at the node. One must be
+// inbound and one must be outbound. The current edge is skipped.
+
+bool OnewayPairEdgesExist(const NodeInfo* node,
+                          const GraphTile* tile,
+                          const GraphId& startnode) {
+  // Iterate through the edges from this node. Skip the one with
+  // the specified edgeindex
+  uint32_t idx;
+  bool forward;
+  bool inbound  = false;
+  bool outbound = false;
+  const DirectedEdge* diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    if (diredge->endnode() == startnode)
+      continue;
+
+    // Skip (ramps/turn channel)
+    if (diredge->link())
+      continue;
+
+    // Check if this is oneway inbound
+    if (!(diredge->forwardaccess() & kAutoAccess) &&
+         (diredge->reverseaccess() & kAutoAccess)) {
+      inbound = true;
+    }
+
+    // Check if this is oneway inbound
+    if ((diredge->forwardaccess() & kAutoAccess) &&
+       !(diredge->reverseaccess() & kAutoAccess)) {
+      outbound = true;
+    }
+  }
+  return (inbound && outbound);
+}
+
+bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
+                            const GraphId& startnode,
+                            DirectedEdgeBuilder& directededge) {
+  if (directededge.link() ||
+      directededge.length() > kMaxInternalLength) {
+    return false;
+  }
+
+  // Both end nodes must connect to at least 3 edges
+  // TODO - what about the half hash case!
+  lock.lock();
+  const GraphTile* tile1 = reader.GetGraphTile(startnode);
+  lock.unlock();
+  const NodeInfo* start_node_info = tile1->node(startnode);
+  lock.lock();
+  const GraphTile* tile2 = reader.GetGraphTile(directededge.endnode());
+  lock.unlock();
+  const NodeInfo* end_node_info = tile2->node(directededge.endnode());
+  if (start_node_info->edge_count() < 3 || end_node_info->edge_count() < 3) {
+     return false;
+  }
+
+  // Each node must have a pair of oneways (one inbound and one outbound).
+  // Exclude links (ramps/turn channels)
+  if (!OnewayPairEdgesExist(start_node_info, tile1, startnode) ||
+      !OnewayPairEdgesExist(end_node_info, tile2, directededge.endnode())) {
+    return false;
+  }
+
+  // Assume this is an intersection internal edge
+  return true;
+}
+
+/**
+  // Limit the length of intersection internal edges
+  if (length > kMaxInternalLength)
+    return false;
+
+  // Both end nodes must connect to at least 3 edges
+  auto bundle1 = collect_node_edges(nodes[startnode], nodes, edges);
+  if (bundle1.edges.size() < 3)
+    return false;
+  auto bundle2 = collect_node_edges(nodes[endnode], nodes, edges);
+  if (bundle2.edges.size() < 3)
+    return false;
+
+  // Each node must have a pair of oneways (one inbound and one outbound).
+  // Exclude links (ramps/turn channels)
+  if (!OnewayPairEdgesExist(bundle1, startnode, edgeindex, wayid, edges, ways) ||
+      !OnewayPairEdgesExist(bundle2, endnode, edgeindex, wayid, edges, ways)) {
+    return false;
+  }
+
+  // Assume this is an intersection internal edge
+  return true;
+}
+**/
+
 
 /**
  * Get the road density around the specified lat,lng position. This is a
@@ -550,6 +647,12 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
           }
         }
 
+        // Test if an internal intersection edge
+        if (IsIntersectionInternal(reader, lock, startnode, directededge)) {
+          directededge.set_internal(true);
+          stats.internalcount++;
+        }
+
         // Set unreachable (driving) flag
         if (IsUnreachable(reader, lock, directededge)) {
           directededge.set_unreachable(true);
@@ -636,6 +739,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
   LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
+  LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
 }
 
 }

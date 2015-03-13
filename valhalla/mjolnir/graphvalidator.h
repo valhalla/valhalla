@@ -20,15 +20,16 @@ namespace valhalla {
 namespace mjolnir {
 
 /**
- * Class used to optimize the graph. Creates opposing edge indexes.
- * TODO - intersection costing? elevation factors?
+ * Class used to validate the graph. Creates opposing edge indexes -
+ * this is an excellent way to validate proper connectivity.
+ * TODO - generate statistics, quality measures.
  */
-class GraphOptimizer {
+class GraphValidator {
  public:
   /**
-   * Optimize the graph tiles.
+   * Validate the graph tiles.
    */
-  static void Optimize(const boost::property_tree::ptree& pt);
+  static void Validate(const boost::property_tree::ptree& pt);
 };
 
 }
