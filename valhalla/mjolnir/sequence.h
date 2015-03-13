@@ -1,6 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
 #define VALHALLA_MJOLNIR_SEQUENCE_H_
 
+/*
+g++ sequence.cpp -o sequence -std=c++11 -O2
+./sequence 100000000
+*/
+
 #include <fstream>
 #include <string>
 #include <vector>
@@ -31,7 +36,7 @@ class sequence {
 
   sequence(const sequence&) = delete;
 
-  sequence(const std::string& file_name, bool create = false, bool use_mmap = true, size_t write_buffer_size = 1024 * 1024 * 32 / sizeof(T)):
+  sequence(const std::string& file_name, bool create = false, size_t write_buffer_size = 1024 * 1024 * 32 / sizeof(T)):
     file(new std::fstream(file_name, std::ios_base::binary | std::ios_base::in | std::ios_base::out | (create ? std::ios_base::trunc : std::ios_base::ate))),
     file_name(file_name), mmap_handle(nullptr) {
 
@@ -45,16 +50,14 @@ class sequence {
     write_buffer.reserve(write_buffer_size ? write_buffer_size : 1);
 
     //memory map the file for reading
-    if(use_mmap)
-      remmap(element_count, element_count);
+    remmap(element_count, element_count);
   }
 
   ~sequence() {
     //finish writing whatever it was to file
     flush();
     //lose the memory map
-    if(mmap_handle)
-      munmap(mmap_handle, element_count * sizeof(T));
+    munmap(mmap_handle, element_count * sizeof(T));
   }
 
   //add an element to the sequence
@@ -73,36 +76,9 @@ class sequence {
     //if no elements we are done
     if(element_count == 0)
       return false;
-    //if its a memory map use built in
-    else if(mmap_handle) {
-      T original = target;
-      target = *std::lower_bound(static_cast<const T*>(mmap_handle), static_cast<const T*>(mmap_handle) + element_count, original, predicate);
-      return !(predicate(original, target) || predicate(target, original));
-    }
-
-    //binary search within the file to find a section of the file that should contain it
-    size_t low = 0, high = element_count - 1;
     T original = target;
-    while(low <= high) {
-      //grab the object in the middle of the range
-      auto mid = (low + high) / 2;
-      file->seekg(mid * sizeof(T));
-      file->read(static_cast<char*>(static_cast<void*>(&target)), sizeof(T));
-      //done
-      if(!predicate(original, target) && !predicate(target, original))
-        return true;
-      //if this was the last chance to find it and we didnt
-      if(low == high)
-        return false;
-      //search the upper half
-      else if(predicate(target, original))
-        low = mid + 1;
-      //search the lower half
-      else
-        high = mid - 1;
-    }
-    //didn't find it
-    return false;
+    target = *std::lower_bound(static_cast<const T*>(mmap_handle), static_cast<const T*>(mmap_handle) + element_count, original, predicate);
+    return !(predicate(original, target) || predicate(target, original));
   }
 
   //finds the first matching object by scanning O(n)
@@ -128,84 +104,8 @@ class sequence {
     //if no elements we are done
     if(element_count == 0)
       return;
-    //if its a memory map use built in
-    else if(mmap_handle) {
-      std::sort(static_cast<T*>(mmap_handle), static_cast<T*>(mmap_handle) + element_count, predicate);
-      return;
-    }
-
-    //write take a chunk at a time, sort it, and write it to a temp file
-    std::vector<T> tmp_buffer(buffer_size);
-    size_t chunk;
-    std::list<std::string> tmp_names;
-    for(size_t pos = 0, i = 0; pos < element_count; pos += chunk, ++i) {
-      //grab a chunk and sort it
-      file->seekg(pos * sizeof(T));
-      chunk = element_count - pos > buffer_size ? buffer_size : element_count - pos;
-      file->read(static_cast<char*>(static_cast<void*>(tmp_buffer.data())), chunk * sizeof(T));
-      std::sort(tmp_buffer.begin(), tmp_buffer.begin() + chunk, predicate);
-      //write it to a temp file so we can merge later
-      std::string tmp_name = std::to_string(i) + "." + file_name;
-      std::fstream tmp_file(tmp_name, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
-      if(!tmp_file)
-        throw std::runtime_error(tmp_name + ": " + strerror(errno));
-      tmp_names.emplace_back(std::move(tmp_name));
-      tmp_file.write(static_cast<const char*>(static_cast<const void*>(tmp_buffer.data())), chunk * sizeof(T));
-    }
-
-    //special case when we only had one file to sort because it was so few elements
-    std::string sorted_file_name = tmp_names.back();
-    if(tmp_names.size() > 1){
-
-      //a way to read a single value from a temp file and get it into the queue
-      auto read_one = [](std::list<std::fstream>::iterator& tmp_file, queue_t& queue){
-        T value;
-        tmp_file->read(static_cast<char*>(static_cast<void*>(&value)), sizeof(T));
-        if(!tmp_file->eof())
-          queue.emplace(std::piecewise_construct, std::forward_as_tuple(value), std::forward_as_tuple(tmp_file));
-      };
-
-      //crack open all the temp files
-      std::list<std::fstream> tmp_files;
-      for(const auto& tmp_name : tmp_names) {
-        tmp_files.emplace_back(tmp_name, std::ios_base::binary | std::ios_base::in);
-        if(!tmp_files.back())
-          throw std::runtime_error(tmp_name + ": " + strerror(errno));
-      }
-
-      //write out a single sorted file by taking the next best value from any of the temp files
-      sorted_file_name = "sorted." + file_name;
-      std::fstream sorted_file(sorted_file_name, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
-      queue_t queue(predicate);
-      //prime the queue with the initial values
-      for(std::list<std::fstream>::iterator tmp_file = tmp_files.begin(); tmp_file != tmp_files.end(); ++tmp_file)
-        read_one(tmp_file, queue);
-      //while we have something to write out
-      size_t written = 0;
-      while(queue.size()){
-        sorted_file.write(static_cast<const char*>(static_cast<const void*>(&queue.begin()->first)), sizeof(T));
-        std::list<std::fstream>::iterator& tmp_file = queue.begin()->second;
-        queue.erase(queue.begin());
-        read_one(tmp_file, queue);
-        if(++written % write_buffer.capacity() == 0){
-          written = 0;
-          sorted_file.flush();
-        }
-      }
-      //done with these
-      for(const auto& tmp_name : tmp_names) {
-        if(std::remove(tmp_name.c_str()) != 0)
-          throw std::runtime_error("Couldn't remove file: " + tmp_name);
-      }
-    }
-
-    //lose the unsorted file
-    file->close();
-    if(std::remove(file_name.c_str()) != 0)
-      throw std::runtime_error("Couldn't remove file: " + file_name);
-    if(std::rename(sorted_file_name.c_str(), file_name.c_str()) != 0)
-      throw std::runtime_error("Couldn't move file " + sorted_file_name + " to file " + file_name);
-    file->open(file_name, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
+    std::sort(static_cast<T*>(mmap_handle), static_cast<T*>(mmap_handle) + element_count, predicate);
+    return;
   }
 
   //perform an volatile operation on all the items of this sequence
@@ -237,8 +137,7 @@ class sequence {
       file->seekg(0, file->end);
       file->write(static_cast<const char*>(static_cast<const void*>(write_buffer.data())), write_buffer.size() * sizeof(T));
       file->flush();
-      if(mmap_handle)
-        remmap(element_count, element_count + write_buffer.size());
+      remmap(element_count, element_count + write_buffer.size());
       element_count += write_buffer.size();
       write_buffer.clear();
     }
@@ -249,7 +148,7 @@ class sequence {
     return element_count + write_buffer.size();
   }
 
-  //a read/writeable object within the sequence, accessed either through memory or file
+  //a read/writeable object within the sequence, accessed through memory mapped file
   struct iterator {
     friend class sequence;
    public:
@@ -261,23 +160,11 @@ class sequence {
       return *this;
     }
     iterator& operator=(const T& other) {
-      if(parent->mmap_handle) {
-        *(static_cast<T*>(parent->mmap_handle) + index) = other;
-        return *this;
-      }
-
-      parent->file->seekg(index * sizeof(T));
-      parent->file->write(static_cast<const char*>(static_cast<const void*>(&other)), sizeof(T));
+      *(static_cast<T*>(parent->mmap_handle) + index) = other;
       return *this;
     }
     operator T() {
-      if(parent->mmap_handle)
-        return *(static_cast<T*>(parent->mmap_handle) + index);
-
-      T result;
-      parent->file->seekg(index * sizeof(T));
-      parent->file->read(static_cast<char*>(static_cast<void*>(&result)), sizeof(T));
-      return result;
+      return *(static_cast<T*>(parent->mmap_handle) + index);
     }
     T operator*() {
       return operator T();
