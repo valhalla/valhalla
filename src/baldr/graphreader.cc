@@ -5,15 +5,20 @@
 #include <fstream>
 #include <sys/stat.h>
 
+namespace {
+  constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
+  constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
+}
+
 namespace valhalla {
 namespace baldr {
 
 //this constructor delegates to the other
-GraphReader::GraphReader(const boost::property_tree::ptree& pt):GraphReader(TileHierarchy(pt)) {
-  tilecache_.reserve(32);
-}
+GraphReader::GraphReader(const boost::property_tree::ptree& pt):tile_hierarchy_(pt), cache_size_(0) {
+  max_cache_size_ = pt.get<size_t>("max_cache_size", DEFAULT_MAX_CACHE_SIZE);
 
-GraphReader::GraphReader(const TileHierarchy& th):tile_hierarchy_(th) {
+  //assume avg of 10 megs per tile
+  cache_.reserve(max_cache_size_/AVERAGE_TILE_SIZE);
 }
 
 // Method to test if tile exists
@@ -29,9 +34,11 @@ bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const Graph
 
 // Get a pointer to a graph tile object given a GraphId.
 const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
+  //TODO: clear the cache automatically once we become overcommitted by a certain amount
+
   // Check if the level/tileid combination is in the cache
-  auto cached = tilecache_.find(graphid.Tile_Base());
-  if(cached != tilecache_.end())
+  auto cached = cache_.find(graphid.Tile_Base());
+  if(cached != cache_.end())
     return &cached->second;
 
   // It wasn't in cache so create a GraphTile object. This reads the tile from disk
@@ -40,7 +47,8 @@ const GraphTile* GraphReader::GetGraphTile(const GraphId& graphid) {
   if(tile.size() == 0)
     return nullptr;
   // Keep a copy in the cache and return it
-  auto inserted = tilecache_.emplace(graphid.Tile_Base(), std::move(tile));
+  cache_size_ += tile.size();
+  auto inserted = cache_.emplace(graphid.Tile_Base(), std::move(tile));
   return &inserted.first->second;
 }
 
@@ -54,6 +62,21 @@ const GraphTile* GraphReader::GetGraphTile(const PointLL& pointll){
 
 const TileHierarchy& GraphReader::GetTileHierarchy() const {
   return tile_hierarchy_;
+}
+
+/**
+ * Clears the cache
+ */
+void GraphReader::Clear() {
+  cache_size_ = 0;
+  cache_.clear();
+}
+
+/** Returns true if the cache is over committed with respect to the limit
+ * @return  true
+ */
+bool GraphReader::OverCommitted() const {
+  return max_cache_size_ < cache_size_;
 }
 
 
