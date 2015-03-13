@@ -1,10 +1,26 @@
-#include "../../valhalla/mjolnir/graphvalidator.h"
+
+#include "mjolnir/graphvalidator.h"
+#include "valhalla/mjolnir/graphtilebuilder.h"
 
 #include <valhalla/midgard/logging.h>
 
 #include <ostream>
 #include <set>
 #include <boost/format.hpp>
+#include <sstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <utility>
+
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphreader.h>
+
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -131,6 +147,10 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       if (tilebuilder.size() == 0) {
         continue;
       }
+
+      // Check if we need to clear the tile cache
+      if(graphreader_.OverCommitted())
+        graphreader_.Clear();
 
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
