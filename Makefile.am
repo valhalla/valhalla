@@ -77,7 +77,8 @@ check_PROGRAMS = \
 	test/tilehierarchy \
 	test/graphtile \
 	test/nodeinfo \
-	test/turn
+	test/turn \
+	test/graphreader
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -99,6 +100,9 @@ test_nodeinfo_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_turn_SOURCES = test/turn.cc test/test.cc
 test_turn_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_turn_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_graphreader_SOURCES = test/graphreader.cc test/test.cc
+test_graphreader_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_graphreader_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)

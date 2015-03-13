@@ -25,13 +25,6 @@ class GraphReader {
   GraphReader(const boost::property_tree::ptree& pt);
 
   /**
-   * Constructor
-   *
-   * @param tilehierarchy  the tilehierarchy
-   */
-  GraphReader(const TileHierarchy& th);
-
-  /**
    * Test if tile exists
    * @param  graphid  GraphId of the tile to test (tile id and level).
    */
@@ -66,12 +59,28 @@ class GraphReader {
    */
   const TileHierarchy& GetTileHierarchy() const;
 
+  /**
+   * Clears the cache
+   */
+  void Clear();
+
+  /** Returns true if the cache is over committed with respect to the limit
+   * @return  true
+   */
+  bool OverCommitted() const;
+
  protected:
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;
 
   // The actual cached GraphTile objects
-  std::unordered_map<GraphId, GraphTile> tilecache_;
+  std::unordered_map<GraphId, GraphTile> cache_;
+
+  // The current cache size in bytes
+  size_t cache_size_;
+
+  // The max cache size in bytes
+  size_t max_cache_size_;
 };
 
 }
