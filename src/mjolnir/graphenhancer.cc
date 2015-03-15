@@ -16,6 +16,11 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 #include <boost/filesystem/operations.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
@@ -34,6 +39,11 @@ using namespace valhalla::mjolnir;
 
 
 namespace {
+
+
+typedef boost::geometry::model::d2::point_xy<double> point_type;
+typedef boost::geometry::model::polygon<point_type> polygon_type;
+typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
 // Number of iterations to try to determine if an edge is unreachable
 // by driving. If a search terminates before this without reaching
@@ -248,75 +258,36 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return static_cast<uint32_t>((density / 32.0f) * 16.0f);
 }
 
-uint32_t GetAdminIndex(sqlite3 *db_handle, const std::vector<int32_t>& rowids, const PointLL& ll) {
+uint32_t GetAdminId(sqlite3 *db_handle, const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
 
   uint32_t index = 0;
+  point_type p(ll.lng(), ll.lat());
 
-  if (!rowids.size() || !db_handle)
-    return index;
-
-  sqlite3_stmt *stmt = 0;
-  uint32_t ret;
-  char *err_msg = NULL;
-
-  std::string sql = "SELECT rowid from admins where rowid in (";
-  std::string tmp;
-
-  for (auto rowid : rowids) {
-    sql += tmp;
-    sql += std::to_string(rowid);
-    tmp = ", ";
-  }
-
-  std::string point = "MakePoint(" + std::to_string(ll.lng());
-  point += ", " + std::to_string(ll.lat()) + ")";
-
-  sql += ") and ST_Contains(geom, " + point;
-  sql += ") AND ROWID IN (SELECT ROWID FROM SpatialIndex where f_table_name = 'admins' AND search_frame = ";
-  sql += point + ") order by admin_level DESC limit 1;";
-
-
- // sql += ") and ST_Contains(geom, " + point;
- // sql += ") and rowid in (SELECT rowid FROM idx_admins_geom WHERE xmin <= MbrMaxX(" + point;
- // sql += ") AND xmax >= MbrMinX(" + point + ") AND ymin <= MbrMaxY(" + point;
- // sql += ") AND ymax >= MbrMinY(" + point + ") limit 1) order by admin_level DESC limit 1";
-
- // std::cout << sql << std::endl;
-
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-
-  if (ret == SQLITE_OK) {
-    uint32_t result = 0;
-    result = sqlite3_step(stmt);
-    while (result == SQLITE_ROW) {
-      index = sqlite3_column_int(stmt, 0);
-      result = sqlite3_step(stmt);
-    }
-  }
-
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
+  for (const auto& poly : polys) {
+    if (boost::geometry::within(p, poly.second))
+      return poly.first;
   }
 
   return index;
 }
 
-std::vector<int32_t> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileBuilder& tilebuilder) {
+std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileBuilder& tilebuilder) {
 
-  std::vector<int32_t> rowids;
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
 
   if (!db_handle)
-    return rowids;
+    return polys;
 
   sqlite3_stmt *stmt = 0;
   uint32_t ret;
   char *err_msg = NULL;
 
-  std::string sql = "SELECT rowid, name, name_en from admins where ";
+  std::string sql = "SELECT rowid, name, name_en, st_astext(geom) from admins where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) order by admin_level DESC";
+  sql += std::to_string(aabb.maxy()) + ")) order by admin_level;";
+
+ // std::cout << sql << std::endl;
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -328,7 +299,6 @@ std::vector<int32_t> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileB
       std::vector<std::string> names;
 
       uint32_t id = sqlite3_column_int(stmt, 0);
-      rowids.emplace_back(id);
 
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
         names.emplace_back((char*)sqlite3_column_text(stmt, 1));
@@ -336,7 +306,15 @@ std::vector<int32_t> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileB
       if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
         names.emplace_back((char*)sqlite3_column_text(stmt, 2));
 
+      std::string geom;
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 3);
+
       tilebuilder.AddAdmin(id,names);
+
+      multi_polygon_type multi_poly;
+      boost::geometry::read_wkt(geom, multi_poly);
+      polys.emplace(id, multi_poly);
 
       result = sqlite3_step(stmt);
     }
@@ -347,7 +325,7 @@ std::vector<int32_t> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileB
     stmt = 0;
   }
 
-  return rowids;
+  return polys;
 
 }
 
@@ -497,7 +475,7 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
    //std::string database = dir + "/" +  db_name;
 
- /* std::string database = "/data/valhalla/admin.sqlite";
+  std::string database = "/data/valhalla/admin.sqlite";
 
   sqlite3 *db_handle = nullptr;
 
@@ -532,8 +510,8 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
   }
 
-  std::vector<int32_t> rowids;
-*/
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
+
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
   lock.lock();
@@ -565,8 +543,8 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
-    //if (db_handle)
-    //  rowids = GetAdmins(db_handle, tiles.TileBounds(id), tilebuilder);
+    if (db_handle)
+      polys = GetAdmins(db_handle, tiles.TileBounds(id), tilebuilder);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfoBuilder> nodes;
@@ -584,7 +562,7 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
       // Enhance node attributes (TODO - admin, timezone)
 
-     // uint32_t admin_index = GetAdminIndex(db_handle,rowids, nodeinfo.latlng());
+      uint32_t admin_index = tilebuilder.GetAdminIndex(GetAdminId(db_handle,polys, nodeinfo.latlng()));
 
       nodeinfo.set_density(density);
 
@@ -661,6 +639,9 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
     tilebuilder.Update(tile_hierarchy, static_cast<const GraphTileHeaderBuilder&>(*tilebuilder.header()), nodes, directededges);
     lock.unlock();
   }
+
+  if (db_handle)
+    sqlite3_close (db_handle);
 
   // Send back the statistics
   result.set_value(stats);
