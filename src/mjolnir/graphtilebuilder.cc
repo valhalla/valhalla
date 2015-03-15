@@ -307,8 +307,16 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   }
 }
 
+uint32_t GraphTileBuilder::GetAdminIndex(const uint32_t id) {
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
+
+  if (existing_admin_info_offset_item == admin_info_offset_map.end())
+    return 0;
+  return existing_admin_info_offset_item->second;
+}
+
 // Add admin
-uint32_t GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::string>& names) {
+void GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::string>& names) {
 
   auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
   if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
@@ -352,18 +360,8 @@ uint32_t GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::str
     // Add to the map
     admin_info_offset_map.emplace(id,admin_info_offset_);
 
-    // Set current admin offset
-    uint32_t current_admin_offset = admin_info_offset_;
-
     // Update edge offset for next item
     admin_info_offset_ += admininfo.SizeOf();
-
-    // Return the offset to this edge info
-    return current_admin_offset;
-  }
-  else {
-    // Already have this edge - return the offset
-    return existing_admin_info_offset_item->second;
   }
 }
 

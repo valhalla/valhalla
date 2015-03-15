@@ -114,7 +114,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Add admin info to the tile.
    */
-  uint32_t AddAdmin(const uint32_t id,const std::vector<std::string>& names);
+  void AddAdmin(const uint32_t id,const std::vector<std::string>& names);
+
+  /**
+   * Get admin index
+   */
+  uint32_t GetAdminIndex(const uint32_t id);
 
   /**
    * Gets a builder for a node from an existing tile.
