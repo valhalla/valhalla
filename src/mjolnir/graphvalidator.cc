@@ -1,9 +1,26 @@
-#include "mjolnir/graphoptimizer.h"
+
+#include "mjolnir/graphvalidator.h"
+#include "valhalla/mjolnir/graphtilebuilder.h"
+
 #include <valhalla/midgard/logging.h>
 
 #include <ostream>
 #include <set>
 #include <boost/format.hpp>
+#include <sstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <utility>
+
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphreader.h>
+
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -31,9 +48,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
               nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     // End node must match the start node, shortcut (bool) must match
-    // and lengths must be close...
+    // and lengths must match
     if (directededge->endnode() == startnode &&
-        static_cast<bool>(edge.shortcut()) == static_cast<bool>(directededge->shortcut()) &&
+        edge.is_shortcut() == directededge->is_shortcut() &&
         directededge->length() == edge.length()) {
       if (opp_index != absurd_index) {
         dupcount_++;
@@ -51,7 +68,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
     uint32_t n = 0;
     directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      if (sc == directededge->shortcut() && directededge->shortcut()) {
+      if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
         LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
           % directededge->length() % directededge->endnode()).str());
         n++;
@@ -74,7 +91,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 namespace valhalla {
 namespace mjolnir {
 
-void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
+void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
   // Number of possible duplicates
   uint32_t dupcount_;
@@ -88,7 +105,7 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
 
   // Iterate through all levels and all tiles.
   // TODO - concurrency
-  LOG_INFO("GraphOptimizer - validate tiles first");
+  LOG_INFO("GraphValidator - validate signs first");
 
   // Validate signs
   for (auto tile_level :  tile_hierarchy_.levels()) {
@@ -118,7 +135,7 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
       }
     }
   }
-  LOG_INFO("Validation of tiles is done");
+  LOG_INFO("Validation signs is done. Validate connectivity.");
 
   for (auto tile_level :  tile_hierarchy_.levels()) {
     dupcount_ = 0;
@@ -130,6 +147,10 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
       if (tilebuilder.size() == 0) {
         continue;
       }
+
+      // Check if we need to clear the tile cache
+      if(graphreader_.OverCommitted())
+        graphreader_.Clear();
 
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
@@ -162,10 +183,9 @@ void GraphOptimizer::Optimize(const boost::property_tree::ptree& pt) {
       }
 
       // Write the new file
-      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes,
-                         directededges);
+      tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
     }
-
+    LOG_INFO("Validation of connectivity is done");
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % level % dupcount_).str());
   }

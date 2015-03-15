@@ -1,5 +1,22 @@
 #include "mjolnir/hierarchybuilder.h"
+#include "valhalla/mjolnir/graphtilebuilder.h"
+
+#include <sstream>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <utility>
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
+
 #include <boost/format.hpp>
 
 #include <ostream>
@@ -10,6 +27,40 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+
+// Simple structure to describe a connection between 2 levels
+struct NodeConnection {
+  GraphId basenode;
+  GraphId newnode;
+
+  NodeConnection(const GraphId& bn, const GraphId& nn)
+      : basenode(bn),
+        newnode(nn) {
+  }
+
+  // For sorting by Id
+  bool operator < (const NodeConnection& other) const {
+    return basenode.id() < other.basenode.id();
+  }
+};
+
+// Simple structure representing nodes in the new level
+struct NewNode {
+  GraphId basenode;
+  bool contract;
+
+  NewNode(const GraphId& bn, const bool c)
+      : basenode(bn),
+        contract(c) {
+  }
+};
+
+// Simple structure to hold the 2 pair of directed edges at a node.
+// First edge in the pair is incoming and second is outgoing
+struct EdgePairs {
+  std::pair<GraphId, GraphId> edge1;
+  std::pair<GraphId, GraphId> edge2;
+};
 
 struct hierarchy_info {
   uint32_t contractcount_;
@@ -158,9 +209,10 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
+  // NOTE-this seems to cause issues on PA Tpke / Breezewood
   for (uint32_t i = 0; i < n; i++) {
     if (i != match.first && i != match.second) {
-      if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
+ //     if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
         return false;
     }
   }
@@ -367,20 +419,14 @@ if (nodea.level() == 0) {
      % nodea % baseni->latlng().lat() % baseni->latlng().lng() % nodeb).str());
 }
 **/
-      // Add shortcut directed edge (if we have not reached max per node)
-      if (shortcut < kMaxShortcutsFromNode) {
-        // Add to the shortcut map (associates the base edge index to the
-        // shortcut index). Remove superseded mask that may have been copied
-        // from base level directed edge
-        shortcuts[i] = shortcut+1;
-        newedge.set_shortcut(shortcut+1);
-        newedge.set_superseded(0);
-        shortcut++;
-        directededges.emplace_back(std::move(newedge));
-      } else {
-        LOG_INFO("Skip adding shortcut at " + std::to_string(baseni->latlng().lat()) +
-                 "," + std::to_string(baseni->latlng().lng()));
-      }
+      // Add shortcut edge. Add to the shortcut map (associates the base edge
+      // index to the shortcut index).Remove superseded mask that may have
+      // been copied from base level directed edge
+      shortcuts[i] = shortcut+1;
+      newedge.set_shortcut(shortcut+1);
+      newedge.set_superseded(0);
+      directededges.emplace_back(std::move(newedge));
+      shortcut++;
     }
   }
   info.shortcutcount_ += directededges.size();
@@ -404,6 +450,10 @@ void FormTilesInNewLevel(
       tileid++;
       continue;
     }
+
+    // Check if we need to clear the tile cache
+    if(info.graphreader_.OverCommitted())
+      info.graphreader_.Clear();
 
     // Create GraphTileBuilder for the new tile
     GraphTileBuilder tilebuilder;
@@ -664,6 +714,10 @@ void ConnectBaseLevelToNewLevel(
       }
     }
 
+    // Check if we need to clear the tile cache
+    if(info.graphreader_.OverCommitted())
+      info.graphreader_.Clear();
+
     // Increment tile Id
     tileid++;
   }
@@ -679,6 +733,10 @@ void GetNodesInNewLevel(
   uint32_t baselevel = (uint32_t) base_level.level;
   const GraphTile* tile = nullptr;
   for (uint32_t basetileid = 0; basetileid < ntiles; basetileid++) {
+    // Check if we need to clear the tile cache
+    if(info.graphreader_.OverCommitted())
+      info.graphreader_.Clear();
+
     // Get the graph tile. Skip if no tile exists (common case)
     tile = info.graphreader_.GetGraphTile(GraphId(basetileid, baselevel, 0));
     if (tile == nullptr) {

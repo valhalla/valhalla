@@ -37,7 +37,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
                    const float speed, const baldr::Use use,
-                   const bool not_thru,  const bool internal,
                    const RoadClass rc, const uint32_t localidx,
                    const bool signal, const uint32_t restrictions)
      :  DirectedEdge() {
@@ -57,8 +56,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_bikenetwork(way.bike_network());
   set_link(way.link());
   set_classification(rc);
-  set_not_thru(not_thru);
-  set_internal(internal);
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);
@@ -484,11 +481,19 @@ void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
 
 // Set the flag for whether this edge represents a shortcut between 2 nodes.
 void DirectedEdgeBuilder::set_shortcut(const uint32_t shortcut) {
-  if (shortcut > kMaxShortcutsFromNode) {
-    LOG_ERROR("Exceeding max shortcut edges from a node: " + std::to_string(shortcut));
-  } else {
+  // 0 is not a valid shortcut
+  if (shortcut == 0) {
+    LOG_ERROR("Invalid shortcut mask = 0");
+    return;
+  }
+
+  // Set the shortcut mask if within the max number of masked shortcut edges
+  if (shortcut <= kMaxShortcutsFromNode) {
     hierarchy_.shortcut = (1 << (shortcut-1));
   }
+
+  // Set the is_shortcut flag
+  hierarchy_.is_shortcut = true;
 }
 
 // Set the flag for whether this edge is superseded by a shortcut edge.
