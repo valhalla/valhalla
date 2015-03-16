@@ -9,7 +9,9 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : simplerestrictions(0),
+    : nodecount(0),
+      directededge_count(0),
+      simplerestrictions(0),
       timedrestrictions(0),
       turnchannelcount(0),
       culdesaccount(0),
@@ -18,6 +20,8 @@ DataQuality::DataQuality()
 
 // Add statistics (accumulate from several DataQuality objects)
 void DataQuality::AddStatistics(const DataQuality& stats) {
+  nodecount          += stats.nodecount;
+  directededge_count += stats.directededge_count;
   simplerestrictions += stats.simplerestrictions;
   timedrestrictions  += stats.timedrestrictions;
   turnchannelcount   += stats.turnchannelcount;
@@ -47,6 +51,8 @@ void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid
 
 // Logs statistics and issues
 void DataQuality::LogStatistics() const {
+  LOG_INFO("Node Count = " + std::to_string(nodecount));
+  LOG_INFO("Directed Edge Count = " + std::to_string(directededge_count));
   LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
   LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
   LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
