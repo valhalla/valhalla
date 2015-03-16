@@ -4,7 +4,7 @@
 #include <valhalla/mjolnir/graphbuilder.h>
 #include <valhalla/mjolnir/graphenhancer.h>
 #include <valhalla/mjolnir/hierarchybuilder.h>
-#include <valhalla/mjolnir/graphoptimizer.h>
+#include <valhalla/mjolnir/graphvalidator.h>
 #include <valhalla/midgard/logging.h>
 
 #include <fstream>
@@ -61,7 +61,7 @@ void write_tiles(const std::string& config_file) {
   valhalla::mjolnir::GraphBuilder::Build(conf.get_child("mjolnir"), osmdata, "test_ways_file.bin", "test_way_nodes_file.bin");
   valhalla::mjolnir::GraphEnhancer::Enhance(conf.get_child("mjolnir.hierarchy"));
   valhalla::mjolnir::HierarchyBuilder::Build(conf.get_child("mjolnir.hierarchy"));
-  valhalla::mjolnir::GraphOptimizer::Optimize(conf.get_child("mjolnir.hierarchy"));
+  valhalla::mjolnir::GraphValidator::Validate(conf.get_child("mjolnir.hierarchy"));
 }
 
 boost::python::dict make_request(const std::string& loc1, const std::string& loc2,
