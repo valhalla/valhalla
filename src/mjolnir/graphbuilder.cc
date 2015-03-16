@@ -792,6 +792,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
 
         // Increment the counts in the histogram
+        stats.nodecount++;
+        stats.directededge_count += directededges.size();
         stats.node_counts[directededges.size()]++;
 
         // Next node in the tile
