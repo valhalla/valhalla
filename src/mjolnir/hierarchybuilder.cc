@@ -176,7 +176,7 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, edgeid++) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (directededge->classification() <= rcc && !directededge->trans_down()
-        && !directededge->shortcut()) {
+        && !directededge->is_shortcut()) {
       edges.push_back(edgeid);
     }
   }
@@ -310,7 +310,7 @@ void AddShortcutEdges(
     // point (upward transitions are created later).
     const DirectedEdge* directededge = tile->directededge(base_edge_id);
     if (directededge->classification() > rcc || directededge->trans_down()
-        || directededge->shortcut()) {
+        || directededge->is_shortcut()) {
       continue;
     }
 
@@ -487,7 +487,7 @@ void FormTilesInNewLevel(
         // it is not a transition edge or shortcut in the base level
         const DirectedEdge* directededge = tile->directededge(oldedgeid);
         if (directededge->classification() <= rcc && !directededge->trans_down()
-            && !directededge->shortcut()) {
+            && !directededge->is_shortcut()) {
           // Copy the directed edge information and update end node,
           // edge data offset, and opp_index
           DirectedEdge oldedge = *directededge;
