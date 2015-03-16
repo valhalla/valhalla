@@ -161,7 +161,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
     if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
-      bundle.node_edges.emplace(std::make_pair(edge, node.end_of));  // TODO piecewise emplace?
+      bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
       if (edge.attributes.link) {
@@ -393,15 +393,12 @@ void ReclassifyLinks(const std::string& ways_file,
           visitedset.insert(expand_node_itr.position());
           expandset.erase(expandset.begin());
           for (const auto& expandededge : expanded.node_edges) {
-            // Do not allow use of the start edge
-            if (expandededge.second == startedge.second) {
+            // Do not allow use of the start edge or any non-link edge
+            if (expandededge.second == startedge.second ||
+                !expandededge.first.attributes.link) {
               continue;
             }
-            // Add this edge (it should be a link edge) and get its end node
-            if (!expandededge.first.attributes.link) {
-              LOG_ERROR("Expanding onto non-link edge!");
-              continue;
-            }
+            // Expand from end node of this edge
             expand(expandededge.first, expand_node_itr);
           }
         }
