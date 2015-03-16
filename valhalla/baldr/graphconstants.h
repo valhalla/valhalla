@@ -87,8 +87,10 @@ enum class NodeType : uint8_t {
 // Intersection types. Classifications of various intersections.
 // TODO - enumerate and assign!
 enum class IntersectionType : uint8_t {
-  kFalse = 0       // False intersection. Only 2 edges connect. Typically
+  kRegular = 0,    // Regular, unclassified intersection
+  kFalse = 1,      // False intersection. Only 2 edges connect. Typically
                    // where 2 ways are split or where attributes force a split.
+  kDeadEnd = 2     // Node only connects to one edge ("dead-end").
 };
 
 // Edge use. Indicates specialized uses.
