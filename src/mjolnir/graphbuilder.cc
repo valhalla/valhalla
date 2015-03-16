@@ -163,19 +163,22 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   sequence<Edge> edges(edges_file, false);
   uint32_t run_index = 0;
   uint32_t node_index = 0;
+  size_t node_count = 0;
   Node last_node{};
   std::map<GraphId, size_t> tiles;
   nodes.transform(
-    [&nodes, &edges, &run_index, &node_index, &last_node, &tiles](Node& node) {
+    [&nodes, &edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
       //remember if this was a new tile
       if(node_index == 0 || node.graph_id != (--tiles.end())->first) {
         tiles.insert({node.graph_id, node_index});
         node.graph_id.fields.id = 0;
         run_index = node_index;
+        ++node_count;
       }//but is it a new node
       else if(last_node.node.osmid != node.node.osmid) {
         node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
         run_index = node_index;
+        ++node_count;
       }//not new keep the same graphid
       else
         node.graph_id.fields.id = last_node.graph_id.fields.id;
@@ -202,7 +205,7 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
     }
   );
 
-  LOG_INFO("Finished");
+  LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
 }
 
@@ -274,7 +277,7 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file, const 
     }
   }
 
-  LOG_INFO("Finished with " + std::to_string(edges.size()) + " edges and " + std::to_string(nodes.size()) + " nodes");
+  LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
 
 
