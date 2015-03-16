@@ -88,19 +88,19 @@ struct Edge {
    * (TODO - presence of name, end of simple restriction)
    */
   bool operator < (const Edge& other) const {
+    // Is this a loop?
+    if (targetnode_ == other.targetnode_ &&
+        sourcenode_ == other.sourcenode_ &&
+        sourcenode_ == targetnode_) {
+      false;
+    }
     if (attributes.importance == other.attributes.importance) {
       // Equal importance - check driveability
       bool d  = attributes.driveableforward || attributes.driveablereverse;
       bool od = other.attributes.driveableforward || other.attributes.driveablereverse;
       if (d == od) {
         // Tiebreaker
-        if (targetnode_ == other.targetnode_) {
-          // Loop?
-          return llindex_ < other.llindex_;
-        } else {
-          return targetnode_ < other.targetnode_;
-        }
-        return targetnode_ < other.targetnode_;
+        return llindex_ < other.llindex_;
       } else {
         return d > od;
       }
