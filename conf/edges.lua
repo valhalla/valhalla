@@ -405,6 +405,10 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
+  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+    use = 7
+  end
+
   kv["use"] = use
 
   local cycle_lane = shared[kv["cycleway"]] or separated[kv["cycleway"]] or dedicated[kv["cycleway"]] or 0
