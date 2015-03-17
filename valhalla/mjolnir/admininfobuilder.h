@@ -20,18 +20,19 @@ namespace mjolnir {
 class AdminInfoBuilder {
  public:
   /**
-   * Set the indexes to names used by this admin
-   * @param  ame_offset_list  a list of name indexes.
-   */
-  void set_name_offset_list(const std::vector<uint32_t>& name_offset_list);
+    * Set the indexes to names used by this edge
+    * @param  text_name_offset_list  a list of name indexes.
+    */
+   void set_text_name_offset_list(const std::vector<uint32_t>& text_name_offset_list);
+
 
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
  protected:
 
-  // List of name indexes
-  std::vector<uint32_t> name_offset_list_;
+  // List of roadname indexes
+  std::vector<uint32_t> text_name_offset_list_;
 
   friend std::ostream& operator<<(std::ostream& os, const AdminInfoBuilder& id);
 

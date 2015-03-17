@@ -49,13 +49,11 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
             + (signs_builder_.size() * sizeof(SignBuilder)));
-    header_builder_.set_streetlist_offset(
-        header_builder_.edgeinfo_offset() + edge_info_offset_);
 
     header_builder_.set_admininfo_offset(
-        header_builder_.streetlist_offset() + street_list_offset_);
+        header_builder_.edgeinfo_offset() + edge_info_offset_);
 
-    header_builder_.set_namelist_offset(
+    header_builder_.set_textlist_offset(
         header_builder_.admininfo_offset() + admin_info_offset_);
 
     // Write the header.
@@ -75,19 +73,22 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                signs_builder_.size() * sizeof(SignBuilder));
 
     // Write the edge data
-    SerializeEdgeInfosToOstream(file);
+     SerializeEdgeInfosToOstream(file);
 
-    // Write the streets
-    SerializeStreetListToOstream(file);
+     // Write the admin data
+     SerializeAdminInfosToOstream(file);
 
-    // Write the admin data
-    SerializeAdminInfosToOstream(file);
+     // Write the names
+     SerializeTextListToOstream(file);
 
-    // Write the names
-    SerializeNameListToOstream(file);
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6% admininfo offset = %7% namelist offset = %8%" )
+      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_ % admin_info_offset_ % name_list_offset_).str());
 
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% streetlist offset = %6% admininfo offset = %7% namelist offset = %8%" )
-      % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % street_list_offset_ % admin_info_offset_ % name_list_offset_).str());
+    size_t fsize = file.tellp();
+    if (fsize % 8 != 0) {
+      char empty[8] = {};
+      file.write(empty, (8 - (fsize % 8)));
+    }
 
     size_ = file.tellp();
     file.close();
@@ -98,9 +99,10 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
 
 // Update a graph tile with new header, nodes, and directed edges.
 void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
-                const GraphTileHeaderBuilder& hdr,
+                GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges) {
+
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
             GraphTile::FileSuffix(hdr.graphid(), hierarchy);
@@ -113,6 +115,15 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
   std::ofstream file(filename.c_str(),
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
+
+    std::size_t addedsize = 0;
+
+    for (const auto& admininfo : admininfo_list_)
+      addedsize += admininfo.SizeOf();
+
+    hdr.set_textlist_offset(
+        hdr.admininfo_offset() + addedsize);
+
     // Write the updated header.
     file.write(reinterpret_cast<const char*>(&hdr),
                sizeof(GraphTileHeaderBuilder));
@@ -129,13 +140,17 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
 
-    // Write the existing edgeinfo, and streetlist
+    // Write the existing edgeinfo, and textlist
     file.write(edgeinfo_, edgeinfo_size_);
-    file.write(streetlist_, streetlist_size_);
 
-    // Write the existing admininfo, and textlist
-    file.write(admininfo_, admininfo_size_);
-    file.write(namelist_, namelist_size_);
+    // Write the admin data
+    SerializeAdminInfosToOstream(file);
+
+    // Save existing text
+    file.write(textlist_, textlist_size_);
+
+    // Save updateded text
+    SerializeTextListToOstream(file);
 
     size_ = file.tellp();
     file.close();
@@ -178,13 +193,14 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
 
-    // Write the existing edgeinfo, and streetlist
+    // Write the existing edgeinfo, and textlist
     file.write(edgeinfo_, edgeinfo_size_);
-    file.write(streetlist_, streetlist_size_);
 
-    // Write the existing admininfo, and textlist
+    // Write the existing admininfo
     file.write(admininfo_, admininfo_size_);
-    file.write(namelist_, namelist_size_);
+
+    // Write the text data
+    file.write(textlist_, textlist_size_);
 
     size_ = file.tellp();
     file.close();
@@ -218,19 +234,19 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
     }
 
     // If nothing already used this sign text
-    auto existing_text_offset = street_offset_map.find(sign.text());
-    if (existing_text_offset == street_offset_map.end()) {
+    auto existing_text_offset = text_offset_map.find(sign.text());
+    if (existing_text_offset == text_offset_map.end()) {
       // Add name to text list
-      streetlistbuilder_.emplace_back(sign.text());
+      textlistbuilder_.emplace_back(sign.text());
 
       // Add sign to the list
-      signs_builder_.emplace_back(idx, sign.type(), street_list_offset_);
+      signs_builder_.emplace_back(idx, sign.type(), text_list_offset_);
 
       // Add text/offset pair to map
-      street_offset_map.emplace(sign.text(), street_list_offset_);
+      text_offset_map.emplace(sign.text(), text_list_offset_);
 
       // Update text offset value to length of string plus null terminator
-      street_list_offset_ += (sign.text().length() + 1);
+      text_list_offset_ += (sign.text().length() + 1);
     }
     else {
       // Name already exists. Add sign type and existing text offset to list
@@ -257,8 +273,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     ///////////////////////////////////////////////////////////////////////////
     // Put each name's index into the chunk of bytes containing all the names
     // in the tile
-    std::vector<uint32_t> street_name_offset_list;
-    street_name_offset_list.reserve(names.size());
+    std::vector<uint32_t> text_name_offset_list;
+    text_name_offset_list.reserve(names.size());
     for (const auto& name : names) {
       // Skip blank names
       if (name.empty()) {
@@ -266,26 +282,26 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
 
       // If nothing already used this name
-      auto existing_text_offset = street_offset_map.find(name);
-      if (existing_text_offset == street_offset_map.end()) {
+      auto existing_text_offset = text_offset_map.find(name);
+      if (existing_text_offset == text_offset_map.end()) {
         // Add name to text list
-        streetlistbuilder_.emplace_back(name);
+        textlistbuilder_.emplace_back(name);
 
         // Add name offset to list
-        street_name_offset_list.emplace_back(street_list_offset_);
+        text_name_offset_list.emplace_back(text_list_offset_);
 
         // Add name/offset pair to map
-        street_offset_map.emplace(name, street_list_offset_);
+        text_offset_map.emplace(name, text_list_offset_);
 
         // Update text offset value to length of string plus null terminator
-        street_list_offset_ += (name.length() + 1);
+        text_list_offset_ += (name.length() + 1);
       } // Something was already using this name
       else {
         // Add existing offset to list
-        street_name_offset_list.emplace_back(existing_text_offset->second);
+        text_name_offset_list.emplace_back(existing_text_offset->second);
       }
     }
-    edgeinfo.set_street_name_offset_list(street_name_offset_list);
+    edgeinfo.set_text_name_offset_list(text_name_offset_list);
 
     // Add to the map
     edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);
@@ -327,8 +343,8 @@ void GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::string>
     ///////////////////////////////////////////////////////////////////////////
     // Put each name's index into the chunk of bytes containing all the names
     // in the tile
-    std::vector<uint32_t> name_offset_list;
-    name_offset_list.reserve(names.size());
+    std::vector<uint32_t> text_name_offset_list;
+    text_name_offset_list.reserve(names.size());
     for (const auto& name : names) {
       // Skip blank names
       if (name.empty()) {
@@ -336,26 +352,31 @@ void GraphTileBuilder::AddAdmin(const uint32_t id,const std::vector<std::string>
       }
 
       // If nothing already used this name
-      auto existing_text_offset = name_offset_map.find(name);
-      if (existing_text_offset == name_offset_map.end()) {
+      auto existing_text_offset = text_offset_map.find(name);
+      if (existing_text_offset == text_offset_map.end()) {
         // Add name to text list
-        namelistbuilder_.emplace_back(name);
+        textlistbuilder_.emplace_back(name);
+
+        // Need to append to the list; therefore, we need the offset
+        if (text_list_offset_ == 0)
+          text_list_offset_ = textlist_size_;
 
         // Add name offset to list
-        name_offset_list.emplace_back(name_list_offset_);
+        text_name_offset_list.emplace_back(text_list_offset_);
 
         // Add name/offset pair to map
-        name_offset_map.emplace(name, name_list_offset_);
+        text_offset_map.emplace(name, text_list_offset_);
 
         // Update text offset value to length of string plus null terminator
-        name_list_offset_ += (name.length() + 1);
+        text_list_offset_ += (name.length() + 1);
+
       } // Something was already using this name
       else {
         // Add existing offset to list
-        name_offset_list.emplace_back(existing_text_offset->second);
+        text_name_offset_list.emplace_back(existing_text_offset->second);
       }
     }
-    admininfo.set_name_offset_list(name_offset_list);
+    admininfo.set_text_name_offset_list(text_name_offset_list);
 
     // Add to the map
     admin_info_offset_map.emplace(id,admin_info_offset_);
@@ -374,9 +395,9 @@ void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
 }
 
 // Serialize the text list
-void GraphTileBuilder::SerializeStreetListToOstream(std::ostream& out) {
-  for (const auto& street : streetlistbuilder_) {
-    out << street << '\0';
+void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
+  for (const auto& text : textlistbuilder_) {
+    out << text << '\0';
   }
 }
 
@@ -384,13 +405,6 @@ void GraphTileBuilder::SerializeStreetListToOstream(std::ostream& out) {
 void GraphTileBuilder::SerializeAdminInfosToOstream(std::ostream& out) {
   for (const auto& admininfo : admininfo_list_) {
     out << admininfo;
-  }
-}
-
-// Serialize the text list
-void GraphTileBuilder::SerializeNameListToOstream(std::ostream& out) {
-  for (const auto& name : namelistbuilder_) {
-    out << name << '\0';
   }
 }
 

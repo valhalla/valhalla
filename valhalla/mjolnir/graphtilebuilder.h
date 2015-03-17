@@ -67,7 +67,7 @@ class GraphTileBuilder : public baldr::GraphTile {
     * @param  directededges  Updated list of edges.
     */
    void Update(const baldr::TileHierarchy& hierarchy,
-               const GraphTileHeaderBuilder& hdr,
+               GraphTileHeaderBuilder& hdr,
                const std::vector<NodeInfoBuilder>& nodes,
                const std::vector<DirectedEdgeBuilder>& directededges);
 
@@ -166,14 +166,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Write all edgeinfo items to specified stream
   void SerializeEdgeInfosToOstream(std::ostream& out);
 
-  // Write all streetlist items to specified stream
-  void SerializeStreetListToOstream(std::ostream& out);
+  // Write all textlist items to specified stream
+  void SerializeTextListToOstream(std::ostream& out);
 
   // Write all edgeinfo items to specified stream
   void SerializeAdminInfosToOstream(std::ostream& out);
-
-  // Write all namelist items to specified stream
-  void SerializeNameListToOstream(std::ostream& out);
 
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
@@ -198,11 +195,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::list<EdgeInfoBuilder> edgeinfo_list_;
 
   // Text list offset and map
-  uint32_t street_list_offset_ = 0;
-  std::unordered_map<std::string, uint32_t> street_offset_map;
+  uint32_t text_list_offset_ = 0;
+  std::unordered_map<std::string, uint32_t> text_offset_map;
 
   // Text list. List of names used within this tile
-  std::list<std::string> streetlistbuilder_;
+  std::list<std::string> textlistbuilder_;
 
   // Admin info offset
   size_t admin_info_offset_ = 0;
@@ -211,12 +208,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   // The admininfo list
   std::list<AdminInfoBuilder> admininfo_list_;
 
-  // Text list offset and map
-  uint32_t name_list_offset_ = 0;
-  std::unordered_map<std::string, uint32_t> name_offset_map;
 
-  // Text list. List of names used within this tile
-  std::list<std::string> namelistbuilder_;
 };
 
 }

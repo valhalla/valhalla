@@ -409,15 +409,18 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return static_cast<uint32_t>((density / 32.0f) * 16.0f);
 }
 
-uint32_t GetAdminId(sqlite3 *db_handle, const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
+uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
 
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
 
   for (const auto& poly : polys) {
-    if (boost::geometry::within(p, poly.second))
+    if (boost::geometry::covered_by(p, poly.second))
       return poly.first;
   }
+
+  std::cout << "GetAdminId" << std::endl;
+
 
   return index;
 }
@@ -436,15 +439,31 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, co
   std::string sql = "SELECT rowid, name, name_en, st_astext(geom) from admins where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) order by admin_level;";
-
- // std::cout << sql << std::endl;
+  sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK) {
     uint32_t result = 0;
     result = sqlite3_step(stmt);
+
+    if (result == SQLITE_DONE) { //state/prov not found, try to find country
+
+      sql = "SELECT rowid, name, name_en, st_astext(geom) from admins where ";
+      sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+      sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+      sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
+
+      sqlite3_finalize(stmt);
+      stmt = 0;
+
+      ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+      if (ret == SQLITE_OK) {
+        result = 0;
+        result = sqlite3_step(stmt);
+      }
+    }
     while (result == SQLITE_ROW) {
 
       std::vector<std::string> names;
@@ -454,9 +473,11 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, co
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
         names.emplace_back((char*)sqlite3_column_text(stmt, 1));
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
-        names.emplace_back((char*)sqlite3_column_text(stmt, 2));
-
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
+        std::string data =  "en:";
+        data += (char*)sqlite3_column_text(stmt, 2);
+        names.emplace_back(data);
+      }
       std::string geom;
       if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
         geom = (char*)sqlite3_column_text(stmt, 3);
@@ -626,14 +647,12 @@ bool ConsistentNames(const std::vector<std::string>& names1,
 
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the done map as well
-void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
+void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
 
-  // std::string dir = pt.get<std::string>("admin.admin_dir");
-   //std::string db_name = pt.get<std::string>("admin.db_name");
+  std::string dir = pt.get<std::string>("admin_dir");
+  std::string db_name = pt.get<std::string>("db_name");
 
-   //std::string database = dir + "/" +  db_name;
-
-  std::string database = "/data/valhalla/admin.sqlite";
+  std::string database = dir + "/" +  db_name;
 
   sqlite3 *db_handle = nullptr;
 
@@ -667,6 +686,9 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
     LOG_INFO("SpatiaLite loaded as an extension");
 
   }
+  else
+    LOG_INFO("Admin db " + database + " not found.  Not saving admin information.");
+
 
   std::unordered_map<uint32_t,multi_polygon_type> polys;
 
@@ -720,8 +742,14 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
       // Enhance node attributes (TODO - admin, timezone)
 
-      uint32_t admin_index = tilebuilder.GetAdminIndex(GetAdminId(db_handle,polys, nodeinfo.latlng()));
+      uint32_t admin_index = tilebuilder.GetAdminIndex(GetAdminId(polys, nodeinfo.latlng()));
 
+     // std::cout << admin_index << std::endl;
+
+    //  if (admin_index ==0)
+      //  std::cout << nodeinfo.latlng().lng() << " " << nodeinfo.latlng().lat() << std::endl;
+
+      nodeinfo.set_admin_index(admin_index);
       nodeinfo.set_density(density);
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
@@ -817,7 +845,10 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
     // Write the new file
     lock.lock();
-    tilebuilder.Update(tile_hierarchy, static_cast<const GraphTileHeaderBuilder&>(*tilebuilder.header()), nodes, directededges);
+    GraphTileHeader existinghdr = *(tilebuilder.header());
+    GraphTileHeaderBuilder hdrbuilder =
+          static_cast<GraphTileHeaderBuilder&>(existinghdr);
+    tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
     lock.unlock();
   }
 
@@ -837,7 +868,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
 
   // Graphreader
-  GraphReader reader(pt);
+  GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
@@ -853,7 +884,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   LOG_INFO("Enhancing local graph...");
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::ref(reader), std::ref(done_set), std::ref(lock), std::ref(results.back())));
+    thread.reset(new std::thread(enhance, std::ref(pt.get_child("mjolnir.admin")), std::ref(reader), std::ref(done_set), std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work

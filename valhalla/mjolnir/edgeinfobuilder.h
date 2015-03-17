@@ -23,9 +23,9 @@ class EdgeInfoBuilder {
  public:
   /**
    * Set the indexes to names used by this edge
-   * @param  street_name_offset_list  a list of name indexes.
+   * @param  text_name_offset_list  a list of name indexes.
    */
-  void set_street_name_offset_list(const std::vector<uint32_t>& street_name_offset_list);
+  void set_text_name_offset_list(const std::vector<uint32_t>& text_name_offset_list);
 
   /**
    * Set the shape of the edge.
@@ -40,7 +40,7 @@ class EdgeInfoBuilder {
  protected:
 
   // List of roadname indexes
-  std::vector<uint32_t> street_name_offset_list_;
+  std::vector<uint32_t> text_name_offset_list_;
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;

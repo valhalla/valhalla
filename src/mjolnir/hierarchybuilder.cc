@@ -589,10 +589,8 @@ void AddConnectionsToBaseTile(
       existinghdr.directededgecount() + connections.size());
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
   hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
-  hdrbuilder.set_streetlist_offset(existinghdr.streetlist_offset() + addedsize);
-
   hdrbuilder.set_admininfo_offset(existinghdr.admininfo_offset() + addedsize);
-  hdrbuilder.set_namelist_offset(existinghdr.namelist_offset() + addedsize);
+  hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed
   hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());

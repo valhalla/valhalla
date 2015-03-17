@@ -52,19 +52,14 @@ void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
   edgeinfo_offset_ = offset;
 }
 
-// Sets the offset to the street list.
-void GraphTileHeaderBuilder::set_streetlist_offset(const uint32_t offset) {
-  streetlist_offset_ = offset;
+// Sets the offset to the text list.
+void GraphTileHeaderBuilder::set_textlist_offset(const uint32_t offset) {
+  textlist_offset_ = offset;
 }
 
 // Sets the offset to the admin info.
 void GraphTileHeaderBuilder::set_admininfo_offset(const uint32_t offset) {
   admininfo_offset_ = offset;
-}
-
-// Sets the offset to the street list.
-void GraphTileHeaderBuilder::set_namelist_offset(const uint32_t offset) {
-  namelist_offset_ = offset;
 }
 
 // Sets the offset to the list of Multi-Edge Restrictions.
