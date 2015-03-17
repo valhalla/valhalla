@@ -21,9 +21,8 @@ GraphTileHeader::GraphTileHeader()
       directededgecount_(0),
       signcount_(0),
       edgeinfo_offset_(0),
-      streetlist_offset_(0),
+      textlist_offset_(0),
       admininfo_offset_(0),
-      namelist_offset_(0),
       merlist_offset_(0),
       timedres_offset_(0),
       transit_offset_(0) {
@@ -75,18 +74,13 @@ uint32_t GraphTileHeader::edgeinfo_offset() const {
 }
 
 // Get the offset in bytes to the start of the text / names list.
-uint32_t GraphTileHeader::streetlist_offset() const {
-  return streetlist_offset_;
+uint32_t GraphTileHeader::textlist_offset() const {
+  return textlist_offset_;
 }
 
 // Get the offset in bytes to the administrative information.
 uint32_t GraphTileHeader::admininfo_offset() const {
   return admininfo_offset_;
-}
-
-// Get the offset in bytes to the start of the text / names list.
-uint32_t GraphTileHeader::namelist_offset() const {
-  return namelist_offset_;
 }
 
 // Get the offset in bytes to the Multi-Edge Restriction list. (TODO)

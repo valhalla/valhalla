@@ -48,13 +48,11 @@ GraphTile::GraphTile()
       directededges_(nullptr),
       signs_(nullptr),
       edgeinfo_(nullptr),
-      streetlist_(nullptr),
+      textlist_(nullptr),
       admininfo_(nullptr),
-      namelist_(nullptr),
       edgeinfo_size_(0),
-      streetlist_size_(0),
-      admininfo_size_(0),
-      namelist_size_(0) {
+      textlist_size_(0),
+      admininfo_size_(0){
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -99,19 +97,19 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    // Set a pointer to the sign list
    signs_ = reinterpret_cast<Sign*>(ptr);
    ptr += header_->signcount() * sizeof(Sign);
+
    // Start of edge information and its size
    edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
-   edgeinfo_size_ = header_->streetlist_offset() - header_->edgeinfo_offset();
+   edgeinfo_size_ = header_->admininfo_offset() - header_->edgeinfo_offset();
+
+   admininfo_ = graphtile_.get() + header_->admininfo_offset();
+   admininfo_size_ = header_->textlist_offset() - header_->admininfo_offset();
+
    // Start of text list and its size
    // TODO - need to adjust the size once Exits are added
-   streetlist_ = graphtile_.get() + header_->streetlist_offset();
-   streetlist_size_ = header_->admininfo_offset() - header_->streetlist_offset();
-   // Start of admin information and its size
-   admininfo_ = graphtile_.get() + header_->admininfo_offset();
-   admininfo_size_ = header_->namelist_offset() - header_->admininfo_offset();
-   // Start of text list and its size
-   namelist_ = graphtile_.get() + header_->namelist_offset();
-   namelist_size_ = filesize - header_->namelist_offset();
+   textlist_ = graphtile_.get() + header_->textlist_offset();
+   textlist_size_ = filesize - header_->textlist_offset();
+
    // Set the size to indicate success
    size_ = filesize;
   }
@@ -203,11 +201,11 @@ const DirectedEdge* GraphTile::directededge(const size_t idx) const {
 }
 
 std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
-  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset, streetlist_, streetlist_size_));
+  return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset, textlist_, textlist_size_));
 }
 
 std::unique_ptr<const AdminInfo> GraphTile::admininfo(const size_t offset) const {
-  return std::unique_ptr<AdminInfo>(new AdminInfo(admininfo_ + offset, namelist_, namelist_size_));
+  return std::unique_ptr<AdminInfo>(new AdminInfo(admininfo_ + offset, textlist_, textlist_size_));
 }
 
 // Get the directed edges outbound from the specified node index.
@@ -266,9 +264,9 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 
     // Add signs
     while (signs_[mid].edgeindex() == idx && mid < count) {
-      if (signs_[mid].text_offset() < streetlist_size_) {
+      if (signs_[mid].text_offset() < textlist_size_) {
         signs.emplace_back(signs_[mid].type(),
-                (streetlist_ + signs_[mid].text_offset()));
+                (textlist_ + signs_[mid].text_offset()));
       } else {
         throw std::runtime_error("GetSigns: offset exceeds size of text list");
       }

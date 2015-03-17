@@ -42,7 +42,7 @@ class AdminInfo {
   const uint32_t name_count() const;
 
   // Returns the admin level
-  const uint32_t admin_level() const;
+  //const uint32_t admin_level() const;
 
   // Returns the name index at the specified index.
   const uint32_t GetNameOffset(uint8_t index) const;
@@ -59,10 +59,8 @@ class AdminInfo {
   // Packed items: counts for names and level
   union PackedItem {
     struct Fields {
-
-      uint32_t admin_level         :2;
       uint32_t name_count          :8;
-      uint32_t spare               :22;
+      uint32_t spare               :24;
     } fields;
     uint32_t value;
   };

@@ -172,23 +172,16 @@ class GraphTile {
 
   // Street names as sets of null-terminated char arrays. Edge info has
   // offsets into this array.
-  char* streetlist_;
+  char* textlist_;
 
   // Number of bytes in the text/name list
-  std::size_t streetlist_size_;
+  std::size_t textlist_size_;
 
   // List of admin info structures.
   char* admininfo_;
 
   // Size of the admininfo data
   std::size_t admininfo_size_;
-
-  // Admin names as sets of null-terminated char arrays. Admin info has
-  // offsets into this array.
-  char* namelist_;
-
-  // Number of bytes in the text/name list
-  std::size_t namelist_size_;
 };
 
 }
