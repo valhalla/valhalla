@@ -97,10 +97,12 @@ class DynamicCost {
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge  Pointer to a directed edge.
+   * @param   edge     Pointer to a directed edge.
+   * @param   density  Relative road density.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const = 0;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const uint32_t density) const = 0;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -109,11 +111,13 @@ class DynamicCost {
    * @param   edge  Directed edge (the to edge)
    * @param   node  Node (intersection) where transition occurs.
    * @param   pred  Predecessor edge information.
+   * @param   to_idx Index of the "to" directed edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                               const baldr::NodeInfo* node,
-                               const EdgeLabel& pred) const;
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const uint32_t to_idx) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied

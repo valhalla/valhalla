@@ -220,7 +220,7 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Skip shortcut edges when near the destination.
       // TODO - do not think this is needed - moved this out of autocost.
       // If needed should base it on a hierarchy limit...
-      if (directededge->shortcut() && dist2dest < 10000.0f)
+      if (directededge->is_shortcut() && dist2dest < 10000.0f)
         continue;
 
       // Skip any superseded edges that match the shortcut mask. Also skip
@@ -241,8 +241,8 @@ std::vector<GraphId> PathAlgorithm::GetBestPath(const PathLocation& origin,
       shortcuts |= directededge->shortcut();
 
       // Get cost
-      Cost edgecost = costing->EdgeCost(directededge) +
-                      costing->TransitionCost(directededge, nodeinfo, pred);
+      Cost edgecost = costing->EdgeCost(directededge, nodeinfo->density()) +
+                      costing->TransitionCost(directededge, nodeinfo, pred, i);
       float cost = pred.cost() + edgecost.cost;
 
       // Check if already in adjacency list
@@ -332,7 +332,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const auto node_id = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id)->endnode();
     const auto tile = graphreader.GetGraphTile(node_id);
     const auto node_info = tile->node(node_id);
-    loop_edge_cost = costing->EdgeCost(tile->directededge(loop_edge_id)).cost *
+    loop_edge_cost = costing->EdgeCost(tile->directededge(loop_edge_id), node_info->density()).cost *
                         (1.f - origin.edges().front().dist);
     //keep information about all the edges leaving the end of this edge
     for(uint32_t edge_index = node_info->edge_index(); edge_index < node_info->edge_index() + node_info->edge_count(); ++edge_index) {
@@ -351,7 +351,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get cost and sort cost
-    float cost = costing->EdgeCost(directededge).cost * (1.f - edge.dist) + loop_edge_cost;
+    float cost = costing->EdgeCost(directededge, 0).cost * (1.f - edge.dist) + loop_edge_cost;
     float sortcost = cost + heuristic;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -371,7 +371,7 @@ void PathAlgorithm::SetDestination(GraphReader& graphreader, const PathLocation&
   for (const auto& edge : dest.edges()) {
     // Keep the id and the cost to traverse the partial distance
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id)).cost * edge.dist;
+    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id), 0).cost * edge.dist;
   }
 }
 

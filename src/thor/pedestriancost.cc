@@ -45,9 +45,11 @@ class PedestrianCost : public DynamicCost {
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
    * @param   edge  Pointer to a directed edge.
+   * @param   density  Relative road density.
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const uint32_t density) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -130,7 +132,8 @@ bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
 
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
-Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge) const {
+Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
+                              const uint32_t density) const {
   // Slightly favor walkways/paths. TODO - penalize stairs
   float sec = edge->length() * speedfactor_;
   if (edge->use() == Use::kFootway) {
