@@ -99,6 +99,17 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
       // Motorway or trunk - allow higher speed for rural than urban
     } else {
       // Modify speed: high density (urban) vs. low density (rural)
+      if (density > 2.0f) {
+        if (directededge.classification() == RoadClass::kPrimary) {
+          directededge.set_speed(50);
+        } else if (directededge.classification() == RoadClass::kSecondary) {
+          directededge.set_speed(40);
+        } else if (directededge.classification() == RoadClass::kTertiary) {
+          directededge.set_speed(30);
+        } else {
+          directededge.set_speed(20);
+        }
+      }
     }
 
     // Modify speed based on surface
@@ -623,7 +634,7 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
       // Go through directed edges and update data
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
-      for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++) {
+      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
         DirectedEdgeBuilder& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
         // Enhance directed edge attributes. TODO - drive_on_right flag
         // and other admin related processing
@@ -676,6 +687,18 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
+      }
+
+      // Set the intersection type
+      if (nodeinfo.edge_count() == 1) {
+        nodeinfo.set_intersection(IntersectionType::kDeadEnd);
+      } else if (nodeinfo.edge_count() == 2) {
+        if (nodeinfo.type() == NodeType::kGate ||
+            nodeinfo.type() == NodeType::kTollBooth) {
+          ; // TODO??
+        } else {
+          nodeinfo.set_intersection(IntersectionType::kFalse);
+        }
       }
 
       // Add the node to the list
