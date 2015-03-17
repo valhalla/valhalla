@@ -76,8 +76,14 @@ struct Edge {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
-    e.attributes.driveableforward = way.auto_forward();
-    e.attributes.driveablereverse = way.auto_backward();
+    if (way.use() == Use::kEmergencyAccess) {
+      // Temporary until all access values are set
+      e.attributes.driveableforward = false;
+      e.attributes.driveablereverse = false;
+    } else {
+      e.attributes.driveableforward = way.auto_forward();
+      e.attributes.driveablereverse = way.auto_backward();
+    }
     e.attributes.link = way.link();
     e.attributes.reclass_link = false;
     return e;
@@ -153,7 +159,10 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       auto edge = *edge_itr;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
+      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+        bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      }
       if (edge.attributes.link) {
         bundle.link_count++;
       }
@@ -163,7 +172,10 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       auto edge = *edge_itr;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
+      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+        bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      }
       if (edge.attributes.link) {
         bundle.link_count++;
       }
@@ -320,17 +332,21 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
 
 
 /**
- * Get the best classification for any non-link edges from a node.
+ * Get the best classification for any driveable non-link edges from a node.
  * @param  edges The file backed list of edges in the graph.
  * @return  Returns the best (most important) classification
  */
-// Gets the most important class among the node's edges
 uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
-  for (const auto& edge : edges)
-    if (!edge.first.attributes.link)
-      if (edge.first.attributes.importance < bestrc)
+  for (const auto& edge : edges) {
+    if (!edge.first.attributes.link &&
+        (edge.first.attributes.driveableforward ||
+         edge.first.attributes.driveablereverse)) {
+      if (edge.first.attributes.importance < bestrc) {
         bestrc = edge.first.attributes.importance;
+      }
+    }
+  }
   return bestrc;
 }
 
