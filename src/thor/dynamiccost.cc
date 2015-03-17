@@ -36,7 +36,8 @@ bool DynamicCost::AllowMultiPass() const {
 // costs (i.e., intersection/turn costs) must override this method.
 Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
                                  const NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const uint32_t to_idx) const {
   return Cost(0.0f, 0.0f);
 }
 
