@@ -143,7 +143,7 @@ void NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
   text_instruction += "Continue";
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " onto ";
+    text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();
   }
 
