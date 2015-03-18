@@ -372,10 +372,16 @@ void ReclassifyLinks(const std::string& ways_file,
   auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
     auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
     auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
-    if (end_node_bundle.node.attributes_.non_link_edge &&
-        end_node_bundle.link_count < 2) {
+
+    // Add the classification if there is a driveable non-link edge
+    if (end_node_bundle.node.attributes_.non_link_edge) {
       endrc.insert(GetBestNonLinkClass(end_node_bundle.node_edges));
-    } else if (visitedset.find(end_node_itr.position()) == visitedset.end()){
+    }
+
+    // Add the end node to the expandset if link_count > 1 (another link edge
+    // other than the incoming) and end node has not already been visited
+    if (end_node_bundle.link_count > 1 &&
+        visitedset.find(end_node_itr.position()) == visitedset.end()) {
       expandset.insert(end_node_itr.position());
     }
   };
@@ -418,7 +424,7 @@ void ReclassifyLinks(const std::string& ways_file,
                 !expandededge.first.attributes.link) {
               continue;
             }
-            // Expand from end node of this edge
+            // Expand from end node of this link edge
             expand(expandededge.first, expand_node_itr);
           }
         }
