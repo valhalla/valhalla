@@ -49,12 +49,16 @@ struct enhancer_stats {
   uint32_t unreachable;
   uint32_t not_thru;
   uint32_t internalcount;
+  uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
     if(max_density < other.max_density)
       max_density = other.max_density;
     unreachable += other.unreachable;
     not_thru += other.not_thru;
     internalcount += other.internalcount;
+    for (uint32_t i = 0; i < 16; i++) {
+      density_counts[i] += other.density_counts[i];
+    }
   }
 };
 
@@ -224,100 +228,91 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
   return false;
 }
 
-// Test if a pair of one-way edges exist at the node. One must be
-// inbound and one must be outbound. The current edge is skipped.
-
-bool OnewayPairEdgesExist(const NodeInfo* node,
-                          const GraphTile* tile,
-                          const GraphId& startnode) {
-  // Iterate through the edges from this node. Skip the one with
-  // the specified edgeindex
-  uint32_t idx;
-  bool forward;
-  bool inbound  = false;
-  bool outbound = false;
-  const DirectedEdge* diredge = tile->directededge(node->edge_index());
-  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-    if (diredge->endnode() == startnode)
-      continue;
-
-    // Skip (ramps/turn channel)
-    if (diredge->link())
-      continue;
-
-    // Check if this is oneway inbound
-    if (!(diredge->forwardaccess() & kAutoAccess) &&
-         (diredge->reverseaccess() & kAutoAccess)) {
-      inbound = true;
-    }
-
-    // Check if this is oneway inbound
-    if ((diredge->forwardaccess() & kAutoAccess) &&
-       !(diredge->reverseaccess() & kAutoAccess)) {
-      outbound = true;
-    }
-  }
-  return (inbound && outbound);
-}
-
 bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
                             const GraphId& startnode,
-                            DirectedEdgeBuilder& directededge) {
-  if (directededge.link() ||
-      directededge.length() > kMaxInternalLength) {
+                            NodeInfoBuilder& startnodeinfo,
+                            DirectedEdgeBuilder& directededge,
+                            const uint32_t idx) {
+  // Internal intersection edges must be short
+  if (directededge.length() > kMaxInternalLength) {
     return false;
   }
 
-  // Both end nodes must connect to at least 3 edges
-  // TODO - what about the half hash case!
+  // Must have inbound oneway at start node (exclude edges that are nearly
+  // straight turn type onto the directed edge
+  bool oneway_inbound = false;
   lock.lock();
-  const GraphTile* tile1 = reader.GetGraphTile(startnode);
+  const GraphTile* tile = reader.GetGraphTile(startnode);
   lock.unlock();
-  const NodeInfo* start_node_info = tile1->node(startnode);
-  lock.lock();
-  const GraphTile* tile2 = reader.GetGraphTile(directededge.endnode());
-  lock.unlock();
-  const NodeInfo* end_node_info = tile2->node(directededge.endnode());
-  if (start_node_info->edge_count() < 3 || end_node_info->edge_count() < 3) {
-     return false;
-  }
+  uint32_t heading = startnodeinfo.heading(idx);
+  const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
+  for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
+    // Skip the current directed edge and any inbound edges not oneway
+    if (i == idx ||
+        !((diredge->reverseaccess() & kAutoAccess) &&
+         !(diredge->forwardaccess() & kAutoAccess))) {
+      continue;
+    }
 
-  // Each node must have a pair of oneways (one inbound and one outbound).
-  // Exclude links (ramps/turn channels)
-  if (!OnewayPairEdgesExist(start_node_info, tile1, startnode) ||
-      !OnewayPairEdgesExist(end_node_info, tile2, directededge.endnode())) {
+    // Exclude edges that are nearly straight to go onto directed edge
+    uint32_t from_heading = ((startnodeinfo.heading(i) + 180) % 360);
+    uint32_t turndegree = GetTurnDegree(from_heading, heading);
+    if (turndegree < 30 || turndegree > 330) {
+      continue;
+    }
+
+    // If we are here the edge is a candidate oneway inbound
+    oneway_inbound = true;
+    break;
+  }
+  if (!oneway_inbound) {
     return false;
   }
+
+  // Must have outbound oneway at end node (exclude edges that are nearly
+  // straight turn from directed edge
+  bool oneway_outbound = false;
+  if (tile->id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(directededge.endnode());
+    lock.unlock();
+  }
+  const NodeInfo* node = tile->node(directededge.endnode());
+  diredge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
+    // Skip opposing directed edge and any outbound edges not oneway
+    if (i == directededge.opp_local_idx() ||
+        !((diredge->forwardaccess() & kAutoAccess) &&
+          !(diredge->reverseaccess() & kAutoAccess))) {
+      continue;
+    }
+
+    // Exclude edges that are nearly straight to go onto directed edge
+    // Unfortunately don't have headings at the end node...
+    auto shape = tile->edgeinfo(diredge->edgeinfo_offset())->shape();
+    if (!diredge->forward())
+      std::reverse(shape.begin(), shape.end());
+    uint32_t to_heading = std::round(PointLL::HeadingAlongPolyline(shape,
+                                 kMetersOffsetForHeading));
+    uint32_t turndegree = GetTurnDegree(heading, to_heading);
+    if (turndegree < 30 || turndegree > 330) {
+      continue;
+    }
+
+    // If we are here the edge is oneway outbound
+    oneway_outbound = true;
+    break;
+  }
+  if (!oneway_outbound) {
+    return false;
+  }
+
+  // TODO - do we need to check headings of the inbound and outbound
+  // oneway edges
 
   // Assume this is an intersection internal edge
   return true;
 }
-
-/**
-  // Limit the length of intersection internal edges
-  if (length > kMaxInternalLength)
-    return false;
-
-  // Both end nodes must connect to at least 3 edges
-  auto bundle1 = collect_node_edges(nodes[startnode], nodes, edges);
-  if (bundle1.edges.size() < 3)
-    return false;
-  auto bundle2 = collect_node_edges(nodes[endnode], nodes, edges);
-  if (bundle2.edges.size() < 3)
-    return false;
-
-  // Each node must have a pair of oneways (one inbound and one outbound).
-  // Exclude links (ramps/turn channels)
-  if (!OnewayPairEdgesExist(bundle1, startnode, edgeindex, wayid, edges, ways) ||
-      !OnewayPairEdgesExist(bundle2, endnode, edgeindex, wayid, edges, ways)) {
-    return false;
-  }
-
-  // Assume this is an intersection internal edge
-  return true;
-}
-**/
-
 
 /**
  * Get the road density around the specified lat,lng position. This is a
@@ -403,7 +398,14 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   localdensity = (localroadlengths * 0.0005f) / localkm2;
   if (density > maxdensity)
      maxdensity = density;
-  return static_cast<uint32_t>((density / 32.0f) * 16.0f);
+
+  // Convert density into a relative value from 0-16
+  float mid = 8.0f;
+  float max = 24.0f;
+  uint32_t relative_density = (density < mid) ?
+      static_cast<uint32_t>((density / mid) * 10.0f) :
+      static_cast<uint32_t>(((density - mid) / (max - mid)) * 5.0f) + 10;
+  return (relative_density < 16) ? relative_density : 15;
 }
 
 /**
@@ -592,6 +594,7 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
     // Iterate through the nodes
     float localdensity = 0.0f;
     uint32_t nodecount = tilebuilder.header()->nodecount();
+    const GraphTile* endnodetile = nullptr;
     for (uint32_t i = 0; i < nodecount; i++) {
       GraphId startnode(id, local_level, i);
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
@@ -601,6 +604,7 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
       // Enhance node attributes (TODO - admin, timezone)
       nodeinfo.set_density(density);
+      stats.density_counts[density]++;
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
       // on the node as well.
@@ -658,12 +662,6 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
           }
         }
 
-        // Test if an internal intersection edge
-        if (IsIntersectionInternal(reader, lock, startnode, directededge)) {
-          directededge.set_internal(true);
-          stats.internalcount++;
-        }
-
         // Set unreachable (driving) flag
         if (IsUnreachable(reader, lock, directededge)) {
           directededge.set_unreachable(true);
@@ -679,11 +677,23 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
         }
 
         // Set the opposing index on the local level
-        lock.lock();
-        const GraphTile* endnodetile = reader.GetGraphTile(directededge.endnode());
-        lock.unlock();
+        if (tile->id() == directededge.endnode().Tile_Base()) {
+          endnodetile = tile;
+        } else {
+          lock.lock();
+          endnodetile = reader.GetGraphTile(directededge.endnode());
+          lock.unlock();
+        }
         directededge.set_opp_local_idx(
             GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+
+        // Test if an internal intersection edge. Must do this after setting
+        // opposing edge index
+        if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
+                                   directededge, j)) {
+          directededge.set_internal(true);
+          stats.internalcount++;
+        }
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
@@ -763,6 +773,9 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
   LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
+  for (auto density : stats.density_counts) {
+    LOG_INFO("Density: " + std::to_string(density));
+  }
 }
 
 }
