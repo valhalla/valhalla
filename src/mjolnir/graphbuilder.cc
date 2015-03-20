@@ -839,7 +839,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   std::string edges_file = "edges.bin";
   TileHierarchy tile_hierarchy(pt.get_child("hierarchy"));
   unsigned int threads = std::max(static_cast<unsigned int>(1),
-    pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+                                  pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
   const auto& tl = tile_hierarchy.levels().rbegin();
   uint8_t level = tl->second.level;
 

@@ -413,30 +413,28 @@ uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys
 
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
-
   for (const auto& poly : polys) {
-    if (boost::geometry::covered_by(p, poly.second))
-      return poly.first;
+      if (boost::geometry::covered_by(p, poly.second))
+        return poly.first;
   }
-
-  std::cout << "GetAdminId" << std::endl;
-
-
   return index;
 }
 
-std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, const AABB2& aabb, GraphTileBuilder& tilebuilder) {
-
+std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
+                                                             const AABB2& aabb, GraphTileBuilder& tilebuilder) {
   std::unordered_map<uint32_t,multi_polygon_type> polys;
-
   if (!db_handle)
     return polys;
 
   sqlite3_stmt *stmt = 0;
   uint32_t ret;
   char *err_msg = NULL;
+  uint32_t result = 0;
+  uint32_t id = 0;
+  bool dor = true;
+  std::string geom;
 
-  std::string sql = "SELECT rowid, name, name_en, st_astext(geom) from admins where ";
+  std::string sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
@@ -444,19 +442,16 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, co
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK) {
-    uint32_t result = 0;
     result = sqlite3_step(stmt);
-
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, name, name_en, st_astext(geom) from admins where ";
+      sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
       sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
 
       sqlite3_finalize(stmt);
       stmt = 0;
-
       ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
       if (ret == SQLITE_OK) {
@@ -467,8 +462,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, co
     while (result == SQLITE_ROW) {
 
       std::vector<std::string> names;
-
-      uint32_t id = sqlite3_column_int(stmt, 0);
+      id = sqlite3_column_int(stmt, 0);
 
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
         names.emplace_back((char*)sqlite3_column_text(stmt, 1));
@@ -478,27 +472,28 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdmins(sqlite3 *db_handle, co
         data += (char*)sqlite3_column_text(stmt, 2);
         names.emplace_back(data);
       }
-      std::string geom;
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 3);
+      dor = true;
+      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
+        dor = sqlite3_column_int(stmt, 3);
+
+      geom = "";
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 4);
 
       tilebuilder.AddAdmin(id,names);
-
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(id, multi_poly);
+      drive_on_right.emplace(id, dor);
 
       result = sqlite3_step(stmt);
     }
   }
-
   if (stmt) {
     sqlite3_finalize(stmt);
     stmt = 0;
   }
-
   return polys;
-
 }
 
 /**
@@ -691,6 +686,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
 
 
   std::unordered_map<uint32_t,multi_polygon_type> polys;
+  std::unordered_map<uint32_t,bool> drive_on_right;
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -723,8 +719,13 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
+    //Creating a dummy admin at index 0.  Used if admins are not used/created.
+    std::vector<std::string> noadmins;
+    noadmins.emplace_back("None");
+    tilebuilder.AddAdmin(0,noadmins);
+
     if (db_handle)
-      polys = GetAdmins(db_handle, tiles.TileBounds(id), tilebuilder);
+      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfoBuilder> nodes;
@@ -740,16 +741,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), localdensity, stats.max_density, tiles, local_level);
 
-      // Enhance node attributes (TODO - admin, timezone)
+      // Enhance node attributes (TODO - timezone)
+      uint32_t admin_id = GetAdminId(polys, nodeinfo.latlng());
+      nodeinfo.set_admin_index(tilebuilder.GetAdminIndex(admin_id));
 
-      uint32_t admin_index = tilebuilder.GetAdminIndex(GetAdminId(polys, nodeinfo.latlng()));
-
-     // std::cout << admin_index << std::endl;
-
-    //  if (admin_index ==0)
-      //  std::cout << nodeinfo.latlng().lng() << " " << nodeinfo.latlng().lat() << std::endl;
-
-      nodeinfo.set_admin_index(admin_index);
       nodeinfo.set_density(density);
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
@@ -791,6 +786,9 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
 
         // Update speed.
         UpdateSpeed(directededge, localdensity);
+
+        // Set drive on right flag
+        directededge.set_drive_on_right(drive_on_right[admin_id]);
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {
@@ -838,7 +836,6 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
       }
-
       // Add the node to the list
       nodes.emplace_back(std::move(nodeinfo));
     }
