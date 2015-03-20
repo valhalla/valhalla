@@ -106,7 +106,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    admininfo_size_ = header_->textlist_offset() - header_->admininfo_offset();
 
    // Start of text list and its size
-   // TODO - need to adjust the size once Exits are added
    textlist_ = graphtile_.get() + header_->textlist_offset();
    textlist_size_ = filesize - header_->textlist_offset();
 
