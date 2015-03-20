@@ -40,7 +40,7 @@ lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
-        valhalla/baldr/admininfo.h \
+	valhalla/baldr/admininfo.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
@@ -57,7 +57,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/streetnames.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/admininfo.cc \
-        src/baldr/directededge.cc \
+	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
 	src/baldr/graphreader.cc \
