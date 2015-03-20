@@ -26,7 +26,7 @@ std::size_t AdminInfoBuilder::SizeOf() const {
 std::ostream& operator<<(std::ostream& os, const AdminInfoBuilder& aib) {
   // Make packeditem
   // TODO - protect against exceeding sizes!
-  baldr::AdminInfo::PackedItem item;
+  baldr::AdminInfo::PackedItem item = {};
 
   // Check if we are exceeding the max name size
   if (aib.text_name_offset_list_.size() > kMaxNames) {

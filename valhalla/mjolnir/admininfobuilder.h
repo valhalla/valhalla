@@ -29,11 +29,11 @@ class AdminInfoBuilder {
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
- protected:
+
 
   // List of roadname indexes
   std::vector<uint32_t> text_name_offset_list_;
-
+ protected:
   friend std::ostream& operator<<(std::ostream& os, const AdminInfoBuilder& id);
 
 };

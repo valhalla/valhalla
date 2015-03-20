@@ -59,17 +59,30 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
-    * Update a graph tile with new header, nodes, and directed edges. Used
-    * in GraphOptimizer to update directed edge information.
-    * @param  hierarchy      How the tiles are setup on disk
-    * @param  hdr            Update header
-    * @param  nodes          Update list of nodes
-    * @param  directededges  Updated list of edges.
-    */
-   void Update(const baldr::TileHierarchy& hierarchy,
-               GraphTileHeaderBuilder& hdr,
-               const std::vector<NodeInfoBuilder>& nodes,
-               const std::vector<DirectedEdgeBuilder>& directededges);
+ * Update a graph tile with new header, nodes, and directed edges. Used
+ * in GraphOptimizer to update directed edge information.
+ * @param hierarchy How the tiles are setup on disk
+ * @param hdr Update header
+ * @param nodes Update list of nodes
+ * @param directededges Updated list of edges.
+ */
+ void Update(const baldr::TileHierarchy& hierarchy,
+ const GraphTileHeaderBuilder& hdr,
+ const std::vector<NodeInfoBuilder>& nodes,
+ const std::vector<DirectedEdgeBuilder>& directededges);
+
+ /**
+* Update a graph tile with new header, nodes, and directed edges. Used
+* in GraphOptimizer to update directed edge information.
+* @param hierarchy How the tiles are setup on disk
+* @param hdr Update header
+* @param nodes Update list of nodes
+* @param directededges Updated list of edges.
+*/
+void Update(const baldr::TileHierarchy& hierarchy,
+GraphTileHeaderBuilder& hdr,
+const std::vector<NodeInfoBuilder>& nodes,
+const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
    * Update a graph tile with new header, nodes, directed edges, signs,
@@ -114,12 +127,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Add admin info to the tile.
    */
-  void AddAdmin(const uint32_t id,const std::vector<std::string>& names);
+  uint32_t AddAdmin(const uint32_t id,const std::vector<std::string>& names);
 
   /**
-   * Get admin index
+   * Get the admin index.
    */
-  uint32_t GetAdminIndex(const uint32_t id);
+  uint32_t GetAdminIndex(const uint32_t& id);
 
   /**
    * Gets a builder for a node from an existing tile.
