@@ -1,0 +1,85 @@
+#include "test.h"
+
+#include <vector>
+#include <iostream>
+#include <fstream>
+
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/admininfo.h>
+#include "mjolnir/admininfobuilder.h"
+#include <boost/shared_array.hpp>
+#include <valhalla/baldr/sign.h>
+#include <memory>
+#include "mjolnir/signbuilder.h"
+
+using namespace std;
+using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
+
+namespace {
+
+boost::shared_array<char> ToFileAndBack(const AdminInfoBuilder& aibuilder) {
+  // write AdminInfoBuilder to binary file
+  std::ofstream out_file("AdminInfoBuilder_TestWriteRead.gph",
+                         std::ios::out | std::ios::binary | std::ios::ate);
+  if (out_file.is_open()) {
+    out_file << aibuilder;
+    out_file.close();
+  } else {
+    throw runtime_error("Failed to open file for writing");
+  }
+
+  // read EdgeInfo from binary file
+  streampos size;
+  boost::shared_array<char> memblock;
+
+  std::ifstream in_file("AdminInfoBuilder_TestWriteRead.gph",
+                        std::ios::in | std::ios::binary | std::ios::ate);
+  if (in_file.is_open()) {
+    size = in_file.tellg();
+    memblock.reset(new char[size]);
+    in_file.seekg(0, ios::beg);
+    in_file.read(memblock.get(), size);
+    in_file.close();
+  }
+
+  return memblock;
+}
+
+void TestWriteRead() {
+  // Make a builder to write the info to disk
+  AdminInfoBuilder aibuilder;
+
+  // Name
+  std::vector<uint32_t> name_offset_list;
+  name_offset_list.push_back(963);
+  name_offset_list.push_back(957);
+  name_offset_list.push_back(862);
+  aibuilder.set_text_name_offset_list(name_offset_list);
+
+  // Make an edge info object from the memory
+  boost::shared_array<char> memblock = ToFileAndBack(aibuilder);
+  std::unique_ptr<AdminInfo> ai(new AdminInfo(memblock.get(), nullptr, 0));
+
+  //TODO: errors thrown should say what was found and what was expected
+
+  // Validate the read in fields to the original AdminInfoBuilder
+  if (!(name_offset_list.size() == ai->name_count()))
+    throw runtime_error("WriteRead:name_count test failed");
+  // Check the name indices
+  for (uint8_t i = 0; i < ai->name_count(); ++i) {
+    if (!(name_offset_list[i] == ai->GetNameOffset(static_cast<uint8_t>(i))))
+      throw runtime_error("WriteRead:GetNameOffset test failed");
+  }
+}
+
+}
+
+int main() {
+  test::suite suite("admininfobuilder");
+
+  // Write to file and read into EdgeInfo
+  suite.test(TEST_CASE(TestWriteRead));
+
+  return suite.tear_down();
+}
