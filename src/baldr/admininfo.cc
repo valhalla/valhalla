@@ -23,10 +23,6 @@ const uint32_t AdminInfo::name_count() const {
   return item_->fields.name_count;
 }
 
-//const uint32_t AdminInfo::admin_level() const {
-//  return item_->fields.admin_level;
-//}
-
 const uint32_t AdminInfo::GetNameOffset(uint8_t index) const {
   if(index < item_->fields.name_count)
     return name_offset_list_[index];
@@ -37,16 +33,12 @@ const uint32_t AdminInfo::GetNameOffset(uint8_t index) const {
 const std::vector<std::string> AdminInfo::GetNames() const {
   // Get each name
   std::vector<std::string> names;
-  for (uint32_t i = 0; i < 1; i++) {
+  for (uint32_t i = 0; i < name_count(); i++) {
     uint32_t offset = GetNameOffset(i);
-
-    std::cout << offset << std::endl;
-
     if (offset < names_list_length_) {
       names.push_back(names_list_ + offset);
-    } else {
+    } else
       throw std::runtime_error("Admininfo:GetNames: offset exceeds size of text list");
-    }
   }
   return names;
 }

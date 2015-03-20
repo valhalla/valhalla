@@ -43,6 +43,8 @@ const std::vector<std::string> EdgeInfo::GetNames() const {
   std::vector<std::string> names;
   for (uint32_t i = 0; i < name_count(); i++) {
     uint32_t offset = GetStreetNameOffset(i);
+   // std::cout << offset << " " << names_list_length_<< std::endl;
+
     if (offset < names_list_length_) {
       names.push_back(names_list_ + offset);
     } else {

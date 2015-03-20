@@ -60,11 +60,13 @@ class AdminInfo {
   union PackedItem {
     struct Fields {
       uint32_t name_count          :8;
-      uint32_t spare               :24;
+      uint32_t timezone            :6;
+      uint32_t dst                 :1;
+      uint32_t spare               :17;
+
     } fields;
     uint32_t value;
   };
-
 
  protected:
 
