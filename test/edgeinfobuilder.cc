@@ -55,7 +55,7 @@ void TestWriteRead() {
   street_name_offset_list.push_back(963);
   street_name_offset_list.push_back(957);
   street_name_offset_list.push_back(862);
-  eibuilder.set_street_name_offset_list(street_name_offset_list);
+  eibuilder.set_text_name_offset_list(street_name_offset_list);
 
   // Shape
   std::vector<PointLL> shape;
