@@ -117,6 +117,7 @@ pbfadminbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_
 
 # tests
 check_PROGRAMS = \
+	test/admininfobuilder \
 	test/directededgebuilder \
 	test/edgeinfobuilder \
 	test/uniquenames \
@@ -126,7 +127,10 @@ check_PROGRAMS = \
         test/graphparser \
 	test/nodeinfobuilder \
         test/refs \
-	test/signinfo 
+	test/signinfo
+test_admininfobuilder_SOURCES = test/admininfobuilder.cc test/test.cc
+test_admininfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_admininfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
 test_directededgebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
