@@ -72,10 +72,10 @@ class AdminInfo {
   PackedItem* item_;
 
   // DST start date and time.
-  std::string start_dst_;
+  char start_dst_[9];
 
   // DST end date and time.
-  std::string end_dst_;
+  char end_dst_[9];
 
   // ISO 3166-2 code.  Index into textlist
   uint32_t iso_code_index_;
