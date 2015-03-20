@@ -205,7 +205,7 @@ separated = {
 
 oneway = {
 ["no"] = "false",
-["-1"] = "false",
+["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
 ["1"] = "true"
@@ -321,6 +321,7 @@ function filter_tags_generic(kv)
     oneway_bike = oneway[kv["oneway:bicycle"]]
   end
 
+  local oneway_reverse = kv["oneway"]
   local oneway_norm = oneway[kv["oneway"]]
   if kv["junction"] == "roundabout" then
     oneway_norm = "true"
@@ -351,6 +352,17 @@ function filter_tags_generic(kv)
        (shared[kv["cycleway:left"]] or separated[kv["cycleway:left"]] or dedicated[kv["cycleway:left"]]))) then
     kv["bike_forward"] = "true"
     kv["bike_backward"] = "true"
+  end
+
+  --flip the onewayness 
+  if oneway_reverse == "-1" then
+    local forwards = kv["auto_forward"]
+    kv["auto_forward"] = kv["auto_backward"]
+    kv["auto_backward"] = forwards
+
+    forwards = kv["bike_forward"]
+    kv["bike_forward"] = kv["bike_backward"]
+    kv["bike_backward"] = forwards
   end
 
   --if none of the modes were set we are done looking at this junker
@@ -403,6 +415,10 @@ function filter_tags_generic(kv)
     use = 63 --other
   else 
     use = 0 --general road, no special use
+  end
+
+  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+    use = 7
   end
 
   kv["use"] = use
