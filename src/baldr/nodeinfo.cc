@@ -13,7 +13,7 @@ namespace baldr {
 NodeInfo::NodeInfo()
     : latlng_{},
       attributes_{},
-      intersection_(IntersectionType::kFalse),
+      intersection_(IntersectionType::kRegular),
       type_{},
       admin_{},
       stop_{},
