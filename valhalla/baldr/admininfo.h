@@ -59,19 +59,22 @@ class AdminInfo {
   // Packed items: counts for names and level
   union PackedItem {
     struct Fields {
-      uint32_t name_count          :8;
-      uint32_t timezone            :6;
-      uint32_t dst                 :1;
-      uint32_t spare               :17;
-
+      uint64_t start_dst            :24; //MMDDHHMM
+      uint64_t end_dst              :24; //MMDDHHMM
+      uint64_t name_count           :8;  //name count
+      uint64_t parent_admin         :6;  //parent admin index
+      uint64_t spare                :2;
     } fields;
-    uint32_t value;
+    uint64_t value;
   };
 
  protected:
 
   // Where we keep the statistics about how large the vectors below are
   PackedItem* item_;
+
+  // ISO 3166-2 code.  Index into textlist
+  uint32_t iso_code_index_;
 
   // List of name indexes
   uint32_t* name_offset_list_;

@@ -6,6 +6,8 @@ namespace baldr {
 AdminInfo::AdminInfo(char* ptr, const char* names_list, const size_t names_list_length)
   : names_list_(names_list), names_list_length_(names_list_length) {
 
+  iso_code_index_ = 0;
+
   item_ = reinterpret_cast<PackedItem*>(ptr);
   ptr += sizeof(PackedItem);
 
