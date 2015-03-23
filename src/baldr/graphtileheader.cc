@@ -22,7 +22,7 @@ GraphTileHeader::GraphTileHeader()
       signcount_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
-      admin_offset_(0),
+      admininfo_offset_(0),
       merlist_offset_(0),
       timedres_offset_(0),
       transit_offset_(0) {
@@ -78,9 +78,9 @@ uint32_t GraphTileHeader::textlist_offset() const {
   return textlist_offset_;
 }
 
-// Get the offset in bytes to the administrative information. (TODO)
-uint32_t GraphTileHeader::admin_offset() const {
-  return admin_offset_;
+// Get the offset in bytes to the administrative information.
+uint32_t GraphTileHeader::admininfo_offset() const {
+  return admininfo_offset_;
 }
 
 // Get the offset in bytes to the Multi-Edge Restriction list. (TODO)

@@ -7,6 +7,7 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <boost/shared_array.hpp>
 #include <memory>
@@ -100,6 +101,12 @@ class GraphTile {
   std::unique_ptr<const EdgeInfo> edgeinfo(const size_t offset) const;
 
   /**
+   * Get a pointer to admin info.
+   * @return  Returns admin info.
+   */
+  std::unique_ptr<const AdminInfo> admininfo(const size_t offset) const;
+
+  /**
    * Convenience method to get the directed edges originating at a node.
    * @param  node_index  Node Id within this tile.
    * @param  count       (OUT) Number of outbound edges
@@ -116,6 +123,14 @@ class GraphTile {
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
+
+  /**
+   * Convenience method to get the names for an admin given the offset to the
+   * admin information.
+   * @param  admininfo_offset  Offset to the admin info.
+   * @return  Returns a list (vector) of names.
+   */
+  std::vector<std::string> GetAdminNames(const uint32_t admininfo_offset) const;
 
   /**
    * Convenience method to get the signs for an edge given the directed
@@ -161,6 +176,12 @@ class GraphTile {
 
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
+
+  // List of admin info structures.
+  char* admininfo_;
+
+  // Size of the admininfo data
+  std::size_t admininfo_size_;
 };
 
 }

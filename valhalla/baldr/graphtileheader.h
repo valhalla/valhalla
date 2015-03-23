@@ -80,11 +80,11 @@ class GraphTileHeader {
   uint32_t textlist_offset() const;
 
   /**
-   * Get the offset to the administrative information. (TODO)
+   * Get the offset to the administrative information.
    * @return  Returns the number of bytes to offset to the administrative
    *          information.
    */
-  uint32_t admin_offset() const;
+  uint32_t admininfo_offset() const;
 
   /**
    * Get the offset to the Multi-Edge Restriction list. (TODO)
@@ -133,11 +133,11 @@ class GraphTileHeader {
   // Offset to edge info
   uint32_t edgeinfo_offset_;
 
-  // Offset to name list
+  // Offset to text list
   uint32_t textlist_offset_;
 
   // Offset to the administrative information
-  uint32_t admin_offset_;
+  uint32_t admininfo_offset_;
 
   // Offset to the multi-edge restriction list
   uint32_t merlist_offset_;
