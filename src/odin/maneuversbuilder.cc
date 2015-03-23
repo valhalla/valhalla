@@ -220,10 +220,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // Combine the 'same name straight' next maneuver with the current maneuver
       // if begin edge of next maneuver is not a turn channel
       // and the next maneuver is not an internal intersection maneuver
+      // and the current maneuver is not a ramp
+      // and the next maneuver is not a ramp
+      // and current and next maneuvers have a common base name
       else if ((next_man->begin_relative_direction()
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
-          && !next_man->internal_intersection() && !common_base_names.empty()) {
+          && !next_man->internal_intersection() && !curr_man->ramp()
+          && !next_man->ramp() && !common_base_names.empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
