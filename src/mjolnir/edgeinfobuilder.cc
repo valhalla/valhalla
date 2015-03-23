@@ -11,9 +11,9 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the indexes to names used by this edge.
-void EdgeInfoBuilder::set_street_name_offset_list(
-    const std::vector<uint32_t>& street_name_offset_list) {
-  street_name_offset_list_ = street_name_offset_list;
+void EdgeInfoBuilder::set_text_name_offset_list(
+    const std::vector<uint32_t>& text_name_offset_list) {
+  text_name_offset_list_ = text_name_offset_list;
 }
 
 // Set the shape of the edge.
@@ -25,7 +25,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 std::size_t EdgeInfoBuilder::SizeOf() const {
   std::size_t size = 0;
   size += sizeof(baldr::EdgeInfo::PackedItem);
-  size += (street_name_offset_list_.size() * sizeof(uint32_t));
+  size += (text_name_offset_list_.size() * sizeof(uint32_t));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   return size;
 }
@@ -34,7 +34,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Make packeditem
   // TODO - protect against exceeding sizes!
   baldr::EdgeInfo::PackedItem item;
-  item.fields.name_count = static_cast<uint32_t>(eib.street_name_offset_list_.size());
+  item.fields.name_count = static_cast<uint32_t>(eib.text_name_offset_list_.size());
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
@@ -47,8 +47,8 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
 
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&item), sizeof(baldr::EdgeInfo::PackedItem));
-  os.write(reinterpret_cast<const char*>(&eib.street_name_offset_list_[0]),
-            (eib.street_name_offset_list_.size() * sizeof(uint32_t)));
+  os.write(reinterpret_cast<const char*>(&eib.text_name_offset_list_[0]),
+            (eib.text_name_offset_list_.size() * sizeof(uint32_t)));
   os << eib.encoded_shape_;
 
   return os;

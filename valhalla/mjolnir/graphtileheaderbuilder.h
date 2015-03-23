@@ -65,8 +65,8 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_edgeinfo_offset(const uint32_t offset);
 
   /**
-   * Sets the offset to the name list.
-   * @param offset Offset in bytes to the start of the text/name list.
+   * Sets the offset to the text list.
+   * @param offset Offset in bytes to the start of the text list.
    */
   void set_textlist_offset(const uint32_t offset);
 
@@ -75,7 +75,7 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param offset Offset in bytes to the start of the  administrative
    *               information.
    */
-  void set_admin_offset(const uint32_t offset);
+  void set_admininfo_offset(const uint32_t offset);
 
   /**
    * Sets the offset to the list of Multi-Edge Restrictions.

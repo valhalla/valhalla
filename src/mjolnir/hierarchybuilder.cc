@@ -444,6 +444,9 @@ void FormTilesInNewLevel(
   uint32_t edge_info_offset;
   uint8_t level = new_level.level;
   RoadClass rcc = new_level.importance;
+
+  info.graphreader_.Clear();
+
   for (const auto& newtile : info.tilednodes_) {
     // Skip if no nodes in the tile at the new level
     if (newtile.size() == 0) {
@@ -471,6 +474,9 @@ void FormTilesInNewLevel(
       NodeInfo baseni = *(tile->node(newnode.basenode.id()));
       NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
       node.set_edge_index(edgeindex);
+
+      node.set_admin_index(tilebuilder.AddAdmin(
+          baseni.admin_index(),tile->GetAdminNames(baseni.admin_index())));
 
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
@@ -589,10 +595,10 @@ void AddConnectionsToBaseTile(
       existinghdr.directededgecount() + connections.size());
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
   hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
+  hdrbuilder.set_admininfo_offset(existinghdr.admininfo_offset() + addedsize);
   hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed
-  hdrbuilder.set_admin_offset(existinghdr.admin_offset());
   hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());
 
   // Get the directed edge index of the first sign. If no signs are
@@ -774,6 +780,7 @@ namespace mjolnir {
 // that only connect to 2 edges with compatible attributes and all other
 // edges are on lower hierarchy level.
 void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
+
   GraphReader graphreader(pt);
   const auto& tile_hierarchy = graphreader.GetTileHierarchy();
   if (graphreader.GetTileHierarchy().levels().size() < 2)

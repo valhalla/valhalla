@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
-  GraphEnhancer::Enhance(pt.get_child("mjolnir.hierarchy"));
+  GraphEnhancer::Enhance(pt);
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.

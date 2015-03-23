@@ -154,8 +154,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
-      GraphTileHeaderBuilder hdrbuilder =
-          static_cast<GraphTileHeaderBuilder&>(existinghdr);
+      const GraphTileHeaderBuilder hdrbuilder =
+          static_cast<const GraphTileHeaderBuilder&>(existinghdr);
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfoBuilder> nodes;

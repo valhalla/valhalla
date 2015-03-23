@@ -46,6 +46,7 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
+        valhalla/mjolnir/admininfobuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
@@ -71,6 +72,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/signbuilder.h \
         valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
+	src/mjolnir/admininfobuilder.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -96,7 +98,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/signbuilder.cc \
         src/mjolnir/util.cc
 libvalhalla_mjolnir_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ 
+libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@ -lsqlite3 -lspatialite
 
 #distributed executables
 bin_PROGRAMS = \
@@ -106,7 +108,7 @@ bin_PROGRAMS = \
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder.cc 
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
 pbfadminbuilder_SOURCES = \
         src/mjolnir/pbfadminbuilder.cc
@@ -115,6 +117,7 @@ pbfadminbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_
 
 # tests
 check_PROGRAMS = \
+	test/admininfobuilder \
 	test/directededgebuilder \
 	test/edgeinfobuilder \
 	test/uniquenames \
@@ -124,7 +127,10 @@ check_PROGRAMS = \
         test/graphparser \
 	test/nodeinfobuilder \
         test/refs \
-	test/signinfo 
+	test/signinfo
+test_admininfobuilder_SOURCES = test/admininfobuilder.cc test/test.cc
+test_admininfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_admininfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
 test_directededgebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

@@ -13,6 +13,15 @@
 #include <cinttypes>
 #include <limits>
 
+#include <sqlite3.h>
+#include <spatialite.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
+
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/tilehierarchy.h>
@@ -31,6 +40,11 @@ using namespace valhalla::mjolnir;
 
 
 namespace {
+
+
+typedef boost::geometry::model::d2::point_xy<double> point_type;
+typedef boost::geometry::model::polygon<point_type> polygon_type;
+typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
 // Number of iterations to try to determine if an edge is unreachable
 // by driving. If a search terminates before this without reaching
@@ -408,6 +422,93 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return (relative_density < 16) ? relative_density : 15;
 }
 
+uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
+
+  uint32_t index = 0;
+  point_type p(ll.lng(), ll.lat());
+  for (const auto& poly : polys) {
+      if (boost::geometry::covered_by(p, poly.second))
+        return poly.first;
+  }
+  return index;
+}
+
+std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
+                                                             const AABB2& aabb, GraphTileBuilder& tilebuilder) {
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
+  if (!db_handle)
+    return polys;
+
+  sqlite3_stmt *stmt = 0;
+  uint32_t ret;
+  char *err_msg = NULL;
+  uint32_t result = 0;
+  uint32_t id = 0;
+  bool dor = true;
+  std::string geom;
+
+  std::string sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
+  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK) {
+    result = sqlite3_step(stmt);
+    if (result == SQLITE_DONE) { //state/prov not found, try to find country
+
+      sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
+      sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+      sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+      sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
+
+      sqlite3_finalize(stmt);
+      stmt = 0;
+      ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+      if (ret == SQLITE_OK) {
+        result = 0;
+        result = sqlite3_step(stmt);
+      }
+    }
+    while (result == SQLITE_ROW) {
+
+      std::vector<std::string> names;
+      id = sqlite3_column_int(stmt, 0);
+
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+        names.emplace_back((char*)sqlite3_column_text(stmt, 1));
+
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
+        std::string data =  "en:";
+        data += (char*)sqlite3_column_text(stmt, 2);
+        names.emplace_back(data);
+      }
+      dor = true;
+      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
+        dor = sqlite3_column_int(stmt, 3);
+
+      geom = "";
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 4);
+
+      tilebuilder.AddAdmin(id,names);
+      multi_polygon_type multi_poly;
+      boost::geometry::read_wkt(geom, multi_poly);
+      polys.emplace(id, multi_poly);
+      drive_on_right.emplace(id, dor);
+
+      result = sqlite3_step(stmt);
+    }
+  }
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+  return polys;
+}
+
 /**
  * Gets the stop likelihoood / impact at an intersection when transitioning
  * from one edge to another. This depends on the difference between the
@@ -554,7 +655,51 @@ bool ConsistentNames(const std::vector<std::string>& names1,
 
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the done map as well
-void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
+void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable& done_set, std::mutex& lock, std::promise<enhancer_stats>& result) {
+
+  std::string dir = pt.get<std::string>("admin_dir");
+  std::string db_name = pt.get<std::string>("db_name");
+
+  std::string database = dir + "/" +  db_name;
+
+  sqlite3 *db_handle = nullptr;
+
+  if (boost::filesystem::exists(database)) {
+
+    spatialite_init(0);
+
+    sqlite3_stmt *stmt = 0;
+    uint32_t ret;
+    char *err_msg = NULL;
+    std::string sql;
+
+    ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READONLY, NULL);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("cannot open " + database);
+      sqlite3_close(db_handle);
+      db_handle = NULL;
+      return;
+    }
+
+    // loading SpatiaLite as an extension
+    sqlite3_enable_load_extension(db_handle, 1);
+    sql = "SELECT load_extension('libspatialite.so')";
+    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("load_extension() error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db_handle);
+      return;
+    }
+    LOG_INFO("SpatiaLite loaded as an extension");
+
+  }
+  else
+    LOG_INFO("Admin db " + database + " not found.  Not saving admin information.");
+
+
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
+  std::unordered_map<uint32_t,bool> drive_on_right;
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0};
@@ -587,6 +732,14 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
+    //Creating a dummy admin at index 0.  Used if admins are not used/created.
+    std::vector<std::string> noadmins;
+    noadmins.emplace_back("None");
+    tilebuilder.AddAdmin(0,noadmins);
+
+    if (db_handle)
+      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
+
     // Update nodes and directed edges as needed
     std::vector<NodeInfoBuilder> nodes;
     std::vector<DirectedEdgeBuilder> directededges;
@@ -602,7 +755,10 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), localdensity, stats.max_density, tiles, local_level);
 
-      // Enhance node attributes (TODO - admin, timezone)
+      // Enhance node attributes (TODO - timezone)
+      uint32_t admin_id = GetAdminId(polys, nodeinfo.latlng());
+      nodeinfo.set_admin_index(tilebuilder.GetAdminIndex(admin_id));
+
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
 
@@ -645,6 +801,9 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
         // Update speed.
         UpdateSpeed(directededge, localdensity);
+
+        // Set drive on right flag
+        directededge.set_drive_on_right(drive_on_right[admin_id]);
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {
@@ -717,9 +876,15 @@ void enhance(GraphReader& reader, IdTable& done_set, std::mutex& lock, std::prom
 
     // Write the new file
     lock.lock();
-    tilebuilder.Update(tile_hierarchy, static_cast<const GraphTileHeaderBuilder&>(*tilebuilder.header()), nodes, directededges);
+    GraphTileHeader existinghdr = *(tilebuilder.header());
+    GraphTileHeaderBuilder hdrbuilder =
+          static_cast<GraphTileHeaderBuilder&>(existinghdr);
+    tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
     lock.unlock();
   }
+
+  if (db_handle)
+    sqlite3_close (db_handle);
 
   // Send back the statistics
   result.set_value(stats);
@@ -734,7 +899,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
 
   // Graphreader
-  GraphReader reader(pt);
+  GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread> > threads(
@@ -750,7 +915,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   LOG_INFO("Enhancing local graph...");
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::ref(reader), std::ref(done_set), std::ref(lock), std::ref(results.back())));
+    thread.reset(new std::thread(enhance, std::ref(pt.get_child("mjolnir.admin")), std::ref(reader), std::ref(done_set), std::ref(lock), std::ref(results.back())));
   }
 
   // Wait for them to finish up their work

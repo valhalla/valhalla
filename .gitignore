@@ -58,6 +58,7 @@ test/signinfo
 test/*.log
 test/*.trs
 EdgeInfoBuilder_TestWriteRead.gph
+AdminInfoBuilder_TestWriteRead.gph
 
 # test coverage stuff
 *.gcno

@@ -21,6 +21,7 @@
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/mjolnir/admininfobuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include "signbuilder.h"
 
@@ -58,17 +59,30 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
-    * Update a graph tile with new header, nodes, and directed edges. Used
-    * in GraphOptimizer to update directed edge information.
-    * @param  hierarchy      How the tiles are setup on disk
-    * @param  hdr            Update header
-    * @param  nodes          Update list of nodes
-    * @param  directededges  Updated list of edges.
-    */
-   void Update(const baldr::TileHierarchy& hierarchy,
-               const GraphTileHeaderBuilder& hdr,
-               const std::vector<NodeInfoBuilder>& nodes,
-               const std::vector<DirectedEdgeBuilder>& directededges);
+ * Update a graph tile with new header, nodes, and directed edges. Used
+ * in GraphOptimizer to update directed edge information.
+ * @param hierarchy How the tiles are setup on disk
+ * @param hdr Update header
+ * @param nodes Update list of nodes
+ * @param directededges Updated list of edges.
+ */
+ void Update(const baldr::TileHierarchy& hierarchy,
+ const GraphTileHeaderBuilder& hdr,
+ const std::vector<NodeInfoBuilder>& nodes,
+ const std::vector<DirectedEdgeBuilder>& directededges);
+
+ /**
+* Update a graph tile with new header, nodes, and directed edges. Used
+* in GraphOptimizer to update directed edge information.
+* @param hierarchy How the tiles are setup on disk
+* @param hdr Update header
+* @param nodes Update list of nodes
+* @param directededges Updated list of edges.
+*/
+void Update(const baldr::TileHierarchy& hierarchy,
+GraphTileHeaderBuilder& hdr,
+const std::vector<NodeInfoBuilder>& nodes,
+const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
    * Update a graph tile with new header, nodes, directed edges, signs,
@@ -110,6 +124,15 @@ class GraphTileBuilder : public baldr::GraphTile {
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
                        bool& added);
+  /**
+   * Add admin info to the tile.
+   */
+  uint32_t AddAdmin(const uint32_t id,const std::vector<std::string>& names);
+
+  /**
+   * Get the admin index.
+   */
+  uint32_t GetAdminIndex(const uint32_t& id);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -159,6 +182,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Write all textlist items to specified stream
   void SerializeTextListToOstream(std::ostream& out);
 
+  // Write all edgeinfo items to specified stream
+  void SerializeAdminInfosToOstream(std::ostream& out);
+
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
 
@@ -187,6 +213,15 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
+
+  // Admin info offset
+  size_t admin_info_offset_ = 0;
+  std::unordered_map<uint32_t,size_t> admin_info_offset_map;
+
+  // The admininfo list
+  std::list<AdminInfoBuilder> admininfo_list_;
+
+
 };
 
 }
