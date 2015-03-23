@@ -25,6 +25,26 @@ const uint32_t AdminInfo::name_count() const {
   return item_->fields.name_count;
 }
 
+const char* AdminInfo::StartDST() const {
+  return start_dst_;
+}
+
+void AdminInfo::SetStartDST(const std::string& start_dst) {
+  //YYYYMMDD
+  std::size_t length = start_dst.copy(start_dst_,kDstSize-1);
+  start_dst_[length]='\0';
+}
+
+void AdminInfo::SetEndDST(const std::string& end_dst) {
+  //YYYYMMDD
+  std::size_t length = end_dst.copy(end_dst_,kDstSize-1);
+  end_dst_[length]='\0';
+}
+
+const char* AdminInfo::EndDST() const {
+  return start_dst_;
+}
+
 const uint32_t AdminInfo::GetNameOffset(uint8_t index) const {
   if(index < item_->fields.name_count)
     return name_offset_list_[index];

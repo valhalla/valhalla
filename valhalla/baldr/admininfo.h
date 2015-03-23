@@ -16,6 +16,7 @@ namespace valhalla {
 namespace baldr {
 
 constexpr size_t kMaxNames = 255;
+constexpr size_t kDstSize = 9;
 
 /**
  * Admin information
@@ -41,8 +42,17 @@ class AdminInfo {
   // Returns the name count
   const uint32_t name_count() const;
 
-  // Returns the admin level
-  //const uint32_t admin_level() const;
+  // When does daylight saving time start?
+  const char* StartDST() const;
+
+  // When does daylight saving time end?
+  const char* EndDST() const;
+
+  // Set when daylight saving time starts.
+  void SetStartDST(const std::string& start_dst);
+
+  // Set when daylight saving time ends.
+  void SetEndDST(const std::string& end_dst);
 
   // Returns the name index at the specified index.
   const uint32_t GetNameOffset(uint8_t index) const;
@@ -72,10 +82,10 @@ class AdminInfo {
   PackedItem* item_;
 
   // DST start date and time.
-  char start_dst_[9];
+  char start_dst_[kDstSize];
 
   // DST end date and time.
-  char end_dst_[9];
+  char end_dst_[kDstSize];
 
   // ISO 3166-2 code.  Index into textlist
   uint32_t iso_code_index_;
