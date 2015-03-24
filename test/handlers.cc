@@ -42,6 +42,10 @@ void write_config(const std::string& filename) {
           \"way_function\": \"ways_proc\", \
           \"relation_script\": \"test/lua/relations.lua\", \
           \"relation_function\": \"rels_proc\" \
+        }, \
+        \"admin\": { \
+          \"admin_dir\": \"/data/valhalla\", \
+          \"db_name\": \"admin.sqlite\" \
         } \
       } \
     }";
@@ -59,7 +63,7 @@ void write_tiles(const std::string& config_file) {
   auto osmdata = valhalla::mjolnir::PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"},
       "test_ways_file.bin", "test_way_nodes_file.bin");
   valhalla::mjolnir::GraphBuilder::Build(conf.get_child("mjolnir"), osmdata, "test_ways_file.bin", "test_way_nodes_file.bin");
-  valhalla::mjolnir::GraphEnhancer::Enhance(conf.get_child("mjolnir.hierarchy"));
+  valhalla::mjolnir::GraphEnhancer::Enhance(conf);
   valhalla::mjolnir::HierarchyBuilder::Build(conf.get_child("mjolnir.hierarchy"));
   valhalla::mjolnir::GraphValidator::Validate(conf.get_child("mjolnir.hierarchy"));
 }
