@@ -98,7 +98,6 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
   if (edge1->classification() != edge2->classification()
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
-      || edge1->internal() != edge2->internal()
       || edge1->speed() != edge2->speed()
       || edge1->ferry() != edge2->ferry()
       || edge1->railferry() != edge2->railferry()
@@ -181,6 +180,11 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
     }
   }
 
+  // Must have only 2 edges at this level
+  if (edges.size() != 2) {
+    return false;
+  }
+
   // Get pairs of matching edges. If more than 1 pair exists then
   // we cannot contract this node.
   uint32_t n = edges.size();
@@ -210,12 +214,12 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
-  for (uint32_t i = 0; i < n; i++) {
+/*  for (uint32_t i = 0; i < n; i++) {
     if (i != match.first && i != match.second) {
- //     if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
+      if (tile->directededge(edges[i])->forwardaccess() & kAutoAccess)
         return false;
     }
-  }
+  }*/
 
   // Get the directed edges - these are the outbound edges from the node.
   // Get the opposing directed edges - these are the inbound edges to the node.
@@ -276,8 +280,8 @@ uint32_t ConnectEdges(const GraphId& basenode,
 }
 
 
-bool IsEnteringEdgeOfContractedNode(const GraphId& node,
-                                                      const GraphId& edge, const std::unordered_map<uint64_t, EdgePairs>& contractions_) {
+bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
+              const std::unordered_map<uint64_t, EdgePairs>& contractions_) {
   auto edgepairs = contractions_.find(node.value);
   if (edgepairs == contractions_.cend()) {
     LOG_WARN("No edge pairs found for contracted node");
@@ -425,6 +429,10 @@ if (nodea.level() == 0) {
       shortcuts[i] = shortcut+1;
       newedge.set_shortcut(shortcut+1);
       newedge.set_superseded(0);
+
+      // Make sure shortcut edge is not marked as internal edge
+      newedge.set_internal(false);
+
       directededges.emplace_back(std::move(newedge));
       shortcut++;
     }
