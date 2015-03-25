@@ -513,7 +513,7 @@ Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
 
 float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
   if (use == Use::kTurnChannel) {
-    return spd * 0.9f;
+    return spd * 1.25f;
   } else if (use == Use::kRamp) {
     if (rc == RoadClass::kMotorway) {
       return 95.0f;
