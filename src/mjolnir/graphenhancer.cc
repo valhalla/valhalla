@@ -110,6 +110,11 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
       }
     }
 
+    // Do not change speed on ramps or turn channels
+    if (directededge.link()) {
+      return;
+    }
+
     // TODO
     // Modify speed
     if (directededge.classification() == RoadClass::kMotorway ||
@@ -554,8 +559,14 @@ uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
   // TODO:Handle special cases (ramps, turn channels, etc.)
+  if (edges[to].use() == Use::kTurnChannel) {
+    return 0;
+  } else if (edges[from].use() == Use::kTurnChannel) {
+    return 2;
+  }
 
-  // TODO: Increase stop impact at large intersections (more edges)
+  // Increase stop impact at large intersections (more edges) or
+  // if several are high class
 
   // TODO:Increase stop level based on classification of edges
 
