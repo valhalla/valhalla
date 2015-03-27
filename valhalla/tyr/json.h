@@ -1,3 +1,6 @@
+#ifndef VALHALLA_TYR_JSON_H_
+#define VALHALLA_TYR_JSON_H_
+
 #include <ostream>
 #include <boost/variant.hpp>
 #include <memory>
@@ -81,7 +84,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   std::ostream& ostream_;
 };
 
-std::ostream& operator<<(std::ostream& stream, const Jmap& json){
+inline std::ostream& operator<<(std::ostream& stream, const Jmap& json){
   stream << '{';
   bool seprator = false;
   for(const auto& key_value : json) {
@@ -95,7 +98,7 @@ std::ostream& operator<<(std::ostream& stream, const Jmap& json){
   return stream;
 }
 
-std::ostream& operator<<(std::ostream& stream, const Jarray& json){
+inline std::ostream& operator<<(std::ostream& stream, const Jarray& json){
   stream << '[';
   bool seprator = false;
   for(const auto& element : json) {
@@ -108,14 +111,16 @@ std::ostream& operator<<(std::ostream& stream, const Jarray& json){
   return stream;
 }
 
-MapPtr map(std::initializer_list<Jmap::value_type> list) {
+inline MapPtr map(std::initializer_list<Jmap::value_type> list) {
   return MapPtr(new Jmap(list));
 }
 
-ArrayPtr array(std::initializer_list<Jarray::value_type> list) {
+inline ArrayPtr array(std::initializer_list<Jarray::value_type> list) {
   return ArrayPtr(new Jarray(list));
 }
 
 }
 }
 }
+
+#endif //VALHALLA_TYR_JSON_H_

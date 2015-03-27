@@ -1,5 +1,6 @@
 #include "tyr/handler.h"
 #include "tyr/route_handler.h"
+#include "tyr/custom_route_handler.h"
 #include "tyr/locate_handler.h"
 #include "tyr/nearest_handler.h"
 #include <valhalla/midgard/logging.h>
@@ -83,6 +84,13 @@ BOOST_PYTHON_MODULE(tyr_service) {
       boost::noncopyable>("RouteHandler", boost::python::no_init)
     .def("__init__", boost::python::make_constructor(init<valhalla::tyr::RouteHandler>))
     .def("Action", &valhalla::tyr::RouteHandler::Action)
+  ;
+
+  boost::python::class_<valhalla::tyr::CustomRouteHandler,
+      boost::shared_ptr<valhalla::tyr::CustomRouteHandler>,
+      boost::noncopyable>("CustomRouteHandler", boost::python::no_init)
+    .def("__init__", boost::python::make_constructor(init<valhalla::tyr::CustomRouteHandler>))
+    .def("Action", &valhalla::tyr::CustomRouteHandler::Action)
   ;
 
 }
