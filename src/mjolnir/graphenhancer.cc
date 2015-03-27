@@ -444,10 +444,12 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   char *err_msg = NULL;
   uint32_t result = 0;
   uint32_t id = 0;
+  uint32_t parent_id = 0;
   bool dor = true;
   std::string geom;
 
-  std::string sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
+  std::string sql = "SELECT rowid, parent_admin, name, name_en, iso_code, drive_on_right, st_astext(geom) ";
+  sql += "from admins where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
@@ -458,8 +460,8 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
-      sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+      sql = "SELECT rowid, parent_admin, name, name_en, iso_code, drive_on_right, st_astext(geom) from ";
+      sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
 
@@ -477,21 +479,30 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       std::vector<std::string> names;
       id = sqlite3_column_int(stmt, 0);
 
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        names.emplace_back((char*)sqlite3_column_text(stmt, 1));
+      parent_id = 0;
+      if (sqlite3_column_type(stmt, 1) == SQLITE_INTEGER)
+        parent_id = sqlite3_column_int(stmt, 1);
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
+        names.emplace_back((char*)sqlite3_column_text(stmt, 2));
+
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
         std::string data =  "en:";
-        data += (char*)sqlite3_column_text(stmt, 2);
+        data += (char*)sqlite3_column_text(stmt, 3);
         names.emplace_back(data);
       }
+
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
+        names.emplace_back((char*)sqlite3_column_text(stmt, 4));
+      }
+
       dor = true;
-      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
-        dor = sqlite3_column_int(stmt, 3);
+      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
+        dor = sqlite3_column_int(stmt, 5);
 
       geom = "";
-      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 4);
+      if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 6);
 
       tilebuilder.AddAdmin(id,names);
       multi_polygon_type multi_poly;

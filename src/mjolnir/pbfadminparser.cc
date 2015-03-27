@@ -97,6 +97,8 @@ struct admin_callback : public OSMPBF::Callback {
         admin.set_admin_level(std::stoi(tag.second));
       else if (tag.first == "drive_on_right")
         admin.set_drive_on_right(tag.second == "true" ? true : false);
+      else if (tag.first == "iso_code" && !tag.second.empty())
+        admin.set_iso_code_index(osmdata_.name_offset_map.index(tag.second));
     }
 
     std::list<uint64_t> member_ids;
