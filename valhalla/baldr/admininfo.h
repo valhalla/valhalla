@@ -42,6 +42,18 @@ class AdminInfo {
   // Returns the name count
   const uint32_t name_count() const;
 
+  // Returns the admin id
+  const uint32_t admin_id() const;
+
+  // Returns the parent admin id
+  const uint32_t parent_admin_id() const;
+
+  // Returns the iso code index
+  const uint32_t iso_code_index() const;
+
+  // Set the iso code index.
+  void set_iso_code_index(const uint32_t iso_code_index);
+
   // When does daylight saving time start?
   const char* StartDST() const;
 
@@ -70,8 +82,9 @@ class AdminInfo {
   union PackedItem {
     struct Fields {
       uint32_t name_count           :8;  //name count
-      uint32_t parent_admin         :6;  //parent admin index
-      uint32_t spare                :18;
+      uint32_t admin_id             :6;  //admin id
+      uint32_t parent_admin_id      :6;  //parent admin id
+      uint32_t spare                :12;
     } fields;
     uint32_t value;
   };

@@ -10,7 +10,7 @@ AdminInfo::AdminInfo(char* ptr, const char* names_list, const size_t names_list_
 
   item_ = reinterpret_cast<PackedItem*>(ptr);
   ptr += sizeof(PackedItem);
-
+  AdminInfo
   // Set name_offset_list_ pointer
   name_offset_list_ = reinterpret_cast<uint32_t*>(ptr);
   ptr += (name_count() * sizeof(uint32_t));
@@ -23,6 +23,26 @@ AdminInfo::~AdminInfo() {
 
 const uint32_t AdminInfo::name_count() const {
   return item_->fields.name_count;
+}
+
+// Returns the iso code
+const uint32_t AdminInfo::iso_code_index() const {
+  return iso_code_index_;
+}
+
+// Set the iso code index.
+void AdminInfo::set_iso_code_index(const uint32_t iso_code_index) {
+  iso_code_index_ = iso_code_index;
+}
+
+// Returns the parent admin id
+const uint32_t AdminInfo::parent_admin_id() const {
+  return item_->fields.parent_admin_id;
+}
+
+// Returns the admin id
+const uint32_t AdminInfo::admin_id() const {
+  return item_->fields.admin_id;
 }
 
 const char* AdminInfo::StartDST() const {
