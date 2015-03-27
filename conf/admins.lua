@@ -143,11 +143,24 @@ function rels_proc (kv, nokeys)
        kv["admin_level"] = "2"
        if kv["name"] == "France métropolitaine" then
          kv["name"] = "France"
+         kv["iso_code"] = "FR"
        end
      end
 
      if kv["admin_level"] == "6" then
        kv["admin_level"] = "4"
+     end
+
+     if kv["admin_level"] == "2" then
+       if kv["ISO3166-1:alpha2"] then
+         kv["iso_code"] = kv["ISO3166-1:alpha2"]
+       elseif kv["ISO3166-1"] then
+         kv["iso_code"] = kv["ISO3166-1"]
+       end
+     elseif kv["admin_level"] == "4" then
+       if kv["ISO3166-2"] then
+         kv["iso_code"] = kv["ISO3166-2"]
+       end
      end
 
      kv["drive_on_right"] = drive_on_right[kv["name"]] or drive_on_right[kv["name:en"]] or "true"
