@@ -99,7 +99,7 @@ json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions
   uint64_t seconds = 0, meters = 0;
   for(const auto& maneuver : trip_directions.maneuver()) {
     meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
-    seconds + static_cast<uint64_t>(maneuver.time());
+    seconds += static_cast<uint64_t>(maneuver.time());
   }
   route_summary->emplace("total_time", seconds);
   route_summary->emplace("total_distance", meters);
