@@ -160,7 +160,7 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
     man->emplace("time", static_cast<uint64_t>(maneuver.time()));
     man->emplace("distance", static_cast<uint64_t>(maneuver.length() * 1000.f));
     man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.begin_shape_index()));
-    man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
+    man->emplace("endShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
 
     if (maneuver.portions_toll())
       man->emplace("hasPortionsToll", maneuver.portions_toll());
