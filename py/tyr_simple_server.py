@@ -19,7 +19,7 @@ http://localhost:8002/nearest?loc=40.657912,-73.914450
 
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
-actions = {'/locate': tyr_service.LocateHandler, '/nearest': tyr_service.NearestHandler, '/viaroute': tyr_service.RouteHandler, '/route': tyr_service.CustomRouteHandler}
+actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler, 'route': tyr_service.CustomRouteHandler}
 methods = ['auto', 'pedestrian', 'bicycle']
 
 #enable threaded server
@@ -41,10 +41,10 @@ class TyrHandler(BaseHTTPRequestHandler):
     try:
       split = urlparse.urlsplit(self.path)
     except:
-      raise Exception('Try a url with 2 components: /action?querystring')
+      raise Exception('Try a url with 2 components: action?querystring')
     #path has the costing method and action in it
     try:
-      action = actions[split.path]
+      action = actions[split.path.split('/')[-1]]
     except:
       raise Exception('Try a valid action: ' + str([k for k in actions]))
     #get a dict and unexplode non-list entries
