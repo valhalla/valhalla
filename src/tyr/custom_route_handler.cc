@@ -62,131 +62,101 @@ OSRM output looks like this:
 using namespace valhalla::tyr;
 using namespace std;
 
-json::ArrayPtr route_name(const valhalla::odin::TripDirections& trip_directions){
-  auto route_name = json::array({});
-  if(trip_directions.maneuver_size() > 0) {
-    if(trip_directions.maneuver(0).street_name_size() > 0) {
-      route_name->push_back(trip_directions.maneuver(0).street_name(0));
-    }
-    if(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name_size() > 0) {
-      route_name->push_back(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
-    }
-  }
-  return route_name;
-}
+json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
 
-json::ArrayPtr via_indices(const valhalla::odin::TripDirections& trip_directions){
-  auto via_indices = json::array({});
-  if(trip_directions.maneuver_size() > 0) {
-    via_indices->push_back(static_cast<uint64_t>(0));
-    via_indices->push_back(static_cast<uint64_t>(trip_directions.maneuver_size() - 1));
-  }
-  return via_indices;
-}
+  // TODO: multiple legs.
 
-json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions){
   auto route_summary = json::map({});
-  if(trip_directions.maneuver_size() > 0) {
-    if(trip_directions.maneuver(0).street_name_size() > 0)
-      route_summary->emplace("start_point", trip_directions.maneuver(0).street_name(0));
-    else
-      route_summary->emplace("start_point", string(""));
-    if(trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name_size() > 0)
-      route_summary->emplace("end_point", trip_directions.maneuver(trip_directions.maneuver_size() - 1).street_name(0));
-    else
-      route_summary->emplace("end_point", string(""));
-  }
   uint64_t seconds = 0, meters = 0;
   for(const auto& maneuver : trip_directions.maneuver()) {
     meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
-    seconds + static_cast<uint64_t>(maneuver.time());
+    seconds += static_cast<uint64_t>(maneuver.time());
   }
-  route_summary->emplace("total_time", seconds);
-  route_summary->emplace("total_distance", meters);
+  route_summary->emplace("time", seconds);
+  route_summary->emplace("distance", meters);
   return route_summary;
 }
 
-json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
-  auto via_points = json::array({});
+json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
+  auto locations = json::array({});
   for(const auto& location : trip_path.location()) {
-    via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
+
+    auto loc = json::map({});
+
+    //loc->emplace("type", location.type());
+    loc->emplace("latitude", (long double)(location.ll().lat()));
+    loc->emplace("longitude",(long double)(location.ll().lng()));
+    loc->emplace("name",location.name());
+    loc->emplace("phone",location.phone());
+    loc->emplace("street",location.street());
+    loc->emplace("city",location.city());
+    loc->emplace("state",location.state());
+    loc->emplace("postalCode",location.postal_code());
+    loc->emplace("country",location.country());
+    // loc->emplace("url",location.url());
+    //loc->emplace("sideOfStreet",location.side_of_street());
+    locations->emplace_back(loc);
   }
-  return via_points;
+
+  return locations;
 }
 
-const std::unordered_map<int, std::string> maneuver_type = {
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             "0" },//NoTurn = 0,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),         "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),          "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampStraight),     "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayStraight),     "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kMerge),            "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryEnter),       "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryExit),        "1" },//GoStraight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightRight),      "2" },//TurnSlightRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRight),            "3" },//TurnRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampRight),        "3" },//TurnRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitRight),        "3" },//TurnRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayRight),        "3" },//TurnRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpRight),       "4" },//TurnSharpRight,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft),        "5" },//UTurn,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnRight),       "5" },//UTurn,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft),        "6" },//TurnSharpLeft,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kLeft),             "7" },//TurnLeft,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampLeft),         "7" },//TurnLeft,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitLeft),         "7" },//TurnLeft,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayLeft),         "7" },//TurnLeft,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft),       "8" },//TurnSlightLeft,
-    //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               "9" },//ReachViaLocation,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutEnter),  "11" },//EnterRoundAbout,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutExit),   "12" },//LeaveRoundAbout,
-    //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               "13" },//StayOnRoundAbout,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),            "14" },//StartAtEndOfStreet,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),       "14" },//StartAtEndOfStreet,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),        "14" },//StartAtEndOfStreet,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestination),      "15" },//ReachedYourDestination,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight), "15" },//ReachedYourDestination,
-    { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft),  "15" },//ReachedYourDestination,
-    //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                "16" },//EnterAgainstAllowedDirection,
-    //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                "17" },//LeaveAgainstAllowedDirection
-};
 
-const std::unordered_map<int, std::string> cardinal_direction_string = {
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kNorth),     "N" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kNorthEast), "NE" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kEast),      "E" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kSouthEast), "SE" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kSouth),     "S" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kSouthWest), "SW" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kWest),      "W" },
-  { static_cast<int>(valhalla::odin::TripDirections_Maneuver_CardinalDirection_kNorthWest), "NW" }
-};
+json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
+                    const valhalla::odin::TripDirections& trip_directions){
 
-json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_directions){
-  auto route_instructions = json::array({});
+  // TODO: multiple legs.
+  auto legs = json::array({});
+  auto leg = json::map({});
+  auto summary = json::map({});
+  uint64_t seconds = 0, meters = 0;
+  auto maneuvers = json::array({});
+
   for(const auto& maneuver : trip_directions.maneuver()) {
-    //if we dont know the type of maneuver then skip it
-    auto maneuver_text = maneuver_type.find(static_cast<int>(maneuver.type()));
-    if(maneuver_text == maneuver_type.end())
-      continue;
 
-    //length
-    std::ostringstream length;
-    length << static_cast<uint64_t>(maneuver.length()*1000.f) << "m";
+    meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
+    seconds += static_cast<uint64_t>(maneuver.time());
+    leg->emplace("shape", trip_path.shape());
+    auto man = json::map({});
 
-    //json
-    route_instructions->emplace_back(json::array({
-      maneuver_text->second, //maneuver type
-      (maneuver.street_name_size() ? maneuver.street_name(0) : string("")), //street name
-      static_cast<uint64_t>(maneuver.length() * 1000.f), //length in meters
-      static_cast<uint64_t>(maneuver.begin_shape_index()), //index in the shape
-      static_cast<uint64_t>(maneuver.time()), //time in seconds
-      length.str(), //length as a string with a unit suffix
-      cardinal_direction_string.find(static_cast<int>(maneuver.begin_cardinal_direction()))->second, // one of: N S E W NW NE SW SE
-      static_cast<uint64_t>(maneuver.begin_heading())
-    }));
+    man->emplace("type", static_cast<uint64_t>(maneuver.type()));
+    man->emplace("writtenInstruction", maneuver.text_instruction());
+    //“verbalTransitionAlertInstruction” : “<verbalTransitionAlertInstruction>”,
+    //“verbalPreTransitionInstruction” : “<verbalPreTransitionInstruction>”,
+    //“verbalPostTransitionInstruction” : “<verbalPostTransitionInstruction>”,
+    auto street_names = json::array({});
+
+    for (int i = 0; i < maneuver.street_name_size(); i++)
+      street_names->emplace_back(maneuver.street_name(i));
+
+    if (street_names->size())
+      man->emplace("streetNames", street_names);
+    man->emplace("time", static_cast<uint64_t>(maneuver.time()));
+    man->emplace("distance", static_cast<uint64_t>(maneuver.length() * 1000.f));
+    man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.begin_shape_index()));
+    man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
+
+    if (maneuver.portions_toll())
+      man->emplace("hasPortionsToll", maneuver.portions_toll());
+    if (maneuver.portions_unpaved())
+      man->emplace("hasPortionsUnpaved", maneuver.portions_unpaved());
+
+    //  man->emplace("hasGate", maneuver.);
+    //  man->emplace("hasFerry", maneuver.);
+    //“portionsTollNote” : “<portionsTollNote>”,
+    //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
+    //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
+    //“checkFerryInfoNote” : “<checkFerryInfoNote>”
+    maneuvers->emplace_back(man);
+
   }
-  return route_instructions;
+  leg->emplace("maneuvers", maneuvers);
+  summary->emplace("time", seconds);
+  summary->emplace("distance", meters);
+  leg->emplace("summary",summary);
+
+  legs->emplace_back(leg);
+  return legs;
 }
 
 void serialize(const valhalla::odin::TripPath& trip_path,
@@ -194,25 +164,18 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 
   //TODO: worry about multipoint routes
 
-
   //build up the json object
   auto json = json::map
-  ({
-    {"hint_data", json::map
       ({
-        {"locations", json::array({ string(""), string("") })}, //TODO: are these internal ids?
-        {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
+      {"trip", json::map
+      ({
+          {"locations", locations(trip_path)},
+          {"summary", summary(trip_directions)},
+          {"legs", legs(trip_path,trip_directions)},
+          {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+          {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
       })
-    },
-    {"route_name", route_name(trip_directions)}, //TODO: list of all of the streets or just the via points?
-    {"via_indices", via_indices(trip_directions)}, //maneuver index
-    {"found_alternative", static_cast<bool>(false)}, //no alt route support
-    {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
-    {"via_points", via_points(trip_path)}, //array of lat,lng pairs
-    {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
-    {"route_geometry", trip_path.shape()}, //polyline encoded shape
-    {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-    {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
+    }
   });
 
   //serialize it
