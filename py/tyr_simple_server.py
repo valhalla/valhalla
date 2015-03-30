@@ -20,7 +20,7 @@ http://localhost:8002/car/nearest?loc=40.657912,-73.914450
 costing_methods = {'car': 'auto', 'bicycle': 'bicycle', 'foot': 'pedestrian'}
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
-actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler}
+actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler, 'route': tyr_service.CustomRouteHandler}
 
 #enable threaded server
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):

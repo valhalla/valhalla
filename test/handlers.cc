@@ -112,6 +112,16 @@ void TestRouteHanlder() {
   LOG_DEBUG(handler.Action());
 }
 
+void TestCustomRouteHandler() {
+  //make the input
+  boost::python::dict dict =
+    make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto");
+
+  //run the route
+  valhalla::tyr::RouteHandler handler("test/test_config", dict);
+  LOG_DEBUG(handler.Action());
+}
+
 }
 
 int main() {
@@ -119,6 +129,8 @@ int main() {
 
   Py_Initialize();
   suite.test(TEST_CASE(TestRouteHanlder));
+
+  suite.test(TEST_CASE(TestCustomRouteHandler));
 
   //suite.test(TEST_CASE(TestNearestHanlder));
 
