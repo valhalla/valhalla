@@ -865,6 +865,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
           stats.internalcount++;
         }
 
+        // Set country crossing flag
+        if (false)  // TODO
+          directededge.set_ctry_crossing(true);
+
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
       }

@@ -244,9 +244,15 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
 
   /**
    * Set the speed type (see graphconstants.h)
-   * @param  speed_type  Returns the speed type.
+   * @param  speed_type  Speed type.
    */
   void set_speed_type(const SpeedType speed_type);
+
+  /**
+   * Set the country crossing flag.
+   * @param  crossing  True if this edge crosses into a new country.
+   */
+  void set_ctry_crossing(const bool crossing);
 
   /**
    * Set all forward access modes to true (used for transition edges)
