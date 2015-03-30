@@ -120,7 +120,7 @@ if __name__ == '__main__':
   #setup the server
   server = (conf.get('listen_address', '0.0.0.0'), conf.get('port', 8002))
   TyrHandler.protocol_version = 'HTTP/1.0'
-  httpd = HTTPServer(server, TyrHandler)
+  httpd = ThreadedHTTPServer(server, TyrHandler)
 
   try:
     httpd.serve_forever()
