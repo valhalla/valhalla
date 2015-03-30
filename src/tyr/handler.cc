@@ -24,8 +24,7 @@ Handler::Handler(const std::string& config, const boost::python::dict& dict_requ
   }
   //jsonp callback is optional
   if(dict_request.has_key("jsonp") && boost::python::len(dict_request["jsonp"])) {
-    boost::python::list jsonp_list = boost::python::extract<boost::python::list>(dict_request["jsonp"]);
-    boost::python::str jsonp_str = boost::python::str(jsonp_list[0]);
+    boost::python::str jsonp_str = boost::python::extract<boost::python::str>(dict_request["jsonp"]);
     jsonp_ = boost::python::extract<std::string>(jsonp_str);
   }
 }

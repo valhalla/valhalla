@@ -74,10 +74,11 @@ boost::python::dict make_request(const std::string& loc1, const std::string& loc
   /*{
       'loc': ['40.657912,-73.914450', '40.040501,-76.306271'],
       'costing_method': 'auto',
-      'output': ['json'],
-      'z': ['17'],
+      'output': 'json',
+      'z': '17',
       'config': 'conf/pbf2graph.json',
-      'instructions': ['true']
+      'instructions': 'true',
+      'jsonp': 'some_callback'
     }*/
 
   namespace bp = boost::python;
@@ -87,12 +88,9 @@ boost::python::dict make_request(const std::string& loc1, const std::string& loc
   loc.append(loc2);
   request["loc"] = loc;
   request["costing_method"] = request_type.c_str();
-  bp::list output;  output.append("json");
-  request["output"] = output;
-  bp::list z; z.append("17");
-  request["z"] = z;
-  bp::list instructions; instructions.append("true");
-  request["instructions"] = instructions;
+  request["output"] = "json";
+  request["z"] = "17";
+  request["instructions"] = "true";
   return request;
 }
 
