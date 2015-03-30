@@ -27,36 +27,62 @@
 namespace {
 
 /*
-OSRM output looks like this:
+valhalla output looks like this:
 {
-    "hint_data": {
-        "locations": [
-            "_____38_SADaFQQAKwEAABEAAAAAAAAAdgAAAFfLwga4tW0C4P6W-wAARAA",
-            "fzhIAP____8wFAQA1AAAAC8BAAAAAAAAAAAAAP____9Uu20CGAiX-wAAAAA"
+    "trip":
+{
+    "status": 0,
+    "locations": [ ],
+    "summary":
+{
+    "distance": 4973,
+    "time": 325
+},
+"legs":
+[
+  {
+      "summary":
+  {
+      "distance": 4973,
+      "time": 325
+  },
+  "maneuvers":
+  [
+    {
+        "beginShapeIndex": 0,
+        "distance": 633,
+        "writtenInstruction": "Start out going west on West Market Street.",
+        "streetNames":
+        [
+            "West Market Street"
         ],
-        "checksum": 2875622111
+        "type": 1,
+        "time": 41
     },
-    "route_name": [ "West 26th Street", "Madison Avenue" ],
-    "via_indices": [ 0, 9 ],
-    "found_alternative": false,
-    "route_summary": {
-        "end_point": "West 29th Street",
-        "start_point": "West 26th Street",
-        "total_time": 145,
-        "total_distance": 878
+    {
+        "beginShapeIndex": 7,
+        "distance": 4340,
+        "writtenInstruction": "Continue onto Jonestown Road.",
+        "streetNames":
+        [
+            "Jonestown Road"
+        ],
+        "type": 8,
+        "time": 284
     },
-    "via_points": [ [ 40.744377, -73.990433 ], [40.745811, -73.988075 ] ],
-    "route_instructions": [
-        [ "10", "West 26th Street", 216, 0, 52, "215m", "SE", 118 ],
-        [ "1", "East 26th Street", 153, 2, 29, "153m", "SE", 120 ],
-        [ "7", "Madison Avenue", 237, 3, 25, "236m", "NE", 29 ],
-        [ "7", "East 29th Street", 155, 6, 29, "154m", "NW", 299 ],
-        [ "1", "West 29th Street", 118, 7, 21, "117m", "NW", 299 ],
-        [ "15", "", 0, 8, 0, "0m", "N", 0 ]
-    ],
-    "route_geometry": "ozyulA~p_clCfc@ywApTar@li@ybBqe@c[ue@e[ue@i[ci@dcB}^rkA",
-    "status_message": "Found route between points",
-    "status": 0
+    {
+        "beginShapeIndex": 40,
+        "distance": 0,
+        "writtenInstruction": "You have arrived at your destination.",
+        "type": 4,
+        "time": 0
+    }
+],
+"shape": "gysalAlg|zpC~Clt@tDtx@hHfaBdKl{BrKbnApGro@tJrz@jBbQj@zVt@lTjFnnCrBz}BmFnoB]pHwCvm@eJxtATvXTnfAk@|^z@rGxGre@nTpnBhBbQvXduCrUr`Edd@naEja@~gAhk@nzBxf@byAfm@tuCvDtOvNzi@|jCvkKngAl`HlI|}@`N`{Adx@pjE??xB|J"
+}
+],
+"status_message": "Found route between points"
+}
 }
 */
 using namespace valhalla::tyr;
