@@ -3,16 +3,6 @@
 namespace valhalla {
 namespace thor {
 
-// Default constructor
-AdjacencyList::AdjacencyList()
-    : bucketrange_(0.0f),
-      bucketcount_(0.0f),
-      bucketsize_(0.0f),
-      mincost_(0.0f),
-      maxcost_(0.0f),
-      currentcost_(0.0f) {
-}
-
 // Constructor with bucket sizes and range.
 AdjacencyList::AdjacencyList(const float mincost,
                              const float range,
@@ -23,6 +13,7 @@ AdjacencyList::AdjacencyList(const float mincost,
   mincost_ = currentcost_;
   bucketrange_ = range;
   bucketsize_ = static_cast<float>(bucketsize);
+  inv_ = 1.0f / bucketsize_;
 
   // Set the maximum cost (above this goes into the overflow bucket)
   maxcost_ = mincost + bucketrange_;
@@ -60,8 +51,10 @@ void AdjacencyList::Clear() {
 void AdjacencyList::Add(const uint32_t label, const float sortcost) {
   if (sortcost < currentcost_) {
     currentbucket_->emplace_front(label);
+  } else if (sortcost < maxcost_) {
+    buckets_[static_cast<uint32_t>((sortcost-mincost_)*inv_)].push_back(label);
   } else {
-    Bucket(sortcost).emplace_back(label);
+    overflowbucket_.push_back(label);
   }
 }
 
@@ -91,7 +84,7 @@ void AdjacencyList::DecreaseCost(const uint32_t label,
 
   // Remove the label index from the old bucket and add it to the new bucket
   previousbucket.remove(label);
-  newbucket.emplace_back(label);
+  newbucket.push_back(label);
 }
 
 // Remove the label with the lowest cost
@@ -124,7 +117,7 @@ uint32_t AdjacencyList::Remove(const std::vector<EdgeLabel>& edgelabels) {
   // smallest bucket that is not empty and set it as the currentbucket
   EmptyOverflow(edgelabels);
   for (currentbucket_ = buckets_.begin(); currentbucket_ != buckets_.end();
-      currentbucket_++) {
+       currentbucket_++) {
     // If current bucket is not empty return the first label off the list
     if (!currentbucket_->empty()) {
       uint32_t label = currentbucket_->front();
@@ -139,7 +132,7 @@ uint32_t AdjacencyList::Remove(const std::vector<EdgeLabel>& edgelabels) {
 // Returns the bucket given the cost
 std::list<uint32_t>& AdjacencyList::Bucket(const float cost) {
   return (cost < maxcost_) ?
-      buckets_[(uint32_t)((cost - mincost_) / bucketsize_)] :
+      buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
       overflowbucket_;
 }
 
@@ -147,8 +140,6 @@ std::list<uint32_t>& AdjacencyList::Bucket(const float cost) {
 // low level buckets.
 void AdjacencyList::EmptyOverflow(const std::vector<EdgeLabel>& edgelabels) {
   bool found = false;
-  float cost;
-  uint32_t label;
   std::vector<uint32_t> tmp;
   while (!found && !overflowbucket_.empty()) {
     // Adjust cost range
@@ -158,21 +149,21 @@ void AdjacencyList::EmptyOverflow(const std::vector<EdgeLabel>& edgelabels) {
 
     tmp.clear();
     while (!overflowbucket_.empty()) {
-      label = overflowbucket_.front();
+      uint32_t label = overflowbucket_.front();
       overflowbucket_.pop_front();
-      cost = edgelabels[label].sortcost();
+      float cost = edgelabels[label].sortcost();
       if (cost < maxcost_) {
-        buckets_[((cost - mincost_) / bucketsize_)].emplace_back(label);
+        buckets_[static_cast<uint32_t>((cost-mincost_)*inv_)].push_back(label);
         found = true;
       } else {
-        tmp.emplace_back(label);
+        tmp.push_back(label);
       }
     }
 
     // Clear overflow and add any labels that lie outside the new range
     overflowbucket_.clear();
     for (auto label : tmp) {
-      overflowbucket_.emplace_back(label);
+      overflowbucket_.push_back(label);
     }
   }
 }

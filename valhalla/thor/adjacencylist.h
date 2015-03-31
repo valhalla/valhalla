@@ -30,7 +30,7 @@ class AdjacencyList {
    * stored in an "overflow" bucket.
    * @param mincost    Minimum sort cost (based on A* heuristic). Used
    *                   to create the initial range for bucket sorting.
-   * @param range      Cost (sort cost) range for double buckets.
+   * @param range      Cost (sort cost) range for low-level buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    *                   Must be an integer value.
    */
@@ -82,6 +82,7 @@ class AdjacencyList {
   float bucketrange_;  // Total range of costs in lower level buckets
   float bucketcount_;  // Number of buckets
   float bucketsize_;   // Bucket size (range of costs in same bucket)
+  float inv_;          // 1/bucketsize (so we can avoid division)
   float mincost_;      // Minimum cost within the low level buckets
   float maxcost_;      // Above this goes into overflow bucket.
   float currentcost_;  // Current cost.
@@ -94,9 +95,6 @@ class AdjacencyList {
 
   // Overflow bucket
   std::list<uint32_t> overflowbucket_;
-
-  // Make the default constructor private to force use of one with args
-  AdjacencyList();
 
   // Returns the bucket given the cost
   std::list<uint32_t>& Bucket(const float cost);
