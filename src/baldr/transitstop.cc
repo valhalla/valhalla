@@ -1,19 +1,7 @@
 #include "baldr/transitstop.h"
-#include <boost/functional/hash.hpp>
-#include <cmath>
 
 namespace valhalla {
 namespace baldr {
-
-// Default constructor
-TransitStop::TransitStop()
-    : stopid_(0),
-      tl_stopid_{},
-      name_index_(0),
-      desc_index_(0),
-      parent_stopid_(0),
-      fare_zoneid_(0) {
-}
 
 // Get the internal stop Id.
 uint32_t TransitStop::stopid() const {

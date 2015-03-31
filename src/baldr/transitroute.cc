@@ -1,19 +1,7 @@
 #include "baldr/transitroute.h"
-#include <boost/functional/hash.hpp>
-#include <cmath>
 
 namespace valhalla {
 namespace baldr {
-
-// Default constructor
-TransitRoute::TransitRoute()
-    : routeid_(0),
-      agencyid_(0),
-      tl_routeid_{},
-      short_name_index_(0),
-      long_name_index_(0),
-      desc_index_(0) {
-}
 
 // Get the internal route Id.
 uint32_t TransitRoute::routeid() const {

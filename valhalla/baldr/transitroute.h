@@ -1,12 +1,7 @@
 #ifndef VALHALLA_BALDR_TRANSITROUTE_H_
 #define VALHALLA_BALDR_TRANSITROUTE_H_
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
-
-using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
@@ -21,11 +16,6 @@ constexpr uint32_t kOneStopIdSize = 256;
  */
 class TransitRoute {
  public:
-  /**
-   * Transit stop.
-   */
-  TransitRoute();
-
   /**
    * Get the internal route Id.
    * @return  Returns the internal stop Id.
