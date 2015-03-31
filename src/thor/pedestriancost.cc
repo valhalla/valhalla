@@ -122,7 +122,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   // not-thru edges except near the destination.
   return ((edge->forwardaccess() & kPedestrianAccess) &&
            pred.opp_local_idx() != edge->localedgeidx()  &&
-          !(edge->not_thru() && pred.distance() > not_thru_distance_));
+          !(edge->not_thru() && pred.distance() > not_thru_distance_) &&
+           edge->surface() != Surface::kImpassable);
 }
 
 // Check if access is allowed at the specified node.

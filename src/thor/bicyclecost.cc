@@ -169,11 +169,12 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const EdgeLabel& pred) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Disallow Uturns. Do not allow entering
-  // not-thru edges except near the destination.
+  // not-thru edges except near the destination. Skip impassable edges.
   if (!(edge->forwardaccess() & kBicycleAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-      (edge->not_thru() && pred.distance() > not_thru_distance_)) {
+      (edge->not_thru() && pred.distance() > not_thru_distance_) ||
+       edge->surface() == Surface::kImpassable) {
     return false;
   }
 
@@ -185,7 +186,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   else if (bicycletype_ == BicycleType::kCross)
     return edge->surface() <= Surface::kDirt;
   else if (bicycletype_ == BicycleType::kMountain)
-    return edge->surface() < Surface::kPath;   // Allow all but unpassable
+    return edge->surface() <= Surface::kPath;   // Allow all but impassable
 
   return true;
 }

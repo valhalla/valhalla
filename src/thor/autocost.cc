@@ -161,15 +161,17 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
-// Check if access is allowed on the specified edge.
+// Check if access is allowed on the specified edge. Not worh checking
+// not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
   // Check access, Uturn, simple turn restriction, and not_thru edges
   // TODO - perhaps allow Uturns at dead-end nodes?
+  // TODO - Do not allow impassible surface types
   return (edge->forwardaccess() & kAutoAccess) &&
          (pred.opp_local_idx() != edge->localedgeidx()) && // Uturn
-         !(pred.restrictions() & (1 << edge->localedgeidx())) &&
-         !(edge->not_thru() && (pred.distance() > not_thru_distance_));
+         !(pred.restrictions() & (1 << edge->localedgeidx()) &&
+          (edge->surface() != Surface::kImpassable));
 }
 
 // Check if access is allowed at the specified node.
@@ -195,23 +197,21 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
                                const uint32_t to_idx) const {
   // Special cases: gate, toll booth, false intersections
-  if (node->type() == NodeType::kGate)
-    return { gate_cost_, gate_cost_ };
-  else if (node->type() == NodeType::kTollBooth) {
-    return { tollbooth_cost_, tollbooth_cost_ };
-  } else if (node->intersection() == IntersectionType::kFalse) {
+  if (node->intersection() == IntersectionType::kFalse) {
     return { 0.0f, 0.0f };
-  }
-
-  // Transition cost = stopimpact * turncost + maneuverpenalty
-  uint32_t idx = pred.opp_local_idx();
-  float seconds = edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
-                       edge->edge_to_right(idx) && edge->edge_to_left(idx),
-                       edge->drive_on_right());
-  if (node->name_consistency(idx, to_idx)) {
-      return { seconds, seconds };
+  } else if (node->type() == NodeType::kGate) {
+    return { gate_cost_, gate_cost_ };
+  } else if (node->type() == NodeType::kTollBooth) {
+    return { tollbooth_cost_, tollbooth_cost_ };
   } else {
-    return { seconds + maneuver_penalty_, seconds };
+    // Transition cost = stopimpact * turncost + maneuverpenalty
+    uint32_t idx = pred.opp_local_idx();
+    float seconds = edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
+                         edge->edge_to_right(idx) && edge->edge_to_left(idx),
+                         edge->drive_on_right());
+    return (node->name_consistency(idx, to_idx)) ?
+              Cost(seconds, seconds) :
+              Cost(seconds + maneuver_penalty_, seconds);
   }
 }
 
@@ -239,7 +239,7 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
     else if (turn_type == Turn::Type::kSharpRight)
       return 1.0f;
     else if (turn_type <= Turn::Type::kLeft)
-      return 2.0f;
+      return 2.5f;
     else // Slight left
       return 0.75f;
   } else {
