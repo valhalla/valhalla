@@ -108,6 +108,7 @@ class TransitDeparture {
     uint32_t start   : 12;     // Start date for the scheduled departure
     uint32_t end     : 12;     // End date for the scheduled departure
     uint32_t days    : 7;      // Days of the week
+    uint32_t spare   : 1;
   };
   ScheduleDates dates_;
 
