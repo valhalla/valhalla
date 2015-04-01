@@ -30,9 +30,11 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -659,9 +661,9 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 
 bool ConsistentNames(const std::vector<std::string>& names1,
                      const std::vector<std::string>& names2) {
-  StreetNames street_names1(names1);
-  StreetNames street_names2(names2);
-  return (!(street_names1.FindCommonBaseNames(street_names2).empty()));
+  std::unique_ptr<StreetNames> street_names1 = make_unique<StreetNamesUs>(names1);
+  std::unique_ptr<StreetNames> street_names2 = make_unique<StreetNamesUs>(names2);
+  return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
 // We make sure to lock on reading and writing because we dont want to race
