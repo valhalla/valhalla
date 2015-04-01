@@ -18,8 +18,14 @@ void TestGetTurnDegree() {
   // Sharp Right
   if (GetTurnDegree(180, 340) != 160)
     throw std::runtime_error("Invalid turn degree");
+  // Sharp Right
+  if (GetTurnDegree(180, 352) != 172)
+    throw std::runtime_error("Invalid turn degree");
   // Sharp Left
   if (GetTurnDegree(180, 40) != 220)
+    throw std::runtime_error("Invalid turn degree");
+  // Sharp Left
+  if (GetTurnDegree(180, 10) != 190)
     throw std::runtime_error("Invalid turn degree");
   // Left
   if (GetTurnDegree(0, 180) != 180)
