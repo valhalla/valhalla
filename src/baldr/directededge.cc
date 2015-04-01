@@ -185,6 +185,11 @@ SpeedType DirectedEdge::speed_type() const {
   return static_cast<SpeedType>(attributes_.speed_type);
 }
 
+// Get the country crossing flag.
+bool DirectedEdge::ctry_crossing() const {
+  return attributes_.ctry_crossing;
+}
+
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
   return forwardaccess_.v;
@@ -373,6 +378,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.use+1)-1);
   de.attributes_.speed_type = ~de.attributes_.speed_type;
   boost::hash_combine(seed,ffs(de.attributes_.speed_type+1)-1);
+  de.attributes_.ctry_crossing = ~de.attributes_.ctry_crossing;
+  boost::hash_combine(seed,ffs(de.attributes_.ctry_crossing+1)-1);
   de.attributes_.spare = ~de.attributes_.spare;
   boost::hash_combine(seed,ffs(de.attributes_.spare+1)-1);
 

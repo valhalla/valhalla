@@ -15,7 +15,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kMaxEncodedShapeSize = 16383;
+constexpr size_t kMaxEncodedShapeSize = 65535;
 
 /**
  * Edge information not required in shortest path algorithm and is

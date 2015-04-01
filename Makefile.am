@@ -56,7 +56,10 @@ nobase_include_HEADERS = \
 	valhalla/baldr/streetname.h \
 	valhalla/baldr/streetnames.h \
 	valhalla/baldr/streetname_us.h \
-	valhalla/baldr/streetnames_us.h
+	valhalla/baldr/streetnames_us.h \
+	valhalla/baldr/transitdeparture.h \
+	valhalla/baldr/transitroute.h \
+	valhalla/baldr/transitstop.h
 libvalhalla_baldr_la_SOURCES = \
 	src/baldr/admininfo.cc \
 	src/baldr/directededge.cc \
@@ -75,7 +78,10 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/streetname.cc \
 	src/baldr/streetnames.cc \
 	src/baldr/streetname_us.cc \
-	src/baldr/streetnames_us.cc
+	src/baldr/streetnames_us.cc \
+	src/baldr/transitdeparture.cc \
+	src/baldr/transitroute.cc \
+	src/baldr/transitstop.cc 
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
