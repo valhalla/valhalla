@@ -1,0 +1,18 @@
+These scripts and files will be throw away after we use gtfs from transitland.
+
+These scripts import feeds from NYC via ./makeNYC.sh.  Prerequisites for the
+scripts are:  1.  Install postgresql and create a gtfs db.  2.  Spatial 
+enable the db via: CREATE EXTENSION postgis;  3.  Update dbuser var in
+build_schedule.sh and import.sh to your db username.  4.  Install csvfilter
+via: sudo pip install csvfilter.
+
+Run ./makeNYC.sh
+
+This will create the gtfs tables from the feeds.  It will also create a 
+schedule table for stop pairs.
+
+NOTE:  LIRR puts all of the calendar entries in the calendar_dates.txt
+file.  Therefore, you will see an error for their feed:
+ERROR:  could not open file "/data/valhalla/mjolnir/gtfs/schedule.txt" for reading: No such file or directory
+
+Please disregard this error.
