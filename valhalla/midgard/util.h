@@ -8,6 +8,7 @@
 #include <utility>
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 namespace valhalla {
 namespace midgard {
@@ -130,6 +131,14 @@ struct memory_status {
   friend std::ostream& operator<<(std::ostream&, const memory_status&);
 };
 std::ostream& operator<<(std::ostream& stream, const memory_status& s);
+
+/**
+ * Implement the missing make_unique for C++11.
+ */
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+  return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
+}
 
 }
 }
