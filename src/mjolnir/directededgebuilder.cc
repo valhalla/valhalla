@@ -282,6 +282,11 @@ void DirectedEdgeBuilder::set_speed_type(const SpeedType speed_type) {
   attributes_.speed_type = static_cast<uint8_t>(speed_type);
 }
 
+// Set the country crossing flag.
+void DirectedEdgeBuilder::set_ctry_crossing(const bool crossing) {
+  attributes_.ctry_crossing = crossing;
+}
+
 // Set all forward access modes to true (used for transition edges)
 void DirectedEdgeBuilder::set_all_forward_access() {
   forwardaccess_.v = kAllAccess;
