@@ -2,27 +2,29 @@
 #define VALHALLA_BALDR_STREETNAMES_H_
 
 #include <list>
+#include <vector>
+#include <memory>
 
 #include <valhalla/baldr/streetname.h>
 
 namespace valhalla {
 namespace baldr {
 
-class StreetNames : public std::list<StreetName> {
+class StreetNames : public std::list<std::unique_ptr<StreetName>> {
  public:
   StreetNames();
 
-  StreetNames(const std::vector<std::string>& names);
-
   virtual ~StreetNames();
 
-  virtual std::string ToString() const;
+  std::string ToString() const;
 
-  virtual std::string ToParameterString() const;
+  std::string ToParameterString() const;
 
-  virtual StreetNames FindCommonStreetNames(const StreetNames& other_street_names) const;
+  virtual std::unique_ptr<StreetNames> FindCommonStreetNames(
+      const StreetNames& other_street_names) const = 0;
 
-  virtual StreetNames FindCommonBaseNames(const StreetNames& other_street_names) const;
+  virtual std::unique_ptr<StreetNames> FindCommonBaseNames(
+      const StreetNames& other_street_names) const = 0;
 
  protected:
 
