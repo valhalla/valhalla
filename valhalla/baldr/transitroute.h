@@ -6,9 +6,6 @@
 namespace valhalla {
 namespace baldr {
 
-// TODO - move this so it can be shared by other transit information
-constexpr uint32_t kOneStopIdSize = 256;
-
 /**
  * Information held for each transit route. This is information not required
  * during path generation. Such information is held within the transit
@@ -30,7 +27,7 @@ class TransitRoute {
 
   /**
    * Get the TransitLand one stop Id for this route.
-   * @return  Returns the TransitLand one route Id.
+   * @return  Returns the TransitLand one-stop Id.
    */
   const char* tl_routeid() const;
 

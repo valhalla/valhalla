@@ -18,7 +18,7 @@ uint32_t TransitRoute::agencyid() const {
 
 /**
 * Get the TransitLand one stop Id for this route.
-* @return  Returns the TransitLand one route Id.
+* @return  Returns the TransitLand one-stop Id.
 */
 const char* TransitRoute::tl_routeid() const {
   return tl_routeid_;
