@@ -184,6 +184,25 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6
 };
 
+// ------------------------------- Transit information --------------------- //
+
+constexpr uint32_t kOneStopIdSize = 256;
+
+// Transit transfer types
+enum class TransferType : uint8_t {
+  kRecommended = 0,   // Recommended transfer point between 2 routes
+  kTimed       = 1,   // Timed transfer between 2 routes. Departing vehicle
+                      // is expected to wait, allowing sufficient time for
+                      // passengers to transfer.
+  kMinTime     = 2,   // Transfer is expected to take the time specified.
+  kNotPossible = 3    // Transfers not possible between routes
+};
+
+enum class CalendarExceptionType : uint8_t {
+  kAdded       = 1,   // Service added for the specified date
+  kRemoved     = 2    // Service removed for the specified date
+};
+
 }
 }
 

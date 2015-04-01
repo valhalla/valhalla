@@ -6,9 +6,6 @@
 namespace valhalla {
 namespace baldr {
 
-// TODO - move this so it can be shared by other transit information
-constexpr uint32_t kOneStopIdSize = 256;
-
 /**
  * Information held for each transit stop. This is information not required
  * during path generation. Such information is held within NodeInfo (lat,lng,

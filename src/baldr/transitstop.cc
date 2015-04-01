@@ -8,7 +8,7 @@ uint32_t TransitStop::stopid() const {
   return stopid_;
 }
 
-// Get the TransitLand one stop Id.
+// Get the TransitLand one-stop Id.
 const char* TransitStop::tl_stopid() const {
   return tl_stopid_;
 }
