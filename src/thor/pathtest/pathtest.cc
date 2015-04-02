@@ -50,7 +50,11 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
     }
   }
   if (pathedges.size() == 0) {
-    throw std::runtime_error("No path could be found for input");
+    cost->DisableHighwayTransitions();
+    pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+    if (pathedges.size() == 0) {
+      throw std::runtime_error("No path could be found for input");
+    }
   }
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
@@ -190,16 +194,26 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  // Figure out the route type
+  // Construct costing
+  boost::property_tree::ptree costing = pt.get_child("costing");
   CostFactory<DynamicCost> factory;
+  for (const auto cm : costing) {
+    std::cout << "Costing method: " << cm.first << std::endl;
+  }
+
+  // Any good way to ties these into the config?
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto-shorter", CreateAutoShorterCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
 
+  // Figure out the route type
   for (auto & c : routetype)
     c = std::tolower(c);
-  std::shared_ptr<DynamicCost> cost = factory.Create(routetype, pt.get_child("thor"));
+
+  // Get the costing method - pass the JSON configuration
+  std::shared_ptr<DynamicCost> cost = factory.Create(routetype,
+                       pt.get_child("costing." + routetype));
 
   LOG_INFO("routetype: " + routetype);
 

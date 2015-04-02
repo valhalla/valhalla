@@ -166,6 +166,12 @@ class DynamicCost {
   void RelaxHierarchyLimits(const float factor);
 
   /**
+   * Do not transition up to highway level - remain on arterial. Used as last
+   * resort.
+   */
+  void DisableHighwayTransitions();
+
+  /**
    * Reset hierarchy limits.
    */
   void ResetHierarchyLimits();

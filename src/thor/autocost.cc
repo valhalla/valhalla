@@ -11,8 +11,16 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace thor {
 
+// Default options/values
+namespace {
+constexpr float kDefaultManeuverPenalty  = 5.0f;   // Seconds
+constexpr float kDefaultGateCost         = 30.0f;  // Seconds
+constexpr float kDefaultTollBoothCost    = 15.0f;  // Seconds
+constexpr float kDefaultTollBoothPenalty = 0.0f;  // Seconds
+
 // Maximum speed expected - this is used for the A* heuristic
 constexpr uint32_t kMaxSpeedKph = 140;
+}
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -58,7 +66,7 @@ class AutoCost : public DynamicCost {
 
   /**
    * Checks if access is allowed for the provided node. Node access can
-   * be restricted if bollards or gates are present. (TODO - others?)
+   * be restricted if bollards or gates are present.
    * @param  edge  Pointer to node information.
    * @return  Returns true if access is allowed, false if not.
    */
@@ -114,9 +122,10 @@ class AutoCost : public DynamicCost {
  protected:
   float speedfactor_[256];
   float density_factor_[16]; // Density factor
-  float maneuver_penalty_;  // Penalty (seconds) when inconsistent names
-  float gate_cost_;         // Penalty (seconds) to go through gate
-  float tollbooth_cost_;    // Penalty (seconds) to go through toll booth
+  float maneuver_penalty_;   // Penalty (seconds) when inconsistent names
+  float gate_cost_;          // Cost (seconds) to go through gate
+  float tollbooth_cost_;     // Cost (seconds) to go through toll booth
+  float tollbooth_penalty_;  // Penalty (seconds) to go through a toll booth
 
   /**
    * Compute a turn cost based on the turn type, crossing flag,
@@ -131,11 +140,16 @@ class AutoCost : public DynamicCost {
 
 
 // Constructor
-AutoCost::AutoCost(const boost::property_tree::ptree& config)
-    : DynamicCost(config),
-      maneuver_penalty_(5.0f),
-      gate_cost_(30.0f),
-      tollbooth_cost_(15.0f) {
+AutoCost::AutoCost(const boost::property_tree::ptree& pt)
+    : DynamicCost(pt) {
+
+  maneuver_penalty_ = pt.get<float>("maneuver_penalty",
+                                    kDefaultManeuverPenalty);
+  gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
+  tollbooth_cost_ = pt.get<float>("toll_booth_cost", kDefaultTollBoothCost);
+  tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
+                                     kDefaultTollBoothPenalty);
+
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
   for (uint32_t s = 1; s < 255; s++) {
@@ -167,11 +181,10 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
   // Check access, Uturn, simple turn restriction, and not_thru edges
   // TODO - perhaps allow Uturns at dead-end nodes?
-  // TODO - Do not allow impassible surface types
   return (edge->forwardaccess() & kAutoAccess) &&
          (pred.opp_local_idx() != edge->localedgeidx()) && // Uturn
-         !(pred.restrictions() & (1 << edge->localedgeidx()) &&
-          (edge->surface() != Surface::kImpassable));
+        !(pred.restrictions() & (1 << edge->localedgeidx()) &&
+         (edge->surface() != Surface::kImpassable));
 }
 
 // Check if access is allowed at the specified node.
@@ -197,12 +210,13 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const EdgeLabel& pred,
                                const uint32_t to_idx) const {
   // Special cases: gate, toll booth, false intersections
+  // TODO - do we want toll booth penalties?
   if (node->intersection() == IntersectionType::kFalse) {
     return { 0.0f, 0.0f };
   } else if (node->type() == NodeType::kGate) {
     return { gate_cost_, gate_cost_ };
   } else if (node->type() == NodeType::kTollBooth) {
-    return { tollbooth_cost_, tollbooth_cost_ };
+    return { tollbooth_cost_ + tollbooth_penalty_, tollbooth_cost_ };
   } else {
     // Transition cost = stopimpact * turncost + maneuverpenalty
     uint32_t idx = pred.opp_local_idx();
@@ -292,8 +306,8 @@ class AutoShorterCost : public AutoCost {
 
 
 // Constructor
-AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& config)
-    : AutoCost(config) {
+AutoShorterCost::AutoShorterCost(const boost::property_tree::ptree& pt)
+    : AutoCost(pt) {
   // Create speed cost table that reduces the impact of speed
   adjspeedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
   for (uint32_t s = 1; s < 255; s++) {
