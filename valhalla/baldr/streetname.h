@@ -2,7 +2,7 @@
 #define VALHALLA_BALDR_STREETNAME_H_
 
 #include <string>
-#include <vector>
+#include <memory>
 
 namespace valhalla {
 namespace baldr {
@@ -10,6 +10,8 @@ namespace baldr {
 class StreetName {
  public:
   StreetName(const std::string& value);
+
+  virtual ~StreetName();
 
   const std::string& value() const;
 
@@ -19,24 +21,19 @@ class StreetName {
 
   bool EndsWith(const std::string& suffix) const;
 
-  std::string GetPreDir() const;
+  virtual std::string GetPreDir() const = 0;
 
-  std::string GetPostDir() const;
+  virtual std::string GetPostDir() const = 0;
 
-  std::string GetPostCardinalDir() const;
+  virtual std::string GetPostCardinalDir() const = 0;
 
-  std::string GetBaseName() const;
+  virtual std::string GetBaseName() const = 0;
 
-  bool HasSameBaseName(const StreetName& rhs) const;
-
-  // TODO - add more functionality later and comments
+  virtual bool HasSameBaseName(const StreetName& rhs) const = 0;
 
  protected:
   std::string value_;
 
-  static const std::vector<std::string> pre_dirs_;
-  static const std::vector<std::string> post_dirs_;
-  static const std::vector<std::string> post_cardinal_dirs_;
 };
 
 }
