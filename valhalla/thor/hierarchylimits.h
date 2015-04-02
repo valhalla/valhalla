@@ -117,6 +117,13 @@ struct HierarchyLimits {
     upward_until_dist *= factor;
     downward_within_dist *= factor;
   }
+
+  void DisableHighwayTransitions() {
+    up_transition_count = 0;
+    max_up_transitions = 0;
+    expansion_within_dist = kMaxDistance;
+    upward_until_dist = kMaxDistance;
+  }
 };
 
 }
