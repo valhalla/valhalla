@@ -14,16 +14,11 @@ namespace baldr {
 class TransitDeparture {
  public:
   /**
-   * Get the stop Id (internal) of the departure stop.
+   * Get the edge Id - for lookup of all departures along this edge. Each edge
+   * represents a unique departure/arrival stop pair and route Id.
    * @return  Returns the departure stop Id.
    */
-  uint32_t departurestop() const;
-
-  /**
-   * Get the stop Id (internal) of the arrival stop.
-   * @return  Returns the arrival stop Id.
-   */
-  uint32_t arrivalstop() const;
+  uint32_t edgeid() const;
 
   /**
    * Get the internal trip Id for this departure.
@@ -36,6 +31,12 @@ class TransitDeparture {
    * @return  Returns the internal route Id.
    */
   uint32_t routeid() const;
+
+  /**
+   * Get the block Id oof this trip.
+   * @return  Returns the block Id.
+   */
+  uint32_t blockid() const;
 
   /**
    * Get the headsign offset into the names/text list.
@@ -82,17 +83,18 @@ class TransitDeparture {
   uint32_t serviceid() const;
 
  protected:
-  // Stop Id (internal) for the departure.
-  uint32_t departurestop_;
-
-  // Stop Id (internal) of the arrival stop.
-  uint32_t arrivalstop_;
+  // Edge Id - lookup departures by unique edge Id (which indicates a unique
+  // departure / arrival stop pair.
+  uint32_t edgeid_;
 
   // TripId (internal).
   uint32_t tripid_;
 
   // Route Id (internal).
   uint32_t routeid_;
+
+  // Block Id
+  uint32_t blockid_;
 
   // Headsign offset into the names/text list.
   uint32_t headsign_;
@@ -112,8 +114,7 @@ class TransitDeparture {
   };
   ScheduleDates dates_;
 
-  // Service Id (internal) for calendar exceptions. TODO - can this be a union
-  // with dates (as one or the other are applied).
+  // Service Id (internal) for calendar exceptions (additions and removals)
   uint32_t serviceid_;
 
   // TODO - fare info, frequencies

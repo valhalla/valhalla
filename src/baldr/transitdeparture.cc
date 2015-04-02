@@ -3,14 +3,10 @@
 namespace valhalla {
 namespace baldr {
 
-// Get the stop Id (internal) of the departure stop.
-uint32_t TransitDeparture::departurestop() const {
-  return departurestop_;
-}
-
-// Get the stop Id (internal) of the arrival stop.
-uint32_t TransitDeparture::arrivalstop() const {
-  return arrivalstop_;
+// Get the edge Id - for lookup of all departures along this edge. Each edge
+// represents a unique departure/arrival stop pair and route Id.
+uint32_t TransitDeparture::edgeid() const {
+  return edgeid_;
 }
 
 // Get the internal trip Id for this departure.
@@ -21,6 +17,11 @@ uint32_t TransitDeparture::tripid() const {
 // Get the route Id (internal) for this departure.
 uint32_t TransitDeparture::routeid() const {
   return routeid_;
+}
+
+// Get the block Id of this trip.
+uint32_t TransitDeparture::blockid() const {
+  return blockid_;
 }
 
 // Get the headsign offset into the names/text list.
