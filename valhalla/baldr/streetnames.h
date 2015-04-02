@@ -20,6 +20,8 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
 
   std::string ToParameterString() const;
 
+  virtual std::unique_ptr<StreetNames> clone() const = 0;
+
   virtual std::unique_ptr<StreetNames> FindCommonStreetNames(
       const StreetNames& other_street_names) const = 0;
 

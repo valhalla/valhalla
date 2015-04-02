@@ -21,6 +21,17 @@ StreetNamesUs::StreetNamesUs(const std::vector<std::string>& names) {
 StreetNamesUs::~StreetNamesUs() {
 }
 
+std::unique_ptr<StreetNames> StreetNamesUs::clone() const {
+  std::unique_ptr<StreetNames> clone_street_names = midgard::make_unique<
+      StreetNamesUs>();
+  for (const auto& street_name : *this) {
+    clone_street_names->emplace_back(
+        midgard::make_unique<StreetNameUs>(street_name->value()));
+  }
+
+  return clone_street_names;
+}
+
 std::unique_ptr<StreetNames> StreetNamesUs::FindCommonStreetNames(
     const StreetNames& other_street_names) const {
   std::unique_ptr<StreetNames> common_street_names = midgard::make_unique<

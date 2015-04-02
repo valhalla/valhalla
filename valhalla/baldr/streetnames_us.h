@@ -18,6 +18,8 @@ class StreetNamesUs : public StreetNames {
 
   ~StreetNamesUs();
 
+  std::unique_ptr<StreetNames> clone() const override;
+
   std::unique_ptr<StreetNames> FindCommonStreetNames(
       const StreetNames& other_street_names) const override;
 
