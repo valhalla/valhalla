@@ -59,6 +59,12 @@ void DynamicCost::RelaxHierarchyLimits(const float factor) {
   }
 }
 
+// Do not transition up to highway level - remain on arterial. Used as last
+// resort.
+void DynamicCost::DisableHighwayTransitions() {
+  hierarchy_limits_[1].DisableHighwayTransitions();
+}
+
 // Set the distance from the destination where "not_thru" edges are allowed.
 void DynamicCost::set_not_thru_distance(const float d) {
   not_thru_distance_ = d;
