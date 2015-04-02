@@ -40,6 +40,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsHighway() const;
 
+  std::vector<std::string> GetNameList() const;
+
   std::string ToString() const;
 
   std::string ToParameterString() const;

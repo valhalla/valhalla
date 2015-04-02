@@ -78,6 +78,14 @@ bool EnhancedTripPath_Edge::IsHighway() const {
   return false;
 }
 
+std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
+  std::vector<std::string> name_list;
+  for (const auto& name : this->name()) {
+    name_list.push_back(name);
+  }
+  return name_list;
+}
+
 std::string EnhancedTripPath_Edge::ToString() const {
   std::string str;
   str.reserve(256);
