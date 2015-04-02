@@ -1,10 +1,14 @@
 #include <iostream>
 
 #include "odin/maneuver.h"
+
+#include <valhalla/midgard/util.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_us.h>
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace odin {
@@ -50,6 +54,9 @@ Maneuver::Maneuver()
       internal_intersection_(false),
       internal_right_turn_count_(0),
       internal_left_turn_count_(0) {
+  street_names_ = make_unique<StreetNamesUs>();
+  begin_street_names_ = make_unique<StreetNamesUs>();
+  cross_street_names_ = make_unique<StreetNamesUs>();
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {
@@ -61,63 +68,53 @@ void Maneuver::set_type(const TripDirections_Maneuver_Type& type) {
 }
 
 const StreetNames& Maneuver::street_names() const {
-  return street_names_;
+  return *street_names_;
 }
 
-StreetNames* Maneuver::mutable_street_names() {
-  return &street_names_;
+void Maneuver::set_street_names(const std::vector<std::string>& names) {
+  street_names_ = make_unique<StreetNamesUs>(names);
 }
 
-void Maneuver::set_street_names(const StreetNames& street_names) {
-  street_names_ = street_names;
-}
-
-void Maneuver::set_street_names(StreetNames&& street_names) {
+void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
   street_names_ = std::move(street_names);
 }
 
 bool Maneuver::HasStreetNames() const {
-  return (!street_names_.empty());
+  return (!street_names_->empty());
 }
 
 const StreetNames& Maneuver::begin_street_names() const {
-  return begin_street_names_;
+  return *begin_street_names_;
 }
 
-StreetNames* Maneuver::mutable_begin_street_names() {
-  return &begin_street_names_;
+void Maneuver::set_begin_street_names(const std::vector<std::string>& names) {
+  begin_street_names_ = make_unique<StreetNamesUs>(names);
 }
 
-void Maneuver::set_begin_street_names(const StreetNames& begin_street_names) {
-  begin_street_names_ = begin_street_names;
-}
-
-void Maneuver::set_begin_street_names(StreetNames&& begin_street_names) {
+void Maneuver::set_begin_street_names(
+    std::unique_ptr<StreetNames>&& begin_street_names) {
   begin_street_names_ = std::move(begin_street_names);
 }
 
 bool Maneuver::HasBeginStreetNames() const {
-  return (!begin_street_names_.empty());
+  return (!begin_street_names_->empty());
 }
 
 const StreetNames& Maneuver::cross_street_names() const {
-  return cross_street_names_;
+  return *cross_street_names_;
 }
 
-StreetNames* Maneuver::mutable_cross_street_names() {
-  return &cross_street_names_;
+void Maneuver::set_cross_street_names(const std::vector<std::string>& names) {
+  cross_street_names_ = make_unique<StreetNamesUs>(names);
 }
 
-void Maneuver::set_cross_street_names(const StreetNames& cross_street_names) {
-  cross_street_names_ = cross_street_names;
-}
-
-void Maneuver::set_cross_street_names(StreetNames&& cross_street_names) {
+void Maneuver::set_cross_street_names(
+    std::unique_ptr<StreetNames>&& cross_street_names) {
   cross_street_names_ = std::move(cross_street_names);
 }
 
 bool Maneuver::HasCrossStreetNames() const {
-  return (!cross_street_names_.empty());
+  return (!cross_street_names_->empty());
 }
 
 const std::string& Maneuver::instruction() const {
@@ -296,7 +293,7 @@ void Maneuver::set_internal_intersection(bool internal_intersection) {
 
 bool Maneuver::HasUsableInternalIntersectionName() const {
   uint32_t link_count = (end_node_index_ - begin_node_index_);
-  if (internal_intersection_ && !street_names_.empty()
+  if (internal_intersection_ && !street_names_->empty()
       && ((link_count == 1) || (link_count == 3))) {
     return true;
   }
@@ -356,13 +353,13 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(type_);
 
   man_str += " | street_names_=";
-  man_str += street_names_.ToString();
+  man_str += street_names_->ToString();
 
   man_str += " | begin_street_names=";
-  man_str += begin_street_names_.ToString();
+  man_str += begin_street_names_->ToString();
 
   man_str += " | cross_street_names=";
-  man_str += cross_street_names_.ToString();
+  man_str += cross_street_names_->ToString();
 
   man_str += " | instruction=";
   man_str += instruction_;
@@ -449,13 +446,13 @@ std::string Maneuver::ToParameterString() const {
       ->name();
 
   man_str += delim;
-  man_str += street_names_.ToParameterString();
+  man_str += street_names_->ToParameterString();
 
   man_str += delim;
-  man_str += begin_street_names_.ToParameterString();
+  man_str += begin_street_names_->ToParameterString();
 
   man_str += delim;
-  man_str += cross_street_names_.ToParameterString();
+  man_str += cross_street_names_->ToParameterString();
 
   man_str += delim;
   man_str += "\"";

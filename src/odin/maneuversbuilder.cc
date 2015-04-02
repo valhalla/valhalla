@@ -3,10 +3,10 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/turn.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_us.h>
 #include <proto/tripdirections.pb.h>
 #include <odin/maneuversbuilder.h>
 #include <odin/signs.h>
-#include <odin/streetnames.h>
 
 #include <iostream>
 #include <algorithm>
@@ -35,7 +35,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   int man_id = 1;
   LOG_TRACE("############################################");
   LOG_TRACE("MANEUVERS");
-  for (Maneuver maneuver : maneuvers) {
+  for (const Maneuver& maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(man_id++) + ":  ");
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
@@ -50,7 +50,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   int combined_man_id = 1;
   LOG_TRACE("############################################");
   LOG_TRACE("COMBINED MANEUVERS");
-  for (Maneuver maneuver : maneuvers) {
+  for (const Maneuver& maneuver : maneuvers) {
     LOG_TRACE("---------------------------------------------");
     LOG_TRACE(std::to_string(combined_man_id++) + ":  ");
     LOG_TRACE(std::string("  maneuver_PARAMETERS=") + maneuver.ToParameterString());
@@ -190,7 +190,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
 
     while (next_man != maneuvers.end()) {
       // Process common base names
-      baldr::StreetNames common_base_names = curr_man->street_names()
+      std::unique_ptr<StreetNames> common_base_names = curr_man->street_names()
           .FindCommonBaseNames(next_man->street_names());
 
       // Get the begin edge of the next maneuver
@@ -227,7 +227,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
           && !next_man->internal_intersection() && !curr_man->ramp()
-          && !next_man->ramp() && !common_base_names.empty()) {
+          && !next_man->ramp() && !common_base_names->empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
@@ -259,8 +259,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
 
   // Set the cross street names
   if (curr_man->HasUsableInternalIntersectionName()) {
-    next_man->set_cross_street_names(
-        std::move(*(curr_man->mutable_street_names())));
+    next_man->set_cross_street_names(curr_man->street_names().clone());
   }
 
   // Set the right and left internal turn counts
@@ -471,11 +470,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // or usable internal intersection name exists
   if ((maneuver.street_names().empty() && !maneuver.internal_intersection())
       || UsableInternalIntersectionName(maneuver, node_index)) {
-    auto* names = maneuver.mutable_street_names();
-    names->clear();
-    for (const auto& name : prev_edge->name()) {
-      names->emplace_back(name);
-    }
+    maneuver.set_street_names(prev_edge->GetNameList());
   }
 
   // Update the internal turn count
@@ -855,17 +850,19 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   // TODO: add logic for 'T' and pencil point u-turns
 
-  odin::StreetNames prev_edge_names(prev_edge->name());
+  std::unique_ptr<StreetNames> prev_edge_names = make_unique<StreetNamesUs>(
+      prev_edge->GetNameList());
 
   // Process same names
-  if (maneuver.street_names() == prev_edge_names) {
-    return true;
-  }
+  // TODO - do we need this anymore?
+//  if (maneuver.street_names() == prev_edge_names) {
+//    return true;
+//  }
 
   // Process common base names
-  baldr::StreetNames common_base_names = prev_edge_names.FindCommonBaseNames(
-      maneuver.street_names());
-  if (!common_base_names.empty()) {
+  std::unique_ptr<StreetNames> common_base_names = prev_edge_names
+      ->FindCommonBaseNames(maneuver.street_names());
+  if (!common_base_names->empty()) {
     maneuver.set_street_names(std::move(common_base_names));
     return true;
   }

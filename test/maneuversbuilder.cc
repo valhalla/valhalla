@@ -442,19 +442,13 @@ void PopulateManeuver(
   maneuver.set_type(type);
 
   // street_names
-  StreetNames* street_name_list = maneuver.mutable_street_names();
-  for (auto& street_name : street_names)
-    street_name_list->emplace_back(street_name);
+  maneuver.set_street_names(street_names);
 
   // begin_street_names
-  StreetNames* begin_street_name_list = maneuver.mutable_begin_street_names();
-  for (auto& begin_street_name : begin_street_names)
-    begin_street_name_list->emplace_back(begin_street_name);
+  maneuver.set_begin_street_names(begin_street_names);
 
   // cross_street_names
-  StreetNames* cross_street_name_list = maneuver.mutable_cross_street_names();
-  for (auto& cross_street_name : cross_street_names)
-    cross_street_name_list->emplace_back(cross_street_name);
+  maneuver.set_cross_street_names(cross_street_names);
 
   maneuver.set_instruction(instruction);
   maneuver.set_distance(distance);

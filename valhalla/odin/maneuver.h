@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/baldr/streetnames.h>
@@ -31,21 +32,18 @@ class Maneuver {
   void set_type(const TripDirections_Maneuver_Type& type);
 
   const StreetNames& street_names() const;
-  StreetNames* mutable_street_names();
-  void set_street_names(const StreetNames& street_names);
-  void set_street_names(StreetNames&& street_names);
+  void set_street_names(const std::vector<std::string>& names);
+  void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
 
   const StreetNames& begin_street_names() const;
-  StreetNames* mutable_begin_street_names();
-  void set_begin_street_names(const StreetNames& begin_street_names);
-  void set_begin_street_names(StreetNames&& begin_street_names);
+  void set_begin_street_names(const std::vector<std::string>& names);
+  void set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names);
   bool HasBeginStreetNames() const;
 
   const StreetNames& cross_street_names() const;
-  StreetNames* mutable_cross_street_names();
-  void set_cross_street_names(const StreetNames& cross_street_names);
-  void set_cross_street_names(StreetNames&& cross_street_names);
+  void set_cross_street_names(const std::vector<std::string>& names);
+  void set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names);
   bool HasCrossStreetNames() const;
 
   const std::string& instruction() const;
@@ -134,9 +132,9 @@ class Maneuver {
 
  protected:
   TripDirections_Maneuver_Type type_;
-  StreetNames street_names_;
-  StreetNames begin_street_names_;
-  StreetNames cross_street_names_;
+  std::unique_ptr<StreetNames> street_names_;
+  std::unique_ptr<StreetNames> begin_street_names_;
+  std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
   float distance_;
   uint32_t time_;
