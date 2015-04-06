@@ -159,7 +159,18 @@ function rels_proc (kv, nokeys)
        end
      elseif kv["admin_level"] == "4" then
        if kv["ISO3166-2"] then
-         kv["iso_code"] = kv["ISO3166-2"]
+         i, j = string.find(kv["ISO3166-2"], '-', 1, true)
+         if i == 3 then
+           if string.len(kv["ISO3166-2"]) == 6 or string.len(kv["ISO3166-2"]) == 5 then
+             kv["iso_code"] = string.sub(kv["ISO3166-2"], 4)
+           end
+         elseif string.find(kv["ISO3166-2"], '-', 1, true) == nil then
+           if string.len(kv["ISO3166-2"]) == 2 or  string.len(kv["ISO3166-2"]) == 3 then 
+             kv["iso_code"] = kv["ISO3166-2"]
+           elseif string.len(kv["ISO3166-2"]) == 4 or  string.len(kv["ISO3166-2"]) == 5 then
+             kv["iso_code"] = string.sub(kv["ISO3166-2"], 3)
+           end
+         end
        end
      end
 
