@@ -495,6 +495,13 @@ SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
+// Gets a const admin builder at specified index.
+const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
+  if (idx < admins_builder_.size())
+    return admins_builder_.at(idx);
+  throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
+}
+
 }
 }
 
