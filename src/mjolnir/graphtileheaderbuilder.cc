@@ -27,6 +27,21 @@ void GraphTileHeaderBuilder::set_version(const std::string& version) {
   version_[kMaxVersionSize-1] = 0;
 }
 
+// Set the relative quality of name assignment for this tile.
+void GraphTileHeaderBuilder::set_name_quality(const uint32_t name_quality) {
+  quality_.name = name_quality;
+}
+
+// Set the relative quality of speed assignment for this tile.
+void GraphTileHeaderBuilder::set_speed_quality(const uint32_t speed_quality) {
+  quality_.speed = speed_quality;
+}
+
+// Set the relative quality of exit signs for this tile.
+void GraphTileHeaderBuilder::set_exit_quality(const uint32_t exit_quality) {
+  quality_.exit = exit_quality;
+}
+
 // Set the graph Id of this tile.
 void GraphTileHeaderBuilder::set_graphid(const baldr::GraphId& graphid) {
   graphid_ = graphid;
@@ -45,6 +60,36 @@ void GraphTileHeaderBuilder::set_directededgecount(const uint32_t count) {
 // Sets the sign count.
 void GraphTileHeaderBuilder::set_signcount(const uint32_t count) {
   signcount_ = count;
+}
+
+// Sets the number of transit departures in this tile.
+void GraphTileHeaderBuilder::set_departurecount(const uint32_t departures) {
+  transit1_.departurecount = departures;
+}
+
+// Sets the number of transit trips in this tile.
+void GraphTileHeaderBuilder::set_tripcount(const uint32_t trips) {
+  transit1_.tripcount = trips;
+}
+
+// Sets the number of transit stops in this tile.
+void GraphTileHeaderBuilder::set_stopcount(const uint32_t stops) {
+  transit1_.stopcount = stops;
+}
+
+// Sets the number of transit routes in this tile.
+void GraphTileHeaderBuilder::set_routecount(const uint32_t routes) {
+  transit2_.routecount = routes;
+}
+
+// Sets the number of transit transfers in this tile.
+void GraphTileHeaderBuilder::set_transfercount(const uint32_t transfers) {
+  transit2_.transfercount = transfers;
+}
+
+// Gets the number of transit calendar exceptions in this tile.
+void GraphTileHeaderBuilder::set_calendarcount(const uint32_t calendars) {
+  transit2_.calendarcount = calendars;
 }
 
 // Sets the admin count.
@@ -70,11 +115,6 @@ void GraphTileHeaderBuilder::set_merlist_offset(const uint32_t offset) {
 // Sets the offset to the list of timed restrictions.
 void GraphTileHeaderBuilder::set_timedres_offset(const uint32_t offset) {
   timedres_offset_ = offset;
-}
-
- // Sets the offset to the list of transit departures / schedule.
-void GraphTileHeaderBuilder::set_transit_offset(const uint32_t offset) {
-  transit_offset_ = offset;
 }
 
 }

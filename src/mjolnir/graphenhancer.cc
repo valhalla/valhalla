@@ -422,13 +422,31 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   if (density > maxdensity)
      maxdensity = density;
 
-  // Convert density into a relative value from 0-16. Seems a reasonable
-  // median density is around 4 km / km2
-  float mid = 4.0f;
-  float max = 20.0f;
-  uint32_t relative_density = (density < mid) ?
-      static_cast<uint32_t>((density / mid) * 8.0f) :
-      static_cast<uint32_t>(((density - mid) / (max - mid)) * 5.0f) + 8;
+  // Convert density into a relative value from 0-16.
+  // Median density is ~4 km / km2
+  // Less than 1% have density > 20 km / km2
+  float mid = 6.0;
+  float m2  = 10.0f;
+  float max = 18.0f;  // about 4.5M above this
+  uint32_t relative_density;
+  if (density < mid) {
+    relative_density = static_cast<uint32_t>((density / mid) * 10.0f);
+  } else if (density < m2) {
+    relative_density = static_cast<uint32_t>(((density - mid) / (m2 - mid)) * 3.0f) + 10;
+  } else {
+    relative_density = static_cast<uint32_t>(((density - m2) / (max - mid)) * 3.0f) + 13;
+  }
+/*  float mid = 4.5;
+  float m2  = 10.0f;
+  float max = 18.0f;  // about 4.5M above this
+  uint32_t relative_density;
+  if (density < mid) {
+    relative_density = static_cast<uint32_t>((density / mid) * 8.0f);
+  } else if (density < m2) {
+    relative_density = static_cast<uint32_t>(((density - mid) / (m2 - mid)) * 4.0f) + 8;
+  } else {
+    relative_density = static_cast<uint32_t>(((density - m2) / (max - mid)) * 4.0f) + 12;
+  }*/
   return (relative_density < 16) ? relative_density : 15;
 }
 
