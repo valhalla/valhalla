@@ -30,9 +30,11 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -57,6 +59,9 @@ constexpr uint32_t kMaxNoThruTries = 256;
 // Meters offset from start/end of shape for finding heading
 constexpr float kMetersOffsetForHeading = 30.0f;
 
+// Radius (km) to use for density
+constexpr float kDensityRadius = 2.5f;
+
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
@@ -80,9 +85,14 @@ struct enhancer_stats {
  * Update directed edge speed based on density and other edge parameters like
  * surface type. TODO - add admin specific logic
  * @param  directededge  Directed edge to update.
- * @param  density       Road density.
+ * @param  density       Relative road density.
  */
-void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
+void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
+  // Do not change speed on ramps or turn channels
+  if (directededge.link()) {
+    return;
+  }
+
   // If speed is assigned from an OSM max_speed tag we only update it based
   // on surface type.
   if (directededge.speed_type() == SpeedType::kTagged) {
@@ -97,40 +107,54 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const float density) {
       }
     }
   } else {
-    // Set speed on ferries
+    // Set speed on ferries. Base the speed on the length - assumes
+    // that longer lengths generally use a faster ferry boat
     if (directededge.railferry()) {
-      directededge.set_speed(40);
+      directededge.set_speed(65);  // 40 MPH
+      return;
     } else if (directededge.ferry()) {
-      if (directededge.length() < 4000) {
-        directededge.set_speed(15);
+      if (directededge.length() < 2000) {
+        directededge.set_speed(10);  // 5 knots
       } else if (directededge.length() < 8000) {
-        directededge.set_speed(15);
+        directededge.set_speed(20);  // 10 knots
       } else {
-        directededge.set_speed(15);
+        directededge.set_speed(30);  // 15 knots
       }
+      return;
     }
 
     // TODO
-    // Modify speed
+    // Modify speed based on urban/rural region
     if (directededge.classification() == RoadClass::kMotorway ||
         directededge.classification() == RoadClass::kTrunk) {
       // Motorway or trunk - allow higher speed for rural than urban
     } else {
-      // Modify speed: high density (urban) vs. low density (rural)
-      if (density > 2.0f) {
+      // Modify speed: high density (urban) vs. low density (rural). Assume
+      // the mean density is 8 - anything above that we assume is urban
+      if (density > 8) {
         if (directededge.classification() == RoadClass::kPrimary) {
-          directededge.set_speed(50);
+          directededge.set_speed(60);  // 35MPH
         } else if (directededge.classification() == RoadClass::kSecondary) {
-          directededge.set_speed(40);
+          directededge.set_speed(50);  // 30 MPH
         } else if (directededge.classification() == RoadClass::kTertiary) {
-          directededge.set_speed(30);
+          directededge.set_speed(40);  // 25 MPH
+        } else if (directededge.classification() == RoadClass::kResidential) {
+          directededge.set_speed(35);  // 20 MPH
         } else {
-          directededge.set_speed(20);
+          directededge.set_speed(25);  // 15 MPH (service/alley)
         }
       }
     }
 
     // Modify speed based on surface
+    if (directededge.surface() >= Surface::kPavedRough) {
+      uint32_t speed = directededge.speed();
+      if (speed >= 50) {
+         directededge.set_speed(speed - 10);
+      } else if (speed > 15) {
+        directededge.set_speed(speed - 5);
+      }
+    }
   }
 }
 
@@ -335,9 +359,6 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  * @param  reader        Graph reader
  * @param  lock          Mutex for locking while tiles are retrieved
  * @param  ll            Lat,lng position
- * @param  localdensity  (OUT) Local road density (within a smaller radius) -
- *                       might be useful for speed assignment. Units are
- *                       km of road per square kilometer
  * @param  maxdensity    (OUT) max density found
  * @param  tiles         Tiling (for getting list of required tiles)
  * @param  local_level   Level of the local tiles.
@@ -345,34 +366,24 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  *          more dense.
  */
 uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    float& localdensity, float& maxdensity, Tiles tiles,
-                    uint8_t local_level) {
-  // TODO - create constants for the radii we want to use
-
-  // Specify radius in km  but turn into meters since internal lengths are m
-  float radius = 5.0f;
-  float km2 = kPi * radius * radius;
-  float r2 = radius * 1000.0f * radius * 1000.0f;
-
-  // Local radius - for use in speed assignments.
-  float localradius = 1.0f;
-  float localkm2 = kPi * localradius * localradius;
-  float localr2 = localradius * 1000.0f * localradius * 1000.0f;
+                    float& maxdensity, Tiles tiles,uint8_t local_level) {
+  // Radius is in km - turn into meters
+  float kr2 = kDensityRadius * kDensityRadius;
+  float mr2 = kr2 * 1000000.0f;
 
   DistanceApproximator approximator(ll);
 
   // Get a list of tiles required for a node search within this radius
-  float latdeg = (radius / kMetersPerDegreeLat) * 0.5f;
+  float latdeg = (kDensityRadius / kMetersPerDegreeLat) * 0.5f;
   float mpd = DistanceApproximator::MetersPerLngDegree(ll.lat());
-  float lngdeg = (radius / mpd) * 0.5f;
+  float lngdeg = (kDensityRadius / mpd) * 0.5f;
   AABB2 bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
              Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
   // For all tiles needed to find nodes within the radius...find nodes within
-  // the radius and add lengths of directed edges
+  // the radius (squared) and add lengths of directed edges
   float roadlengths = 0.0f;
-  float localroadlengths = 0.0f;
   for (auto t : tilelist) {
     // Check all the nodes within the tile
     lock.lock();
@@ -385,7 +396,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
     for (auto node = start_node; node < end_node; ++node) {
       // Check if within radius
       float d = approximator.DistanceSquared(node->latlng());
-      if (d < r2) {
+      if (d < mr2) {
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -397,9 +408,6 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
               directededge->use() == Use::kEmergencyAccess ||
               directededge->use() == Use::kCuldesac) {
             roadlengths += directededge->length();
-            if (d < localr2) {
-              localroadlengths += directededge->length();
-            }
           }
         }
       }
@@ -408,20 +416,21 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
 
   // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
   // (since 2 directed edges per edge)
-  float density = (roadlengths * 0.0005f) / km2;
-  localdensity = (localroadlengths * 0.0005f) / localkm2;
+  float density = (roadlengths * 0.0005f) / (kPi * kr2);
   if (density > maxdensity)
      maxdensity = density;
 
-  // Convert density into a relative value from 0-16
-  float mid = 8.0f;
-  float max = 24.0f;
+  // Convert density into a relative value from 0-16. Seems a reasonable
+  // median density is around 4 km / km2
+  float mid = 4.0f;
+  float max = 20.0f;
   uint32_t relative_density = (density < mid) ?
-      static_cast<uint32_t>((density / mid) * 10.0f) :
-      static_cast<uint32_t>(((density - mid) / (max - mid)) * 5.0f) + 10;
+      static_cast<uint32_t>((density / mid) * 8.0f) :
+      static_cast<uint32_t>(((density - mid) / (max - mid)) * 5.0f) + 8;
   return (relative_density < 16) ? relative_density : 15;
 }
 
+// Get admininstrative index
 uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
 
   uint32_t index = 0;
@@ -568,8 +577,14 @@ uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
   // TODO:Handle special cases (ramps, turn channels, etc.)
+  if (edges[to].use() == Use::kTurnChannel) {
+    return 0;
+  } else if (edges[from].use() == Use::kTurnChannel) {
+    return 2;
+  }
 
-  // TODO: Increase stop impact at large intersections (more edges)
+  // Increase stop impact at large intersections (more edges) or
+  // if several are high class
 
   // TODO:Increase stop level based on classification of edges
 
@@ -662,9 +677,9 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
 
 bool ConsistentNames(const std::vector<std::string>& names1,
                      const std::vector<std::string>& names2) {
-  StreetNames street_names1(names1);
-  StreetNames street_names2(names2);
-  return (!(street_names1.FindCommonBaseNames(street_names2).empty()));
+  std::unique_ptr<StreetNames> street_names1 = make_unique<StreetNamesUs>(names1);
+  std::unique_ptr<StreetNames> street_names2 = make_unique<StreetNamesUs>(names2);
+  return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
 // We make sure to lock on reading and writing because we dont want to race
@@ -767,7 +782,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
 
       // Get relative road density and local density
-      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), localdensity, stats.max_density, tiles, local_level);
+      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats.max_density, tiles, local_level);
 
       // Enhance node attributes (TODO - timezone)
       uint32_t admin_index = GetAdminId(polys, nodeinfo.latlng());
@@ -814,7 +829,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         // and other admin related processing
 
         // Update speed.
-        UpdateSpeed(directededge, localdensity);
+        UpdateSpeed(directededge, density);
 
         // Set drive on right flag
         directededge.set_drive_on_right(drive_on_right[admin_index]);
@@ -867,6 +882,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
           directededge.set_internal(true);
           stats.internalcount++;
         }
+
+        // Set country crossing flag
+        if (false)  // TODO
+          directededge.set_ctry_crossing(true);
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));

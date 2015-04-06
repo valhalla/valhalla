@@ -54,7 +54,10 @@ struct Edge {
     uint32_t backward_signal  : 1;
     uint32_t link             : 1;
     uint32_t reclass_link     : 1;
-    uint32_t spare            : 6;
+    uint32_t has_names        : 1;
+    uint32_t driveforward     : 1;   // For sorting in collect_node_edges
+                                     //  - set based on source node
+    uint32_t spare            : 4;
   };
   EdgeAttributes attributes;
 
@@ -86,12 +89,19 @@ struct Edge {
     }
     e.attributes.link = way.link();
     e.attributes.reclass_link = false;
+    e.attributes.has_names = (way.name_index_ != 0
+                           || way.name_en_index_ != 0
+                           || way.alt_name_index_ != 0
+                           || way.official_name_index_ != 0
+                           || way.ref_index_ != 0
+                           || way.int_ref_index_ != 0);
     return e;
   }
 
   /**
-   * For sorting edges. By importance, driveability
-   * (TODO - presence of name, end of simple restriction)
+   * For sorting edges. By driveability (forward), importance, and
+   * presence of names.
+   * (TODO - end of simple restriction?)
    */
   bool operator < (const Edge& other) const {
     // Is this a loop?
@@ -100,18 +110,23 @@ struct Edge {
         sourcenode_ == targetnode_) {
       false;
     }
-    if (attributes.importance == other.attributes.importance) {
-      // Equal importance - check driveability
-      bool d  = attributes.driveableforward || attributes.driveablereverse;
-      bool od = other.attributes.driveableforward || other.attributes.driveablereverse;
-      if (d == od) {
-        // Tiebreaker
-        return llindex_ < other.llindex_;
+
+    // Sort by driveability (forward, importance, has_names)
+    bool d  = attributes.driveforward;
+    bool od = other.attributes.driveforward;
+    if (d == od) {
+      if (attributes.importance == other.attributes.importance) {
+        // Equal importance - check presence of names
+        if (attributes.has_names == other.attributes.has_names) {
+          return llindex_ < other.llindex_;
+        } else {
+          return attributes.has_names > other.attributes.has_names;
+        }
       } else {
-        return d > od;
+        return attributes.importance < other.attributes.importance;
       }
     } else {
-      return attributes.importance < other.attributes.importance;
+      return d > od;
     }
   }
 };
@@ -157,6 +172,8 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
     if(node.is_start()) {
       auto edge_itr = edges[node.start_of];
       auto edge = *edge_itr;
+      // Set driveforward - this edge is traversed in forward direction
+      edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
@@ -170,6 +187,8 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
     if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
       auto edge = *edge_itr;
+      // Set driveforward - this edge is traversed in reverse direction
+      edge.attributes.driveforward = edge.attributes.driveablereverse;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
@@ -513,7 +532,7 @@ Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
 
 float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
   if (use == Use::kTurnChannel) {
-    return spd * 0.9f;
+    return spd * 1.25f;
   } else if (use == Use::kRamp) {
     if (rc == RoadClass::kMotorway) {
       return 95.0f;
