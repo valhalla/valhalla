@@ -65,14 +65,6 @@ tyr_service_la_LDFLAGS = @COVERAGE_LDFLAGS@ -module -shared
 # python scripts
 python_PYTHON = py/tyr_simple_server.py
 
-#distributed executables
-bin_PROGRAMS = tyr
-
-tyr_SOURCES = \
-        src/tyr/tyr.cc
-tyr_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-tyr_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ libvalhalla_tyr.la
-
 # tests
 check_PROGRAMS = \
 	test/handlers \
