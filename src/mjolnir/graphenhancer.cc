@@ -67,6 +67,7 @@ struct enhancer_stats {
   float max_density; //(km/km2)
   uint32_t unreachable;
   uint32_t not_thru;
+  uint32_t no_country_found;
   uint32_t internalcount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
@@ -74,6 +75,7 @@ struct enhancer_stats {
       max_density = other.max_density;
     unreachable += other.unreachable;
     not_thru += other.not_thru;
+    no_country_found += other.no_country_found;
     internalcount += other.internalcount;
     for (uint32_t i = 0; i < 16; i++) {
       density_counts[i] += other.density_counts[i];
@@ -777,6 +779,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     float localdensity = 0.0f;
     uint32_t nodecount = tilebuilder.header()->nodecount();
     const GraphTile* endnodetile = nullptr;
+
+    uint32_t prev_admin_index = 0;
+    uint32_t admin_index = 0;
+
     for (uint32_t i = 0; i < nodecount; i++) {
       GraphId startnode(id, local_level, i);
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
@@ -785,8 +791,15 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats.max_density, tiles, local_level);
 
       // Enhance node attributes (TODO - timezone)
-      uint32_t admin_index = GetAdminId(polys, nodeinfo.latlng());
+      admin_index = GetAdminId(polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
+
+      if (admin_index == 0) {
+        stats.no_country_found++;
+      }
+
+      if (i == 0)
+        prev_admin_index = admin_index;
 
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
@@ -884,8 +897,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         }
 
         // Set country crossing flag
-        if (false)  // TODO
+        if (admin_index != prev_admin_index) {
           directededge.set_ctry_crossing(true);
+          prev_admin_index = admin_index;
+        }
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
@@ -970,6 +985,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
   LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
+  LOG_INFO("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
   for (auto density : stats.density_counts) {
     LOG_INFO("Density: " + std::to_string(density));
