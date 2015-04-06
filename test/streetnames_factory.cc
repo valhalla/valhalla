@@ -42,7 +42,7 @@ void TestCreate() {
 }
 
 int main() {
-  test::suite suite("streetnames_us");
+  test::suite suite("streetnames_factory");
 
   // Constructor with list argument
   suite.test(TEST_CASE(TestCreate));
