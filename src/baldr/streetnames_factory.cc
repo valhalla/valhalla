@@ -14,7 +14,8 @@ std::unique_ptr<StreetNames> StreetNamesFactory::Create(
   if (country_code == "US") {
     return midgard::make_unique<StreetNamesUs>(names);
   }
-  return midgard::make_unique<StreetNamesUs>(names);
+
+  return midgard::make_unique<StreetNames>(names);
 }
 
 }

@@ -27,9 +27,16 @@ void TryCreate(const std::string& country_code,
 }
 
 void TestCreate() {
+  // US - should be StreetNamesUs
   TryCreate("US", { "Main Street" }, "N8valhalla5baldr13StreetNamesUsE");
   TryCreate("US", { "Hershey Road", "PA 743 North" },
             "N8valhalla5baldr13StreetNamesUsE");
+
+  // DE - should be default StreetNames
+  TryCreate("DE", { "Mittelstraße", }, "N8valhalla5baldr11StreetNamesE");
+  TryCreate("DE", { "Unter den Linden", "B 2", "B 5" },
+            "N8valhalla5baldr11StreetNamesE");
+
 }
 
 }
