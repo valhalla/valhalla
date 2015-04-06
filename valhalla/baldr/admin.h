@@ -10,8 +10,8 @@ namespace valhalla {
 namespace baldr {
 
 constexpr size_t kDst = 8;
-constexpr size_t kStateIso = 4;
-constexpr size_t kCountryIso = 3;
+constexpr size_t kStateIso = 3;
+constexpr size_t kCountryIso = 2;
 
 /**
  * Holds a generic admin with state and country iso and text. Also, contains
@@ -28,10 +28,10 @@ class Admin {
   const std::string state_iso() const;
 
   // When does daylight saving time start?
-  const char* start_dst() const;
+  const std::string start_dst() const;
 
   // When does daylight saving time end?
-  const char* end_dst() const;
+  const std::string end_dst() const;
 
   /**
    * Get the offset into the GraphTile text list for the state text associated
