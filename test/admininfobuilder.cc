@@ -19,11 +19,8 @@ using namespace valhalla::mjolnir;
 namespace {
 
 void TestWriteRead() {
-  // Make a builder to write the info to disk
-  AdminInfoBuilder aibuilder;
-
-  // Name
-  aibuilder.AdminInfoBuilder(5,6,"US","PA","20150308","20151101");
+  // Make a builder
+  AdminInfoBuilder aibuilder(5,6,"US","PA","20150308","20151101");
 
   if (aibuilder.country_offset() != 5)
     throw runtime_error("AdminInfoBuilder country_offset incorrect.");
@@ -34,7 +31,7 @@ void TestWriteRead() {
   if (aibuilder.country_iso() != "US")
     throw runtime_error("AdminInfoBuilder country_iso incorrect.");
 
-  if (aibuilder.country_iso() != "PA")
+  if (aibuilder.state_iso() != "PA")
     throw runtime_error("AdminInfoBuilder state_iso incorrect.");
 
   if (aibuilder.start_dst() != "20150308")
@@ -42,6 +39,17 @@ void TestWriteRead() {
 
   if (aibuilder.end_dst() != "20151101")
     throw runtime_error("AdminInfoBuilder end_dst incorrect.");
+
+  AdminInfoBuilder aibuilderStateISO(5,6,"GB","WLS","20150308","20151101");
+
+  if (aibuilderStateISO.state_iso() != "WLS")
+    throw runtime_error("AdminInfoBuilder 3 char state_iso incorrect.");
+
+  AdminInfoBuilder aibuilderEmptyStrings(5,6,"","","","");
+
+  if (aibuilderEmptyStrings.country_iso() != "" && aibuilderEmptyStrings.state_iso() != "" &&
+      aibuilderEmptyStrings.start_dst() != "" &&  aibuilderEmptyStrings.end_dst() != "")
+    throw runtime_error("AdminInfoBuilder empty strings test failed.");
 }
 
 }
