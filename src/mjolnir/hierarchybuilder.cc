@@ -475,8 +475,13 @@ void FormTilesInNewLevel(
       NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
       node.set_edge_index(edgeindex);
 
-      node.set_admin_index(tilebuilder.AddAdmin(
-          baseni.admin_index(),tile->GetAdminNames(baseni.admin_index())));
+      node.set_admin_index(0);
+
+      const auto& admin = tile->admininfo(baseni.admin_index());
+      node.set_admin_index(tilebuilder.AddAdmin(baseni.admin_index(),
+                                                admin->country_text(), admin->state_text(),
+                                                admin->country_iso(), admin->state_iso(),
+                                                admin->start_dst(), admin->end_dst()));
 
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
@@ -595,7 +600,6 @@ void AddConnectionsToBaseTile(
       existinghdr.directededgecount() + connections.size());
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
   hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
-  hdrbuilder.set_admininfo_offset(existinghdr.admininfo_offset() + addedsize);
   hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed

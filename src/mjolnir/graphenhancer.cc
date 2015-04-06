@@ -444,15 +444,17 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   char *err_msg = NULL;
   uint32_t result = 0;
   uint32_t id = 0;
-  uint32_t parent_id = 0;
   bool dor = true;
   std::string geom;
+  std::string country_name, state_name, country_iso, state_iso;
 
-  std::string sql = "SELECT rowid, parent_admin, name, name_en, iso_code, drive_on_right, st_astext(geom) ";
-  sql += "from admins where ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  std::string sql = "SELECT state.rowid, country.name, state.name, country.iso_code, ";
+  sql += "state.iso_code, state.drive_on_right, st_astext(state.geom) ";
+  sql += "from admins state, admins country where ";
+  sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
+  sql += std::to_string(aabb.maxy()) + ")) and ";
+  sql += "country.rowid = state.parent_admin and state.admin_level=4;";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -460,7 +462,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, parent_admin, name, name_en, iso_code, drive_on_right, st_astext(geom) from ";
+      sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
@@ -476,25 +478,24 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     }
     while (result == SQLITE_ROW) {
 
-      std::vector<std::string> names;
       id = sqlite3_column_int(stmt, 0);
 
-      parent_id = 0;
-      if (sqlite3_column_type(stmt, 1) == SQLITE_INTEGER)
-        parent_id = sqlite3_column_int(stmt, 1);
+      country_name = "";
+      state_name = "";
+      country_iso = "";
+      state_iso = "";
+
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+        country_name = (char*)sqlite3_column_text(stmt, 1);
 
       if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
-        names.emplace_back((char*)sqlite3_column_text(stmt, 2));
+        state_name = (char*)sqlite3_column_text(stmt, 2);
 
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
-        std::string data =  "en:";
-        data += (char*)sqlite3_column_text(stmt, 3);
-        names.emplace_back(data);
-      }
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
+        country_iso = (char*)sqlite3_column_text(stmt, 3);
 
-      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) {
-        names.emplace_back((char*)sqlite3_column_text(stmt, 4));
-      }
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
+        state_iso = (char*)sqlite3_column_text(stmt, 4);
 
       dor = true;
       if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
@@ -504,11 +505,13 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
         geom = (char*)sqlite3_column_text(stmt, 6);
 
-      tilebuilder.AddAdmin(id,names);
+      uint32_t index = tilebuilder.AddAdmin(id,country_name,state_name,
+                                            country_iso,state_iso,"","");
+
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
-      polys.emplace(id, multi_poly);
-      drive_on_right.emplace(id, dor);
+      polys.emplace(index, multi_poly);
+      drive_on_right.emplace(index, dor);
 
       result = sqlite3_step(stmt);
     }
@@ -746,7 +749,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
     std::vector<std::string> noadmins;
     noadmins.emplace_back("None");
-    tilebuilder.AddAdmin(0,noadmins);
+    tilebuilder.AddAdmin(0,"None","None","","","","");
 
     if (db_handle)
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
@@ -767,8 +770,8 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), localdensity, stats.max_density, tiles, local_level);
 
       // Enhance node attributes (TODO - timezone)
-      uint32_t admin_id = GetAdminId(polys, nodeinfo.latlng());
-      nodeinfo.set_admin_index(tilebuilder.GetAdminIndex(admin_id));
+      uint32_t admin_index = GetAdminId(polys, nodeinfo.latlng());
+      nodeinfo.set_admin_index(admin_index);
 
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
@@ -814,7 +817,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         UpdateSpeed(directededge, localdensity);
 
         // Set drive on right flag
-        directededge.set_drive_on_right(drive_on_right[admin_id]);
+        directededge.set_drive_on_right(drive_on_right[admin_index]);
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {

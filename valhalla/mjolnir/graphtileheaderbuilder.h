@@ -59,6 +59,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_signcount(const uint32_t count);
 
   /**
+   * Sets the number of admins within this tile.
+   * @param count Number of admins within the tile.
+   */
+  void set_admincount(const uint32_t count);
+
+  /**
    * Sets the offset to the edge info.
    * @param offset Offset in bytes to the start of the edge information.
    */
@@ -69,13 +75,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param offset Offset in bytes to the start of the text list.
    */
   void set_textlist_offset(const uint32_t offset);
-
-  /**
-   * Sets the offset to the administrative information.
-   * @param offset Offset in bytes to the start of the  administrative
-   *               information.
-   */
-  void set_admininfo_offset(const uint32_t offset);
 
   /**
    * Sets the offset to the list of Multi-Edge Restrictions.
