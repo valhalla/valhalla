@@ -1,7 +1,7 @@
 #ifndef VALHALLA_TYR_HANDLER_H_
 #define VALHALLA_TYR_HANDLER_H_
 
-#include <boost/python/dict.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/optional.hpp>
 #include <string>
 #include <valhalla/baldr/location.h>
@@ -15,10 +15,10 @@ class Handler {
    * Parses json request data to be used as options for the action
    *
    * @param config   where the config file resides
-   * @param dict     the request data
+   * @param json     the request data
    * @return a handler object ready to act
    */
-  Handler(const std::string& config, const boost::python::dict& dict_request);
+  Handler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request);
 
   /**
    * Don't expose the default constructor
@@ -37,7 +37,7 @@ class Handler {
 
  protected:
 
-  std::string config_;
+  boost::property_tree::ptree config_;
   std::vector<baldr::Location> locations_;
   boost::optional<std::string> jsonp_;
 

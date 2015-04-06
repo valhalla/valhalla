@@ -61,8 +61,8 @@ class TyrHandler(BaseHTTPRequestHandler):
     if params.has_key('costing_method') == False:
       raise Exception('Try a valid costing_method: ' + str(methods))
     #do the action
-    #just send the dict over to c++ and use it directly
-    result = action(params).Action()
+    #just send the json over to c++ and parse it there
+    result = action(json.dumps(params, separators=(',', ':'))).Action()
     #hand it back
     return result, jsonp is not None 
 

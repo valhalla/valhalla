@@ -1,5 +1,7 @@
 #include "test.h"
 #include "tyr/route_handler.h"
+#include "tyr/json.h"
+
 #include <valhalla/mjolnir/pbfgraphparser.h>
 #include <valhalla/mjolnir/graphbuilder.h>
 #include <valhalla/mjolnir/graphenhancer.h>
@@ -8,6 +10,7 @@
 #include <valhalla/midgard/logging.h>
 
 #include <fstream>
+#include <sstream>
 #include <boost/python/dict.hpp>
 #include <boost/python/str.hpp>
 #include <boost/python/list.hpp>
@@ -68,30 +71,23 @@ void write_tiles(const std::string& config_file) {
   valhalla::mjolnir::GraphValidator::Validate(conf.get_child("mjolnir.hierarchy"));
 }
 
-boost::python::dict make_request(const std::string& loc1, const std::string& loc2,
+boost::property_tree::ptree make_request(const std::string& loc1, const std::string& loc2,
   const std::string& request_type) {
-  //the dict should look something like this:
-  /*{
-      'loc': ['40.657912,-73.914450', '40.040501,-76.306271'],
-      'costing_method': 'auto',
-      'output': 'json',
-      'z': '17',
-      'config': 'conf/pbf2graph.json',
-      'instructions': 'true',
-      'jsonp': 'some_callback'
-    }*/
 
-  namespace bp = boost::python;
-  bp::dict request;
-  bp::list loc;
-  loc.append(loc1);
-  loc.append(loc2);
-  request["loc"] = loc;
-  request["costing_method"] = request_type.c_str();
-  request["output"] = "json";
-  request["z"] = "17";
-  request["instructions"] = "true";
-  return request;
+  using namespace valhalla::tyr;
+  auto json = json::map
+  ({
+    {"loc", json::array({ loc1, loc2 })},
+    {"costing_method", request_type},
+    {"output", std::string("json")},
+    {"z", static_cast<uint64_t>(17)},
+    {"instructions", static_cast<bool>(true)},
+    {"jsonp", std::string("some_callback")},
+  });
+  std::stringstream stream; stream << *json;
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(stream, pt);
+  return pt;
 }
 
 void TestRouteHanlder() {
@@ -101,22 +97,28 @@ void TestRouteHanlder() {
   //write the tiles with it
   write_tiles("test/test_config");
 
+  boost::property_tree::ptree config;
+  boost::property_tree::read_json("test/test_config", config);
+
   //make the input
-  boost::python::dict dict =
+  boost::property_tree::ptree request =
     make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto");
 
   //run the route
-  valhalla::tyr::RouteHandler handler("test/test_config", dict);
+  valhalla::tyr::RouteHandler handler(config, request);
   LOG_DEBUG(handler.Action());
 }
 
 void TestCustomRouteHandler() {
+  boost::property_tree::ptree config;
+  boost::property_tree::read_json("test/test_config", config);
+
   //make the input
-  boost::python::dict dict =
+  boost::property_tree::ptree request =
     make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto");
 
   //run the route
-  valhalla::tyr::RouteHandler handler("test/test_config", dict);
+  valhalla::tyr::RouteHandler handler(config, request);
   LOG_DEBUG(handler.Action());
 }
 
@@ -125,7 +127,6 @@ void TestCustomRouteHandler() {
 int main() {
   test::suite suite("handlers");
 
-  Py_Initialize();
   suite.test(TEST_CASE(TestRouteHanlder));
 
   suite.test(TEST_CASE(TestCustomRouteHandler));
@@ -133,7 +134,6 @@ int main() {
   //suite.test(TEST_CASE(TestNearestHanlder));
 
   //suite.test(TEST_CASE(TestLocateHanlder));
-  Py_Finalize();
 
   return suite.tear_down();
 }

@@ -10,22 +10,23 @@
 namespace valhalla {
 namespace tyr {
 
-Handler::Handler(const std::string& config, const boost::python::dict& dict_request):config_(config) {
+Handler::Handler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request):config_(config) {
   //we require locations
-  if(!dict_request.has_key("loc"))
-    throw std::runtime_error("required parameter `loc' was not provided");
-  boost::python::list locations_list = boost::python::extract<boost::python::list>(dict_request["loc"]);
-  for(ssize_t i = 0; i < boost::python::len(locations_list); ++i) {
-    //get the python string
-    boost::python::str location_str = boost::python::str(locations_list[i]);
-    //TODO: worry about whether it was a break point or a through point
-    std::string location = boost::python::extract<std::string>(location_str);
-    locations_.emplace_back(std::move(baldr::Location::FromCsv(location)));
+  try {
+    for(const auto& loc : request.get_child("loc"))
+      locations_.emplace_back(std::move(baldr::Location::FromCsv(loc.second.get_value<std::string>())));
+    if(locations_.size() < 2)
+      throw;
   }
+  catch(...) {
+    throw std::runtime_error("insufficiently specified required parameter `loc'");
+  }
+
   //jsonp callback is optional
-  if(dict_request.has_key("jsonp") && boost::python::len(dict_request["jsonp"])) {
-    boost::python::str jsonp_str = boost::python::extract<boost::python::str>(dict_request["jsonp"]);
-    jsonp_ = boost::python::extract<std::string>(jsonp_str);
+  auto maybe_jsonp = request.get_child_optional("jsonp");
+  std::string jsonp;
+  if(maybe_jsonp && (jsonp = maybe_jsonp->get_value<std::string>()).size() > 0) {
+    jsonp_ = jsonp;
   }
 }
 
