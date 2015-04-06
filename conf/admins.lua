@@ -143,11 +143,35 @@ function rels_proc (kv, nokeys)
        kv["admin_level"] = "2"
        if kv["name"] == "France métropolitaine" then
          kv["name"] = "France"
+         kv["iso_code"] = "FR"
        end
      end
 
      if kv["admin_level"] == "6" then
        kv["admin_level"] = "4"
+     end
+
+     if kv["admin_level"] == "2" then
+       if kv["ISO3166-1:alpha2"] then
+         kv["iso_code"] = kv["ISO3166-1:alpha2"]
+       elseif kv["ISO3166-1"] then
+         kv["iso_code"] = kv["ISO3166-1"]
+       end
+     elseif kv["admin_level"] == "4" then
+       if kv["ISO3166-2"] then
+         i, j = string.find(kv["ISO3166-2"], '-', 1, true)
+         if i == 3 then
+           if string.len(kv["ISO3166-2"]) == 6 or string.len(kv["ISO3166-2"]) == 5 then
+             kv["iso_code"] = string.sub(kv["ISO3166-2"], 4)
+           end
+         elseif string.find(kv["ISO3166-2"], '-', 1, true) == nil then
+           if string.len(kv["ISO3166-2"]) == 2 or  string.len(kv["ISO3166-2"]) == 3 then 
+             kv["iso_code"] = kv["ISO3166-2"]
+           elseif string.len(kv["ISO3166-2"]) == 4 or  string.len(kv["ISO3166-2"]) == 5 then
+             kv["iso_code"] = string.sub(kv["ISO3166-2"], 3)
+           end
+         end
+       end
      end
 
      kv["drive_on_right"] = drive_on_right[kv["name"]] or drive_on_right[kv["name:en"]] or "true"

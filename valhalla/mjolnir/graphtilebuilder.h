@@ -127,7 +127,10 @@ const std::vector<DirectedEdgeBuilder>& directededges);
   /**
    * Add admin info to the tile.
    */
-  uint32_t AddAdmin(const uint32_t id,const std::vector<std::string>& names);
+  uint32_t AddAdmin(const uint32_t& id,
+                const std::string& country_name, const std::string& state_name,
+                const std::string& country_iso, const std::string& state_iso,
+                const std::string& start_dst, const std::string& end_dst);
 
   /**
    * Get the admin index.
@@ -200,6 +203,14 @@ const std::vector<DirectedEdgeBuilder>& directededges);
   // indexed directly.
   std::vector<SignBuilder> signs_builder_;
 
+  // List of admins. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<AdminInfoBuilder> admins_builder_;
+
+  // Admin info offset
+  size_t admin_info_offset_ = 0;
+  std::unordered_map<uint32_t,size_t> admin_info_offset_map;
+
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
@@ -213,14 +224,6 @@ const std::vector<DirectedEdgeBuilder>& directededges);
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
-
-  // Admin info offset
-  size_t admin_info_offset_ = 0;
-  std::unordered_map<uint32_t,size_t> admin_info_offset_map;
-
-  // The admininfo list
-  std::list<AdminInfoBuilder> admininfo_list_;
-
 
 };
 

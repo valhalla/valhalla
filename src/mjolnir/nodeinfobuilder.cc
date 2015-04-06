@@ -94,12 +94,26 @@ void NodeInfoBuilder::set_intersection(const IntersectionType type) {
 
 // Set the index of the administrative information within this tile.
 void NodeInfoBuilder::set_admin_index(const uint16_t admin_index) {
-  admin_.admin_index = admin_index;
+  if (admin_index > kMaxAdminsPerTile) {
+    // Log an error and set count to max.
+    LOG_ERROR("NodeInfoBuilder: admin index exceeds max: " +
+              std::to_string(admin_index));
+    admin_.admin_index = kMaxAdminsPerTile;
+  } else {
+    admin_.admin_index = admin_index;
+  }
 }
 
 // Set the timezone index.
 void NodeInfoBuilder::set_timezone(const uint16_t timezone) {
-  admin_.timezone = timezone;
+  if (timezone > kMaxTimeZonesPerTile) {
+    // Log an error and set count to max.
+    LOG_ERROR("NodeInfoBuilder: timezone index exceeds max: " +
+              std::to_string(timezone));
+    admin_.timezone = kMaxTimeZonesPerTile;
+  } else {
+    admin_.timezone = timezone;
+  }
 }
 
 // Set the daylight saving time flag

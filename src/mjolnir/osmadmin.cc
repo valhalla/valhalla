@@ -58,6 +58,16 @@ uint32_t OSMAdmin::name_en_index() const {
   return name_en_index_;
 }
 
+// Set the index for the iso coce.
+void OSMAdmin::set_iso_code_index(const uint32_t idx) {
+  iso_code_index_ = idx;
+}
+
+// Get the iso code.
+uint32_t OSMAdmin::iso_code_index() const {
+  return iso_code_index_;
+}
+
 // Set admin level.
 void OSMAdmin::set_admin_level(const uint32_t level) {
   admin_level_ = level;
