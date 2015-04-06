@@ -44,17 +44,16 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
+    header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
-            + (signs_builder_.size() * sizeof(SignBuilder)));
-
-    header_builder_.set_admininfo_offset(
-        header_builder_.edgeinfo_offset() + edge_info_offset_);
+            + (signs_builder_.size() * sizeof(SignBuilder))
+            + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
 
     header_builder_.set_textlist_offset(
-        header_builder_.admininfo_offset() + admin_info_offset_);
+        header_builder_.edgeinfo_offset() + edge_info_offset_);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
@@ -72,11 +71,12 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
 
+    // Write the admins
+    file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+               admins_builder_.size() * sizeof(AdminInfoBuilder));
+
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
-
-    // Write the admin data
-    SerializeAdminInfosToOstream(file);
 
     // Write the names
     SerializeTextListToOstream(file);
@@ -132,11 +132,12 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
 
+    // Write the existing admins
+    file.write(reinterpret_cast<const char*>(&admins_[0]),
+               hdr.admincount() * sizeof(Admin));
+
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
-
-    // Save existing admin
-    file.write(admininfo_, admininfo_size_);
 
     // Save existing text
     file.write(textlist_, textlist_size_);
@@ -169,11 +170,10 @@ void GraphTileBuilder::Update(
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
 
-    std::size_t addedsize = 0;
-    for (const auto& admin : admininfo_list_) {
-      addedsize += admin.SizeOf();
-    }
+    hdr.set_admincount(admins_builder_.size());
+    std::size_t addedsize = (admins_builder_.size() * sizeof(AdminInfoBuilder));
 
+    hdr.set_edgeinfo_offset(hdr.edgeinfo_offset() + addedsize);
     hdr.set_textlist_offset(hdr.textlist_offset() + addedsize);
 
     // Write the updated header.
@@ -192,11 +192,12 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
 
+    // Write the admins
+    file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+               admins_builder_.size() * sizeof(AdminInfoBuilder));
+
     // Write the existing edgeinfo, and textlist
     file.write(edgeinfo_, edgeinfo_size_);
-
-    // Write the admin data
-    SerializeAdminInfosToOstream(file);
 
     // Save existing text
     file.write(textlist_, textlist_size_);
@@ -245,9 +246,12 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
 
-    // Write the existing edgeinfo, admininfo, and textlist
+    // Write the existing admins
+    file.write(reinterpret_cast<const char*>(&admins_[0]),
+               hdr.admincount() * sizeof(Admin));
+
+    // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
-    file.write(admininfo_, admininfo_size_);
     file.write(textlist_, textlist_size_);
 
     size_ = file.tellp();
@@ -372,6 +376,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 
 // Get admin index
 uint32_t GraphTileBuilder::GetAdminIndex(const uint32_t& id) {
+
   auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
   if (existing_admin_info_offset_item == admin_info_offset_map.end())
     return 0;
@@ -379,68 +384,80 @@ uint32_t GraphTileBuilder::GetAdminIndex(const uint32_t& id) {
 }
 
 // Add admin
-uint32_t GraphTileBuilder::AddAdmin(const uint32_t id,
-                                    const std::vector<std::string>& names) {
+uint32_t GraphTileBuilder::AddAdmin(const uint32_t& id,
+                                    const std::string& country_name, const std::string& state_name,
+                                    const std::string& country_iso, const std::string& state_iso,
+                                    const std::string& start_dst, const std::string& end_dst) {
 
   auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
   if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
-    // Add a new AdminInfo to the list and get a reference to it
-    admininfo_list_.emplace_back();
-    AdminInfoBuilder& admininfo = admininfo_list_.back();
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Put each name's index into the chunk of bytes containing all the names
-    // in the tile
-    std::vector<uint32_t> text_name_offset_list;
-    text_name_offset_list.reserve(names.size());
-    for (const auto& name : names) {
-      // Skip blank names
-      if (name.empty()) {
-        continue;
-      }
+    uint32_t country_offset = 0;
+    uint32_t state_offset = 0;
 
-      // If nothing already used this name
-      auto existing_text_offset = text_offset_map.find(name);
+    if (!country_name.empty()) {
+      // If nothing already used this admin text
+      auto existing_text_offset = text_offset_map.find(country_name);
       if (existing_text_offset == text_offset_map.end()) {
         // Add name to text list
-        textlistbuilder_.emplace_back(name);
+        textlistbuilder_.emplace_back(country_name);
 
         // Append to the list. Get the size of the current list
         if (text_list_offset_ == 0)
           text_list_offset_ = textlist_size_;
 
-        // Add name offset to list
-        text_name_offset_list.emplace_back(text_list_offset_);
+        country_offset = text_list_offset_;
 
-        // Add name/offset pair to map
-        text_offset_map.emplace(name, text_list_offset_);
+        // Add text/offset pair to map
+        text_offset_map.emplace(country_name, text_list_offset_);
 
         // Update text offset value to length of string plus null terminator
-        text_list_offset_ += (name.length() + 1);
-
-      }  // Something was already using this name
-      else {
-        // Add existing offset to list
-        text_name_offset_list.emplace_back(existing_text_offset->second);
+        text_list_offset_ += (country_name.length() + 1);
+      } else {
+        // Name already exists. Add sign type and existing text offset to list
+        country_offset = existing_text_offset->second;
       }
     }
-    admininfo.set_text_name_offset_list(text_name_offset_list);
+
+    if (!state_name.empty()) {
+      // If nothing already used this admin text
+      auto existing_text_offset = text_offset_map.find(state_name);
+      if (existing_text_offset == text_offset_map.end()) {
+        // Add name to text list
+        textlistbuilder_.emplace_back(state_name);
+
+        // Append to the list. Get the size of the current list
+        if (text_list_offset_ == 0)
+          text_list_offset_ = textlist_size_;
+
+        state_offset = text_list_offset_;
+
+        // Add text/offset pair to map
+        text_offset_map.emplace(state_name, text_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        text_list_offset_ += (state_name.length() + 1);
+      } else {
+        // Name already exists. Add sign type and existing text offset to list
+        state_offset = existing_text_offset->second;
+      }
+    }
+
+    // Add admin to the list
+    admins_builder_.emplace_back(country_offset, state_offset,
+                                 country_iso, state_iso,
+                                 start_dst, end_dst);
 
     // Add to the map
-    admin_info_offset_map.emplace(id, admin_info_offset_);
+    admin_info_offset_map.emplace(id, admins_builder_.size()-1);
 
-    // Set current admin offset
-    uint32_t current_admin_offset = admin_info_offset_;
+    return admins_builder_.size()-1;
 
-    // Update admin offset for next item
-    admin_info_offset_ += admininfo.SizeOf();
-
-    // Return the offset to this admin info
-    return current_admin_offset;
   } else {
     // Already have this admin - return the offset
     return existing_admin_info_offset_item->second;
   }
+
 }
 
 // Serialize the edge info list
@@ -454,13 +471,6 @@ void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
 void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
   for (const auto& text : textlistbuilder_) {
     out << text << '\0';
-  }
-}
-
-// Serialize the admin info list
-void GraphTileBuilder::SerializeAdminInfosToOstream(std::ostream& out) {
-  for (const auto& admininfo : admininfo_list_) {
-    out << admininfo;
   }
 }
 

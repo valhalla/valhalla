@@ -47,6 +47,11 @@ void GraphTileHeaderBuilder::set_signcount(const uint32_t count) {
   signcount_ = count;
 }
 
+// Sets the admin count.
+void GraphTileHeaderBuilder::set_admincount(const uint32_t count) {
+  admincount_ = count;
+}
+
 // Sets the offset to the edge info.
 void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
   edgeinfo_offset_ = offset;
@@ -55,11 +60,6 @@ void GraphTileHeaderBuilder::set_edgeinfo_offset(const uint32_t offset) {
 // Sets the offset to the text list.
 void GraphTileHeaderBuilder::set_textlist_offset(const uint32_t offset) {
   textlist_offset_ = offset;
-}
-
-// Sets the offset to the admin info.
-void GraphTileHeaderBuilder::set_admininfo_offset(const uint32_t offset) {
-  admininfo_offset_ = offset;
 }
 
 // Sets the offset to the list of Multi-Edge Restrictions.
