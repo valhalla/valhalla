@@ -117,6 +117,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       if (tile.size() == 0) {
         continue;
       }
+
+      // Iterate through the tile and validate signs
       for (uint32_t i = 0; i < tile.header()->nodecount(); i++) {
         const NodeInfo* nodeinfo = tile.node(i);
 
@@ -133,6 +135,10 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
           }
         }
       }
+
+      // Check if we need to clear the tile cache
+      if(graphreader_.OverCommitted())
+        graphreader_.Clear();
     }
   }
   LOG_INFO("Validation signs is done. Validate connectivity.");
@@ -147,10 +153,6 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       if (tilebuilder.size() == 0) {
         continue;
       }
-
-      // Check if we need to clear the tile cache
-      if(graphreader_.OverCommitted())
-        graphreader_.Clear();
 
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
@@ -184,6 +186,10 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
       // Write the new file
       tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
+
+      // Check if we need to clear the tile cache
+      if(graphreader_.OverCommitted())
+        graphreader_.Clear();
     }
     LOG_INFO("Validation of connectivity is done");
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")

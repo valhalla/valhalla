@@ -35,6 +35,24 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_version(const std::string& version);
 
   /**
+   * Set the relative quality of name assignment for this tile.
+   * @param   name_quality  Relative name quality for this tile (0-15).
+   */
+  void set_name_quality(const uint32_t name_quality);
+
+  /**
+   * Set the relative quality of speed assignment for this tile.
+   * @param  speed_quality   Relative speed quality for this tile (0-15).
+   */
+  void set_speed_quality(const uint32_t speed_quality);
+
+  /**
+   * Set the relative quality of exit signs for this tile.
+   * @param  exit_quality   Relative exit sign quality for this tile (0-15).
+   */
+  void set_exit_quality(const uint32_t exit_quality);
+
+  /**
    * Set the graph Id of this tile.
    * @param  graphid  GraphId (tileid and level) of this tile.
    */
@@ -57,6 +75,42 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param count Number of signs within the tile.
    */
   void set_signcount(const uint32_t count);
+
+  /**
+   * Sets the number of transit departures in this tile.
+   * @param departures  The number of transit departures.
+   */
+  void set_departurecount(const uint32_t departures);
+
+  /**
+   * Sets the number of transit trips in this tile.
+   * @param  trips  The number of transit trips.
+   */
+  void set_tripcount(const uint32_t trips);
+
+  /**
+   * Sets the number of transit stops in this tile.
+   * @param  stops  The number of transit stops.
+   */
+  void set_stopcount(const uint32_t stops);
+
+  /**
+   * Sets the number of transit routes in this tile.
+   * @param  routes  The number of transit routes.
+   */
+  void set_routecount(const uint32_t routes);
+
+  /**
+   * Sets the number of transit transfers in this tile.
+   * @param  transfers   The number of transit transfers.
+   */
+  void set_transfercount(const uint32_t transfers);
+
+  /**
+   * Gets the number of transit calendar exceptions in this tile.
+   * @param  calendars  The number of transit calendar exceptions.
+   */
+  void set_calendarcount(const uint32_t calendars);
 
   /**
    * Sets the number of admins within this tile.
@@ -89,12 +143,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    *               list.
    */
   void set_timedres_offset(const uint32_t offset);
-
-  /**
-   * Sets the offset to the list of transit departures / schedule.
-   * @param offset Offset in bytes to the start of the transit schedules.
-   */
-  void set_transit_offset(const uint32_t offset);
 };
 
 }
