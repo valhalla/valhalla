@@ -11,9 +11,11 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxTileEdgeCount  = 4194303;  // 2^22 directed edges
-constexpr uint32_t kMaxEdgesPerNode   = 127;      // Maximum edges per node
-constexpr uint32_t kMaxLocalEdgeIndex = 7;        // Max. index of edges on
+constexpr uint32_t kMaxTileEdgeCount    = 4194303;  // 2^22 directed edges
+constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
+constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
+constexpr uint32_t kMaxTimeZonesPerTile = 63;       // Maximum TimeZones per tile
+constexpr uint32_t kMaxLocalEdgeIndex   = 7;        // Max. index of edges on
                                                   // local level
 constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 

@@ -38,9 +38,10 @@ endif
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
+	valhalla/baldr/admin.h \
+        valhalla/baldr/admininfo.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
-	valhalla/baldr/admininfo.h \
 	valhalla/baldr/graphconstants.h \
 	valhalla/baldr/graphid.h \
 	valhalla/baldr/graphreader.h \
@@ -64,6 +65,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/transittransfer.h \
 	valhalla/baldr/transittrip.h
 libvalhalla_baldr_la_SOURCES = \
+        src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
