@@ -30,6 +30,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_factory.h>
 #include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
@@ -661,10 +662,14 @@ uint32_t GetOpposingEdgeIndex(const GraphTile* endnodetile,
   return kMaxEdgesPerNode;
 }
 
-bool ConsistentNames(const std::vector<std::string>& names1,
+bool ConsistentNames(const std::string& country_code1,
+                     const std::vector<std::string>& names1,
+                     const std::string& country_code2,
                      const std::vector<std::string>& names2) {
-  std::unique_ptr<StreetNames> street_names1 = make_unique<StreetNamesUs>(names1);
-  std::unique_ptr<StreetNames> street_names2 = make_unique<StreetNamesUs>(names2);
+  std::unique_ptr<StreetNames> street_names1 = StreetNamesFactory::Create(
+      country_code1, names1);
+  std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(
+      country_code2, names2);
   return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
@@ -827,8 +832,11 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
 
         // Name continuity - set in NodeInfo
         for (uint32_t k = (j + 1); k < ntrans; k++) {
+          // TODO: get country codes from admin - for now, default to US
           if (ConsistentNames(
+              "US",
               tile->edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+              "US",
               tile->edgeinfo(
                   tilebuilder.directededge(nodeinfo.edge_index() + k)
                       .edgeinfo_offset())->GetNames())) {
