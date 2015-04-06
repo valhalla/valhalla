@@ -1,116 +1,75 @@
 #ifndef VALHALLA_BALDR_ADMININFO_H_
 #define VALHALLA_BALDR_ADMININFO_H_
 
-#include <vector>
-#include <string>
-#include <ostream>
+#include <valhalla/baldr/admin.h>
 #include <iostream>
-
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/baldr/graphid.h>
-
-using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kMaxNames = 255;
-constexpr size_t kDstSize = 9;
-
 /**
- * Admin information
+ * Interface class used to pass information about a admin.
+ * Encapsulates the country and state text.
  */
 class AdminInfo {
  public:
-  AdminInfo() = delete;
-  AdminInfo(const AdminInfo& other) = delete;
+  /**
+   * Constructor.
+   * @param  country_text country text string.
+   * @param  state_text   state text string.
+   * @param  country_iso  country iso string.
+   * @param  state_iso    state iso string.
+   * @param  start_dst    start dst string.
+   * @param  end_dst      end dst  string.
+   */
+  AdminInfo(const std::string& country_text, const std::string& state_text,
+            const std::string& country_iso, const std::string& state_iso,
+            const std::string& start_dst, const std::string& end_dst);
+  /**
+   * Returns the country text.
+   * @return  Returns the country text as a const reference to the text string.
+   */
+  const std::string& country_text() const;
 
   /**
-   * Constructor
-   *
-   * @param pointer to a bit of memory that has the info for this admin
+   * Returns the state text.
+   * @return  Returns the state text as a const reference to the text string.
    */
-  AdminInfo(char* ptr, const char* names_list, const size_t names_list_length);
+  const std::string& state_text() const;
 
   /**
-   * Destructor
-   *
+   * Get the country iso
+   * @return  Returns the country iso
    */
-  virtual ~AdminInfo();
-
-  // Returns the name count
-  const uint32_t name_count() const;
-
-  // Returns the admin id
-  const uint32_t admin_id() const;
-
-  // Returns the parent admin id
-  const uint32_t parent_admin_id() const;
-
-  // Returns the iso code index
-  const uint32_t iso_code_index() const;
-
-  // Set the iso code index.
-  void set_iso_code_index(const uint32_t iso_code_index);
-
-  // When does daylight saving time start?
-  const char* StartDST() const;
-
-  // When does daylight saving time end?
-  const char* EndDST() const;
-
-  // Set when daylight saving time starts.
-  void SetStartDST(const std::string& start_dst);
-
-  // Set when daylight saving time ends.
-  void SetEndDST(const std::string& end_dst);
-
-  // Returns the name index at the specified index.
-  const uint32_t GetNameOffset(uint8_t index) const;
+  const std::string& country_iso() const;
 
   /**
-   * Convenience method to get the names for an admin
-   * @return   Returns a list (vector) of names.
+   * Get the state iso
+   * @return  Returns the state iso
    */
-  const std::vector<std::string> GetNames() const;
+  const std::string& state_iso() const;
 
-  // Operator EqualTo.
-  bool operator ==(const AdminInfo& rhs) const;
+  /**
+   * Get the start dst
+   * @return  Returns the start dst
+   */
+  const std::string& start_dst() const;
 
-  // Packed items: counts for names and level
-  union PackedItem {
-    struct Fields {
-      uint32_t name_count           :8;  //name count
-      uint32_t admin_id             :6;  //admin id
-      uint32_t parent_admin_id      :6;  //parent admin id
-      uint32_t spare                :12;
-    } fields;
-    uint32_t value;
-  };
+  /**
+   * Get the end dst
+   * @return  Returns the end dst
+   */
+  const std::string& end_dst() const;
 
  protected:
+  std::string country_text_;
+  std::string state_text_;
 
-  // Where we keep the statistics about how large the vectors below are
-  PackedItem* item_;
+  std::string country_iso_;
+  std::string state_iso_;
 
-  // DST start date and time.
-  char start_dst_[kDstSize];
-
-  // DST end date and time.
-  char end_dst_[kDstSize];
-
-  // ISO 3166-2 code.  Index into textlist
-  uint32_t iso_code_index_;
-
-  // List of name indexes
-  uint32_t* name_offset_list_;
-
-  // The list of names within the tile
-  const char* names_list_;
-
-  // The size of the names list
-  const size_t names_list_length_;
+  std::string start_dst_;
+  std::string end_dst_;
 
 };
 

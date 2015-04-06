@@ -68,6 +68,12 @@ class GraphTileHeader {
   uint32_t signcount() const;
 
   /**
+   * Gets the number of admins in this tile.
+   * @return  Returns the number of admins.
+   */
+  uint32_t admincount() const;
+
+  /**
    * Gets the offset to the edge info.
    * @return  Returns the number of bytes to offset to the edge information.
    */
@@ -130,14 +136,14 @@ class GraphTileHeader {
   // Number of signs
   uint32_t signcount_;
 
+  // Number of admins
+  uint32_t admincount_;
+
   // Offset to edge info
   uint32_t edgeinfo_offset_;
 
   // Offset to text list
   uint32_t textlist_offset_;
-
-  // Offset to the administrative information
-  uint32_t admininfo_offset_;
 
   // Offset to the multi-edge restriction list
   uint32_t merlist_offset_;

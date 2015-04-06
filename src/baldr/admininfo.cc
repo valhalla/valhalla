@@ -3,86 +3,46 @@
 namespace valhalla {
 namespace baldr {
 
-AdminInfo::AdminInfo(char* ptr, const char* names_list, const size_t names_list_length)
-  : names_list_(names_list), names_list_length_(names_list_length) {
-
-  iso_code_index_ = 0;
-
-  item_ = reinterpret_cast<PackedItem*>(ptr);
-  ptr += sizeof(PackedItem);
-  AdminInfo
-  // Set name_offset_list_ pointer
-  name_offset_list_ = reinterpret_cast<uint32_t*>(ptr);
-  ptr += (name_count() * sizeof(uint32_t));
+// Get the country text
+const std::string& AdminInfo::country_text() const {
+  return country_text_;
 }
 
-AdminInfo::~AdminInfo() {
-  //nothing to delete these are all shallow pointers for the moment held
-  //by another object
+// Get the state text
+const std::string& AdminInfo::state_text() const {
+  return state_text_;
 }
 
-const uint32_t AdminInfo::name_count() const {
-  return item_->fields.name_count;
+// Get the country iso
+const std::string& AdminInfo::country_iso() const {
+  return country_iso_;
 }
 
-// Returns the iso code
-const uint32_t AdminInfo::iso_code_index() const {
-  return iso_code_index_;
+// Get the state iso
+const std::string& AdminInfo::state_iso() const {
+  return state_iso_;
 }
 
-// Set the iso code index.
-void AdminInfo::set_iso_code_index(const uint32_t iso_code_index) {
-  iso_code_index_ = iso_code_index;
-}
-
-// Returns the parent admin id
-const uint32_t AdminInfo::parent_admin_id() const {
-  return item_->fields.parent_admin_id;
-}
-
-// Returns the admin id
-const uint32_t AdminInfo::admin_id() const {
-  return item_->fields.admin_id;
-}
-
-const char* AdminInfo::StartDST() const {
+// Get the start dst
+const std::string& AdminInfo::start_dst() const {
   return start_dst_;
 }
 
-void AdminInfo::SetStartDST(const std::string& start_dst) {
-  //YYYYMMDD
-  std::size_t length = start_dst.copy(start_dst_,kDstSize-1);
-  start_dst_[length]='\0';
+// Get the end dst
+const std::string& AdminInfo::end_dst() const {
+  return end_dst_;
 }
 
-void AdminInfo::SetEndDST(const std::string& end_dst) {
-  //YYYYMMDD
-  std::size_t length = end_dst.copy(end_dst_,kDstSize-1);
-  end_dst_[length]='\0';
-}
-
-const char* AdminInfo::EndDST() const {
-  return start_dst_;
-}
-
-const uint32_t AdminInfo::GetNameOffset(uint8_t index) const {
-  if(index < item_->fields.name_count)
-    return name_offset_list_[index];
-  else
-    throw std::runtime_error("NameOffset index was out of bounds");
-}
-
-const std::vector<std::string> AdminInfo::GetNames() const {
-  // Get each name
-  std::vector<std::string> names;
-  for (uint32_t i = 0; i < name_count(); i++) {
-    uint32_t offset = GetNameOffset(i);
-    if (offset < names_list_length_) {
-      names.push_back(names_list_ + offset);
-    } else
-      throw std::runtime_error("Admininfo:GetNames: offset exceeds size of text list");
-  }
-  return names;
+// Constructor
+AdminInfo::AdminInfo(const std::string& country_text, const std::string& state_text,
+                     const std::string& country_iso, const std::string& state_iso,
+                     const std::string& start_dst, const std::string& end_dst)
+    : country_text_(country_text),
+      state_text_(state_text),
+      country_iso_(country_iso),
+      state_iso_(state_iso),
+      start_dst_(start_dst),
+      end_dst_(end_dst) {
 }
 
 }

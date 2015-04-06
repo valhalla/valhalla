@@ -47,12 +47,11 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       signs_(nullptr),
+      admins_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
-      admininfo_(nullptr),
       edgeinfo_size_(0),
-      textlist_size_(0),
-      admininfo_size_(0){
+      textlist_size_(0){
 }
 
 // Constructor given a filename. Reads the graph data into memory.
@@ -97,13 +96,13 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    // Set a pointer to the sign list
    signs_ = reinterpret_cast<Sign*>(ptr);
    ptr += header_->signcount() * sizeof(Sign);
+   // Set a pointer to the sign list
+   admins_ = reinterpret_cast<Admin*>(ptr);
+   ptr += header_->admincount() * sizeof(Admin);
 
    // Start of edge information and its size
    edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
-   edgeinfo_size_ = header_->admininfo_offset() - header_->edgeinfo_offset();
-
-   admininfo_ = graphtile_.get() + header_->admininfo_offset();
-   admininfo_size_ = header_->textlist_offset() - header_->admininfo_offset();
+   edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
 
    // Start of text list and its size
    textlist_ = graphtile_.get() + header_->textlist_offset();
@@ -203,10 +202,6 @@ std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
   return std::unique_ptr<EdgeInfo>(new EdgeInfo(edgeinfo_ + offset, textlist_, textlist_size_));
 }
 
-std::unique_ptr<const AdminInfo> GraphTile::admininfo(const size_t offset) const {
-  return std::unique_ptr<AdminInfo>(new AdminInfo(admininfo_ + offset, textlist_, textlist_size_));
-}
-
 // Get the directed edges outbound from the specified node index.
 const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
                                                 uint32_t& count,
@@ -217,15 +212,23 @@ const DirectedEdge* GraphTile::GetDirectedEdges(const uint32_t node_index,
   return directededge(nodeinfo->edge_index());
 }
 
-// Convenience method to get the admin names given the offset to the admin info
-std::vector<std::string> GraphTile::GetAdminNames(const uint32_t admininfo_offset) const {
-  return admininfo(admininfo_offset)->GetNames();
-}
-
 // Convenience method to get the names for an edge given the offset to the
 // edge info
 std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) const {
   return edgeinfo(edgeinfo_offset)->GetNames();
+}
+
+// Get the admininfo at the specified index.
+const AdminInfo* GraphTile::admininfo(const size_t idx) const {
+  if (idx < header_->admincount()) {
+    const Admin admin = admins_[idx];
+
+    return new AdminInfo(textlist_ + admin.country_offset(),
+                         textlist_ + admin.state_offset(),
+                         admin.country_iso(), admin.state_iso(),
+                         admin.start_dst(), admin.end_dst());
+  }
+  throw std::runtime_error("GraphTile Admin index out of bounds");
 }
 
 // Convenience method to get the signs for an edge given the
