@@ -3,6 +3,17 @@
 namespace valhalla {
 namespace baldr {
 
+// Constructor with arguments
+TransitTransfer::TransitTransfer(const uint32_t from_stopid,
+                                 const uint32_t to_stopid,
+                                 const TransferType type,
+                                 const uint32_t mintime)
+    : from_stopid_(from_stopid),
+      to_stopid_(to_stopid) {
+  transfer_.type = static_cast<uint32_t>(type);
+  transfer_.mintime = mintime;
+}
+
 // Get the from stop Id.
 uint32_t TransitTransfer::from_stopid() const {
   return from_stopid_;

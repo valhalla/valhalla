@@ -11,6 +11,10 @@ namespace baldr {
  */
 class TransitTransfer {
  public:
+  // Constructor with arguments
+  TransitTransfer(const uint32_t from_stopid, const uint32_t to_stopid,
+                  const TransferType type, const uint32_t mintime);
+
   /**
    * Get the from stop Id.
    * @return  Returns the from stop Id.

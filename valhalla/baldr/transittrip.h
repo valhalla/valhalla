@@ -13,6 +13,12 @@ namespace baldr {
  */
 class TransitTrip {
  public:
+  // Constructor with arguments
+  TransitTrip(const uint32_t tripid,
+              const uint32_t routeid, const char* tl_tripid,
+              const uint32_t short_name_offset,
+              const uint32_t headsign_offset);
+
   /**
    * Get the internal route Id.
    * @return  Returns the internal stop Id.
@@ -32,16 +38,16 @@ class TransitTrip {
   const char* tl_tripid() const;
 
   /**
-   * Get the text/name index for the short trip name.
-   * @return  Returns the short name index in the text/name list.
+   * Get the text/name offset for the short trip name.
+   * @return  Returns the offset to the short name in the text/name list.
    */
-  uint32_t short_name_index() const;
+  uint32_t short_name_offset() const;
 
   /**
-   * Get the text/name index for the trip headsign.
-   * @return  Returns the headsign index in the text/name list.
+   * Get the text/name offset for the trip headsign.
+   * @return  Returns the offset for the headsign in the text/name list.
    */
-  uint32_t headsign_index() const;
+  uint32_t headsign_offset() const;
 
  protected:
   // Trip Id (internal) - for trip lookup
@@ -54,11 +60,11 @@ class TransitTrip {
   char tl_tripid_[kOneStopIdSize];
 
   // Short route name offset in the text/name list.
-  uint32_t short_name_index_;
+  uint32_t short_name_offset_;
 
-  // Headsign index into the text/name list. TODO - do we need this
+  // Headsign offset into the text/name list. TODO - do we need this
   // or can we just pass this into each departure?
-  uint32_t headsign_index_;
+  uint32_t headsign_offset_;
 };
 
 }

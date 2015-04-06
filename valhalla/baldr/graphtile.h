@@ -101,12 +101,6 @@ class GraphTile {
   std::unique_ptr<const EdgeInfo> edgeinfo(const size_t offset) const;
 
   /**
-   * Get a pointer to admin info.
-   * @return  Returns admin info.
-   */
-  std::unique_ptr<const AdminInfo> admininfo(const size_t offset) const;
-
-  /**
    * Convenience method to get the directed edges originating at a node.
    * @param  node_index  Node Id within this tile.
    * @param  count       (OUT) Number of outbound edges
@@ -124,13 +118,8 @@ class GraphTile {
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
-  /**
-   * Convenience method to get the names for an admin given the offset to the
-   * admin information.
-   * @param  admininfo_offset  Offset to the admin info.
-   * @return  Returns a list (vector) of names.
-   */
-  std::vector<std::string> GetAdminNames(const uint32_t admininfo_offset) const;
+  // Get the admininfo at the specified index.
+  const AdminInfo* admininfo(const size_t idx) const;
 
   /**
    * Convenience method to get the signs for an edge given the directed
@@ -163,6 +152,10 @@ class GraphTile {
   // Signs (indexed by directed edge index)
   Sign* signs_;
 
+  // List of admins. This is a fixed size structure so it can be
+  // indexed directly.
+  Admin* admins_;
+
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
   char* edgeinfo_;
@@ -177,11 +170,6 @@ class GraphTile {
   // Number of bytes in the text/name list
   std::size_t textlist_size_;
 
-  // List of admin info structures.
-  char* admininfo_;
-
-  // Size of the admininfo data
-  std::size_t admininfo_size_;
 };
 
 }
