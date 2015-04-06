@@ -3,6 +3,15 @@
 namespace valhalla {
 namespace baldr {
 
+TransitCalendar::TransitCalendar(const uint32_t serviceid,
+                                 const uint32_t date,
+                const CalendarExceptionType type)
+    : serviceid_(serviceid) {
+  // TODO - check limits once form is finalized
+  exception_.date = date;
+  exception_.type = static_cast<uint32_t>(type);
+}
+
 // Get the service Id for this calendar exception.
 uint32_t TransitCalendar::serviceid() const {
   return serviceid_;

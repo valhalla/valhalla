@@ -13,6 +13,10 @@ namespace baldr {
  */
 class TransitCalendar {
  public:
+  // Constructor with args.
+  TransitCalendar(const uint32_t serviceid, const uint32_t date,
+                  const CalendarExceptionType type);
+
   /**
    * Get the service Id for this calendar exception.
    * @return  Returns the service Id.

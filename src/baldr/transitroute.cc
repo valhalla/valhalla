@@ -1,7 +1,20 @@
+#include <string.h>
 #include "baldr/transitroute.h"
 
 namespace valhalla {
 namespace baldr {
+
+// Constructor with arguments
+TransitRoute:: TransitRoute(const uint32_t routeid, const uint32_t agencyid,
+            const char* tl_routeid, const uint32_t short_name_index,
+            const uint32_t long_name_index, const uint32_t desc_index)
+    : routeid_(routeid),
+      agencyid_(agencyid),
+      short_name_index_(short_name_index),
+      long_name_index_(long_name_index),
+      desc_index_(desc_index) {
+  strncpy(tl_routeid_, tl_routeid, kOneStopIdSize);
+}
 
 // Get the internal route Id.
 uint32_t TransitRoute::routeid() const {
