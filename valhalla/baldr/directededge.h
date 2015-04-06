@@ -256,6 +256,12 @@ class DirectedEdge {
   SpeedType speed_type() const;
 
   /**
+   * Get the country crossing flag.
+   * @return  Returns true if the edge crosses into a new country.
+   */
+  bool ctry_crossing() const;
+
+  /**
    * Get the access modes in the forward direction (bit field).
    */
   uint8_t forwardaccess() const;
@@ -456,7 +462,8 @@ class DirectedEdge {
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
     uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
-    uint64_t spare          : 18;
+    uint64_t ctry_crossing  : 1;  // Does the edge cross into new country
+    uint64_t spare          : 17;
   };
   Attributes attributes_;
 
