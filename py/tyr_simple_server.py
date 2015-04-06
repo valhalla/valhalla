@@ -20,7 +20,6 @@ http://localhost:8002/nearest?loc=40.657912,-73.914450
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
 actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler, 'route': tyr_service.CustomRouteHandler}
-methods = ['auto', 'pedestrian', 'bicycle']
 
 #enable threaded server
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
@@ -58,8 +57,6 @@ class TyrHandler(BaseHTTPRequestHandler):
       params = json.loads(params['json'])
       if jsonp is not None:
         params['jsonp'] = jsonp
-    if params.has_key('costing_method') == False:
-      raise Exception('Try a valid costing_method: ' + str(methods))
     #do the action
     #just send the json over to c++ and parse it there
     result = action(json.dumps(params, separators=(',', ':'))).Action()

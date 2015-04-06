@@ -226,22 +226,25 @@ namespace tyr {
 
 RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request) : Handler(config, request) {
   //parse out the type of route
-  std::string costing_method;
+  std::string costing;
   try {
-    costing_method = request.get<std::string>("costing_method");
+    costing = request.get<std::string>("costing");
   }
   catch(...) {
-    throw std::runtime_error("No edge/node costing method provided");
+    throw std::runtime_error("No edge/node costing provided");
   }
 
   //register edge/node costing methods
   valhalla::thor::CostFactory<valhalla::thor::DynamicCost> factory;
   factory.Register("auto", valhalla::thor::CreateAutoCost);
+  factory.Register("auto_shorter", valhalla::thor::CreateAutoShorterCost);
   factory.Register("bicycle", valhalla::thor::CreateBicycleCost);
   factory.Register("pedestrian", valhalla::thor::CreatePedestrianCost);
 
+  //TODO: overwrite anything in config.costing with anything in request.costing
+
   //get the costing method
-  cost_ = factory.Create(costing_method, config.get_child("thor"));
+  cost_ = factory.Create(costing, config.get_child("costing." + costing));
 
   //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
