@@ -17,15 +17,17 @@ namespace baldr {
 GraphTileHeader::GraphTileHeader()
     : date_created_{},
       graphid_{},
+      quality_{},
       nodecount_(0),
       directededgecount_(0),
       signcount_(0),
+      transit1_{},
+      transit2_{},
       admincount_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
       merlist_offset_(0),
-      timedres_offset_(0),
-      transit_offset_(0) {
+      timedres_offset_(0) {
   internal_version_ = NodeInfo::internal_version() +
                       DirectedEdge::internal_version() +
                       GraphId::internal_version();
@@ -48,6 +50,21 @@ std::string GraphTileHeader::version() const {
   return version_;
 }
 
+// Get the relative quality of name assignment for this tile.
+uint32_t GraphTileHeader::name_quality() const {
+  return static_cast<uint32_t>(quality_.name);
+}
+
+// Get the relative quality of speed assignment for this tile.
+uint32_t GraphTileHeader::speed_quality() const {
+  return static_cast<uint32_t>(quality_.speed);
+}
+
+// Get the relative quality of exit signs for this tile.
+uint32_t GraphTileHeader::exit_quality() const {
+  return static_cast<uint32_t>(quality_.exit);
+}
+
 // Get the GraphId (tileid and level) of this tile.
 const GraphId& GraphTileHeader::graphid() const {
   return graphid_;
@@ -66,6 +83,36 @@ uint32_t GraphTileHeader::directededgecount() const {
 // Gets the number of signs in the tile.
 uint32_t GraphTileHeader::signcount() const {
   return signcount_;
+}
+
+// Gets the number of transit departures in this tile.
+uint32_t GraphTileHeader::departurecount() const {
+  return transit1_.departurecount;
+}
+
+// Gets the number of transit trips in this tile.
+uint32_t GraphTileHeader::tripcount() const {
+  return transit1_.tripcount;
+}
+
+// Gets the number of transit stops in this tile.
+uint32_t GraphTileHeader::stopcount() const {
+  return transit1_.stopcount;
+}
+
+// Gets the number of transit routes in this tile.
+uint32_t GraphTileHeader::routecount() const {
+  return transit2_.routecount;
+}
+
+// Gets the number of transit transfers in this tile.
+uint32_t GraphTileHeader::transfercount() const {
+  return transit2_.transfercount;
+}
+
+// Gets the number of transit calendar exceptions in this tile.
+uint32_t GraphTileHeader::calendarcount() const {
+  return transit2_.calendarcount;
 }
 
 // Gets the number of admins in the tile.

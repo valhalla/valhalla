@@ -44,6 +44,24 @@ class GraphTileHeader {
   std::string version() const;
 
   /**
+   * Get the relative quality of name assignment for this tile.
+   * @return  Returns relative name quality for this tile (0-15).
+   */
+  uint32_t name_quality() const;
+
+  /**
+   * Get the relative quality of speed assignment for this tile.
+   * @return  Returns relative speed quality for this tile (0-15).
+   */
+  uint32_t speed_quality() const;
+
+  /**
+   * Get the relative quality of exit signs for this tile.
+   * @return  Returns relative exit sign quality for this tile (0-15).
+   */
+  uint32_t exit_quality() const;
+
+  /**
    * Get the GraphId (tileid and level) of this tile.
    * @return  Returns the graph Id.
    */
@@ -59,13 +77,49 @@ class GraphTileHeader {
    * Gets the number of directed edges in this tile.
    * @return  Returns the number of directed edges.
    */
- uint32_t directededgecount() const;
+  uint32_t directededgecount() const;
 
   /**
    * Gets the number of signs in this tile.
    * @return  Returns the number of signs.
    */
   uint32_t signcount() const;
+
+  /**
+   * Gets the number of transit departures in this tile.
+   * @return  Returns the number of transit departures.
+   */
+  uint32_t departurecount() const;
+
+  /**
+   * Gets the number of transit trips in this tile.
+   * @return  Returns the number of transit trips.
+   */
+   uint32_t tripcount() const;
+
+  /**
+   * Gets the number of transit stops in this tile.
+   * @return  Returns the number of transit stops.
+   */
+  uint32_t stopcount() const;
+
+  /**
+   * Gets the number of transit routes in this tile.
+   * @return  Returns the number of transit routes.
+   */
+  uint32_t routecount() const;
+
+  /**
+   * Gets the number of transit transfers in this tile.
+   * @return  Returns the number of transit transfers.
+   */
+  uint32_t transfercount() const;
+
+  /**
+   * Gets the number of transit calendar exceptions in this tile.
+   * @return  Returns the number of transit calendar exceptions.
+   */
+  uint32_t calendarcount() const;
 
   /**
    * Gets the number of admins in this tile.
@@ -106,13 +160,6 @@ class GraphTileHeader {
    */
   uint32_t timedres_offset() const;
 
-  /**
-   * Get the offset to the transit schedule list. (TODO)
-   * @return  Returns the number of bytes to offset to the the list of
-   *          transit departures.
-   */
-  uint32_t transit_offset() const;
-
  protected:
 
   // Internal version info
@@ -123,6 +170,15 @@ class GraphTileHeader {
 
   // baldr version.
   char version_[kMaxVersionSize];
+
+  // Quality metrics. These are 4 bit (0-15) relative quality indicators.
+  struct TileQuality {
+    uint64_t name           : 4;
+    uint64_t speed          : 4;
+    uint64_t exit           : 4;
+    uint64_t spare          : 52;
+  };
+  TileQuality quality_;
 
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
@@ -136,7 +192,24 @@ class GraphTileHeader {
   // Number of signs
   uint32_t signcount_;
 
-  // Number of admins
+  // Number of transit departure records
+  struct Transit1 {
+    uint64_t departurecount : 24;
+    uint64_t tripcount      : 24;
+    uint64_t stopcount      : 16;
+  };
+  Transit1 transit1_;
+
+  // Transit information for this tile.
+  struct Transit2 {
+    uint64_t routecount     : 16;
+    uint64_t transfercount  : 16;
+    uint64_t calendarcount  : 16;
+    uint64_t spare          : 16;
+  };
+  Transit2 transit2_;
+
+  // Number of admin records
   uint32_t admincount_;
 
   // Offset to edge info
@@ -150,9 +223,6 @@ class GraphTileHeader {
 
   // Offset to the timed restriction list
   uint32_t timedres_offset_;
-
-  // Offset to transit schedule list
-  uint32_t transit_offset_;
 };
 
 }
