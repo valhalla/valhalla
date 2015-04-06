@@ -53,11 +53,11 @@ class Admin {
         const std::string& country_iso, const std::string& state_iso,
         const std::string& start_dst, const std::string& end_dst);
 
-  // country ISO3166-1
-  char country_iso_[kCountryIso];
+  // country name offset
+  uint32_t country_offset_;
 
-  // state ISO3166-2
-  char state_iso_[kStateIso];
+  // state name offset
+  uint32_t state_offset_;
 
   // DST start date and time.
   char start_dst_[kDst];
@@ -65,11 +65,14 @@ class Admin {
   // DST end date and time.
   char end_dst_[kDst];
 
-  // country name offset
-  uint32_t country_offset_;
+  // country ISO3166-1
+  char country_iso_[kCountryIso];
 
-  // state name offset
-  uint32_t state_offset_;
+  // state ISO3166-2
+  char state_iso_[kStateIso];
+
+  // spare for byte alignment
+  char spare_[3];
 
 };
 
