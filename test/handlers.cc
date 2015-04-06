@@ -78,7 +78,7 @@ boost::property_tree::ptree make_request(const std::string& loc1, const std::str
   auto json = json::map
   ({
     {"loc", json::array({ loc1, loc2 })},
-    {"costing_method", request_type},
+    {"costing", request_type},
     {"output", std::string("json")},
     {"z", static_cast<uint64_t>(17)},
     {"instructions", static_cast<bool>(true)},
