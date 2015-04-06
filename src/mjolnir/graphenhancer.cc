@@ -67,6 +67,7 @@ struct enhancer_stats {
   float max_density; //(km/km2)
   uint32_t unreachable;
   uint32_t not_thru;
+  uint32_t no_country_found;
   uint32_t internalcount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
@@ -74,6 +75,7 @@ struct enhancer_stats {
       max_density = other.max_density;
     unreachable += other.unreachable;
     not_thru += other.not_thru;
+    no_country_found += other.no_country_found;
     internalcount += other.internalcount;
     for (uint32_t i = 0; i < 16; i++) {
       density_counts[i] += other.density_counts[i];
@@ -455,11 +457,15 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   uint32_t id = 0;
   bool dor = true;
   std::string geom;
+  std::string country_name, state_name, country_iso, state_iso;
 
-  std::string sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  std::string sql = "SELECT state.rowid, country.name, state.name, country.iso_code, ";
+  sql += "state.iso_code, state.drive_on_right, st_astext(state.geom) ";
+  sql += "from admins state, admins country where ";
+  sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and admin_level=4;";
+  sql += std::to_string(aabb.maxy()) + ")) and ";
+  sql += "country.rowid = state.parent_admin and state.admin_level=4;";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -467,8 +473,8 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) { //state/prov not found, try to find country
 
-      sql = "SELECT rowid, name, name_en, drive_on_right, st_astext(geom) from admins where ";
-      sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+      sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
+      sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
       sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
 
@@ -483,30 +489,40 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     }
     while (result == SQLITE_ROW) {
 
-      std::vector<std::string> names;
       id = sqlite3_column_int(stmt, 0);
 
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        names.emplace_back((char*)sqlite3_column_text(stmt, 1));
+      country_name = "";
+      state_name = "";
+      country_iso = "";
+      state_iso = "";
 
-      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) {
-        std::string data =  "en:";
-        data += (char*)sqlite3_column_text(stmt, 2);
-        names.emplace_back(data);
-      }
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+        country_name = (char*)sqlite3_column_text(stmt, 1);
+
+      if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
+        state_name = (char*)sqlite3_column_text(stmt, 2);
+
+      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
+        country_iso = (char*)sqlite3_column_text(stmt, 3);
+
+      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
+        state_iso = (char*)sqlite3_column_text(stmt, 4);
+
       dor = true;
-      if (sqlite3_column_type(stmt, 3) == SQLITE_INTEGER)
-        dor = sqlite3_column_int(stmt, 3);
+      if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
+        dor = sqlite3_column_int(stmt, 5);
 
       geom = "";
-      if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 4);
+      if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 6);
 
-      tilebuilder.AddAdmin(id,names);
+      uint32_t index = tilebuilder.AddAdmin(id,country_name,state_name,
+                                            country_iso,state_iso,"","");
+
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
-      polys.emplace(id, multi_poly);
-      drive_on_right.emplace(id, dor);
+      polys.emplace(index, multi_poly);
+      drive_on_right.emplace(index, dor);
 
       result = sqlite3_step(stmt);
     }
@@ -750,7 +766,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
     std::vector<std::string> noadmins;
     noadmins.emplace_back("None");
-    tilebuilder.AddAdmin(0,noadmins);
+    tilebuilder.AddAdmin(0,"None","None","","","","");
 
     if (db_handle)
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
@@ -763,6 +779,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     float localdensity = 0.0f;
     uint32_t nodecount = tilebuilder.header()->nodecount();
     const GraphTile* endnodetile = nullptr;
+
+    uint32_t prev_admin_index = 0;
+    uint32_t admin_index = 0;
+
     for (uint32_t i = 0; i < nodecount; i++) {
       GraphId startnode(id, local_level, i);
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
@@ -771,8 +791,15 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats.max_density, tiles, local_level);
 
       // Enhance node attributes (TODO - timezone)
-      uint32_t admin_id = GetAdminId(polys, nodeinfo.latlng());
-      nodeinfo.set_admin_index(tilebuilder.GetAdminIndex(admin_id));
+      admin_index = GetAdminId(polys, nodeinfo.latlng());
+      nodeinfo.set_admin_index(admin_index);
+
+      if (admin_index == 0) {
+        stats.no_country_found++;
+      }
+
+      if (i == 0)
+        prev_admin_index = admin_index;
 
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
@@ -818,7 +845,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         UpdateSpeed(directededge, density);
 
         // Set drive on right flag
-        directededge.set_drive_on_right(drive_on_right[admin_id]);
+        directededge.set_drive_on_right(drive_on_right[admin_index]);
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {
@@ -870,8 +897,10 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         }
 
         // Set country crossing flag
-        if (false)  // TODO
+        if (admin_index != prev_admin_index) {
           directededge.set_ctry_crossing(true);
+          prev_admin_index = admin_index;
+        }
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
@@ -956,6 +985,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
   LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
+  LOG_INFO("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
   for (auto density : stats.density_counts) {
     LOG_INFO("Density: " + std::to_string(density));

@@ -18,59 +18,38 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-boost::shared_array<char> ToFileAndBack(const AdminInfoBuilder& aibuilder) {
-  // write AdminInfoBuilder to binary file
-  std::ofstream out_file("AdminInfoBuilder_TestWriteRead.gph",
-                         std::ios::out | std::ios::binary | std::ios::ate);
-  if (out_file.is_open()) {
-    out_file << aibuilder;
-    out_file.close();
-  } else {
-    throw runtime_error("Failed to open file for writing");
-  }
-
-  // read EdgeInfo from binary file
-  streampos size;
-  boost::shared_array<char> memblock;
-
-  std::ifstream in_file("AdminInfoBuilder_TestWriteRead.gph",
-                        std::ios::in | std::ios::binary | std::ios::ate);
-  if (in_file.is_open()) {
-    size = in_file.tellg();
-    memblock.reset(new char[size]);
-    in_file.seekg(0, ios::beg);
-    in_file.read(memblock.get(), size);
-    in_file.close();
-  }
-
-  return memblock;
-}
-
 void TestWriteRead() {
-  // Make a builder to write the info to disk
-  AdminInfoBuilder aibuilder;
+  // Make a builder
+  AdminInfoBuilder aibuilder(5,6,"US","PA","20150308","20151101");
 
-  // Name
-  std::vector<uint32_t> name_offset_list;
-  name_offset_list.push_back(963);
-  name_offset_list.push_back(957);
-  name_offset_list.push_back(862);
-  aibuilder.set_text_name_offset_list(name_offset_list);
+  if (aibuilder.country_offset() != 5)
+    throw runtime_error("AdminInfoBuilder country_offset incorrect.");
 
-  // Make an edge info object from the memory
-  boost::shared_array<char> memblock = ToFileAndBack(aibuilder);
-  std::unique_ptr<AdminInfo> ai(new AdminInfo(memblock.get(), nullptr, 0));
+  if (aibuilder.state_offset() != 6)
+    throw runtime_error("AdminInfoBuilder state_offset incorrect.");
 
-  //TODO: errors thrown should say what was found and what was expected
+  if (aibuilder.country_iso() != "US")
+    throw runtime_error("AdminInfoBuilder country_iso incorrect.");
 
-  // Validate the read in fields to the original AdminInfoBuilder
-  if (!(name_offset_list.size() == ai->name_count()))
-    throw runtime_error("WriteRead:name_count test failed");
-  // Check the name indices
-  for (uint8_t i = 0; i < ai->name_count(); ++i) {
-    if (!(name_offset_list[i] == ai->GetNameOffset(static_cast<uint8_t>(i))))
-      throw runtime_error("WriteRead:GetNameOffset test failed");
-  }
+  if (aibuilder.state_iso() != "PA")
+    throw runtime_error("AdminInfoBuilder state_iso incorrect.");
+
+  if (aibuilder.start_dst() != "20150308")
+    throw runtime_error("AdminInfoBuilder start_dst incorrect.");
+
+  if (aibuilder.end_dst() != "20151101")
+    throw runtime_error("AdminInfoBuilder end_dst incorrect.");
+
+  AdminInfoBuilder aibuilderStateISO(5,6,"GB","WLS","20150308","20151101");
+
+  if (aibuilderStateISO.state_iso() != "WLS")
+    throw runtime_error("AdminInfoBuilder 3 char state_iso incorrect.");
+
+  AdminInfoBuilder aibuilderEmptyStrings(5,6,"","","","");
+
+  if (aibuilderEmptyStrings.country_iso() != "" && aibuilderEmptyStrings.state_iso() != "" &&
+      aibuilderEmptyStrings.start_dst() != "" &&  aibuilderEmptyStrings.end_dst() != "")
+    throw runtime_error("AdminInfoBuilder empty strings test failed.");
 }
 
 }

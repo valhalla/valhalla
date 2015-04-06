@@ -282,6 +282,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";
   sql += "admin_level INTEGER NOT NULL,";
+  sql += "iso_code TEXT,";
+  sql += "parent_admin INTEGER,";
   sql += "name TEXT NOT NULL,";
   sql += "name_en TEXT,";
   sql += "drive_on_right INTEGER NOT NULL)";
@@ -309,8 +311,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (admin_level, name, name_en, drive_on_right, geom) ";
-  sql += "VALUES (?, ?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
+  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, drive_on_right, geom) ";
+  sql += "VALUES (?, ?, ?, ?, ?, ?, CastToMulti(GeomFromText(?, 4326)))";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -381,18 +383,27 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           sqlite3_clear_bindings (stmt);
           sqlite3_bind_int (stmt, 1, admin.admin_level());
 
+          if (admin.iso_code_index()) {
+            name = osmdata.name_offset_map.name(admin.iso_code_index());
+            sqlite3_bind_text (stmt, 2, name.c_str(), name.length(), SQLITE_STATIC);
+          }
+          else
+            sqlite3_bind_null(stmt,2);
+
+          sqlite3_bind_null(stmt,3);
+
           name = osmdata.name_offset_map.name(admin.name_index());
-          sqlite3_bind_text (stmt, 2, name.c_str(), name.length(), SQLITE_STATIC);
+          sqlite3_bind_text (stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
 
           if (admin.name_en_index()) {
             name = osmdata.name_offset_map.name(admin.name_en_index());
-            sqlite3_bind_text (stmt, 3, name.c_str(), name.length(), SQLITE_STATIC);
+            sqlite3_bind_text (stmt, 5, name.c_str(), name.length(), SQLITE_STATIC);
           }
           else
-            sqlite3_bind_null(stmt,3);
+            sqlite3_bind_null(stmt,5);
 
-          sqlite3_bind_int (stmt, 4, admin.drive_on_right());
-          sqlite3_bind_text (stmt, 5, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+          sqlite3_bind_int (stmt, 6, admin.drive_on_right());
+          sqlite3_bind_text (stmt, 7, wkt.c_str(), wkt.length(), SQLITE_STATIC);
           /* performing INSERT INTO */
           ret = sqlite3_step (stmt);
           if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
@@ -470,6 +481,20 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
   LOG_INFO("Done updating drive on right column.");
+
+  sql = "update admins set parent_admin = (select a.rowid from admins";
+  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
+  sql += "a.admin_level) where rowid = ";
+  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
+  sql += "and admins.admin_level != a.admin_level)";
+  ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free (err_msg);
+    sqlite3_close (db_handle);
+    return;
+  }
+  LOG_INFO("Done updating Parent admin");
 
   sqlite3_close (db_handle);
 }

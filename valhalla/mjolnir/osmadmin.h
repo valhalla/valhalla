@@ -78,6 +78,18 @@ struct OSMAdmin {
   uint32_t name_en_index() const;
 
   /**
+   * Sets the index for iso code
+   * @param  idx  Index for the iso code.
+   */
+  void set_iso_code_index(const uint32_t idx);
+
+  /**
+   * Get the iso code index.
+   * @return  Returns the index for the iso code.
+   */
+  uint32_t iso_code_index() const;
+
+  /**
    * Set admin level.
    * @param   level  admin level
    */
@@ -110,6 +122,9 @@ struct OSMAdmin {
   // Names of country or state/prov
   uint32_t name_index_;
   uint32_t name_en_index_;
+
+  // ISO code
+  uint32_t iso_code_index_;
 
   // Count of members.
   uint16_t memberid_count_;
