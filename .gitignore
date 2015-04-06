@@ -46,6 +46,7 @@ test/graphtile
 test/nodeinfo
 test/streetname_us
 test/streetnames_us
+test/streetnames_factory
 test/graphreader
 test/turn
 test/*.log
