@@ -46,6 +46,12 @@ GraphTile::GraphTile()
       header_(nullptr),
       nodes_(nullptr),
       directededges_(nullptr),
+      departures_(nullptr),
+      transit_trips_(nullptr),
+      transit_stops_(nullptr),
+      transit_routes_(nullptr),
+      transit_transfers_(nullptr),
+      transit_exceptions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
       edgeinfo_(nullptr),
@@ -90,9 +96,35 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     // Set a pointer to the node list
    nodes_ = reinterpret_cast<NodeInfo*>(ptr);
    ptr += header_->nodecount() * sizeof(NodeInfo);
+
    // Set a pointer to the directed edge list
    directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
    ptr += header_->directededgecount() * sizeof(DirectedEdge);
+
+   // Set a pointer to the transit departure list
+   departures_ = reinterpret_cast<TransitDeparture*>(ptr);
+   ptr += header_->departurecount() * sizeof(TransitDeparture);
+
+   // Set a pointer to the transit trip list
+   transit_trips_ = reinterpret_cast<TransitTrip*>(ptr);
+   ptr += header_->tripcount() * sizeof(TransitTrip);
+
+   // Set a pointer to the transit stop list
+   transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
+   ptr += header_->stopcount() * sizeof(TransitStop);
+
+   // Set a pointer to the transit route list
+   transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
+   ptr += header_->routecount() * sizeof(TransitRoute);
+
+   // Set a pointer to the transit transfer list
+   transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
+   ptr += header_->transfercount() * sizeof(TransitTransfer);
+
+   // Set a pointer to the transit calendar exception list
+   transit_exceptions_ = reinterpret_cast<TransitCalendar*>(ptr);
+   ptr += header_->calendarcount() * sizeof(TransitCalendar);
+
    // Set a pointer to the sign list
    signs_ = reinterpret_cast<Sign*>(ptr);
    ptr += header_->signcount() * sizeof(Sign);

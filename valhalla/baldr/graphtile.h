@@ -5,6 +5,12 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/transitcalendar.h>
+#include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transitroute.h>
+#include <valhalla/baldr/transitstop.h>
+#include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/transittrip.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
@@ -148,6 +154,24 @@ class GraphTile {
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   DirectedEdge* directededges_;
+
+  // Transit departures (indexed by directed edge index)
+  TransitDeparture* departures_;
+
+  // Transit trips (indexed by trip Id)
+  TransitTrip* transit_trips_;
+
+  // Transit stops (indexed by stop Id)
+  TransitStop* transit_stops_;
+
+  // Transit route (indexed by route Id)
+  TransitRoute* transit_routes_;
+
+  // Transit transfers (indexed by stop Id)
+  TransitTransfer* transit_transfers_;
+
+  // Transit calendar exceptions (indexed by service Id)
+  TransitCalendar* transit_exceptions_;
 
   // Signs (indexed by directed edge index)
   Sign* signs_;
