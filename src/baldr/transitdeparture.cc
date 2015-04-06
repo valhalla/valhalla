@@ -3,6 +3,28 @@
 namespace valhalla {
 namespace baldr {
 
+// Construct with arguments
+TransitDeparture::TransitDeparture(const uint32_t edgeid, const uint32_t tripid,
+                 const uint32_t routeid, const uint32_t blockid,
+                 const uint32_t headsign_offset,
+                 const uint32_t departure_time,
+                 const uint32_t elapsed_time,
+                 const uint32_t start_date,
+                 const uint32_t end_date, const uint32_t days,
+                 const uint32_t serviceid)
+    : edgeid_(edgeid),
+      tripid_(tripid),
+      routeid_(routeid),
+      blockid_(blockid),
+      headsign_offset_(headsign_offset),
+      serviceid_(serviceid) {
+  times_.departure = departure_time;
+  times_.elapsed   = elapsed_time;
+  dates_.start     = start_date;
+  dates_.end       = end_date;
+  dates_.days      = days;
+}
+
 // Get the edge Id - for lookup of all departures along this edge. Each edge
 // represents a unique departure/arrival stop pair and route Id.
 uint32_t TransitDeparture::edgeid() const {
@@ -25,12 +47,12 @@ uint32_t TransitDeparture::blockid() const {
 }
 
 // Get the headsign offset into the names/text list.
-uint32_t TransitDeparture::headsign() const {
-  return headsign_;
+uint32_t TransitDeparture::headsign_offset() const {
+  return headsign_offset_;
 }
 
 // Get the departure time.
-uint32_t TransitDeparture::departure_time_() const {
+uint32_t TransitDeparture::departure_time() const {
   return times_.departure;
 }
 

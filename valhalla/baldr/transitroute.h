@@ -13,6 +13,11 @@ namespace baldr {
  */
 class TransitRoute {
  public:
+  // Constructor with arguments
+  TransitRoute(const uint32_t routeid, const uint32_t agencyid,
+               const char* tl_routeid, const uint32_t short_name_index,
+               const uint32_t long_name_index, const uint32_t desc_index);
+
   /**
    * Get the internal route Id.
    * @return  Returns the internal stop Id.

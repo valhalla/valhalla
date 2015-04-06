@@ -13,6 +13,16 @@ namespace baldr {
  */
 class TransitDeparture {
  public:
+  // Construct with arguments
+  TransitDeparture(const uint32_t edgeid, const uint32_t tripid,
+                   const uint32_t routeid, const uint32_t blockid,
+                   const uint32_t headsign_offset,
+                   const uint32_t departure_time,
+                   const uint32_t elapsed_time,
+                   const uint32_t start_date,
+                   const uint32_t enddate, const uint32_t days,
+                   const uint32_t serviceid);
+
   /**
    * Get the edge Id - for lookup of all departures along this edge. Each edge
    * represents a unique departure/arrival stop pair and route Id.
@@ -42,13 +52,13 @@ class TransitDeparture {
    * Get the headsign offset into the names/text list.
    * @return  Returns the offset into the names/text list.
    */
-  uint32_t headsign() const;
+  uint32_t headsign_offset() const;
 
   /**
    * Get the departure time.
    * @return  Returns the departure time in seconds from midnight.
    */
-  uint32_t departure_time_() const;
+  uint32_t departure_time() const;
 
   /**
    * Get the elapsed time until arrival at the next stop.
@@ -97,7 +107,7 @@ class TransitDeparture {
   uint32_t blockid_;
 
   // Headsign offset into the names/text list.
-  uint32_t headsign_;
+  uint32_t headsign_offset_;
 
   // Departure time (seconds from midnight)
   struct ScheduleTimes {
