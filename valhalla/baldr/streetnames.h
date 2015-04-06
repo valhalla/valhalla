@@ -14,21 +14,21 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
  public:
   StreetNames();
 
+  StreetNames(const std::vector<std::string>& names);
+
   virtual ~StreetNames();
 
   std::string ToString() const;
 
   std::string ToParameterString() const;
 
-  virtual std::unique_ptr<StreetNames> clone() const = 0;
+  virtual std::unique_ptr<StreetNames> clone() const;
 
   virtual std::unique_ptr<StreetNames> FindCommonStreetNames(
-      const StreetNames& other_street_names) const = 0;
+      const StreetNames& other_street_names) const;
 
   virtual std::unique_ptr<StreetNames> FindCommonBaseNames(
-      const StreetNames& other_street_names) const = 0;
-
- protected:
+      const StreetNames& other_street_names) const;
 
 };
 

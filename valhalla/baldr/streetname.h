@@ -21,15 +21,15 @@ class StreetName {
 
   bool EndsWith(const std::string& suffix) const;
 
-  virtual std::string GetPreDir() const = 0;
+  virtual std::string GetPreDir() const;
 
-  virtual std::string GetPostDir() const = 0;
+  virtual std::string GetPostDir() const;
 
-  virtual std::string GetPostCardinalDir() const = 0;
+  virtual std::string GetPostCardinalDir() const;
 
-  virtual std::string GetBaseName() const = 0;
+  virtual std::string GetBaseName() const;
 
-  virtual bool HasSameBaseName(const StreetName& rhs) const = 0;
+  virtual bool HasSameBaseName(const StreetName& rhs) const;
 
  protected:
   std::string value_;
