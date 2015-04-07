@@ -156,6 +156,12 @@ const std::vector<DirectedEdgeBuilder>& directededges);
    */
   SignBuilder& sign(const size_t idx);
 
+  /**
+   * Gets a const admin builder at specified index.
+   * @param  idx  Index of the admin builder in the list.
+   */
+  const AdminInfoBuilder& admins_builder(size_t idx);
+
  protected:
 
   struct EdgeTupleHasher {
