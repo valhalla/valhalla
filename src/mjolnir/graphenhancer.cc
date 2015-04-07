@@ -280,6 +280,11 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
     return false;
   }
 
+  // Internal intersection edges must not be a roundabout
+  if (directededge.roundabout()) {
+    return false;
+  }
+
   // Must have inbound oneway at start node (exclude edges that are nearly
   // straight turn type onto the directed edge
   bool oneway_inbound = false;
