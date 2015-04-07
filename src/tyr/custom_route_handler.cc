@@ -213,25 +213,30 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 namespace valhalla {
 namespace tyr {
 
-CustomRouteHandler::CustomRouteHandler(const std::string& config, const boost::python::dict& dict_request) : Handler(config, dict_request) {
+CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request) : Handler(config, request) {
   //parse out the type of route
-  if(!dict_request.has_key("costing_method"))
-    throw std::runtime_error("No edge/node costing method provided");
+  std::string costing;
+  try {
+    costing = request.get<std::string>("costing");
+  }
+  catch(...) {
+    throw std::runtime_error("No edge/node costing provided");
+  }
+
   //register edge/node costing methods
   valhalla::thor::CostFactory<valhalla::thor::DynamicCost> factory;
   factory.Register("auto", valhalla::thor::CreateAutoCost);
+  factory.Register("auto_shorter", valhalla::thor::CreateAutoShorterCost);
   factory.Register("bicycle", valhalla::thor::CreateBicycleCost);
   factory.Register("pedestrian", valhalla::thor::CreatePedestrianCost);
 
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config, pt);
+  //TODO: overwrite anything in config.costing with anything in request.costing
 
   //get the costing method
-  std::string costing_method = boost::python::extract<std::string>(boost::python::str(dict_request["costing_method"]));
-  cost_ = factory.Create(costing_method, pt.get_child("thor"));
+  cost_ = factory.Create(costing, config.get_child("costing." + costing));
 
   //get the config for the graph reader
-  reader_.reset(new valhalla::baldr::GraphReader(pt.get_child("mjolnir.hierarchy")));
+  reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
