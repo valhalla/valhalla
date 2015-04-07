@@ -227,7 +227,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
           && !next_man->internal_intersection() && !curr_man->ramp()
-          && !next_man->ramp() && !common_base_names->empty()) {
+          && !next_man->ramp() && !curr_man->roundabout()
+          && !next_man->roundabout() &&!common_base_names->empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
@@ -850,6 +851,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   // TODO: add logic for 'T' and pencil point u-turns
 
+  // TODO: update to use factory and country code
   std::unique_ptr<StreetNames> prev_edge_names = make_unique<StreetNamesUs>(
       prev_edge->GetNameList());
 
