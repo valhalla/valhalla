@@ -16,7 +16,7 @@ namespace {
 constexpr float kDefaultManeuverPenalty  = 5.0f;   // Seconds
 constexpr float kDefaultGateCost         = 30.0f;  // Seconds
 constexpr float kDefaultTollBoothCost    = 15.0f;  // Seconds
-constexpr float kDefaultTollBoothPenalty = 0.0f;  // Seconds
+constexpr float kDefaultTollBoothPenalty = 0.0f;   // Seconds
 
 // Maximum speed expected - this is used for the A* heuristic
 constexpr uint32_t kMaxSpeedKph = 140;
@@ -142,7 +142,6 @@ class AutoCost : public DynamicCost {
 // Constructor
 AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt) {
-
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
@@ -175,7 +174,7 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
-// Check if access is allowed on the specified edge. Not worh checking
+// Check if access is allowed on the specified edge. Not worth checking
 // not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
@@ -201,7 +200,7 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge,
   }
 #endif
   float sec = (edge->length() * speedfactor_[edge->speed()]);
-  return Cost(sec * density_factor_[density], sec);
+  return { sec * density_factor_[density], sec };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -323,8 +322,8 @@ AutoShorterCost::~AutoShorterCost() {
 // (in seconds) to traverse the edge.
 Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                const uint32_t density) const {
-  return Cost(edge->length() * adjspeedfactor_[edge->speed()],
-              edge->length() * speedfactor_[edge->speed()]);
+  return { edge->length() * adjspeedfactor_[edge->speed()],
+           edge->length() * speedfactor_[edge->speed()] };
 }
 
 float AutoShorterCost::AStarCostFactor() const {
