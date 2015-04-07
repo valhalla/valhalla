@@ -43,7 +43,7 @@
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0 
     },
-    "auto-shorter": {
+    "auto_shorter": {
     },
     "pedestrian": {
       "walking_speed": 5.1,
