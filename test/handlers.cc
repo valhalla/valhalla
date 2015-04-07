@@ -21,37 +21,85 @@
 namespace {
 
 void write_config(const std::string& filename) {
+  using namespace valhalla::tyr;
+
   std::ofstream file;
   try {
-  file.open(filename, std::ios_base::trunc);
-  file << "{ \
-      \"thor\": {}, \
-      \"mjolnir\": { \
-        \"input\": { \
-          \"type\": \"protocolbuffer\" \
-        }, \
-        \"hierarchy\": { \
-          \"tile_dir\": \"test/tiles\", \
-          \"levels\": [ \
-            {\"name\": \"local\", \"level\": 2, \"size\": 0.25}, \
-            {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
-            {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
-          ] \
-        }, \
-        \"tagtransform\": { \
-          \"node_script\": \"test/lua/vertices.lua\", \
-          \"node_function\": \"nodes_proc\", \
-          \"way_script\": \"test/lua/edges.lua\", \
-          \"way_function\": \"ways_proc\", \
-          \"relation_script\": \"test/lua/relations.lua\", \
-          \"relation_function\": \"rels_proc\" \
-        }, \
-        \"admin\": { \
-          \"admin_dir\": \"/data/valhalla\", \
-          \"db_name\": \"admin.sqlite\" \
-        } \
-      } \
-    }";
+    file.open(filename, std::ios_base::trunc);
+    file << *json::map
+      ({
+        {"mjolnir", json::map
+          ({
+            {"input", json::map({{"type", std::string("protocolbuffer")}})},
+            {"hierarchy", json::map
+              ({
+                {"tile_dir", std::string("test/tiles")},
+                {"levels", json::array
+                  ({
+                    json::map({
+                      {"name",std::string("local")},
+                      {"level", static_cast<uint64_t>(2)},
+                      {"size", static_cast<long double>(0.25)}
+                    }),
+                    json::map({
+                      {"name",std::string("arterial")},
+                      {"level", static_cast<uint64_t>(1)},
+                      {"size", static_cast<long double>(1)},
+                      {"importance_cutoff",std::string("Tertiary")}
+                    }),
+                    json::map({
+                      {"name",std::string("highway")},
+                      {"level", static_cast<uint64_t>(0)},
+                      {"size", static_cast<long double>(4)},
+                      {"importance_cutoff",std::string("Trunk")}
+                    })
+                  })
+                }
+              })
+            },
+            {"tagtransform", json::map
+              ({
+                {"node_script", std::string("test/lua/vertices.lua")},
+                {"node_function", std::string("nodes_proc")},
+                {"way_script", std::string("test/lua/edges.lua")},
+                {"way_function", std::string("ways_proc")},
+                {"relation_script", std::string("test/lua/relations.lua")},
+                {"relation_function", std::string("rels_proc")}
+              })
+            },
+            {"admin", json::map
+              ({
+                {"admin_dir", std::string("/data/valhalla")},
+                {"db_name", std::string("admin.sqlite")}
+              })
+            }
+          })
+        },
+        {"thor", json::map({})},
+        {"costing", json::map
+          ({
+            {"auto_shorter", json::map({})},
+            {"bicycle", json::map({})},
+            {"auto", json::map
+              ({
+                {"maneuver_penalty", static_cast<long double>(5.0)},
+                {"gate_cost", static_cast<long double>(30.0)},
+                {"toll_booth_cost", static_cast<long double>(15.0)},
+                {"toll_booth_penalty", static_cast<long double>(0.0)}
+              })
+            },
+            {"pedestrian", json::map
+              ({
+                {"walking_speed", static_cast<long double>(5.1)},
+                {"walkway_factor", static_cast<long double>(0.9)},
+                {"alley_factor", static_cast<long double>(2.0)},
+                {"driveway_factor", static_cast<long double>(2.0)},
+                {"step_penalty", static_cast<long double>(30.0)}
+              })
+            }
+          })
+        }
+      });
   }
   catch(...) {
 
