@@ -38,13 +38,13 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_sif.la
 nobase_include_HEADERS = \
-	valhalla/sif/costfactory.h
+	valhalla/sif/costfactory.h \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
 	valhalla/sif/pedestriancost.h \
 	valhalla/sif/dynamiccost.h \
 	valhalla/sif/hierarchylimits.h \
-	valhalla/sif/edgelable.h
+	valhalla/sif/edgelabel.h
 libvalhalla_sif_la_SOURCES = \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
