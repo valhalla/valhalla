@@ -239,8 +239,8 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 
   // Cannot have turn restriction from either inbound edge edge to
   // the other outbound edge
-  if ((oppdiredge1->restrictions() & (1 << edge2->localedgeidx()) != 0) ||
-      (oppdiredge2->restrictions() & (1 << edge1->localedgeidx()) != 0)) {
+  if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
+      ((oppdiredge2->restrictions() & (1 << edge1->localedgeidx())) != 0)) {
       return false;
   }
 
