@@ -1,5 +1,7 @@
 #include "thor/adjacencylist.h"
 
+using namespace valhalla::sif;
+
 namespace valhalla {
 namespace thor {
 

@@ -3,10 +3,11 @@
 #include <vector>
 #include <algorithm>
 #include "config.h"
-#include "thor/edgelabel.h"
+#include <valhalla/sif/edgelabel.h>
 #include "thor/adjacencylist.h"
 
 using namespace std;
+using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
