@@ -26,7 +26,7 @@ enum class SearchStrategy : bool { NODE, EDGE };
  * A callable element which returns true if an edge should be
  * filtered out of the correlated set and false if the edge is usable
  */
-const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down(); };
+const sif::EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down(); };
 
 /**
  * Find an location within the route network given an input location
@@ -39,7 +39,7 @@ const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge* edge){ return
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  EdgeFilter filter = PathThroughFilter,
+  sif::EdgeFilter filter = PathThroughFilter,
   const SearchStrategy strategy = SearchStrategy::EDGE);
 
 }
