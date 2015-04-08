@@ -126,6 +126,9 @@ class Maneuver {
   uint32_t internal_left_turn_count() const;
   void set_internal_left_turn_count(uint32_t internal_left_turn_count);
 
+  uint32_t roundabout_exit_count() const;
+  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -159,6 +162,7 @@ class Maneuver {
   Signs signs_;
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
+  uint32_t roundabout_exit_count_;
 
   // TODO notes
 

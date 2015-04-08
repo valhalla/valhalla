@@ -53,7 +53,8 @@ Maneuver::Maneuver()
       portions_highway_(false),
       internal_intersection_(false),
       internal_right_turn_count_(0),
-      internal_left_turn_count_(0) {
+      internal_left_turn_count_(0),
+      roundabout_exit_count_(0) {
   street_names_ = make_unique<StreetNamesUs>();
   begin_street_names_ = make_unique<StreetNamesUs>();
   cross_street_names_ = make_unique<StreetNamesUs>();
@@ -345,6 +346,14 @@ void Maneuver::set_internal_left_turn_count(uint32_t internal_left_turn_count) {
   internal_left_turn_count_ = internal_left_turn_count;
 }
 
+uint32_t Maneuver::roundabout_exit_count() const {
+  return roundabout_exit_count_;
+}
+
+void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
+  roundabout_exit_count_ = roundabout_exit_count;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -432,6 +441,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | internal_left_turn_count=";
   man_str += std::to_string(internal_left_turn_count_);
+
+  man_str += " | roundabout_exit_count=";
+  man_str += std::to_string(roundabout_exit_count_);
 
   return man_str;
 }
@@ -530,6 +542,9 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(internal_left_turn_count_);
+
+  man_str += delim;
+  man_str += std::to_string(roundabout_exit_count_);
 
   return man_str;
 }
