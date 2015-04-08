@@ -808,8 +808,8 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     uint32_t nodecount = tilebuilder.header()->nodecount();
     const GraphTile* endnodetile = nullptr;
 
-    uint32_t prev_admin_index = 0;
-    uint32_t admin_index = 0;
+    uint32_t prev_country_offset = 0;
+    uint32_t country_offset = 0;
 
     for (uint32_t i = 0; i < nodecount; i++) {
       GraphId startnode(id, local_level, i);
@@ -819,21 +819,22 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats.max_density, tiles, local_level);
 
       // Enhance node attributes (TODO - timezone)
-      admin_index = GetAdminId(polys, nodeinfo.latlng());
+      uint32_t admin_index = GetAdminId(polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
 
       // Set the country code
       std::string country_code = "";
       if (admin_index != 0) {
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
+        country_offset = tilebuilder.admins_builder(admin_index).country_offset();
       }
 
-      if (admin_index == 0) {
+      if (country_offset == 0) {
         stats.no_country_found++;
       }
 
       if (i == 0)
-        prev_admin_index = admin_index;
+        prev_country_offset = country_offset;
 
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
@@ -932,14 +933,14 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         }
 
         // Set country crossing flag
-        if (admin_index != prev_admin_index) {
+        if (country_offset != prev_country_offset)
           directededge.set_ctry_crossing(true);
-          prev_admin_index = admin_index;
-        }
 
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
       }
+
+      prev_country_offset = country_offset;
 
       // Set the intersection type
       if (nodeinfo.edge_count() == 1) {
