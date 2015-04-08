@@ -5,6 +5,7 @@
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/sif/dynamiccost.h>
 
 #include <functional>
 
@@ -25,7 +26,6 @@ enum class SearchStrategy : bool { NODE, EDGE };
  * A callable element which returns true if an edge should be
  * filtered out of the correlated set and false if the edge is usable
  */
-using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
 const EdgeFilter PathThroughFilter = [](const baldr::DirectedEdge* edge){ return edge->trans_up() || edge->trans_down(); };
 
 /**

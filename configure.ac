@@ -24,6 +24,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
+CHECK_VALHALLA_SIF
 CHECK_VALHALLA_MJOLNIR
 
 # check for boost and make sure we have the program options library
