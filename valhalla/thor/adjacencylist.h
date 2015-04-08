@@ -4,11 +4,7 @@
 #include <vector>
 #include <list>
 
-#include <valhalla/thor/edgelabel.h>
-
-// Constant indicating an invalid label. Used to indicate the adjacency list
-// is empty during a Remove call.
-constexpr uint32_t kInvalidLabel = UINT32_MAX;
+#include <valhalla/sif/edgelabel.h>
 
 namespace valhalla {
 namespace thor {
@@ -76,7 +72,7 @@ class AdjacencyList {
    * @return  Returns the label index of the lowest cost label. Returns
    *             kInvalidLabel if the adjacency list is empty.
    */
-  uint32_t Remove(const std::vector<EdgeLabel>& edgelabels);
+  uint32_t Remove(const std::vector<sif::EdgeLabel>& edgelabels);
 
  private:
   float bucketrange_;  // Total range of costs in lower level buckets
@@ -104,7 +100,7 @@ class AdjacencyList {
    * low level buckets.
    * @param  edgelabels  List of all edge labels (required to get costs).
    */
-  void EmptyOverflow(const std::vector<EdgeLabel>& edgelabels);
+  void EmptyOverflow(const std::vector<sif::EdgeLabel>& edgelabels);
 };
 
 }
