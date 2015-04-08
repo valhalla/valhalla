@@ -1,4 +1,4 @@
-#include "thor/autocost.h"
+#include "sif/autocost.h"
 
 #include <iostream>
 #include <valhalla/midgard/constants.h>

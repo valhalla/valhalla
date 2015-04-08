@@ -1,4 +1,4 @@
-#include "thor/dynamiccost.h"
+#include "sif/dynamiccost.h"
 #include <valhalla/thor/hierarchylimits.h>
 
 using namespace valhalla::baldr;

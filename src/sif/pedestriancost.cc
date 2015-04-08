@@ -1,4 +1,4 @@
-#include "thor/pedestriancost.h"
+#include "sif/pedestriancost.h"
 
 #include <valhalla/midgard/constants.h>
 

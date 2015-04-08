@@ -3,14 +3,19 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/loki/search.h>
 #include <memory>
 
-#include <valhalla/thor/hierarchylimits.h>
-#include <valhalla/thor/edgelabel.h>
+#include <valhalla/sif/hierarchylimits.h>
+#include <valhalla/sif/edgelabel.h>
 
 namespace valhalla {
 namespace thor {
+
+/**
+ * A callable element which returns true if an edge should be
+ * filtered out of the correlated set and false if the edge is usable
+ */
+using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
 
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
@@ -152,7 +157,7 @@ class DynamicCost {
    * Returns a function/functor to be used in location searching which will
    * exclude results from the search by looking at each edges attribution
    */
-  virtual const loki::EdgeFilter GetFilter() const = 0;
+  virtual const EdgeFilter GetFilter() const = 0;
 
   /**
    * Gets the hierarchy limits.

@@ -1,7 +1,7 @@
 #ifndef VALHALLA_THOR_BICYCLECOST_H_
 #define VALHALLA_THOR_BICYCLECOST_H_
 
-#include <valhalla/thor/dynamiccost.h>
+#include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace thor {

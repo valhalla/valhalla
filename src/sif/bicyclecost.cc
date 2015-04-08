@@ -1,4 +1,4 @@
-#include "thor/bicyclecost.h"
+#include "sif/bicyclecost.h"
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 

@@ -4,7 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <valhalla/thor/dynamiccost.h>
+#include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace thor {

@@ -3,7 +3,7 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/thor/dynamiccost.h>
+#include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
 namespace thor {

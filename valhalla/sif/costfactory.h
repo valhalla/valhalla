@@ -4,9 +4,9 @@
 #include <map>
 #include <memory>
 
-#include <valhalla/thor/autocost.h>
-#include <valhalla/thor/bicyclecost.h>
-#include <valhalla/thor/pedestriancost.h>
+#include <valhalla/sif/autocost.h>
+#include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/pedestriancost.h>
 
 namespace valhalla {
 namespace thor {
