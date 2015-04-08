@@ -1,0 +1,18 @@
+-o "39.886929,-76.983902,stop,US 30" -d "39.887150,-76.984810,stop,North Queen Street" -t auto --config ../conf/valhalla.json
+-o "39.886902,-76.983986,stop,US 30" -d "39.886509,-76.985268,stop,US 30" -t auto --config ../conf/valhalla.json
+-o "39.886948,-76.983849,stop,US 30" -d "39.886333,-76.984383,stop,South Queen Street" -t auto --config ../conf/valhalla.json
+-o "39.863617,-77.056808,stop,US 30" -d "39.863068,-77.055328,stop,Hanover Street" -t auto --config ../conf/valhalla.json
+-o "39.863586,-77.056931,stop,US 30" -d "39.864128,-77.054909,stop,US 30" -t auto --config ../conf/valhalla.json
+-o "39.863609,-77.056839,stop,US 30" -d "39.864521,-77.056129,stop,Carlisle Street" -t auto --config ../conf/valhalla.json
+-o "39.287716,-77.530220,stop,Catoctin Mountain Highway" -d "39.287296,-77.532410,stop,Point of Rocks Road" -t auto --config ../conf/valhalla.json
+-o "39.287678,-77.530235,stop,Catoctin Mountain Highway" -d "39.284996,-77.532295,stop,Catoctin Mountain Highway" -t auto --config ../conf/valhalla.json
+-o "39.287785,-77.530182,stop,Catoctin Mountain Highway" -d "39.285492,-77.529594,stop,Point of Rocks Road" -t auto --config ../conf/valhalla.json
+-o "38.912933,-77.051727,stop,Massachusetts Avenue Northwest" -d "38.911545,-77.050659,stop,23rd Street Northwest" -t auto --config ../conf/valhalla.json
+-o "38.912899,-77.051682,stop,Massachusetts Avenue Northwest" -d "38.911781,-77.049591,stop,Massachusetts Avenue Northwest" -t auto --config ../conf/valhalla.json
+-o "38.910370,-77.045532,stop,Massachusetts Avenue Northwest" -d "38.908787,-77.044235,stop,New Hampshire Avenue Northwest" -t auto --config ../conf/valhalla.json
+-o "38.910309,-77.045357,stop,Massachusetts Avenue Northwest" -d "38.908192,-77.043427,stop,19th Street Northwest" -t auto --config ../conf/valhalla.json
+-o "38.910343,-77.045448,stop,Massachusetts Avenue Northwest" -d "38.908859,-77.041191,stop,Massachusetts Avenue Northwest" -t auto --config ../conf/valhalla.json
+-o "38.910316,-77.045380,stop,Massachusetts Avenue Northwest" -d "38.909641,-77.041092,stop,P Street Northwest" -t auto --config ../conf/valhalla.json
+-o "39.493633,-76.317940,stop,East Wheel Road" -d "39.493553,-76.315727,stop,Laurel Bush Road" -t auto --config ../conf/valhalla.json
+-o "39.493641,-76.317856,stop,East Wheel Road" -d "39.494732,-76.315758,stop,East Wheel Road" -t auto --config ../conf/valhalla.json
+-o "39.493649,-76.317780,stop,East Wheel Road" -d "39.494690,-76.317337,stop,Laurel Bush Road" -t auto --config ../conf/valhalla.json
