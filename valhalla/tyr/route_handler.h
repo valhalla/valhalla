@@ -2,7 +2,7 @@
 #define VALHALLA_TYR_ROUTE_HANDLER_H_
 
 #include <valhalla/tyr/handler.h>
-#include <valhalla/thor/dynamiccost.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/baldr/graphreader.h>
 #include <string>
 #include <memory>
@@ -39,7 +39,7 @@ class RouteHandler : public Handler {
 
  protected:
 
-  valhalla::thor::cost_ptr_t cost_;
+  valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };
 
