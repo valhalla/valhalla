@@ -7,6 +7,7 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::sif;
 using namespace valhalla::loki;
 
 namespace {
