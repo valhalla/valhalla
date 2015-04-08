@@ -721,7 +721,12 @@ void NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
 void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Enter roundabout";
+  text_instruction += "Enter the roundabout";
+  if (maneuver.roundabout_exit_count() > 0) {
+    text_instruction += " and take the ";
+    text_instruction += "TBD ";  // TODO - roundabout exit count
+    text_instruction += "exit";
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
@@ -730,9 +735,7 @@ void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
 void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the ";
-  text_instruction += "TBD ";  // TODO - roundabout exit count
-  text_instruction += "exit";
+  text_instruction += "Exit the roundabout";
   if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
     text_instruction += maneuver.street_names().ToString();
