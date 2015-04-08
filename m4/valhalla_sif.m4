@@ -30,7 +30,7 @@ AC_DEFUN([CHECK_VALHALLA_SIF],
         	[AC_LANG_PUSH([C++])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/sif/costfactory.h>]],
 			[[using namespace valhalla::sif;
-			CostFactory f;]])],
+			CostFactory<DynamicCost> f;]])],
 			ax_cv_valhalla_sif=yes, ax_cv_valhalla_sif=no)
 		AC_LANG_POP([C++])
 	])
