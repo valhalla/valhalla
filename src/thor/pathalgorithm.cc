@@ -6,6 +6,7 @@
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
+using namespace valhalla::sif;
 
 // TODO: make a class that extends std::exception, with messages and
 // error codes and return the appropriate error codes

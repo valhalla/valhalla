@@ -12,18 +12,19 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
+#include <valhalla/sif/costfactory.h>
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/midgard/logging.h>
 #include "thor/pathalgorithm.h"
-#include "thor/costfactory.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::odin;
+using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
