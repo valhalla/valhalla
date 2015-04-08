@@ -128,19 +128,13 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
     }
     LOG_TRACE(std::string("  node=") + node->ToString());
-    uint32_t right_count;
-    uint32_t right_similar_count;
-    uint32_t left_count;
-    uint32_t left_similar_count;
+    IntersectingEdgeCounts xedge_counts;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-        right_count,
-        right_similar_count,
-        left_count,
-        left_similar_count);
-    LOG_TRACE(std::string("    right_count=") + std::to_string(right_count)
-        + std::string("    left_count=") + std::to_string(left_count));
-    LOG_TRACE(std::string("    right_similar_count=") + std::to_string(right_similar_count)
-        + std::string("    left_similar_count=") + std::to_string(left_similar_count));
+                                                   xedge_counts);
+    LOG_TRACE(std::string("    right=") + std::to_string(xedge_counts.right)
+        + std::string("    left=") + std::to_string(xedge_counts.left));
+    LOG_TRACE(std::string("    right_similar=") + std::to_string(xedge_counts.right_similar)
+        + std::string("    left_similar=") + std::to_string(xedge_counts.left_similar));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -876,27 +870,21 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   auto* prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
 
-  uint32_t right_count;
-  uint32_t right_similar_count;
-  uint32_t left_count;
-  uint32_t left_similar_count;
+  IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
   // TODO driveable
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                 right_count,
-                                                 right_similar_count,
-                                                 left_count,
-                                                 left_similar_count);
+                                                 xedge_counts);
 
   Maneuver::RelativeDirection relative_direction =
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  if ((right_similar_count == 0) && (left_similar_count > 0)
+  if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepRight);
-  } else if ((right_similar_count > 0) && (left_similar_count == 0)
+  } else if ((xedge_counts.right_similar > 0) && (xedge_counts.left_similar == 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);
@@ -919,7 +907,7 @@ Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
 }
 
 bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
-  // TODO: use admin of node to return proper value
+  // TODO: use value from edgeto return proper value
   return true;
 }
 

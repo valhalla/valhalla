@@ -293,6 +293,17 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
+bool EnhancedTripPath_IntersectingEdge::IsDriveableOutbound() const {
+  TripPath_Driveability d = driveability();
+  if ((d == TripPath_Driveability_kForward)
+      || (d == TripPath_Driveability_kBoth)) {
+    return true;
+  }
+  return false;
+
+}
+
+
 std::string EnhancedTripPath_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
@@ -327,12 +338,8 @@ EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
-    uint32_t from_heading, uint32_t& right_count, uint32_t& right_similar_count,
-    uint32_t& left_count, uint32_t& left_similar_count) const {
-  right_count = 0;
-  right_similar_count = 0;
-  left_count = 0;
-  left_similar_count = 0;
+    uint32_t from_heading, IntersectingEdgeCounts& xedge_counts) {
+  xedge_counts.clear();
 
   // No turn - just return
   if (intersecting_edge_size() == 0)
@@ -343,36 +350,63 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
+    bool xedge_driveable_outbound =
+        GetIntersectingEdge(i)->IsDriveableOutbound();
+
     if (path_turn_degree > 180) {
       if ((intersecting_turn_degree > path_turn_degree)
           || (intersecting_turn_degree < 180)) {
-        ++right_count;
+        ++xedge_counts.right;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 true)) {
-          ++right_similar_count;
+          ++xedge_counts.right_similar;
+          if (xedge_driveable_outbound) {
+            ++xedge_counts.right_similar_driveable_outbound;
+          }
+        }
+        if (xedge_driveable_outbound) {
+          ++xedge_counts.right_driveable_outbound;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           && (intersecting_turn_degree > 180)) {
-        ++left_count;
+        ++xedge_counts.left;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 false)) {
-          ++left_similar_count;
+          ++xedge_counts.left_similar;
+          if (xedge_driveable_outbound) {
+            ++xedge_counts.left_similar_driveable_outbound;
+          }
+        }
+        if (xedge_driveable_outbound) {
+          ++xedge_counts.left_driveable_outbound;
         }
       }
     } else {
       if ((intersecting_turn_degree > path_turn_degree)
           && (intersecting_turn_degree < 180)) {
-        ++right_count;
+        ++xedge_counts.right;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 true)) {
-          ++right_similar_count;
+          ++xedge_counts.right_similar;
+          if (xedge_driveable_outbound) {
+            ++xedge_counts.right_similar_driveable_outbound;
+          }
+        }
+        if (xedge_driveable_outbound) {
+          ++xedge_counts.right_driveable_outbound;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           || (intersecting_turn_degree > 180)) {
-        ++left_count;
+        ++xedge_counts.left;
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 false)) {
-          ++left_similar_count;
+          ++xedge_counts.left_similar;
+          if (xedge_driveable_outbound) {
+            ++xedge_counts.left_similar_driveable_outbound;
+          }
+        }
+        if (xedge_driveable_outbound) {
+          ++xedge_counts.left_driveable_outbound;
         }
       }
     }
