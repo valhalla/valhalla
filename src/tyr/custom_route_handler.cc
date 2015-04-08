@@ -11,10 +11,10 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
-#include <valhalla/thor/costfactory.h>
-#include <valhalla/thor/autocost.h>
-#include <valhalla/thor/bicyclecost.h>
-#include <valhalla/thor/pedestriancost.h>
+#include <valhalla/sif/costfactory.h>
+#include <valhalla/sif/autocost.h>
+#include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/pedestriancost.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/thor/trippathbuilder.h>
@@ -224,11 +224,11 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
   }
 
   //register edge/node costing methods
-  valhalla::thor::CostFactory<valhalla::thor::DynamicCost> factory;
-  factory.Register("auto", valhalla::thor::CreateAutoCost);
-  factory.Register("auto_shorter", valhalla::thor::CreateAutoShorterCost);
-  factory.Register("bicycle", valhalla::thor::CreateBicycleCost);
-  factory.Register("pedestrian", valhalla::thor::CreatePedestrianCost);
+  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
+  factory.Register("auto", valhalla::sif::CreateAutoCost);
+  factory.Register("auto_shorter", valhalla::sif::CreateAutoShorterCost);
+  factory.Register("bicycle", valhalla::sif::CreateBicycleCost);
+  factory.Register("pedestrian", valhalla::sif::CreatePedestrianCost);
 
   //TODO: overwrite anything in config.costing with anything in request.costing
 
