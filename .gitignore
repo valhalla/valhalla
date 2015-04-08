@@ -55,6 +55,7 @@ test/graphbuilder
 test/refs
 test/graphparser
 test/signinfo
+test/admininfobuilder
 test/*.log
 test/*.trs
 EdgeInfoBuilder_TestWriteRead.gph

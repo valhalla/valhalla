@@ -1,4 +1,5 @@
 #include "mjolnir/idtable.h"
+#include <stdexcept>
 
 namespace valhalla {
 namespace mjolnir {
