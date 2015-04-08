@@ -33,26 +33,12 @@ libtool
 .dirstamp
 *.lo
 .libs/
-libvalhalla_baldr.la
+libvalhalla_sif.la
 
 # tests
 test-suite.log
 test-driver
-test/location
-test/directededge
-test/graphid
-test/graphreader
-test/messaging
-test/tilehierarchy
-test/graphtile
-test/nodeinfo
-test/streetname
-test/streetnames
-test/streetname_us
-test/streetnames_us
-test/streetnames_factory
-test/graphreader
-test/turn
+test/factory
 test/*.log
 test/*.trs
 
