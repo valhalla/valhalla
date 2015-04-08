@@ -9,7 +9,7 @@
 using namespace valhalla::baldr;
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 // Default options/values
 namespace {
@@ -112,7 +112,7 @@ class AutoCost : public DynamicCost {
    * exclude results from the search by looking at each edges attribution
    * @return Function/functor to be used in filtering out edges
    */
-  virtual const loki::EdgeFilter GetFilter() const {
+  virtual const EdgeFilter GetFilter() const {
     //throw back a lambda that checks the access for this type of costing
     return [](const baldr::DirectedEdge* edge){
       return edge->trans_up() || edge->trans_down() || !(edge->forwardaccess() & kAutoAccess);

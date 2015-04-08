@@ -1,10 +1,9 @@
 #include "sif/dynamiccost.h"
-#include <valhalla/thor/hierarchylimits.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla{
-namespace thor{
+namespace sif {
 
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt)
     : not_thru_distance_(5000.0f) {

@@ -39,15 +39,18 @@ endif
 lib_LTLIBRARIES = libvalhalla_sif.la
 nobase_include_HEADERS = \
 	valhalla/sif/costfactory.h
-	valhalla/sif/autocost.cc \
-	valhalla/sif/bicyclecost.cc \
-	valhalla/sif/pedestriancost.cc \
-	valhalla/sif/dynamiccost.cc
+	valhalla/sif/autocost.h \
+	valhalla/sif/bicyclecost.h \
+	valhalla/sif/pedestriancost.h \
+	valhalla/sif/dynamiccost.h \
+	valhalla/sif/hierarchylimits.h \
+	valhalla/sif/edgelable.h
 libvalhalla_sif_la_SOURCES = \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
 	src/sif/pedestriancost.cc \
-	src/sif/dynamiccost.cc 
+	src/sif/dynamiccost.cc \
+	src/sif/edgelabel.cc
 libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 

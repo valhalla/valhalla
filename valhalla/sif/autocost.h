@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_AUTOCOST_H_
-#define VALHALLA_THOR_AUTOCOST_H_
+#ifndef VALHALLA_SIF_AUTOCOST_H_
+#define VALHALLA_SIF_AUTOCOST_H_
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -7,7 +7,7 @@
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 /**
  * Create an auto route cost method. This is generally shortest time but uses
@@ -25,4 +25,4 @@ cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
 }
 }
 
-#endif  // VALHALLA_THOR_AUTOCOST_H_
+#endif  // VALHALLA_SIF_AUTOCOST_H_

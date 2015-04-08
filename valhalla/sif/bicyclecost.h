@@ -1,10 +1,10 @@
-#ifndef VALHALLA_THOR_BICYCLECOST_H_
-#define VALHALLA_THOR_BICYCLECOST_H_
+#ifndef VALHALLA_SIF_BICYCLECOST_H_
+#define VALHALLA_SIF_BICYCLECOST_H_
 
 #include <valhalla/sif/dynamiccost.h>
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 /**
  * Create a bicyclecost
@@ -15,4 +15,4 @@ cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config);
 }
 }
 
-#endif  // VALHALLA_THOR_BICYCLECOST_H_
+#endif  // VALHALLA_SIF_BICYCLECOST_H_

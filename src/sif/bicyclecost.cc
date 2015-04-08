@@ -5,7 +5,7 @@
 using namespace valhalla::baldr;
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 // Cost of traversing an edge with steps. Make this high but not impassible.
 // Equal to about 0.5km.
@@ -124,7 +124,7 @@ class BicycleCost : public DynamicCost {
    * exclude results from the search by looking at each edges attribution
    * @return Function to be used in filtering out edges
    */
-  virtual const loki::EdgeFilter GetFilter() const {
+  virtual const EdgeFilter GetFilter() const {
     //throw back a lambda that checks the access for this type of costing
     BicycleType b = bicycletype_;
     return [b](const baldr::DirectedEdge* edge){

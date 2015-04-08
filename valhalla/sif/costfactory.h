@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_COSTFACTORY_H_
-#define VALHALLA_THOR_COSTFACTORY_H_
+#ifndef VALHALLA_SIF_COSTFACTORY_H_
+#define VALHALLA_SIF_COSTFACTORY_H_
 
 #include <map>
 #include <memory>
@@ -9,7 +9,7 @@
 #include <valhalla/sif/pedestriancost.h>
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 /**
 * Generic factory class for creating objects based on type name.
@@ -60,4 +60,4 @@ class CostFactory {
 }
 }
 
-#endif // VALHALLA_THOR_COSTFACTORY_H_
+#endif // VALHALLA_SIF_COSTFACTORY_H_

@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_DYNAMICCOST_H_
-#define VALHALLA_THOR_DYNAMICCOST_H_
+#ifndef VALHALLA_SIF_DYNAMICCOST_H_
+#define VALHALLA_SIF_DYNAMICCOST_H_
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
@@ -9,7 +9,7 @@
 #include <valhalla/sif/edgelabel.h>
 
 namespace valhalla {
-namespace thor {
+namespace sif {
 
 /**
  * A callable element which returns true if an edge should be
@@ -196,4 +196,4 @@ typedef std::shared_ptr<DynamicCost> cost_ptr_t;
 }
 }
 
-#endif  // VALHALLA_THOR_DYNAMICCOST_H_
+#endif  // VALHALLA_SIF_DYNAMICCOST_H_
