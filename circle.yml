@@ -17,7 +17,7 @@ test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage
   override:
-    - make test -j2
+    - make test -j8
   post:
     - sudo make install
 
