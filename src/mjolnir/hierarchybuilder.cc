@@ -157,6 +157,13 @@ GraphId GetOpposingEdge(const GraphId& node,
   return GraphId(0, 0, 0);
 }
 
+// Get the ISO country code at the end node
+std::string EndNodeIso(const DirectedEdge* edge, hierarchy_info& info) {
+  const GraphTile* tile = info.graphreader_.GetGraphTile(edge->endnode());
+  const NodeInfo* nodeinfo = tile->node(edge->endnode());
+  return tile->admininfo(nodeinfo->admin_index())->country_iso();
+}
+
 // Test if the node is eligible to be contracted (part of a shortcut) in
 // the new level.
 bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
@@ -241,7 +248,14 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
   // the other outbound edge
   if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
       ((oppdiredge2->restrictions() & (1 << edge1->localedgeidx())) != 0)) {
-      return false;
+    return false;
+  }
+
+  // ISO country codes at the end nodes must equal this node
+  std::string iso = tile->admininfo(nodeinfo->admin_index())->country_iso();
+  if (EndNodeIso(edge1, info) != iso || EndNodeIso(edge2, info) != iso) {
+//    LOG_INFO("ISO codes do not match!");
+    return false;
   }
 
   // Store the pairs of base edges entering and exiting this node
