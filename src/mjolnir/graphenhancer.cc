@@ -808,9 +808,6 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     uint32_t nodecount = tilebuilder.header()->nodecount();
     const GraphTile* endnodetile = nullptr;
 
-    uint32_t prev_country_offset = 0;
-    uint32_t country_offset = 0;
-
     for (uint32_t i = 0; i < nodecount; i++) {
       GraphId startnode(id, local_level, i);
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
@@ -824,17 +821,9 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
 
       // Set the country code
       std::string country_code = "";
-      if (admin_index != 0) {
+      if (admin_index != 0)
         country_code = tilebuilder.admins_builder(admin_index).country_iso();
-        country_offset = tilebuilder.admins_builder(admin_index).country_offset();
-      }
-
-      if (country_offset == 0) {
-        stats.no_country_found++;
-      }
-
-      if (i == 0)
-        prev_country_offset = country_offset;
+      else stats.no_country_found++;
 
       nodeinfo.set_density(density);
       stats.density_counts[density]++;
@@ -932,15 +921,9 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
           stats.internalcount++;
         }
 
-        // Set country crossing flag
-        if (country_offset != prev_country_offset)
-          directededge.set_ctry_crossing(true);
-
         // Add the directed edge
         directededges.emplace_back(std::move(directededge));
       }
-
-      prev_country_offset = country_offset;
 
       // Set the intersection type
       if (nodeinfo.edge_count() == 1) {
