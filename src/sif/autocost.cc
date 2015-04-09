@@ -189,7 +189,7 @@ bool AutoCost::AllowMultiPass() const {
 // not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
-  // Check access, Uturn, simple turn restriction, and not_thru edges
+  // Check access, Uturn, and simple turn restriction.
   // TODO - perhaps allow Uturns at dead-end nodes?
   if (!(edge->forwardaccess() & kAutoAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx()) ||
