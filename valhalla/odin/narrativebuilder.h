@@ -55,6 +55,8 @@ class NarrativeBuilder {
 
   static std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
 
+  static std::string FormOrdinalValue(uint32_t value);
+
 };
 
 }

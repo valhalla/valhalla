@@ -61,8 +61,49 @@ class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
 
   EnhancedTripPath_IntersectingEdge() = delete;
 
+  bool IsDriveableOutbound() const;
+
   std::string ToString() const;
 
+};
+
+struct IntersectingEdgeCounts {
+
+  IntersectingEdgeCounts() {
+    clear();
+  }
+
+  IntersectingEdgeCounts(uint32_t r, uint32_t rs, uint32_t rdo, uint32_t rsdo,
+                         uint32_t l, uint32_t ls, uint32_t ldo, uint32_t lsdo)
+      : right(r),
+        right_similar(rs),
+        right_driveable_outbound(rdo),
+        right_similar_driveable_outbound(rsdo),
+        left(l),
+        left_similar(ls),
+        left_driveable_outbound(ldo),
+        left_similar_driveable_outbound(lsdo) {
+  }
+
+  void clear() {
+    right = 0;
+    right_similar = 0;
+    right_driveable_outbound = 0;
+    right_similar_driveable_outbound = 0;
+    left = 0;
+    left_similar = 0;
+    left_driveable_outbound = 0;
+    left_similar_driveable_outbound = 0;
+  }
+
+  uint32_t right;
+  uint32_t right_similar;
+  uint32_t right_driveable_outbound;
+  uint32_t right_similar_driveable_outbound;
+  uint32_t left;
+  uint32_t left_similar;
+  uint32_t left_driveable_outbound;
+  uint32_t left_similar_driveable_outbound;
 };
 
 class EnhancedTripPath_Node : public TripPath_Node {
@@ -74,9 +115,7 @@ class EnhancedTripPath_Node : public TripPath_Node {
   EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(
-      uint32_t from_heading, uint32_t& right_count,
-      uint32_t& right_similar_count, uint32_t& left_count,
-      uint32_t& left_similar_count) const;
+      uint32_t from_heading, IntersectingEdgeCounts& xedge_counts);
 
   std::string ToString() const;
 

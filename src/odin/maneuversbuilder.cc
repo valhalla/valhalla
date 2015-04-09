@@ -128,19 +128,17 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading())));
     }
     LOG_TRACE(std::string("  node=") + node->ToString());
-    uint32_t right_count;
-    uint32_t right_similar_count;
-    uint32_t left_count;
-    uint32_t left_similar_count;
+    IntersectingEdgeCounts xedge_counts;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-        right_count,
-        right_similar_count,
-        left_count,
-        left_similar_count);
-    LOG_TRACE(std::string("    right_count=") + std::to_string(right_count)
-        + std::string("    left_count=") + std::to_string(left_count));
-    LOG_TRACE(std::string("    right_similar_count=") + std::to_string(right_similar_count)
-        + std::string("    left_similar_count=") + std::to_string(left_similar_count));
+                                                   xedge_counts);
+    LOG_TRACE(std::string("    right=") + std::to_string(xedge_counts.right)
+        + std::string(" | right_similar=") + std::to_string(xedge_counts.right_similar)
+        + std::string(" | right_driveable_outbound=") + std::to_string(xedge_counts.right_driveable_outbound)
+        + std::string(" | right_similar_driveable_outbound=") + std::to_string(xedge_counts.right_similar_driveable_outbound));
+    LOG_TRACE(std::string("    left =") + std::to_string(xedge_counts.left)
+        + std::string(" | left_similar =") + std::to_string(xedge_counts.left_similar)
+        + std::string(" | left_driveable_outbound =") + std::to_string(xedge_counts.left_driveable_outbound)
+        + std::string(" | left_similar_driveable_outbound =") + std::to_string(xedge_counts.left_similar_driveable_outbound));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -227,7 +225,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           == Maneuver::RelativeDirection::kKeepStraight)
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
           && !next_man->internal_intersection() && !curr_man->ramp()
-          && !next_man->ramp() && !common_base_names->empty()) {
+          && !next_man->ramp() && !curr_man->roundabout()
+          && !next_man->roundabout() &&!common_base_names->empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
@@ -450,6 +449,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Roundabout
   if (prev_edge->roundabout()) {
     maneuver.set_roundabout(true);
+    maneuver.set_roundabout_exit_count(1);
   }
 
   // Internal Intersection
@@ -498,6 +498,21 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_portions_highway(true);
   }
 
+  // Roundabouts
+  if (prev_edge->roundabout()) {
+    IntersectingEdgeCounts xedge_counts;
+    trip_path_->GetEnhancedNode(node_index)
+        ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   xedge_counts);
+    if (IsRightSideOfStreetDriving()) {
+      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+              + xedge_counts.right_driveable_outbound);
+    } else {
+      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+              + xedge_counts.left_driveable_outbound);
+    }
+  }
+
   // Signs
   if (prev_edge->has_sign()) {
     // Exit number
@@ -540,6 +555,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set the begin shape index
   maneuver.set_begin_shape_index(curr_edge->begin_shape_index());
 
+
   // if possible, set the turn degree and relative direction
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   if (prev_edge) {
@@ -548,6 +564,23 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Calculate and set the relative direction for the specified maneuver
     DetermineRelativeDirection(maneuver);
+
+    // TODO - determine if we want to count right driveable at entrance node
+    // Roundabouts
+//    if (curr_edge->roundabout()) {
+//      IntersectingEdgeCounts xedge_counts;
+//      trip_path_->GetEnhancedNode(node_index)
+//            ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+//                                                       xedge_counts);
+//      if (IsRightSideOfStreetDriving()) {
+//        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+//                                           + xedge_counts.right_driveable_outbound);
+//      } else {
+//        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+//                                           + xedge_counts.left_driveable_outbound);
+//      }
+//    }
+
   }
 
   // Set the maneuver type
@@ -850,6 +883,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   // TODO: add logic for 'T' and pencil point u-turns
 
+  // TODO: update to use factory and country code
   std::unique_ptr<StreetNames> prev_edge_names = make_unique<StreetNamesUs>(
       prev_edge->GetNameList());
 
@@ -874,27 +908,21 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   auto* prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
 
-  uint32_t right_count;
-  uint32_t right_similar_count;
-  uint32_t left_count;
-  uint32_t left_similar_count;
+  IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
   // TODO driveable
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                 right_count,
-                                                 right_similar_count,
-                                                 left_count,
-                                                 left_similar_count);
+                                                 xedge_counts);
 
   Maneuver::RelativeDirection relative_direction =
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  if ((right_similar_count == 0) && (left_similar_count > 0)
+  if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepRight);
-  } else if ((right_similar_count > 0) && (left_similar_count == 0)
+  } else if ((xedge_counts.right_similar > 0) && (xedge_counts.left_similar == 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);
@@ -917,7 +945,7 @@ Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
 }
 
 bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
-  // TODO: use admin of node to return proper value
+  // TODO: use value from edgeto return proper value
   return true;
 }
 
