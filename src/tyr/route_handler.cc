@@ -190,7 +190,8 @@ json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_dir
 }
 
 void serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions, std::ostringstream& stream) {
+  const valhalla::odin::TripDirections& trip_directions,
+  std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -248,6 +249,10 @@ RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boos
 
   //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
+
+  // Get the units (defaults to kilometers)
+  km_units_ = true;
+  units_ = (km_units_) ? "kilometers" : "miles";
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }

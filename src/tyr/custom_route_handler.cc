@@ -32,6 +32,7 @@ valhalla output looks like this:
     "trip":
 {
     "status": 0,
+    "units": "kilometers"
     "locations": [ ],
     "summary":
 {
@@ -93,13 +94,14 @@ json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
   // TODO: multiple legs.
 
   auto route_summary = json::map({});
+  float length = 0.0f;
   uint64_t seconds = 0, meters = 0;
   for(const auto& maneuver : trip_directions.maneuver()) {
-    meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
+    length += maneuver.length();
     seconds += static_cast<uint64_t>(maneuver.time());
   }
   route_summary->emplace("time", seconds);
-  route_summary->emplace("distance", meters);
+  route_summary->emplace("length", (long double)(length));
   return route_summary;
 }
 
@@ -135,12 +137,13 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
   auto legs = json::array({});
   auto leg = json::map({});
   auto summary = json::map({});
-  uint64_t seconds = 0, meters = 0;
+  float length = 0.0f;
+  uint64_t seconds = 0;
   auto maneuvers = json::array({});
 
   for(const auto& maneuver : trip_directions.maneuver()) {
 
-    meters += static_cast<uint64_t>(maneuver.length() * 1000.f);
+    length += maneuver.length();
     seconds += static_cast<uint64_t>(maneuver.time());
     leg->emplace("shape", trip_path.shape());
     auto man = json::map({});
@@ -158,7 +161,7 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
     if (street_names->size())
       man->emplace("streetNames", street_names);
     man->emplace("time", static_cast<uint64_t>(maneuver.time()));
-    man->emplace("distance", static_cast<uint64_t>(maneuver.length() * 1000.f));
+    man->emplace("length", (long double)(maneuver.length()));
     man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.begin_shape_index()));
     man->emplace("endShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
 
@@ -178,7 +181,7 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
   }
   leg->emplace("maneuvers", maneuvers);
   summary->emplace("time", seconds);
-  summary->emplace("distance", meters);
+  summary->emplace("length", (long double)length);
   leg->emplace("summary",summary);
 
   legs->emplace_back(leg);
@@ -186,7 +189,9 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
 }
 
 void serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions, std::ostringstream& stream) {
+  const valhalla::odin::TripDirections& trip_directions,
+  const std::string& units,
+  std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -199,7 +204,8 @@ void serialize(const valhalla::odin::TripPath& trip_path,
           {"summary", summary(trip_directions)},
           {"legs", legs(trip_path,trip_directions)},
           {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-          {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
+          {"status", static_cast<uint64_t>(0)}, //0 success or 207 no route
+          {"units", units}
       })
     }
   });
@@ -237,6 +243,10 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
 
   //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
+
+  // Get the units (defaults to kilometers)
+  km_units_ = true;
+  units_ = (km_units_) ? "kilometers" : "miles";
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
@@ -286,7 +296,7 @@ std::string CustomRouteHandler::Action() {
   std::ostringstream stream;
   if(jsonp_)
     stream << *jsonp_ << '(';
-  serialize(trip_path, trip_directions, stream);
+  serialize(trip_path, trip_directions, units_, stream);
   if(jsonp_)
     stream << ')';
   return stream.str();
