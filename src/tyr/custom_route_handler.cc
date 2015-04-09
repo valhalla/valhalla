@@ -244,8 +244,19 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
   //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
 
-  // Get the units (defaults to kilometers)
-  km_units_ = true;
+  // Get the units (defaults to kilometers
+  std::string units = "kilometers";
+  try {
+    units = request.get<std::string>("units");
+  }
+  catch(...) {
+    std::cout << "No units string - assume kilometers" << std::endl;
+  }
+  if (units == "miles" || units == "m") {
+    km_units_ = false;
+  } else {
+    km_units_ = true;
+  }
   units_ = (km_units_) ? "kilometers" : "miles";
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
