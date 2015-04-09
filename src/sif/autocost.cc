@@ -18,7 +18,7 @@ constexpr float kDefaultGateCost              = 30.0f;  // Seconds
 constexpr float kDefaultTollBoothCost         = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty      = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingFactor = 600.0f; // Seconds
-constexpr bool  kDefaultAvoidCountryCrossings = true;
+constexpr bool  kDefaultAvoidCountryCrossings = false;
 // Maximum speed expected - this is used for the A* heuristic
 constexpr uint32_t kMaxSpeedKph = 140;
 }
