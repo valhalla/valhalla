@@ -45,12 +45,17 @@ namespace baldr{
 
     //grab some address info
     auto part = parts.begin() + 2;
-    for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+    for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_, &l.phone_, &l.url_ }) {
       if(part == parts.end())
         break;
       address->swap(*part);
       ++part;
     }
+
+    if (parts.size() > 11) {
+      l.heading_ = parts[11];
+    }
+
     return l;
   }
 

@@ -61,6 +61,10 @@ struct Location {
   std::string state_;
   std::string zip_;
   std::string country_;
+  std::string phone_;
+  std::string url_;
+
+  std::string heading_;
 
   //TODO: fill these out in constructors and add getters and setters
 /*
