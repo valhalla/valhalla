@@ -186,18 +186,19 @@ bool AutoCost::AllowMultiPass() const {
 // not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
-
-  // Avoid country crossings.
-  if (avoid_country_crossings_ && edge->ctry_crossing()) {
-    return false;
-  }
-
   // Check access, Uturn, simple turn restriction, and not_thru edges
   // TODO - perhaps allow Uturns at dead-end nodes?
-  return (edge->forwardaccess() & kAutoAccess) &&
-         (pred.opp_local_idx() != edge->localedgeidx()) && // Uturn
-        !(pred.restrictions() & (1 << edge->localedgeidx()) &&
-         (edge->surface() != Surface::kImpassable));
+  if (!(edge->forwardaccess() & kAutoAccess) ||
+      (pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+       edge->surface() == Surface::kImpassable) {
+    return false;
+  }
+  // Avoid country crossings.
+  if (avoid_country_crossings_ && edge->ctry_crossing())
+    return false;
+
+  return true;
 }
 
 // Check if access is allowed at the specified node.
