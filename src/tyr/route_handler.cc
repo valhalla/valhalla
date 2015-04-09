@@ -109,7 +109,8 @@ json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions
 json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
   auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
-    via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
+    via_points->emplace_back(json::array({static_cast<long double>(location.ll().lat()),
+            static_cast<long double>(location.ll().lng())}));
   }
   return via_points;
 }
@@ -250,9 +251,18 @@ RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boos
   //get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
 
-  // Get the units (defaults to kilometers)
-  km_units_ = true;
-  units_ = (km_units_) ? "kilometers" : "miles";
+  // Get the units (defaults to kilometers
+   std::string units = "kilometers";
+   auto s = request.get_optional<std::string>("units");
+   if (s) {
+     units = *s;
+   }
+   if (units == "miles" || units == "m") {
+     km_units_ = false;
+   } else {
+     km_units_ = true;
+   }
+   units_ = (km_units_) ? "kilometers" : "miles";
 
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }

@@ -101,7 +101,7 @@ json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
     seconds += static_cast<uint64_t>(maneuver.time());
   }
   route_summary->emplace("time", seconds);
-  route_summary->emplace("length", (long double)(length));
+  route_summary->emplace("length", static_cast<long double>(length));
   return route_summary;
 }
 
@@ -112,8 +112,8 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
     auto loc = json::map({});
 
     //loc->emplace("type", location.type());
-    loc->emplace("latitude", (long double)(location.ll().lat()));
-    loc->emplace("longitude",(long double)(location.ll().lng()));
+    loc->emplace("latitude",  static_cast<long double>(location.ll().lat()));
+    loc->emplace("longitude", static_cast<long double>(location.ll().lng()));
     loc->emplace("name",location.name());
     loc->emplace("phone",location.phone());
     loc->emplace("street",location.street());
@@ -161,7 +161,7 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
     if (street_names->size())
       man->emplace("streetNames", street_names);
     man->emplace("time", static_cast<uint64_t>(maneuver.time()));
-    man->emplace("length", (long double)(maneuver.length()));
+    man->emplace("length", static_cast<long double>(maneuver.length()));
     man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.begin_shape_index()));
     man->emplace("endShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
 
@@ -181,7 +181,7 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
   }
   leg->emplace("maneuvers", maneuvers);
   summary->emplace("time", seconds);
-  summary->emplace("length", (long double)length);
+  summary->emplace("length", static_cast<long double>(length));
   leg->emplace("summary",summary);
 
   legs->emplace_back(leg);
@@ -219,47 +219,8 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 namespace valhalla {
 namespace tyr {
 
-CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request) : Handler(config, request) {
-  //parse out the type of route
-  std::string costing;
-  try {
-    costing = request.get<std::string>("costing");
-  }
-  catch(...) {
-    throw std::runtime_error("No edge/node costing provided");
-  }
-
-  //register edge/node costing methods
-  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
-  factory.Register("auto", valhalla::sif::CreateAutoCost);
-  factory.Register("auto_shorter", valhalla::sif::CreateAutoShorterCost);
-  factory.Register("bicycle", valhalla::sif::CreateBicycleCost);
-  factory.Register("pedestrian", valhalla::sif::CreatePedestrianCost);
-
-  //TODO: overwrite anything in config.costing with anything in request.costing
-
-  //get the costing method
-  cost_ = factory.Create(costing, config.get_child("costing." + costing));
-
-  //get the config for the graph reader
-  reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
-
-  // Get the units (defaults to kilometers
-  std::string units = "kilometers";
-  try {
-    units = request.get<std::string>("units");
-  }
-  catch(...) {
-    std::cout << "No units string - assume kilometers" << std::endl;
-  }
-  if (units == "miles" || units == "m") {
-    km_units_ = false;
-  } else {
-    km_units_ = true;
-  }
-  units_ = (km_units_) ? "kilometers" : "miles";
-
-  //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
+CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request)
+      : RouteHandler(config, request) {
 }
 
 CustomRouteHandler::~CustomRouteHandler() {

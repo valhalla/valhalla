@@ -38,7 +38,8 @@ class RouteHandler : public Handler {
   virtual std::string Action();
 
  protected:
-
+  bool km_units_;
+  std::string units_;
   valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };

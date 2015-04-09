@@ -1,7 +1,7 @@
 #ifndef VALHALLA_TYR_CUSTOM_ROUTE_HANDLER_H_
 #define VALHALLA_TYR_CUSTOM_ROUTE_HANDLER_H_
 
-#include <valhalla/tyr/handler.h>
+#include <valhalla/tyr/route_handler.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/baldr/graphreader.h>
 #include <string>
@@ -10,7 +10,7 @@
 namespace valhalla{
 namespace tyr{
 
-class CustomRouteHandler : public Handler {
+class CustomRouteHandler : public RouteHandler {
  public:
   /**
    * Parses json request data to be used as options for the action
@@ -36,11 +36,6 @@ class CustomRouteHandler : public Handler {
    * @return string the json representation of the route mirroring the format of OSRM for now
    */
   virtual std::string Action();
-
- protected:
-
-  valhalla::sif::cost_ptr_t cost_;
-  std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };
 
 }
