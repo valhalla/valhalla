@@ -43,7 +43,7 @@
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0
       "country_crossing_factor": 600.0,
-      "avoid_country_crossings": true
+      "avoid_country_crossings": false
     },
     "auto_shorter": {
     },
