@@ -252,6 +252,8 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
       return 0.5f;
     else if (turn_type == Turn::Type::kSharpRight)
       return 1.0f;
+    else if (turn_type <= Turn::Type::kSharpLeft) // Reverse and sharp left
+      return 5.0f;
     else if (turn_type <= Turn::Type::kLeft)
       return 2.5f;
     else // Slight left
