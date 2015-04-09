@@ -13,12 +13,13 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr float kDefaultManeuverPenalty       = 5.0f;   // Seconds
-constexpr float kDefaultGateCost              = 30.0f;  // Seconds
-constexpr float kDefaultTollBoothCost         = 15.0f;  // Seconds
-constexpr float kDefaultTollBoothPenalty      = 0.0f;   // Seconds
-constexpr float kDefaultCountryCrossingFactor = 600.0f; // Seconds
-constexpr bool  kDefaultAvoidCountryCrossings = false;
+constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
+constexpr float kDefaultGateCost                = 30.0f;  // Seconds
+constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
+constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
+constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
+constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+constexpr bool  kDefaultAvoidCountryCrossings   = false;
 // Maximum speed expected - this is used for the A* heuristic
 constexpr uint32_t kMaxSpeedKph = 140;
 }
@@ -127,8 +128,9 @@ class AutoCost : public DynamicCost {
   float gate_cost_;          // Cost (seconds) to go through gate
   float tollbooth_cost_;     // Cost (seconds) to go through toll booth
   float tollbooth_penalty_;  // Penalty (seconds) to go through a toll booth
-  float country_crossing_factor_; // Penalty (seconds) to go across a country border
-  bool  avoid_country_crossings_; // Avoid country crossings?
+  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  bool  avoid_country_crossings_;   // Avoid country crossings?
   /**
    * Compute a turn cost based on the turn type, crossing flag,
    * and whether right or left side of road driving.
@@ -152,8 +154,9 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
                                      kDefaultTollBoothPenalty);
 
-  country_crossing_factor_ = pt.get<float>("country_crossing_factor",
-                                           kDefaultCountryCrossingFactor);
+  country_crossing_cost_ = pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost);
+  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
+                                           kDefaultCountryCrossingPenalty);
   avoid_country_crossings_ = pt.get<bool>("avoid_country_crossings",
                                           kDefaultAvoidCountryCrossings);
 
@@ -227,14 +230,12 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // TODO - do we want toll booth penalties?
   if (node->intersection() == IntersectionType::kFalse) {
     return { 0.0f, 0.0f };
+  } else if (edge->ctry_crossing()) {
+    return { country_crossing_cost_ + country_crossing_penalty_, country_crossing_cost_ };
   } else if (node->type() == NodeType::kGate) {
-    return (edge->ctry_crossing()) ?
-        Cost(gate_cost_ + country_crossing_factor_, gate_cost_ + country_crossing_factor_) :
-        Cost(gate_cost_, gate_cost_);
+    return { gate_cost_, gate_cost_ };
   } else if (node->type() == NodeType::kTollBooth) {
     return { tollbooth_cost_ + tollbooth_penalty_, tollbooth_cost_ };
-  } else if (edge->ctry_crossing()) {
-    return { country_crossing_factor_, country_crossing_factor_ };
   } else {
     // Transition cost = stopimpact * turncost + maneuverpenalty
     uint32_t idx = pred.opp_local_idx();
