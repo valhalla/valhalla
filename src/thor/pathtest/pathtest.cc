@@ -196,13 +196,13 @@ int main(int argc, char *argv[]) {
   }
 
   // Construct costing
-  boost::property_tree::ptree costing = pt.get_child("costing");
-  CostFactory<DynamicCost> factory;
-  for (const auto cm : costing) {
-    std::cout << "Costing method: " << cm.first << std::endl;
-  }
+//  boost::property_tree::ptree costing = pt.get_child("costing");
+//  for (const auto cm : costing) {
+//    std::cout << "Costing method: " << cm.first << std::endl;
+//  }
 
   // Any good way to ties these into the config?
+  CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto-shorter", CreateAutoShorterCost);
   factory.Register("bicycle", CreateBicycleCost);
@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
 
   // Get the costing method - pass the JSON configuration
   std::shared_ptr<DynamicCost> cost = factory.Create(routetype,
-                       pt.get_child("costing." + routetype));
+                       pt.get_child("costing_options." + routetype));
 
   LOG_INFO("routetype: " + routetype);
 
