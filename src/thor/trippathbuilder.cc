@@ -119,10 +119,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_postal_code(origin.zip_);
   if (!origin.country_.empty())
     tp_orig->set_country(origin.country_);
-  if (!origin.phone_.empty())
-    tp_orig->set_phone(origin.phone_);
-  if (!origin.url_.empty())
-    tp_orig->set_url(origin.url_);
   if (!origin.heading_.empty())
     tp_orig->set_heading(std::stoi(origin.heading_));
 
@@ -143,10 +139,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_postal_code(dest.zip_);
   if (!dest.country_.empty())
     tp_dest->set_country(dest.country_);
-  if (!dest.phone_.empty())
-    tp_dest->set_phone(dest.phone_);
-  if (!dest.url_.empty())
-    tp_dest->set_url(dest.url_);
   if (!dest.heading_.empty())
     tp_dest->set_heading(std::stoi(dest.heading_));
 
