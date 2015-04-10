@@ -32,7 +32,18 @@ valhalla output looks like this:
     "trip":
 {
     "status": 0,
-    "locations": [ ],
+    "locations": [
+       {
+        "longitude": -76.4791,
+        "latitude": 40.4136,
+         "stopType": 0
+       },
+       {
+        "longitude": -76.5352,
+        "latitude": 40.4029,
+        "stopType": 0
+       }
+     ],
     "summary":
 {
     "distance": 4973,
@@ -109,18 +120,30 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
 
     auto loc = json::map({});
 
-    //loc->emplace("type", location.type());
+    loc->emplace("stopType", static_cast<uint64_t>(location.stop_type()));
     loc->emplace("latitude", (long double)(location.ll().lat()));
     loc->emplace("longitude",(long double)(location.ll().lng()));
-    loc->emplace("name",location.name());
-    loc->emplace("phone",location.phone());
-    loc->emplace("street",location.street());
-    loc->emplace("city",location.city());
-    loc->emplace("state",location.state());
-    loc->emplace("postalCode",location.postal_code());
-    loc->emplace("country",location.country());
-    // loc->emplace("url",location.url());
+    if (!location.name().empty())
+      loc->emplace("name",location.name());
+    if (!location.phone().empty())
+      loc->emplace("phone",location.phone());
+    if (!location.street().empty())
+      loc->emplace("street",location.street());
+    if (!location.city().empty())
+      loc->emplace("city",location.city());
+    if (!location.state().empty())
+      loc->emplace("state",location.state());
+    if (!location.postal_code().empty())
+      loc->emplace("postalCode",location.postal_code());
+    if (!location.country().empty())
+      loc->emplace("country",location.country());
+    if (!location.url().empty())
+      loc->emplace("url",location.url());
+    if (location.has_heading())
+      loc->emplace("heading",static_cast<uint64_t>(location.heading()));
+
     //loc->emplace("sideOfStreet",location.side_of_street());
+
     locations->emplace_back(loc);
   }
 
