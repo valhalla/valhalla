@@ -12,8 +12,8 @@ namespace baldr{
   Location::Location(const midgard::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
   }
 
-  Location Location::FromGeoJson(const std::string& geojson){
-    throw std::runtime_error("Location serialization from geojson is not yet implemented");
+  Location Location::FromJson(const std::string& json){
+    throw std::runtime_error("Location serialization from json is not yet implemented");
   }
 
   Location Location::FromCsv(const std::string& csv) {
@@ -44,13 +44,20 @@ namespace baldr{
       (parts.size() > 2 && parts[2] == "through" ? StopType::THROUGH : StopType::BREAK));
 
     //grab some address info
-    auto part = parts.begin() + 2;
-    for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
-      if(part == parts.end())
-        break;
-      address->swap(*part);
-      ++part;
+    if (parts.size() > 3) {
+      auto part = parts.begin() + 3;
+      for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+        if(part == parts.end())
+          break;
+        address->swap(*part);
+        ++part;
+      }
     }
+
+    if (parts.size() > 9) {
+      l.heading_ = parts[9];
+    }
+
     return l;
   }
 

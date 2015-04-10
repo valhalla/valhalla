@@ -37,9 +37,9 @@ struct Location {
 
   /**
    * conversion.
-   * @param  geojson  a geojson representation of the location
+   * @param  json  a json representation of the location
    */
-  static Location FromGeoJson(const std::string& geojson);
+  static Location FromJson(const std::string& json);
 
   /**
    * conversion.
@@ -62,12 +62,12 @@ struct Location {
   std::string zip_;
   std::string country_;
 
+  std::string heading_;
+
   //TODO: fill these out in constructors and add getters and setters
 /*
   //the spot where the feature is on the map
   midgard::PointLL display_latlng_;
-  //name of the location (useful for POIs)
-  std::string name_;
   //id of the osm way that this location was on
   std::uint64_t wayid_;
 */
