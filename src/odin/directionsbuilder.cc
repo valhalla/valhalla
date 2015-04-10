@@ -51,6 +51,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   // Populate trip and leg IDs
   trip_directions.set_trip_id(trip_path.trip_id());
   trip_directions.set_leg_id(trip_path.leg_id());
+  trip_directions.set_leg_count(trip_path.leg_count());
 
   // Populate locations
   for (const auto& path_location : trip_path.location()) {
@@ -62,13 +63,21 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     } else {
       direction_location->set_type(TripDirections_Location_Type_kBreak);
     }
-    direction_location->set_heading(path_location.heading());
-    direction_location->set_name(path_location.name());
-    direction_location->set_street(path_location.street());
-    direction_location->set_city(path_location.city());
-    direction_location->set_state(path_location.state());
-    direction_location->set_postal_code(path_location.postal_code());
-    direction_location->set_country(path_location.country());
+
+    if (path_location.has_heading())
+      direction_location->set_heading(path_location.heading());
+    if (path_location.has_name())
+      direction_location->set_name(path_location.name());
+    if (path_location.has_street())
+      direction_location->set_street(path_location.street());
+    if (path_location.has_city())
+      direction_location->set_city(path_location.city());
+    if (path_location.has_state())
+      direction_location->set_state(path_location.state());
+    if (path_location.has_postal_code())
+      direction_location->set_postal_code(path_location.postal_code());
+    if (path_location.has_country())
+      direction_location->set_country(path_location.country());
   }
 
   // Populate maneuvers
