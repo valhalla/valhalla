@@ -44,12 +44,14 @@ namespace baldr{
       (parts.size() > 2 && parts[2] == "through" ? StopType::THROUGH : StopType::BREAK));
 
     //grab some address info
-    auto part = parts.begin() + 2;
-    for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_, &l.phone_, &l.url_ }) {
-      if(part == parts.end())
-        break;
-      address->swap(*part);
-      ++part;
+    if (parts.size() > 3) {
+      auto part = parts.begin() + 3;
+      for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_, &l.phone_, &l.url_ }) {
+        if(part == parts.end())
+          break;
+        address->swap(*part);
+        ++part;
+      }
     }
 
     if (parts.size() > 11) {
