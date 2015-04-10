@@ -10,8 +10,8 @@ namespace {
   void test_construction() {
     Location l();
     try{
-      Location geojson = Location::FromGeoJson("somestring");
-      throw std::runtime_error("Location from geojson serialization should throw as its unimplemented");
+      Location json = Location::FromJson("somestring");
+      throw std::runtime_error("Location from json serialization should throw as its unimplemented");
     }
     catch(...) {
     }
@@ -70,24 +70,16 @@ namespace {
     if(!(csv.name_=="Home" && csv.street_=="123 Main Street" && csv.city_=="Lancaster" && csv.state_=="PA" && csv.zip_=="90210" && csv.country_=="US"))
       throw std::runtime_error("Csv location parsing failed");
 
-    csv = Location::FromCsv("1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US,717-555-1212");
-    if(!(csv.name_=="Home" && csv.street_=="123 Main Street" && csv.city_=="Lancaster" && csv.state_=="PA" && csv.zip_=="90210" && csv.country_=="US" && csv.phone_=="717-555-1212"))
+    csv = Location::FromCsv("1.452,-3.45,stop,,,,,,DE");
+    if(!(csv.name_=="" && csv.street_=="" && csv.city_=="" && csv.state_=="" && csv.zip_=="" && csv.country_=="DE"))
       throw std::runtime_error("Csv location parsing failed");
 
-    csv = Location::FromCsv("1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US,717-555-1212,www.url.com");
-    if(!(csv.name_=="Home" && csv.street_=="123 Main Street" && csv.city_=="Lancaster" && csv.state_=="PA" && csv.zip_=="90210" && csv.country_=="US" && csv.phone_=="717-555-1212" && csv.url_=="www.url.com"))
+    csv = Location::FromCsv("1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US,270");
+    if(!(csv.name_=="Home" && csv.street_=="123 Main Street" && csv.city_=="Lancaster" && csv.state_=="PA" && csv.zip_=="90210" && csv.country_=="US" && csv.heading_=="270"))
       throw std::runtime_error("Csv location parsing failed");
 
-    csv = Location::FromCsv("1.452,-3.45,stop,,,,,,,,www.url.com");
-    if(!(csv.name_=="" && csv.street_=="" && csv.city_=="" && csv.state_=="" && csv.zip_=="" && csv.country_=="" && csv.phone_=="" && csv.url_=="www.url.com"))
-      throw std::runtime_error("Csv location parsing failed");
-
-    csv = Location::FromCsv("1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US,717-555-1212,www.url.com,270");
-    if(!(csv.name_=="Home" && csv.street_=="123 Main Street" && csv.city_=="Lancaster" && csv.state_=="PA" && csv.zip_=="90210" && csv.country_=="US" && csv.phone_=="717-555-1212" && csv.url_=="www.url.com" && csv.heading_=="270"))
-      throw std::runtime_error("Csv location parsing failed");
-
-    csv = Location::FromCsv("1.452,-3.45,stop,Lancaster Brewing Company,,,,,,,,65");
-    if(!(csv.name_=="Lancaster Brewing Company" && csv.street_=="" && csv.city_=="" && csv.state_=="" && csv.zip_=="" && csv.country_=="" && csv.phone_=="" && csv.url_=="" && csv.heading_=="65"))
+    csv = Location::FromCsv("1.452,-3.45,stop,Lancaster Brewing Company,,,,,,65");
+    if(!(csv.name_=="Lancaster Brewing Company" && csv.street_=="" && csv.city_=="" && csv.state_=="" && csv.zip_=="" && csv.country_=="" && csv.heading_=="65"))
       throw std::runtime_error("Csv location parsing failed");
 
   }

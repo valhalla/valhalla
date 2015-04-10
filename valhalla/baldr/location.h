@@ -37,9 +37,9 @@ struct Location {
 
   /**
    * conversion.
-   * @param  geojson  a geojson representation of the location
+   * @param  json  a json representation of the location
    */
-  static Location FromGeoJson(const std::string& geojson);
+  static Location FromJson(const std::string& json);
 
   /**
    * conversion.
@@ -61,8 +61,6 @@ struct Location {
   std::string state_;
   std::string zip_;
   std::string country_;
-  std::string phone_;
-  std::string url_;
 
   std::string heading_;
 
