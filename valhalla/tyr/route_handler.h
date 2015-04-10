@@ -10,6 +10,8 @@
 namespace valhalla{
 namespace tyr{
 
+// Base route handler - intended to handle simple requests for OSRM
+// compatibility mode. Valhalla JSON inputs use the CustomRouteHandler.
 class RouteHandler : public Handler {
  public:
   /**
@@ -38,7 +40,6 @@ class RouteHandler : public Handler {
   virtual std::string Action();
 
  protected:
-
   valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };

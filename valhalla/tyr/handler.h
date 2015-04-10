@@ -36,7 +36,6 @@ class Handler {
   virtual std::string Action() = 0;
 
  protected:
-
   boost::property_tree::ptree config_;
   std::vector<baldr::Location> locations_;
   boost::optional<std::string> jsonp_;

@@ -36,7 +36,7 @@
       "color": true
     }
   },
-  "costing": {
+  "costing_options": {
     "auto": {
       "maneuver_penalty": 5.0,
       "gate_cost": 30.0,
