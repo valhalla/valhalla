@@ -57,10 +57,10 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     auto* direction_location = trip_directions.add_location();
     direction_location->mutable_ll()->set_lat(path_location.ll().lat());
     direction_location->mutable_ll()->set_lng(path_location.ll().lng());
-    if (path_location.stop_type() == TripPath_StopType_kThrough) {
-      direction_location->set_stop_type(TripDirections_StopType_kThrough);
+    if (path_location.type() == TripPath_Location_Type_kThrough) {
+      direction_location->set_type(TripDirections_Location_Type_kThrough);
     } else {
-      direction_location->set_stop_type(TripDirections_StopType_kBreak);
+      direction_location->set_type(TripDirections_Location_Type_kBreak);
     }
     direction_location->set_heading(path_location.heading());
     direction_location->set_name(path_location.name());

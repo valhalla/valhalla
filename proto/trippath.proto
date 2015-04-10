@@ -7,14 +7,14 @@ message TripPath {
     optional float lng = 2;
   }
  
-  enum StopType {
-    kBreak = 0;
-    kThrough = 1;
-  }
-    
   message Location {
+    enum Type {
+      kBreak = 0;
+      kThrough = 1;
+    }
+
     optional LatLng ll = 1;
-    optional StopType stop_type = 2;
+    optional Type type = 2;
     optional uint32 heading = 3;        // 0-359
     optional string name = 4;
     optional string street = 5;    
@@ -89,9 +89,10 @@ message TripPath {
   
   optional uint64 trip_id = 1;
   optional uint32 leg_id = 2;
-  repeated Location location = 3;
-  repeated Node node = 4;
-  optional string shape = 5;
+  optional uint32 leg_count = 3;
+  repeated Location location = 4;
+  repeated Node node = 5;
+  optional string shape = 6;
 
 }
 
