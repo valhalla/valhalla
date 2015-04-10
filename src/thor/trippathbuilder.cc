@@ -115,6 +115,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_street(origin.street_);
   if (!origin.city_.empty())
     tp_orig->set_city(origin.city_);
+  if (!origin.state_.empty())
+    tp_orig->set_state(origin.state_);
   if (!origin.zip_.empty())
     tp_orig->set_postal_code(origin.zip_);
   if (!origin.country_.empty())
@@ -135,6 +137,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_street(dest.street_);
   if (!dest.city_.empty())
     tp_dest->set_city(dest.city_);
+  if (!dest.state_.empty())
+    tp_dest->set_state(dest.state_);
   if (!dest.zip_.empty())
     tp_dest->set_postal_code(dest.zip_);
   if (!dest.country_.empty())
