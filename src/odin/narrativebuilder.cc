@@ -112,7 +112,7 @@ NarrativeBuilder::NarrativeBuilder() {
 void NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Start out going ";
+  text_instruction += "Go ";
   text_instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
   if (maneuver.HasStreetNames()) {
