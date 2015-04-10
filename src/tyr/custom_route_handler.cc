@@ -116,13 +116,17 @@ json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
   return route_summary;
 }
 
-json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
+json::ArrayPtr locations(const valhalla::odin::TripDirections& trip_directions){
   auto locations = json::array({});
-  for(const auto& location : trip_path.location()) {
+  for(const auto& location : trip_directions.location()) {
 
     auto loc = json::map({});
 
-    loc->emplace("stopType", static_cast<uint64_t>(location.stop_type()));
+    if (location.type() == valhalla::odin::TripDirections_Location_Type_kThrough) {
+      loc->emplace("type", std::string("through"));
+    } else {
+      loc->emplace("type", std::string("break"));
+    }
     loc->emplace("latitude", static_cast<long double>(location.ll().lat()));
     loc->emplace("longitude",static_cast<long double>(location.ll().lng()));
     if (!location.name().empty())
@@ -134,7 +138,7 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
     if (!location.state().empty())
       loc->emplace("state",location.state());
     if (!location.postal_code().empty())
-      loc->emplace("postalCode",location.postal_code());
+      loc->emplace("postal_code",location.postal_code());
     if (!location.country().empty())
       loc->emplace("country",location.country());
     if (location.has_heading())
@@ -149,8 +153,7 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
 }
 
 
-json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
-                    const valhalla::odin::TripDirections& trip_directions){
+json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
 
   // TODO: multiple legs.
   auto legs = json::array({});
@@ -164,11 +167,10 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
 
     length += maneuver.length();
     seconds += static_cast<uint64_t>(maneuver.time());
-    leg->emplace("shape", trip_path.shape());
     auto man = json::map({});
 
     man->emplace("type", static_cast<uint64_t>(maneuver.type()));
-    man->emplace("writtenInstruction", maneuver.text_instruction());
+    man->emplace("instruction", maneuver.text_instruction());
     //“verbalTransitionAlertInstruction” : “<verbalTransitionAlertInstruction>”,
     //“verbalPreTransitionInstruction” : “<verbalPreTransitionInstruction>”,
     //“verbalPostTransitionInstruction” : “<verbalPostTransitionInstruction>”,
@@ -178,16 +180,16 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
       street_names->emplace_back(maneuver.street_name(i));
 
     if (street_names->size())
-      man->emplace("streetNames", street_names);
+      man->emplace("street_names", street_names);
     man->emplace("time", static_cast<uint64_t>(maneuver.time()));
     man->emplace("length", static_cast<long double>(maneuver.length()));
-    man->emplace("beginShapeIndex", static_cast<uint64_t>(maneuver.begin_shape_index()));
-    man->emplace("endShapeIndex", static_cast<uint64_t>(maneuver.end_shape_index()));
+    man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
+    man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
     if (maneuver.portions_toll())
-      man->emplace("hasPortionsToll", maneuver.portions_toll());
+      man->emplace("toll", maneuver.portions_toll());
     if (maneuver.portions_unpaved())
-      man->emplace("hasPortionsUnpaved", maneuver.portions_unpaved());
+      man->emplace("unpaved", maneuver.portions_unpaved());
 
     //  man->emplace("hasGate", maneuver.);
     //  man->emplace("hasFerry", maneuver.);
@@ -202,15 +204,14 @@ json::ArrayPtr legs(const valhalla::odin::TripPath& trip_path,
   summary->emplace("time", seconds);
   summary->emplace("length", static_cast<long double>(length));
   leg->emplace("summary",summary);
+  leg->emplace("shape", trip_directions.shape());
 
   legs->emplace_back(leg);
   return legs;
 }
 
-void serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions,
-  const std::string& units,
-  std::ostringstream& stream) {
+void serialize(const valhalla::odin::TripDirections& trip_directions,
+               const std::string& units, std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -219,9 +220,9 @@ void serialize(const valhalla::odin::TripPath& trip_path,
       ({
       {"trip", json::map
       ({
-          {"locations", locations(trip_path)},
+          {"locations", locations(trip_directions)},
           {"summary", summary(trip_directions)},
-          {"legs", legs(trip_path,trip_directions)},
+          {"legs", legs(trip_directions)},
           {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
           {"status", static_cast<uint64_t>(0)}, //0 success or 207 no route
           {"units", units}
@@ -334,7 +335,7 @@ std::string CustomRouteHandler::Action() {
   std::ostringstream stream;
   if(jsonp_)
     stream << *jsonp_ << '(';
-  serialize(trip_path, trip_directions, units_, stream);
+  serialize(trip_directions, units_, stream);
   if(jsonp_)
     stream << ')';
   return stream.str();
