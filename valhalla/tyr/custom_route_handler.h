@@ -1,7 +1,7 @@
 #ifndef VALHALLA_TYR_CUSTOM_ROUTE_HANDLER_H_
 #define VALHALLA_TYR_CUSTOM_ROUTE_HANDLER_H_
 
-#include <valhalla/tyr/handler.h>
+#include <valhalla/tyr/route_handler.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/baldr/graphreader.h>
 #include <string>
@@ -38,7 +38,8 @@ class CustomRouteHandler : public Handler {
   virtual std::string Action();
 
  protected:
-
+  bool km_units_;
+  std::string units_;
   valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };

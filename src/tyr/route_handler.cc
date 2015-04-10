@@ -109,7 +109,8 @@ json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions
 json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
   auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
-    via_points->emplace_back(json::array({(long double)(location.ll().lat()), (long double)(location.ll().lng())}));
+    via_points->emplace_back(json::array({static_cast<long double>(location.ll().lat()),
+            static_cast<long double>(location.ll().lng())}));
   }
   return via_points;
 }
@@ -190,7 +191,8 @@ json::ArrayPtr route_instructions(const valhalla::odin::TripDirections& trip_dir
 }
 
 void serialize(const valhalla::odin::TripPath& trip_path,
-  const valhalla::odin::TripDirections& trip_directions, std::ostringstream& stream) {
+  const valhalla::odin::TripDirections& trip_directions,
+  std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -224,8 +226,9 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 namespace valhalla {
 namespace tyr {
 
-RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request) : Handler(config, request) {
-  //parse out the type of route
+RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request)
+    : Handler(config, request) {
+  // Parse out the type of route
   std::string costing;
   try {
     costing = request.get<std::string>("costing");
@@ -234,22 +237,19 @@ RouteHandler::RouteHandler(const boost::property_tree::ptree& config, const boos
     throw std::runtime_error("No edge/node costing provided");
   }
 
-  //register edge/node costing methods
+  // Register edge/node costing methods
   valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
   factory.Register("auto", valhalla::sif::CreateAutoCost);
   factory.Register("auto_shorter", valhalla::sif::CreateAutoShorterCost);
   factory.Register("bicycle", valhalla::sif::CreateBicycleCost);
   factory.Register("pedestrian", valhalla::sif::CreatePedestrianCost);
 
-  //TODO: overwrite anything in config.costing with anything in request.costing
+  // Get the costing method. Get the base options from the config
+  boost::property_tree::ptree config_costing = config.get_child("costing_options." + costing);
+  cost_ = factory.Create(costing, config_costing);
 
-  //get the costing method
-  cost_ = factory.Create(costing, config.get_child("costing." + costing));
-
-  //get the config for the graph reader
+  // Get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
-
-  //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
 
 RouteHandler::~RouteHandler() {
