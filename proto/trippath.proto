@@ -22,8 +22,6 @@ message TripPath {
     optional string state = 7;
     optional string postal_code = 8;    
     optional string country = 9;    
-    optional string phone = 10;
-    optional string url = 11;
   }
   
   message Sign {
