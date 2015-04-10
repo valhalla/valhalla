@@ -125,8 +125,6 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
     loc->emplace("longitude",(long double)(location.ll().lng()));
     if (!location.name().empty())
       loc->emplace("name",location.name());
-    if (!location.phone().empty())
-      loc->emplace("phone",location.phone());
     if (!location.street().empty())
       loc->emplace("street",location.street());
     if (!location.city().empty())
@@ -137,8 +135,6 @@ json::ArrayPtr locations(const valhalla::odin::TripPath& trip_path){
       loc->emplace("postalCode",location.postal_code());
     if (!location.country().empty())
       loc->emplace("country",location.country());
-    if (!location.url().empty())
-      loc->emplace("url",location.url());
     if (location.has_heading())
       loc->emplace("heading",static_cast<uint64_t>(location.heading()));
 
