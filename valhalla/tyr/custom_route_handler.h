@@ -10,7 +10,7 @@
 namespace valhalla{
 namespace tyr{
 
-class CustomRouteHandler : public RouteHandler {
+class CustomRouteHandler : public Handler {
  public:
   /**
    * Parses json request data to be used as options for the action
@@ -36,6 +36,12 @@ class CustomRouteHandler : public RouteHandler {
    * @return string the json representation of the route mirroring the format of OSRM for now
    */
   virtual std::string Action();
+
+ protected:
+  bool km_units_;
+  std::string units_;
+  valhalla::sif::cost_ptr_t cost_;
+  std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };
 
 }

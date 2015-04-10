@@ -219,8 +219,55 @@ void serialize(const valhalla::odin::TripPath& trip_path,
 namespace valhalla {
 namespace tyr {
 
-CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request)
-      : RouteHandler(config, request) {
+CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config,
+                                       const boost::property_tree::ptree& request)
+    : Handler(config, request) {
+  // Parse out the type of route - this provides the costing method to use
+  std::string costing;
+  try {
+    costing = request.get<std::string>("costing");
+  }
+  catch(...) {
+    throw std::runtime_error("No edge/node costing provided");
+  }
+
+  // Register edge/node costing methods
+  valhalla::sif::CostFactory<valhalla::sif::DynamicCost> factory;
+  factory.Register("auto", valhalla::sif::CreateAutoCost);
+  factory.Register("auto_shorter", valhalla::sif::CreateAutoShorterCost);
+  factory.Register("bicycle", valhalla::sif::CreateBicycleCost);
+  factory.Register("pedestrian", valhalla::sif::CreatePedestrianCost);
+
+  // Get the costing options. Get the base options from the config and the
+  // options for the specified costing method
+  std::string method_options = "costing_options." + costing;
+  boost::property_tree::ptree config_costing = config.get_child(method_options);
+  auto request_costing = request.get_child_optional(method_options);
+  if (request_costing) {
+    // If the request has any options for this costing type, merge the 2
+    // costing options - override any config options that are in the request.
+    // and  add any request options not in the config.
+    for (auto r : *request_costing) {
+      config_costing.put_child(r.first, r.second);
+    }
+  }
+  cost_ = factory.Create(costing, config_costing);
+
+  // Get the config for the graph reader
+  reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
+
+  // TODO - replace this below when we pass down to Odin and get back info
+  // in the proto
+  // Get the units (defaults to kilometers)
+  std::string units = "k";
+  auto s = request.get_optional<std::string>("units");
+  if (s) {
+    units = *s;
+  }
+  km_units_ = (units == "miles" || units == "m") ? false : true;
+  units_ = (km_units_) ? "kilometers" : "miles";
+
+  //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
 
 CustomRouteHandler::~CustomRouteHandler() {

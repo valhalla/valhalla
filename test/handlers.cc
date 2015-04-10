@@ -76,7 +76,7 @@ void write_config(const std::string& filename) {
           })
         },
         {"thor", json::map({})},
-        {"costing", json::map
+        {"costing_options", json::map
           ({
             {"auto_shorter", json::map({})},
             {"bicycle", json::map({})},
