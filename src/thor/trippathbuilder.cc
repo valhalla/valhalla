@@ -107,8 +107,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_stop_type(
-      (origin.stoptype_ == Location::StopType::BREAK) ? TripPath_StopType_kBreak : TripPath_StopType_kThrough);
+  tp_orig->set_type(
+      (origin.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
@@ -127,8 +127,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_stop_type(
-      (dest.stoptype_ == Location::StopType::BREAK) ? TripPath_StopType_kBreak : TripPath_StopType_kThrough);
+  tp_dest->set_type(
+      (dest.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
