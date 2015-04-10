@@ -86,8 +86,9 @@ message TripDirections {
   
   optional uint64 trip_id = 1;
   optional uint32 leg_id = 2;
-  repeated Location location = 3;
-  repeated Maneuver maneuver = 4;
-  optional string shape = 5;
+  optional uint32 leg_count = 3;
+  repeated Location location = 4;
+  repeated Maneuver maneuver = 5;
+  optional string shape = 6;
 }
 
