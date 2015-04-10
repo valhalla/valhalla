@@ -2,6 +2,28 @@ package valhalla.odin;
 
 message TripDirections {
   
+  message LatLng {
+    optional float lat = 1;
+    optional float lng = 2;
+  }
+
+  enum StopType {
+    kBreak = 0;
+    kThrough = 1;
+  }
+
+  message Location {
+    optional LatLng ll = 1;
+    optional StopType stop_type = 2;
+    optional uint32 heading = 3;        // 0-359
+    optional string name = 4;
+    optional string street = 5;
+    optional string city = 6;
+    optional string state = 7;
+    optional string postal_code = 8;
+    optional string country = 9;
+  }
+
   // TODO: add in other attributes
   message Maneuver {
     enum CardinalDirection {
@@ -64,7 +86,8 @@ message TripDirections {
   
   optional uint64 trip_id = 1;
   optional uint32 leg_id = 2;
-  repeated Maneuver maneuver = 3;
-  optional string shape = 4;
+  repeated Location location = 3;
+  repeated Maneuver maneuver = 4;
+  optional string shape = 5;
 }
 

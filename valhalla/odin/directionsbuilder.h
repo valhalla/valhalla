@@ -7,8 +7,8 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/odin/maneuver.h>
 
-namespace valhalla{
-namespace odin{
+namespace valhalla {
+namespace odin {
 
 class DirectionsBuilder {
  public:
@@ -17,7 +17,8 @@ class DirectionsBuilder {
   TripDirections Build(TripPath& trip_path);
 
  protected:
-  TripDirections PopulateTripDirections(std::list<Maneuver>& maneuvers);
+  TripDirections PopulateTripDirections(TripPath& trip_path,
+                                        std::list<Maneuver>& maneuvers);
 
 };
 
