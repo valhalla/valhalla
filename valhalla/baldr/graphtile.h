@@ -125,7 +125,10 @@ class GraphTile {
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
   // Get the admininfo at the specified index.
-  const AdminInfo* admininfo(const size_t idx) const;
+  std::unique_ptr<const AdminInfo> admininfo(const size_t idx) const;
+
+  // Get the admin at the specified index.
+  const Admin* admin(const size_t idx) const;
 
   /**
    * Convenience method to get the signs for an edge given the directed
