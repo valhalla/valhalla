@@ -253,7 +253,10 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 
   // ISO country codes at the end nodes must equal this node
   std::string iso = tile->admininfo(nodeinfo->admin_index())->country_iso();
-  if (EndNodeIso(edge1, info) != iso || EndNodeIso(edge2, info) != iso) {
+  std::string e1_iso = EndNodeIso(edge1, info);
+  std::string e2_iso = EndNodeIso(edge2, info);
+  if (e1_iso.empty() || e2_iso.empty() || iso.empty() ||
+      e1_iso != iso || e2_iso != iso) {
 //    LOG_INFO("ISO codes do not match!");
     return false;
   }
@@ -482,6 +485,9 @@ void FormTilesInNewLevel(
 
     // Create GraphTileBuilder for the new tile
     GraphTileBuilder tilebuilder;
+
+    //Creating a dummy admin at index 0.  Used if admins are not used/created.
+    tilebuilder.AddAdmin(0,"None","None","","","","");
 
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;

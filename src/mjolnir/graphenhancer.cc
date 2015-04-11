@@ -792,8 +792,6 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     lock.unlock();
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
-    std::vector<std::string> noadmins;
-    noadmins.emplace_back("None");
     tilebuilder.AddAdmin(0,"None","None","","","","");
 
     if (db_handle)

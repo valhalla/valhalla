@@ -30,12 +30,15 @@ namespace {
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-    GraphReader& graphreader_, uint32_t& dupcount_) {
+    GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_) {
 
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
   const GraphTile* tile = graphreader_.GetGraphTile(endnode);
   const NodeInfo* nodeinfo = tile->node(endnode.id());
+
+  // Set the end node iso.  Used for country crossings.
+  endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
 
   // TODO - check if more than 1 edge has matching startnode and
   // distance!
@@ -170,14 +173,99 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
 
+        const GraphTile* tile = graphreader_.GetGraphTile(node);
+        std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
+
+    /*    if (nodeinfo.latlng().first == -82.4237543f && nodeinfo.latlng().second == 42.9984804f ) {
+          std::cout << "mid good" << std::endl;
+          std::cout << begin_node_iso << std::endl;
+          std::cout << nodeinfo.admin_index() << std::endl;
+
+        }
+
+
+        if (nodeinfo.latlng().first == -82.4326549f && nodeinfo.latlng().second == 42.9988345f) {
+          std::cout << "left good" << std::endl;
+          std::cout << begin_node_iso << std::endl;
+          std::cout << nodeinfo.admin_index() << std::endl;
+
+        }
+
+
+        if (nodeinfo.latlng().first == -82.4135064f && nodeinfo.latlng().second == 42.994748f) {
+          std::cout << "right good" << std::endl;
+          std::cout << begin_node_iso << std::endl;
+          std::cout << nodeinfo.admin_index() << std::endl;
+
+        }
+
+        if (nodeinfo.latlng().first == -82.4134112f && nodeinfo.latlng().second == 42.9948798f) {
+           std::cout << "right bad" << std::endl;
+           std::cout << begin_node_iso << std::endl;
+           std::cout << nodeinfo.admin_index() << std::endl;
+
+         }
+
+         if (nodeinfo.latlng().first == -82.4235694f && nodeinfo.latlng().second == 42.9988248f) {
+           std::cout << "mid bad" << std::endl;
+           std::cout << begin_node_iso << std::endl;
+           std::cout << nodeinfo.admin_index() << std::endl;
+
+         }
+         if (nodeinfo.latlng().first == -82.4330586f && nodeinfo.latlng().second == 42.9992422f ) {
+           std::cout << "left bad" << std::endl;
+           std::cout << begin_node_iso << std::endl;
+           std::cout << nodeinfo.admin_index() << std::endl;
+
+         }*/
+
         // Go through directed edges and update data
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++) {
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
                                   nodeinfo.edge_index() + j);
 
+          std::string end_node_iso_;
           // Set the opposing edge index
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge, graphreader_, dupcount_));
+          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge, graphreader_, dupcount_, end_node_iso_));
+
+          // if the country ISO codes do not match then this is a country crossing.
+          if (!begin_node_iso.empty() && !end_node_iso_.empty() &&
+               begin_node_iso != end_node_iso_) {
+            directededge.set_ctry_crossing(true);
+
+            if (begin_node_iso.empty()) {
+              std::cout << nodeinfo.latlng().second << "," << nodeinfo.latlng().first << std::endl;
+            }
+
+            /*if ((nodeinfo.latlng().first == -82.4237543f && nodeinfo.latlng().second == 42.9984804f ) ||
+               (nodeinfo.latlng().first == -82.4326549f && nodeinfo.latlng().second == 42.9988345f) ||
+               (nodeinfo.latlng().first == -82.4135064f && nodeinfo.latlng().second == 42.994748f) ||
+               (nodeinfo.latlng().first == -82.4134112f && nodeinfo.latlng().second == 42.9948798f) ||
+               (nodeinfo.latlng().first == -82.4235694f && nodeinfo.latlng().second == 42.9988248f) ||
+               (nodeinfo.latlng().first == -82.4330586f && nodeinfo.latlng().second == 42.9992422f ))
+            {
+            std::cout << "begin_node_iso " << begin_node_iso << std::endl;
+            std::cout << "end_node_iso_ " << end_node_iso_ << std::endl;
+            }*/
+          }
+          //else directededge.set_ctry_crossing(false);
+
+
+
+         /* for (const auto name : tile->edgeinfo(directededge.edgeinfo_offset())->GetNames())
+                    {
+
+                      if ("Blue Water Bridge" == name) {
+
+                        std::cout << "Greg " << directededge.ctry_crossing() << std::endl;
+                        std::cout << "begin_node_iso " << begin_node_iso << std::endl;
+                        std::cout << "end_node_iso_ " << end_node_iso_ << std::endl;
+                        std::cout << "is shortcut " << directededge.is_shortcut() << std::endl;
+                    }
+                    }
+*/
           directededges.emplace_back(std::move(directededge));
+
         }
 
         // Add the node to the list
