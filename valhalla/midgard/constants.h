@@ -3,14 +3,16 @@
 
 #include <math.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 // Time constants
 constexpr float kSecPerHour = 3600.0f;
 constexpr float kHourPerSec = 1.0f / 3600.0f;
 
 // Distance constants
+constexpr float kMetersPerKm        = 1000.0f;
+constexpr float kKmPerMeter         = 0.001f;
 constexpr float kMilePerKm          = 1.609344f;
 constexpr float kKmPerMile          = 1.0f / kMilePerKm;
 constexpr float kRadEarthMeters     = 6378160.187;

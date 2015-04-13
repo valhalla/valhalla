@@ -1,4 +1,5 @@
 #include "valhalla/midgard/tiles.h"
+#include "valhalla/midgard/distanceapproximator.h"
 #include <cmath>
 
 namespace valhalla {
@@ -89,6 +90,14 @@ AABB2 Tiles::TileBounds(const int32_t col, const int32_t row) const {
   float basey = ((float) row * tilesize_) + tilebounds_.miny();
   float basex = ((float) col * tilesize_) + tilebounds_.minx();
   return AABB2(basey, basex, basey + tilesize_, basex + tilesize_);
+}
+
+// Get the tile area in square kilometers.
+float Tiles::Area(const int32_t tileid) const {
+  AABB2 bb = TileBounds(tileid);
+  return ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
+         ((bb.maxx() - bb.minx()) *
+             DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
 }
 
 Point2 Tiles::Center(const int32_t tileid) const {

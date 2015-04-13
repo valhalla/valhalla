@@ -6,10 +6,11 @@
 #include <map>
 #include <cstdint>
 
+#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/aabb2.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * A class that provides a uniform (square) tiling system for a specified
@@ -119,6 +120,12 @@ class Tiles {
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2 TileBounds(const int32_t col, const int32_t row) const;
+
+  /**
+   * Get the tile area in square kilometers.
+   * @return  Returns the tile area in kilometers squared.
+   */
+  float Area(const int32_t tileid) const;
 
   /**
    * Gets the center of the specified tile.
