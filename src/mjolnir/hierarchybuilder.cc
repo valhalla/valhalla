@@ -408,10 +408,11 @@ void AddShortcutEdges(
 
       // Add the edge info. Use length to match edge in case multiple edges
       // exist between the 2 nodes. Test whether this shape is forward or
-      // reverse (in case an existing edge exists)
+      // reverse (in case an existing edge exists).
+      // TODO - what should the wayId be?
       bool added = true;
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
-                                                          shape, names, added);
+                                                          0, shape, names, added);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -548,7 +549,7 @@ void FormTilesInNewLevel(
           std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
                               directededge->edgeinfo_offset());
           edge_info_offset = tilebuilder.AddEdgeInfo(directededge->length(),
-                             nodea, nodeb, edgeinfo->shape(),
+                             nodea, nodeb, edgeinfo->wayid(), edgeinfo->shape(),
                              tile->GetNames(directededge->edgeinfo_offset()),
                              added);
           newedge.set_edgeinfo_offset(edge_info_offset);

@@ -22,6 +22,12 @@ namespace mjolnir {
 class EdgeInfoBuilder {
  public:
   /**
+   * Set the OSM way Id.
+   * @param wayid  Way Id.
+   */
+  void set_wayid(const uint64_t wayid);
+
+  /**
    * Set the indexes to names used by this edge
    * @param  text_name_offset_list  a list of name indexes.
    */
@@ -38,6 +44,9 @@ class EdgeInfoBuilder {
   std::size_t SizeOf() const;
 
  protected:
+
+  // OSM Way Id
+  uint64_t wayid_;
 
   // List of roadname indexes
   std::vector<uint32_t> text_name_offset_list_;

@@ -121,6 +121,7 @@ const std::vector<DirectedEdgeBuilder>& directededges);
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
+                       const uint64_t wayid,
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
                        bool& added);
