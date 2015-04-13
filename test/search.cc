@@ -86,7 +86,7 @@ void make_tile() {
 
     bool add;
     //make more complex edge geom so that there are 3 segments, affine combination doesnt properly handle arcs but who cares
-    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, shape, {std::to_string(name)}, add);
+    uint32_t edge_info_offset = tile.AddEdgeInfo(name, u.first, v.first, 123, shape, {std::to_string(name)}, add);
     edge_builder.set_edgeinfo_offset(edge_info_offset);
     return edge_builder;
   };
