@@ -35,6 +35,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_version(const std::string& version);
 
   /**
+   * Set the relative road density within this tile.
+   * @param  density  Relative road density within this tile (0-15).
+   */
+  void set_density(const uint32_t density);
+
+  /**
    * Set the relative quality of name assignment for this tile.
    * @param   name_quality  Relative name quality for this tile (0-15).
    */
