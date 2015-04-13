@@ -443,17 +443,6 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   } else {
     relative_density = static_cast<uint32_t>(((density - m2) / (max - mid)) * 3.0f) + 13;
   }
-/*  float mid = 4.5;
-  float m2  = 10.0f;
-  float max = 18.0f;  // about 4.5M above this
-  uint32_t relative_density;
-  if (density < mid) {
-    relative_density = static_cast<uint32_t>((density / mid) * 8.0f);
-  } else if (density < m2) {
-    relative_density = static_cast<uint32_t>(((density - mid) / (m2 - mid)) * 4.0f) + 8;
-  } else {
-    relative_density = static_cast<uint32_t>(((density - m2) / (max - mid)) * 4.0f) + 12;
-  }*/
   return (relative_density < 16) ? relative_density : 15;
 }
 
