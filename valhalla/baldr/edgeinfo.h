@@ -15,6 +15,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
+constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;
 
 /**
@@ -28,25 +29,41 @@ class EdgeInfo {
 
   /**
    * Constructor
-   *
-   * @param pointer to a bit of memory that has the info for this edge
+   * @param  ptr  Pointer to a bit of memory that has the info for this edge
+   * @param  names_list  Pointer to the start of the text/names list.
+   * @param  names_list_length  Length (bytes) of the text/names list.
    */
   EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length);
 
   /**
    * Destructor
-   *
    */
   virtual ~EdgeInfo();
 
-  // Returns the name count
-  const uint32_t name_count() const;
+  /**
+   * Gets the OSM way Id.
+   * @return  Returns the OSM way Id.
+   */
+  uint64_t wayid() const;
 
-  // Returns the shape count
-  const uint32_t encoded_shape_size() const;
+  /**
+   * Get the number of names.
+   * @return Returns the name count.
+   */
+  uint32_t name_count() const;
 
-  // Returns the name index at the specified index.
-  const uint32_t GetStreetNameOffset(uint8_t index) const;
+  /**
+   * Get the size of the encoded shape (number of bytes).
+   * @return  Returns the shape size.
+   */
+  uint32_t encoded_shape_size() const;
+
+  /**
+   * Get the name offset for the specified name index.
+   * @param  index  Index into the name list.
+   * @return  Returns the offset into the text/name list.
+   */
+  uint32_t GetStreetNameOffset(uint8_t index) const;
 
   /**
    * Convenience method to get the names for an edge
@@ -57,26 +74,22 @@ class EdgeInfo {
   /**
    * Get the shape of the edge.
    * @return  Returns the the list of lat,lng points describing the
-   * *        shape of the edge.
+   *          shape of the edge.
    */
   const std::vector<PointLL>& shape() const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
 
-  // Packed items: counts for names, shape, exit signs
-  union PackedItem {
-    struct Fields {
-
-      uint32_t name_count          :4;
-      uint32_t encoded_shape_size  :16;
-      uint32_t spare               :12;
-    } fields;
-    uint32_t value;
+  struct PackedItem {
+    uint32_t name_count          :4;
+    uint32_t encoded_shape_size  :16;
+    uint32_t spare               :12;
   };
 
-
  protected:
+  // OSM way Id
+  uint64_t wayid_;
 
   // Where we keep the statistics about how large the vectors below are
   PackedItem* item_;
