@@ -115,7 +115,7 @@ if __name__ == '__main__':
     sys.exit(1)
 
   #setup the server
-  server = (conf.get('listen_address', '0.0.0.0'), conf.get('port', 8002))
+  server = (conf.get('listen_address', '*'), conf.get('port', 8002))
   TyrHandler.protocol_version = 'HTTP/1.0'
   httpd = ThreadedHTTPServer(server, TyrHandler)
 
