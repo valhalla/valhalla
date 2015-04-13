@@ -17,9 +17,15 @@ http://localhost:8002/locate?loc=40.657912,-73.914450
 http://localhost:8002/nearest?loc=40.657912,-73.914450
 '''
 
+class dummyHandler:
+  def __init__(self, json):
+    self.version = '{"version": 0}'
+  def Action(self):
+    return self.version
+
 #mapping actions to internal methods to call with the input
 #TODO: these will be methods to boost python bindings into the tyr library
-actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler, 'route': tyr_service.CustomRouteHandler}
+actions = {'locate': tyr_service.LocateHandler, 'nearest': tyr_service.NearestHandler, 'viaroute': tyr_service.RouteHandler, 'route': tyr_service.CustomRouteHandler, 'version': dummyHandler }
 
 #enable threaded server
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
