@@ -44,6 +44,12 @@ class GraphTileHeader {
   std::string version() const;
 
   /**
+   * Get the relative road density within this tile.
+   * @return  Returns the relative density for this tile (0-15).
+   */
+  uint32_t density() const;
+
+  /**
    * Get the relative quality of name assignment for this tile.
    * @return  Returns relative name quality for this tile (0-15).
    */
@@ -173,10 +179,11 @@ class GraphTileHeader {
 
   // Quality metrics. These are 4 bit (0-15) relative quality indicators.
   struct TileQuality {
+    uint64_t density        : 4;
     uint64_t name           : 4;
     uint64_t speed          : 4;
     uint64_t exit           : 4;
-    uint64_t spare          : 52;
+    uint64_t spare          : 48;
   };
   TileQuality quality_;
 
