@@ -8,6 +8,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/python/str.hpp>
 #include <boost/python/extract.hpp>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
@@ -240,8 +241,17 @@ namespace valhalla {
 namespace tyr {
 
 CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config,
-                                       const boost::property_tree::ptree& request)
-    : Handler(config, request) {
+                                       const boost::property_tree::ptree& request) {
+  try {
+    for(const auto& location : request.get_child("locations"))
+      locations_.emplace_back(std::move(baldr::Location::FromPtree(location.second)));
+    if(locations_.size() < 2)
+      throw;
+  }
+  catch(...) {
+    throw std::runtime_error("insufficiently specified required parameter 'locations'");
+  }
+
   // Parse out the type of route - this provides the costing method to use
   std::string costing;
   try {
