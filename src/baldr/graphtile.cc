@@ -251,14 +251,22 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 }
 
 // Get the admininfo at the specified index.
-const AdminInfo* GraphTile::admininfo(const size_t idx) const {
+const AdminInfo GraphTile::admininfo(const size_t idx) const {
   if (idx < header_->admincount()) {
-    const Admin admin = admins_[idx];
+    const Admin& admin = admins_[idx];
 
-    return new AdminInfo(textlist_ + admin.country_offset(),
-                         textlist_ + admin.state_offset(),
-                         admin.country_iso(), admin.state_iso(),
-                         admin.start_dst(), admin.end_dst());
+    return AdminInfo(textlist_ + admin.country_offset(),
+                     textlist_ + admin.state_offset(),
+                     admin.country_iso(), admin.state_iso(),
+                     admin.start_dst(), admin.end_dst());
+  }
+  throw std::runtime_error("GraphTile AdminInfo index out of bounds");
+}
+
+// Get the admin at the specified index.
+const Admin GraphTile::admin(const size_t idx) const {
+  if (idx < header_->admincount()) {
+    return admins_[idx];
   }
   throw std::runtime_error("GraphTile Admin index out of bounds");
 }
