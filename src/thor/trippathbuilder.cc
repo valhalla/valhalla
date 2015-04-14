@@ -107,14 +107,16 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_stop_type(
-      (origin.stoptype_ == Location::StopType::BREAK) ? TripPath_StopType_kBreak : TripPath_StopType_kThrough);
+  tp_orig->set_type(
+      (origin.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
     tp_orig->set_street(origin.street_);
   if (!origin.city_.empty())
     tp_orig->set_city(origin.city_);
+  if (!origin.state_.empty())
+    tp_orig->set_state(origin.state_);
   if (!origin.zip_.empty())
     tp_orig->set_postal_code(origin.zip_);
   if (!origin.country_.empty())
@@ -127,14 +129,16 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_stop_type(
-      (dest.stoptype_ == Location::StopType::BREAK) ? TripPath_StopType_kBreak : TripPath_StopType_kThrough);
+  tp_dest->set_type(
+      (dest.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
     tp_dest->set_street(dest.street_);
   if (!dest.city_.empty())
     tp_dest->set_city(dest.city_);
+  if (!dest.state_.empty())
+    tp_dest->set_state(dest.state_);
   if (!dest.zip_.empty())
     tp_dest->set_postal_code(dest.zip_);
   if (!dest.country_.empty())
