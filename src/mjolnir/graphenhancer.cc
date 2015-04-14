@@ -530,7 +530,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
         geom = (char*)sqlite3_column_text(stmt, 6);
 
-      uint32_t index = tilebuilder.AddAdmin(id,country_name,state_name,
+      uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
                                             country_iso,state_iso,"","");
 
       multi_polygon_type multi_poly;
@@ -781,9 +781,7 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     lock.unlock();
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
-    std::vector<std::string> noadmins;
-    noadmins.emplace_back("None");
-    tilebuilder.AddAdmin(0,"None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","","","");
 
     if (db_handle)
       polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
@@ -858,7 +856,8 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
         UpdateSpeed(directededge, density);
 
         // Set drive on right flag
-        directededge.set_drive_on_right(drive_on_right[admin_index]);
+        if (admin_index != 0)
+          directededge.set_drive_on_right(drive_on_right[admin_index]);
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {

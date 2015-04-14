@@ -128,15 +128,14 @@ const std::vector<DirectedEdgeBuilder>& directededges);
   /**
    * Add admin info to the tile.
    */
-  uint32_t AddAdmin(const uint32_t& id,
-                const std::string& country_name, const std::string& state_name,
-                const std::string& country_iso, const std::string& state_iso,
-                const std::string& start_dst, const std::string& end_dst);
+  uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
+                    const std::string& country_iso, const std::string& state_iso,
+                    const std::string& start_dst, const std::string& end_dst);
 
   /**
    * Get the admin index.
    */
-  uint32_t GetAdminIndex(const uint32_t& id);
+  uint32_t GetAdminIndex(const std::string& country_iso);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -216,7 +215,7 @@ const std::vector<DirectedEdgeBuilder>& directededges);
 
   // Admin info offset
   size_t admin_info_offset_ = 0;
-  std::unordered_map<uint32_t,size_t> admin_info_offset_map;
+  std::unordered_map<std::string,size_t> admin_info_offset_map;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
