@@ -172,8 +172,7 @@ boost::property_tree::ptree make_json_request(float lat1, float lng1,
   ({
     {"locations", locations(loc_list)},
     {"costing", request_type},
-    {"output", std::string("json")},
-    {"z", static_cast<uint64_t>(17)},
+    {"output", std::string("json")}
   });
   std::stringstream stream; stream << *json;
   boost::property_tree::ptree pt;
