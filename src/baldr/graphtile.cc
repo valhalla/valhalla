@@ -253,7 +253,7 @@ std::vector<std::string> GraphTile::GetNames(const uint32_t edgeinfo_offset) con
 // Get the admininfo at the specified index.
 const AdminInfo GraphTile::admininfo(const size_t idx) const {
   if (idx < header_->admincount()) {
-    const Admin admin = admins_[idx];
+    const Admin& admin = admins_[idx];
 
     return AdminInfo(textlist_ + admin.country_offset(),
                      textlist_ + admin.state_offset(),
