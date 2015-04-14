@@ -44,8 +44,7 @@ SRTMTile::SRTMTile(const std::string& dir, const int32_t baselat,
     LOG_WARN("No SRTM file: " + fname);
     return;
   }
-std::cout << "Opened file: " << fname << std::endl;
-std::cout << "Baselat = " << baselat_ << " BaseLng = " << baselng_ << std::endl;
+
   // Read the SRTM height data
   file.read(reinterpret_cast<char*>(heights_), kSRTMPosts * sizeof(int16_t));
   if (file.bad()) {
@@ -82,13 +81,12 @@ float SRTMTile::baselng() const {
 // specified, a box filter (weighted) using the 4 nearest height postings
 // is used.
 float SRTMTile::height(const PointLL& ll, const bool filter) const {
-std::cout << "LL = " << ll.lat() << "," << ll.lng() << std::endl;
   // Get the base row and column for the lat,lng
   float row = ((ll.lat() - baselat_) * static_cast<float>(kRowColCount - 1));
   float col = ((ll.lng() - baselng_) * static_cast<float>(kRowColCount - 1));
   int32_t r0 = static_cast<int32_t>(row);
   int32_t c0 = static_cast<int32_t>(col);
-std::cout << "row = " << row << " col = " << col << " r0 = " << r0 << " c0 = " << c0 << std::endl;
+
   // Use a bilinear (box) filter
   if (filter) {
     // Get the integer row and column positions (cells are padded +1)
