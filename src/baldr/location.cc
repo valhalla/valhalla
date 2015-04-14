@@ -69,6 +69,14 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
   return location;
 }
 
+Location Location::FromJson(const std::string& json) {
+  std::stringstream stream;
+  stream << json;
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(stream, pt);
+  return FromPtree(pt);
+}
+
   Location Location::FromCsv(const std::string& csv) {
     //split it up into parts
     std::vector<std::string> parts;

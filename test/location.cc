@@ -104,15 +104,15 @@ void test_from_csv() {
     throw std::runtime_error("Csv location parsing failed");
 }
 
-boost::property_tree::ptree make_ptree(float lat, float lng,
-                                std::string type = "break",
-                                std::string heading = "",
-                                std::string name = "",
-                                std::string street = "",
-                                std::string city = "",
-                                std::string state = "",
-                                std::string postal_code = "",
-                                std::string country = "") {
+std::string make_json(float lat, float lng,
+                      std::string type = "break",
+                      std::string heading = "",
+                      std::string name = "",
+                      std::string street = "",
+                      std::string city = "",
+                      std::string state = "",
+                      std::string postal_code = "",
+                      std::string country = "") {
   std::string json = "{";
   json += "\"latitude\":" + std::to_string(lat);
   json += ",\"longitude\":" + std::to_string(lng);
@@ -134,6 +134,21 @@ boost::property_tree::ptree make_ptree(float lat, float lng,
     json += ",\"country\":\"" + country + "\"";
   json += "}";
 
+  //LOG_INFO("json=" + json);
+  return json;
+}
+
+boost::property_tree::ptree make_ptree(float lat, float lng,
+                                std::string type = "break",
+                                std::string heading = "",
+                                std::string name = "",
+                                std::string street = "",
+                                std::string city = "",
+                                std::string state = "",
+                                std::string postal_code = "",
+                                std::string country = "") {
+  std::string json = make_json(lat, lng, type, heading, name, street, city,
+                               state, postal_code, country);
   //LOG_INFO("json=" + json);
   std::stringstream stream;
   stream << json.c_str();
@@ -239,6 +254,35 @@ void test_from_ptree() {
     throw std::runtime_error("Ptree location parsing failed");
 }
 
+void test_from_json() {
+
+  float lat = 40.748174;
+  float lng = -73.984984;
+  std::string type_default = "break";
+  std::string type_specified = "through";
+  int heading = 200;
+  std::string name = "Empire State Building";
+  std::string street = "350 5th Avenue";
+  std::string city = "New York";
+  std::string state = "NY";
+  std::string postal_code = "10118-0110";
+  std::string country = "US";
+
+  try {
+    Location loc = Location::FromJson("something");
+    throw std::runtime_error("This should have been malformed json");
+  } catch (...) {
+  }
+
+  // Test Lat/Lng and default type
+  Location loc = Location::FromJson(make_json(lat, lng));
+  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
+      || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
+      || (loc.stoptype_ != Location::StopType::BREAK))
+    throw std::runtime_error("Json location parsing failed");
+
+}
+
 }
 
 int main(void) {
@@ -247,6 +291,8 @@ int main(void) {
   suite.test(TEST_CASE(test_from_csv));
 
   suite.test(TEST_CASE(test_from_ptree));
+
+  suite.test(TEST_CASE(test_from_json));
 
   return suite.tear_down();
 }
