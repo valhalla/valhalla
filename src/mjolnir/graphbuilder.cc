@@ -792,8 +792,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(
-            edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id, shape,
-            w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
+            edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id,
+            w.way_id(), shape, w.GetNames(ref, osmdata.ref_offset_map,
+                                         osmdata.name_offset_map),
             added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 

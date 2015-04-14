@@ -27,6 +27,11 @@ void GraphTileHeaderBuilder::set_version(const std::string& version) {
   version_[kMaxVersionSize-1] = 0;
 }
 
+// Set the relative road density within this tile.
+void GraphTileHeaderBuilder::set_density(const uint32_t density) {
+  quality_.density = density;
+}
+
 // Set the relative quality of name assignment for this tile.
 void GraphTileHeaderBuilder::set_name_quality(const uint32_t name_quality) {
   quality_.name = name_quality;

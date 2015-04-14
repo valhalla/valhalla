@@ -310,6 +310,7 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
+                                       const uint64_t wayid,
                                        const std::vector<PointLL>& lls,
                                        const std::vector<std::string>& names,
                                        bool& added) {
@@ -320,6 +321,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Add a new EdgeInfo to the list and get a reference to it
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+    edgeinfo.set_wayid(wayid);
     edgeinfo.set_shape(lls);
 
     ///////////////////////////////////////////////////////////////////////////
