@@ -50,6 +50,11 @@ std::string GraphTileHeader::version() const {
   return version_;
 }
 
+// Get the relative road density within this tile.
+uint32_t GraphTileHeader::density() const {
+  return static_cast<uint32_t>(quality_.density);
+}
+
 // Get the relative quality of name assignment for this tile.
 uint32_t GraphTileHeader::name_quality() const {
   return static_cast<uint32_t>(quality_.name);
