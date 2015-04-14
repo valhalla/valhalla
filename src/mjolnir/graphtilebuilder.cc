@@ -375,21 +375,20 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 }
 
 // Get admin index
-uint32_t GraphTileBuilder::GetAdminIndex(const uint32_t& id) {
+uint32_t GraphTileBuilder::GetAdminIndex(const std::string& country_iso) {
 
-  auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(country_iso);
   if (existing_admin_info_offset_item == admin_info_offset_map.end())
     return 0;
   return existing_admin_info_offset_item->second;
 }
 
 // Add admin
-uint32_t GraphTileBuilder::AddAdmin(const uint32_t& id,
-                                    const std::string& country_name, const std::string& state_name,
+uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name, const std::string& state_name,
                                     const std::string& country_iso, const std::string& state_iso,
                                     const std::string& start_dst, const std::string& end_dst) {
 
-  auto existing_admin_info_offset_item = admin_info_offset_map.find(id);
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(country_iso);
   if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
 
     uint32_t country_offset = 0;
@@ -449,7 +448,7 @@ uint32_t GraphTileBuilder::AddAdmin(const uint32_t& id,
                                  start_dst, end_dst);
 
     // Add to the map
-    admin_info_offset_map.emplace(id, admins_builder_.size()-1);
+    admin_info_offset_map.emplace(country_iso, admins_builder_.size()-1);
 
     return admins_builder_.size()-1;
 

@@ -160,8 +160,8 @@ GraphId GetOpposingEdge(const GraphId& node,
 // Get the ISO country code at the end node
 std::string EndNodeIso(const DirectedEdge* edge, hierarchy_info& info) {
   const GraphTile* tile = info.graphreader_.GetGraphTile(edge->endnode());
-  const NodeInfo* nodeinfo = tile->node(edge->endnode());
-  return tile->admininfo(nodeinfo->admin_index())->country_iso();
+  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  return tile->admininfo(nodeinfo->admin_index()).country_iso();
 }
 
 // Test if the node is eligible to be contracted (part of a shortcut) in
@@ -252,14 +252,12 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
   }
 
   // ISO country codes at the end nodes must equal this node
-  std::string iso = tile->admininfo(nodeinfo->admin_index())->country_iso();
+  std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, info);
   std::string e2_iso = EndNodeIso(edge2, info);
   if (e1_iso.empty() || e2_iso.empty() || iso.empty() ||
-      e1_iso != iso || e2_iso != iso) {
-//    LOG_INFO("ISO codes do not match!");
+      e1_iso != iso || e2_iso != iso)
     return false;
-  }
 
   // Store the pairs of base edges entering and exiting this node
   EdgePairs edgepairs;
@@ -487,7 +485,7 @@ void FormTilesInNewLevel(
     GraphTileBuilder tilebuilder;
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
-    tilebuilder.AddAdmin(0,"None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","","","");
 
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
@@ -503,14 +501,10 @@ void FormTilesInNewLevel(
       NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
       node.set_edge_index(edgeindex);
 
-      node.set_admin_index(0);
-
       const auto& admin = tile->admininfo(baseni.admin_index());
-      node.set_admin_index(tilebuilder.AddAdmin(baseni.admin_index(),
-                                                admin->country_text(), admin->state_text(),
-                                                admin->country_iso(), admin->state_iso(),
-                                                admin->start_dst(), admin->end_dst()));
-
+      node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
+                                                admin.country_iso(), admin.state_iso(),
+                                                admin.start_dst(), admin.end_dst()));
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       std::vector<DirectedEdgeBuilder> directededges;
