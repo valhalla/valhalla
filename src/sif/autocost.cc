@@ -19,7 +19,6 @@ constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
-constexpr bool  kDefaultAvoidCountryCrossings   = false;
 // Maximum speed expected - this is used for the A* heuristic
 constexpr uint32_t kMaxSpeedKph = 140;
 }
@@ -130,7 +129,6 @@ class AutoCost : public DynamicCost {
   float tollbooth_penalty_;  // Penalty (seconds) to go through a toll booth
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
-  bool  avoid_country_crossings_;   // Avoid country crossings?
   /**
    * Compute a turn cost based on the turn type, crossing flag,
    * and whether right or left side of road driving.
@@ -157,8 +155,6 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   country_crossing_cost_ = pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
                                            kDefaultCountryCrossingPenalty);
-  avoid_country_crossings_ = pt.get<bool>("avoid_country_crossings",
-                                          kDefaultAvoidCountryCrossings);
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -197,9 +193,6 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
        edge->surface() == Surface::kImpassable) {
     return false;
   }
-  // Avoid country crossings.
-  if (avoid_country_crossings_ && edge->ctry_crossing())
-    return false;
 
   return true;
 }
