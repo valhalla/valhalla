@@ -2,9 +2,11 @@
 #include <stdexcept>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "baldr/location.h"
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 
 namespace valhalla{
 namespace baldr{
@@ -12,9 +14,60 @@ namespace baldr{
   Location::Location(const midgard::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
   }
 
-  Location Location::FromJson(const std::string& json){
-    throw std::runtime_error("Location serialization from json is not yet implemented");
+Location Location::FromPtree(const boost::property_tree::ptree& pt) {
+
+  Location location(
+      { pt.get<float>("longitude"), pt.get<float>("latitude") },
+      (pt.get<std::string>("type") == "through" ?
+          StopType::THROUGH : StopType::BREAK));
+  //LOG_INFO("LAT=" + std::to_string(location.latlng_.lat()));
+  //LOG_INFO("LNG=" + std::to_string(location.latlng_.lng()));
+  //LOG_INFO("TYPE=" + pt.get<std::string>("type"));
+
+  auto heading_ptr = pt.get_optional<int>("heading");
+  if (heading_ptr) {
+    location.heading_ =  std::to_string(*heading_ptr);
+    //LOG_INFO("HEADING=" + location.heading_);
   }
+
+  auto name_ptr = pt.get_optional<std::string>("name");
+  if (name_ptr) {
+    location.name_ = *name_ptr;
+    //LOG_INFO("NAME=" + location.name_);
+  }
+
+  auto street_ptr = pt.get_optional<std::string>("street");
+  if (street_ptr) {
+    location.street_ = *street_ptr;
+    //LOG_INFO("STREET=" + location.street_);
+  }
+
+  auto city_ptr = pt.get_optional<std::string>("city");
+  if (city_ptr) {
+    location.city_ = *city_ptr;
+    //LOG_INFO("CITY=" + location.city_);
+  }
+
+  auto state_ptr = pt.get_optional<std::string>("state");
+  if (state_ptr) {
+    location.state_ = *state_ptr;
+    //LOG_INFO("STATE=" + location.state_);
+  }
+
+  auto postal_code_ptr = pt.get_optional<std::string>("postal_code");
+  if (postal_code_ptr) {
+    location.zip_ = *postal_code_ptr;
+    //LOG_INFO("POSTAL_CODE=" + location.zip_);
+  }
+
+  auto country_ptr = pt.get_optional<std::string>("country");
+  if (country_ptr) {
+    location.country_ = *country_ptr;
+    //LOG_INFO("COUNTRY=" + location.country_);
+  }
+
+  return location;
+}
 
   Location Location::FromCsv(const std::string& csv) {
     //split it up into parts

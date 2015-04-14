@@ -6,6 +6,8 @@
 
 #include <valhalla/midgard/pointll.h>
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace valhalla{
 namespace baldr{
 
@@ -39,7 +41,7 @@ struct Location {
    * conversion.
    * @param  json  a json representation of the location
    */
-  static Location FromJson(const std::string& json);
+  static Location FromPtree(const boost::property_tree::ptree& pt);
 
   /**
    * conversion.
