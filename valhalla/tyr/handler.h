@@ -20,10 +20,6 @@ class Handler {
    */
   Handler(const boost::property_tree::ptree& config, const boost::property_tree::ptree& request);
 
-  /**
-   * Don't expose the default constructor
-   */
-  Handler() = delete;
 
   /**
    * Destructor
@@ -40,6 +36,7 @@ class Handler {
   std::vector<baldr::Location> locations_;
   boost::optional<std::string> jsonp_;
 
+  Handler() {};
 };
 
 }

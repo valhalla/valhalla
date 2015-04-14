@@ -1,5 +1,6 @@
 #include "test.h"
 #include "tyr/route_handler.h"
+#include "tyr/custom_route_handler.h"
 #include "tyr/json.h"
 
 #include <valhalla/mjolnir/pbfgraphparser.h>
@@ -8,6 +9,7 @@
 #include <valhalla/mjolnir/hierarchybuilder.h>
 #include <valhalla/mjolnir/graphvalidator.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/location.h>
 
 #include <fstream>
 #include <sstream>
@@ -18,10 +20,12 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <Python.h>
 
+using namespace valhalla::baldr;
+using namespace valhalla::tyr;
+
 namespace {
 
 void write_config(const std::string& filename) {
-  using namespace valhalla::tyr;
 
   std::ofstream file;
   try {
@@ -122,7 +126,6 @@ void write_tiles(const std::string& config_file) {
 boost::property_tree::ptree make_request(const std::string& loc1, const std::string& loc2,
   const std::string& request_type) {
 
-  using namespace valhalla::tyr;
   auto json = json::map
   ({
     {"loc", json::array({ loc1, loc2 })},
@@ -131,6 +134,46 @@ boost::property_tree::ptree make_request(const std::string& loc1, const std::str
     {"z", static_cast<uint64_t>(17)},
     {"instructions", static_cast<bool>(true)},
     {"jsonp", std::string("some_callback")},
+  });
+  std::stringstream stream; stream << *json;
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(stream, pt);
+  return pt;
+}
+
+json::ArrayPtr locations(const std::vector<Location>& loc_list){
+
+  auto locations = json::array({});
+  for(const auto& loc : loc_list) {
+
+    auto location = json::map({});
+
+    location->emplace("latitude", static_cast<long double>(loc.latlng_.lat()));
+    location->emplace("longitude",static_cast<long double>(loc.latlng_.lng()));
+    location->emplace(
+        "type",
+        (loc.stoptype_ == Location::StopType::THROUGH ?
+            std::string("through") : std::string("break")));
+
+    locations->emplace_back(location);
+  }
+
+  return locations;
+}
+
+boost::property_tree::ptree make_json_request(float lat1, float lng1,
+                                              float lat2, float lng2,
+                                              const std::string& request_type) {
+  std::vector<Location> loc_list;
+  loc_list.emplace_back(Location({lng1, lat1}));
+  loc_list.emplace_back(Location({lng2, lat2}));
+
+  auto json = json::map
+  ({
+    {"locations", locations(loc_list)},
+    {"costing", request_type},
+    {"output", std::string("json")},
+    {"z", static_cast<uint64_t>(17)},
   });
   std::stringstream stream; stream << *json;
   boost::property_tree::ptree pt;
@@ -163,10 +206,10 @@ void TestCustomRouteHandler() {
 
   //make the input
   boost::property_tree::ptree request =
-    make_request("47.139815, 9.525708", "47.167321, 9.509609", "auto");
+    make_json_request(47.139815, 9.525708, 47.167321, 9.509609, "auto");
 
   //run the route
-  valhalla::tyr::RouteHandler handler(config, request);
+  valhalla::tyr::CustomRouteHandler handler(config, request);
   LOG_DEBUG(handler.Action());
 }
 
