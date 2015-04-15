@@ -190,7 +190,7 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
     if (maneuver.portions_toll())
       man->emplace("toll", maneuver.portions_toll());
     if (maneuver.portions_unpaved())
-      man->emplace("unpaved", maneuver.portions_unpaved());
+      man->emplace("rough", maneuver.portions_unpaved());
 
     //  man->emplace("hasGate", maneuver.);
     //  man->emplace("hasFerry", maneuver.);
