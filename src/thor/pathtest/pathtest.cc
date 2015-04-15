@@ -16,6 +16,7 @@
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
@@ -37,7 +38,8 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+      t2 - t1).count();
   LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
   t1 = std::chrono::high_resolution_clock::now();
   std::vector<GraphId> pathedges;
@@ -58,7 +60,8 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
     }
   }
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   // Form output information based on pathedges
@@ -66,22 +69,25 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin, dest);
 
   // TODO - perhaps walk the edges to find total length?
-  //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " km");
+  //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " mi");
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
   t1 = std::chrono::high_resolution_clock::now();
   pathalgorithm.Clear();
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
 
   // Run again to see benefits of caching
   t1 = std::chrono::high_resolution_clock::now();
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   return trip_path;
@@ -92,7 +98,8 @@ namespace std {
 //TODO: maybe move this into location.h if its actually useful elsewhere than here?
 std::string to_string(const valhalla::baldr::Location& l) {
   std::string s;
-  for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
+  for (auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l
+      .country_ }) {
     s.append(*address);
     s.push_back(',');
   }
@@ -102,23 +109,36 @@ std::string to_string(const valhalla::baldr::Location& l) {
 
 }
 
-TripDirections DirectionsTest(TripPath& trip_path, Location origin, Location destination) {
+TripDirections DirectionsTest(const DirectionsOptions& directions_options,
+                              TripPath& trip_path, Location origin,
+                              Location destination) {
   DirectionsBuilder directions;
-  TripDirections trip_directions = directions.Build(trip_path);
+  TripDirections trip_directions = directions.Build(directions_options,
+                                                    trip_path);
   float totalDistance = 0.0f;
   int m = 1;
-  valhalla::midgard::logging::Log("From: " + std::to_string(origin), " [NARRATIVE] ");
-  valhalla::midgard::logging::Log("To: " + std::to_string(destination), " [NARRATIVE] ");
-  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
-  for(int i = 0; i < trip_directions.maneuver_size(); ++i) {
+  valhalla::midgard::logging::Log("From: " + std::to_string(origin),
+                                  " [NARRATIVE] ");
+  valhalla::midgard::logging::Log("To: " + std::to_string(destination),
+                                  " [NARRATIVE] ");
+  valhalla::midgard::logging::Log(
+      "==============================================", " [NARRATIVE] ");
+  for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);
-    valhalla::midgard::logging::Log(std::to_string(m++) + ": " + maneuver.text_instruction() + " | " + std::to_string(maneuver.length()) + " km", " [NARRATIVE] ");
-    if(i < trip_directions.maneuver_size() - 1)
-      valhalla::midgard::logging::Log("----------------------------------------------", " [NARRATIVE] ");
+    valhalla::midgard::logging::Log(
+        std::to_string(m++) + ": " + maneuver.text_instruction() + " | "
+            + std::to_string(maneuver.length()) + " mi",
+        " [NARRATIVE] ");
+    if (i < trip_directions.maneuver_size() - 1)
+      valhalla::midgard::logging::Log(
+          "----------------------------------------------", " [NARRATIVE] ");
     totalDistance += maneuver.length();
   }
-  valhalla::midgard::logging::Log("==============================================", " [NARRATIVE] ");
-  valhalla::midgard::logging::Log("Total distance: " + std::to_string(totalDistance) + " km", " [NARRATIVE] ");
+  valhalla::midgard::logging::Log(
+      "==============================================", " [NARRATIVE] ");
+  valhalla::midgard::logging::Log(
+      "Total distance: " + std::to_string(totalDistance) + " mi",
+      " [NARRATIVE] ");
 
   return trip_directions;
 }
@@ -143,8 +163,7 @@ int main(int argc, char *argv[]) {
       "destination,d",
       boost::program_options::value<std::string>(&destination),
       "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
-      "type,t",
-      boost::program_options::value<std::string>(&routetype),
+      "type,t", boost::program_options::value<std::string>(&routetype),
       "Route Type: auto|bicycle|pedestrian|auto-shorter")
   // positional arguments
   ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
@@ -155,7 +174,10 @@ int main(int argc, char *argv[]) {
   bpo::variables_map vm;
 
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(), vm);
+    bpo::store(
+        bpo::command_line_parser(argc, argv).options(options).positional(
+            pos_options).run(),
+        vm);
     bpo::notify(vm);
 
   } catch (std::exception &e) {
@@ -176,9 +198,11 @@ int main(int argc, char *argv[]) {
   }
 
   // argument checking and verification
-  for (auto arg : std::vector<std::string> { "origin", "destination", "type", "config" }) {
+  for (auto arg : std::vector<std::string> { "origin", "destination", "type",
+      "config" }) {
     if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
+      std::cerr << "The <" << arg
+                << "> argument was not provided, but is mandatory\n\n";
       std::cerr << options << "\n";
       return EXIT_FAILURE;
     }
@@ -189,9 +213,12 @@ int main(int argc, char *argv[]) {
   boost::property_tree::read_json(config.c_str(), pt);
 
   //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt.get_child_optional("thor.logging");
-  if(logging_subtree) {
-    auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&, std::unordered_map<std::string, std::string> >(logging_subtree.get());
+  boost::optional<boost::property_tree::ptree&> logging_subtree = pt
+      .get_child_optional("thor.logging");
+  if (logging_subtree) {
+    auto logging_config = valhalla::midgard::ToMap<
+        const boost::property_tree::ptree&,
+        std::unordered_map<std::string, std::string> >(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
 
@@ -213,8 +240,8 @@ int main(int argc, char *argv[]) {
     c = std::tolower(c);
 
   // Get the costing method - pass the JSON configuration
-  std::shared_ptr<DynamicCost> cost = factory.Create(routetype,
-                       pt.get_child("costing_options." + routetype));
+  std::shared_ptr<DynamicCost> cost = factory.Create(
+      routetype, pt.get_child("costing_options." + routetype));
 
   LOG_INFO("routetype: " + routetype);
 
@@ -228,23 +255,34 @@ int main(int argc, char *argv[]) {
   PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
   PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+      t2 - t1).count();
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // TODO - set locations
+
+  // Directions options
+  // TODO - read options?
+  DirectionsOptions directions_options;
+  directions_options.set_units(
+      DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en_US");
 
   // Try the route
   t1 = std::chrono::high_resolution_clock::now();
   TripPath trip_path = PathTest(reader, pathOrigin, pathDest, cost);
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
 
   // Try the the directions
   t1 = std::chrono::high_resolution_clock::now();
-  TripDirections trip_directions = DirectionsTest(trip_path, originloc, destloc);
+  TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
+                                                  originloc, destloc);
   t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+  msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
 
   return EXIT_SUCCESS;
