@@ -1,4 +1,3 @@
-
 #include <stdexcept>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -8,11 +7,13 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/logging.h>
 
-namespace valhalla{
-namespace baldr{
+namespace valhalla {
+namespace baldr {
 
-  Location::Location(const midgard::PointLL& latlng, const StopType& stoptype):latlng_(latlng), stoptype_(stoptype){
-  }
+Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
+    : latlng_(latlng),
+      stoptype_(stoptype) {
+}
 
 Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
@@ -26,7 +27,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   auto heading_ptr = pt.get_optional<int>("heading");
   if (heading_ptr) {
-    location.heading_ =  std::to_string(*heading_ptr);
+    location.heading_ = std::to_string(*heading_ptr);
     //LOG_INFO("HEADING=" + location.heading_);
   }
 
@@ -77,50 +78,54 @@ Location Location::FromJson(const std::string& json) {
   return FromPtree(pt);
 }
 
-  Location Location::FromCsv(const std::string& csv) {
-    //split it up into parts
-    std::vector<std::string> parts;
-    boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","));
-    if(parts.size() < 2)
-      throw std::runtime_error("Bad format for csv formated location");
+Location Location::FromCsv(const std::string& csv) {
+  //split it up into parts
+  std::vector<std::string> parts;
+  boost::algorithm::split(parts, csv, boost::algorithm::is_any_of(","));
+  if (parts.size() < 2)
+    throw std::runtime_error("Bad format for csv formated location");
 
-    // Validate lat,lng input. Longitude must be between -360 and 360. Values outside
-    // -180 to 180 are converted to lie within the range [-180,180]
-    float lat = std::stof(parts[0]);
-    if (lat < -90.0f || lat > 90.0f) {
-      throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
-    }
-    float lng = std::stof(parts[1]);
-    if (lng < -360.0f || lng > 360.0f) {
-      throw std::runtime_error("Longitude must be in the range [-360, 360] degrees");
-    }
-    if (lng < -180.0f) {
-      lng += 360.0f;
-    } else if (lng > 180.0f) {
-      lng -= 360.0f;
-    }
-
-    //make the lng, lat and check for info about the stop type
-    Location l({lng, lat},
-      (parts.size() > 2 && parts[2] == "through" ? StopType::THROUGH : StopType::BREAK));
-
-    //grab some address info
-    if (parts.size() > 3) {
-      auto part = parts.begin() + 3;
-      for(auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_ }) {
-        if(part == parts.end())
-          break;
-        address->swap(*part);
-        ++part;
-      }
-    }
-
-    if (parts.size() > 9) {
-      l.heading_ = parts[9];
-    }
-
-    return l;
+  // Validate lat,lng input. Longitude must be between -360 and 360. Values outside
+  // -180 to 180 are converted to lie within the range [-180,180]
+  float lat = std::stof(parts[0]);
+  if (lat < -90.0f || lat > 90.0f) {
+    throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
   }
+  float lng = std::stof(parts[1]);
+  if (lng < -360.0f || lng > 360.0f) {
+    throw std::runtime_error(
+        "Longitude must be in the range [-360, 360] degrees");
+  }
+  if (lng < -180.0f) {
+    lng += 360.0f;
+  } else if (lng > 180.0f) {
+    lng -= 360.0f;
+  }
+
+  //make the lng, lat and check for info about the stop type
+  Location l(
+      { lng, lat },
+      (parts.size() > 2 && parts[2] == "through" ?
+          StopType::THROUGH : StopType::BREAK));
+
+  //grab some address info
+  if (parts.size() > 3) {
+    auto part = parts.begin() + 3;
+    for (auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l
+        .country_ }) {
+      if (part == parts.end())
+        break;
+      address->swap(*part);
+      ++part;
+    }
+  }
+
+  if (parts.size() > 9) {
+    l.heading_ = parts[9];
+  }
+
+  return l;
+}
 
 }
 }
