@@ -39,9 +39,15 @@ struct Location {
 
   /**
    * conversion.
-   * @param  json  a json representation of the location
+   * @param  pt  a property tree representation of the location
    */
   static Location FromPtree(const boost::property_tree::ptree& pt);
+
+  /**
+   * conversion.
+   * @param  json  a json representation of the location
+   */
+  static Location FromJson(const std::string& json);
 
   /**
    * conversion.
