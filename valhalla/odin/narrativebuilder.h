@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 #include <valhalla/odin/maneuver.h>
 
@@ -13,7 +14,8 @@ namespace odin {
 class NarrativeBuilder {
  public:
 
-  static void Build(std::list<Maneuver>& maneuvers);
+  static void Build(const DirectionsOptions& directions_options,
+                    std::list<Maneuver>& maneuvers);
 
  protected:
   NarrativeBuilder();
