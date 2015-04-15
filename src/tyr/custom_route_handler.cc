@@ -241,7 +241,9 @@ namespace valhalla {
 namespace tyr {
 
 CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config,
-                                       const boost::property_tree::ptree& request) {
+                                       const boost::property_tree::ptree& request)
+  : Handler(config, request) {
+
   try {
     for(const auto& location : request.get_child("locations"))
       locations_.emplace_back(std::move(baldr::Location::FromPtree(location.second)));

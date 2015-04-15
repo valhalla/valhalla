@@ -2,6 +2,8 @@
 #define VALHALLA_TYR_LOCATE_HANDLER_H_
 
 #include <valhalla/tyr/handler.h>
+#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/baldr/graphreader.h>
 
 namespace valhalla{
 namespace tyr{
@@ -34,6 +36,9 @@ class LocateHandler : public Handler {
   virtual std::string Action();
 
  protected:
+  std::vector<baldr::Location> locations_;
+  valhalla::sif::cost_ptr_t cost_;
+  std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };
 
 }

@@ -38,6 +38,7 @@ class CustomRouteHandler : public Handler {
   virtual std::string Action();
 
  protected:
+  std::vector<baldr::Location> locations_;
   bool km_units_;
   std::string units_;
   valhalla::sif::cost_ptr_t cost_;

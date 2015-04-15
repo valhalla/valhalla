@@ -4,7 +4,6 @@
 #include <valhalla/tyr/handler.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/baldr/graphreader.h>
-#include <string>
 #include <memory>
 
 namespace valhalla{
@@ -40,6 +39,7 @@ class RouteHandler : public Handler {
   virtual std::string Action();
 
  protected:
+  std::vector<baldr::Location> locations_;
   valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
 };
