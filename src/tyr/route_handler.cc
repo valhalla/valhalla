@@ -4,6 +4,7 @@
 #include <ostream>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/python/str.hpp>
@@ -291,7 +292,9 @@ std::string RouteHandler::Action() {
 
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
-  valhalla::odin::TripDirections trip_directions = directions_builder.Build(trip_path);
+  valhalla::odin::DirectionsOptions directions_options;
+  valhalla::odin::TripDirections trip_directions = directions_builder.Build(
+      directions_options, trip_path);
 
   //make some json
   std::ostringstream stream;

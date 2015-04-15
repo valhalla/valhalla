@@ -4,6 +4,7 @@
 #include <ostream>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/python/str.hpp>
@@ -235,6 +236,28 @@ void serialize(const valhalla::odin::TripDirections& trip_directions,
   stream << *json;
 }
 
+valhalla::odin::DirectionsOptions get_directions_options(const boost::property_tree::ptree& pt) {
+
+  valhalla::odin::DirectionsOptions directions_options;
+
+  auto units_ptr = pt.get_optional<std::string>("units");
+  if (units_ptr) {
+    std::string units = *units_ptr;
+    if ((units == "miles") || (units == "mi")) {
+      directions_options.set_units(valhalla::odin::DirectionsOptions_Units_kMiles);
+    } else {
+      directions_options.set_units(valhalla::odin::DirectionsOptions_Units_kKilometers);
+    }
+  }
+
+  auto lang_ptr = pt.get_optional<std::string>("language");
+  if (lang_ptr) {
+    directions_options.set_language(*lang_ptr);
+  }
+
+  return directions_options;
+}
+
 }
 
 namespace valhalla {
@@ -285,6 +308,12 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
 
   // Get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
+
+  // Grab the directions options, if they exist
+  auto directions_options_ptree_ptr = request.get_child_optional("directions_options");
+  if (directions_options_ptree_ptr) {
+    directions_options_ptree_ = *directions_options_ptree_ptr;
+  }
 
   // TODO - replace this below when we pass down to Odin and get back info
   // in the proto
@@ -339,7 +368,8 @@ std::string CustomRouteHandler::Action() {
 
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
-  valhalla::odin::TripDirections trip_directions = directions_builder.Build(trip_path);
+  valhalla::odin::TripDirections trip_directions = directions_builder.Build(
+      get_directions_options(directions_options_ptree_), trip_path);
 
   //make some json
   std::ostringstream stream;
