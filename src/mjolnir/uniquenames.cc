@@ -1,9 +1,9 @@
 #include "mjolnir/uniquenames.h"
 
+#include <valhalla/midgard/logging.h>
+
 namespace valhalla {
 namespace mjolnir {
-
-typedef std::map<std::string, uint32_t> nameindextype;
 
 // Constructor
 UniqueNames::UniqueNames() {
@@ -14,16 +14,15 @@ UniqueNames::UniqueNames() {
 // Get an index given a name. Add the name if it is not in the current list
 // of unique names
 uint32_t UniqueNames::index(const std::string& name) {
-  // Get the iterator into the names map. If it points to a pair whose key
-  // is equivalent, then return the index stored in the map entry
+  // Find the name in the map. If it is there return the index.
   uint32_t index = 0;
-  auto it = names_.lower_bound(name);
-  if (it != names_.end() && !(names_.key_comp()(name, it->first))) {
+  auto it = names_.find(name);
+  if (it != names_.end()) {
      index = it->second;
   }
   else {
      // Not in the map, add index and update
-     it = names_.insert(it, nameindextype::value_type(name, 0));
+     it = names_.insert(it, NamesMap::value_type(name, 0));
      indexes_.push_back(it);
      index = indexes_.size() - 1;
      it->second = index;
@@ -50,6 +49,14 @@ void UniqueNames::Clear() {
 // unique name we return the size of the map - 1.
 size_t UniqueNames::Size() const {
   return names_.size() - 1;
+}
+
+/**
+ * Log information about the number of unique names, size of the vector, etc.
+ */
+void UniqueNames::Log() const {
+  LOG_INFO("Number of names: " + std::to_string(Size()));
+  LOG_INFO("Number of indexes: " + std::to_string(indexes_.size()));
 }
 
 }

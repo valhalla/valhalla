@@ -6,12 +6,11 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/exitsign.h>
 #include "mjolnir/edgeinfobuilder.h"
-#include "mjolnir/exitsignbuilder.h"
-
 #include <boost/shared_array.hpp>
+#include <valhalla/baldr/sign.h>
 #include <memory>
+#include "mjolnir/signbuilder.h"
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -56,22 +55,13 @@ void TestWriteRead() {
   street_name_offset_list.push_back(963);
   street_name_offset_list.push_back(957);
   street_name_offset_list.push_back(862);
-  eibuilder.set_street_name_offset_list(street_name_offset_list);
+  eibuilder.set_text_name_offset_list(street_name_offset_list);
 
   // Shape
   std::vector<PointLL> shape;
   shape.push_back(PointLL(-76.3002, 40.0433));
   shape.push_back(PointLL(-76.3036, 40.043));
   eibuilder.set_shape(shape);
-
-  // Exit signs
-  std::vector<ExitSignBuilder> exit_signs;
-  exit_signs.emplace_back(ExitSign::Type::kNumber, 100);
-  exit_signs.emplace_back(ExitSign::Type::kBranch, 200);
-  exit_signs.emplace_back(ExitSign::Type::kToward, 300);
-  exit_signs.emplace_back(ExitSign::Type::kName, 400);
-  std::vector<ExitSignBuilder> es(exit_signs);  // copy for compare below
-  eibuilder.set_exit_signs(std::move(exit_signs));
 
   // Make an edge info object from the memory
   boost::shared_array<char> memblock = ToFileAndBack(eibuilder);
@@ -84,8 +74,6 @@ void TestWriteRead() {
     throw runtime_error("WriteRead:name_count test failed");
   if (!(shape.size() == ei->shape().size()))
     throw runtime_error("WriteRead:shape_count test failed");
-  if (!(es.size() == ei->exit_sign_count()))
-    throw runtime_error("WriteRead:exit_sign_count test failed");
 
   // Check the name indices
   for (uint8_t i = 0; i < ei->name_count(); ++i) {
@@ -97,15 +85,6 @@ void TestWriteRead() {
   for (size_t i = 0; i < ei->shape().size(); ++i) {
     if (!shape[i].ApproximatelyEqual(ei->shape()[i]))
       throw runtime_error("WriteRead:shape test failed");
-  }
-
-  // Check the exits
-  for (size_t i = 0; i < ei->exit_sign_count(); ++i) {
-    const ExitSign* esp = ei->GetExitSign(static_cast<uint8_t>(i));
-    if (!(es[i].type() == esp->type()))
-      throw runtime_error("WriteRead:GetExitSign.type test failed");
-    if (!(es[i].text_offset() == esp->text_offset()))
-      throw runtime_error("WriteRead:GetExitSign.text_offset test failed");
   }
 }
 

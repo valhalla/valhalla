@@ -6,31 +6,13 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
-
-using namespace valhalla::baldr;
+#include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
 
 // OSM way
-class OSMWay {
- public:
-
-  /**
-   * Constructor
-   */
-  OSMWay();
-
-  /**
-   * Constructor given a way id.
-   * @param   id  way id
-   */
-  OSMWay(uint64_t id);
-
-  /**
-   * Destructor
-   */
-  ~OSMWay();
+struct OSMWay {
 
   /**
    * Set way id.
@@ -45,20 +27,15 @@ class OSMWay {
   uint64_t way_id() const;
 
   /**
-   * Set local nodelist.
-   * @param   nodes  list of nodes for this way
+   * Set the number of nodes for this way.
+   * @param count  Number of nodes in this way.
    */
-  void set_nodes(const std::vector<uint64_t> &nodes);
+  void set_node_count(const uint32_t count);
+
   /**
    * Get the number of nodes for this way.
    */
   uint32_t node_count() const;
-
-  /**
-   * Get the list of nodes for this way.
-   * @return  Returns nodes
-   */
-  const std::vector<uint64_t>& nodes() const;
 
   /**
    * Sets the speed
@@ -73,160 +50,184 @@ class OSMWay {
   float speed() const;
 
   /**
-   * Sets the ref
-   * @param  ref   Reference.
+   * Sets the index for the ref
+   * @param  idx  Index for the reference.
    */
-  void set_ref(const std::string& ref);
+  void set_ref_index(const uint32_t idx);
 
   /**
-   * Get the ref.
-   * @return  Returns ref.
+   * Get the ref index.
+   * @return  Returns the index for the ref.
    */
-  const std::string& ref() const;
+  uint32_t ref_index() const;
 
   /**
-   * Sets the int ret
-   * @param  int_ref   International reference.
+   * Sets the index for int ret
+   * @param  idx  Index for the international reference.
    */
-  void set_int_ref(const std::string& int_ref);
+  void set_int_ref_index(const uint32_t idx);
 
   /**
-   * Get the int ref.
-   * @return  Returns int ref.
+   * Get the int ref index.
+   * @return  Returns the index for the int ref.
    */
-  const std::string& int_ref() const;
+  uint32_t int_ref_index() const;
 
   /**
-   * Sets the name
-   * @param  name   Name.
+   * Sets the index for name
+   * @param  idx  Index for the name.
    */
-  void set_name(const std::string& name);
+  void set_name_index(const uint32_t idx);
 
   /**
-   * Get the name.
-   * @return  Returns name.
+   * Get the name index.
+   * @return  Returns the index for the name.
    */
-  const std::string& name() const;
+  uint32_t name_index() const;
 
   /**
-   * Sets the name:en
-   * @param  name:en   English name.
+   * Sets the index for name:en
+   * @param  idx  Index for the English name.
    */
-  void set_name_en(const std::string& name_en);
+  void set_name_en_index(const uint32_t idx);
 
   /**
-   * Get the name:en.
-   * @return  Returns english name.
+   * Get the name:en index.
+   * @return  Returns the index for the English name.
    */
-  const std::string& name_en() const;
+  uint32_t name_en_index() const;
 
   /**
-   * Sets the alt name
-   * @param  alt_name   Alt name.
+   * Sets the index for alt name
+   * @param  idx  Index for the alt name.
    */
-  void set_alt_name(const std::string& alt_name);
+  void set_alt_name_index(const uint32_t idx);
 
   /**
-   * Get the alt name.
-   * @return  Returns alt name.
+   * Get the alt name index.
+   * @return  Returns the index for the alt name.
    */
-  const std::string& alt_name() const;
+  uint32_t alt_name_index() const;
 
   /**
-   * Sets the official name
-   * @param  official_name   Official name.
+   * Sets the index for official name
+   * @param  idx  Index for the official name.
    */
-  void set_official_name(const std::string& official_name);
+  void set_official_name_index(const uint32_t idx);
 
   /**
-   * Get the official name.
-   * @return  Returns official name.
+   * Get the official name index.
+   * @return  Returns the index for the official name.
    */
-  const std::string& official_name() const;
+  uint32_t official_name_index() const;
 
   /**
-   * Sets the destination.
-   * @param  destination   Destination.
+   * Sets the index for destination.
+   * @param  idx  Index for the destination.
    */
-  void set_destination(const std::string& destination);
+  void set_destination_index(const uint32_t idx);
 
   /**
-   * Get the get_destination.
-   * @return  Returns destination.
+   * Get the get_destination index.
+   * @return  Returns the index for the destination.
    */
-  const std::string& destination() const;
+  uint32_t destination_index() const;
 
   /**
-   * Sets the destination ref.
-   * @param  destination_ref   Destination ref.
+   * Sets the index for destination ref.
+   * @param  idx  Index for the destination ref.
    */
-  void set_destination_ref(const std::string& destination_ref);
+  void set_destination_ref_index(const uint32_t idx);
 
   /**
-   * Get the destination_ref.
-   * @return  Returns destination ref.
+   * Get the destination_ref index.
+   * @return  Returns the index for the destination ref.
    */
-  const std::string& destination_ref() const;
+  uint32_t destination_ref_index() const;
 
   /**
-   * Sets the destination ref to.
-   * @param  destination_ref_to   Destination ref to.
+   * Sets the index for destination ref to.
+   * @param  idx  Index for the destination ref to.
    */
-  void set_destination_ref_to(const std::string& destination_ref_to);
+  void set_destination_ref_to_index(const uint32_t idx);
 
   /**
-   * Get the destination ref to.
-   * @return  Returns destination ref to.
+   * Get the destination ref to index.
+   * @return  Returns the index for the destination ref to.
    */
-  const std::string& destination_ref_to() const;
+  uint32_t destination_ref_to_index() const;
 
   /**
-   * Sets the junction ref.
-   * @param  junction_ref   Junction ref.
+   * Sets the index for destination street.
+   * @param  idx  Index for the destination street.
    */
-  void set_junction_ref(const std::string& junction_ref);
+  void set_destination_street_index(const uint32_t idx);
 
   /**
-   * Get the junction ref.
-   * @return  Returns junction ref.
+   * Get the destination_street index.
+   * @return  Returns the index for the destination street.
    */
-  const std::string& junction_ref() const;
+  uint32_t destination_street_index() const;
 
   /**
-   * Sets the bike national ref.
-   * @param  bike_national_ref   Name of the national bike network.
+   * Sets the index for destination street to.
+   * @param  idx  Index for the destination street to.
    */
-  void set_bike_national_ref(const std::string& bike_national_ref);
+  void set_destination_street_to_index(const uint32_t idx);
 
   /**
-   * Get the bike national ref.
-   * @return  Returns national bike network name.
+   * Get the destination street to index.
+   * @return  Returns the index for the destination street to.
    */
-  const std::string& bike_national_ref() const;
+  uint32_t destination_street_to_index() const;
 
   /**
-   * Sets the bike regional ref.
-   * @param  bike_regional_ref   Name of the regional bike network.
+   * Sets the index for junction ref.
+   * @param  idx  Index for the junction ref.
    */
-  void set_bike_regional_ref(const std::string& bike_regional_ref);
+  void set_junction_ref_index(const uint32_t idx);
 
   /**
-   * Get the bike regional ref.
-   * @return  Returns regional bike network name.
+   * Get the junction ref index.
+   * @return  Returns the index for the junction ref.
    */
-  const std::string& bike_regional_ref() const;
+  uint32_t junction_ref_index() const;
 
   /**
-   * Sets the bike local ref.
-   * @param  bike_local_ref   Name of the local bike network.
+   * Sets the index for bike national ref.
+   * @param  idx  Index for the name of the national bike network.
    */
-  void set_bike_local_ref(const std::string& bike_local_ref);
+  void set_bike_national_ref_index(const uint32_t idx);
 
   /**
-   * Get the bike local ref.
-   * @return  Returns local bike network name.
+   * Get the bike national ref index.
+   * @return  Returns the index for the national bike network name.
    */
-  const std::string& bike_local_ref() const;
+  uint32_t bike_national_ref_index() const;
+
+  /**
+   * Sets the index for bike regional ref.
+   * @param  idx  Index for the name of the regional bike network.
+   */
+  void set_bike_regional_ref_index(const uint32_t idx);
+
+  /**
+   * Get the bike regional ref index.
+   * @return  Returns the index for the regional bike network name.
+   */
+  uint32_t bike_regional_ref_index() const;
+
+  /**
+   * Sets the index for bike local ref.
+   * @param  idx  Index for the name of the local bike network.
+   */
+  void set_bike_local_ref_index(const uint32_t idx);
+
+  /**
+   * Get the bike local ref index.
+   * @return  Returns the index for the local bike network name.
+   */
+  uint32_t bike_local_ref_index() const;
 
   /**
    * Sets the auto_forward flag.
@@ -364,25 +365,25 @@ class OSMWay {
    * Sets the surface.
    * @param  surface
    */
-  void set_surface(const Surface surface);
+  void set_surface(const baldr::Surface surface);
 
   /**
    * Get the surface.
    * @return  Returns Surface.
    */
-  Surface surface() const;
+  baldr::Surface surface() const;
 
   /**
    * Sets the cycle lane.
    * @param  cyclelane
    */
-  void set_cyclelane(const CycleLane cyclelane);
+  void set_cyclelane(const baldr::CycleLane cyclelane);
 
   /**
    * Get the cycle lane.
    * @return  Returns CycleLane.
    */
-  CycleLane cyclelane() const;
+  baldr::CycleLane cyclelane() const;
 
   /**
    * Sets the number of lanes
@@ -433,6 +434,42 @@ class OSMWay {
   bool bridge() const;
 
   /**
+   * Set seasonal flag.
+   * @param  seasonal   Is this seasonal?
+   */
+  void set_seasonal(const bool seasonal);
+
+  /**
+   * Get the seasonal flag.
+   * @return  Returns seasonal flag.
+   */
+  bool seasonal() const;
+
+  /**
+   * Set hov flag.
+   * @param  hov   Is this hov?
+   */
+  void set_hov(const bool hov);
+
+  /**
+   * Get the hov flag.
+   * @return  Returns hov flag.
+   */
+  bool hov() const;
+
+  /**
+   * Set drive_on_right flag.
+   * @param  drive_on_right   Is a country that we drive on the right?
+   */
+  void set_drive_on_right(const bool drive_on_right);
+
+  /**
+   * Get the drive on right flag.
+   * @return  Returns drive on right flag.
+   */
+  bool drive_on_right() const;
+
+  /**
    * Sets the bike network.
    * @param  bike_network Mask of the bike networks (ncn/rcn/lcn).
    */
@@ -457,29 +494,41 @@ class OSMWay {
   bool exit() const;
 
   /**
+   * Sets the tagged_speed flag.
+   * @param  tagged_speed  User specified speed?
+   */
+  void set_tagged_speed(const bool tagged_speed);
+
+  /**
+   * Get the tagged_speed flag.
+   * @return  Returns tagged_speed flag.
+   */
+  bool tagged_speed() const;
+
+  /**
    * Get the road class.
    * @return  Returns road class.
    */
-  RoadClass road_class() const;
+  baldr::RoadClass road_class() const;
 
   /**
    * Sets the road class.
    * @param  roadclass  Road Class/highway type.
    */
-  void set_road_class(const RoadClass roadclass);
+  void set_road_class(const baldr::RoadClass roadclass);
 
   /**
    * Sets the use tag.
    * @param  use       use. None Cycleway ParkingAisle, Driveway, Alley,
    *                        EmergencyAccess, DriveThru, Steps, and Other
    */
-  void set_use(const Use use);
+  void set_use(const baldr::Use use);
 
   /**
    * Get the use.
    * @return  Returns use.
    */
-  Use use() const;
+  baldr::Use use() const;
 
   /**
    * Sets the link tag.
@@ -495,37 +544,40 @@ class OSMWay {
 
   /**
    * Get the names for the edge info based on the road class.
+   * @param  ref              updated refs from relations.
+   * @param  ref_offset_map   map of unique refs from ways.
+   * @param  name_offset_map  map of unique names from ways.
    * @return  Returns vector of strings
    */
-  std::vector<std::string> GetNames() const;
+  std::vector<std::string> GetNames(const std::string& ref,
+                                    const UniqueNames& ref_offset_map,
+                                    const UniqueNames& name_offset_map) const;
 
- private:
   // OSM way Id
   uint64_t osmwayid_;
 
-  // List of OSM node Ids along the way
-  std::vector<uint64_t> nodes_;
-
   // Reference name (highway numbers)
-  std::string ref_;
-  std::string int_ref_;
+  uint32_t ref_index_;
+  uint32_t int_ref_index_;
 
   // Names
-  std::string name_;
-  std::string name_en_;
-  std::string alt_name_;
-  std::string official_name_;
+  uint32_t name_index_;
+  uint32_t name_en_index_;
+  uint32_t alt_name_index_;
+  uint32_t official_name_index_;
 
   // Sign Destination information
-  std::string destination_;
-  std::string destination_ref_;
-  std::string destination_ref_to_;
-  std::string junction_ref_;
+  uint32_t destination_index_;
+  uint32_t destination_ref_index_;
+  uint32_t destination_ref_to_index_;
+  uint32_t destination_street_index_;
+  uint32_t destination_street_to_index_;
+  uint32_t junction_ref_index_;
 
   // Bike network information
-  std::string bike_national_ref_;
-  std::string bike_regional_ref_;
-  std::string bike_local_ref_;
+  uint32_t bike_national_ref_index_;
+  uint32_t bike_regional_ref_index_;
+  uint32_t bike_local_ref_index_;
 
   // Way attributes
   union WayAttributes {
@@ -547,13 +599,18 @@ class OSMWay {
       uint32_t tunnel           :1;
       uint32_t toll             :1;
       uint32_t bridge           :1;
+      uint32_t seasonal         :1;
+      uint32_t hov              :1;
+      uint32_t drive_on_right   :1;
       uint32_t bikenetwork      :4;
       uint32_t exit             :1;
-      uint32_t spare            :4;
+      uint32_t tagged_speed     :1;
     } fields;
     uint32_t v;
   };
   WayAttributes attributes_;
+
+  uint16_t nodecount_;
 
   union Classification {
     struct Fields {

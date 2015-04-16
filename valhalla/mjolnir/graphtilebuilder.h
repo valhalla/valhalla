@@ -15,12 +15,15 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/signinfo.h>
+
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/baldr/exitsigninfo.h>
+#include <valhalla/mjolnir/admininfobuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include "signbuilder.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -56,17 +59,47 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
-   * Update a graph tile with new header, nodes, and directed edges. This
-   * is used to add directed edges connecting two hierarchy levels.
+ * Update a graph tile with new header, nodes, and directed edges. Used
+ * in GraphOptimizer to update directed edge information.
+ * @param hierarchy How the tiles are setup on disk
+ * @param hdr Update header
+ * @param nodes Update list of nodes
+ * @param directededges Updated list of edges.
+ */
+ void Update(const baldr::TileHierarchy& hierarchy,
+ const GraphTileHeaderBuilder& hdr,
+ const std::vector<NodeInfoBuilder>& nodes,
+ const std::vector<DirectedEdgeBuilder>& directededges);
+
+ /**
+* Update a graph tile with new header, nodes, and directed edges. Used
+* in GraphOptimizer to update directed edge information.
+* @param hierarchy How the tiles are setup on disk
+* @param hdr Update header
+* @param nodes Update list of nodes
+* @param directededges Updated list of edges.
+*/
+void Update(const baldr::TileHierarchy& hierarchy,
+GraphTileHeaderBuilder& hdr,
+const std::vector<NodeInfoBuilder>& nodes,
+const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Update a graph tile with new header, nodes, directed edges, signs,
+   * and turn restrictions.
+   * This is used to add directed edges connecting two hierarchy levels.
    * @param  hierarchy      How the tiles are setup on disk
    * @param  hdr            Update header
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
+   * @param  signs          Updated list of signs.
+   * @param  trs            Updated list of turn restrictions.
    */
   void Update(const baldr::TileHierarchy& hierarchy,
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
-              const std::vector<DirectedEdgeBuilder> directededges);
+              const std::vector<DirectedEdgeBuilder>& directededges,
+              const std::vector<SignBuilder>& signs);
 
   /**
    * Add a node and its outbound edges.
@@ -76,14 +109,33 @@ class GraphTileBuilder : public baldr::GraphTile {
       const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
+   * Add sign information.
+   * @param  idx  Directed edge index.
+   * @param  signs  Sign information.
+   */
+  void AddSigns(const uint32_t idx,
+                const std::vector<baldr::SignInfo>& signs);
+
+  /**
    * Add edge info to the tile.
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
+                       const uint64_t wayid,
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
-                       const std::vector<ExitSignInfo>& exit_sign_infos,
                        bool& added);
+  /**
+   * Add admin info to the tile.
+   */
+  uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
+                    const std::string& country_iso, const std::string& state_iso,
+                    const std::string& start_dst, const std::string& end_dst);
+
+  /**
+   * Get the admin index.
+   */
+  uint32_t GetAdminIndex(const std::string& country_iso);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -96,6 +148,19 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  idx  Index of the directed edge within the tile.
    */
   DirectedEdgeBuilder& directededge(const size_t idx);
+
+  /**
+   * Gets a non-const sign (builder) from existing tile data.
+   * @param  idx  Index of the sign (index in the array, not the
+   *              directed edge index) within the tile.
+   */
+  SignBuilder& sign(const size_t idx);
+
+  /**
+   * Gets a const admin builder at specified index.
+   * @param  idx  Index of the admin builder in the list.
+   */
+  const AdminInfoBuilder& admins_builder(size_t idx);
 
  protected:
 
@@ -126,6 +191,9 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Write all textlist items to specified stream
   void SerializeTextListToOstream(std::ostream& out);
 
+  // Write all edgeinfo items to specified stream
+  void SerializeAdminInfosToOstream(std::ostream& out);
+
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
 
@@ -137,6 +205,18 @@ class GraphTileBuilder : public baldr::GraphTile {
   // indexed directly.
   std::vector<DirectedEdgeBuilder> directededges_builder_;
 
+  // List of signs. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<SignBuilder> signs_builder_;
+
+  // List of admins. This is a fixed size structure so it can be
+  // indexed directly.
+  std::vector<AdminInfoBuilder> admins_builder_;
+
+  // Admin info offset
+  size_t admin_info_offset_ = 0;
+  std::unordered_map<std::string,size_t> admin_info_offset_map;
+
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
   std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
@@ -144,12 +224,13 @@ class GraphTileBuilder : public baldr::GraphTile {
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;
 
-   // Text list offset and map
-   uint32_t text_list_offset_ = 0;
-   std::unordered_map<std::string, uint32_t> text_offset_map;
+  // Text list offset and map
+  uint32_t text_list_offset_ = 0;
+  std::unordered_map<std::string, uint32_t> text_offset_map;
 
-   // Text list. List of names used within this tile
-   std::list<std::string> textlistbuilder_;
+  // Text list. List of names used within this tile
+  std::list<std::string> textlistbuilder_;
+
 };
 
 }

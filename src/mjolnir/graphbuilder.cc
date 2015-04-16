@@ -1,15 +1,11 @@
 
-
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/util.h"
-
-// Use open source PBF reader from:
-//     https://github.com/CanalTP/libosmpbfreader
-#include "osmpbfreader.h"
 
 #include <future>
 #include <utility>
 #include <thread>
+#include <set>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -20,486 +16,482 @@
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/exitsigninfo.h>
+#include <valhalla/baldr/signinfo.h>
+
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
 
-namespace valhalla {
-namespace mjolnir {
 
-// Number of tries when determining not thru edges
-constexpr uint32_t kMaxNoThruTries = 256;
+namespace {
 
 // Absurd classification.
 constexpr uint32_t kAbsurdRoadClass = 777777;
 
-// Method to get the shape for an edge - since LL is stored as a pair of
-// floats we need to change into PointLL to get length of an edge
-std::vector<midgard::PointLL> Edge::shape() const {
-  std::vector<midgard::PointLL> lls;
-  for (const std::pair<float, float>& ll : latlngs_) {
-    lls.emplace_back(midgard::PointLL(ll.first, ll.second));
+/**
+ * An edge in the graph. Connects 2 nodes that have 2 or more "uses" - meaning
+ * the node forms an intersection (or is the end of an OSM way). OSM nodes
+ * with less than 2 uses become a shape point (lat,lng) along the edge.
+ */
+struct Edge {
+  // Index into the list of OSM way information
+  uint32_t wayindex_;
+
+  // Index of the first lat,lng into the GraphBuilder latlngs
+  uint32_t llindex_;
+
+  // Attributes needed to sort the edges
+  struct EdgeAttributes {
+    uint32_t llcount          : 16;
+    uint32_t importance       : 3;
+    uint32_t driveableforward : 1;
+    uint32_t driveablereverse : 1;
+    uint32_t traffic_signal   : 1;
+    uint32_t forward_signal   : 1;
+    uint32_t backward_signal  : 1;
+    uint32_t link             : 1;
+    uint32_t reclass_link     : 1;
+    uint32_t has_names        : 1;
+    uint32_t driveforward     : 1;   // For sorting in collect_node_edges
+                                     //  - set based on source node
+    uint32_t spare            : 4;
+  };
+  EdgeAttributes attributes;
+
+  // index of the source (start) node of the edge
+  uint32_t sourcenode_;
+
+  // index of the target (end) node of the edge
+  uint32_t targetnode_;
+
+  /**
+   * Construct a new edge. Target node and additional lat,lngs will
+   * be filled in later.
+   * @param sourcenode   Start node of the edge
+   * @param wayindex     Index into list of OSM ways
+   * @param ll           Lat,lng at the start of the edge.
+   */
+  static Edge make_edge(const uint32_t wayindex,
+       const uint32_t llindex, const OSMWay& way) {
+    Edge e{wayindex, llindex};
+    e.attributes.llcount = 1;
+    e.attributes.importance = static_cast<uint32_t>(way.road_class());
+    if (way.use() == Use::kEmergencyAccess) {
+      // Temporary until all access values are set
+      e.attributes.driveableforward = false;
+      e.attributes.driveablereverse = false;
+    } else {
+      e.attributes.driveableforward = way.auto_forward();
+      e.attributes.driveablereverse = way.auto_backward();
+    }
+    e.attributes.link = way.link();
+    e.attributes.reclass_link = false;
+    e.attributes.has_names = (way.name_index_ != 0
+                           || way.name_en_index_ != 0
+                           || way.alt_name_index_ != 0
+                           || way.official_name_index_ != 0
+                           || way.ref_index_ != 0
+                           || way.int_ref_index_ != 0);
+    return e;
   }
-  return lls;
-}
 
-
-// Construct GraphBuilder based on properties file and input PBF extract
-GraphBuilder::GraphBuilder(const boost::property_tree::ptree& pt)
-    : tile_hierarchy_(pt.get_child("hierarchy")),
-      stats_(new DataQuality()),
-      threads_(std::max(static_cast<unsigned int>(1), pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()))){
-}
-
-// Delete the OSM node map.
-void delete_node_map(OSMData& osmdata) {
-  std::unordered_map<uint64_t, OSMNode> tmp;
-  tmp.swap(osmdata.nodes);
-}
-
-// Build the graph from the input
-void GraphBuilder::Build(OSMData& osmdata) {
-  // Construct edges
-  std::clock_t start = std::clock();
-  ConstructEdges(osmdata);
-  uint32_t msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("ConstructEdges took " + std::to_string(msecs) + " ms");
-
-  // No longer need the OSMNodes map in osmdata - can we recover its
-  // memory?
-  LOG_INFO("Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
-  delete_node_map(osmdata);
-  LOG_INFO("After delete: Sizeof OSM node map: " + std::to_string(osmdata.nodes.size()));
-
-  // Sort the edge indexes at the nodes (by driveability and importance)
-  // TODO (do we still need to do this??)
-/** start = std::clock();
-  SortEdgesFromNodes();
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("SortEdges took " + std::to_string(msecs) + " ms");  **/
-
-  // Reclassify links (ramps). Cannot do this when building tiles since the
-  // edge list needs to be modified
-  start = std::clock();
-  ReclassifyLinks(osmdata.ways);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("ReclassifyLinks took " + std::to_string(msecs) + " ms");
-
-  // Tile the nodes at the base (local) level
-  start = std::clock();
-  const auto& tl = tile_hierarchy_.levels().rbegin();
-  TileNodes(tl->second.tiles.TileSize(), tl->second.level);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("TileNodes took " + std::to_string(msecs) + " ms");
-
-  // Iterate through edges - tile the end nodes to create connected graph
-  start = std::clock();
-  BuildLocalTiles(tl->second.level, osmdata.ways,osmdata.node_ref,
-                  osmdata.node_exit_to, osmdata.node_name);
-  msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("BuildLocalTiles took " + std::to_string(msecs) + " ms");
-
-  // Log statistics and issues
-  stats_->Log();
-}
-
-// Construct edges in the graph.
-// TODO - compare logic to example_routing app. to see why the edge
-// count differs.
-void GraphBuilder::ConstructEdges(const OSMData& osmdata) {
-  // Reserve size for the Node map
-  nodes_.reserve(osmdata.intersection_count);
-
-  // Iterate through the OSM ways
-  uint32_t edgeindex = 0;
-  uint64_t startnodeid, nodeid;
-  edges_.reserve(osmdata.edge_count);
-  for (size_t wayindex = 0; wayindex < osmdata.ways.size(); wayindex++) {
-    // Get some way attributes needed for the edge
-    const auto& way = osmdata.ways[wayindex];
-
-    // Start an edge at the first node of the way and add the
-    // edge index to the node
-    startnodeid = nodeid = way.nodes()[0];
-    const auto& osmnode = osmdata.nodes.find(nodeid)->second;
-    Edge edge(nodeid, wayindex, osmnode.latlng(), way);
-
-    // If Node exists add an edge to it, otherwise construct Node, add an
-    // edge and add it to the map
-    auto node = nodes_.find(nodeid);
-    if (node == nodes_.end()) {
-      nodes_.emplace(std::piecewise_construct,
-                     std::forward_as_tuple(nodeid),
-                     std::forward_as_tuple(osmnode, edgeindex, way.link()));
-    }
-    else {
-      node->second.AddEdge(edgeindex, way.link());
+  /**
+   * For sorting edges. By driveability (forward), importance, and
+   * presence of names.
+   * (TODO - end of simple restriction?)
+   */
+  bool operator < (const Edge& other) const {
+    // Is this a loop?
+    if (targetnode_ == other.targetnode_ &&
+        sourcenode_ == other.sourcenode_ &&
+        sourcenode_ == targetnode_) {
+      false;
     }
 
-    // Iterate through the nodes of the way and add lat,lng to the current
-    // way until a node with > 1 uses is found.
-    for (size_t i = 1; i < way.node_count(); i++) {
-      // Add the node lat,lng to the edge shape.
-      nodeid  = way.nodes()[i];
-      const auto& osmnode = osmdata.nodes.find(nodeid)->second;
-      edge.AddLL(osmnode.latlng());
-
-      // If a is an intersection or the end of the way
-      // it's a node of the road network graph
-      if (osmnode.intersection()) {
-        // End the current edge and add its edge index to the node
-        edge.targetnode_ = nodeid;
-
-        // If Node exists add an edge to it, otherwise construct Node, add an
-        // edge and add it to the map
-        auto node = nodes_.find(nodeid);
-        if (node == nodes_.end()) {
-          nodes_.emplace(std::piecewise_construct,
-                         std::forward_as_tuple(nodeid),
-                         std::forward_as_tuple(osmnode, edgeindex, way.link()));
-
-          // Is there a better way to save this for use later?
-          node = nodes_.find(nodeid);
+    // Sort by driveability (forward, importance, has_names)
+    bool d  = attributes.driveforward;
+    bool od = other.attributes.driveforward;
+    if (d == od) {
+      if (attributes.importance == other.attributes.importance) {
+        // Equal importance - check presence of names
+        if (attributes.has_names == other.attributes.has_names) {
+          return llindex_ < other.llindex_;
+        } else {
+          return attributes.has_names > other.attributes.has_names;
         }
-        else {
-          // Add the edgeindex to the node (unless this is a loop with same
-          // start and end node Ids)
-          if (startnodeid != nodeid) {
-            node->second.AddEdge(edgeindex, way.link());
-          }
-        }
+      } else {
+        return attributes.importance < other.attributes.importance;
+      }
+    } else {
+      return d > od;
+    }
+  }
+};
 
-        // Add the edge to the list of edges
-        edges_.emplace_back(std::move(edge));
-        edgeindex++;
+/**
+ * Node within the graph
+ */
+struct Node {
+  //the underlying osm node and attributes
+  OSMNode node;
+  //the graph edge that this node starts
+  uint32_t start_of;
+  //the graph edge that this node ends
+  uint32_t end_of;
+  //the graphid of the node
+  GraphId graph_id;
 
-        // Start a new edge if this is not the last node in the way
-        if (i < way.node_count() - 1) {
-          startnodeid = nodeid;
-          edge = Edge(nodeid, wayindex, osmnode.latlng(), way);
-          node->second.AddEdge(edgeindex, way.link());
-        }
+  bool is_start() const {
+    return start_of != - 1;
+  }
+  bool is_end() const {
+    return end_of != - 1;
+  }
+
+};
+
+// collect all the edges that start or end at this node
+struct node_bundle : Node {
+  size_t node_count;
+  size_t link_count;
+  //TODO: to enable two directed edges per loop edge turn this into an unordered_multimap or just a list of pairs
+  std::map<Edge, size_t> node_edges;
+  node_bundle(const Node& other):Node(other), node_count(0), link_count(0) {}
+};
+node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequence<Node>& nodes, sequence<Edge>& edges) {
+  //copy out the first nodes attributes (as they are the correctly merged one)
+  auto itr = node_itr;
+  node_bundle bundle(*itr);
+  Node node;
+  //for each node with the same id (duplicate)
+  for(; itr != nodes.end() && (node = *itr).node.osmid == bundle.node.osmid; ++itr) {
+    ++bundle.node_count;
+    if(node.is_start()) {
+      auto edge_itr = edges[node.start_of];
+      auto edge = *edge_itr;
+      // Set driveforward - this edge is traversed in forward direction
+      edge.attributes.driveforward = edge.attributes.driveableforward;
+      bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
+      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
+      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+        bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      }
+      if (edge.attributes.link) {
+        bundle.link_count++;
+      }
+    }
+    if(node.is_end()) {
+      auto edge_itr = edges[node.end_of];
+      auto edge = *edge_itr;
+      // Set driveforward - this edge is traversed in reverse direction
+      edge.attributes.driveforward = edge.attributes.driveablereverse;
+      bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
+      bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
+      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+        bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+      }
+      if (edge.attributes.link) {
+        bundle.link_count++;
       }
     }
   }
-  LOG_INFO("Constructed " + std::to_string(edges_.size()) + " edges");
+  return bundle;
 }
 
-class EdgeSorter {
- public:
-  EdgeSorter(const std::vector<Edge>& edges)
-     : osmnodeid_(0),
-       edges_(edges) {
-  }
-  void SetNodeId(const uint64_t nodeid) {
-    osmnodeid_ = nodeid;
-  }
-  bool operator() (const uint32_t e1index, const uint32_t e2index) const {
-    const Edge& e1 = edges_[e1index];
-    const Edge& e2 = edges_[e2index];
+/**
+ * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
+ * we also need to then update the egdes that pointed to them
+ *
+ */
+std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
+                                    const std::string& edges_file,
+                                    const TileHierarchy& tile_hierarchy,
+                                    const uint8_t level) {
+  LOG_INFO("Sorting graph...");
 
-    // Check if edges are forward or reverse
-    bool e1forward = (e1.sourcenode_ == osmnodeid_);
-    bool e2forward = (e2.sourcenode_ == osmnodeid_);
+  // Sort nodes by graphid then by osmid, so its basically a set of tiles
+  sequence<Node> nodes(nodes_file, false);
+  nodes.sort(
+    [&tile_hierarchy, &level](const Node& a, const Node& b) {
+      if(a.graph_id == b.graph_id)
+        return a.node.osmid < b.node.osmid;
+      return a.graph_id < b.graph_id;
+    }
+  );
+  //run through the sorted nodes, going back to the edges they reference and updating each edge
+  //to point to the first (out of the duplicates) nodes index. at the end of this there will be
+  //tons of nodes that no edges reference, but we need them because they are the means by which
+  //we know what edges connect to a given node from the nodes perspective
+  sequence<Edge> edges(edges_file, false);
+  uint32_t run_index = 0;
+  uint32_t node_index = 0;
+  size_t node_count = 0;
+  Node last_node{};
+  std::map<GraphId, size_t> tiles;
+  nodes.transform(
+    [&nodes, &edges, &run_index, &node_index, &node_count, &last_node, &tiles](Node& node) {
+      //remember if this was a new tile
+      if(node_index == 0 || node.graph_id != (--tiles.end())->first) {
+        tiles.insert({node.graph_id, node_index});
+        node.graph_id.fields.id = 0;
+        run_index = node_index;
+        ++node_count;
+      }//but is it a new node
+      else if(last_node.node.osmid != node.node.osmid) {
+        node.graph_id.fields.id = last_node.graph_id.fields.id + 1;
+        run_index = node_index;
+        ++node_count;
+      }//not new keep the same graphid
+      else
+        node.graph_id.fields.id = last_node.graph_id.fields.id;
 
-    bool e1drive = ((e1forward && e1.attributes_.fields.driveableforward) ||
-                       (!e1forward && e1.attributes_.fields.driveablereverse));
-    bool e2drive = ((e2forward && e2.attributes_.fields.driveableforward) ||
-                       (!e2forward && e2.attributes_.fields.driveablereverse));
+      //if this node marks the start of an edge, go tell the edge where the first node in the series is
+      if(node.is_start()) {
+        auto element = edges[node.start_of];
+        auto edge = *element;
+        edge.sourcenode_ = run_index;
+        element = edge;
+      }
+      //if this node marks the end of an edge, go tell the edge where the first node in the series is
+      if(node.is_end()) {
+        auto element = edges[node.end_of];
+        auto edge = *element;
+        edge.targetnode_ = run_index;
+        element = edge;
+      }
 
-    // If both driveable or both not driveable, compare importance
-    if (e1drive == e2drive) {
-      return e1.attributes_.fields.importance < e2.attributes_.fields.importance;
-    } else if (e1drive && !e2drive) {
-      return true;
-    } else {
-      return false;
+      //next node
+      last_node = node;
+      ++node_index;
+      return node;
+    }
+  );
+
+  LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
+  return tiles;
+}
+
+// Construct edges in the graph and assign nodes to tiles.
+void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
+          const std::string& way_nodes_file,
+          const std::string& nodes_file,
+          const std::string& edges_file, const float tilesize,
+          const std::function<GraphId (const OSMNode&)>& graph_id_predicate) {
+  LOG_INFO("Creating graph edges from ways...")
+
+  // Iterate through the OSM ways
+  uint32_t edgeindex = 0;
+  GraphId graphid;
+  //so we can read ways and nodes and write edges
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+  sequence<Edge> edges(edges_file, true);
+  sequence<Node> nodes(nodes_file, true);
+
+  // For each way traversed via the nodes
+  size_t current_way_node_index = 0;
+  while (current_way_node_index < way_nodes.size()) {
+    // Grab the way and its first node
+    auto way_node = *way_nodes[current_way_node_index];
+    const auto way = *ways[way_node.way_index];
+    const auto first_way_node_index = current_way_node_index;
+    const auto last_way_node_index = first_way_node_index + way.node_count() - 1;
+
+    // Remember this edge starts here
+    Edge edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+
+    // Remember this node as starting this edge
+    way_node.node.attributes_.link_edge = way.link();
+    way_node.node.attributes_.non_link_edge = !way.link();
+    nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1), graph_id_predicate(way_node.node)});
+
+    // Iterate through the nodes of the way until we find an intersection
+    while(current_way_node_index < way_nodes.size()) {
+      // Get the next shape point on this edge
+      way_node = *way_nodes[++current_way_node_index];
+      edge.attributes.llcount++;
+
+      // If its an intersection or the end of the way it's a node of the road network graph
+      if (way_node.node.intersection()) {
+
+        // Finish off this edge
+        way_node.node.attributes_.link_edge = way.link();
+        way_node.node.attributes_.non_link_edge = !way.link();
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
+        edges.push_back(edge);
+
+        // Start a new edge if this is not the last node in the way
+        if (current_way_node_index != last_way_node_index) {
+          edge = Edge::make_edge(way_node.way_index, current_way_node_index, way);
+          sequence<Node>::iterator element = --nodes.end();
+          auto node = *element;
+          node.start_of = edges.size();
+          element = node;
+        }// This was the last shape point in the way
+        else {
+          ++current_way_node_index;
+          break;
+        }
+      }// If this edge has a signal not at a intersection
+      else if (way_node.node.traffic_signal()) {
+        edge.attributes.traffic_signal = true;
+        edge.attributes.forward_signal = way_node.node.forward_signal();
+        edge.attributes.backward_signal = way_node.node.backward_signal();
+      }
     }
   }
- private:
-  uint64_t osmnodeid_;
-  const std::vector<Edge>& edges_;
-};
 
-// Sort edge indexes from each node
-void GraphBuilder::SortEdgesFromNodes() {
-  // Sort the directed edges from the node
-  EdgeSorter sorter(edges_);
-  for (auto& node : nodes_) {
-    sorter.SetNodeId(node.first);
-    std::sort(node.second.mutable_edges().begin(),
-              node.second.mutable_edges().end(), sorter);
-  }
+  LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
 
-uint32_t GraphBuilder::GetBestNonLinkClass(const Node& node) const {
+
+/**
+ * Get the best classification for any driveable non-link edges from a node.
+ * @param  edges The file backed list of edges in the graph.
+ * @return  Returns the best (most important) classification
+ */
+uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
-  for (auto idx : node.edges()) {
-    const Edge& edge = edges_[idx];
-    if (!edge.attributes_.fields.link) {
-      if (edge.attributes_.fields.importance < bestrc)
-        bestrc = edge.attributes_.fields.importance;
+  for (const auto& edge : edges) {
+    if (!edge.first.attributes.link &&
+        (edge.first.attributes.driveableforward ||
+         edge.first.attributes.driveablereverse)) {
+      if (edge.first.attributes.importance < bestrc) {
+        bestrc = edge.first.attributes.importance;
+      }
     }
   }
   return bestrc;
 }
 
+
 // Reclassify links (ramps and turn channels).
-void GraphBuilder::ReclassifyLinks(const WayVector& ways) {
+void ReclassifyLinks(const std::string& ways_file,
+                     const std::string& nodes_file,
+                     const std::string& edges_file,
+                     DataQuality& stats) {
+  LOG_INFO("Reclassifying link graph edges...")
+
   uint32_t count = 0;
-  std::unordered_set<uint64_t> visitedset;  // Set of visited nodes
-  std::unordered_set<uint64_t> expandset;   // Set of nodes to expand
-  std::vector<uint32_t> linkedgeindexes;    // Edge indexes to reclassify
-  for (const auto& node : nodes_) {
-    if (node.second.link_edge() && node.second.non_link_edge()) {
+  std::unordered_set<size_t> visitedset;  // Set of visited nodes
+  std::unordered_set<size_t> expandset;   // Set of nodes to expand
+  std::list<size_t> linkedgeindexes;     // Edge indexes to reclassify
+  std::multiset<uint32_t> endrc;           //
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<Edge> edges(edges_file, false);
+  sequence<Node> nodes(nodes_file, false);
+  //std::set<size_t> indices;
+
+  //try to expand
+  auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
+    auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
+    auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
+
+    // Add the classification if there is a driveable non-link edge
+    if (end_node_bundle.node.attributes_.non_link_edge) {
+      endrc.insert(GetBestNonLinkClass(end_node_bundle.node_edges));
+    }
+
+    // Add the end node to the expandset if link_count > 1 (another link edge
+    // other than the incoming) and end node has not already been visited
+    if (end_node_bundle.link_count > 1 &&
+        visitedset.find(end_node_itr.position()) == visitedset.end()) {
+      expandset.insert(end_node_itr.position());
+    }
+  };
+
+  //for each node
+  sequence<Node>::iterator node_itr = nodes.begin();
+  while (node_itr != nodes.end()) {
+    // If the node has a both links and non links at it
+    auto bundle = collect_node_edges(node_itr, nodes, edges);
+    if (bundle.node.attributes_.link_edge && bundle.node.attributes_.non_link_edge) {
       // Get the highest classification of non-link edges at this node
-      uint32_t beststartrc = GetBestNonLinkClass(node.second);
+      endrc = { GetBestNonLinkClass(bundle.node_edges) };
 
       // Expand from all link edges
-      for (auto startedgeindex : node.second.edges()) {
-        // Get the edge information. Skip non-link edges
-        const Edge& startedge = edges_[startedgeindex];
-        if (!startedge.attributes_.fields.link) {
+      for (const auto& startedge : bundle.node_edges) {
+        // Get the edge information. Skip non-link edges and link edges
+        // already reclassified
+        if (!startedge.first.attributes.link ||
+             startedge.first.attributes.reclass_link) {
           continue;
         }
 
-        // Clear the sets and edge list
-        visitedset.clear();
-        expandset.clear();
-        linkedgeindexes.clear();
+        // Clear the visited set and start expanding at the end of this edge
+        visitedset = {};
+        expandset = {};
+        linkedgeindexes = { startedge.second };
+        expand(startedge.first, node_itr);
 
-        // Add the start edge to list of links edges to potentially reclassify
-        linkedgeindexes.push_back(startedgeindex);
-
-        // If the first end node contains a non-link edge we compute the best
-        // classification. If not we add the end node to the expand set.
-        uint32_t bestendrc = kAbsurdRoadClass;
-        uint64_t endnode = (startedge.sourcenode_ == node.first) ?
-            startedge.targetnode_ : startedge.sourcenode_;
-        auto firstendnode = nodes_.find(endnode);
-        if (firstendnode != nodes_.end()) {
-          if (firstendnode->second.non_link_edge()) {
-            bestendrc = GetBestNonLinkClass(firstendnode->second);
-          } else {
-            expandset.insert(endnode);
-          }
-        }
-
-        // Expand edges until all paths reach a node that has a non-link
-        for (uint32_t n = 0; n < 512; n++) {
-          // Once expand list is empty - mark all link edges encountered
-          // with the specified classification / importance and break out
-          // of this loop (can still expand other ramp edges
-          // from the starting node
-          if (expandset.empty()) {
-            // Make sure this connects...
-            if (bestendrc == kAbsurdRoadClass)  {
-              stats_->AddIssue(kUnconnectedLinkEdge, GraphId(),
-                             ways[startedge.wayindex_].way_id(), 0);
-            } else {
-              // Set to the lower of the 2 best road classes (start and end).
-              // Apply this to each of the link edges
-              uint32_t rc = std::max(beststartrc, bestendrc);
-              for (auto idx : linkedgeindexes) {
-                if (rc > edges_[idx].attributes_.fields.importance) {
-                  edges_[idx].attributes_.fields.importance = rc;
-                  count++;
-                }
-              }
-            }
-            break;
-          }
-
-          // Get the node off of the expand list and add it to the visited list
-          uint64_t expandnode = *expandset.begin();
+        // Expand edges until all paths reach a node that has a non-link and
+        // only one link edge
+        while (!expandset.empty()) {
+          // Expand all edges from this node and pop from expand set
+          auto expand_node_itr = nodes[*expandset.begin()];
+          auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+          visitedset.insert(expand_node_itr.position());
           expandset.erase(expandset.begin());
-          visitedset.insert(expandnode);
-
-          // Expand all edges from this node
-          const auto nd = nodes_.find(expandnode);
-          if (nd == nodes_.end()) {
-            continue;
+          for (const auto& expandededge : expanded.node_edges) {
+            // Do not allow use of the start edge or any non-link edge
+            if (expandededge.second == startedge.second ||
+                !expandededge.first.attributes.link) {
+              continue;
+            }
+            // Expand from end node of this link edge
+            expand(expandededge.first, expand_node_itr);
           }
-          for (const auto& edgeindex : nd->second.edges()) {
-            // Do not allow use of the start edge
-            if (edgeindex == startedgeindex) {
-              continue;
-            }
+        }
 
-            // Add this edge (it should be a link edge) and get its end node
-            const Edge& nextedge = edges_[edgeindex];
-            if (!nextedge.attributes_.fields.link) {
-              LOG_ERROR("Expanding onto non-link edge!");
-              continue;
-            }
-            uint32_t osmendnode = (nextedge.sourcenode_ == expandnode) ?
-                    nextedge.targetnode_ : nextedge.sourcenode_;
-            linkedgeindexes.push_back(edgeindex);
-            const auto endnd = nodes_.find(osmendnode);
-            if (endnd == nodes_.end()) {
-              continue;
-            }
-
-            // If the end node contains any non-links find the best
-            // classification - do not expand from this node
-            if (endnd->second.non_link_edge()) {
-              uint32_t rc = GetBestNonLinkClass(endnd->second);
-              if (rc < bestendrc) {
-                bestendrc = rc;
-              }
-            } else if (visitedset.find(osmendnode) == visitedset.end()) {
-              // Add to the expand set if not in the visited set
-              expandset.insert(osmendnode);
+        // Once expand list is empty - mark all link edges encountered
+        // with the specified classification / importance and break out
+        // of this loop (can still expand other ramp edges
+        // from the starting node
+        // Make sure this connects...
+        if (endrc.size() < 2) {
+          stats.AddIssue(kUnconnectedLinkEdge, GraphId(), (*ways[startedge.first.wayindex_]).way_id(), 0);
+        }
+        else {
+          // Set to the value of the 2nd best road class of all
+          // connections. This protects against downgrading links
+          // when branches occur.
+          uint32_t rc = *(++endrc.cbegin());
+          for (auto idx : linkedgeindexes) {
+            sequence<Edge>::iterator element = edges[idx];
+            auto edge = *element;
+            edge.attributes.reclass_link = true;
+            if (rc > edge.attributes.importance) {
+              edge.attributes.importance = rc;
+              element = edge;
+              //indices.insert(idx);
+              count++;
             }
           }
         }
       }
     }
-  }
-  LOG_INFO((boost::format("Reclassify Links: Count %1%") % count).str());
-}
 
-namespace {
-
-class graphbuilder : public GraphBuilder {
- public:
-  using GraphBuilder::CreateExitSignInfoList;
-};
-
-// Test if this is a "not thru" edge. These are edges that enter a region that
-// has no exit other than the edge entering the region
-bool IsNoThroughEdge(const uint64_t startnode, const uint64_t endnode,
-                     const uint32_t startedgeindex,
-                     const std::unordered_map<uint64_t, Node>& nodes,
-                     const std::vector<Edge>& edges) {
-  // Add the end node Id to the set of nodes to expand
-  std::unordered_set<uint64_t> visitedset;
-  std::unordered_set<uint64_t> expandset;
-  expandset.insert(endnode);
-
-  // Expand edges until exhausted, the maximum number of expansions occur,
-  // or end up back at the starting node. No node can be visited twice.
-  for (uint32_t n = 0; n < kMaxNoThruTries; n++) {
-    // If expand list is exhausted this is "not thru"
-    if (expandset.empty()) {
-      return true;
-    }
-
-    // Get the node off of the expand list and add it to the visited list.
-    // Expand edges from this node.
-    uint64_t node = *expandset.begin();
-    expandset.erase(expandset.begin());
-    visitedset.emplace(node);
-    const auto nd = nodes.find(node);
-    if (nd != nodes.end()) {
-      for (const auto& edgeindex : nd->second.edges()) {
-        if (edgeindex == startedgeindex) {
-          // Do not allow use of the start edge
-          continue;
-        }
-
-        // Return false if we have returned back to the start node or we
-        // encounter a tertiary road (or better)
-        const Edge& edge = edges[edgeindex];
-        uint64_t osmendnode = (edge.sourcenode_ == node) ?
-                  edge.targetnode_ : edge.sourcenode_;
-        if (osmendnode == startnode ||
-            edge.attributes_.fields.importance <=
-            static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
-          return false;
-        }
-
-        // Add to the expand set if not in the visited set
-        if (visitedset.find(osmendnode) == visitedset.end()) {
-          expandset.insert(osmendnode);
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/**
- * Test if a pair of one-way edges exist at the node. One must be
- * inbound and one must be outbound. The current edge is skipped.
- */
-bool OnewayPairEdgesExist(const Node& node,
-                          const uint32_t edgeindex,
-                          const uint64_t wayid,
-                          const std::vector<Edge>& edges,
-                          const WayVector& ways) {
-  // Iterate through the edges from this node. Skip the one with
-  // the specified edgeindex
-  uint32_t idx;
-  bool inbound  = false;
-  bool outbound = false;
-  for (const auto idx : node.edges()) {
-    if (idx == edgeindex) {
-      continue;
-    }
-
-    // Get the edge and way
-    const Edge& edge = edges[idx];
-    const OSMWay &w = ways[edge.wayindex_];
-
-    // Skip if this has matching way Id
-    if (w.way_id() == wayid) {
-      return false;
-    }
-
-    // Check if this is oneway inbound
-    if (!w.auto_forward() && w.auto_backward()) {
-      inbound = true;
-    }
-
-    // Check if this is oneway outbound
-    if (w.auto_forward() && !w.auto_backward()) {
-      outbound = true;
-    }
-  }
-}
-
-bool IsIntersectionInternal(const uint64_t startnode, const uint64_t endnode,
-                            const uint32_t edgeindex, const uint64_t wayid,
-                            const float length,
-                            const std::unordered_map<uint64_t, Node>& nodes,
-                            const std::vector<Edge>& edges,
-                            const WayVector& ways) {
-  // Limit the length of intersection internal edges
-  if (length > kMaxInternalLength) {
-    return false;
+    //go to the next node
+    node_itr += bundle.node_count;
   }
 
-  // Both end nodes must connect to at least 3 edges
-  const auto& node1 = nodes.find(startnode)->second;
-  if (node1.edge_count() < 3) {
-    return false;
-  }
-  const auto& node2 = nodes.find(endnode)->second;
-  if (node2.edge_count() < 3) {
-    return false;
-  }
+  /*for(const auto& b : indices)
+    LOG_INFO(std::to_string(b));*/
 
-  // Each node must have a pair of oneways (one inbound and one outbound)
-  if (!OnewayPairEdgesExist(node1, edgeindex, wayid, edges, ways) ||
-      !OnewayPairEdgesExist(node2, edgeindex, wayid, edges, ways)) {
-    return false;
-  }
-
-  // Assume this is an intersection internal edge
-  return true;
+  LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
 
 /**
  * Get the use for a link (either a kRamp or kTurnChannel)
  * TODO - validate logic with some real world cases.
  */
-Use GetLinkUse(const RoadClass rc, const float length,
-               const uint64_t startnode,  const uint64_t endnode,
-               const std::unordered_map<uint64_t, Node>& nodes) {
+Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
+               const float length, sequence<Node>& nodes, sequence<Edge>& edges) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
   if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
@@ -508,20 +500,34 @@ Use GetLinkUse(const RoadClass rc, const float length,
   }
 
   // TODO - if there is a exit sign or exit number present this is
-  // considered kRamp
+  // considered kRamp. Do we have this information anywhere yet?
 
   // Both end nodes have to connect to a non-link edge. If either end node
   // connects only to "links" this likely indicates a split or fork,
   // which are not so prevalent in turn channels.
-  auto startnd = nodes.find(startnode);
-  if (startnd != nodes.end()) {
-    auto endnd = nodes.find(endnode);
-    if (endnd != nodes.end()) {
-      if (startnd->second.non_link_edge() && endnd->second.non_link_edge())
-        return Use::kTurnChannel;
+  auto startnode_itr = nodes[edge_pair.first.sourcenode_];
+  auto startnd = collect_node_edges(startnode_itr, nodes, edges);
+  auto endnode_itr = nodes[edge_pair.first.targetnode_];
+  auto endnd = collect_node_edges(endnode_itr, nodes, edges);
+  if (startnd.node.attributes_.non_link_edge && endnd.node.attributes_.non_link_edge) {
+    // If either end node connects to another link then still
+    // call it a ramp. So turn channels are very short and ONLY connect
+    // to non-link edges without any exit signs.
+    for (const auto& edge : startnd.node_edges) {
+      if (edge.second != edge_pair.second && edge.first.attributes.link) {
+        return Use::kRamp;
+      }
     }
+    for (const auto& edge : endnd.node_edges) {
+      if (edge.second != edge_pair.second && edge.first.attributes.link) {
+        return Use::kRamp;
+      }
+    }
+    return Use::kTurnChannel;
   }
-  return Use::kRamp;
+  else {
+    return Use::kRamp;
+  }
 }
 
 float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
@@ -536,14 +542,17 @@ float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
       return 65.0f;
     } else if (rc == RoadClass::kSecondary) {
       return 50.0f;
-    } else if (rc == RoadClass::kTertiaryUnclassified) {
+    } else if (rc == RoadClass::kTertiary) {
       return 40.0f;
+    } else if (rc == RoadClass::kUnclassified) {
+      return 35.0f;
     } else {
       return 25.0f;
     }
   }
+  return spd;
 }
-
+/*
 struct DuplicateEdgeInfo {
   uint32_t edgeindex;
   uint32_t length;
@@ -555,21 +564,21 @@ struct DuplicateEdgeInfo {
   }
 };
 
-void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
-                        const std::vector<uint32_t>& edgelengths,
-                        const std::unordered_map<uint64_t, Node>& nodes,
-                        const std::vector<Edge>& edges,
-                        const WayVector& ways, std::atomic<DataQuality*>& stats) {
+void CheckForDuplicates(const GraphId& nodeid, const Node& node,
+                const std::vector<uint32_t>& edgelengths,
+                const std::unordered_map<GraphId, std::vector<Node>>& nodes,
+                const std::vector<Edge>& edges,
+                const std::vector<OSMWay>& ways, std::atomic<DataQuality*>& stats) {
   uint32_t edgeindex;
-  uint64_t endnode;
-  std::unordered_map<uint64_t, DuplicateEdgeInfo> endnodes;
-  for (size_t n = 0; n < node.edge_count(); n++) {
-    edgeindex = node.edges().at(n);
+  GraphId endnode;
+  std::unordered_map<GraphId, DuplicateEdgeInfo> endnodes;
+  uint32_t n = 0;
+  for (auto edgeindex : node.edges) {
     const Edge& edge = edges[edgeindex];
-    if (edge.sourcenode_ == osmnodeid) {
-      endnode = nodes.find(edge.targetnode_)->second.graphid().value();
+    if (edge.sourcenode_ == nodeid) {
+      endnode = edge.targetnode_;
     } else {
-      endnode = nodes.find(edge.sourcenode_)->second.graphid().value();
+      endnode = edge.sourcenode_;
     }
 
     // Check if the end node is already in the set of edges from this node
@@ -583,153 +592,254 @@ void CheckForDuplicates(const uint64_t osmnodeid, const Node& node,
                        std::forward_as_tuple(endnode),
                        std::forward_as_tuple(edgeindex, edgelengths[n]));
     }
+    n++;
   }
 }
+*/
+uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
+    sequence<Node>& nodes, sequence<Edge>& edges, const OSMData& osmdata,
+    sequence<OSMWay>& ways, DataQuality& stats) {
 
-void BuildTileSet(
-    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start,
-    std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_end,
-    const std::unordered_map<uint64_t, Node>& nodes,
-    const WayVector& ways, const std::vector<Edge>& edges,
-    const baldr::TileHierarchy& hierarchy,
-    const std::unordered_map<uint64_t, std::string>& map_ref,
-    const std::unordered_map<uint64_t, std::string>& map_name,
-    const std::unordered_map<uint64_t, std::string>& map_exit_to,
-    std::atomic<DataQuality*>& stats,
-    std::promise<size_t>& result) {
+  auto res = osmdata.restrictions.equal_range(wayid);
+  if (res.first == osmdata.restrictions.end()) {
+    return 0;
+  }
 
-  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream()
-        << std::this_thread::get_id()).str();
+  // Edge is the from edge of a restriction. Find all TRs (if any)
+  // through the target (end) node of this directed edge.
+  auto node_itr = nodes[endnode];
+  auto node = *node_itr;
+  std::vector<OSMRestriction> trs;
+  for (auto r = res.first; r != res.second; ++r) {
+    if (r->second.via() == node.node.osmid) {
+      if (r->second.day_on() != DOW::kNone) {
+        stats.timedrestrictions++;
+      } else {
+        trs.push_back(r->second);
+      }
+    }
+  }
+  if (trs.empty()) {
+    return 0;
+  }
+
+  // Get the way Ids of the edges at the endnode
+  std::vector<uint64_t> wayids;
+  auto bundle = collect_node_edges(node_itr, nodes, edges);
+  for (const auto& edge : bundle.node_edges) {
+    wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
+  }
+
+  // There are some cases where both ONLY and NO restriction types are
+  // present. Allow this. Iterate through all restrictions and set the
+  // restriction mask to include the indexes of restricted turns.
+  uint32_t mask = 0;
+  for (const auto& tr : trs) {
+    switch (tr.type()) {
+    case RestrictionType::kNoLeftTurn:
+    case RestrictionType::kNoRightTurn:
+    case RestrictionType::kNoStraightOn:
+    case RestrictionType::kNoUTurn:
+      // Iterate through the edge wayIds until the matching to way Id is found
+      for (uint32_t idx = 0, n = wayids.size(); idx < n; idx++) {
+        if (wayids[idx] == tr.to()) {
+          mask |= (1 << idx);
+          break;
+        }
+      }
+      break;
+
+    case RestrictionType::kOnlyRightTurn:
+    case RestrictionType::kOnlyLeftTurn:
+    case RestrictionType::kOnlyStraightOn:
+      // Iterate through the edge wayIds - any non-matching edge is added
+      // to the turn restriction
+      for (uint32_t idx = 0, n = wayids.size(); idx < n; idx++) {
+        if (wayids[idx] != tr.to()) {
+          mask |= (1 << idx);
+        }
+      }
+      break;
+    }
+  }
+
+  // Return the restriction mask
+  return mask;
+}
+
+void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
+    const std::string& nodes_file, const std::string& edges_file,
+    const TileHierarchy& hierarchy, const OSMData& osmdata,
+    std::map<GraphId, size_t>::const_iterator tile_start, std::map<GraphId, size_t>::const_iterator tile_end,
+    std::promise<DataQuality>& result) {
+
+  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
 
-  // A place to keep information about what was done
-  size_t written = 0;
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
+  sequence<Edge> edges(edges_file, false);
+  sequence<Node> nodes(nodes_file, false);
+
+  // Method to get the shape for an edge - since LL is stored as a pair of
+  // floats we need to change into PointLL to get length of an edge
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+    std::vector<PointLL> shape;
+    shape.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+      auto node = (*way_nodes[idx++]).node;
+      shape.emplace_back(node.lng, node.lat);
+    }
+    return shape;
+  };
 
   // For each tile in the task
   bool added = false;
-  bool not_thru, forward, internal;
-  uint32_t edgeindex;
-  int64_t source, target;
+  DataQuality stats;
   for(; tile_start != tile_end; ++tile_start) {
     try {
-     // What actually writes the tile
+      // What actually writes the tile
       GraphTileBuilder graphtile;
 
       // Iterate through the nodes
+      uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
-      for (const auto& osmnodeid : tile_start->second) {
-        const Node& node = nodes.find(osmnodeid)->second; //TODO: check validity?
-
-        // Compute edge lengths from the edge lat,lngs (round to nearest meter)
-        std::vector<uint32_t> edgelengths;
-        for (auto edgeindex : node.edges()) {
-          float length = PointLL().Length(edges[edgeindex].shape());
-          edgelengths.push_back(static_cast<uint32_t>(length + 0.5f));
-        }
+      //for each node in the tile
+      auto node_itr = nodes[tile_start->second];
+      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_start->first.Tile_Base()) {
+        //amalgamate all the node duplicates into one and the edges that connect to it
+        //this moves the iterator for you
+        auto bundle = collect_node_edges(node_itr, nodes, edges);
+        const auto& node = bundle.node;
+        PointLL node_ll{node.lng, node.lat};
 
         // Look for potential duplicates
-        CheckForDuplicates(osmnodeid, node, edgelengths, nodes, edges,
-                           ways, stats);
+        //CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
 
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
-        RoadClass bestclass = RoadClass::kOther;
+        uint32_t n = 0;
+        RoadClass bestclass = RoadClass::kServiceOther;
         std::vector<DirectedEdgeBuilder> directededges;
-        for (size_t n = 0; n < node.edge_count(); n++) {
+        for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
-          edgeindex = node.edges().at(n);
-          const Edge& edge = edges[edgeindex];
-          const OSMWay &w = ways[edge.wayindex_];
+          const Edge& edge = edge_pair.first;
+          const OSMWay w = *ways[edge.wayindex_];
 
-          // Assign nodes
-          const GraphId& nodea = nodes.find(edge.sourcenode_)->second.graphid();
-          if (!nodea.Is_Valid()) {
-            throw std::runtime_error("NodeA: OSMID = " +
-                 std::to_string(edge.sourcenode_) + " GraphId is not valid");
-          }
-          const GraphId& nodeb = nodes.find(edge.targetnode_)->second.graphid();
-          if (!nodeb.Is_Valid()) {
-            throw std::runtime_error("NodeB: OSMID = " +
-                 std::to_string(edge.targetnode_) + " GraphId is not valid");
-          }
+          // Get the shape for the edge and compute its length
+          auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+          uint32_t length = static_cast<uint32_t>(PointLL::Length(shape) + .5f);
 
           // Determine orientation along the edge (forward or reverse between
           // the 2 nodes). Check for edge error.
-          if (edge.sourcenode_ == osmnodeid) {
-            forward = true;
-            source = edge.sourcenode_;
-            target = edge.targetnode_;
-          } else if (edge.targetnode_ == osmnodeid) {
-            forward = false;
-            source = edge.targetnode_;
-            target = edge.sourcenode_;
-          } else {
-            // ERROR!!!
-            LOG_ERROR((boost::format("WayID =  %1% Edge Index = %2% Edge nodes %3% and %4% did not match the OSM node Id %5%")
-              % w.way_id() % edgeindex %  edge.sourcenode_  % edge.targetnode_ % osmnodeid).str());
-          }
-
-          // Check for not_thru edge (only on low importance edges)
-          if (edge.attributes_.fields.importance <=
-              static_cast<uint32_t>(RoadClass::kTertiaryUnclassified)) {
-            not_thru = false;
-          } else {
-            not_thru = IsNoThroughEdge(source, target, edgeindex,
-                             nodes, edges);
-          }
-
-          // Test if an internal intersection edge
-          internal = IsIntersectionInternal(source, target, edgeindex,
-                  w.way_id(), edgelengths[n], nodes, edges, ways);
-
-          // Set the end node
-          const GraphId& endnode = (forward) ? nodeb : nodea;
+          bool forward = edge.sourcenode_ == node_itr.position();
+          size_t source = edge.sourcenode_, target = edge.targetnode_;
+          if (!forward)
+            std::swap(source, target);
 
           // If link is set test to see if we can infer that the edge
           // is a turn channel. Update speed for link edges.
           float speed = w.speed();
-          RoadClass rc = static_cast<RoadClass>(edge.attributes_.fields.importance);
+          RoadClass rc = static_cast<RoadClass>(edge.attributes.importance);
           Use use = w.use();
           if (w.link()) {
-            if (use != Use::kNone) {
-              (*stats).AddIssue(kIncompatibleLinkUse, GraphId(), w.way_id(), 0);
-            }
-            use   = GetLinkUse(rc, edgelengths[n], edge.sourcenode_,
-                                edge.targetnode_, nodes);
+            use = GetLinkUse(edge_pair, rc, length, nodes, edges);
+            if (use == Use::kTurnChannel)
+              stats.turnchannelcount++;
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
-          //Does the directed edge contain exit information?
-          bool has_exitinfo = (node.ref() || node.name() || node.exit_to() || w.exit());
+          // Infer cul-de-sac if a road edge is a loop and is low
+          // classification. TODO - do we need length limit?
+          if (use == Use::kRoad && source == target &&
+              rc > RoadClass::kTertiary) {
+            use = Use::kCuldesac;
+            stats.culdesaccount++;
+          }
+
+          // Handle simple turn restrictions that originate from this
+          // directed edge
+          uint32_t restrictions = CreateSimpleTurnRestriction(w.way_id(),
+            target, nodes, edges, osmdata, ways, stats);
+          if (restrictions != 0)
+            stats.simplerestrictions++;
+
+          // traffic signal exists at an intersection node
+          // OR
+          // traffic signal exists at a non-intersection node
+          // forward signal must exist if forward direction and vice versa.
+          // if forward and backward signal flags are not set then only set for oneways.
+          bool has_signal = (!forward && node.traffic_signal()) ||
+            ((edge.attributes.traffic_signal) &&
+            ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal) ||
+            (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal)));
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, endnode, forward, edgelengths[n],
-                        speed, use, not_thru, has_exitinfo, internal, rc);
+          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
+                        speed, use, rc, n, has_signal, restrictions);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
-          bestclass = std::min(bestclass, directededge.importance());
+          bestclass = std::min(bestclass, directededge.classification());
+
+          // Check for updated ref from relations.
+          std::string ref;
+          auto iter = osmdata.way_ref.find(w.way_id());
+          if (iter != osmdata.way_ref.end()) {
+            if (w.ref_index() != 0)
+              ref = GraphBuilder::GetRef(osmdata.ref_offset_map.name(w.ref_index()),iter->second);
+          }
 
           // Add edge info to the tile and set the offset in the directed edge
-          uint32_t edge_info_offset = graphtile.AddEdgeInfo(edgeindex,
-               nodea, nodeb, edge.shape(), w.GetNames(),
-               graphbuilder::CreateExitSignInfoList(osmnodeid, node, w, map_ref, map_name, map_exit_to),
-               added);
-          directededge.set_edgedataoffset(edge_info_offset);
+          uint32_t edge_info_offset = graphtile.AddEdgeInfo(
+            edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id,
+            w.way_id(), shape, w.GetNames(ref, osmdata.ref_offset_map,
+                                         osmdata.name_offset_map),
+            added);
+          directededge.set_edgeinfo_offset(edge_info_offset);
 
-          // Add to general statistics
-          (*stats).AddStats(tile_start->first, directededge);
+          // TODO - update logic so we limit the CreateExitSignInfoList calls
+          // TODO - Also, we will have to deal with non ramp signs
+          // Any exits for this directed edge? is auto and oneway?
+          std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(node, w, osmdata);
+          if (!exits.empty() && directededge.forwardaccess()
+               && directededge.use() == Use::kRamp) {
+            graphtile.AddSigns(idx, exits);
+            directededge.set_exitsign(true);
+          }
+
+          //TODO: If this was a loop edge we need its twin because this node wont be encountered again
+          /*if(source == target) {
+            idx++;
+            n++;
+            auto flipped = directededge.flipped();
+            flipped.set_localedgeidx(n);
+            directededges.emplace_back();
+          }*/
+
+          // Increment the directed edge index within the tile
+          idx++;
+          n++;
         }
 
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        NodeInfoBuilder nodebuilder(node.latlng(), directededgecount,
-                                    node.edge_count(), bestclass);
-        directededgecount += node.edge_count();
+        NodeInfoBuilder nodebuilder(node_ll, directededgecount, n, bestclass, node.access_mask(),
+                                    node.type(), (n == 1), node.traffic_signal());
+
+        directededgecount += n;
 
         // Add node and directed edge information to the tile
         graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
+
+        // Increment the counts in the histogram
+        stats.nodecount++;
+        stats.directededge_count += directededges.size();
+        stats.node_counts[directededges.size()]++;
+
+        // Next node in the tile
+        node_itr += bundle.node_count;
       }
 
       // Write the actual tile to disk
@@ -737,7 +847,6 @@ void BuildTileSet(
 
       // Made a tile
       LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
-      written += graphtile.size();
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
@@ -747,63 +856,222 @@ void BuildTileSet(
     }
   }
   // Let the main thread see how this thread faired
-  result.set_value(written);
+  result.set_value(stats);
+}
+
+// Build tiles for the local graph hierarchy
+void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
+  const std::string& ways_file, const std::string& way_nodes_file,
+  const std::string& nodes_file, const std::string& edges_file,
+  const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats) {
+
+  LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
+
+  // A place to hold worker threads and their results, be they exceptions or otherwise
+  std::vector<std::shared_ptr<std::thread> > threads(thread_count);
+
+  // Hold the results (DataQuality/stats) for the threads
+  std::vector<std::promise<DataQuality> > results(threads.size());
+
+  // Divvy up the work
+  size_t floor = tiles.size() / threads.size();
+  size_t at_ceiling = tiles.size() - (threads.size() * floor);
+  std::map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
+
+  // Atomically pass around stats info
+  LOG_INFO(std::to_string(tiles.size()) + " tiles");
+  for (size_t i = 0; i < threads.size(); ++i) {
+    // Figure out how many this thread will work on (either ceiling or floor)
+    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
+    // Where the range begins
+    tile_start = tile_end;
+    // Where the range ends
+    std::advance(tile_end, tile_count);
+    // Make the thread
+    threads[i].reset(
+      new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
+                      std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
+                      std::cref(osmdata), tile_start, tile_end, std::ref(results[i]))
+    );
+  }
+
+  // Join all the threads to wait for them to finish up their work
+  for (auto& thread : threads) {
+    thread->join();
+  }
+
+  LOG_INFO("Finished");
+
+  // Check all of the outcomes and accumulate stats
+  for (auto& result : results) {
+    // If something bad went down this will rethrow it
+    try {
+      // Add statistics and log issues on this thread
+      const auto& stat = result.get_future().get();
+      stats.AddStatistics(stat);
+      stat.LogIssues();
+    }
+    catch(std::exception& e) {
+      //TODO: throw further up the chain?
+    }
+  }
 }
 
 }
 
-std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
-    const uint64_t osmnodeid, const Node& node, const OSMWay& way,
-    const std::unordered_map<uint64_t, std::string>& map_ref,
-    const std::unordered_map<uint64_t, std::string>& map_name,
-    const std::unordered_map<uint64_t, std::string>& map_exit_to) {
+namespace valhalla {
+namespace mjolnir {
 
-  std::vector<ExitSignInfo> exit_list;
+// Build the graph from the input
+void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& osmdata,
+    const std::string& ways_file, const std::string& way_nodes_file) {
+  std::string nodes_file = "nodes.bin";
+  std::string edges_file = "edges.bin";
+  TileHierarchy tile_hierarchy(pt.get_child("hierarchy"));
+  unsigned int threads = std::max(static_cast<unsigned int>(1),
+                                  pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+  const auto& tl = tile_hierarchy.levels().rbegin();
+  uint8_t level = tl->second.level;
+
+  // Make the edges and nodes in the graph
+  ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tl->second.tiles.TileSize(),
+    [&tile_hierarchy, &level](const OSMNode& node) {
+      return tile_hierarchy.GetGraphId({node.lng, node.lat}, level);
+    }
+  );
+
+  // Line up the nodes and then re-map the edges that the edges to them
+  auto tiles = SortGraph(nodes_file, edges_file, tile_hierarchy, level);
+
+  // Reclassify links (ramps). Cannot do this when building tiles since the
+  // edge list needs to be modified
+  DataQuality stats;
+  ReclassifyLinks(ways_file, nodes_file, edges_file, stats);
+
+  // Build tiles at the local level. Form connected graph from nodes and edges.
+  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tiles, tile_hierarchy, stats);
+
+  stats.LogStatistics();
+}
+
+
+// Get highway refs from relations
+std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& relation_ref) {
+  bool found = false;
+  std::string refs;
+  std::vector<std::string> way_refs = GetTagTokens(way_ref); // US 51;I 57
+  std::vector<std::string> refdirs = GetTagTokens(relation_ref);// US 51|north;I 57|north
+  for (auto& ref : way_refs) {
+    found = false;
+    for (const auto& refdir : refdirs) {
+      std::vector<std::string> tmp = GetTagTokens(refdir,'|'); // US 51|north
+      if (tmp.size() == 2) {
+        if (tmp[0] == ref) { // US 51 == US 51
+          if (!refs.empty())
+            refs += ";" + ref + " " + tmp[1];// ref order of the way wins.
+          else
+            refs = ref + " " + tmp[1];
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found) {   // no direction found in relations for this ref
+      if (!refs.empty())
+        refs += ";" + ref;
+      else
+        refs = ref;
+    }
+  }
+  return refs;
+}
+
+std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata) {
+
+  std::vector<SignInfo> exit_list;
+
+  ////////////////////////////////////////////////////////////////////////////
+  // NUMBER
 
   // Exit sign number
-  if (!way.junction_ref().empty()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, way.junction_ref());
+  if (way.junction_ref_index() != 0) {
+    exit_list.emplace_back(Sign::Type::kExitNumber,
+            osmdata.ref_offset_map.name(way.junction_ref_index()));
   }  else if (node.ref()) {
-    exit_list.emplace_back(ExitSign::Type::kNumber, map_ref.find(osmnodeid)->second);
+    exit_list.emplace_back(Sign::Type::kExitNumber,
+            osmdata.node_ref.find(node.osmid)->second);
   }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // BRANCH
+
+  bool has_branch = false;
 
   // Exit sign branch refs
-  bool has_branch = false;
-  if (!way.destination_ref().empty()) {
+  if (way.destination_ref_index() != 0) {
     has_branch = true;
-    std::vector<std::string> branch_refs = GetTagTokens(way.destination_ref());
+    std::vector<std::string> branch_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.destination_ref_index()));
     for (auto& branch_ref : branch_refs) {
-      exit_list.emplace_back(ExitSign::Type::kBranch, branch_ref);
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_ref);
     }
   }
+
+  // Exit sign branch road names
+  if (way.destination_street_index() != 0) {
+    has_branch = true;
+    std::vector<std::string> branch_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_index()));
+    for (auto& branch_street : branch_streets) {
+      exit_list.emplace_back(Sign::Type::kExitBranch, branch_street);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  // TOWARD
+
+  bool has_toward = false;
 
   // Exit sign toward refs
-  bool has_toward = false;
-  if (!way.destination_ref_to().empty()) {
+  if (way.destination_ref_to_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_refs = GetTagTokens(way.destination_ref_to());
+    std::vector<std::string> toward_refs = GetTagTokens(
+        osmdata.ref_offset_map.name(way.destination_ref_to_index()));
     for (auto& toward_ref : toward_refs) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_ref);
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_ref);
     }
   }
 
-  // Exit sign toward names
-  if (!way.destination().empty()) {
+  // Exit sign toward streets
+  if (way.destination_street_to_index() != 0) {
     has_toward = true;
-    std::vector<std::string> toward_names = GetTagTokens(way.destination());
-    for (auto& toward_name : toward_names) {
-      exit_list.emplace_back(ExitSign::Type::kToward, toward_name);
+    std::vector<std::string> toward_streets = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_street_to_index()));
+    for (auto& toward_street : toward_streets) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_street);
     }
   }
 
+  // Exit sign toward locations
+  if (way.destination_index() != 0) {
+    has_toward = true;
+    std::vector<std::string> toward_names = GetTagTokens(
+        osmdata.name_offset_map.name(way.destination_index()));
+    for (auto& toward_name : toward_names) {
+      exit_list.emplace_back(Sign::Type::kExitToward, toward_name);
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
   // Process exit_to only if other branch or toward info does not exist
   if (!has_branch && !has_toward) {
     if (node.exit_to()) {
 
       std::string tmp;
       std::size_t pos;
-
-      std::vector<std::string> exit_tos = GetTagTokens(map_exit_to.find(osmnodeid)->second);
+      std::vector<std::string> exit_tos = GetTagTokens(
+          osmdata.node_exit_to.find(node.osmid)->second);
       for (auto& exit_to : exit_tos) {
 
         tmp = exit_to;
@@ -812,12 +1080,12 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
 
         //remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "to ")) {
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(3));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(3));
             continue;
         }
         //remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
         if (boost::starts_with(tmp, "toward ")) {
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(7));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(7));
             continue;
         }
 
@@ -828,9 +1096,9 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
         if (found != std::string::npos &&
            (tmp.find(" to ",found+4) == std::string::npos && tmp.find(" toward ") == std::string::npos)) {
 
-            exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+            exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
 
-            exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+4));
+            exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+4));
             continue;
         }
 
@@ -841,149 +1109,32 @@ std::vector<ExitSignInfo> GraphBuilder::CreateExitSignInfoList(
         if (found != std::string::npos &&
             (tmp.find(" toward ",found+8) == std::string::npos && tmp.find(" to ") == std::string::npos)) {
 
-          exit_list.emplace_back(ExitSign::Type::kBranch, exit_to.substr(0,found));
+          exit_list.emplace_back(Sign::Type::kExitBranch, exit_to.substr(0,found));
 
-          exit_list.emplace_back(ExitSign::Type::kToward, exit_to.substr(found+8));
+          exit_list.emplace_back(Sign::Type::kExitToward, exit_to.substr(found+8));
           continue;
         }
 
         //default to toward.
-        exit_list.emplace_back(ExitSign::Type::kToward, exit_to);
-
+        exit_list.emplace_back(Sign::Type::kExitToward, exit_to);
       }
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////
+  // NAME
+
   // Exit sign name
   if (node.name()) {
-    std::vector<std::string> names = GetTagTokens(map_name.find(osmnodeid)->second);
+    std::vector<std::string> names = GetTagTokens(
+            osmdata.node_name.find(node.osmid)->second);
     for (auto& name : names) {
-      exit_list.emplace_back(ExitSign::Type::kName, name);
+      exit_list.emplace_back(Sign::Type::kExitName, name);
     }
   }
 
   return exit_list;
 }
-
-void GraphBuilder::TileNodes(const float tilesize, const uint8_t level) {
-  LOG_INFO("Tiling nodes");
-
-  // Get number of tiles and reserve space for them
-  // < 30% of the earth is land and most roads are on land, even less than that even has roads
-  Tiles tiles(AABB2({-180.0f, -90.0f}, {180.0f, 90.0f}), tilesize);
-  tilednodes_.reserve(tiles.TileCount() * .3f);
-  // Iterate through all OSM nodes and assign GraphIds
-  for (auto& node : nodes_) {
-    // Skip any nodes that have no edges
-    if (node.second.edge_count() == 0) {
-      continue;
-    }
-    // Put the node into the tile
-    GraphId id = tile_hierarchy_.GetGraphId(node.second.latlng(), level);
-    std::vector<uint64_t>& tile = tilednodes_[id];
-    tile.emplace_back(node.first);
-    // Set the GraphId for this OSM node.
-    node.second.set_graphid(GraphId(id.tileid(), id.level(), tile.size() - 1));
-  }
-
-  LOG_INFO("Tiled nodes created");
-}
-
-// Build tiles for the local graph hierarchy
-void GraphBuilder::BuildLocalTiles(const uint8_t level,
-                                   const WayVector& ways,
-                                   const std::unordered_map<uint64_t, std::string>& node_ref,
-                                   const std::unordered_map<uint64_t, std::string>& node_exit_to,
-                                   const std::unordered_map<uint64_t, std::string>& node_name) const {
-  // A place to hold worker threads and their results, be they exceptions or otherwise
-  std::vector<std::shared_ptr<std::thread> > threads(threads_);
-  // A place to hold the results of those threads, be they exceptions or otherwise
-  std::vector<std::promise<size_t> > results(threads.size());
-  // Divvy up the work
-  size_t floor = tilednodes_.size() / threads.size();
-  size_t at_ceiling = tilednodes_.size() - (threads.size() * floor);
-  std::unordered_map<GraphId, std::vector<uint64_t> >::const_iterator tile_start, tile_end = tilednodes_.begin();
-  // Atomically pass around stats info
-  std::atomic<DataQuality*> atomic_stats(stats_.get());
-  LOG_INFO(std::to_string(tilednodes_.size()) + " tiles");
-  for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    // Where the range begins
-    tile_start = tile_end;
-    // Where the range ends
-    std::advance(tile_end, tile_count);
-    // Make the thread
-    threads[i].reset(
-      new std::thread(BuildTileSet, tile_start, tile_end, nodes_, ways, edges_,
-                      tile_hierarchy_, node_ref, node_name, node_exit_to,
-                      std::ref(atomic_stats), std::ref(results[i]))
-    );
-  }
-
-  // Join all the threads to wait for them to finish up their work
-  for (auto& thread : threads) {
-    thread->join();
-  }
-
-  // Check all of the outcomes
-  for (auto& result : results) {
-    // If something bad went down this will rethrow it
-    try {
-      auto pass_fail = result.get_future().get();
-      //TODO: print out stats about how many tiles or bytes were written by the thread?
-    }
-    catch(std::exception& e) {
-      //TODO: throw further up the chain?
-    }
-  }
-
-  /*// Wait for results to come back from the threads, logging what happened and removing the result
-  auto process_result = [] (std::unordered_map<GraphId, std::future<size_t> >& results) {
-    // For each task
-    for (std::unordered_map<GraphId, std::future<size_t> >::iterator result = results.begin(); result != results.end(); ++result) {
-      try {
-        // Block until the result is ready
-        auto status = result->second.wait_for(std::chrono::microseconds(1));
-        // If it was ready
-        if (status == std::future_status::ready) {
-          size_t bytes = result->second.get();
-          LOG_INFO((boost::format("Wrote tile %1%: %2% bytes") % result->first % bytes).str());
-          results.erase(result);
-          break;
-        }
-      }
-      catch (const std::exception& e) {
-        //TODO: log and rethrow
-        LOG_ERROR((boost::format("Failed tile %1%: %2%") % result->first % << e.what()).str());
-        results.erase(result);
-        break;
-      }
-    }
-  };
-
-  // Process each tile asynchronously
-  std::unordered_map<GraphId, std::future<size_t> > results(8);
-  for (const auto& tile : tilednodes_) {
-    // If we can squeeze this task in
-    if(results.size() < kMaxInFlightTasks) {
-      // Build the tile
-      results.emplace(tile.first, std::async(std::launch::async, BuildTile, tile, nodes_, ways_, edges_, tile_hierarchy_.tile_dir()));
-      continue;
-    }
-
-    // If We already have too many in flight wait for some to finish
-    while(results.size() >= kMaxInFlightTasks) {
-      // Try to get some results
-      process_result(results);
-    }
-  }
-
-  // We're done adding tasks but there may be more results
-  while(results.size())
-    process_result(results);*/
-}
-
 
 }
 }

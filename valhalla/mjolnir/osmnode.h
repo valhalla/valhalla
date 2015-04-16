@@ -5,28 +5,39 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/graphconstants.h>
+
 namespace valhalla {
 namespace mjolnir {
+
+struct NodeAttributes {
+  uint32_t access_mask      : 8;
+  uint32_t type             : 3;
+  uint32_t exit_to          : 1;
+  uint32_t ref              : 1;
+  uint32_t name             : 1;
+  uint32_t intersection     : 1;
+  uint32_t traffic_signal   : 1;
+  uint32_t forward_signal   : 1;
+  uint32_t backward_signal  : 1;
+  uint32_t non_link_edge    : 1;
+  uint32_t link_edge        : 1;
+  uint32_t spare            : 4;
+};
 
 /**
  * OSM node information. Result of parsing an OSM node.
  */
-class OSMNode {
- public:
-  /**
-   * Constructor
-   */
-  OSMNode();
+struct OSMNode {
 
-  /**
-   * Constructor given a lng,lat
-   */
-  OSMNode(const float lng, const float lat);
+  // The osm id of the node
+  uint64_t osmid;
 
-  /**
-   * Destructor.
-   */
-  ~OSMNode();
+  // Lat,lng of the node
+  float lng, lat;
+
+  // Node attributes. Shared by OSMNode and GraphBuilder Node.
+  NodeAttributes attributes_;
 
   /**
    * Sets the lat,lng.
@@ -38,37 +49,39 @@ class OSMNode {
    * Gets the lat,lng.
    * @return   Returns the lat,lng of the node.
    */
-  const std::pair<float, float>& latlng() const;
+  std::pair<float, float> latlng() const;
 
   /**
-   * Set modes mask.
+   * Set access mask.
    */
-  void set_modes_mask(const uint32_t modes_mask);
+  void set_access_mask(const uint32_t access_mask);
 
   /**
-   * Get the modes mask.
+   * Get the access mask.
    */
-  uint32_t modes_mask() const;
+  uint32_t access_mask() const;
 
   /**
-   * Set gate flag.
-   */
-  void set_gate(const bool gate);
+    * Set payment mask.
+    */
+   // void set_payment_mask(const uint32_t payment_mask);
+
+   /**
+    * Get the payment mask.
+    */
+   // uint32_t payment_mask() const;
 
   /**
-   * Get the gate flag.
+   * Sets the type.
+   * @param  type
    */
-  bool gate() const;
+  void set_type(const baldr::NodeType type);
 
   /**
-   * Set bollard flag.
+   * Get the type.
+   * @return  Returns the type of node.
    */
-  void set_bollard(const bool bollard);
-
-  /**
-   * Get the bollard flag.
-   */
-  bool bollard() const;
+  baldr::NodeType type() const;
 
   /**
    * Set the exit to flag
@@ -125,33 +138,30 @@ class OSMNode {
   bool traffic_signal() const;
 
   /**
-   * Get the attributes value.
-   * @return  Returns the attributes word.
+   * Set forward_signal flag.
    */
-  bool attributes() const;
+  void set_forward_signal(const bool forward_signal);
 
- protected:
-  // Lat,lng of the node
-  std::pair<float, float> latlng_;
+  /**
+   * Get the forward_signal flag.
+   */
+  bool forward_signal() const;
 
-  // Node attributes
-  union NodeAttributes {
-    struct Fields {
-      uint32_t modes_mask     : 8;
-      uint32_t gate           : 1;
-      uint32_t bollard        : 1;
-      uint32_t exit_to        : 1;
-      uint32_t ref            : 1;
-      uint32_t name           : 1;
-      uint32_t intersection   : 1;
-      uint32_t traffic_signal : 1;
-      uint32_t non_link_edge  : 1;   // Used in derived Node class.
-      uint32_t link_edge      : 1;   // Used in derived Node class.
-      uint32_t spare          : 15;
-    } fields;
-    uint32_t v;
-  };
-  NodeAttributes attributes_;
+  /**
+   * Set backward_signal flag.
+   */
+  void set_backward_signal(const bool backward_signal);
+
+  /**
+   * Get the backward_signal flag.
+   */
+  bool backward_signal() const;
+
+  /**
+   * Get the attributes.
+   * @return  Returns the attributes.
+   */
+  const NodeAttributes& attributes() const;
 };
 
 }

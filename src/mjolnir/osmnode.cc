@@ -2,115 +2,115 @@
 
 #include <algorithm>
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 
-OSMNode::OSMNode()
-    : latlng_{},
-      attributes_{} {
-}
-
-OSMNode::OSMNode(const float lng, const float lat)
-    : latlng_{lng, lat},
-      attributes_{} {
-}
-
-OSMNode::~OSMNode() {
-}
-
 // Sets the lat,lng.
 void OSMNode::set_latlng(const std::pair<float, float>& ll) {
-  latlng_ = ll;
+  lng = ll.first;
+  lat = ll.second;
 }
 
 // Gets the lat,lng.
-const std::pair<float, float>& OSMNode::latlng() const {
-  return latlng_;
+std::pair<float, float> OSMNode::latlng() const {
+  return std::make_pair(lng, lat);
 }
 
-// Set modes mask.
-void OSMNode::set_modes_mask(const uint32_t modes_mask) {
-  attributes_.fields.modes_mask = modes_mask;
+// Set access mask.
+void OSMNode::set_access_mask(const uint32_t access_mask) {
+  attributes_.access_mask = access_mask;
 }
 
-// Get the modes mask.
-uint32_t OSMNode::modes_mask() const {
-  return attributes_.fields.modes_mask;
+// Get the access mask.
+uint32_t OSMNode::access_mask() const {
+  return attributes_.access_mask;
 }
 
 // Set the exit to flag
 void OSMNode::set_exit_to(const bool exit_to) {
-  attributes_.fields.exit_to = exit_to;
+  attributes_.exit_to = exit_to;
 }
 
 // Get the exit to flag
 bool OSMNode::exit_to() const {
-  return attributes_.fields.exit_to;
+  return attributes_.exit_to;
 }
 
 // Set the ref flag
 void OSMNode::set_ref(const bool ref) {
-  attributes_.fields.ref = ref;
+  attributes_.ref = ref;
 }
 
 // Get the ref flag
 bool OSMNode::ref() const {
-  return attributes_.fields.ref;
+  return attributes_.ref;
 }
 
 // Set the name flag
 void OSMNode::set_name(const bool name) {
-  attributes_.fields.name = name;
+  attributes_.name = name;
 }
 
 // Get the name flag
 bool OSMNode::name() const {
-  return attributes_.fields.name;
+  return attributes_.name;
 }
 
-// Set gate flag.
-void OSMNode::set_gate(const bool gate) {
-  attributes_.fields.gate = gate;
+// Set the node type.
+void OSMNode::set_type(const NodeType type) {
+  attributes_.type = static_cast<uint8_t>(type);
 }
 
-// Get the gate flag.
-bool OSMNode::gate() const {
-  return attributes_.fields.gate;
-}
-
-// Set bollard flag.
-void OSMNode::set_bollard(const bool bollard) {
-  attributes_.fields.bollard = bollard;
-}
-
-// Get the bollard flag.
-bool OSMNode::bollard() const {
-  return attributes_.fields.bollard;
+// Get the node type.
+NodeType OSMNode::type() const {
+  return static_cast<baldr::NodeType>(attributes_.type);
 }
 
 // Set the intersection flag.
 void OSMNode::set_intersection(const bool intersection) {
-  attributes_.fields.intersection = intersection;
+  attributes_.intersection = intersection;
 }
 
 // Get the intersection flag
 bool OSMNode::intersection() const {
-  return attributes_.fields.intersection;
+  return attributes_.intersection;
 }
 
 // Set traffic_signal flag.
-void OSMNode:: set_traffic_signal(const bool traffic_signal) {
-  attributes_.fields.traffic_signal = traffic_signal;
+void OSMNode::set_traffic_signal(const bool traffic_signal) {
+  attributes_.traffic_signal = traffic_signal;
 }
 
 // Get the traffic_signal flag.
 bool OSMNode::traffic_signal() const {
-  return attributes_.fields.traffic_signal;
+  return attributes_.traffic_signal;
+}
+
+// Set forward_signal flag.
+void OSMNode::set_forward_signal(const bool forward_signal) {
+  attributes_.forward_signal = forward_signal;
+}
+
+// Get the forward_signal flag.
+bool OSMNode::forward_signal() const {
+  return attributes_.forward_signal;
+}
+
+// Set backward_signal flag.
+void OSMNode::set_backward_signal(const bool backward_signal) {
+  attributes_.backward_signal = backward_signal;
+}
+
+// Get the backward_signal flag.
+bool OSMNode::backward_signal() const {
+  return attributes_.backward_signal;
 }
 
 // Get the attributes value.
-bool OSMNode::attributes() const {
-  return attributes_.v;
+const NodeAttributes& OSMNode::attributes() const {
+  return attributes_;
 }
 
 

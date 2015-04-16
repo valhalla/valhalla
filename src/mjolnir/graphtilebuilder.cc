@@ -28,7 +28,9 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                                      const GraphId& graphid) {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' + GraphTile::FileSuffix(graphid, hierarchy);
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
+      + GraphTile::FileSuffix(graphid, hierarchy);
+
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
     boost::filesystem::create_directories(filename.parent_path());
@@ -38,12 +40,18 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                      std::ios::out | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Configure the header
+    header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
+    header_builder_.set_signcount(signs_builder_.size());
+    header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder)));
+            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+            + (signs_builder_.size() * sizeof(SignBuilder))
+            + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
+
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
@@ -59,14 +67,143 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the signs
+    file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
+               signs_builder_.size() * sizeof(SignBuilder));
+
+    // Write the admins
+    file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+               admins_builder_.size() * sizeof(AdminInfoBuilder));
+
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
     // Write the names
     SerializeTextListToOstream(file);
 
-    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% edgeinfo offset = %4% textlist offset = %5%")
-      % filename % nodes_builder_.size() % directededges_builder_.size() % edge_info_offset_ % text_list_offset_).str());
+    LOG_DEBUG((boost::format("Write: %1% nodes = %2% directededges = %3% signs %4% edgeinfo offset = %5% textlist offset = %6% admininfo offset = %7%" )
+            % filename % nodes_builder_.size() % directededges_builder_.size() % signs_builder_.size() % edge_info_offset_ % text_list_offset_ % admin_info_offset_).str());
+
+    /*   size_t fsize = file.tellp();
+     if (fsize % 8 != 0) {
+     char empty[8] = {};
+     file.write(empty, (8 - (fsize % 8)));
+     }
+     */
+    size_ = file.tellp();
+    file.close();
+  } else {
+    throw std::runtime_error("Failed to open file " + filename.string());
+  }
+}
+
+// Update a graph tile with new header, nodes, and directed edges.
+void GraphTileBuilder::Update(
+    const baldr::TileHierarchy& hierarchy, const GraphTileHeaderBuilder& hdr,
+    const std::vector<NodeInfoBuilder>& nodes,
+    const std::vector<DirectedEdgeBuilder>& directededges) {
+
+  // Get the name of the file
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
+      + GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file. Truncate so we replace the contents.
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+
+    // Write the updated header.
+    file.write(reinterpret_cast<const char*>(&hdr),
+               sizeof(GraphTileHeaderBuilder));
+
+    // Write the updated nodes
+    file.write(reinterpret_cast<const char*>(&nodes[0]),
+               nodes.size() * sizeof(NodeInfoBuilder));
+
+    // Write the updated directed edges
+    file.write(reinterpret_cast<const char*>(&directededges[0]),
+               directededges.size() * sizeof(DirectedEdgeBuilder));
+
+    // Write the existing signs
+    file.write(reinterpret_cast<const char*>(&signs_[0]),
+               hdr.signcount() * sizeof(Sign));
+
+    // Write the existing admins
+    file.write(reinterpret_cast<const char*>(&admins_[0]),
+               hdr.admincount() * sizeof(Admin));
+
+    // Write the existing edgeinfo
+    file.write(edgeinfo_, edgeinfo_size_);
+
+    // Save existing text
+    file.write(textlist_, textlist_size_);
+
+    size_ = file.tellp();
+    file.close();
+
+  } else {
+    throw std::runtime_error("Failed to open file " + filename.string());
+  }
+}
+
+
+// Update a graph tile with new header, nodes, and directed edges.
+void GraphTileBuilder::Update(
+    const baldr::TileHierarchy& hierarchy, GraphTileHeaderBuilder& hdr,
+    const std::vector<NodeInfoBuilder>& nodes,
+    const std::vector<DirectedEdgeBuilder>& directededges) {
+
+  // Get the name of the file
+  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
+      + GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+
+  // Make sure the directory exists on the system
+  if (!boost::filesystem::exists(filename.parent_path()))
+    boost::filesystem::create_directories(filename.parent_path());
+
+  // Open file. Truncate so we replace the contents.
+  std::ofstream file(filename.c_str(),
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+
+    hdr.set_admincount(admins_builder_.size());
+    std::size_t addedsize = (admins_builder_.size() * sizeof(AdminInfoBuilder));
+
+    hdr.set_edgeinfo_offset(hdr.edgeinfo_offset() + addedsize);
+    hdr.set_textlist_offset(hdr.textlist_offset() + addedsize);
+
+    // Write the updated header.
+    file.write(reinterpret_cast<const char*>(&hdr),
+               sizeof(GraphTileHeaderBuilder));
+
+    // Write the updated nodes
+    file.write(reinterpret_cast<const char*>(&nodes[0]),
+               nodes.size() * sizeof(NodeInfoBuilder));
+
+    // Write the updated directed edges
+    file.write(reinterpret_cast<const char*>(&directededges[0]),
+               directededges.size() * sizeof(DirectedEdgeBuilder));
+
+    // Write the existing signs
+    file.write(reinterpret_cast<const char*>(&signs_[0]),
+               hdr.signcount() * sizeof(Sign));
+
+    // Write the admins
+    file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
+               admins_builder_.size() * sizeof(AdminInfoBuilder));
+
+    // Write the existing edgeinfo, and textlist
+    file.write(edgeinfo_, edgeinfo_size_);
+
+    // Save existing text
+    file.write(textlist_, textlist_size_);
+
+    // append the new text.
+    SerializeTextListToOstream(file);
 
     size_ = file.tellp();
     file.close();
@@ -75,15 +212,15 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
   }
 }
 
-// Update a graph tile with new header, nodes, and directed edges. This
-// is used to add directed edges connecting two hierarchy levels
+// Update a graph tile with new header, nodes, directed edges, and signs.
 void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
-                const std::vector<DirectedEdgeBuilder> directededges) {
+                const std::vector<DirectedEdgeBuilder>& directededges,
+                const std::vector<SignBuilder>& signs) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
-            GraphTile::FileSuffix(id_, hierarchy);
+            GraphTile::FileSuffix(hdr.graphid(), hierarchy);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -105,6 +242,14 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the updated signs
+    file.write(reinterpret_cast<const char*>(&signs[0]),
+               signs.size() * sizeof(SignBuilder));
+
+    // Write the existing admins
+    file.write(reinterpret_cast<const char*>(&admins_[0]),
+               hdr.admincount() * sizeof(Admin));
+
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
     file.write(textlist_, textlist_size_);
@@ -116,6 +261,7 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
   }
 }
 
+// Add a node and list of directed edges
 void GraphTileBuilder::AddNodeAndDirectedEdges(
     const NodeInfoBuilder& node,
     const std::vector<DirectedEdgeBuilder>& directededges) {
@@ -127,15 +273,47 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
     // Add the directed edge to the list
     directededges_builder_.push_back(directededge);
   }
+}
 
+// Add signs
+void GraphTileBuilder::AddSigns(const uint32_t idx,
+                                const std::vector<SignInfo>& signs) {
+  // Iterate through the list of sign info (with sign text)
+  for (const auto& sign : signs) {
+    // Skip signs with no sign text
+    if (sign.text().empty()) {
+      continue;
+    }
+
+    // If nothing already used this sign text
+    auto existing_text_offset = text_offset_map.find(sign.text());
+    if (existing_text_offset == text_offset_map.end()) {
+      // Add name to text list
+      textlistbuilder_.emplace_back(sign.text());
+
+      // Add sign to the list
+      signs_builder_.emplace_back(idx, sign.type(), text_list_offset_);
+
+      // Add text/offset pair to map
+      text_offset_map.emplace(sign.text(), text_list_offset_);
+
+      // Update text offset value to length of string plus null terminator
+      text_list_offset_ += (sign.text().length() + 1);
+    } else {
+      // Name already exists. Add sign type and existing text offset to list
+      signs_builder_.emplace_back(idx, sign.type(),
+                                  existing_text_offset->second);
+    }
+  }
 }
 
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
-             const GraphId& nodea, const baldr::GraphId& nodeb,
-             const std::vector<PointLL>& lls,
-             const std::vector<std::string>& names,
-             const std::vector<ExitSignInfo>& exit_sign_infos,
-             bool& added) {
+                                       const GraphId& nodea,
+                                       const baldr::GraphId& nodeb,
+                                       const uint64_t wayid,
+                                       const std::vector<PointLL>& lls,
+                                       const std::vector<std::string>& names,
+                                       bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
   auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
@@ -143,13 +321,14 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Add a new EdgeInfo to the list and get a reference to it
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
+    edgeinfo.set_wayid(wayid);
     edgeinfo.set_shape(lls);
 
     ///////////////////////////////////////////////////////////////////////////
     // Put each name's index into the chunk of bytes containing all the names
     // in the tile
-    std::vector<uint32_t> street_name_offset_list;
-    street_name_offset_list.reserve(names.size());
+    std::vector<uint32_t> text_name_offset_list;
+    text_name_offset_list.reserve(names.size());
     for (const auto& name : names) {
       // Skip blank names
       if (name.empty()) {
@@ -163,54 +342,20 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         textlistbuilder_.emplace_back(name);
 
         // Add name offset to list
-        street_name_offset_list.emplace_back(text_list_offset_);
+        text_name_offset_list.emplace_back(text_list_offset_);
 
         // Add name/offset pair to map
         text_offset_map.emplace(name, text_list_offset_);
 
         // Update text offset value to length of string plus null terminator
         text_list_offset_ += (name.length() + 1);
-      } // Something was already using this name
+      }  // Something was already using this name
       else {
         // Add existing offset to list
-        street_name_offset_list.emplace_back(existing_text_offset->second);
+        text_name_offset_list.emplace_back(existing_text_offset->second);
       }
     }
-    edgeinfo.set_street_name_offset_list(street_name_offset_list);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Add each exit text to the text list
-    // Make list of exit type and text offset
-    std::vector<ExitSignBuilder> exit_signs;
-    exit_signs.reserve(names.size());
-    for (const auto& exit_sign_info : exit_sign_infos) {
-      // Skip blank names
-      if (exit_sign_info.text().empty()) {
-        continue;
-      }
-
-      // If nothing already used this exit text
-      auto existing_text_offset = text_offset_map.find(exit_sign_info.text());
-      if (existing_text_offset == text_offset_map.end()) {
-        // Add name to text list
-        textlistbuilder_.emplace_back(exit_sign_info.text());
-
-        // Add exit sign (type and offset) to list
-        exit_signs.emplace_back(exit_sign_info.type(), text_list_offset_);
-
-        // Add text/offset pair to map
-        text_offset_map.emplace(exit_sign_info.text(), text_list_offset_);
-
-        // Update text offset value to length of string plus null terminator
-        text_list_offset_ += (exit_sign_info.text().length() + 1);
-      } // Something was already using this name
-      else {
-        // Add existing exit type and text offset to list
-        exit_signs.emplace_back(exit_sign_info.type(),
-                                existing_text_offset->second);
-      }
-    }
-    edgeinfo.set_exit_signs(std::move(exit_signs));
+    edgeinfo.set_text_name_offset_list(text_name_offset_list);
 
     // Add to the map
     edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);
@@ -224,12 +369,96 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Return the offset to this edge info
     added = true;
     return current_edge_offset;
-  }
-  else {
+  } else {
     // Already have this edge - return the offset
     added = false;
     return existing_edge_offset_item->second;
   }
+}
+
+// Get admin index
+uint32_t GraphTileBuilder::GetAdminIndex(const std::string& country_iso) {
+
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(country_iso);
+  if (existing_admin_info_offset_item == admin_info_offset_map.end())
+    return 0;
+  return existing_admin_info_offset_item->second;
+}
+
+// Add admin
+uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name, const std::string& state_name,
+                                    const std::string& country_iso, const std::string& state_iso,
+                                    const std::string& start_dst, const std::string& end_dst) {
+
+  auto existing_admin_info_offset_item = admin_info_offset_map.find(country_iso);
+  if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
+
+    uint32_t country_offset = 0;
+    uint32_t state_offset = 0;
+
+    if (!country_name.empty()) {
+      // If nothing already used this admin text
+      auto existing_text_offset = text_offset_map.find(country_name);
+      if (existing_text_offset == text_offset_map.end()) {
+        // Add name to text list
+        textlistbuilder_.emplace_back(country_name);
+
+        // Append to the list. Get the size of the current list
+        if (text_list_offset_ == 0)
+          text_list_offset_ = textlist_size_;
+
+        country_offset = text_list_offset_;
+
+        // Add text/offset pair to map
+        text_offset_map.emplace(country_name, text_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        text_list_offset_ += (country_name.length() + 1);
+      } else {
+        // Name already exists. Add sign type and existing text offset to list
+        country_offset = existing_text_offset->second;
+      }
+    }
+
+    if (!state_name.empty()) {
+      // If nothing already used this admin text
+      auto existing_text_offset = text_offset_map.find(state_name);
+      if (existing_text_offset == text_offset_map.end()) {
+        // Add name to text list
+        textlistbuilder_.emplace_back(state_name);
+
+        // Append to the list. Get the size of the current list
+        if (text_list_offset_ == 0)
+          text_list_offset_ = textlist_size_;
+
+        state_offset = text_list_offset_;
+
+        // Add text/offset pair to map
+        text_offset_map.emplace(state_name, text_list_offset_);
+
+        // Update text offset value to length of string plus null terminator
+        text_list_offset_ += (state_name.length() + 1);
+      } else {
+        // Name already exists. Add sign type and existing text offset to list
+        state_offset = existing_text_offset->second;
+      }
+    }
+
+    // Add admin to the list
+    admins_builder_.emplace_back(country_offset, state_offset,
+                                 country_iso, state_iso,
+                                 start_dst, end_dst);
+
+    // Add to the map
+    admin_info_offset_map.emplace(country_iso, admins_builder_.size()-1);
+
+    return admins_builder_.size()-1;
+
+  } else {
+    // Already have this admin - return the offset
+    return existing_admin_info_offset_item->second;
+  }
+
 }
 
 // Serialize the edge info list
@@ -248,16 +477,30 @@ void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
 
 // Gets a non-const node (builder) from existing tile data.
 NodeInfoBuilder& GraphTileBuilder::node(const size_t idx) {
- if (idx < header_->nodecount())
-   return static_cast<NodeInfoBuilder&>(nodes_[idx]);
- throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
+  if (idx < header_->nodecount())
+    return static_cast<NodeInfoBuilder&>(nodes_[idx]);
+  throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
-// Gets a non-const node (builder) from existing tile data.
+// Gets a non-const directed edge (builder) from existing tile data.
 DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
   if (idx < header_->directededgecount())
     return static_cast<DirectedEdgeBuilder&>(directededges_[idx]);
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
+}
+
+// Gets a non-const sign (builder) from existing tile data.
+SignBuilder& GraphTileBuilder::sign(const size_t idx) {
+  if (idx < header_->signcount())
+    return static_cast<SignBuilder&>(signs_[idx]);
+  throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+// Gets a const admin builder at specified index.
+const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
+  if (idx < admins_builder_.size())
+    return admins_builder_.at(idx);
+  throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
 }
 
 }

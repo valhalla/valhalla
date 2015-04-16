@@ -43,10 +43,70 @@ road_class = {
 ["secondary_link"] = 3,
 ["tertiary"] = 4, 
 ["tertiary_link"] = 4, 
-["unclassified"] = 4, 
-["residential"] = 5, 
-["residential_link"] = 5, 
-["service"] = 6 
+["unclassified"] = 5, 
+["residential"] = 6, 
+["residential_link"] = 6
+}
+
+restriction = {
+["no_left_turn"] = 0,
+["no_right_turn"] = 1,
+["no_straight_on"] = 2,
+["no_u_turn"] = 3,
+["only_right_turn"] = 4,
+["only_left_turn"] = 5,
+["only_straight_on"] = 6
+}
+
+dow = {
+["Sunday"] = 1,
+["sunday"] = 1,
+["Sun"] = 1,
+["sun"] = 1,
+["Su"] = 1,
+["su"] = 1,
+["Monday"] = 2,
+["monday"] = 2,
+["Mon"] = 2,
+["mon"] = 2,
+["Mo"] = 2,
+["mo"] = 2,
+["Tuesday"] = 3,
+["tuesday"] = 3,
+["Tues"] = 3,
+["tues"] = 3,
+["Tue"] = 3,
+["tue"] = 3,
+["Tu"] = 3,
+["tu"] = 3,
+["Wednesday"] = 4,
+["wednesday"] = 4,
+["Weds"] = 4,
+["weds"] = 4,
+["Wed"] = 4,
+["wed"] = 4,
+["We"] = 4,
+["we"] = 4,
+["Thursday"] = 5,
+["thursday"] = 5,
+["Thurs"] = 5,
+["thurs"] = 5,
+["Thur"] = 5,
+["thur"] = 5,
+["Th"] = 5,
+["th"] = 5,
+["Friday"] = 6,
+["friday"] = 6,
+["Fri"] = 6,
+["fri"] = 6,
+["Fr"] = 6,
+["fr"] = 6,
+["Saturday"] = 7,
+["saturday"] = 7,
+["Sat"] = 7,
+["sat"] = 7,
+["Sa"] = 7,
+["sa"] = 7
 }
 
 default_speed = {
@@ -54,10 +114,10 @@ default_speed = {
 [1] = 90,
 [2] = 75,
 [3] = 60,
-[4] = 40,
+[4] = 50,
 [5] = 40,
-[6] = 20,
-[7] = 30
+[6] = 30,
+[7] = 20
 }
 
 access = {
@@ -81,11 +141,11 @@ no_thru_traffic = {
 }
 
 use = {
-["parking_aisle"] = 3,
 ["driveway"] = 4,
 ["alley"] = 5,
-["emergency_access"] = 6,
-["drive-through"] = 7
+["parking_aisle"] = 6,
+["emergency_access"] = 7,
+["drive-through"] = 8
 }
 
 motor_vehicle = {
@@ -145,7 +205,7 @@ separated = {
 
 oneway = {
 ["no"] = "false",
-["-1"] = "false",
+["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
 ["1"] = "true"
@@ -172,6 +232,7 @@ toll = {
 ["true"] = "true",
 ["false"] = "false",
 ["1"] = "true",
+["interval"] = "true",
 ["snowmobile"] = "true"
 }
 
@@ -222,6 +283,16 @@ function filter_tags_generic(kv)
     for k,v in pairs(forward) do
       kv[k] = v
     end
+
+    --check for auto_forward overrides
+    kv["auto_forward"] = motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorcar"]] or kv["auto_forward"]
+
+    --check for ped overrides
+    kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
+
+    --check for bike_forward overrides
+    kv["bike_forward"] = bicycle[kv["bicycle"]] or bicycle[kv["cycleway"]] or kv["bike_forward"]
+
   else
     --if its a ferry and these tags dont show up we want to set them to true 
     local default_val = tostring(ferry)
@@ -250,6 +321,7 @@ function filter_tags_generic(kv)
     oneway_bike = oneway[kv["oneway:bicycle"]]
   end
 
+  local oneway_reverse = kv["oneway"]
   local oneway_norm = oneway[kv["oneway"]]
   if kv["junction"] == "roundabout" then
     oneway_norm = "true"
@@ -260,14 +332,14 @@ function filter_tags_generic(kv)
   kv["oneway"] = oneway_norm
   if oneway_norm == "true" then
     kv["auto_backward"] = "false"
-    if kv["bike_backward"] then 
+    if kv["bike_backward"] == "true" then 
       if (oneway_bike == nil or oneway_bike == "true") then --bike only in reverse on a bike path.
         kv["bike_forward"] = "false"
       elseif oneway_bike == "false" then --bike in both directions on a bike path.
         kv["bike_forward"] = "true"
       end
     end
-  elseif oneway_norm == nil then
+  elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
     if kv["bike_backward"] == "false" then
       kv["bike_backward"] = kv["bike_forward"]
@@ -282,10 +354,27 @@ function filter_tags_generic(kv)
     kv["bike_backward"] = "true"
   end
 
+  --flip the onewayness 
+  if oneway_reverse == "-1" then
+    local forwards = kv["auto_forward"]
+    kv["auto_forward"] = kv["auto_backward"]
+    kv["auto_backward"] = forwards
+
+    forwards = kv["bike_forward"]
+    kv["bike_forward"] = kv["bike_backward"]
+    kv["bike_backward"] = forwards
+  end
+
   --if none of the modes were set we are done looking at this junker
   if kv["auto_forward"] == "false" and kv["bike_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_backward"] == "false" and kv["pedestrian"] == "false" then
     return 1
   end
+
+   delete_tags = { 'FIXME', 'note', 'source' }
+
+   for i,k in ipairs(delete_tags) do
+      kv[k] = nil
+   end
 
   --set a few flags
   local road_class = road_class[kv["highway"]]
@@ -294,7 +383,7 @@ function filter_tags_generic(kv)
     road_class = 2 --TODO:  can we weight based on ferry types?
   elseif kv["highway"] == nil and kv["railway"] then
     road_class = 2 --TODO:  can we weight based on rail types?    
-  elseif road_class == nil then
+  elseif road_class == nil then --service and other = 7
     road_class = 7
   end 
   
@@ -305,27 +394,31 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] == "steps" then
-    use = 8 --steps/stairs
+    use = 26 --steps/stairs
   elseif kv["highway"] == "track" then
-    use = 11 
+    use = 3 
   elseif kv["highway"] == nil then 
     use = 0
   elseif kv["highway"] then
     --favor bicycles
     if kv["highway"] == "cycleway" then
-        use = 1
+        use = 20
     elseif kv["pedestrian"] == "false" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and (kv["bike_forward"] == "true" or kv["bike_backward"] == "true") then
-       use = 1
+       use = 20
     --favor pedestrians
     elseif kv["highway"] == "footway" or kv["highway"] == "pedestrian" then 
-       use = 2
+       use = 25
     elseif kv["pedestrian"] == "true" and kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_forward"] == "false" and kv["bike_backward"] == "false" then
-       use = 2
+       use = 25
     end
   elseif use == nil and kv["service"] then
-    use = 12 --other
+    use = 63 --other
   else 
-    use = 0 --none
+    use = 0 --general road, no special use
+  end
+
+  if kv["access"] == "emergency" or kv["emergency"] == "yes" then
+    use = 7
   end
 
   kv["use"] = use
@@ -365,11 +458,24 @@ function filter_tags_generic(kv)
   end
   kv["lanes"] = lane_count
   kv["bridge"] = bridge[kv["bridge"]] or "false"
+  
+  -- TODO access:conditional
+  if kv["seasonal"] and kv["seasonal"] ~= "no" then
+    kv["seasonal"] = "true"
+  end
+
+  -- TODO access
+  if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
+    kv["hov"] = "true"
+  end
+
   kv["tunnel"] = tunnel[kv["tunnel"]] or "false"
   kv["toll"] = toll[kv["toll"]] or "false"
   kv["destination"] = kv["destination"]
   kv["destination:ref"] = kv["destination:ref"]
   kv["destination:ref:to"] = kv["destination:ref:to"]
+  kv["destination:street"] = kv["destination:street"]
+  kv["destination:street:to"] = kv["destination:street:to"]
   kv["junction:ref"] = kv["junction:ref"]
 
   local nref = kv["ncn_ref"]
@@ -416,12 +522,48 @@ function ways_proc (kv, nokeys)
   return filter, kv, 0, 0
 end
 
-function rels_proc (keyvalues, nokeys)
-  --we dont care about rels at all so filter all of them
-  --actually we do because it contains turn restrictions and route
-  --shielding and directional information but we post process that
-  --information out using the middle tables
-  return 1, keyvalues
+function rels_proc (kv, nokeys)
+  if (kv["type"] == "route" or kv["type"] == "restriction") then
+
+     local restrict = restriction[kv["restriction"]]
+
+     if kv["type"] == "restriction" then
+
+       if restrict ~= nil then
+         kv["restriction"] = restrict
+
+         if kv["day_on"] or kv["day_off"] then
+
+           local day_on = dow[kv["day_on"]]
+           if day_on == nil then
+             kv["day_on"] = 0
+           else
+             kv["day_on"] = day_on
+           end
+
+           local day_off = dow[kv["day_off"]]
+           if day_off == nil then
+             kv["day_off"] = 0
+           else
+             kv["day_off"] = day_off
+           end
+         end
+       else
+         return 1, kv
+       end
+       return 0, kv
+  --has a restiction but type is not restriction...ignore
+     elseif restrict ~= nil then
+       return 1, kv
+     else
+       kv["day_on"] = nil
+       kv["day_off"] = nil
+       kv["restriction"] = nil
+       return 0, kv
+     end
+  end
+
+  return 1, kv
 end
 
 function rel_members_proc (keyvalues, keyvaluemembers, roles, membercount)
@@ -437,3 +579,5 @@ function rel_members_proc (keyvalues, keyvaluemembers, roles, membercount)
 
   return 1, keyvalues, membersuperseeded, 0, 0, 0
 end
+
+

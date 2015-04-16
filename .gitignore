@@ -31,6 +31,7 @@ libtool
 valhalla/proto
 src/proto
 pbfgraphbuilder
+pbfadminbuilder
 hierarchybuilder
 *.o
 .deps/
@@ -38,19 +39,27 @@ hierarchybuilder
 *.lo
 .libs/
 libvalhalla_mjolnir.la
+*.bin
 
 # tests
 test-suite.log
 test-driver
+test/test_config
+test/directededgebuilder
 test/edgeinfobuilder
+test/nodeinfobuilder
 test/uniquenames
-test/nodetable
+test/idtable
 test/graphtilebuilder
 test/graphbuilder
-test/exitsigninfo
+test/refs
+test/graphparser
+test/signinfo
+test/admininfobuilder
 test/*.log
 test/*.trs
 EdgeInfoBuilder_TestWriteRead.gph
+AdminInfoBuilder_TestWriteRead.gph
 
 # test coverage stuff
 *.gcno

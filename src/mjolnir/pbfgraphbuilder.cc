@@ -1,11 +1,11 @@
 #include <string>
 #include <vector>
 
-#include "pbfgraphbuilder.h"
-#include "mjolnir/pbfparser.h"
+#include "../../valhalla/mjolnir/graphvalidator.h"
+#include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphoptimizer.h"
 #include "config.h"
 
 // For OSM pbf reader
@@ -87,30 +87,6 @@ bool ParseArguments(int argc, char *argv[]) {
   return false;
 }
 
-/**
- * Parse PBF into the supplied data structures
- */
-OSMData ParsePBF(const boost::property_tree::ptree& pt,
-                const std::vector<std::string>& input_files) {
-  PBFParser parser(pt);
-  return parser.Load(input_files);
-}
-
-/**
- * Build local graph from protocol buffer input.
- */
-void BuildLocalGraphFromPBF(const boost::property_tree::ptree& pt,
-               const std::vector<std::string>& input_files) {
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  OSMData osmdata = ParsePBF(pt, input_files);
-
-  // Build the graph using the OSMNodes and OSMWays from the parser
-  GraphBuilder graphbuilder(pt);
-  graphbuilder.Build(osmdata);
-}
-
 int main(int argc, char** argv) {
 
   if (!ParseArguments(argc, argv))
@@ -130,7 +106,12 @@ int main(int argc, char** argv) {
   //we only support protobuf at present
   std::string input_type = pt.get<std::string>("mjolnir.input.type");
   if(input_type == "protocolbuffer"){
-    BuildLocalGraphFromPBF(pt.get_child("mjolnir"), input_files);
+    // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+    // relations are defined within the PBFParser class
+    auto osm_data = PBFGraphParser::Parse(pt.get_child("mjolnir"), input_files, "ways.bin", "way_nodes.bin");
+
+    // Build the graph using the OSMNodes and OSMWays from the parser
+    GraphBuilder::Build(pt.get_child("mjolnir"), osm_data, "ways.bin", "way_nodes.bin");
   }/*else if("postgres"){
     //TODO
     if (v.first == "host")
@@ -145,15 +126,18 @@ int main(int argc, char** argv) {
       return false;  //unknown value;
   }*/
 
+  // Enhance the local level of the graph. This adds information to the local
+  // level that is usable across all levels (density, administrative
+  // information (and country based attribution), edge transition logic, etc.
+  GraphEnhancer::Enhance(pt);
+
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder hierarchybuilder(pt.get_child("mjolnir.hierarchy"));
-  hierarchybuilder.Build();
+  HierarchyBuilder::Build(pt.get_child("mjolnir.hierarchy"));
 
-  // Optimize the graph to add information that cannot be added until
+  // Validate the graph and add information that cannot be added until
   // full graph is formed.
-  GraphOptimizer graphoptimizer(pt.get_child("mjolnir.hierarchy"));
-  graphoptimizer.Optimize();
+  GraphValidator::Validate(pt.get_child("mjolnir.hierarchy"));
 
   return EXIT_SUCCESS;
 }

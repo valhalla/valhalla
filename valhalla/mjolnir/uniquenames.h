@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
+
+using NamesMap = std::unordered_map<std::string, uint32_t>;
 
 /**
  * Class to hold a list of unique names and indexes to them.
@@ -45,12 +47,17 @@ class UniqueNames {
    */
   size_t Size() const;
 
+  /**
+   * Log information about the number of unique names, size of the vector, etc.
+   */
+  void Log() const;
+
  protected:
   // Map of names to indexes
-  std::map<std::string, uint32_t> names_;
+  NamesMap names_;
 
   // List of entries into the map
-  typedef std::map<std::string, uint32_t>::iterator nameiter;
+  using nameiter = NamesMap::iterator;
   std::vector<nameiter> indexes_;
 };
 

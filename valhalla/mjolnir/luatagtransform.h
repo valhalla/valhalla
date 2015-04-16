@@ -7,19 +7,21 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <string>
-#include <map>
+#include <valhalla/mjolnir/osmdata.h>
 
-// Represents the key/values of an object
-typedef std::map<std::string, std::string> Tags;
+#include <string>
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
+
+using Tags = std::unordered_map<std::string, std::string>;
 
 /**
  */
 class LuaTagTransform {
  public:
+
   /**
    * Constructor
    */
@@ -36,30 +38,41 @@ class LuaTagTransform {
 
   void SetLuaNodeFunc(std::string luanodefunc);
 
+  void SetLuaRelationFunc(std::string luarelationfunc);
+
   std::string GetLuaWayFunc() const;
 
   std::string GetLuaNodeFunc() const;
+
+  std::string GetLuaRelationFunc() const;
 
   void SetLuaWayScript(std::string luawayscript);
 
   void SetLuaNodeScript(std::string luanodescript);
 
+  void SetLuaRelationScript(std::string luarelationscript);
+
   std::string GetLuaWayScript() const;
 
   std::string GetLuaNodeScript() const;
 
-  Tags TransformInLua(bool isWay, const Tags &tags);
+  std::string GetLuaRelationScript() const;
+
+  Tags Transform(OSMType type, const Tags &tags);
 
  protected:
 
   lua_State *waystate_;
   lua_State *nodestate_;
+  lua_State *relationstate_;
 
-  std::string luanodefunc_;
   std::string luawayfunc_;
+  std::string luanodefunc_;
+  std::string luarelationfunc_;
 
-  std::string luanodescript_;
   std::string luawayscript_;
+  std::string luanodescript_;
+  std::string luarelationscript_;
 
 };
 

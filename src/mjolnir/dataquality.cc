@@ -9,18 +9,25 @@ namespace mjolnir {
 
 // Constructor
 DataQuality::DataQuality()
-    : not_thru_count_(0),
-      internal_count_(0) {
+    : nodecount(0),
+      directededge_count(0),
+      simplerestrictions(0),
+      timedrestrictions(0),
+      turnchannelcount(0),
+      culdesaccount(0),
+      node_counts{} {
 }
 
-// Add statistics
-void DataQuality::AddStats(const GraphId& tileid,
-                           const DirectedEdge& directededge) {
-  if (directededge.not_thru()) {
-    not_thru_count_++;
-  }
-  if (directededge.internal()) {
-    internal_count_++;
+// Add statistics (accumulate from several DataQuality objects)
+void DataQuality::AddStatistics(const DataQuality& stats) {
+  nodecount          += stats.nodecount;
+  directededge_count += stats.directededge_count;
+  simplerestrictions += stats.simplerestrictions;
+  timedrestrictions  += stats.timedrestrictions;
+  turnchannelcount   += stats.turnchannelcount;
+  culdesaccount      += stats.culdesaccount;
+  for (uint32_t i = 0; i < 128; i++) {
+    node_counts[i] += stats.node_counts[i];
   }
 }
 
@@ -43,27 +50,42 @@ void DataQuality::AddIssue(const DataIssueType issuetype, const GraphId& graphid
 }
 
 // Logs statistics and issues
-void DataQuality::Log() {
-  LOG_INFO("Not thru edgecount = " + std::to_string(not_thru_count_));
-  LOG_INFO("Internal edgecount = " + std::to_string(internal_count_));
+void DataQuality::LogStatistics() const {
+  LOG_INFO("Node Count = " + std::to_string(nodecount));
+  LOG_INFO("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_INFO("Turn Channel Count = " + std::to_string(turnchannelcount));
+  LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
+  LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
+  LOG_INFO("Cul-de-Sac Count = " + std::to_string(culdesaccount));
+  LOG_INFO("Node edge count histogram:");
+  for (uint32_t i = 0; i < 128; i++) {
+    if (node_counts[i] > 0) {
+      LOG_INFO(std::to_string(i) + ": " + std::to_string(node_counts[i]));
+    }
+  }
+}
 
+// Logs issues
+void DataQuality::LogIssues() const {
   // Log the duplicate ways - sort by number of duplicate edges
 
   uint32_t duplicates = 0;
   std::vector<DuplicateWay> dups;
-  LOG_WARN("Duplicate Ways: count = " + std::to_string(duplicateways_.size()));
-  for (const auto& dup : duplicateways_) {
-    dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second,
-                                    dup.second));
-    duplicates += dup.second;
+  if (duplicateways_.size() > 0) {
+    LOG_WARN("Duplicate Ways: count = " + std::to_string(duplicateways_.size()));
+    for (const auto& dup : duplicateways_) {
+      dups.emplace_back(DuplicateWay(dup.first.first, dup.first.second,
+                                      dup.second));
+      duplicates += dup.second;
+    }
+    LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) +
+             " duplicate edges = " + std::to_string(duplicates));
   }
-  LOG_WARN("Duplicate ways " + std::to_string(duplicateways_.size()) +
-           " duplicate edges = " + std::to_string(duplicates));
 
   // Sort by edgecount and write to separate file
   std::ofstream dupfile;
   std::sort(dups.begin(), dups.end());
-  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::trunc);
+  dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::app);
   dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
   for (const auto& dupway : dups) {
     dupfile << dupway.wayid1 << "," << dupway.wayid2 << ","
@@ -72,15 +94,19 @@ void DataQuality::Log() {
   dupfile.close();
 
   // Log the unconnected link edges
-  LOG_WARN("Link edges that are not connected. OSM Way Ids");
-  for (const auto& wayid : unconnectedlinks_) {
-    LOG_WARN(std::to_string(wayid));
+  if (unconnectedlinks_.size() > 0) {
+    LOG_WARN("Link edges that are not connected. OSM Way Ids");
+    for (const auto& wayid : unconnectedlinks_) {
+      LOG_WARN(std::to_string(wayid));
+    }
   }
 
   // Log the links with incompatible use
-  LOG_WARN("Link edges that have incompatible use. OSM Way Ids:");
-  for (const auto& wayid : incompatiblelinkuse_) {
-    LOG_WARN(std::to_string(wayid));
+  if (incompatiblelinkuse_.size() > 0) {
+    LOG_WARN("Link edges that have incompatible use. OSM Way Ids:");
+    for (const auto& wayid : incompatiblelinkuse_) {
+      LOG_WARN(std::to_string(wayid));
+    }
   }
 }
 

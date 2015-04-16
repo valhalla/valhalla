@@ -8,7 +8,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/mjolnir/exitsignbuilder.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -23,10 +22,16 @@ namespace mjolnir {
 class EdgeInfoBuilder {
  public:
   /**
-   * Set the indexes to names used by this edge
-   * @param  street_name_offset_list  a list of name indexes.
+   * Set the OSM way Id.
+   * @param wayid  Way Id.
    */
-  void set_street_name_offset_list(const std::vector<uint32_t>& street_name_offset_list);
+  void set_wayid(const uint64_t wayid);
+
+  /**
+   * Set the indexes to names used by this edge
+   * @param  text_name_offset_list  a list of name indexes.
+   */
+  void set_text_name_offset_list(const std::vector<uint32_t>& text_name_offset_list);
 
   /**
    * Set the shape of the edge.
@@ -35,25 +40,19 @@ class EdgeInfoBuilder {
    */
   void set_shape(const std::vector<PointLL>& shape);
 
-  /**
-   * Set the exit signs used by this edge
-   * @param  exit_signs  a list of exit signs.
-   */
-  void set_exit_signs(std::vector<ExitSignBuilder>&& exit_signs);
-
   // Returns the size in bytes of this object.
   std::size_t SizeOf() const;
 
  protected:
 
+  // OSM Way Id
+  uint64_t wayid_;
+
   // List of roadname indexes
-  std::vector<uint32_t> street_name_offset_list_;
+  std::vector<uint32_t> text_name_offset_list_;
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;
-
-  // List of exit signs (type and index)
-  std::vector<ExitSignBuilder> exit_signs_;
 
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 
