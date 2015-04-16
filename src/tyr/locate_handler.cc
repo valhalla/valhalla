@@ -1,12 +1,15 @@
 #include "tyr/locate_handler.h"
 #include "tyr/json.h"
 
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
+
+#include <utility>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -18,32 +21,47 @@ namespace {
   //TODO: move json header to baldr
   //TODO: make objects serialize themselves
 
-
-  json::Value serialize_node(const PathLocation& location, GraphReader& reader) {
-    if(location.IsNode()) {
-      auto mp = json::map({});
-      //TODO: get the osm node id
-      //TODO: get the coordinate
-      return mp;
-    }
-    else {
-      return static_cast<nullptr_t>(nullptr);
-    }
+  json::ArrayPtr serialize_ll(const PointLL& ll) {
+    return json::array({
+      static_cast<long double>(ll.lat()), static_cast<long double>(ll.lng())
+    });
   }
 
-  json::ArrayPtr serialize_edges(const std::vector<PathLocation::PathEdge>& edges, GraphReader& reader) {
+  json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader) {
     auto array = json::array({});
-    for(const auto& edge : edges) {
-      //TODO: get the osm way id
-      //TODO: crack open the shape, use the distance to get the coordinate
+    for(const auto& edge : location.edges()) {
+      try {
+        //get the osm way id
+        auto tile = reader.GetGraphTile(edge.id);
+        auto* directed_edge = tile->directededge(edge.id);
+        auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
+        array->emplace_back(
+          json::map({
+            {"way_id", edge_info->wayid()},
+            {"correlated_lat_lon", serialize_ll(location.vertex())}
+          })
+        );
+      }
+      catch(...) {
+        //this really shouldnt ever get hit
+        LOG_WARN("Expected edge no found in graph but found by loki::search!");
+      }
     }
     return array;
   }
 
   json::MapPtr serialize(const PathLocation& location, GraphReader& reader) {
     return json::map({
-      {"node", serialize_node(location, reader)},
-      {"ways", serialize_edges(location.edges(), reader)}
+      {"ways", serialize_edges(location, reader)},
+      {"input_lat_lon", serialize_ll(location.latlng_)}
+    });
+  }
+
+  json::MapPtr serialize(const std::pair<Location, std::string>& skipped) {
+    return json::map({
+      {"ways", static_cast<nullptr_t>(nullptr)},
+      {"input_lat_lon", serialize_ll(skipped.first.latlng_)},
+      {"reason", skipped.second}
     });
   }
 
@@ -100,7 +118,6 @@ LocateHandler::LocateHandler(const boost::property_tree::ptree& config, const bo
 
   // Get the config for the graph reader
   reader_.reset(new baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
-
 }
 
 LocateHandler::~LocateHandler() {
@@ -110,19 +127,38 @@ LocateHandler::~LocateHandler() {
 std::string LocateHandler::Action() {
   //find the correlate the various locations to the underlying graph
   std::list<baldr::PathLocation> correlated;
-  for(const auto& location : locations_)
-    correlated.emplace_back(loki::Search(locations_[0], *reader_, cost_->GetFilter()));
+  std::list<std::pair<PointLL, std::string> > skipped;
+  for(const auto& location : locations_) {
+    try {
+      correlated.emplace_back(loki::Search(locations_[0], *reader_, cost_->GetFilter()));
+    }
+    catch(const std::exception& e) {
+      skipped.emplace_back(std::make_pair(location.latlng_, e.what()));
+    }
+  }
 
   //rip through the correlated ones to create the json array
-  auto json = json::array({});
+  auto correlated_json = json::array({});
   for(const auto& location : correlated)
-    json->emplace_back(serialize(location, *reader_));
+    correlated_json->emplace_back(serialize(location, *reader_));
 
-  //make some json
+  //rip through the skipped ones to create the json array
+  auto skipped_json = json::array({});
+  for(const auto& skip : skipped)
+    skipped_json->emplace_back(serialize(skip));
+
+  //jsonp callback
   std::ostringstream stream;
   if(jsonp_)
     stream << *jsonp_ << '(';
-  stream << *json;
+
+  //top level object
+  stream << *json::map({
+    {"correlated", correlated_json},
+    {"skipped", skipped_json}
+  });
+
+  //finish up jsonp
   if(jsonp_)
     stream << ')';
   return stream.str();
