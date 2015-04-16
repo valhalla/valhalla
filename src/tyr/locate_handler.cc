@@ -9,7 +9,8 @@
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 
-#include <utility>
+#include <unordered_map>
+#include <cstdint>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -29,18 +30,32 @@ namespace {
 
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader) {
     auto array = json::array({});
+    std::unordered_multimap<uint64_t, PointLL> ids;
     for(const auto& edge : location.edges()) {
       try {
         //get the osm way id
         auto tile = reader.GetGraphTile(edge.id);
         auto* directed_edge = tile->directededge(edge.id);
         auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
-        array->emplace_back(
-          json::map({
-            {"way_id", edge_info->wayid()},
-            {"correlated_lat_lon", serialize_ll(location.vertex())}
-          })
-        );
+        //check if we did this one before
+        auto range = ids.equal_range(edge_info->wayid());
+        bool duplicate = false;
+        for(auto id = range.first; id != range.second; ++id) {
+          if(id->second == location.vertex()) {
+            duplicate = true;
+            break;
+          }
+        }
+        //only serialize it if we didnt do it before
+        if(!duplicate) {
+          ids.emplace(edge_info->wayid(), location.vertex());
+          array->emplace_back(
+            json::map({
+              {"way_id", edge_info->wayid()},
+              {"correlated_lat_lon", serialize_ll(location.vertex())}
+            })
+          );
+        }
       }
       catch(...) {
         //this really shouldnt ever get hit
@@ -57,11 +72,11 @@ namespace {
     });
   }
 
-  json::MapPtr serialize(const std::pair<Location, std::string>& skipped) {
+  json::MapPtr serialize(const PointLL& ll, const std::string& reason) {
     return json::map({
       {"ways", static_cast<nullptr_t>(nullptr)},
-      {"input_lat_lon", serialize_ll(skipped.first.latlng_)},
-      {"reason", skipped.second}
+      {"input_lat_lon", serialize_ll(ll)},
+      {"reason", reason}
     });
   }
 
@@ -75,14 +90,14 @@ LocateHandler::LocateHandler(const boost::property_tree::ptree& config, const bo
 
   //we require locations
   try {
-    for(const auto& loc : request.get_child("locations"))
-      locations_.emplace_back(std::move(baldr::Location::FromCsv(loc.second.get_value<std::string>())));
+    for(const auto& location : request.get_child("locations"))
+      locations_.emplace_back(std::move(baldr::Location::FromPtree(location.second)));
     if(locations_.size() < 2)
       throw;
     //TODO: bail if this is too many
   }
   catch(...) {
-    throw std::runtime_error("insufficiently specified required parameter `locations'");
+    throw std::runtime_error("insufficiently specified required parameter 'locations'");
   }
 
   // Parse out the type of route - this provides the costing method to use
@@ -126,39 +141,22 @@ LocateHandler::~LocateHandler() {
 
 std::string LocateHandler::Action() {
   //find the correlate the various locations to the underlying graph
-  std::list<baldr::PathLocation> correlated;
-  std::list<std::pair<PointLL, std::string> > skipped;
+  auto json = json::array({});
   for(const auto& location : locations_) {
     try {
-      correlated.emplace_back(loki::Search(locations_[0], *reader_, cost_->GetFilter()));
+      auto correlated = loki::Search(locations_[0], *reader_, cost_->GetFilter());
+      json->emplace_back(serialize(correlated, *reader_));
     }
     catch(const std::exception& e) {
-      skipped.emplace_back(std::make_pair(location.latlng_, e.what()));
+      json->emplace_back(serialize(location.latlng_, e.what()));
     }
   }
 
-  //rip through the correlated ones to create the json array
-  auto correlated_json = json::array({});
-  for(const auto& location : correlated)
-    correlated_json->emplace_back(serialize(location, *reader_));
-
-  //rip through the skipped ones to create the json array
-  auto skipped_json = json::array({});
-  for(const auto& skip : skipped)
-    skipped_json->emplace_back(serialize(skip));
-
-  //jsonp callback
+  //jsonp callback if need be
   std::ostringstream stream;
   if(jsonp_)
     stream << *jsonp_ << '(';
-
-  //top level object
-  stream << *json::map({
-    {"correlated", correlated_json},
-    {"skipped", skipped_json}
-  });
-
-  //finish up jsonp
+  stream << *json;
   if(jsonp_)
     stream << ')';
   return stream.str();
