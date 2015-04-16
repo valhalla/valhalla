@@ -6,6 +6,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional.hpp>
+#include <boost/format.hpp>
 
 #include "config.h"
 
@@ -109,13 +110,37 @@ std::string to_string(const valhalla::baldr::Location& l) {
 
 }
 
+std::string GetFormattedTime(uint32_t seconds) {
+  uint32_t hours = (uint32_t)seconds/3600;
+  uint32_t minutes = ((uint32_t)(seconds/60)) % 60;
+  std::string formattedTime = "";
+  // Hours
+  if (hours > 0) {
+    formattedTime += std::to_string(hours);
+    formattedTime += (hours == 1) ? " hour" : " hours";
+    if (minutes > 0) {
+      formattedTime += ", ";
+    }
+  }
+  // Minutes
+  if (minutes > 0) {
+    formattedTime += std::to_string(minutes);
+    formattedTime += (minutes == 1) ? " minute" : " minutes";
+  }
+  return formattedTime;
+
+}
+
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                               TripPath& trip_path, Location origin,
                               Location destination) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
-  float totalDistance = 0.0f;
+  std::string units = (
+      directions_options.units()
+          == DirectionsOptions::Units::DirectionsOptions_Units_kKilometers ?
+          "km" : "mi");
   int m = 1;
   valhalla::midgard::logging::Log("From: " + std::to_string(origin),
                                   " [NARRATIVE] ");
@@ -126,18 +151,21 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);
     valhalla::midgard::logging::Log(
-        std::to_string(m++) + ": " + maneuver.text_instruction() + " | "
-            + std::to_string(maneuver.length()) + " mi",
+        (boost::format("%d: %s | %.1f %s") % m++ % maneuver.text_instruction()
+            % maneuver.length() % units).str(),
         " [NARRATIVE] ");
     if (i < trip_directions.maneuver_size() - 1)
       valhalla::midgard::logging::Log(
           "----------------------------------------------", " [NARRATIVE] ");
-    totalDistance += maneuver.length();
   }
   valhalla::midgard::logging::Log(
       "==============================================", " [NARRATIVE] ");
   valhalla::midgard::logging::Log(
-      "Total distance: " + std::to_string(totalDistance) + " mi",
+      "Total time: " + GetFormattedTime(trip_directions.summary().time()),
+      " [NARRATIVE] ");
+  valhalla::midgard::logging::Log(
+      (boost::format("Total length: %.1f %s")
+          % trip_directions.summary().length() % units).str(),
       " [NARRATIVE] ");
 
   return trip_directions;
