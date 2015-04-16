@@ -75,7 +75,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   }
   std::ostream& operator()(uint64_t value) const { return ostream_ << value; }
   std::ostream& operator()(int64_t value) const { return ostream_ << value; }
-  std::ostream& operator()(long double value) const { return ostream_ << value; }
+  std::ostream& operator()(long double value) const { return ostream_ << std::setprecision(6) << std::fixed << value; }
   std::ostream& operator()(bool value) const { return ostream_ << (value ? "true" : "false"); }
   std::ostream& operator()(nullptr_t value) const { return ostream_ << "null"; }
   std::ostream& operator()(const MapPtr& value) const { return ostream_ << *value; }
