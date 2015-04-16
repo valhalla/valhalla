@@ -5,6 +5,7 @@
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/maneuver.h>
 
 namespace valhalla {
@@ -14,11 +15,13 @@ class DirectionsBuilder {
  public:
   DirectionsBuilder();
 
-  TripDirections Build(TripPath& trip_path);
+  TripDirections Build(const DirectionsOptions& directions_options,
+                       TripPath& trip_path);
 
  protected:
-  TripDirections PopulateTripDirections(TripPath& trip_path,
-                                        std::list<Maneuver>& maneuvers);
+  TripDirections PopulateTripDirections(
+      const DirectionsOptions& directions_options, TripPath& trip_path,
+      std::list<Maneuver>& maneuvers);
 
 };
 

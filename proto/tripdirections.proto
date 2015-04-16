@@ -24,7 +24,11 @@ message TripDirections {
     optional string country = 9;
   }
 
-  // TODO: add in other attributes
+  message Summary {
+    optional float length = 1;          // kilometers or miles based on units
+    optional uint32 time = 2;           // seconds
+  }
+  
   message Maneuver {
     enum CardinalDirection {
       kNorth = 0;
@@ -74,7 +78,7 @@ message TripDirections {
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // instruction text
     repeated string street_name = 3;                         // street names
-    optional float length = 4;                               // km (TODO: based on type)
+    optional float length = 4;                               // kilometers or miles based on units
     optional uint32 time = 5;                                // seconds
     optional CardinalDirection begin_cardinal_direction = 6; // CardinalDirection
     optional uint32 begin_heading = 7;                       // 0-360 
@@ -88,7 +92,8 @@ message TripDirections {
   optional uint32 leg_id = 2;
   optional uint32 leg_count = 3;
   repeated Location location = 4;
-  repeated Maneuver maneuver = 5;
-  optional string shape = 6;
+  optional Summary summary = 5;
+  repeated Maneuver maneuver = 6;
+  optional string shape = 7;
 }
 

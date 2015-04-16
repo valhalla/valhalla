@@ -1,0 +1,12 @@
+package valhalla.odin;
+
+message DirectionsOptions {
+  
+  enum Units {
+    kKilometers = 0;
+    kMiles = 1;
+  }
+
+  optional Units units = 1;
+  optional string language = 2 [default = "en_US"];
+}

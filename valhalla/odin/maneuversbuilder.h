@@ -4,6 +4,7 @@
 #include <list>
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
@@ -13,7 +14,8 @@ namespace odin {
 
 class ManeuversBuilder {
  public:
-  ManeuversBuilder(EnhancedTripPath* trip_path);
+  ManeuversBuilder(const DirectionsOptions& directions_options,
+                   EnhancedTripPath* trip_path);
 
   std::list<Maneuver> Build();
 
@@ -66,6 +68,7 @@ class ManeuversBuilder {
 
   void UpdateInternalTurnCount(Maneuver& maneuver, int node_index) const;
 
+  const DirectionsOptions& directions_options_;
   EnhancedTripPath* trip_path_;
 
 };

@@ -29,23 +29,25 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 }
 
-TripDirections DirectionsBuilder::Build(TripPath& trip_path) {
+TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
+                                        TripPath& trip_path) {
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
   // Create maneuvers
-  ManeuversBuilder maneuversBuilder(etp);
+  ManeuversBuilder maneuversBuilder(directions_options, etp);
   auto maneuvers = maneuversBuilder.Build();
 
   // Create the narrative
   // TODO - factory
-  NarrativeBuilder::Build(maneuvers);
+  NarrativeBuilder::Build(directions_options, maneuvers);
 
   // Return trip directions
-  return PopulateTripDirections(trip_path, maneuvers);
+  return PopulateTripDirections(directions_options, trip_path, maneuvers);
 }
 
 TripDirections DirectionsBuilder::PopulateTripDirections(
-    TripPath& trip_path, std::list<Maneuver>& maneuvers) {
+    const DirectionsOptions& directions_options, TripPath& trip_path,
+    std::list<Maneuver>& maneuvers) {
   TripDirections trip_directions;
 
   // Populate trip and leg IDs

@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <valhalla/proto/trippath.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -41,6 +42,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
   bool IsHighway() const;
 
   std::vector<std::string> GetNameList() const;
+
+  float GetLength(const DirectionsOptions::Units& units);
 
   std::string ToString() const;
 

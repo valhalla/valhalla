@@ -3,6 +3,7 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
 
 #include "odin/util.h"
 #include "odin/enhancedtrippath.h"
@@ -84,6 +85,13 @@ std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
     name_list.push_back(name);
   }
   return name_list;
+}
+
+float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
+  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+    return (length() * kKmPerMile);
+  }
+  return length();
 }
 
 std::string EnhancedTripPath_Edge::ToString() const {
