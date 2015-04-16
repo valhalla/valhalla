@@ -129,6 +129,7 @@ class AutoCost : public DynamicCost {
   float tollbooth_penalty_;  // Penalty (seconds) to go through a toll booth
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+
   /**
    * Compute a turn cost based on the turn type, crossing flag,
    * and whether right or left side of road driving.
@@ -152,7 +153,8 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
                                      kDefaultTollBoothPenalty);
 
-  country_crossing_cost_ = pt.get<float>("country_crossing_cost", kDefaultCountryCrossingCost);
+  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
+                                           DefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
                                            kDefaultCountryCrossingPenalty);
 
@@ -224,7 +226,8 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (node->intersection() == IntersectionType::kFalse) {
     return { 0.0f, 0.0f };
   } else if (edge->ctry_crossing()) {
-    return { country_crossing_cost_ + country_crossing_penalty_, country_crossing_cost_ };
+    return { country_crossing_cost_ + country_crossing_penalty_,
+             country_crossing_cost_ };
   } else if (node->type() == NodeType::kGate) {
     return { gate_cost_, gate_cost_ };
   } else if (node->type() == NodeType::kTollBooth) {
@@ -252,7 +255,7 @@ float AutoCost::AStarCostFactor() const {
 }
 
 // Compute a turn cost based on the turn type, crossing flag,
-//  and whether right or left side of road driving.
+// and whether right or left side of road driving.
 float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
                          const bool crossing,
                          const bool drive_on_right) const {
@@ -275,10 +278,10 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
     return (drive_on_right) ? 2.5f : 1.0f;
 
   case Turn::Type::kSharpRight:
-    return (drive_on_right) ? 1.25f : 5.0f;
+    return (drive_on_right) ? 1.25f : 3.5f;
 
   case Turn::Type::kSharpLeft:
-    return (drive_on_right) ? 5.0f : 1.25f;
+    return (drive_on_right) ? 3.5f : 1.25f;
   }
 }
 
