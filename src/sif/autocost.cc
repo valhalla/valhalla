@@ -154,7 +154,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
                                      kDefaultTollBoothPenalty);
 
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
-                                           DefaultCountryCrossingCost);
+                                           kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
                                            kDefaultCountryCrossingPenalty);
 
