@@ -148,8 +148,10 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
   for (auto tile_level :  tile_hierarchy_.levels()) {
     dupcount_ = 0;
+    std::vector<float> densities;
     uint32_t level = (uint32_t)tile_level.second.level;
-    uint32_t ntiles = tile_level.second.tiles.TileCount();
+    auto tiles = tile_level.second.tiles;
+    uint32_t ntiles = tiles.TileCount();
     for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
       // Get the graph tile. Skip if no tile exists (common case)
       GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0));
@@ -167,6 +169,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       std::vector<DirectedEdgeBuilder> directededges;
 
       // Iterate through the nodes and the directed edges
+      float roadlength = 0.0f;
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node(tileid, level, 0);
       for (uint32_t i = 0; i < nodecount; i++, node++) {
@@ -180,23 +183,32 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++) {
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
                                   nodeinfo.edge_index() + j);
+          // Stats...
+          if (!directededge.shortcut() && !directededge.trans_up() &&
+              !directededge.trans_down()) {
+            roadlength += directededge.length();
+          }
 
+          // Set the opposing edge index and get the country ISO at the
+          // end node)
           std::string end_node_iso;
-          // Set the opposing edge index
-          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge, graphreader_, dupcount_, end_node_iso));
+          directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
+                           graphreader_, dupcount_, end_node_iso));
 
-          // if the country ISO codes do not match then this is a country crossing.
+          // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
                begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
 
           directededges.emplace_back(std::move(directededge));
-
         }
 
         // Add the node to the list
         nodes.emplace_back(std::move(nodeinfo));
       }
+
+      float density = (roadlength * 0.0005f) / tiles.Area(tileid);
+      densities.push_back(density);
 
       // Write the new file
       tilebuilder.Update(tile_hierarchy_, hdrbuilder, nodes, directededges);
@@ -208,6 +220,19 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     LOG_INFO("Validation of connectivity is done");
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % level % dupcount_).str());
+
+    // Get the average density and the max density
+    float max_density = 0.0f;
+    float sum = 0.0f;
+    for (auto density : densities) {
+      if (density > max_density) {
+        max_density = density;
+      }
+      sum += density;
+    }
+    float average_density = sum / densities.size();
+    LOG_INFO("Average density = " + std::to_string(average_density) +
+             " max = " + std::to_string(max_density));
   }
 }
 
