@@ -12,15 +12,16 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/odin/directionsbuilder.h>
+#include <valhalla/odin/util.h>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "tyr/json.h"
@@ -236,28 +237,6 @@ void serialize(const valhalla::odin::TripDirections& trip_directions,
   stream << *json;
 }
 
-valhalla::odin::DirectionsOptions get_directions_options(const boost::property_tree::ptree& pt) {
-
-  valhalla::odin::DirectionsOptions directions_options;
-
-  auto units_ptr = pt.get_optional<std::string>("units");
-  if (units_ptr) {
-    std::string units = *units_ptr;
-    if ((units == "miles") || (units == "mi")) {
-      directions_options.set_units(valhalla::odin::DirectionsOptions_Units_kMiles);
-    } else {
-      directions_options.set_units(valhalla::odin::DirectionsOptions_Units_kKilometers);
-    }
-  }
-
-  auto lang_ptr = pt.get_optional<std::string>("language");
-  if (lang_ptr) {
-    directions_options.set_language(*lang_ptr);
-  }
-
-  return directions_options;
-}
-
 }
 
 namespace valhalla {
@@ -369,7 +348,8 @@ std::string CustomRouteHandler::Action() {
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
   valhalla::odin::TripDirections trip_directions = directions_builder.Build(
-      get_directions_options(directions_options_ptree_), trip_path);
+      valhalla::odin::GetDirectionsOptions(directions_options_ptree_),
+      trip_path);
 
   //make some json
   std::ostringstream stream;
