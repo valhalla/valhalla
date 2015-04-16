@@ -21,9 +21,15 @@ class Jmap;
 using MapPtr = std::shared_ptr<Jmap>;
 class Jarray;
 using ArrayPtr = std::shared_ptr<Jarray>;
+struct fp_t {
+  long double value;
+  size_t precision;
+  //and be able to spit out text
+  friend std::ostream& operator<<(std::ostream& stream, const fp_t&);
+};
 
 //a variant of all the possible values to go with keys in json
-using Value = boost::variant<std::string, uint64_t, int64_t, long double, bool, nullptr_t, MapPtr, ArrayPtr>;
+using Value = boost::variant<std::string, uint64_t, int64_t, fp_t, bool, nullptr_t, MapPtr, ArrayPtr>;
 
 //the map value type in json
 class Jmap : public std::unordered_map<std::string, Value> {
@@ -31,7 +37,7 @@ class Jmap : public std::unordered_map<std::string, Value> {
   //just specialize unoredered_map
   using std::unordered_map<std::string, Value>::unordered_map;
   //and be able to spit out text
-  friend std::ostream& operator<<(std::ostream& stream, const Jmap& json);
+  friend std::ostream& operator<<(std::ostream&, const Jmap&);
 };
 
 //the array value type in json
@@ -41,7 +47,7 @@ class Jarray : public std::vector<Value> {
   using std::vector<Value>::vector;
  protected:
   //and be able to spit out text
-  friend std::ostream& operator<<(std::ostream& stream, const Jarray& json);
+  friend std::ostream& operator<<(std::ostream&, const Jarray&);
 };
 
 //how we serialize the different primitives to string
@@ -75,7 +81,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   }
   std::ostream& operator()(uint64_t value) const { return ostream_ << value; }
   std::ostream& operator()(int64_t value) const { return ostream_ << value; }
-  std::ostream& operator()(long double value) const { return ostream_ << value; }
+  std::ostream& operator()(fp_t value) const { return ostream_ << value; }
   std::ostream& operator()(bool value) const { return ostream_ << (value ? "true" : "false"); }
   std::ostream& operator()(nullptr_t value) const { return ostream_ << "null"; }
   std::ostream& operator()(const MapPtr& value) const { return ostream_ << *value; }
@@ -83,6 +89,11 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
  private:
   std::ostream& ostream_;
 };
+
+inline std::ostream& operator<<(std::ostream& stream, const fp_t& fp){
+  stream << std::setprecision(fp.precision) << std::fixed << fp.value;
+  return stream;
+}
 
 inline std::ostream& operator<<(std::ostream& stream, const Jmap& json){
   stream << '{';

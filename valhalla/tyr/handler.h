@@ -33,7 +33,6 @@ class Handler {
 
  protected:
   boost::property_tree::ptree config_;
-  std::vector<baldr::Location> locations_;
   boost::optional<std::string> jsonp_;
 
   Handler() {};

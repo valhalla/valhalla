@@ -1,6 +1,7 @@
 #include "test.h"
 #include "tyr/route_handler.h"
 #include "tyr/custom_route_handler.h"
+#include "tyr/locate_handler.h"
 #include "tyr/json.h"
 
 #include <valhalla/mjolnir/pbfgraphparser.h>
@@ -43,18 +44,18 @@ void write_config(const std::string& filename) {
                     json::map({
                       {"name",std::string("local")},
                       {"level", static_cast<uint64_t>(2)},
-                      {"size", static_cast<long double>(0.25)}
+                      {"size", json::fp_t{0.25, 2}}
                     }),
                     json::map({
                       {"name",std::string("arterial")},
                       {"level", static_cast<uint64_t>(1)},
-                      {"size", static_cast<long double>(1)},
+                      {"size", json::fp_t{1, 0}},
                       {"importance_cutoff",std::string("Tertiary")}
                     }),
                     json::map({
                       {"name",std::string("highway")},
                       {"level", static_cast<uint64_t>(0)},
-                      {"size", static_cast<long double>(4)},
+                      {"size", json::fp_t{4,0}},
                       {"importance_cutoff",std::string("Trunk")}
                     })
                   })
@@ -86,19 +87,19 @@ void write_config(const std::string& filename) {
             {"bicycle", json::map({})},
             {"auto", json::map
               ({
-                {"maneuver_penalty", static_cast<long double>(5.0)},
-                {"gate_cost", static_cast<long double>(30.0)},
-                {"toll_booth_cost", static_cast<long double>(15.0)},
-                {"toll_booth_penalty", static_cast<long double>(0.0)}
+                {"maneuver_penalty", json::fp_t{5.0, 0}},
+                {"gate_cost", json::fp_t{30.0, 0}},
+                {"toll_booth_cost", json::fp_t{15.0, 0}},
+                {"toll_booth_penalty", json::fp_t{0.0, 0}}
               })
             },
             {"pedestrian", json::map
               ({
-                {"walking_speed", static_cast<long double>(5.1)},
-                {"walkway_factor", static_cast<long double>(0.9)},
-                {"alley_factor", static_cast<long double>(2.0)},
-                {"driveway_factor", static_cast<long double>(2.0)},
-                {"step_penalty", static_cast<long double>(30.0)}
+                {"walking_speed", json::fp_t{5.1, 0}},
+                {"walkway_factor", json::fp_t{0.9, 0}},
+                {"alley_factor", json::fp_t{2.0, 0}},
+                {"driveway_factor", json::fp_t{2.0, 0}},
+                {"step_penalty", json::fp_t{30.0, 0}}
               })
             }
           })
@@ -148,8 +149,8 @@ json::ArrayPtr locations(const std::vector<Location>& loc_list){
 
     auto location = json::map({});
 
-    location->emplace("lat", static_cast<long double>(loc.latlng_.lat()));
-    location->emplace("lon",static_cast<long double>(loc.latlng_.lng()));
+    location->emplace("lat", json::fp_t{loc.latlng_.lat(),6});
+    location->emplace("lon",json::fp_t{loc.latlng_.lng(),6});
     location->emplace(
         "type",
         (loc.stoptype_ == Location::StopType::THROUGH ?
@@ -212,6 +213,19 @@ void TestCustomRouteHandler() {
   LOG_DEBUG(handler.Action());
 }
 
+void TestLocateHandler() {
+  boost::property_tree::ptree config;
+  boost::property_tree::read_json("test/test_config", config);
+
+  //make the input
+  boost::property_tree::ptree request =
+    make_json_request(47.139815, 9.525708, 47.167321, 9.509609, "auto");
+
+  //run the route
+  valhalla::tyr::LocateHandler handler(config, request);
+  LOG_DEBUG(handler.Action());
+}
+
 }
 
 int main() {
@@ -221,9 +235,9 @@ int main() {
 
   suite.test(TEST_CASE(TestCustomRouteHandler));
 
-  //suite.test(TEST_CASE(TestNearestHanlder));
+  //suite.test(TEST_CASE(TestNearestHandler));
 
-  //suite.test(TEST_CASE(TestLocateHanlder));
+  suite.test(TEST_CASE(TestLocateHandler));
 
   return suite.tear_down();
 }
