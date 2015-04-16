@@ -4,6 +4,7 @@
 #include <ostream>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/python/str.hpp>
@@ -11,15 +12,16 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/graphid.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/odin/directionsbuilder.h>
+#include <valhalla/odin/util.h>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "tyr/json.h"
@@ -288,6 +290,12 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
   // Get the config for the graph reader
   reader_.reset(new valhalla::baldr::GraphReader(config.get_child("mjolnir.hierarchy")));
 
+  // Grab the directions options, if they exist
+  auto directions_options_ptree_ptr = request.get_child_optional("directions_options");
+  if (directions_options_ptree_ptr) {
+    directions_options_ptree_ = *directions_options_ptree_ptr;
+  }
+
   // TODO - replace this below when we pass down to Odin and get back info
   // in the proto
   // Get the units (defaults to kilometers)
@@ -341,7 +349,9 @@ std::string CustomRouteHandler::Action() {
 
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
-  valhalla::odin::TripDirections trip_directions = directions_builder.Build(trip_path);
+  valhalla::odin::TripDirections trip_directions = directions_builder.Build(
+      valhalla::odin::GetDirectionsOptions(directions_options_ptree_),
+      trip_path);
 
   //make some json
   std::ostringstream stream;
