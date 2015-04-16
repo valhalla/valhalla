@@ -128,7 +128,8 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    // Set a pointer to the sign list
    signs_ = reinterpret_cast<Sign*>(ptr);
    ptr += header_->signcount() * sizeof(Sign);
-   // Set a pointer to the sign list
+
+   // Set a pointer to the admininstrative information list
    admins_ = reinterpret_cast<Admin*>(ptr);
    ptr += header_->admincount() * sizeof(Admin);
 
@@ -319,6 +320,247 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   }
   return signs;
+}
+
+// Get the next departure given the directed edge Id and the current
+// time (seconds from midnight).
+const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
+                 const uint32_t current_time) const {
+  uint32_t count = header_->departurecount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Binary search
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (departures_[mid].edgeid() == edgeid) {
+      found = true;
+      break;
+    }
+    if (edgeid < departures_[mid].edgeid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  if (found) {
+    if (departures_[mid].departure_time() > current_time) {
+      // Back up until a departure from this edge has departure time
+      // less than the current time
+      while (mid > 0 &&
+             departures_[mid-1].edgeid() == edgeid &&
+             departures_[mid-1].departure_time() >= current_time) {
+        mid--;
+      }
+      return &departures_[mid];
+    } else {
+      // Iterate through departures until one is found that departs after
+      // current time
+      while (mid+1 < count &&
+          departures_[mid+1].edgeid() == edgeid &&
+          departures_[mid+1].departure_time() <= current_time) {
+        mid++;
+      }
+      if (departures_[mid].departure_time() >= current_time) {
+        return &departures_[mid];
+      } else {
+        // TODO - maybe wrap around, try next day?
+        LOG_WARN("No more departures  found for edgeid = " +
+                std::to_string(edgeid));
+        return nullptr;
+      }
+    }
+  } else {
+    LOG_ERROR("No departures  found for edgeid = " + std::to_string(edgeid));
+    return nullptr;
+  }
+}
+
+// Get the transit trip given its trip Id.
+const TransitTrip* GraphTile::GetTransitTrip(const uint32_t tripid) const {
+  uint32_t count = header_->tripcount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Binary search - trip Ids should be unique
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_trips_[mid].tripid() == tripid) {
+      return &transit_trips_[mid];
+    }
+    if (tripid < transit_trips_[mid].tripid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  // Not found
+  LOG_ERROR("No trip found for tripid = " + std::to_string(tripid));
+  return nullptr;
+}
+
+// Get the transit stop given its stop Id.
+const TransitStop* GraphTile::GetTransitStop(const uint32_t stopid) const {
+  uint32_t count = header_->stopcount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Binary search - stop Ids should be unique
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_stops_[mid].stopid() == stopid) {
+      return &transit_stops_[mid];
+    }
+    if (stopid < transit_stops_[mid].stopid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  // Not found
+  LOG_ERROR("No trip found for stopid = " + std::to_string(stopid));
+  return nullptr;
+}
+
+// Get the transit route given its route Id.
+const TransitRoute* GraphTile::GetTransitRoute(const uint32_t routeid) const {
+  uint32_t count = header_->routecount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Binary search - stop Ids should be unique
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_routes_[mid].routeid() == routeid) {
+      return &transit_routes_[mid];
+    }
+    if (routeid < transit_routes_[mid].routeid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  // Not found
+  LOG_ERROR("No trip found for routeid = " + std::to_string(routeid));
+  return nullptr;
+}
+
+// Get a pointer to the first transfer record given the stop Id and also
+// compute the number of transfer records for the stop.
+std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
+              const uint32_t stopid) const {
+  uint32_t count = header_->transfercount();
+  if (count == 0) {
+    return {nullptr, 0};
+  }
+
+  // Binary search
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_transfers_[mid].from_stopid() == stopid) {
+      found = true;
+      break;
+    }
+    if (stopid < transit_transfers_[mid].from_stopid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  if (found) {
+    // Back up while prior is equal (or at the beginning)
+    while (mid > 0 &&
+          transit_transfers_[mid-1].from_stopid() == stopid) {
+      mid--;
+    }
+
+    // Set the start and increment until not equal to get the count
+    uint32_t n = 0;
+    TransitTransfer* start = &transit_transfers_[mid];
+    while (transit_transfers_[mid].from_stopid() == stopid && mid < count) {
+      n++;
+      mid++;
+    }
+    return {start, n};
+  } else {
+    LOG_ERROR("No transfers found from stopid = " + std::to_string(stopid));
+    return {nullptr, 0};
+  }
+}
+
+// Get a pointer to the first calendar exception record given the service
+// Id and compute the number of calendar exception records.
+ std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
+               const uint32_t serviceid) const {
+  uint32_t count = header_->calendarcount();
+  if (count == 0) {
+    return {nullptr, 0};
+  }
+
+  // Binary search
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_exceptions_[mid].serviceid() == serviceid) {
+      found = true;
+      break;
+    }
+    if (serviceid < transit_exceptions_[mid].serviceid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  if (found) {
+    // Back up while prior is equal (or at the beginning)
+    while (mid > 0 &&
+          transit_exceptions_[mid-1].serviceid() == serviceid) {
+      mid--;
+    }
+
+    // Set the start and increment until not equal to get the count
+    uint32_t n = 0;
+    TransitCalendar* start = &transit_exceptions_[mid];
+    while (transit_exceptions_[mid].serviceid() == serviceid && mid < count) {
+      n++;
+      mid++;
+    }
+    return {start, n};
+  } else {
+    LOG_ERROR("No calendar exceptions found for serviceid = " +
+                  std::to_string(serviceid));
+    return {nullptr, 0};
+  }
 }
 
 }

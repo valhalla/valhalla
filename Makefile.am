@@ -52,6 +52,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/pathlocation.h \
 	valhalla/baldr/sign.h \
         valhalla/baldr/signinfo.h \
+	valhalla/baldr/srtmtile.h \
 	valhalla/baldr/tilehierarchy.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
@@ -79,6 +80,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/pathlocation.cc \
 	src/baldr/sign.cc \
         src/baldr/signinfo.cc \
+        src/baldr/srtmtile.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -94,6 +96,13 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/transittrip.cc 
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
+
+#distributed executables
+bin_PROGRAMS = srtmtest
+srtmtest_SOURCES = \
+        src/baldr/srtmtest/srtmtest.cc
+srtmtest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+srtmtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ -lz libvalhalla_baldr.la
 
 # tests
 check_PROGRAMS = \
