@@ -115,7 +115,7 @@ json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
     seconds += static_cast<uint64_t>(maneuver.time());
   }
   route_summary->emplace("time", seconds);
-  route_summary->emplace("length", static_cast<long double>(length));
+  route_summary->emplace("length", json::fp_t{length, 3});
   return route_summary;
 }
 
@@ -130,8 +130,8 @@ json::ArrayPtr locations(const valhalla::odin::TripDirections& trip_directions){
     } else {
       loc->emplace("type", std::string("break"));
     }
-    loc->emplace("latitude", static_cast<long double>(location.ll().lat()));
-    loc->emplace("longitude",static_cast<long double>(location.ll().lng()));
+    loc->emplace("latitude", json::fp_t{location.ll().lat(), 6});
+    loc->emplace("longitude",json::fp_t{location.ll().lng(), 6});
     if (!location.name().empty())
       loc->emplace("name",location.name());
     if (!location.street().empty())
@@ -185,7 +185,7 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
     if (street_names->size())
       man->emplace("street_names", street_names);
     man->emplace("time", static_cast<uint64_t>(maneuver.time()));
-    man->emplace("length", static_cast<long double>(maneuver.length()));
+    man->emplace("length", json::fp_t{maneuver.length(), 3});
     man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
     man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
@@ -205,7 +205,7 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
   }
   leg->emplace("maneuvers", maneuvers);
   summary->emplace("time", seconds);
-  summary->emplace("length", static_cast<long double>(length));
+  summary->emplace("length", json::fp_t{length, 3});
   leg->emplace("summary",summary);
   leg->emplace("shape", trip_directions.shape());
 

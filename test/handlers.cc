@@ -44,18 +44,18 @@ void write_config(const std::string& filename) {
                     json::map({
                       {"name",std::string("local")},
                       {"level", static_cast<uint64_t>(2)},
-                      {"size", static_cast<long double>(0.25)}
+                      {"size", json::fp_t{0.25, 2}}
                     }),
                     json::map({
                       {"name",std::string("arterial")},
                       {"level", static_cast<uint64_t>(1)},
-                      {"size", static_cast<long double>(1)},
+                      {"size", json::fp_t{1, 0}},
                       {"importance_cutoff",std::string("Tertiary")}
                     }),
                     json::map({
                       {"name",std::string("highway")},
                       {"level", static_cast<uint64_t>(0)},
-                      {"size", static_cast<long double>(4)},
+                      {"size", json::fp_t{4,0}},
                       {"importance_cutoff",std::string("Trunk")}
                     })
                   })
@@ -87,19 +87,19 @@ void write_config(const std::string& filename) {
             {"bicycle", json::map({})},
             {"auto", json::map
               ({
-                {"maneuver_penalty", static_cast<long double>(5.0)},
-                {"gate_cost", static_cast<long double>(30.0)},
-                {"toll_booth_cost", static_cast<long double>(15.0)},
-                {"toll_booth_penalty", static_cast<long double>(0.0)}
+                {"maneuver_penalty", json::fp_t{5.0, 0}},
+                {"gate_cost", json::fp_t{30.0, 0}},
+                {"toll_booth_cost", json::fp_t{15.0, 0}},
+                {"toll_booth_penalty", json::fp_t{0.0, 0}}
               })
             },
             {"pedestrian", json::map
               ({
-                {"walking_speed", static_cast<long double>(5.1)},
-                {"walkway_factor", static_cast<long double>(0.9)},
-                {"alley_factor", static_cast<long double>(2.0)},
-                {"driveway_factor", static_cast<long double>(2.0)},
-                {"step_penalty", static_cast<long double>(30.0)}
+                {"walking_speed", json::fp_t{5.1, 0}},
+                {"walkway_factor", json::fp_t{0.9, 0}},
+                {"alley_factor", json::fp_t{2.0, 0}},
+                {"driveway_factor", json::fp_t{2.0, 0}},
+                {"step_penalty", json::fp_t{30.0, 0}}
               })
             }
           })
@@ -149,8 +149,8 @@ json::ArrayPtr locations(const std::vector<Location>& loc_list){
 
     auto location = json::map({});
 
-    location->emplace("latitude", static_cast<long double>(loc.latlng_.lat()));
-    location->emplace("longitude",static_cast<long double>(loc.latlng_.lng()));
+    location->emplace("latitude", json::fp_t{loc.latlng_.lat(),6});
+    location->emplace("longitude",json::fp_t{loc.latlng_.lng(),6});
     location->emplace(
         "type",
         (loc.stoptype_ == Location::StopType::THROUGH ?

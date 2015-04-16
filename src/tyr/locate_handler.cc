@@ -22,12 +22,6 @@ namespace {
   //TODO: move json header to baldr
   //TODO: make objects serialize themselves
 
-  json::ArrayPtr serialize_ll(const PointLL& ll) {
-    return json::array({
-      static_cast<long double>(ll.lat()), static_cast<long double>(ll.lng())
-    });
-  }
-
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader) {
     auto array = json::array({});
     std::unordered_multimap<uint64_t, PointLL> ids;
@@ -52,7 +46,8 @@ namespace {
           array->emplace_back(
             json::map({
               {"way_id", edge_info->wayid()},
-              {"correlated_lat_lon", serialize_ll(location.vertex())}
+              {"correlated_lat", json::fp_t{location.latlng_.lat(), 6}},
+              {"correlated_lon", json::fp_t{location.latlng_.lng(), 6}}
             })
           );
         }
@@ -68,14 +63,16 @@ namespace {
   json::MapPtr serialize(const PathLocation& location, GraphReader& reader) {
     return json::map({
       {"ways", serialize_edges(location, reader)},
-      {"input_lat_lon", serialize_ll(location.latlng_)}
+      {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
+      {"input_lon", json::fp_t{location.latlng_.lng(), 6}}
     });
   }
 
   json::MapPtr serialize(const PointLL& ll, const std::string& reason) {
     return json::map({
       {"ways", static_cast<nullptr_t>(nullptr)},
-      {"input_lat_lon", serialize_ll(ll)},
+      {"input_lat", json::fp_t{ll.lat(), 6}},
+      {"input_lon", json::fp_t{ll.lng(), 6}},
       {"reason", reason}
     });
   }

@@ -110,8 +110,7 @@ json::MapPtr route_summary(const valhalla::odin::TripDirections& trip_directions
 json::ArrayPtr via_points(const valhalla::odin::TripPath& trip_path){
   auto via_points = json::array({});
   for(const auto& location : trip_path.location()) {
-    via_points->emplace_back(json::array({static_cast<long double>(location.ll().lat()),
-            static_cast<long double>(location.ll().lng())}));
+    via_points->emplace_back(json::array({json::fp_t{location.ll().lat(),6}, json::fp_t{location.ll().lng(),6}}));
   }
   return via_points;
 }
