@@ -218,6 +218,12 @@ void test_from_json() {
   if ((loc.country_ != country))
     throw std::runtime_error("Json location parsing failed");
 
+  // Test wrong thing is always break
+  loc = Location::FromJson(
+      make_json(lat, lng, "this isnt valid"));
+  if ((loc.stoptype_ != Location::StopType::BREAK))
+    throw std::runtime_error("Json location parsing failed");
+
   // Test everything
   loc = Location::FromJson(
       make_json(lat, lng, type_default, heading_str, name, street, city, state,
