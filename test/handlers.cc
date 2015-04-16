@@ -148,8 +148,8 @@ json::ArrayPtr locations(const std::vector<Location>& loc_list){
 
     auto location = json::map({});
 
-    location->emplace("latitude", static_cast<long double>(loc.latlng_.lat()));
-    location->emplace("longitude",static_cast<long double>(loc.latlng_.lng()));
+    location->emplace("lat", static_cast<long double>(loc.latlng_.lat()));
+    location->emplace("lon",static_cast<long double>(loc.latlng_.lng()));
     location->emplace(
         "type",
         (loc.stoptype_ == Location::StopType::THROUGH ?

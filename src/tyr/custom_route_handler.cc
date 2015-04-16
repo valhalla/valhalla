@@ -130,8 +130,8 @@ json::ArrayPtr locations(const valhalla::odin::TripDirections& trip_directions){
     } else {
       loc->emplace("type", std::string("break"));
     }
-    loc->emplace("latitude", static_cast<long double>(location.ll().lat()));
-    loc->emplace("longitude",static_cast<long double>(location.ll().lng()));
+    loc->emplace("lat", static_cast<long double>(location.ll().lat()));
+    loc->emplace("lon",static_cast<long double>(location.ll().lng()));
     if (!location.name().empty())
       loc->emplace("name",location.name());
     if (!location.street().empty())
