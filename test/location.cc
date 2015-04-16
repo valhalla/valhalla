@@ -105,7 +105,7 @@ void test_from_csv() {
 }
 
 std::string make_json(float lat, float lng,
-                      std::string type = "break",
+                      std::string type = "",
                       std::string heading = "",
                       std::string name = "",
                       std::string street = "",
@@ -116,8 +116,9 @@ std::string make_json(float lat, float lng,
   std::string json = "{";
   json += "\"latitude\":" + std::to_string(lat);
   json += ",\"longitude\":" + std::to_string(lng);
-  json += ",\"type\":\"" + type + "\"";
 
+  if(!type.empty())
+    json += ",\"type\":\"" + type + "\"";
   if (!heading.empty())
     json += ",\"heading\":" + heading;
   if (!name.empty())
@@ -136,122 +137,6 @@ std::string make_json(float lat, float lng,
 
   //LOG_INFO("json=" + json);
   return json;
-}
-
-boost::property_tree::ptree make_ptree(float lat, float lng,
-                                std::string type = "break",
-                                std::string heading = "",
-                                std::string name = "",
-                                std::string street = "",
-                                std::string city = "",
-                                std::string state = "",
-                                std::string postal_code = "",
-                                std::string country = "") {
-  std::string json = make_json(lat, lng, type, heading, name, street, city,
-                               state, postal_code, country);
-  //LOG_INFO("json=" + json);
-  std::stringstream stream;
-  stream << json.c_str();
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(stream, pt);
-  return pt;
-}
-
-void test_from_ptree() {
-
-  float lat = 40.748174;
-  float lng = -73.984984;
-  std::string type_default = "break";
-  std::string type_specified = "through";
-  int heading = 200;
-  std::string name = "Empire State Building";
-  std::string street = "350 5th Avenue";
-  std::string city = "New York";
-  std::string state = "NY";
-  std::string postal_code = "10118-0110";
-  std::string country = "US";
-
-  try {
-    boost::property_tree::ptree pt;
-    Location loc = Location::FromPtree(pt);
-    throw std::runtime_error("This should have been malformed ptree");
-  } catch (...) {
-  }
-
-  // Test Lat/Lng and default type
-  Location loc = Location::FromPtree(make_ptree(lat, lng));
-  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
-      || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
-      || (loc.stoptype_ != Location::StopType::BREAK))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test Lat/Lng and specified type
-  loc = Location::FromPtree(make_ptree(lat, lng, type_specified));
-  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
-      || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
-      || (loc.stoptype_ != Location::StopType::THROUGH))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test Lat/Lng, specified type, and heading
-  std::string heading_str = std::to_string(heading);
-  loc = Location::FromPtree(make_ptree(lat, lng, type_default, heading_str));
-  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
-      || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
-      || (loc.stoptype_ != Location::StopType::BREAK)
-      || (loc.heading_ != heading_str))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test name
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name));
-  if ((loc.name_ != name))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test street
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name, street));
-  if ((loc.street_ != street))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test city
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name, street, city));
-  if ((loc.city_ != city))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test state
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name, street, city, state));
-  if ((loc.state_ != state))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test postal code
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name, street, city, state, postal_code));
-  if ((loc.zip_ != postal_code))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test country
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, "", name, street, city, state, postal_code, country));
-  if ((loc.country_ != country))
-    throw std::runtime_error("Ptree location parsing failed");
-
-  // Test everything
-  loc = Location::FromPtree(
-      make_ptree(lat, lng, type_default, heading_str, name, street, city, state,
-                 postal_code, country));
-  if (!valhalla::midgard::equal<float>(loc.latlng_.lat(), lat)
-      || !valhalla::midgard::equal<float>(loc.latlng_.lng(), lng)
-      || (loc.stoptype_ != Location::StopType::BREAK)
-      || (loc.heading_ != heading_str)
-      || (loc.name_ != name)
-      || (loc.street_ != street)
-      || (loc.city_ != city)
-      || (loc.state_ != state)
-      || (loc.zip_ != postal_code)
-      || (loc.country_ != country))
-    throw std::runtime_error("Ptree location parsing failed");
 }
 
 void test_from_json() {
@@ -356,8 +241,6 @@ int main(void) {
   test::suite suite("location");
 
   suite.test(TEST_CASE(test_from_csv));
-
-  suite.test(TEST_CASE(test_from_ptree));
 
   suite.test(TEST_CASE(test_from_json));
 
