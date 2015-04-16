@@ -42,6 +42,7 @@ class CustomRouteHandler : public Handler {
   std::string units_;
   valhalla::sif::cost_ptr_t cost_;
   std::unique_ptr<valhalla::baldr::GraphReader> reader_;
+  boost::property_tree::ptree directions_options_ptree_;
 };
 
 }
