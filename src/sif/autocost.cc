@@ -259,20 +259,26 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
   if (crossing) {
     return 2.0f;
   }
-  if (drive_on_right) {
-    if (turn_type <= Turn::Type::kRight)
-      return 0.5f;
-    else if (turn_type == Turn::Type::kSharpRight)
-      return 1.0f;
-    else if (turn_type <= Turn::Type::kSharpLeft) // Reverse and sharp left
-      return 5.0f;
-    else if (turn_type <= Turn::Type::kLeft)
-      return 2.5f;
-    else // Slight left
-      return 0.75f;
-  } else {
-    // TODO - reverse logic
-    return 1.0f;
+
+  switch (turn_type) {
+  case Turn::Type::kStraight:
+    return 0.5f;
+
+  case Turn::Type::kSlightLeft:
+  case Turn::Type::kSlightRight:
+    return 0.75f;
+
+  case Turn::Type::kRight:
+    return (drive_on_right) ? 1.0f : 2.5f;
+
+  case Turn::Type::kLeft:
+    return (drive_on_right) ? 2.5f : 1.0f;
+
+  case Turn::Type::kSharpRight:
+    return (drive_on_right) ? 1.25f : 5.0f;
+
+  case Turn::Type::kSharpLeft:
+    return (drive_on_right) ? 5.0f : 1.25f;
   }
 }
 
