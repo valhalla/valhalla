@@ -13,7 +13,8 @@ constexpr auto kTextInstructionInitialCapacity = 128;
 namespace valhalla {
 namespace odin {
 
-void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
+void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
+                             std::list<Maneuver>& maneuvers) {
   for (auto& maneuver : maneuvers) {
     switch (maneuver.type()) {
       case TripDirections_Maneuver_Type_kStartRight:

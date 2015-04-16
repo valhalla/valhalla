@@ -38,7 +38,8 @@ endif
 # proto generation etc
 PROTO_FILES = \
 	proto/trippath.proto \
-	proto/tripdirections.proto
+	proto/tripdirections.proto \
+	proto/directions_options.proto
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_odin_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
@@ -50,6 +51,7 @@ lib_LTLIBRARIES = libvalhalla_odin.la
 nobase_include_HEADERS = \
 	valhalla/proto/trippath.pb.h \
 	valhalla/proto/tripdirections.pb.h \
+	valhalla/proto/directions_options.pb.h \
 	valhalla/odin/directionsbuilder.h \
 	valhalla/odin/maneuversbuilder.h \
 	valhalla/odin/narrativebuilder.h \
@@ -61,6 +63,7 @@ nobase_include_HEADERS = \
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
+	src/proto/directions_options.pb.cc \
 	src/odin/directionsbuilder.cc \
 	src/odin/maneuversbuilder.cc \
 	src/odin/narrativebuilder.cc \

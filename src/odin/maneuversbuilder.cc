@@ -5,6 +5,7 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
 #include <proto/tripdirections.pb.h>
+#include <proto/directions_options.pb.h>
 #include <odin/maneuversbuilder.h>
 #include <odin/signs.h>
 
@@ -23,8 +24,9 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-ManeuversBuilder::ManeuversBuilder(EnhancedTripPath* etp)
-    : trip_path_(etp) {
+ManeuversBuilder::ManeuversBuilder(const DirectionsOptions& directions_options,
+                                   EnhancedTripPath* etp)
+    : directions_options_(directions_options), trip_path_(etp) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -477,7 +479,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   UpdateInternalTurnCount(maneuver, node_index);
 
   // Distance
-  maneuver.set_distance(maneuver.distance() + prev_edge->length());
+  maneuver.set_distance(
+      maneuver.distance() + prev_edge->GetLength(directions_options_.units()));
 
   // Time
   maneuver.set_time(
