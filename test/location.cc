@@ -114,8 +114,8 @@ std::string make_json(float lat, float lng,
                       std::string postal_code = "",
                       std::string country = "") {
   std::string json = "{";
-  json += "\"latitude\":" + std::to_string(lat);
-  json += ",\"longitude\":" + std::to_string(lng);
+  json += "\"lat\":" + std::to_string(lat);
+  json += ",\"lon\":" + std::to_string(lng);
   json += ",\"type\":\"" + type + "\"";
 
   if (!heading.empty())

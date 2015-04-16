@@ -18,7 +18,7 @@ Location::Location(const midgard::PointLL& latlng, const StopType& stoptype)
 Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   Location location(
-      { pt.get<float>("longitude"), pt.get<float>("latitude") },
+      { pt.get<float>("lon"), pt.get<float>("lat") },
       (pt.get<std::string>("type") == "through" ?
           StopType::THROUGH : StopType::BREAK));
   //LOG_INFO("LAT=" + std::to_string(location.latlng_.lat()));
