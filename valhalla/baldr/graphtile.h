@@ -138,6 +138,62 @@ class GraphTile {
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx) const;
 
+  /**
+   * Get the next departure given the directed edge Id and the current
+   * time (seconds from midnight). TODO - what if crosses midnight?
+   * @param   edgeid  Directed edge Id.
+   * @param   current_time  Current time (seconds from midnight).
+   * @return  Returns a pointer to the transit departure information.
+   *          Returns nullptr if no departures are found.
+   */
+  const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
+                                           const uint32_t current_time) const;
+
+  /**
+   * Get the transit trip given its trip Id.
+   * @param   tripid  Trip Id.
+   * @return  Returns a pointer to the transit trip information. Returns
+   *          nullptr if the trip is not found.
+   */
+  const TransitTrip* GetTransitTrip(const uint32_t tripid) const;
+
+  /**
+   * Get the transit stop given its stop Id.
+   * @param   stopid  Stop Id.
+   * @return  Returns a pointer to the transit stop information. Returns
+   *          nullptr if the stop is not found.
+   */
+  const TransitStop* GetTransitStop(const uint32_t stopid) const;
+
+  /**
+   * Get the transit route given its route Id.
+   * @param   routeid  Route Id.
+   * @return  Returns a pointer to the transit route information. Returns
+   *          nullptr if the route is not found.
+   */
+  const TransitRoute* GetTransitRoute(const uint32_t routeid) const;
+
+  /**
+   * Get a pointer to the first transfer record given the stop Id and
+   * compute the number of transfer records for the stop.
+   * @param   stopid  Stop Id.
+   * @return  Returns a pair with a pointer to the initial transfer record
+   *          and a count of transfer records from the given stop Id.
+   */
+  std::pair<TransitTransfer*, uint32_t> GetTransfers(
+                const uint32_t stopid) const;
+
+  /**
+   * Get a pointer to the first calendar exception record given the service
+   * Id and compute the number of calendar exception records.
+   * @param   serviceid  Service Id.
+   * @return  Returns a pair with a pointer to the initial calendar exception
+   *          record and a count of calendar exception records for this
+   *          service Id.
+   */
+  std::pair<TransitCalendar*, uint32_t> GetCalendarExceptions(
+                const uint32_t serviceid) const;
+
  protected:
 
   // Size of the tile in bytes
@@ -158,22 +214,23 @@ class GraphTile {
   // indexed directly.
   DirectedEdge* directededges_;
 
-  // Transit departures (indexed by directed edge index)
+  // Transit departures, many per index (indexed by directed edge index and
+  // sorted by departure time)
   TransitDeparture* departures_;
 
-  // Transit trips (indexed by trip Id)
+  // Transit trips (indexed by trip Id - unique)
   TransitTrip* transit_trips_;
 
-  // Transit stops (indexed by stop Id)
+  // Transit stops (indexed by stop Id - unique)
   TransitStop* transit_stops_;
 
-  // Transit route (indexed by route Id)
+  // Transit route (indexed by route Id - unique)
   TransitRoute* transit_routes_;
 
-  // Transit transfers (indexed by stop Id)
+  // Transit transfers, 1 or more per index (indexed by from stop Id)
   TransitTransfer* transit_transfers_;
 
-  // Transit calendar exceptions (indexed by service Id)
+  // Transit calendar exceptions, 1 or more per index (indexed by service Id)
   TransitCalendar* transit_exceptions_;
 
   // Signs (indexed by directed edge index)

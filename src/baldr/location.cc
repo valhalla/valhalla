@@ -19,8 +19,8 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
 
   Location location(
       { pt.get<float>("lon"), pt.get<float>("lat") },
-      (pt.get<std::string>("type") == "through" ?
-          StopType::THROUGH : StopType::BREAK));
+      (pt.get<std::string>("type", "break") == "through" ?
+        StopType::THROUGH : StopType::BREAK));
   //LOG_INFO("LAT=" + std::to_string(location.latlng_.lat()));
   //LOG_INFO("LNG=" + std::to_string(location.latlng_.lng()));
   //LOG_INFO("TYPE=" + pt.get<std::string>("type"));
