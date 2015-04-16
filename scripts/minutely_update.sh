@@ -1,7 +1,9 @@
 #!/bin/bash 
 #This script is based on the script located on github:
 #https://github.com/artemp/MapQuest-Render-Stack/blob/master/scripts/minutely_update.sh
-BASE_DIR="/data/osm_data"
+BASE_DIR=""
+WORKDIR_OSM=""
+CHANGESET_DIR=""
 
 # programs we're going to use
 OSMOSIS="/usr/bin/osmosis"
@@ -11,12 +13,6 @@ if [ ! -e $OSMOSIS ]; then
   echo "osmosis ($OSMOSIS) not installed, but is required."
   exit 1
 fi
-
-# directories used by the update process
-WORKDIR_OSM="$BASE_DIR/osmosis_work_dir"
-CHANGESET_DIR="$WORKDIR_OSM/minutely"
-# make the directories
-mkdir -p $WORKDIR_OSM $CHANGESET_DIR 
 
 osmosis_fetch_changeset() {
   if [ ! -e $WORKDIR_OSM/state.txt ]; then
@@ -39,9 +35,10 @@ osmosis_cleanup() {
 }
 
 update() {
+
   osmosis_fetch_changeset
 
-  PLANET=$BASE_DIR/planet/$1  
+  PLANET=$BASE_DIR/$1 
 
   $OSMOSIS --rxc $CHANGESET_FILE --rb $PLANET --ac --wb $PLANET.new
 
@@ -65,11 +62,15 @@ update() {
 }
 
 initialize() {
+
+  # make the directories
+  mkdir -p $WORKDIR_OSM $CHANGESET_DIR
+
   if [ -e $WORKDIR_OSM/state.txt ]; then
     echo "Osmosis state file found - has this already been initialized?"
     exit 1
   fi
-  PLANET=$BASE_DIR/planet/$1
+  PLANET=$BASE_DIR/$1
   if [ ! -e $PLANET ]; then
     echo "Planet file not found - cannot initialize without this."
     exit 1
@@ -89,9 +90,15 @@ initialize() {
   wget "http://osm.personalwerk.de/replicate-sequences/?$planet_timestamp" -O $WORKDIR_OSM/state.txt;
 }
 
+# directories used by the update process
+BASE_DIR=$2
+WORKDIR_OSM="$BASE_DIR/osmosis_work_dir"
+WORKDIR_OSM=$WORKDIR_OSM.$3
+CHANGESET_DIR="$WORKDIR_OSM/minutely"
+
 # make sure only one is running at any time...
-LOCK_FILE="$BASE_DIR/locks/minutely.lock"
-mkdir -p "$BASE_DIR/locks"
+LOCK_FILE="$WORKDIR_OSM/locks/minutely.lock"
+mkdir -p "$WORKDIR_OSM/locks"
 
 (set -C; : > $LOCK_FILE) 2> /dev/null
 
@@ -104,13 +111,13 @@ trap 'rm $LOCK_FILE' EXIT 1 2 3 6
 
 case "$1" in
   update)
-   update $2;;
+   update $3;;
 
   initialize)
-    initialize $2;;
+    initialize $3;;
 
   *)
-    echo "Usage: $0 {update|initialize pbf_file}"
+    echo "Usage: $0 {update|initialize pbf_directory pbf_file}"
     echo 
     echo "  update:     Update the database using Osmosis and minutely diffs."
     echo
