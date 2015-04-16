@@ -83,6 +83,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   }
 
   // Populate maneuvers
+  float leg_length = 0.0f;
+  uint32_t leg_time = 0;
   for (const auto& maneuver : maneuvers) {
     auto* trip_maneuver = trip_directions.add_maneuver();
     trip_maneuver->set_type(maneuver.type());
@@ -91,7 +93,9 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->add_street_name(street_name->value());
     }
     trip_maneuver->set_length(maneuver.distance());
+    leg_length += maneuver.distance();
     trip_maneuver->set_time(maneuver.time());
+    leg_time += maneuver.time();
     trip_maneuver->set_begin_cardinal_direction(
         maneuver.begin_cardinal_direction());
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
@@ -100,6 +104,10 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     trip_maneuver->set_portions_toll(maneuver.portions_toll());
     trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
   }
+
+  // Populate summary
+  trip_directions.mutable_summary()->set_length(leg_length);
+  trip_directions.mutable_summary()->set_time(leg_time);
 
   // Populate shape
   trip_directions.set_shape(trip_path.shape());
