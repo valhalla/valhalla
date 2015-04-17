@@ -16,6 +16,12 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/signinfo.h>
+#include <valhalla/baldr/transitcalendar.h>
+#include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transitroute.h>
+#include <valhalla/baldr/transitstop.h>
+#include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/transittrip.h>
 
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
@@ -67,9 +73,9 @@ class GraphTileBuilder : public baldr::GraphTile {
  * @param directededges Updated list of edges.
  */
  void Update(const baldr::TileHierarchy& hierarchy,
- const GraphTileHeaderBuilder& hdr,
- const std::vector<NodeInfoBuilder>& nodes,
- const std::vector<DirectedEdgeBuilder>& directededges);
+             const GraphTileHeaderBuilder& hdr,
+             const std::vector<NodeInfoBuilder>& nodes,
+             const std::vector<DirectedEdgeBuilder>& directededges);
 
  /**
 * Update a graph tile with new header, nodes, and directed edges. Used
@@ -80,9 +86,9 @@ class GraphTileBuilder : public baldr::GraphTile {
 * @param directededges Updated list of edges.
 */
 void Update(const baldr::TileHierarchy& hierarchy,
-GraphTileHeaderBuilder& hdr,
-const std::vector<NodeInfoBuilder>& nodes,
-const std::vector<DirectedEdgeBuilder>& directededges);
+            GraphTileHeaderBuilder& hdr,
+            const std::vector<NodeInfoBuilder>& nodes,
+            const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
    * Update a graph tile with new header, nodes, directed edges, signs,
@@ -103,10 +109,49 @@ const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
    * Add a node and its outbound edges.
+   * @param  node   Node information builder.
+   * @param  directededges  List of directed edges (builders) outbound
+   *                        from the node.
    */
   void AddNodeAndDirectedEdges(
       const NodeInfoBuilder& node,
       const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Add a transit departure.
+   * @param  departure  Transit departure record.
+   */
+  void AddTransitDeparture(const baldr::TransitDeparture& departure);
+
+  /**
+   * Add a transit trip.
+   * @param  trip  Transit trip record.
+   */
+  void AddTransitTrip(const baldr::TransitTrip& trip);
+
+  /**
+   * Add a transit stop.
+   * @param  stop  Transit stop record.
+   */
+  void AddTransitStop(const baldr::TransitStop& stop);
+
+  /**
+   * Add a transit route.
+   * @param  route  Transit route record.
+   */
+  void AddTransitRoute(const baldr::TransitRoute& route);
+
+  /**
+   * Add a transit transfer.
+   * @param  transfer  Transit transfer record.
+   */
+  void AddTransitTransfer(const baldr::TransitTransfer& transfer);
+
+  /**
+   * Add a transit calendar exception.
+   * @param  exception  Transit calendar exception record.
+   */
+  void AddTransitCalendar(const baldr::TransitCalendar& exception);
 
   /**
    * Add sign information.
@@ -204,6 +249,25 @@ const std::vector<DirectedEdgeBuilder>& directededges);
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
   std::vector<DirectedEdgeBuilder> directededges_builder_;
+
+  // List of transit departures. Sorted by directed edge Id and
+  // departure time
+  std::vector<baldr::TransitDeparture> departures_;
+
+  // Transit trips. Sorted by trip Id.
+  std::vector<baldr::TransitTrip> transit_trips_;
+
+  // Transit stops. Sorted by stop Id.
+  std::vector<baldr::TransitStop> transit_stops_;
+
+  // Transit route. Sorted by route Id.
+  std::vector<baldr::TransitRoute> transit_routes_;
+
+  // Transit transfers. Sorted by from stop Id.
+  std::vector<baldr::TransitTransfer> transit_transfers_;
+
+  // Transit calendar exceptions. Sorted by service Id.
+  std::vector<baldr::TransitCalendar> transit_exceptions_;
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
