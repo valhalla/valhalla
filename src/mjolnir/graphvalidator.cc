@@ -38,7 +38,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   const NodeInfo* nodeinfo = tile->node(endnode.id());
 
   // Set the end node iso.  Used for country crossings.
-  endnodeiso_ = tile->admin(nodeinfo->admin_index()).country_iso();
+  endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
 
   // TODO - check if more than 1 edge has matching startnode and
   // distance!
@@ -177,7 +177,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
 
         const GraphTile* tile = graphreader_.GetGraphTile(node);
-        std::string begin_node_iso = tile->admin(nodeinfo.admin_index()).country_iso();
+        std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
         // Go through directed edges and update data
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++) {
