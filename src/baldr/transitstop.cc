@@ -46,5 +46,10 @@ uint32_t TransitStop::fare_zoneid() const {
   return fare_zoneid_;
 }
 
+// operator < - for sorting. Sort by stop Id.
+bool TransitStop::operator < (const TransitStop& other) const {
+  return stopid() < other.stopid();
+}
+
 }
 }

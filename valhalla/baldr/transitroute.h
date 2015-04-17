@@ -54,6 +54,12 @@ class TransitRoute {
    */
   uint32_t desc_index() const;
 
+  /**
+   * operator < - for sorting. Sort by route Id.
+   * @param  other  Other transit route to compare to.
+   * @return  Returns true if route Id < other route Id.
+   */
+  bool operator < (const TransitRoute& other) const;
 
  protected:
   // Internal route Id. Used to lookup/index routes.

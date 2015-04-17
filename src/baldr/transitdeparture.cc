@@ -81,5 +81,14 @@ uint32_t TransitDeparture::serviceid() const {
   return serviceid_;
 }
 
+// operator < - for sorting. Sort by edge Id and departure time.
+bool TransitDeparture::operator < (const TransitDeparture& other) const {
+  if (edgeid() == other.edgeid()) {
+    return departure_time() < other.departure_time();
+  } else {
+    return edgeid() < other.edgeid();
+  }
+}
+
 }
 }

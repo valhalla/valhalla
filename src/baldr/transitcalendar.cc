@@ -27,5 +27,14 @@ CalendarExceptionType TransitCalendar::type() const {
   return static_cast<CalendarExceptionType>(exception_.type);
 }
 
+// operator < - for sorting. Sort by service Id and date.
+bool TransitCalendar::operator < (const TransitCalendar& other) const {
+  if (serviceid() == other.serviceid()) {
+    return date() < other.date();
+  } else {
+    return serviceid() < other.serviceid();
+  }
+}
+
 }
 }

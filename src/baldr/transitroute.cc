@@ -61,5 +61,10 @@ uint32_t TransitRoute::desc_index() const {
   return desc_index_;
 }
 
+// operator < - for sorting. Sort by route Id.
+bool TransitRoute::operator < (const TransitRoute& other) const {
+  return routeid() < other.routeid();
+}
+
 }
 }

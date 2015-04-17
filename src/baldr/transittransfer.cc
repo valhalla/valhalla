@@ -34,5 +34,14 @@ uint32_t TransitTransfer::mintime() const {
   return transfer_.mintime;
 }
 
+// operator < - for sorting. Sort by from stop Id and to stop Id.
+bool TransitTransfer::operator < (const TransitTransfer& other) const {
+  if (from_stopid() == other.from_stopid()) {
+    return to_stopid() < other.to_stopid();
+  } else {
+    return from_stopid() < other.from_stopid();
+  }
+}
+
 }
 }
