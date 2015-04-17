@@ -448,12 +448,11 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
 
 // Get admininstrative index
 uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
-
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
-      if (boost::geometry::covered_by(p, poly.second))
-        return poly.first;
+    if (boost::geometry::covered_by(p, poly.second))
+      return poly.first;
   }
   return index;
 }
@@ -532,7 +531,6 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
 
       uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
                                             country_iso,state_iso,"","");
-
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
@@ -780,11 +778,21 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
-    //Creating a dummy admin at index 0.  Used if admins are not used/created.
+    // Create a dummy admin record at index 0. Used if admin records
+    // are not used/created or if none is found.
     tilebuilder.AddAdmin("None","None","","","","");
 
-    if (db_handle)
-      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id), tilebuilder);
+    // Get the admin polygons. If only one exists for the tile check if the
+    // tile is entirely inside the polygon
+    bool tile_within_one_admin = false;
+    if (db_handle) {
+      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id),
+                           tilebuilder);
+      if (polys.size() == 1) {
+        // TODO - check if tile bounding box is entirely inside the polygon...
+        tile_within_one_admin = true;
+      }
+    }
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfoBuilder> nodes;
@@ -800,11 +808,16 @@ void enhance(const boost::property_tree::ptree& pt, GraphReader& reader, IdTable
       NodeInfoBuilder nodeinfo = tilebuilder.node(i);
 
       // Get relative road density and local density
-      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(), stats.max_density, tiles, local_level);
+      uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),
+                                    stats.max_density, tiles, local_level);
 
-      // Enhance node attributes (TODO - timezone)
-      uint32_t admin_index = GetAdminId(polys, nodeinfo.latlng());
+      // Set admin index
+      uint32_t admin_index = (tile_within_one_admin) ?
+                    polys.begin()->first :
+                    GetAdminId(polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
+
+      // TODO - timezone
 
       // Set the country code
       std::string country_code = "";
