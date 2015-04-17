@@ -49,6 +49,13 @@ class TransitTrip {
    */
   uint32_t headsign_offset() const;
 
+  /**
+   * operator < - for sorting. Sort by trip Id.
+   * @param  other  Other transit trip to compare to.
+   * @return  Returns true if trip Id < other trip Id.
+   */
+  bool operator < (const TransitTrip& other) const;
+
  protected:
   // Trip Id (internal) - for trip lookup
   uint32_t tripid_;

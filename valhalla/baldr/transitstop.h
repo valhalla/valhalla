@@ -55,6 +55,13 @@ class TransitStop {
    */
   uint32_t fare_zoneid() const;
 
+  /**
+   * operator < - for sorting. Sort by stop Id.
+   * @param  other  Other transit stop to compare to.
+   * @return  Returns true if stop Id < other stop Id.
+   */
+  bool operator < (const TransitStop& other) const;
+
  protected:
   // Internal stop Id. Used to lookup/index stops.
   uint32_t stopid_;

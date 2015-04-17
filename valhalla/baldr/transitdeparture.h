@@ -92,6 +92,14 @@ class TransitDeparture {
    */
   uint32_t serviceid() const;
 
+  /**
+   * operator < - for sorting. Sort by edge Id and departure time.
+   * @param  other  Other transit departure to compare to.
+   * @return  Returns true if edge Id < other edge Id or if edge Ids are
+   *          equal and departure < other departure.
+   */
+  bool operator < (const TransitDeparture& other) const;
+
  protected:
   // Edge Id - lookup departures by unique edge Id (which indicates a unique
   // departure / arrival stop pair.

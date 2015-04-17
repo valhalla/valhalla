@@ -35,6 +35,14 @@ class TransitCalendar {
   */
  CalendarExceptionType type() const;
 
+ /**
+  * operator < - for sorting. Sort by service Id and date.
+  * @param  other  Other transit calendar exception to compare to.
+  * @return  Returns true if service Id < other service Id or
+  *          service Ids are equal and date < other date.
+  */
+ bool operator < (const TransitCalendar& other) const;
+
  protected:
   // Service Id - used to index the calendar exceptions.
   uint32_t serviceid_;

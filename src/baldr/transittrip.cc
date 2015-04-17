@@ -40,5 +40,10 @@ uint32_t TransitTrip::headsign_offset() const {
   return headsign_offset_;
 }
 
+// operator < - for sorting. Sort by trip Id.
+bool TransitTrip::operator < (const TransitTrip& other) const {
+  return tripid() < other.tripid();
+}
+
 }
 }

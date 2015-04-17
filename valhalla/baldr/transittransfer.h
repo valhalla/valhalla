@@ -39,6 +39,15 @@ class TransitTransfer {
    */
   uint32_t mintime() const;
 
+  /**
+   * operator < - for sorting. Sort by from stop Id and to stop Id.
+   * @param  other  Other transit transfer to compare to.
+   * @return  Returns true if from stop Id < other from stop Id or
+   *          from stop Ids are equal and to stop Id < other to stop Id.
+   */
+  bool operator < (const TransitTransfer& other) const;
+
+
  protected:
   // From stop Id (internal)
   uint32_t from_stopid_;
