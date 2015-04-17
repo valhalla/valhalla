@@ -108,14 +108,8 @@ json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
   // TODO: multiple legs.
 
   auto route_summary = json::map({});
-  float length = 0.0f;
-  uint64_t seconds = 0, meters = 0;
-  for(const auto& maneuver : trip_directions.maneuver()) {
-    length += maneuver.length();
-    seconds += static_cast<uint64_t>(maneuver.time());
-  }
-  route_summary->emplace("time", seconds);
-  route_summary->emplace("length", json::fp_t{length, 3});
+  route_summary->emplace("time", static_cast<uint64_t>(trip_directions.summary().time()));
+  route_summary->emplace("length", json::fp_t{trip_directions.summary().length(), 3});
   return route_summary;
 }
 
@@ -162,14 +156,10 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
   auto legs = json::array({});
   auto leg = json::map({});
   auto summary = json::map({});
-  float length = 0.0f;
-  uint64_t seconds = 0;
   auto maneuvers = json::array({});
 
   for(const auto& maneuver : trip_directions.maneuver()) {
 
-    length += maneuver.length();
-    seconds += static_cast<uint64_t>(maneuver.time());
     auto man = json::map({});
 
     man->emplace("type", static_cast<uint64_t>(maneuver.type()));
@@ -204,8 +194,8 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
 
   }
   leg->emplace("maneuvers", maneuvers);
-  summary->emplace("time", seconds);
-  summary->emplace("length", json::fp_t{length, 3});
+  summary->emplace("time", static_cast<uint64_t>(trip_directions.summary().time()));
+  summary->emplace("length", json::fp_t{trip_directions.summary().length(), 3});
   leg->emplace("summary",summary);
   leg->emplace("shape", trip_directions.shape());
 
@@ -213,8 +203,9 @@ json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
   return legs;
 }
 
-void serialize(const valhalla::odin::TripDirections& trip_directions,
-               const std::string& units, std::ostringstream& stream) {
+void serialize(const valhalla::odin::DirectionsOptions& directions_options,
+               const valhalla::odin::TripDirections& trip_directions,
+               std::ostringstream& stream) {
 
   //TODO: worry about multipoint routes
 
@@ -228,7 +219,7 @@ void serialize(const valhalla::odin::TripDirections& trip_directions,
           {"legs", legs(trip_directions)},
           {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
           {"status", static_cast<uint64_t>(0)}, //0 success or 207 no route
-          {"units", units}
+          {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
       })
     }
   });
@@ -296,17 +287,6 @@ CustomRouteHandler::CustomRouteHandler(const boost::property_tree::ptree& config
     directions_options_ptree_ = *directions_options_ptree_ptr;
   }
 
-  // TODO - replace this below when we pass down to Odin and get back info
-  // in the proto
-  // Get the units (defaults to kilometers)
-  std::string units = "k";
-  auto s = request.get_optional<std::string>("units");
-  if (s) {
-    units = *s;
-  }
-  km_units_ = (units == "miles" || units == "m") ? false : true;
-  units_ = (km_units_) ? "kilometers" : "miles";
-
   //TODO: we get other info such as: z (zoom level), output (format), instructions (text)
 }
 
@@ -349,15 +329,16 @@ std::string CustomRouteHandler::Action() {
 
   //get some annotated instructions
   valhalla::odin::DirectionsBuilder directions_builder;
+  valhalla::odin::DirectionsOptions directions_options =
+      valhalla::odin::GetDirectionsOptions(directions_options_ptree_);
   valhalla::odin::TripDirections trip_directions = directions_builder.Build(
-      valhalla::odin::GetDirectionsOptions(directions_options_ptree_),
-      trip_path);
+      directions_options, trip_path);
 
   //make some json
   std::ostringstream stream;
   if(jsonp_)
     stream << *jsonp_ << '(';
-  serialize(trip_directions, units_, stream);
+  serialize(directions_options, trip_directions, stream);
   if(jsonp_)
     stream << ')';
   return stream.str();
