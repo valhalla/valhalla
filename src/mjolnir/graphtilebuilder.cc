@@ -67,6 +67,36 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
                directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
 
+    // Sort and write the transit departures
+    std::sort(departures_.begin(), departures_.end());
+    file.write(reinterpret_cast<const char*>(&departures_[0]),
+               departures_.size() * sizeof(TransitDeparture));
+
+    // Sort and write the transit trips
+    std::sort(transit_trips_.begin(), transit_trips_.end());
+    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
+               transit_trips_.size() * sizeof(TransitTrip));
+
+    // Sort and write the transit stops
+    std::sort(transit_stops_.begin(), transit_stops_.end());
+    file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
+               transit_stops_.size() * sizeof(TransitStop));
+
+    // Sort and write the transit routes
+    std::sort(transit_routes_.begin(), transit_routes_.end());
+    file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
+               transit_routes_.size() * sizeof(TransitRoute));
+
+    // Sort and write the transit transfers
+    std::sort(transit_transfers_.begin(), transit_transfers_.end());
+    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
+               transit_transfers_.size() * sizeof(TransitTransfer));
+
+    // Sort and write the transit calendar exceptions
+    std::sort(transit_exceptions_.begin(), transit_exceptions_.end());
+    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
+               transit_exceptions_.size() * sizeof(TransitCalendar));
+
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
                signs_builder_.size() * sizeof(SignBuilder));
@@ -128,6 +158,30 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the existing transit departures
+    file.write(reinterpret_cast<const char*>(&departures_[0]),
+               hdr.departurecount() * sizeof(TransitDeparture));
+
+    // Write the existing transit trips
+    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
+               hdr.tripcount() * sizeof(TransitTrip));
+
+    // Write the existing transit stops
+    file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
+               hdr.stopcount() * sizeof(TransitStop));
+
+    // Write the existing transit routes
+    file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
+               hdr.routecount() * sizeof(TransitRoute));
+
+    // Write the existing transit transfers
+    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
+               hdr.transfercount() * sizeof(TransitTransfer));
+
+    // Write the existing transit calendar exceptions
+    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
+               hdr.calendarcount() * sizeof(TransitCalendar));
+
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
@@ -188,6 +242,30 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the existing transit departures
+    file.write(reinterpret_cast<const char*>(&departures_[0]),
+               hdr.departurecount() * sizeof(TransitDeparture));
+
+    // Write the existing transit trips
+    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
+               hdr.tripcount() * sizeof(TransitTrip));
+
+    // Write the existing transit stops
+    file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
+               hdr.stopcount() * sizeof(TransitStop));
+
+    // Write the existing transit routes
+    file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
+               hdr.routecount() * sizeof(TransitRoute));
+
+    // Write the existing transit transfers
+    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
+               hdr.transfercount() * sizeof(TransitTransfer));
+
+    // Write the existing transit calendar exceptions
+    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
+               hdr.calendarcount() * sizeof(TransitCalendar));
+
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
@@ -242,6 +320,30 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&directededges[0]),
                directededges.size() * sizeof(DirectedEdgeBuilder));
 
+    // Write the existing transit departures
+    file.write(reinterpret_cast<const char*>(&departures_[0]),
+               hdr.departurecount() * sizeof(TransitDeparture));
+
+    // Write the existing transit trips
+    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
+               hdr.tripcount() * sizeof(TransitTrip));
+
+    // Write the existing transit stops
+    file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
+               hdr.stopcount() * sizeof(TransitStop));
+
+    // Write the existing transit routes
+    file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
+               hdr.routecount() * sizeof(TransitRoute));
+
+    // Write the existing transit transfers
+    file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
+               hdr.transfercount() * sizeof(TransitTransfer));
+
+    // Write the existing transit calendar exceptions
+    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
+               hdr.calendarcount() * sizeof(TransitCalendar));
+
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
                signs.size() * sizeof(SignBuilder));
@@ -273,6 +375,36 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
     // Add the directed edge to the list
     directededges_builder_.push_back(directededge);
   }
+}
+
+// Add a transit departure.
+void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
+  departures_.emplace_back(departure);
+}
+
+// Add a transit trip.
+void GraphTileBuilder::AddTransitTrip(const TransitTrip& trip) {
+  transit_trips_.emplace_back(trip);
+}
+
+// Add a transit stop.
+void GraphTileBuilder::AddTransitStop(const TransitStop& stop)  {
+  transit_stops_.emplace_back(stop);
+}
+
+// Add a transit route.
+void GraphTileBuilder::AddTransitRoute(const TransitRoute& route)  {
+  transit_routes_.emplace_back(route);
+}
+
+// Add a transit transfer.
+void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
+  transit_transfers_.emplace_back(transfer);
+}
+
+// Add a transit calendar exception.
+void GraphTileBuilder::AddTransitCalendar(const TransitCalendar& exception)  {
+  transit_exceptions_.emplace_back(exception);
 }
 
 // Add signs
