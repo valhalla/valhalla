@@ -124,11 +124,20 @@ class GraphTile {
    */
   std::vector<std::string> GetNames(const uint32_t edgeinfo_offset) const;
 
-  // Get the admininfo at the specified index.
-  const AdminInfo admininfo(const size_t idx) const;
+  /**
+   * Get the admininfo at the specified index. Populates the state name and
+   * country name from the text/name list.
+   * @param  idx  Index into the admin list.
+   * @return  Returns the admin information.
+   */
+  AdminInfo admininfo(const size_t idx) const;
 
-  // Get the admin at the specified index.
-  const Admin admin(const size_t idx) const;
+  /**
+   * Get the admin at the specified index.
+   * @param  idx  Index into the admin list.
+   * @return  Returns a pointer to the admin structure.
+   */
+  const Admin* admin(const size_t idx) const;
 
   /**
    * Convenience method to get the signs for an edge given the directed
