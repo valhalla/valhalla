@@ -108,22 +108,6 @@ Location Location::FromCsv(const std::string& csv) {
       (parts.size() > 2 && parts[2] == "through" ?
           StopType::THROUGH : StopType::BREAK));
 
-  //grab some address info
-  if (parts.size() > 3) {
-    auto part = parts.begin() + 3;
-    for (auto address : { &l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l
-        .country_ }) {
-      if (part == parts.end())
-        break;
-      address->swap(*part);
-      ++part;
-    }
-  }
-
-  if (parts.size() > 9) {
-    l.heading_ = parts[9];
-  }
-
   return l;
 }
 
