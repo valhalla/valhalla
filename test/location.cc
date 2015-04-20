@@ -30,7 +30,7 @@ void test_from_csv() {
       || csv.stoptype_ != Location::StopType::THROUGH)
     throw std::runtime_error("Csv location parsing failed");
 
-  csv = Location::FromCsv("1.452,-3.45,stop");
+  csv = Location::FromCsv("1.452,-3.45,break");
   if (csv.latlng_.y() != std::stof("1.452")
       || csv.latlng_.x() != std::stof("-3.45")
       || csv.stoptype_ != Location::StopType::BREAK)
@@ -40,68 +40,6 @@ void test_from_csv() {
   if (b.latlng_.x() != 1 || b.latlng_.y() != 2)
     throw std::runtime_error("Location's latlng object should be set");
 
-  csv = Location::FromCsv("1.452,-3.45,stop,Just a name");
-  if (!(csv.name_ == "Just a name"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "PA" && csv.zip_ == "90210"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,,123 Main Street,Lancaster,PA,90210");
-  if (!(csv.name_ == "" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "PA" && csv.zip_ == "90210"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv("1.452,-3.45,stop,Home,,Lancaster,PA,90210");
-  if (!(csv.name_ == "Home" && csv.street_ == "" && csv.city_ == "Lancaster"
-      && csv.state_ == "PA" && csv.zip_ == "90210"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv("1.452,-3.45,stop,Home,123 Main Street,,PA,90210");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "" && csv.state_ == "PA" && csv.zip_ == "90210"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,Home,123 Main Street,Lancaster,,90210");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "" && csv.zip_ == "90210"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "PA" && csv.zip_ == ""))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "PA" && csv.zip_ == "90210"
-      && csv.country_ == "US"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv("1.452,-3.45,stop,,,,,,DE");
-  if (!(csv.name_ == "" && csv.street_ == "" && csv.city_ == ""
-      && csv.state_ == "" && csv.zip_ == "" && csv.country_ == "DE"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv(
-      "1.452,-3.45,stop,Home,123 Main Street,Lancaster,PA,90210,US,270");
-  if (!(csv.name_ == "Home" && csv.street_ == "123 Main Street"
-      && csv.city_ == "Lancaster" && csv.state_ == "PA" && csv.zip_ == "90210"
-      && csv.country_ == "US" && csv.heading_ == "270"))
-    throw std::runtime_error("Csv location parsing failed");
-
-  csv = Location::FromCsv("1.452,-3.45,stop,Lancaster Brewing Company,,,,,,65");
-  if (!(csv.name_ == "Lancaster Brewing Company" && csv.street_ == ""
-      && csv.city_ == "" && csv.state_ == "" && csv.zip_ == ""
-      && csv.country_ == "" && csv.heading_ == "65"))
-    throw std::runtime_error("Csv location parsing failed");
 }
 
 std::string make_json(float lat, float lng,
