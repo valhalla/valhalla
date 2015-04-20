@@ -70,11 +70,13 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
   auto last_node_index = (trip_path_->node_size() - 2);
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(last_node_index)->name(0);
+  std::string units = (directions_options_.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles";
   LOG_DEBUG(
       (boost::format(
-              "ROUTE_REQUEST|-o \"%1$.6f,%2$.6f,stop,%3%\" -d \"%4$.6f,%5$.6f,stop,%6%\" -t auto --config ../conf/valhalla.json")
+              "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}' --config ../conf/valhalla.json")
           % first_point.lat() % first_point.lng() % first_name
-          % last_point.lat() % last_point.lng() % last_name).str());
+          % last_point.lat() % last_point.lng() % last_name
+          % units).str());
 #endif
 
   return maneuvers;
