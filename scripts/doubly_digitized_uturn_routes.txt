@@ -1,8 +1,8 @@
--o "40.306282,-76.805679,stop,Jonestown Road" -d "40.306358,-76.805786,stop,Jonestown Road" -t auto --config ../conf/valhalla.json
--o "39.963654,-75.171616,stop,Spring Garden Street" -d "39.963776,-75.171631,stop,Spring Garden Street" -t auto --config ../conf/valhalla.json
--o "40.574783,-73.987137,stop,Surf Avenue" -d "40.574711,-73.987061,stop,Surf Avenue" -t auto --config ../conf/valhalla.json
--o "38.735542,-77.279182,stop,Silverbrook Road" -d "38.735443,-77.279137,stop,Silverbrook Road" -t auto --config ../conf/valhalla.json
--o "38.786160,-77.650200,stop,Stonewall Shops Square" -d "38.786144,-77.650337,stop,Stonewall Shops Square" -t auto --config ../conf/valhalla.json
--o "39.496216,-76.328972,stop,MD 24" -d "39.496120,-76.329254,stop,MD 24" -t auto --config ../conf/valhalla.json
--o "39.738953,-105.153786,stop,Cole Blvd" -d "39.738953,-105.153603,stop,Cole Blvd" -t auto --config ../conf/valhalla.json
--o "39.308140,-76.532784,stop,Pulaski Highway" -d "39.308372,-76.532722,stop,Pulaski Highway" -t auto --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.306282,"lon":-76.805679,"type":"break","name":"Jonestown Road"},{"lat":40.306358,"lon":-76.805786,"type":"break","name":"Jonestown Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.963654,"lon":-75.171616,"type":"break","name":"Spring Garden Street"},{"lat":39.963776,"lon":-75.171631,"type":"break","name":"Spring Garden Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.574783,"lon":-73.987137,"type":"break","name":"Surf Avenue"},{"lat":40.574711,"lon":-73.987061,"type":"break","name":"Surf Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.735542,"lon":-77.279182,"type":"break","name":"Silverbrook Road"},{"lat":38.735443,"lon":-77.279137,"type":"break","name":"Silverbrook Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.786160,"lon":-77.650200,"type":"break","name":"Stonewall Shops Square"},{"lat":38.786144,"lon":-77.650337,"type":"break","name":"Stonewall Shops Square"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.496216,"lon":-76.328972,"type":"break","name":"MD 24"},{"lat":39.496120,"lon":-76.329254,"type":"break","name":"MD 24"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.738953,"lon":-105.153786,"type":"break","name":"Cole Blvd"},{"lat":39.738953,"lon":-105.153603,"type":"break","name":"Cole Blvd"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.308140,"lon":-76.532784,"type":"break","name":"Pulaski Highway"},{"lat":39.308372,"lon":-76.532722,"type":"break","name":"Pulaski Highway"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json

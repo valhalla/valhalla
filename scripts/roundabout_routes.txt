@@ -1,18 +1,18 @@
--o "39.886929,-76.983902,stop,US 30" -d "39.887150,-76.984810,stop,North Queen Street" -t auto --config ../conf/valhalla.json
--o "39.886902,-76.983986,stop,US 30" -d "39.886509,-76.985268,stop,US 30" -t auto --config ../conf/valhalla.json
--o "39.886948,-76.983849,stop,US 30" -d "39.886333,-76.984383,stop,South Queen Street" -t auto --config ../conf/valhalla.json
--o "39.863617,-77.056808,stop,US 30" -d "39.863068,-77.055328,stop,Hanover Street" -t auto --config ../conf/valhalla.json
--o "39.863586,-77.056931,stop,US 30" -d "39.864128,-77.054909,stop,US 30" -t auto --config ../conf/valhalla.json
--o "39.863609,-77.056839,stop,US 30" -d "39.864521,-77.056129,stop,Carlisle Street" -t auto --config ../conf/valhalla.json
--o "39.287716,-77.530220,stop,Catoctin Mountain Highway" -d "39.287296,-77.532410,stop,Point of Rocks Road" -t auto --config ../conf/valhalla.json
--o "39.287678,-77.530235,stop,Catoctin Mountain Highway" -d "39.284996,-77.532295,stop,Catoctin Mountain Highway" -t auto --config ../conf/valhalla.json
--o "39.287785,-77.530182,stop,Catoctin Mountain Highway" -d "39.285492,-77.529594,stop,Point of Rocks Road" -t auto --config ../conf/valhalla.json
--o "38.912933,-77.051727,stop,Massachusetts Avenue Northwest" -d "38.911545,-77.050659,stop,23rd Street Northwest" -t auto --config ../conf/valhalla.json
--o "38.912899,-77.051682,stop,Massachusetts Avenue Northwest" -d "38.911781,-77.049591,stop,Massachusetts Avenue Northwest" -t auto --config ../conf/valhalla.json
--o "38.910370,-77.045532,stop,Massachusetts Avenue Northwest" -d "38.908787,-77.044235,stop,New Hampshire Avenue Northwest" -t auto --config ../conf/valhalla.json
--o "38.910309,-77.045357,stop,Massachusetts Avenue Northwest" -d "38.908192,-77.043427,stop,19th Street Northwest" -t auto --config ../conf/valhalla.json
--o "38.910343,-77.045448,stop,Massachusetts Avenue Northwest" -d "38.908859,-77.041191,stop,Massachusetts Avenue Northwest" -t auto --config ../conf/valhalla.json
--o "38.910316,-77.045380,stop,Massachusetts Avenue Northwest" -d "38.909641,-77.041092,stop,P Street Northwest" -t auto --config ../conf/valhalla.json
--o "39.493633,-76.317940,stop,East Wheel Road" -d "39.493553,-76.315727,stop,Laurel Bush Road" -t auto --config ../conf/valhalla.json
--o "39.493641,-76.317856,stop,East Wheel Road" -d "39.494732,-76.315758,stop,East Wheel Road" -t auto --config ../conf/valhalla.json
--o "39.493649,-76.317780,stop,East Wheel Road" -d "39.494690,-76.317337,stop,Laurel Bush Road" -t auto --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.886929,"lon":-76.983902,"type":"break","name":"US 30"},{"lat":39.887150,"lon":-76.984810,"type":"break","name":"North Queen Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.886902,"lon":-76.983986,"type":"break","name":"US 30"},{"lat":39.886509,"lon":-76.985268,"type":"break","name":"US 30"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.886948,"lon":-76.983849,"type":"break","name":"US 30"},{"lat":39.886333,"lon":-76.984383,"type":"break","name":"South Queen Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.863617,"lon":-77.056808,"type":"break","name":"US 30"},{"lat":39.863068,"lon":-77.055328,"type":"break","name":"Hanover Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.863586,"lon":-77.056931,"type":"break","name":"US 30"},{"lat":39.864128,"lon":-77.054909,"type":"break","name":"US 30"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.863609,"lon":-77.056839,"type":"break","name":"US 30"},{"lat":39.864521,"lon":-77.056129,"type":"break","name":"Carlisle Street"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.287716,"lon":-77.530220,"type":"break","name":"Catoctin Mountain Highway"},{"lat":39.287296,"lon":-77.532410,"type":"break","name":"Point of Rocks Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.287678,"lon":-77.530235,"type":"break","name":"Catoctin Mountain Highway"},{"lat":39.284996,"lon":-77.532295,"type":"break","name":"Catoctin Mountain Highway"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.287785,"lon":-77.530182,"type":"break","name":"Catoctin Mountain Highway"},{"lat":39.285492,"lon":-77.529594,"type":"break","name":"Point of Rocks Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.912933,"lon":-77.051727,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.911545,"lon":-77.050659,"type":"break","name":"23rd Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.912899,"lon":-77.051682,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.911781,"lon":-77.049591,"type":"break","name":"Massachusetts Avenue Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.910370,"lon":-77.045532,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.908787,"lon":-77.044235,"type":"break","name":"New Hampshire Avenue Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.910309,"lon":-77.045357,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.908192,"lon":-77.043427,"type":"break","name":"19th Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.910343,"lon":-77.045448,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.908859,"lon":-77.041191,"type":"break","name":"Massachusetts Avenue Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":38.910316,"lon":-77.045380,"type":"break","name":"Massachusetts Avenue Northwest"},{"lat":38.909641,"lon":-77.041092,"type":"break","name":"P Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.493633,"lon":-76.317940,"type":"break","name":"East Wheel Road"},{"lat":39.493553,"lon":-76.315727,"type":"break","name":"Laurel Bush Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.493641,"lon":-76.317856,"type":"break","name":"East Wheel Road"},{"lat":39.494732,"lon":-76.315758,"type":"break","name":"East Wheel Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.493649,"lon":-76.317780,"type":"break","name":"East Wheel Road"},{"lat":39.494690,"lon":-76.317337,"type":"break","name":"Laurel Bush Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
