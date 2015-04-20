@@ -109,11 +109,72 @@ std::string to_string(const valhalla::baldr::Location& l) {
   return s;
 }
 
+//TODO: maybe move this into location.h if its actually useful elsewhere than here?
+std::string to_json(const valhalla::baldr::Location& l) {
+  std::string json = "{";
+  json += "\"lat\":";
+  json += std::to_string(l.latlng_.lat());
+
+  json += ",\"lon\":";
+  json += std::to_string(l.latlng_.lng());
+
+  json += ",\"type\":\"";
+  json +=
+      (l.stoptype_ == valhalla::baldr::Location::StopType::THROUGH) ?
+          "through" : "break";
+  json += "\"";
+
+  if (!l.heading_.empty()) {
+    json += ",\"heading\":";
+    json += l.heading_;
+  }
+
+  if (!l.name_.empty()) {
+    json += ",\"name\":\"";
+    json += l.name_;
+    json += "\"";
+  }
+
+  if (!l.street_.empty()) {
+    json += ",\"street\":\"";
+    json += l.street_;
+    json += "\"";
+  }
+
+  if (!l.city_.empty()) {
+    json += ",\"city\":\"";
+    json += l.city_;
+    json += "\"";
+  }
+
+  if (!l.state_.empty()) {
+    json += ",\"state\":\"";
+    json += l.state_;
+    json += "\"";
+  }
+
+  if (!l.zip_.empty()) {
+    json += ",\"postal_code\":\"";
+    json += l.zip_;
+    json += "\"";
+  }
+
+  if (!l.country_.empty()) {
+    json += ",\"country\":\"";
+    json += l.country_;
+    json += "\"";
+  }
+
+  json += "}";
+
+  return json;
+}
+
 }
 
 std::string GetFormattedTime(uint32_t seconds) {
-  uint32_t hours = (uint32_t)seconds/3600;
-  uint32_t minutes = ((uint32_t)(seconds/60)) % 60;
+  uint32_t hours = (uint32_t) seconds / 3600;
+  uint32_t minutes = ((uint32_t) (seconds / 60)) % 60;
   std::string formattedTime = "";
   // Hours
   if (hours > 0) {
@@ -186,15 +247,18 @@ int main(int argc, char *argv[]) {
 
   std::string origin, destination, routetype, json, config;
 
-  options.add_options()("help,h", "Print this help message.")
-      ("version,v", "Print the version of this software.")
-      ("origin,o",boost::program_options::value<std::string>(&origin),
-      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")
-      ("destination,d",boost::program_options::value<std::string>(&destination),
-      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")
-      ("type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")
-      ("json,j", boost::program_options::value<std::string>(&json),
+  options.add_options()("help,h", "Print this help message.")(
+      "version,v", "Print the version of this software.")(
+      "origin,o",
+      boost::program_options::value<std::string>(&origin),
+      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
+      "destination,d",
+      boost::program_options::value<std::string>(&destination),
+      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
+      "type,t", boost::program_options::value<std::string>(&routetype),
+      "Route Type: auto|bicycle|pedestrian|auto-shorter")(
+      "json,j",
+      boost::program_options::value<std::string>(&json),
       "JSON Example: json={\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}")
   // positional arguments
   ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
@@ -242,8 +306,10 @@ int main(int argc, char *argv[]) {
     for (auto arg : std::vector<std::string> { "origin", "destination", "type",
         "config" }) {
       if (vm.count(arg) == 0) {
-        std::cerr << "The <" << arg
-                  << "> argument was not provided, but is mandatory when json is not provided\n\n";
+        std::cerr
+            << "The <"
+            << arg
+            << "> argument was not provided, but is mandatory when json is not provided\n\n";
         std::cerr << options << "\n";
         return EXIT_FAILURE;
       }
@@ -257,13 +323,13 @@ int main(int argc, char *argv[]) {
     boost::property_tree::read_json(stream, json_ptree);
     std::vector<Location> locations;
     try {
-      for(const auto& location : json_ptree.get_child("locations"))
+      for (const auto& location : json_ptree.get_child("locations"))
         locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      if(locations.size() < 2)
+      if (locations.size() < 2)
         throw;
-    }
-    catch(...) {
-      throw std::runtime_error("insufficiently specified required parameter 'locations'");
+    } catch (...) {
+      throw std::runtime_error(
+          "insufficiently specified required parameter 'locations'");
     }
     originloc = locations.at(0);
     destloc = locations.at(locations.size() - 1);
@@ -272,19 +338,31 @@ int main(int argc, char *argv[]) {
     std::string costing;
     try {
       routetype = json_ptree.get<std::string>("costing");
-    }
-    catch(...) {
+    } catch (...) {
       throw std::runtime_error("No edge/node costing provided");
     }
 
     // Grab the directions options, if they exist
-    auto directions_options_ptree_ptr = json_ptree.get_child_optional("directions_options");
+    auto directions_options_ptree_ptr = json_ptree.get_child_optional(
+        "directions_options");
     if (directions_options_ptree_ptr) {
-      directions_options =
-          valhalla::odin::GetDirectionsOptions(*directions_options_ptree_ptr);
+      directions_options = valhalla::odin::GetDirectionsOptions(
+          *directions_options_ptree_ptr);
     }
 
   }
+
+  // TODO: remove after input files are transformed
+#ifdef LOGGING_LEVEL_DEBUG
+  std::string json_input = "-j '{\"locations\":[";
+  json_input += std::to_json(originloc);
+  json_input += ",";
+  json_input += std::to_json(destloc);
+  json_input += "],\"costing\":\"auto\",";
+  json_input += "\"directions_options\":{\"units\":\"miles\"}}'";
+  json_input += " --config ../conf/valhalla.json";
+  valhalla::midgard::logging::Log(json_input, " [JSON_INPUT] ");
+#endif
 
   //parse the config
   boost::property_tree::ptree pt;

@@ -1,13 +1,13 @@
--o "40.6501038,-73.949582,stop,Brooklyn" -d "40.646078,-73.783902,stop,JFK Airport" -t auto --config ../conf/valhalla.json
--o "40.6429479,-73.779373,stop,JFK Airport" -d "40.6501038,-73.949582,stop,Brooklyn" -t auto --config ../conf/valhalla.json
--o "40.310004,-75.130484,stop,,,Doylestown,PA" -d "40.7484284,-73.985654,stop,,350 5th Avenue,New York,NY" -t auto --config ../conf/valhalla.json
--o "40.7484284,-73.985654,stop,,350 5th Avenue,New York,NY" -d "40.310004,-75.130484,stop,,,Doylestown,PA" -t auto --config ../conf/valhalla.json
--o "40.2653681,-76.7083033,stop,,,Hummelstown,PA" -d "40.518681,-78.394736,stop,,,Altoona,PA" -t auto --config ../conf/valhalla.json
--o "40.518681,-78.394736,stop,,,Altoona,PA" -d "40.2653681,-76.7083033,stop,,,Hummelstown,PA" -t auto --config ../conf/valhalla.json
--o "40.03813,-76.3056686,stop,,,Lancaster,PA" -d "40.4416941,-79.9900861,stop,,,Pittsburgh,PA" -t auto --config ../conf/valhalla.json
--o "40.4416941,-79.9900861,stop,,,Pittsburgh,PA" -d "40.03813,-76.3056686,stop,,,Lancaster,PA" -t auto --config ../conf/valhalla.json
--o "40.2854881,-76.6506001,stop,,,Hershey,PA" -d "40.794026,-77.8606975,stop,,,State College,PA" -t auto --config ../conf/valhalla.json
--o "40.794026,-77.8606975,stop,,,State College,PA" -d "40.2854881,-76.6506001,stop,,,Hershey,PA" -t auto --config ../conf/valhalla.json
--o "40.298355,-76.822388,stop,Jonestown Road" -d "40.378578,-76.658173,stop,Bow Creek Road" -t auto --config ../conf/valhalla.json
--o "40.298355,-76.822395,stop,Jonestown Road" -d "40.307674,-76.849991,stop,North Progress Avenue" -t auto --config ../conf/valhalla.json
--o "39.168583,-76.840843,stop,MD 32 West" -d "39.177990,-76.851074,stop,Patuxent Woods Drive" -t auto --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.650105,"lon":-73.949585,"type":"break","name":"Brooklyn"},{"lat":40.646076,"lon":-73.783905,"type":"break","name":"JFK Airport"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.642948,"lon":-73.779373,"type":"break","name":"JFK Airport"},{"lat":40.650105,"lon":-73.949585,"type":"break","name":"Brooklyn"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.310005,"lon":-75.130486,"type":"break","city":"Doylestown","state":"PA"},{"lat":40.748428,"lon":-73.985657,"type":"break","street":"350 5th Avenue","city":"New York","state":"NY"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.748428,"lon":-73.985657,"type":"break","street":"350 5th Avenue","city":"New York","state":"NY"},{"lat":40.310005,"lon":-75.130486,"type":"break","city":"Doylestown","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.265369,"lon":-76.708305,"type":"break","city":"Hummelstown","state":"PA"},{"lat":40.518681,"lon":-78.394737,"type":"break","city":"Altoona","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.518681,"lon":-78.394737,"type":"break","city":"Altoona","state":"PA"},{"lat":40.265369,"lon":-76.708305,"type":"break","city":"Hummelstown","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.038132,"lon":-76.305672,"type":"break","city":"Lancaster","state":"PA"},{"lat":40.441692,"lon":-79.990089,"type":"break","city":"Pittsburgh","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.441692,"lon":-79.990089,"type":"break","city":"Pittsburgh","state":"PA"},{"lat":40.038132,"lon":-76.305672,"type":"break","city":"Lancaster","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"},{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.794025,"lon":-77.860695,"type":"break","city":"State College","state":"PA"},{"lat":40.285488,"lon":-76.650597,"type":"break","city":"Hershey","state":"PA"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.298355,"lon":-76.822388,"type":"break","name":"Jonestown Road"},{"lat":40.378578,"lon":-76.658173,"type":"break","name":"Bow Creek Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.298355,"lon":-76.822395,"type":"break","name":"Jonestown Road"},{"lat":40.307674,"lon":-76.849991,"type":"break","name":"North Progress Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.168583,"lon":-76.840843,"type":"break","name":"MD 32 West"},{"lat":39.177990,"lon":-76.851074,"type":"break","name":"Patuxent Woods Drive"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json

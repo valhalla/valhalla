@@ -1,9 +1,9 @@
--o "40.181428,-76.600265,stop,PA 743 South" -d "40.173447,-76.595193,stop,PA 283 East,,,,," -t auto --config ../conf/valhalla.json
--o "40.172472,-76.593220,stop,PA 283 West" -d "40.174585,-76.602597,stop,PA 743 South,,,,," -t auto --config ../conf/valhalla.json
--o "39.176595,-76.848623,Broken Land Parkway" -d "39.178227,-76.848886,stop,Patuxent Woods Drive" -t auto --config ../conf/valhalla.json
--o "39.206384,-76.867874,stop,Hickory Ridge Road" -d "39.207628,-76.866761,stop,Broken Land Parkway" -t auto --config ../conf/valhalla.json
--o "39.379766,-76.474322,stop,MD 43 East" -d "39.381282,-76.471350,stop,Perry Hall Boulevard" -t auto --config ../conf/valhalla.json
--o "39.379766,-76.474322,stop,MD 43 East" -d "39.379321, -76.456440,stop,MD 43 East" -t auto --config ../conf/valhalla.json
--o "39.525728,-76.353193,stop,MD 24 North" -d "39.525809,-76.355119,stop,US 1 Business South" -t auto --config ../conf/valhalla.json
--o "39.525712,-76.354974,stop,US 1 Business North" -d "39.526993,-76.355215,stop,MD 24 North" -t auto --config ../conf/valhalla.json
--o "40.808886,-77.824852,stop,US 322 West" -d "40.811043,-77.830294,stop,East College Avenue" -t auto --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.181427,"lon":-76.600266,"type":"break","name":"PA 743 South"},{"lat":40.173447,"lon":-76.595192,"type":"break","name":"PA 283 East"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.172470,"lon":-76.593224,"type":"break","name":"PA 283 West"},{"lat":40.174583,"lon":-76.602600,"type":"break","name":"PA 743 South"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.176594,"lon":-76.848625,"type":"break"},{"lat":39.178226,"lon":-76.848885,"type":"break","name":"Patuxent Woods Drive"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.206383,"lon":-76.867874,"type":"break","name":"Hickory Ridge Road"},{"lat":39.207626,"lon":-76.866760,"type":"break","name":"Broken Land Parkway"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.379765,"lon":-76.474319,"type":"break","name":"MD 43 East"},{"lat":39.381283,"lon":-76.471352,"type":"break","name":"Perry Hall Boulevard"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.379765,"lon":-76.474319,"type":"break","name":"MD 43 East"},{"lat":39.379322,"lon":-76.456444,"type":"break","name":"MD 43 East"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.525726,"lon":-76.353195,"type":"break","name":"MD 24 North"},{"lat":39.525810,"lon":-76.355118,"type":"break","name":"US 1 Business South"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.525711,"lon":-76.354973,"type":"break","name":"US 1 Business North"},{"lat":39.526993,"lon":-76.355217,"type":"break","name":"MD 24 North"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":40.808887,"lon":-77.824852,"type":"break","name":"US 322 West"},{"lat":40.811043,"lon":-77.830292,"type":"break","name":"East College Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
