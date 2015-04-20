@@ -251,7 +251,6 @@ int main(int argc, char *argv[]) {
     originloc = Location::FromCsv(origin);
     destloc = Location::FromCsv(destination);
   } else {
-    std::cout << "json=" << json << std::endl;
     std::stringstream stream;
     stream << json;
     boost::property_tree::ptree json_ptree;
