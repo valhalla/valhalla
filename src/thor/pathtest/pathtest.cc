@@ -15,6 +15,7 @@
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/odin/directionsbuilder.h>
+#include <valhalla/odin/util.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
@@ -179,20 +180,22 @@ int main(int argc, char *argv[]) {
   "\n"
   "pathtest is a simple command line test tool for shortest path routing. "
   "\n"
+  "Use the -o and -d options OR the -j option for specifying the locations. "
+  "\n"
   "\n");
 
-  std::string origin, destination, routetype, config;
+  std::string origin, destination, routetype, json, config;
 
-  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-      "origin,o",
-      boost::program_options::value<std::string>(&origin),
-      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
-      "destination,d",
-      boost::program_options::value<std::string>(&destination),
-      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
-      "type,t", boost::program_options::value<std::string>(&routetype),
+  options.add_options()("help,h", "Print this help message.")
+      ("version,v", "Print the version of this software.")
+      ("origin,o",boost::program_options::value<std::string>(&origin),
+      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")
+      ("destination,d",boost::program_options::value<std::string>(&destination),
+      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")
+      ("type,t", boost::program_options::value<std::string>(&routetype),
       "Route Type: auto|bicycle|pedestrian|auto-shorter")
+      ("json,j", boost::program_options::value<std::string>(&json),
+      "JSON Example: json={\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}")
   // positional arguments
   ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -225,15 +228,63 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
   }
 
+  // Directions options
+  // TODO - read options?
+  DirectionsOptions directions_options;
+  directions_options.set_units(
+      DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en_US");
+
+  Location originloc(PointLL { 0, 0 });
+  Location destloc(PointLL { 0, 0 });
   // argument checking and verification
-  for (auto arg : std::vector<std::string> { "origin", "destination", "type",
-      "config" }) {
-    if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg
-                << "> argument was not provided, but is mandatory\n\n";
-      std::cerr << options << "\n";
-      return EXIT_FAILURE;
+  if (vm.count("json") == 0) {
+    for (auto arg : std::vector<std::string> { "origin", "destination", "type",
+        "config" }) {
+      if (vm.count(arg) == 0) {
+        std::cerr << "The <" << arg
+                  << "> argument was not provided, but is mandatory when json is not provided\n\n";
+        std::cerr << options << "\n";
+        return EXIT_FAILURE;
+      }
     }
+    originloc = Location::FromCsv(origin);
+    destloc = Location::FromCsv(destination);
+  } else {
+    std::cout << "json=" << json << std::endl;
+    std::stringstream stream;
+    stream << json;
+    boost::property_tree::ptree json_ptree;
+    boost::property_tree::read_json(stream, json_ptree);
+    std::vector<Location> locations;
+    try {
+      for(const auto& location : json_ptree.get_child("locations"))
+        locations.emplace_back(std::move(Location::FromPtree(location.second)));
+      if(locations.size() < 2)
+        throw;
+    }
+    catch(...) {
+      throw std::runtime_error("insufficiently specified required parameter 'locations'");
+    }
+    originloc = locations.at(0);
+    destloc = locations.at(locations.size() - 1);
+
+    // Parse out the type of route - this provides the costing method to use
+    std::string costing;
+    try {
+      routetype = json_ptree.get<std::string>("costing");
+    }
+    catch(...) {
+      throw std::runtime_error("No edge/node costing provided");
+    }
+
+    // Grab the directions options, if they exist
+    auto directions_options_ptree_ptr = json_ptree.get_child_optional("directions_options");
+    if (directions_options_ptree_ptr) {
+      directions_options =
+          valhalla::odin::GetDirectionsOptions(*directions_options_ptree_ptr);
+    }
+
   }
 
   //parse the config
@@ -278,8 +329,6 @@ int main(int argc, char *argv[]) {
 
   // Use Loki to get location information
   auto t1 = std::chrono::high_resolution_clock::now();
-  Location originloc = Location::FromCsv(origin);
-  Location destloc = Location::FromCsv(destination);
   PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
   PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -288,13 +337,6 @@ int main(int argc, char *argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // TODO - set locations
-
-  // Directions options
-  // TODO - read options?
-  DirectionsOptions directions_options;
-  directions_options.set_units(
-      DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en_US");
 
   // Try the route
   t1 = std::chrono::high_resolution_clock::now();
