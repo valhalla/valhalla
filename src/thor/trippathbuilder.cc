@@ -360,6 +360,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->add_name(name);
   }
 
+#ifdef LOGGING_LEVEL_TRACE
+  LOG_TRACE(std::string("wayid=") + std::to_string(edgeinfo->wayid()));
+#endif
+
   // Set the exits (if the directed edge has exit sign information)
   if (directededge->exitsign()) {
     std::vector<SignInfo> signs = graphtile->GetSigns(idx);
