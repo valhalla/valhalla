@@ -31,8 +31,10 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float pa
 
   //yeah we dont add shape if we dont have any length to add
   if(partial_length > 0.f) {
+    //if we are adding on to a shape that already has points we dont want to actually add the first one
+    if(!back_insert)
+      push(*start);
     //for each segment
-    push(*start);
     for(; start != end - 1; ++start) {
       //is this segment longer than what we have left, then we found the segment the point lies on
       const auto length = (start + 1)->Distance(*start);
@@ -226,7 +228,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
     std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
-    trip_edge->set_begin_shape_index(trip_shape.size());
+    if (is_first_edge) {
+      trip_edge->set_begin_shape_index(0);
+    } else {
+      trip_edge->set_begin_shape_index(trip_shape.size()-1);
+    }
+
     // We need to clip the shape if its at the beginning or end and isnt a full length
     if(is_first_edge || is_last_edge) {
       float length = static_cast<float>(directededge->length()) * length_pct;
@@ -247,7 +254,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       else
         trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() +  1, edgeinfo->shape().rend());
     }
-    trip_edge->set_end_shape_index(trip_shape.size());
+    trip_edge->set_end_shape_index(trip_shape.size()-1);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -420,7 +427,6 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->set_end_heading(
         std::round(
             PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
-
   } else {
     // Reverse driveability and heading
     if (directededge->forwardaccess() && directededge->reverseaccess())
