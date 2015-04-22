@@ -223,15 +223,16 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const uint32_t to_idx) const {
   // Special cases: gate, toll booth, false intersections
   // TODO - do we want toll booth penalties?
-  if (node->intersection() == IntersectionType::kFalse) {
-    return { 0.0f, 0.0f };
-  } else if (edge->ctry_crossing()) {
+
+  if (edge->ctry_crossing()) {
     return { country_crossing_cost_ + country_crossing_penalty_,
              country_crossing_cost_ };
   } else if (node->type() == NodeType::kGate) {
     return { gate_cost_, gate_cost_ };
   } else if (node->type() == NodeType::kTollBooth) {
     return { tollbooth_cost_ + tollbooth_penalty_, tollbooth_cost_ };
+  } else if (node->intersection() == IntersectionType::kFalse) {
+      return { 0.0f, 0.0f };
   } else {
     // Transition cost = stopimpact * turncost + maneuverpenalty
     uint32_t idx = pred.opp_local_idx();
