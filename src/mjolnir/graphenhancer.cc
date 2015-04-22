@@ -573,6 +573,16 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
  */
 uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
                        const DirectedEdge* edges, const uint32_t count) {
+  // Special cases. TODO - others?
+  if (edges[from].roundabout() && edges[to].roundabout()) {
+    return 0;
+  }
+  if (edges[to].use() == Use::kTurnChannel) {
+    return 0;
+  } else if (edges[from].use() == Use::kTurnChannel) {
+    return 2;
+  }
+
   // Get the highest classification of other roads at the intersection
   const DirectedEdge* edge = &edges[0];
   RoadClass bestrc = RoadClass::kServiceOther;
@@ -590,15 +600,8 @@ uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
           static_cast<int>(bestrc);
   uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
 
-  // TODO:Handle special cases (ramps, turn channels, etc.)
-  if (edges[to].use() == Use::kTurnChannel) {
-    return 0;
-  } else if (edges[from].use() == Use::kTurnChannel) {
-    return 2;
-  }
-
-  // Increase stop impact at large intersections (more edges) or
-  // if several are high class
+  // TODO: possibly increase stop impact at large intersections (more edges)
+  // or if several are high class
 
   // TODO:Increase stop level based on classification of edges
 
