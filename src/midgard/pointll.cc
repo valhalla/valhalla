@@ -213,9 +213,9 @@ float PointLL::HeadingAlongPolyline(const std::vector<PointLL>& pts,
     }
   }
 
-  // Length of polyline must have exceeded the distance. Return heading from
-  // first to last point.
-  return pts[0].Heading(pts[1]);
+  // Length of polyline is less than the specified distance.
+  // Return heading from first to last point.
+  return pts[0].Heading(pts[n-1]);
 }
 
 // Calculate the heading from a point at a specified distance from the end
@@ -249,9 +249,9 @@ float PointLL::HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
     }
   }
 
-  // Length of polyline must have exceeded the distance. Return heading from
-  // first to last point.
-  return pts[0].Heading(pts[1]);
+  // Length of polyline is less than the specified distance.
+  // Return heading from first to last point.
+  return pts[0].Heading(pts[n-1]);
 }
 
 }
