@@ -30,9 +30,9 @@ libtool
 # built objects
 valhalla/proto
 src/proto
+adminbenchmark
 pbfgraphbuilder
 pbfadminbuilder
-hierarchybuilder
 *.o
 .deps/
 .dirstamp
