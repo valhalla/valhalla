@@ -22,22 +22,23 @@ message TripPath {
     optional string state = 7;
     optional string postal_code = 8;    
     optional string country = 9;    
+    optional string time = 10;
   }
-  
+
   message Sign {
     repeated string exit_number = 1;  // 67B
     repeated string exit_branch = 2;  // I 95 North
     repeated string exit_toward = 3;  // New York
     repeated string exit_name = 4;    // Not used much in US; Used in Canada
   }
-  
+
   enum Driveability {
     kNone = 0;
     kForward = 1;
     kBackward = 2;
     kBoth = 3;
   }
-  
+
   enum RoadClass {
     kMotorway = 0;
     kTrunk = 1;
@@ -48,7 +49,43 @@ message TripPath {
     kResidential = 6;
     kServiceOther = 7;
   }
+
+  enum TravelMode {
+    kDrive = 0;
+    kPedestrian = 1;
+    kBicycle = 2;
+    kPublicTransit = 3;
+  }
+
+  // TODO: review and update as needed
+  enum VehicleType {
+    kCar = 0;
+    kMotorcycle = 1;
+    kFourWheelDrive = 2;
+    kTractorTrailers = 3;
+  }
+
+  // TODO: review and update as needed
+  enum PedestrianType {
+    kFoot = 0;
+    kWheelChair = 1;
+    kSegway = 2;
+  }
+
+  // TODO: review and update as needed
+  enum BicycleType {
+    kRoad = 0;
+    kCross = 1;
+    kMountain = 2;
+  }
   
+  // TODO: review and update as needed
+  enum TransitType {
+    kTrain = 0;
+    kBus = 1;
+    kAircraft = 2;
+  }
+
   message Edge {
     repeated string name = 1;               // street names
     optional float length = 2;              // km
@@ -71,6 +108,11 @@ message TripPath {
     optional bool internal_intersection = 19;
     optional uint32 end_node_index = 20;
     optional Sign sign = 21;
+    optional TravelMode travel_mode = 22;
+    optional VehicleType vehicle_type = 23;
+    optional PedestrianType pedestrian_type = 24;
+    optional BicycleType bicycle_type = 25;
+    optional TransitType transit_type = 26;
   }
   
   message IntersectingEdge {
@@ -85,6 +127,7 @@ message TripPath {
     repeated IntersectingEdge intersecting_edge = 2; 
     optional bool gate = 3;
     optional bool toll_booth = 4;
+    optional uint32 elapsed_time = 5;        // seconds from start of leg
   }
   
   optional uint64 trip_id = 1;
