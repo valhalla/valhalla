@@ -7,6 +7,7 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/odin/maneuver.h>
+#include <valhalla/odin/enhancedtrippath.h>
 
 namespace valhalla {
 namespace odin {
@@ -19,6 +20,8 @@ class DirectionsBuilder {
                        TripPath& trip_path);
 
  protected:
+  void UpdateHeading(EnhancedTripPath* etp);
+
   TripDirections PopulateTripDirections(
       const DirectionsOptions& directions_options, TripPath& trip_path,
       std::list<Maneuver>& maneuvers);
