@@ -104,8 +104,14 @@ libvalhalla_mjolnir_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
 
 #distributed executables
 bin_PROGRAMS = \
+        adminbenchmark \
 	pbfgraphbuilder \
 	pbfadminbuilder
+
+adminbenchmark_SOURCES = \
+        src/mjolnir/adminbenchmark.cc
+adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+adminbenchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
 pbfgraphbuilder_SOURCES = \
 	src/mjolnir/pbfgraphbuilder.cc 
