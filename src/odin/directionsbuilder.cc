@@ -5,6 +5,11 @@
 #include "odin/maneuversbuilder.h"
 #include "odin/narrativebuilder.h"
 
+namespace {
+// Minimum edge length
+constexpr auto kMinEdgeLength = 0.003f;
+}
+
 namespace valhalla {
 namespace odin {
 
@@ -49,26 +54,25 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 }
 
 void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
-  float min_length = 0.003f;
   for (size_t x = 0; x < etp->node_size(); ++x) {
     auto* prev_edge = etp->GetPrevEdge(x);
     auto* curr_edge = etp->GetCurrEdge(x);
     auto* next_edge = etp->GetNextEdge(x);
-    if (curr_edge && (curr_edge->length() < min_length)) {
+    if (curr_edge && (curr_edge->length() < kMinEdgeLength)) {
 
       // Set the current begin heading
-      if (prev_edge && (prev_edge->length() >= min_length)) {
+      if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_begin_heading(prev_edge->end_heading());
       }
-      else if (next_edge && (next_edge->length() >= min_length)) {
+      else if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_begin_heading(next_edge->begin_heading());
       }
 
       // Set the current end heading
-      if (next_edge && (next_edge->length() >= min_length)) {
+      if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_end_heading(next_edge->begin_heading());
       }
-      else if (prev_edge && (prev_edge->length() >= min_length)) {
+      else if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_end_heading(prev_edge->end_heading());
       }
     }
