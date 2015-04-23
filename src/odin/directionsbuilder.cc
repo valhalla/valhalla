@@ -33,6 +33,9 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
                                         TripPath& trip_path) {
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
+  // Update the heading of ~0 length edges
+  UpdateHeading(etp);
+
   // Create maneuvers
   ManeuversBuilder maneuversBuilder(directions_options, etp);
   auto maneuvers = maneuversBuilder.Build();
@@ -43,6 +46,33 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 
   // Return trip directions
   return PopulateTripDirections(directions_options, trip_path, maneuvers);
+}
+
+void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
+  float min_length = 0.003f;
+  for (size_t x = 0; x < etp->node_size(); ++x) {
+    auto* prev_edge = etp->GetPrevEdge(x);
+    auto* curr_edge = etp->GetCurrEdge(x);
+    auto* next_edge = etp->GetNextEdge(x);
+    if (curr_edge && (curr_edge->length() < min_length)) {
+
+      // Set the current begin heading
+      if (prev_edge && (prev_edge->length() >= min_length)) {
+        curr_edge->set_begin_heading(prev_edge->end_heading());
+      }
+      else if (next_edge && (next_edge->length() >= min_length)) {
+        curr_edge->set_begin_heading(next_edge->begin_heading());
+      }
+
+      // Set the current end heading
+      if (next_edge && (next_edge->length() >= min_length)) {
+        curr_edge->set_end_heading(next_edge->begin_heading());
+      }
+      else if (prev_edge && (prev_edge->length() >= min_length)) {
+        curr_edge->set_end_heading(prev_edge->end_heading());
+      }
+    }
+  }
 }
 
 TripDirections DirectionsBuilder::PopulateTripDirections(

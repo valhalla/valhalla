@@ -63,6 +63,10 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 #ifdef LOGGING_LEVEL_DEBUG
   std::vector<PointLL> shape = midgard::decode<std::vector<PointLL> >(
       trip_path_->shape());
+//  int i = 0;
+//  for (PointLL ll : shape) {
+//    LOG_TRACE(std::string("shape lng/lat[") + std::to_string(i++) + "]=" + std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
+//  }
   if (shape.empty() || (trip_path_->node_size() < 2))
   throw std::runtime_error("Error - No shape or invalid node count");
   PointLL first_point = shape.at(0);
