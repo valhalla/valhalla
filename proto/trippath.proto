@@ -52,7 +52,7 @@ message TripPath {
 
   enum TravelMode {
     kDrive = 0;
-    kWalk = 1;
+    kPedestrian = 1;
     kBicycle = 2;
     kPublicTransit = 3;
   }
@@ -63,6 +63,13 @@ message TripPath {
     kMotorcycle = 1;
     kFourWheelDrive = 2;
     kTractorTrailers = 3;
+  }
+
+  // TODO: review and update as needed
+  enum PedestrianType {
+    kFoot = 0;
+    kWheelChair = 1;
+    kSegway = 2;
   }
 
   // TODO: review and update as needed
@@ -103,8 +110,9 @@ message TripPath {
     optional Sign sign = 21;
     optional TravelMode travel_mode = 22;
     optional VehicleType vehicle_type = 23;
-    optional BicycleType bicycle_type = 24;
-    optional TransitType transit_type = 25;
+    optional PedestrianType pedestrian_type = 24;
+    optional BicycleType bicycle_type = 25;
+    optional TransitType transit_type = 26;
   }
   
   message IntersectingEdge {
