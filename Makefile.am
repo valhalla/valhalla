@@ -42,6 +42,7 @@ nobase_include_HEADERS = \
 	valhalla/thor/astarheuristic.h \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/pathalgorithm.h \
+	valhalla/thor/pathinfo.h \
 	valhalla/thor/trippathbuilder.h 
 libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \

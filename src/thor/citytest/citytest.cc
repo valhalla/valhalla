@@ -129,6 +129,9 @@ int main(int argc, char *argv[]) {
   std::string ctry = "Algeria";
   std::string config = "conf/planet.json";
   std::string filename = "World_Cities_Location_table.csv";
+
+  // TODO - update command line processing
+
 /*  options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
        "file,f", boost::program_options::value<std::string>(&filename),
@@ -250,10 +253,6 @@ int main(int argc, char *argv[]) {
   for (auto & c : routetype)
     c = std::tolower(c);
 
-  // Get the costing method - pass the JSON configuration
-  std::shared_ptr<DynamicCost> cost = factory.Create(
-      routetype, pt.get_child("costing_options." + routetype));
-
   LOG_INFO("routetype: " + routetype);
 
   // Get something we can use to fetch tiles
@@ -273,45 +272,58 @@ int main(int argc, char *argv[]) {
   // Run routes
   uint32_t error_count = 0;
   uint32_t success_count = 0;
+  uint32_t npasses[3] = {};
   auto t1 = std::chrono::high_resolution_clock::now();
   for (uint32_t l0 = 0; l0 < cities.size() - 1; l0++) {
-    for (uint32_t l1 = l0 + 1; l0 < cities.size(); l1++) {
+    for (uint32_t l1 = l0 + 1; l1 < cities.size(); l1++) {
+      // Get the costing method. We do this each time since prior route may
+      // have changed hierarchy_limits. Also, this simulates how the service
+      // works
+      std::shared_ptr<DynamicCost> cost = factory.Create(
+           routetype, pt.get_child("costing_options." + routetype));
+
       Location originloc(cities[l0].latlng);
       Location destloc(cities[l1].latlng);
-LOG_INFO("Origin LL= " + std::to_string(cities[l0].latlng.lat()) + "," + std::to_string(cities[l0].latlng.lng()));
+//LOG_INFO("Origin LL= " + std::to_string(cities[l0].latlng.lat()) + "," + std::to_string(cities[l0].latlng.lng()));
       // Use Loki to get location information
       PathLocation origin = Search(originloc, reader, cost->GetFilter());
-LOG_INFO("Origin LL= " + std::to_string(cities[l1].latlng.lat()) + "," + std::to_string(cities[l1].latlng.lng()));
+//LOG_INFO("Dest LL= " + std::to_string(cities[l1].latlng.lat()) + "," + std::to_string(cities[l1].latlng.lng()));
       PathLocation dest   = Search(destloc, reader, cost->GetFilter());
 
-      LOG_INFO("GetBestPath...");
+      uint32_t np = 0;
       PathAlgorithm pathalgorithm;
       std::vector<PathInfo> pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-        if (pathedges.size() == 0) {
-          if (cost->AllowMultiPass()) {
-            LOG_INFO("Try again with relaxed hierarchy limits");
-            pathalgorithm.Clear();
-            cost->RelaxHierarchyLimits(16.0f);
-            pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-          }
-        }
-        if (pathedges.size() == 0) {
-          cost->DisableHighwayTransitions();
+      if (pathedges.size() == 0) {
+        // 2nd pass - increase hierarchy limits, 3rd pass disable highway
+        // transitions
+        if (cost->AllowMultiPass()) {
+          pathalgorithm.Clear();
+          cost->RelaxHierarchyLimits(16.0f);
           pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+          np++;
           if (pathedges.size() == 0) {
-            // TODO - return error
-            error_count++;
+            cost->DisableHighwayTransitions();
+            pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+            np++;
           }
         }
+      }
 
-        // Success
+      if (pathedges.size() == 0) {
+        error_count++;
+      } else {
         success_count++;
+        npasses[np]++;
+      }
 
-        // TODO - perhaps walk the edges to find total length?
+      // TODO - perhaps walk the edges to find total length?
     }
   }
   LOG_INFO(std::to_string(success_count) + " out of " +
            std::to_string(success_count+error_count) + " succeeded");
+  LOG_INFO("Success on first pass: " + std::to_string(npasses[0]));
+  LOG_INFO("Success on second pass: " + std::to_string(npasses[1]));
+  LOG_INFO("Success on third pass: " + std::to_string(npasses[2]));
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   float secs = msecs * 0.001f;
