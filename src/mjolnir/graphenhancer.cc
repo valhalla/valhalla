@@ -474,7 +474,11 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
   sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and ";
-  sql += "country.rowid = state.parent_admin and state.admin_level=4;";
+  sql += "country.rowid = state.parent_admin and state.admin_level=4 ";
+  sql += "and state.rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + "));";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
@@ -485,7 +489,11 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
       sql = "SELECT rowid, name, "", iso_code, "", drive_on_right, st_astext(geom) from ";
       sql += " admins where ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
       sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-      sql += std::to_string(aabb.maxy()) + ")) and admin_level=2;";
+      sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
+      sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+      sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+      sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+      sql += std::to_string(aabb.maxy()) + "));";
 
       sqlite3_finalize(stmt);
       stmt = 0;
