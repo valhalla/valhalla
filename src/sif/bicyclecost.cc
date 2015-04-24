@@ -152,7 +152,7 @@ class BicycleCost : public DynamicCost {
 
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& config)
-    : DynamicCost(config),
+    : DynamicCost(config, TravelMode::kBicycle),
       speed_(25.0f),
       bicycletype_(BicycleType::kRoad),
       smooth_surface_factor_(0.9f),

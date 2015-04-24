@@ -9,7 +9,7 @@ namespace sif {
 EdgeLabel::EdgeLabel()
     : predecessor_(kInvalidLabel),
       edgeid_(GraphId()),
-      cost_(0.0f),
+      cost_{0.0f, 0.0f},
       sortcost_(0.0f),
       distance_(0.0f),
       attributes_{} {
@@ -17,10 +17,11 @@ EdgeLabel::EdgeLabel()
 
 // Constructor with values.
 EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
-                     const DirectedEdge* edge, const float cost,
+                     const DirectedEdge* edge, const Cost& cost,
                      const float sortcost, const float dist,
                      const uint32_t restrictions,
-                     const uint32_t opp_local_idx)
+                     const uint32_t opp_local_idx,
+                     const TravelMode mode)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
@@ -32,6 +33,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
   attributes_.trans_up      = edge->trans_up();
   attributes_.trans_down    = edge->trans_down();
   attributes_.shortcut      = edge->shortcut();
+  attributes_.mode          = static_cast<uint32_t>(mode);
 }
 
 // Destructor
@@ -39,11 +41,12 @@ EdgeLabel::~EdgeLabel() {
 }
 
 // Update predecessor and cost values in the label.
-void EdgeLabel::Update(const uint32_t predecessor, const float cost,
-                       const float sortcost) {
+void EdgeLabel::Update(const uint32_t predecessor, const Cost& cost,
+                       const float sortcost, const TravelMode mode) {
   predecessor_ = predecessor;
   cost_ = cost;
   sortcost_ = sortcost;
+  attributes_.mode = static_cast<uint32_t>(mode);
 }
 
 // Get the predecessor edge label index.
@@ -61,6 +64,11 @@ const baldr::GraphId& EdgeLabel::endnode() const {
   return endnode_;
 }
 
+// Get the cost from the origin to this directed edge.
+const Cost& EdgeLabel::cost() const {
+  return cost_;
+}
+
 // Get the sort cost.
 float EdgeLabel::sortcost() const {
   return sortcost_;
@@ -69,11 +77,6 @@ float EdgeLabel::sortcost() const {
 // Set the sort cost
 void EdgeLabel::SetSortCost(float sortcost) {
 sortcost_ = sortcost;
-}
-
-// Get the cost from the origin to this directed edge.
-float EdgeLabel::cost() const {
-  return cost_;
 }
 
 // Get the distance to the destination.
@@ -107,6 +110,11 @@ bool EdgeLabel::trans_down() const {
 // Get the shortcut flag.
 bool EdgeLabel::shortcut() const {
   return attributes_.shortcut;
+}
+
+// Get the travel mode along this edge.
+TravelMode EdgeLabel::mode() const {
+  return static_cast<TravelMode>(attributes_.mode);
 }
 
 // Operator for sorting.

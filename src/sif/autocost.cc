@@ -144,8 +144,7 @@ class AutoCost : public DynamicCost {
 
 // Constructor
 AutoCost::AutoCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt) {
-
+    : DynamicCost(pt, TravelMode::kDrive) {
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);

@@ -7,6 +7,7 @@
 
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
 namespace sif {
@@ -19,29 +20,6 @@ using EdgeFilter = std::function<bool (const baldr::DirectedEdge*)>;
 
 // Default unit size (seconds) for cost sorting.
 constexpr uint32_t kDefaultUnitSize = 1;
-
-// Simple structure for returning costs
-struct Cost {
-  float cost;
-  float seconds;
-
-  // Default constructor
-  Cost()
-      : cost(0.0f),
-        seconds(0.0f) {
-  }
-
-  // Constructor with args
-  Cost(const float c, const float s)
-       : cost(c),
-         seconds(s) {
-  }
-
-  // Add 2 costs
-  Cost operator + (const Cost& other) const {
-    return Cost(cost + other.cost, seconds + other.seconds);
-  }
-};
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for
@@ -60,9 +38,11 @@ class DynamicCost {
  public:
   /**
    * Constructor.
-   * @param  pt  Property tree with (optional) costing configuration.
+   * @param  pt   Property tree with (optional) costing configuration.
+   * @param  mode Travel mode
    */
-  DynamicCost(const boost::property_tree::ptree& pt);
+  DynamicCost(const boost::property_tree::ptree& pt,
+              const TravelMode mode);
 
   virtual ~DynamicCost();
 
@@ -148,6 +128,18 @@ class DynamicCost {
   virtual uint32_t UnitSize() const;
 
   /**
+   * Set the current travel mode.
+   * @param  mode  Travel mode
+   */
+  void set_travelmode(const TravelMode mode);
+
+  /**
+   * Get the current travel mode.
+   * @return  Returns the current travel mode.
+   */
+  TravelMode travelmode() const;
+
+  /**
    * Set the distance from the destination where "not_thru" edges are allowed.
    * @param  d  Distance in meters.
    */
@@ -182,6 +174,9 @@ class DynamicCost {
   void ResetHierarchyLimits();
 
  protected:
+  // Travel mode
+  TravelMode travelmode_;
+
   // Hierarchy limits.
   std::vector<HierarchyLimits> hierarchy_limits_;
 

@@ -126,7 +126,7 @@ class PedestrianCost : public DynamicCost {
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt) {
+    : DynamicCost(pt, TravelMode::kPedestrian) {
   walking_speed_   = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
   walkway_factor_  = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
   alley_factor_    = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
