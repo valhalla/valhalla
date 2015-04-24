@@ -38,6 +38,7 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_sif.la
 nobase_include_HEADERS = \
+	valhalla/sif/costconstants.h \
 	valhalla/sif/costfactory.h \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \

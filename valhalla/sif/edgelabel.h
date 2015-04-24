@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/sif/costconstants.h>
 #include <limits>
 
 namespace valhalla {
@@ -30,17 +31,19 @@ class EdgeLabel {
    *                       directed edge in the shortest path.
    * @param edgeid    Directed edge.
    * @param endnode   End node of the directed edge.
-   * @param cost      True cost to the edge.
+   * @param cost      True cost (cost and elapsed time in seconds) to the edge.
    * @param sortcost  Cost for sorting (includes A* heuristic)
    * @param dist      Distance meters to the destination
    * @param restrictions Restriction mask from prior edge - this is used
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
+   * @param mode      Mode of travel along this edge.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
-            const baldr::DirectedEdge* edge, const float cost,
+            const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
-            const uint32_t restrictions, const uint32_t opp_local_idx);
+            const uint32_t restrictions, const uint32_t opp_local_idx,
+            const TravelMode mode);
 
   /**
    * Destructor.
@@ -51,11 +54,12 @@ class EdgeLabel {
    * Update an existing edge label with new predecessor and cost information.
    * The edge Id and end node remain the same.
    * @param predecessor Predecessor directed edge in the shortest path.
-   * @param cost      True cost to the edge.
-   * @param sortcost  Cost for sorting (includes A* heuristic)
+   * @param cost        True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost    Cost for sorting (includes A* heuristic)
+   * @param mode        Mode of travel along the edge
    */
-  void Update(const uint32_t predecessor, const float cost,
-            const float sortcost);
+  void Update(const uint32_t predecessor, const Cost& cost,
+            const float sortcost, const TravelMode mode);
 
   /**
    * Get the predecessor edge label.
@@ -79,9 +83,10 @@ class EdgeLabel {
 
   /**
    * Get the cost from the origin to this directed edge.
-   * @return  Returns the cost (units are based on the costing method).
+   * @return  Returns the cost (units are based on the costing method)
+   *          and elapsed time (seconds) to the end of the directed edge.
    */
-  float cost() const;
+  const Cost& cost() const;
 
   /**
    * Get the sort cost from the origin to this directed edge. The sort
@@ -138,6 +143,12 @@ class EdgeLabel {
   bool shortcut() const;
 
   /**
+   * Get the travel mode along this edge.
+   * @return  Returns the travel mode.
+   */
+  TravelMode mode() const;
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
@@ -149,13 +160,16 @@ class EdgeLabel {
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
+  // Elapsed time
+  uint32_t elapsedtime_;
+
   // GraphId of the end node of the edge. This allows the expansion
   // to occur by reading the node and not having to re-read the directed
   // edge
   baldr::GraphId endnode_;
 
-  // Cost (time, distance, etc.) along the path to this edge
-  float cost_;
+  // Cost and elapsed time along the path
+  Cost cost_;
 
   // Sort cost - includes A* heuristic
   float sortcost_;
@@ -181,7 +195,8 @@ class EdgeLabel {
     uint32_t trans_up      : 1;
     uint32_t trans_down    : 1;
     uint32_t shortcut      : 1;
-    uint32_t spare         : 15;
+    uint32_t mode          : 4;
+    uint32_t spare         : 11;
   };
   Attributes attributes_;
 

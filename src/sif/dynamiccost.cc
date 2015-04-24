@@ -5,8 +5,10 @@ using namespace valhalla::baldr;
 namespace valhalla{
 namespace sif {
 
-DynamicCost::DynamicCost(const boost::property_tree::ptree& pt)
-    : not_thru_distance_(5000.0f) {
+DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
+                         const TravelMode mode)
+    : travelmode_(mode),
+      not_thru_distance_(5000.0f) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   for (uint32_t level = 0; level <= 8; level++) {
@@ -62,6 +64,16 @@ void DynamicCost::RelaxHierarchyLimits(const float factor) {
 // resort.
 void DynamicCost::DisableHighwayTransitions() {
   hierarchy_limits_[1].DisableHighwayTransitions();
+}
+
+// Set the current travel mode.
+void DynamicCost::set_travelmode(const TravelMode mode) {
+  travelmode_ = mode;
+}
+
+// Get the current travel mode.
+TravelMode DynamicCost::travelmode() const {
+  return travelmode_;
 }
 
 // Set the distance from the destination where "not_thru" edges are allowed.
