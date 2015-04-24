@@ -274,21 +274,21 @@ std::string RouteHandler::Action() {
 
   //get the path
   valhalla::thor::PathAlgorithm path_algorithm;
-  std::vector<valhalla::baldr::GraphId> path_edges;
-  path_edges = path_algorithm.GetBestPath(origin, destination, *reader_, cost_);
+  std::vector<valhalla::thor::PathInfo> path = path_algorithm.GetBestPath(
+              origin, destination, *reader_, cost_);
 
   // Check if failure.
-  if (path_edges.size() == 0) {
+  if (path.size() == 0) {
     // If costing allows multiple passes - relax the hierarchy limits.
     // TODO - configuration control of # of passes and relaxation factor
     if (cost_->AllowMultiPass()) {
       uint32_t n = 0;
-      while (path_edges.size() == 0 && n++ < 4) {
+      while (path.size() == 0 && n++ < 4) {
         path_algorithm.Clear();
         cost_->RelaxHierarchyLimits(4.0f);
-        path_edges = path_algorithm.GetBestPath(origin, destination, *reader_, cost_);
+        path = path_algorithm.GetBestPath(origin, destination, *reader_, cost_);
       }
-      if (path_edges.size() == 0) {
+      if (path.size() == 0) {
         throw std::runtime_error("Route failed after 4 passes");
       }
     } else {
@@ -297,7 +297,8 @@ std::string RouteHandler::Action() {
   }
 
   //get some pbf
-  valhalla::odin::TripPath trip_path = valhalla::thor::TripPathBuilder::Build(*reader_, path_edges, origin, destination);
+  valhalla::odin::TripPath trip_path = valhalla::thor::TripPathBuilder::Build(
+              *reader_, path, origin, destination);
   path_algorithm.Clear();
 
   //get some annotated instructions
