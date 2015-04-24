@@ -129,19 +129,19 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
   auto trivial_id = trivial(origin, dest);
   if (trivial_id.Is_Valid()) {
     std::vector<PathInfo> trivialpath;
-    trivialpath.emplace_back(PathInfo(mode_, 0, trivial_id));
+    trivialpath.emplace_back(mode_, 0, trivial_id);
     return trivialpath;
   }
 
   // Check for loop path
-  auto loop_edge = loop(origin, dest);
+  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest));
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
 
   // Initialize the origin and destination locations
-  SetOrigin(graphreader, origin, costing, loop_edge);
+  SetOrigin(graphreader, origin, costing, loop_edge_info);
   SetDestination(graphreader, dest, costing);
 
   // Find shortest path
@@ -155,7 +155,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     if (predindex == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
       if(best_destination_.first != kInvalidLabel)
-        return FormPath(best_destination_.first, graphreader, loop_edge);
+        return FormPath(best_destination_.first, graphreader, loop_edge_info);
 
       // We didn't find any destination edge - return empty list of edges
       LOG_ERROR("Route failed after iterations = " +
@@ -172,7 +172,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Check for completion. Form path and return if complete.
     if (IsComplete(predindex)) {
-      return FormPath(best_destination_.first, graphreader, loop_edge);
+      return FormPath(best_destination_.first, graphreader, loop_edge_info);
     }
 
     // Get the end node of the prior directed edge and the current distance
@@ -330,15 +330,16 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
 void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing,
-                 const GraphId& loop_edge_id) {
+                 const PathInfo& loop_edge_info) {
   // Get sort heuristic based on distance from origin to destination
   float dist = astarheuristic_.GetDistance(origin.vertex());
   float heuristic = astarheuristic_.Get(dist);
 
   //we need to do some additional bookkeeping if this path needs to be a loop
+  GraphId loop_edge_id = loop_edge_info.edgeid;
   std::vector<baldr::PathLocation::PathEdge> loop_edges;
   Cost loop_edge_cost {0.0f, 0.0f};
-  if(loop_edge_id.Is_Valid()) {
+  if (loop_edge_id.Is_Valid()) {
     //grab some info about the edge and whats connected to the end of it
     const auto node_id = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id)->endnode();
     const auto tile = graphreader.GetGraphTile(node_id);
@@ -416,7 +417,7 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
 
 // Form the path from the adjacency list.
 std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
-                     GraphReader& graphreader, const GraphId& loop_edge) {
+             GraphReader& graphreader, const PathInfo& loop_edge_info) {
   // TODO - leave in for now!
   LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].cost().cost) +
            "  Iterations = " + std::to_string(edgelabel_index_));
@@ -429,18 +430,18 @@ std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     mode = edgelabel.mode();
-    path.emplace_back(PathInfo(mode, edgelabel.cost().secs,
-                               edgelabel.edgeid()));
+    path.emplace_back(mode, edgelabel.cost().secs,
+                      edgelabel.edgeid());
   }
 
   // We had a loop which means we end on the same edge we began
   // this special case can only be handled by adding back the start
   // edge at the end of the path finding because we need to encounter
   // the same edge twice (loop) and the algorithm doesn't allow for this
-  if (loop_edge.Is_Valid()) {
+  if (loop_edge_info.edgeid.Is_Valid()) {
     // Loop edge uses the mode of the last edge found above.
     // TODO - what is the elapsed time on the loop edge?
-    path.emplace_back(PathInfo(mode, 0, loop_edge));
+    path.emplace_back(loop_edge_info);
   }
 
   // Reverse the list and return

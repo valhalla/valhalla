@@ -112,7 +112,7 @@ class PathAlgorithm {
    * Add edges at the origin to the adjacency list
    */
   void SetOrigin(baldr::GraphReader& graphreader, const baldr::PathLocation& origin,
-      const std::shared_ptr<sif::DynamicCost>& costing, const baldr::GraphId& loop_edge);
+      const std::shared_ptr<sif::DynamicCost>& costing, const PathInfo& loop_edge);
 
   /**
    * Set the destination edge(s).
@@ -131,14 +131,14 @@ class PathAlgorithm {
    * Form the path from the adjacency list.
    * @param   dest  Index in the edge labels of the destination edge.
    * @param   graphreader  Graph tile reader
-   * @param   loop   GraphId representing the loop edge (invalid if none)
+   * @param   loop   PathInfo representing the loop edge (invalid if none)
    * @return  Returns the path info, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
   std::vector<PathInfo> FormPath(const uint32_t dest,
                                  baldr::GraphReader& graphreader,
-                                 const baldr::GraphId& loop);
+                                 const PathInfo& loop);
 
   /**
    * TODO - are we keeping these?
