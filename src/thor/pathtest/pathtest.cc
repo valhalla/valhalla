@@ -33,7 +33,7 @@ using namespace valhalla::thor;
 namespace bpo = boost::program_options;
 
 /**
- * TODO: add locations to TripPath
+ * Test a single path from origin to destination.
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::shared_ptr<DynamicCost> cost) {
@@ -44,7 +44,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
       t2 - t1).count();
   LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
   t1 = std::chrono::high_resolution_clock::now();
-  std::vector<GraphId> pathedges;
+  std::vector<PathInfo> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
   if (pathedges.size() == 0) {
     if (cost->AllowMultiPass()) {
@@ -85,13 +85,17 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
 
   // Run again to see benefits of caching
-  t1 = std::chrono::high_resolution_clock::now();
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-  t2 = std::chrono::high_resolution_clock::now();
-  msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
+  uint32_t totalms = 0;
+  for (uint32_t i = 0; i < 10; i++) {
+    t1 = std::chrono::high_resolution_clock::now();
+    pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+    t2 = std::chrono::high_resolution_clock::now();
+    totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
 
+    pathalgorithm.Clear();
+  }
+  msecs = totalms / 10;
+  LOG_INFO("PathAlgorithm GetBestPath average: " + std::to_string(msecs) + " ms");
   return trip_path;
 }
 

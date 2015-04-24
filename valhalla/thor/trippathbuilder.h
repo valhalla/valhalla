@@ -8,6 +8,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
@@ -32,7 +33,7 @@ class TripPathBuilder {
    * For now just return length. TODO - modify to return trip path.
    */
   static odin::TripPath Build(baldr::GraphReader& graphreader,
-             const std::vector<baldr::GraphId>& pathedges,
+             const std::vector<PathInfo>& path,
              const baldr::PathLocation& origin,
              const baldr::PathLocation& dest);
 
