@@ -210,9 +210,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       continue;
     }
 
-    // Update elapsed time (TODO - store at the node)
-    elapsedtime = path_itr->elapsed_time;
-
     // Add a node to the trip path and set its attributes.
     // TODO - What to do on the 1st node of the path (since we just have
     // a list of path edges).
@@ -220,6 +217,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //if (startnode.Is_Valid()) {
     // TODO:  Add the trip_node for exits.
     //}
+    trip_node->set_elapsed_time(elapsedtime);
     trip_node->set_gate(graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
     trip_node->set_toll_booth(graphtile->node(startnode)->type() == NodeType::kTollBooth ? true : false);
 
@@ -301,6 +299,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       }
     }
 
+    // Update elapsed time at the end of the edge, store this at the
+    // next node.
+    elapsedtime = path_itr->elapsed_time;
+
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
@@ -308,14 +310,13 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     prior_opp_local_index = directededge->opp_local_idx();
   }
 
-  // Add the last node
-  trip_path.add_node();
+  // Add the last node and set the elapsed time at the end node
+  TripPath_Node* trip_node = trip_path.add_node();
+  trip_node->set_elapsed_time(elapsedtime);
 
   // Encode shape and add to trip path.
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
-
-  LOG_INFO("Elapsed time in seconds = " + std::to_string(elapsedtime));
 
   //hand it back
   return trip_path;
