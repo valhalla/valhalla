@@ -1010,7 +1010,6 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
 
   IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-  // TODO driveable
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                  xedge_counts);
 
@@ -1018,12 +1017,14 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
+  // TODO: switch based on travel mode
+  if ((xedge_counts.right_similar_driveable_outbound == 0)
+      && (xedge_counts.left_similar_driveable_outbound > 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepRight);
-  } else if ((xedge_counts.right_similar > 0)
-      && (xedge_counts.left_similar == 0)
+  } else if ((xedge_counts.right_similar_driveable_outbound > 0)
+      && (xedge_counts.left_similar_driveable_outbound == 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);

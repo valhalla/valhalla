@@ -252,8 +252,11 @@ void TryDetermineRelativeDirection_Maneuver(
   // node:1
   node = path.add_node();
   node->mutable_edge()->set_begin_heading(curr_heading);
-  for (auto intersecting_heading : intersecting_headings)
-    node->add_intersecting_edge()->set_begin_heading(intersecting_heading);
+  for (auto intersecting_heading : intersecting_headings) {
+    TripPath_IntersectingEdge* xedge = node->add_intersecting_edge();
+    xedge->set_begin_heading(intersecting_heading);
+    xedge->set_driveability(TripPath_Driveability_kBoth);
+  }
 
   // node:2 dummy last node
   node = path.add_node();
@@ -265,8 +268,12 @@ void TryDetermineRelativeDirection_Maneuver(
   maneuver.set_turn_degree(
       valhalla::midgard::GetTurnDegree(prev_heading, curr_heading));
   mbTest.DetermineRelativeDirection(maneuver);
-  if (maneuver.begin_relative_direction() != expected)
-    throw std::runtime_error("Incorrect relative direction");
+  if (maneuver.begin_relative_direction() != expected) {
+    throw std::runtime_error(
+        std::string("Incorrect relative direction: ")
+            + std::to_string(static_cast<int>(maneuver.begin_relative_direction()))
+            + " | expected: " + std::to_string(static_cast<int>(expected)));
+  }
 }
 
 void TestDetermineRelativeDirection_Maneuver() {
