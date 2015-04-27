@@ -66,7 +66,7 @@ struct HierarchyLimits {
     std::string hl = "hierarchy_limits." + std::to_string(level);
 
     // Set maximum number of upward transitions
-    max_up_transitions = pt.get<unsigned int>(hl + ".max_up_transitions",
+    max_up_transitions = pt.get<uint32_t>(hl + ".max_up_transitions",
                     kDefaultMaxUpTransitions[level]);
 
     // Set distance within which expansion is always allowed for this level
