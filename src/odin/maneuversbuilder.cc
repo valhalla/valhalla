@@ -6,11 +6,13 @@
 #include <valhalla/baldr/streetnames_us.h>
 #include <proto/tripdirections.pb.h>
 #include <proto/directions_options.pb.h>
-#include <odin/maneuversbuilder.h>
-#include <odin/signs.h>
+#include <valhalla/odin/maneuversbuilder.h>
+#include <valhalla/odin/signs.h>
+#include <valhalla/odin/sign.h>
 
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -20,13 +22,42 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::odin;
+
+namespace {
+void SortExitSignList(std::vector<Sign>* signs) {
+  // Sort signs by descending consecutive count order
+  std::sort(signs->begin(), signs->end(), [](Sign a, Sign b) {
+    return b.consecutive_count() < a.consecutive_count();
+  });
+}
+
+void CountAndSortExitSignList(std::vector<Sign>* prev_signs,
+                              std::vector<Sign>* curr_signs) {
+  // Increment count for consecutive exit signs
+  for (Sign& curr_sign : *curr_signs) {
+    for (Sign& prev_sign : *prev_signs) {
+      if (curr_sign.text() == prev_sign.text()) {
+        curr_sign.set_consecutive_count(curr_sign.consecutive_count() + 1);
+        prev_sign.set_consecutive_count(curr_sign.consecutive_count());
+      }
+    }
+  }
+
+  // Sort the previous and current exit signs by descending consecutive count
+  SortExitSignList(prev_signs);
+  SortExitSignList(curr_signs);
+}
+
+}
 
 namespace valhalla {
 namespace odin {
 
 ManeuversBuilder::ManeuversBuilder(const DirectionsOptions& directions_options,
                                    EnhancedTripPath* etp)
-    : directions_options_(directions_options), trip_path_(etp) {
+    : directions_options_(directions_options),
+      trip_path_(etp) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -47,6 +78,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Combine maneuvers
   Combine(maneuvers);
+
+  // Calculate the consecutive exit sign count and then sort
+  CountAndSortExitSigns(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
   int combined_man_id = 1;
@@ -138,7 +172,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  node=") + node->ToString());
     IntersectingEdgeCounts xedge_counts;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-                                                   xedge_counts);
+        xedge_counts);
     LOG_TRACE(std::string("    right=") + std::to_string(xedge_counts.right)
         + std::string(" | right_similar=") + std::to_string(xedge_counts.right_similar)
         + std::string(" | right_driveable_outbound=") + std::to_string(xedge_counts.right_driveable_outbound)
@@ -234,7 +268,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           && (next_man_begin_edge && !next_man_begin_edge->turn_channel())
           && !next_man->internal_intersection() && !curr_man->ramp()
           && !next_man->ramp() && !curr_man->roundabout()
-          && !next_man->roundabout() &&!common_base_names->empty()) {
+          && !next_man->roundabout() && !common_base_names->empty()) {
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
@@ -270,7 +304,8 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
   }
 
   // Set the right and left internal turn counts
-  next_man->set_internal_right_turn_count(curr_man->internal_right_turn_count());
+  next_man->set_internal_right_turn_count(
+      curr_man->internal_right_turn_count());
   next_man->set_internal_left_turn_count(curr_man->internal_left_turn_count());
 
   // Set relative direction
@@ -385,6 +420,61 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineSameNameStraightManeuver(
     curr_man->set_portions_highway(true);
 
   return maneuvers.erase(next_man);
+}
+
+void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
+
+  auto prev_man = maneuvers.rbegin();
+  auto curr_man = maneuvers.rbegin();
+
+  if (prev_man != maneuvers.rend())
+    ++prev_man;
+
+  // Rank the exit signs
+  while (prev_man != maneuvers.rend()) {
+
+    // Increase the branch exit sign consecutive count
+    // if it matches the succeeding named maneuver
+    if (prev_man->HasExitBranchSign() && !curr_man->HasExitSign()
+        && curr_man->HasStreetNames()) {
+      for (Sign& sign : *(prev_man->mutable_signs()->mutable_exit_branch_list())) {
+        for (const auto& street_name : curr_man->street_names()) {
+          if (sign.text() == street_name->value()) {
+            sign.set_consecutive_count(sign.consecutive_count() + 1);
+          }
+        }
+      }
+      SortExitSignList(prev_man->mutable_signs()->mutable_exit_number_list());
+    }
+    // Increase the consecutive count of signs that match their neighbor
+    else if (prev_man->HasExitSign() && curr_man->HasExitSign()) {
+
+      // Process the exit number signs
+      CountAndSortExitSignList(
+          prev_man->mutable_signs()->mutable_exit_number_list(),
+          curr_man->mutable_signs()->mutable_exit_number_list());
+
+      // Process the exit branch signs
+      CountAndSortExitSignList(
+          prev_man->mutable_signs()->mutable_exit_branch_list(),
+          curr_man->mutable_signs()->mutable_exit_branch_list());
+
+      // Process the exit toward signs
+      CountAndSortExitSignList(
+          prev_man->mutable_signs()->mutable_exit_toward_list(),
+          curr_man->mutable_signs()->mutable_exit_toward_list());
+
+      // Process the exit name signs
+      CountAndSortExitSignList(
+          prev_man->mutable_signs()->mutable_exit_name_list(),
+          curr_man->mutable_signs()->mutable_exit_name_list());
+    }
+
+    // Update iterators
+    curr_man = prev_man;
+    ++prev_man;
+  }
+
 }
 
 void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
@@ -514,10 +604,12 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                    xedge_counts);
     if (IsRightSideOfStreetDriving()) {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+      maneuver.set_roundabout_exit_count(
+          maneuver.roundabout_exit_count()
               + xedge_counts.right_driveable_outbound);
     } else {
-      maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
+      maneuver.set_roundabout_exit_count(
+          maneuver.roundabout_exit_count()
               + xedge_counts.left_driveable_outbound);
     }
   }
@@ -563,7 +655,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the begin shape index
   maneuver.set_begin_shape_index(curr_edge->begin_shape_index());
-
 
   // if possible, set the turn degree and relative direction
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
@@ -931,7 +1022,8 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepRight);
-  } else if ((xedge_counts.right_similar > 0) && (xedge_counts.left_similar == 0)
+  } else if ((xedge_counts.right_similar > 0)
+      && (xedge_counts.left_similar == 0)
       && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
     maneuver.set_begin_relative_direction(
         Maneuver::RelativeDirection::kKeepLeft);
