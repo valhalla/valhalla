@@ -19,8 +19,6 @@ constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
-// Maximum speed expected - this is used for the A* heuristic
-constexpr uint32_t kMaxSpeedKph = 140;
 }
 
 /**
@@ -206,11 +204,6 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const DirectedEdge* edge,
                         const uint32_t density) const {
-#ifdef LOGGING_LEVEL_WARN
-  if (edge->speed() > kMaxSpeedKph) {
-    LOG_WARN("Speed = " + std::to_string(edge->speed()));
-  }
-#endif
   float sec = (edge->length() * speedfactor_[edge->speed()]);
   return Cost(sec * density_factor_[density], sec);
 }

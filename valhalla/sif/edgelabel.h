@@ -160,9 +160,6 @@ class EdgeLabel {
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
-  // Elapsed time
-  uint32_t elapsedtime_;
-
   // GraphId of the end node of the edge. This allows the expansion
   // to occur by reading the node and not having to re-read the directed
   // edge
