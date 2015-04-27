@@ -16,13 +16,13 @@ dependencies:
     - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - cd deps; for dep in midgard baldr sif mjolnir; do cd $dep; ./autogen.sh && ./configure && sudo make -j8 install; cd ..; done
+    - cd deps; for dep in midgard baldr sif mjolnir; do cd $dep; ./autogen.sh && ./configure && sudo make -j4 install; cd ..; done
 
 test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local --with-valhalla-sif=/usr/local --with-valhalla-mjolnir=/usr/local
   override:
-    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j8
+    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j4
   post:
     - sudo make install
 
