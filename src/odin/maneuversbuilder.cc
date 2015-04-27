@@ -555,6 +555,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_internal_intersection(true);
   }
 
+  // Travel mode
+  maneuver.set_travel_mode(prev_edge->travel_mode());
+
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, node_index);
 }
@@ -906,6 +909,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
 
   /////////////////////////////////////////////////////////////////////////////
+  // Process travel mode
+  if (maneuver.travel_mode() != prev_edge->travel_mode()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process internal intersection
   if (prev_edge->internal_intersection() && !maneuver.internal_intersection()) {
     return false;
@@ -1017,18 +1026,34 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  // TODO: switch based on travel mode
-  if ((xedge_counts.right_similar_driveable_outbound == 0)
-      && (xedge_counts.left_similar_driveable_outbound > 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepRight);
-  } else if ((xedge_counts.right_similar_driveable_outbound > 0)
-      && (xedge_counts.left_similar_driveable_outbound == 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepLeft);
 
+  // Process driving mode
+  if ((maneuver.travel_mode() == TripPath_TravelMode_kDrive)
+      || (maneuver.travel_mode() == TripPath_TravelMode_kBicycle)) {
+    if ((xedge_counts.right_similar_driveable_outbound == 0)
+        && (xedge_counts.left_similar_driveable_outbound > 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar_driveable_outbound > 0)
+        && (xedge_counts.left_similar_driveable_outbound == 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    }
+  }
+  // Process non-driving mode
+  else {
+    if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar > 0)
+        && (xedge_counts.left_similar == 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    }
   }
 }
 

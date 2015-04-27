@@ -54,7 +54,8 @@ Maneuver::Maneuver()
       internal_intersection_(false),
       internal_right_turn_count_(0),
       internal_left_turn_count_(0),
-      roundabout_exit_count_(0) {
+      roundabout_exit_count_(0),
+      travel_mode_(TripPath_TravelMode_kDrive) {
   street_names_ = make_unique<StreetNamesUs>();
   begin_street_names_ = make_unique<StreetNamesUs>();
   cross_street_names_ = make_unique<StreetNamesUs>();
@@ -354,6 +355,14 @@ void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
   roundabout_exit_count_ = roundabout_exit_count;
 }
 
+TripPath_TravelMode Maneuver::travel_mode() const {
+  return travel_mode_;
+}
+
+void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
+  travel_mode_ = travel_mode;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -444,6 +453,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | roundabout_exit_count=";
   man_str += std::to_string(roundabout_exit_count_);
+
+  man_str += " | travel_mode=";
+  man_str += std::to_string(travel_mode_);
 
   return man_str;
 }
@@ -545,6 +557,11 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_count_);
+
+  man_str += delim;
+  man_str += "TripPath_TravelMode_";
+  man_str += TripPath_TravelMode_descriptor()
+      ->FindValueByNumber(travel_mode_)->name();
 
   return man_str;
 }
