@@ -302,6 +302,7 @@ int main(int argc, char *argv[]) {
           pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
           np++;
           if (pathedges.size() == 0) {
+            pathalgorithm.Clear();
             cost->DisableHighwayTransitions();
             pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
             np++;
