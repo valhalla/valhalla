@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS "agency" CASCADE;
+DROP TABLE IF EXISTS "agency";
 CREATE TABLE "agency"
 (
   agency_key integer primary key,
@@ -7,11 +7,10 @@ CREATE TABLE "agency"
   agency_url text,
   agency_timezone text,
   agency_lang text,
-  agency_phone text,
-  agency_fare_url text
+  agency_phone text
 );
 
-DROP TABLE IF EXISTS "stops" CASCADE;
+DROP TABLE IF EXISTS "stops";
 CREATE TABLE "stops"
 (
   stop_key integer primary key,
@@ -25,18 +24,16 @@ CREATE TABLE "stops"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer,
-  stop_timezone text,
-  wheelchair_boarding integer
+  parent_station_key integer
 );
 
-DROP TABLE IF EXISTS "routes" CASCADE;
+DROP TABLE IF EXISTS "routes";
 CREATE TABLE "routes"
 (
   route_key integer primary key,
   route_id text,
   agency_id text,
-  agency_key bigint,
+  agency_key integer,
   route_short_name text,
   route_long_name text,
   route_desc text,
@@ -46,7 +43,7 @@ CREATE TABLE "routes"
   route_text_color text
 );
 
-DROP TABLE IF EXISTS "trips" CASCADE;
+DROP TABLE IF EXISTS "trips";
 CREATE TABLE "trips"
 (
   route_key integer primary key,
@@ -57,13 +54,10 @@ CREATE TABLE "trips"
   trip_short_name text,
   direction_id text,
   block_id text,
-  block_key integer,
-  shape_id text,
-  wheelchair_accessible integer,
-  bikes_allowed integer
+  shape_id text
 );
 
-DROP TABLE IF EXISTS "stop_times" CASCADE;
+DROP TABLE IF EXISTS "stop_times";
 CREATE TABLE "stop_times"
 (
   trip_key integer primary key,
@@ -76,11 +70,10 @@ CREATE TABLE "stop_times"
   stop_headsign text,
   pickup_type text,
   drop_off_type text,
-  shape_dist_traveled double precision,
-  timepoint integer
+  shape_dist_traveled double precision
 );
 
-DROP TABLE IF EXISTS "calendar" CASCADE;
+DROP TABLE IF EXISTS "calendar";
 CREATE TABLE "calendar"
 (
   service_key integer primary key,
@@ -96,7 +89,7 @@ CREATE TABLE "calendar"
   end_date text
 );
 
-DROP TABLE IF EXISTS "calendar_dates" CASCADE;
+DROP TABLE IF EXISTS "calendar_dates";
 CREATE TABLE "calendar_dates"
 (
   service_key integer primary key,
@@ -105,10 +98,10 @@ CREATE TABLE "calendar_dates"
   exception_type integer
 );
 
-DROP TABLE IF EXISTS "shapes" CASCADE;
+DROP TABLE IF EXISTS "shapes";
 CREATE TABLE "shapes"
 (
-  shape_key integer primary key,
+  shape_key integer primary key autoincrement,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,
@@ -116,14 +109,14 @@ CREATE TABLE "shapes"
   shape_dist_traveled double precision
 );
 
-DROP TABLE IF EXISTS "shape" CASCADE;
+DROP TABLE IF EXISTS "shape"; 
 CREATE TABLE "shape"
 (
-  shape_key integer primary key,
+  shape_key integer primary key autoincrement,
   shape_id text
 );
 
-DROP TABLE IF EXISTS "transfers" CASCADE;
+DROP TABLE IF EXISTS "transfers";
 CREATE TABLE "transfers"
 (
   transfer_key integer primary key,
@@ -135,14 +128,13 @@ CREATE TABLE "transfers"
   min_transfer_time text
 );
 
-DROP TABLE IF EXISTS "schedule" CASCADE;
+DROP TABLE IF EXISTS "schedule";
 CREATE TABLE "schedule"
 (
   schedule_key integer primary key,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
-  block_key text,
   route_key integer,
   service_key integer,
   departure_time text,
@@ -153,23 +145,22 @@ CREATE TABLE "schedule"
   headsign text
 );
 
-DROP TABLE IF EXISTS "agency_tmp" CASCADE;
+DROP TABLE IF EXISTS "agency_tmp";
 CREATE TABLE "agency_tmp"
 (
-  agency_key serial primary key,
+  agency_key integer primary key autoincrement,
   agency_id text,
   agency_name text,
   agency_url text,
   agency_timezone text,
   agency_lang text,
-  agency_phone text,
-  agency_fare_url text
+  agency_phone text
 );
 
-DROP TABLE IF EXISTS "stops_tmp" CASCADE;
+DROP TABLE IF EXISTS "stops_tmp";
 CREATE TABLE "stops_tmp"
 (
-  stop_key serial primary key,
+  stop_key integer primary key autoincrement,
   stop_id text,
   stop_code text,
   stop_name text,
@@ -180,18 +171,16 @@ CREATE TABLE "stops_tmp"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer,
-  stop_timezone text,
-  wheelchair_boarding integer
+  parent_station_key integer
 );
 
-DROP TABLE IF EXISTS "routes_tmp" CASCADE;
+DROP TABLE IF EXISTS "routes_tmp";
 CREATE TABLE "routes_tmp"
 (
-  route_key serial primary key,
+  route_key integer primary key autoincrement,
   route_id text,
   agency_id text,
-  agency_key bigint,
+  agency_key integer,
   route_short_name text,
   route_long_name text,
   route_desc text,
@@ -201,10 +190,10 @@ CREATE TABLE "routes_tmp"
   route_text_color text
 );
 
-DROP TABLE IF EXISTS "trips_tmp" CASCADE;
+DROP TABLE IF EXISTS "trips_tmp";
 CREATE TABLE "trips_tmp"
 (
-  route_key serial primary key,
+  route_key integer primary key autoincrement,
   route_id text,
   service_id text,
   trip_id text,
@@ -212,16 +201,13 @@ CREATE TABLE "trips_tmp"
   trip_short_name text,
   direction_id text,
   block_id text,
-  block_key integer,
-  shape_id text,
-  wheelchair_accessible integer,
-  bikes_allowed integer
+  shape_id text
 );
 
-DROP TABLE IF EXISTS "stop_times_tmp" CASCADE;
+DROP TABLE IF EXISTS "stop_times_tmp";
 CREATE TABLE "stop_times_tmp"
 (
-  trip_key serial primary key,
+  trip_key integer primary key autoincrement,
   trip_id text,
   arrival_time text,
   departure_time text,
@@ -231,14 +217,13 @@ CREATE TABLE "stop_times_tmp"
   stop_headsign text,
   pickup_type text,
   drop_off_type text,
-  shape_dist_traveled double precision,
-  timepoint integer
+  shape_dist_traveled double precision
 );
 
-DROP TABLE IF EXISTS "calendar_tmp" CASCADE;
+DROP TABLE IF EXISTS "calendar_tmp";
 CREATE TABLE "calendar_tmp"
 (
-  service_key serial primary key,
+  service_key integer primary key autoincrement,
   service_id text,
   monday integer,
   tuesday integer,
@@ -251,19 +236,18 @@ CREATE TABLE "calendar_tmp"
   end_date text
 );
 
-DROP TABLE IF EXISTS "calendar_dates_tmp" CASCADE;
+DROP TABLE IF EXISTS "calendar_dates_tmp";
 CREATE TABLE "calendar_dates_tmp"
 (
-  service_key serial primary key,
+  service_key integer primary key autoincrement,
   service_id text,
   date text,
   exception_type integer
 );
 
-DROP TABLE IF EXISTS "shapes_tmp" CASCADE;
+DROP TABLE IF EXISTS "shapes_tmp";
 CREATE TABLE "shapes_tmp"
 (
-  shape_key serial primary key,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,
@@ -271,17 +255,16 @@ CREATE TABLE "shapes_tmp"
   shape_dist_traveled double precision
 );
 
-DROP TABLE IF EXISTS "shape_tmp" CASCADE;
+DROP TABLE IF EXISTS "shape_tmp";
 CREATE TABLE "shape_tmp"
 (
-  shape_key serial primary key,
   shape_id text
 );
 
-DROP TABLE IF EXISTS "transfers_tmp" CASCADE;
+DROP TABLE IF EXISTS "transfers_tmp";
 CREATE TABLE "transfers_tmp"
 (
-  transfer_key serial primary key,
+  transfer_key integer primary key autoincrement,
   from_stop_id text,
   from_stop_key integer,
   to_stop_id text,
@@ -290,14 +273,13 @@ CREATE TABLE "transfers_tmp"
   min_transfer_time text
 );
 
-DROP TABLE IF EXISTS "schedule_tmp" CASCADE;
+DROP TABLE IF EXISTS "schedule_tmp";
 CREATE TABLE "schedule_tmp"
 (
-  schedule_key serial primary key,
+  schedule_key integer primary key autoincrement,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
-  block_key text,
   route_key integer,
   service_key integer,
   departure_time text,
@@ -308,9 +290,6 @@ CREATE TABLE "schedule_tmp"
   headsign text
 );
 
+
 SELECT AddGeometryColumn('shapes', 'geom', 4326, 'POINT', 2);
 SELECT AddGeometryColumn('shape', 'geom', 4326, 'LINESTRING', 2);
-
-SELECT AddGeometryColumn('shapes_tmp', 'geom', 4326, 'POINT', 2);
-SELECT AddGeometryColumn('shape_tmp', 'geom', 4326, 'LINESTRING', 2);
-

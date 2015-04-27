@@ -1,5 +1,10 @@
 
-dbuser=<your db username>
+if [[ "$1" == "pg" ]]; then
+  db=gtfs
+  #dbuser=<your db user name>
+elif [[ "$1" == "sqlite" ]]; then
+  db=transit.sqlite
+fi
 
 #clean up
 cat /dev/null > data.sql
@@ -47,60 +52,122 @@ do
     COL=$(echo $COL | tr " " ,)
 
     #dump out the columns we want
-    csvfilter -f $COL $f > $f.bk
+    csvfilter -f $COL $f --out-delimiter="|" > $f.bk
     mv $f.bk $f
 
     #remove the ^M again due to csvfilter
     tr -d '\r' < $f > $f.bk
     sed '/^$/d' $f.bk > $f
     rm $f.bk
-
+   
     cols=$(head -1 $f)
-        
-    echo "copy ${f%%.*}_tmp(${cols}) from '$PWD/$f' with delimiter ',' csv header;" >> data.sql
+    cols=$(echo $cols | tr "|" ,) 
+
+    if [[ "$1" ==  "pg" ]]; then
+      echo "copy ${f%%.*}_tmp(${cols}) from '$PWD/$f' with delimiter '|' csv header;" >> data.sql
+    elif [[ "$1" ==  "sqlite" ]]; then
+      echo "termsql -a -i $PWD/$f -c '${cols}' -1 -d '|' -t ${f%%.*}_tmp -o ${db}" >> data.sql
+    fi
   fi
 
 done
 
-db=gtfs
+if [[ "$1" ==  "pg" ]]; then
 
-#wipe db as needed.
-if [[ "$1" ==  "clean" ]]; then
-  psql -U $dbuser -f ./create_tables.sql ${db} || exit $?
-fi 
+  #wipe db as needed.
+  if [[ "$2" ==  "clean" ]]; then
+    psql -U $dbuser -f ./create_tables_pg.sql ${db} || exit $?
+  fi 
 
-psql -U $dbuser -f ./data.sql ${db} || exit $?
-psql -U $dbuser -f ./mid_updates.sql ${db} || exit $?
+  psql -U $dbuser -f ./data.sql ${db} || exit $?
+  psql -U $dbuser -f ./mid_updates.sql ${db} || exit $?
 
-./build_schedule.sh
+  ./build_schedule.sh $db $1 $dbuser
 
-psql -U $dbuser gtfs -c "insert into shapes select * from shapes_tmp;"
-psql -U $dbuser gtfs -c "insert into agency select * from agency_tmp;"
-psql -U $dbuser gtfs -c "insert into stops select * from stops_tmp;"
-psql -U $dbuser gtfs -c "insert into routes select * from  routes_tmp;"
-psql -U $dbuser gtfs -c "insert into trips select * from trips_tmp;"
-psql -U $dbuser gtfs -c "insert into stop_times select * from stop_times_tmp;"
-psql -U $dbuser gtfs -c "insert into calendar select * from calendar_tmp;"
-psql -U $dbuser gtfs -c "insert into calendar_dates select * from calendar_dates_tmp;"
-psql -U $dbuser gtfs -c "insert into transfers select * from transfers_tmp;"
-psql -U $dbuser gtfs -c "insert into schedule select * from schedule_tmp;"
+  psql -U $dbuser $db -c "insert into shapes select * from shapes_tmp;"
+  psql -U $dbuser $db -c "insert into shape select * from shape_tmp;"
+  psql -U $dbuser $db -c "insert into agency select * from agency_tmp;"
+  psql -U $dbuser $db -c "insert into stops select * from stops_tmp;"
+  psql -U $dbuser $db -c "insert into routes select * from  routes_tmp;"
+  psql -U $dbuser $db -c "insert into trips select * from trips_tmp;"
+  psql -U $dbuser $db -c "insert into stop_times select * from stop_times_tmp;"
+  psql -U $dbuser $db -c "insert into calendar select * from calendar_tmp;"
+  psql -U $dbuser $db -c "insert into calendar_dates select * from calendar_dates_tmp;"
+  psql -U $dbuser $db -c "insert into transfers select * from transfers_tmp;"
+  psql -U $dbuser $db -c "insert into schedule select * from schedule_tmp;"
+  
+  psql -U $dbuser $db -c "TRUNCATE TABLE shapes_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE shape_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE agency_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE stops_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE routes_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE trips_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE stop_times_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE calendar_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE calendar_dates_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE transfers_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE schedule_tmp;"
+  psql -U $dbuser $db -c "DROP Table s_tmp;"
 
-psql -U $dbuser gtfs -c "TRUNCATE TABLE shapes_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE agency_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE stops_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE routes_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE trips_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE stop_times_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE calendar_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE calendar_dates_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE transfers_tmp;"
-psql -U $dbuser gtfs -c "TRUNCATE TABLE schedule_tmp;"
-psql -U $dbuser gtfs -c "DROP Table s_tmp;"
+  if [[ "$2" ==  "clean" ]]; then
+    psql -U $dbuser $db -c "CREATE INDEX shapes_index ON shapes USING GIST (geom);"
+    psql -U $dbuser $db -c "CREATE INDEX shape_index ON shape USING GIST (geom);"
+    psql -U $dbuser $db -c "CREATE INDEX stop_key_index ON stop_times USING btree (stop_key);"
+  fi
 
-if [[ "$1" ==  "clean" ]]; then
-  psql -U $dbuser gtfs -c "CREATE INDEX shapes_index ON shapes USING GIST (geom);"
-  psql -U $dbuser gtfs -c "CREATE INDEX shape_index ON shape USING GIST (geom);"
-  psql -U $dbuser gtfs -c "CREATE INDEX stop_key_index ON stop_times USING btree (stop_key);"
+elif [[ "$1" ==  "sqlite" ]]; then
+ 
+  #wipe db as needed.
+  if [[ "$2" == "clean" ]]; then
+    rm $db
+    cat ./create_tables_sqlite.sql | spatialite $db || exit $?
+    ./data.sql $db || exit $?
+    cat ./geom.sql | spatialite $db || exit $?
+  else
+    cat ./shapes.sql | spatialite $db || exit $?
+    ./data.sql $db || exit $?
+    cat ./geom.sql | spatialite $db || exit $?
+  fi
+
+  cat ./mid_updates_sqlite.sql | spatialite $db || exit $?
+
+  ./build_schedule.sh $db $1
+
+#think geom makes you call out the col names....not sure.
+  cols=$(head -1 shapes.txt)
+  cols=$(echo $cols | tr "|" ,)
+  spatialite $db "insert into shapes(${cols},geom) select ${cols},geom from shapes_tmp;"
+  spatialite $db "insert into shape(shape_id,geom) select shape_id,geom from shape_tmp;"
+
+  spatialite $db "insert into agency select * from agency_tmp;"
+  spatialite $db "insert into stops select * from stops_tmp;"
+  spatialite $db "insert into routes select * from  routes_tmp;"
+  spatialite $db "insert into trips select * from trips_tmp;"
+  spatialite $db "insert into stop_times select * from stop_times_tmp;"
+  spatialite $db "insert into calendar select * from calendar_tmp;"
+  spatialite $db "insert into calendar_dates select * from calendar_dates_tmp;"
+  spatialite $db "insert into transfers select * from transfers_tmp;"
+  spatialite $db "insert into schedule select * from schedule_tmp;"
+  
+  spatialite $db "DELETE from shapes_tmp;"
+  spatialite $db "DELETE from agency_tmp;"
+  spatialite $db "DELETE from stops_tmp;"
+  spatialite $db "DELETE from routes_tmp;"
+  spatialite $db "DELETE from trips_tmp;"
+  spatialite $db "DELETE from stop_times_tmp;"
+  spatialite $db "DELETE from calendar_tmp;"
+  spatialite $db "DELETE from calendar_dates_tmp;"
+  spatialite $db "DELETE from transfers_tmp;"
+  spatialite $db "DELETE from schedule_tmp;"
+  spatialite $db "DROP Table s_tmp;"
+  spatialite $db "VACUUM ANALYZE;"
+ 
+  if [[ "$2" ==  "clean" ]]; then
+    echo "SELECT CreateSpatialIndex('shapes', 'geom');" | spatialite $db
+    echo "SELECT CreateSpatialIndex('shape', 'geom');" | spatialite $db
+    echo "CREATE INDEX stops_key_index ON stops (stop_key);" | spatialite $db
+  fi
+
 fi
 
 rm *.txt
