@@ -237,8 +237,15 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
+      // Do not combine if travel mode is different
+      if (curr_man->travel_mode() != next_man->travel_mode()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // Combine current internal maneuver with next maneuver
-      if (curr_man->internal_intersection() && (curr_man != next_man)) {
+      else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
                                            next_man,
                                            (curr_man == maneuvers.begin()));
