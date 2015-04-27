@@ -749,6 +749,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             speed = UpdateLinkSpeed(use, rc, w.speed());
           }
 
+          // Validate speed
+          if (speed > kMaxSpeedKph) {
+            LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " +
+                       std::to_string(w.way_id()));
+            speed = kMaxSpeedKph;
+          }
+
           // Infer cul-de-sac if a road edge is a loop and is low
           // classification. TODO - do we need length limit?
           if (use == Use::kRoad && source == target &&
