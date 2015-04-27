@@ -36,7 +36,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
-                      const float speed, const baldr::Use use,
+                      const uint32_t speed, const baldr::Use use,
                       const baldr::RoadClass rc, const uint32_t localidx,
                       const bool signal, const uint32_t restrictions);
 
@@ -328,7 +328,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * Sets the speed in KPH.
    * @param  speed  Speed in KPH.
   */
-  void set_speed(const float speed);
+  void set_speed(const uint32_t speed);
 
   /**
    * Sets the classification (importance) of this edge.
