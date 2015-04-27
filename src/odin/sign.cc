@@ -34,5 +34,10 @@ std::string Sign::ToParameterString() const {
   return str;
 }
 
+bool Sign::operator ==(const Sign& rhs) const {
+  return ((consecutive_count_ == rhs.consecutive_count_)
+      && (text_ == rhs.text_));
+}
+
 }
 }
