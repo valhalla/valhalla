@@ -29,6 +29,7 @@ libtool
 
 # built objects
 pathtest
+citytest
 *.o
 .deps/
 .dirstamp
