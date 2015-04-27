@@ -38,6 +38,8 @@ class ManeuversBuilder {
       std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
       std::list<Maneuver>::iterator next_man);
 
+  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers);
+
   void CreateDestinationManeuver(Maneuver& maneuver);
 
   void CreateStartManeuver(Maneuver& maneuver);
