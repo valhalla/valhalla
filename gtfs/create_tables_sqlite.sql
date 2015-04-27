@@ -292,4 +292,6 @@ CREATE TABLE "schedule_tmp"
 
 
 SELECT AddGeometryColumn('shapes', 'geom', 4326, 'POINT', 2);
+SELECT AddGeometryColumn('stops', 'geom', 4326, 'POINT', 2);
+
 SELECT AddGeometryColumn('shape', 'geom', 4326, 'LINESTRING', 2);
