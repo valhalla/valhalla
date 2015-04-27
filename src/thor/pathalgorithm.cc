@@ -62,7 +62,7 @@ PathAlgorithm::PathAlgorithm()
       edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      best_destination_{kInvalidLabel, Cost(std::numeric_limits<float>::max(), 0.0f)}{
+      best_destination_{kInvalidLabel, Cost(std::numeric_limits<float>::max(), 0.0f)} {
   edgelabels_.reserve(kInitialEdgeLabelCount);
 }
 
@@ -90,9 +90,6 @@ void PathAlgorithm::Clear() {
     delete edgestatus_;
     edgestatus_ = nullptr;
   }
-
-  // Clear the map of adjacency list edges
-  adjlistedges_.clear();
 }
 
 // Initialize prior to finding best path
@@ -167,8 +164,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Remove label from adjacency list, mark it as done - copy the EdgeLabel
     // for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    RemoveFromAdjMap(pred.edgeid());
-    edgestatus_->Set(pred.edgeid(), kPermanent);
+    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
 
     // Check for completion. Form path and return if complete.
     if (IsComplete(predindex)) {
@@ -220,7 +216,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Handle transition edges they either get skipped or added to the
       // adjacency list using the predecessor info
       if (directededge->trans_up() || directededge->trans_down()) {
-        HandleTransitionEdge(level, edgeid, directededge, pred,  predindex);
+          HandleTransitionEdge(level, edgeid, directededge, pred,  predindex);
         continue;
       }
 
@@ -239,8 +235,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
-      EdgeStatusType edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus == kPermanent) {
+      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
+      if (edgestatus.status.set == kPermanent) {
         continue;
       }
 
@@ -251,26 +247,18 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       Cost newcost = pred.cost() +
                      costing->EdgeCost(directededge, nodeinfo->density()) +
                      costing->TransitionCost(directededge, nodeinfo, pred, i);
- //     Cost edgecost = costing->EdgeCost(directededge, nodeinfo->density()) +
- //                     costing->TransitionCost(directededge, nodeinfo, pred, i);
- //     float cost = pred.cost() + edgecost.cost;
- //     float secs = pred.elapsedtime() + edgecost.seconds;
 
-      // Check if already in adjacency list
-      if (edgestatus == kTemporary) {
-        // If cost is less than current cost to this edge then we
-        // update the predecessor information and decrement the sort cost by
-        // the difference in the real costs (the A* heuristic doesn't change)
-        uint32_t prior_label_index = GetPriorEdgeLabel(edgeid);
-        if (prior_label_index != kInvalidLabel) {
-          float dc = edgelabels_[prior_label_index].cost().cost - newcost.cost;
-          if (dc > 0) {
-            float prior_sort_cost = edgelabels_[prior_label_index].sortcost();
-            float newsortcost = prior_sort_cost - dc;
-            edgelabels_[prior_label_index].Update(predindex, newcost, newsortcost, mode_);
-            adjacencylist_->DecreaseCost(prior_label_index, newsortcost,
-                                         prior_sort_cost);
-          }
+      // Check if edge is temporarily labeled and this path has less cost. If
+      // less cost the predecessor is updated and the sort cost is decremented
+      // by the difference in real cost (A* heuristic doesn't change)
+      if (edgestatus.status.set == kTemporary) {
+        uint32_t idx = edgestatus.status.index;
+        float dc = edgelabels_[idx].cost().cost - newcost.cost;
+        if (dc > 0) {
+          float oldsortcost = edgelabels_[idx].sortcost();
+          float newsortcost = oldsortcost - dc;
+          edgelabels_[idx].Update(predindex, newcost, newsortcost, mode_);
+          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
         }
         continue;
       }
@@ -284,15 +272,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
                 directededge->endnode())->latlng());
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
-      // Add edge label
-      edgelabels_.emplace_back(EdgeLabel(predindex, edgeid, directededge,
+      // Add edge label, add to the adjacency list and set edge status
+      edgelabels_.emplace_back(predindex, edgeid, directededge,
                         newcost, sortcost, dist, directededge->restrictions(),
-                        directededge->opp_local_idx(), mode_));
-
-      // Add to the adjacency list, add to the map of edges in the adj. list
+                        directededge->opp_local_idx(), mode_);
       adjacencylist_->Add(edgelabel_index_, sortcost);
-      adjlistedges_[edgeid] = edgelabel_index_;
-      edgestatus_->Set(edgeid, kTemporary);
+      edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
     }
   }
@@ -315,14 +300,13 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
 
   // Allow the transition edge. Add it to the adjacency list using the
   // predecessor information. Transition edges have no length.
-  edgelabels_.emplace_back(EdgeLabel(predindex, edgeid,
+  edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), pred.distance(),
-                pred.restrictions(), pred.opp_local_idx(), mode_));
+                pred.restrictions(), pred.opp_local_idx(), mode_);
 
-  // Add to the adjacency list, add to the map of edges in the adj. list
+  // Add to the adjacency list and set edge status
   adjacencylist_->Add(edgelabel_index_, pred.sortcost());
-  adjlistedges_[edgeid] = edgelabel_index_;
-  edgestatus_->Set(edgeid, kTemporary);
+  edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
   edgelabel_index_++;
 }
 
@@ -368,10 +352,11 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    edgelabels_.emplace_back(EdgeLabel(kInvalidLabel, edgeid,
+    edgelabels_.emplace_back(kInvalidLabel, edgeid,
             directededge, cost, sortcost, dist, 0,
-            directededge->opp_local_idx(), mode_));
+            directededge->opp_local_idx(), mode_);
     adjacencylist_->Add(edgelabel_index_, sortcost);
+    edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
     edgelabel_index_++;
   }
 }
@@ -447,20 +432,6 @@ std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
   // Reverse the list and return
   std:reverse(path.begin(), path.end());
   return path;
-}
-
-// Gets the edge label for an edge that is in the adjacency list.
-uint32_t PathAlgorithm::GetPriorEdgeLabel(const GraphId& edgeid) const {
-  const auto& p = adjlistedges_.find(edgeid);
-  return (p == adjlistedges_.end()) ? kInvalidLabel : p->second;
-}
-
-// Remove the edge label from the map of edges in the adjacency list
-void PathAlgorithm::RemoveFromAdjMap(const GraphId& edgeid) {
-  auto p = adjlistedges_.find(edgeid);
-  if (p != adjlistedges_.end()) {
-    adjlistedges_.erase(p);
-  }
 }
 
 }

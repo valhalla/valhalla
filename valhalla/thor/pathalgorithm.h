@@ -77,10 +77,6 @@ class PathAlgorithm {
   // Edge status
   EdgeStatus* edgestatus_;
 
-  // Map of edges in the adjacency list. Keep this map so we do not have
-  // to search to find an entry that is already in the adjacency list
-  std::unordered_map<baldr::GraphId, uint32_t> adjlistedges_;
-
   // Destinations, id and cost
   std::unordered_map<baldr::GraphId, sif::Cost> destinations_;
 
@@ -152,19 +148,6 @@ class PathAlgorithm {
                                  const baldr::GraphId& endnode,
                                  const baldr::DirectedEdge* shortcutedge,
                                  std::vector<baldr::GraphId>& edgesonpath);
-
-  /**
-   * Gets the edge label for an edge that is in the adjacency list.
-   * @param  edgeid   Edge Id
-   * @return  Returns the index in the edge labels for the edge id.
-   */
-  uint32_t GetPriorEdgeLabel(const baldr::GraphId& edgeid) const;
-
-  /*
-   * Remove the edge label from the map of edges in the adjacency list
-   * @param  edgeid  Edge Id to remove from adjacency list map.
-   */
-  void RemoveFromAdjMap(const baldr::GraphId& edgeid);
 };
 
 }

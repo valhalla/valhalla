@@ -7,7 +7,8 @@
 namespace valhalla {
 namespace thor {
 
-enum EdgeStatusType {
+// Edge label status
+enum EdgeSet {
   kUnreached = 0,   // Unreached - not yet encountered in search
   kPermanent = 1,   // Permanent - shortest path to this edge has been found
   kTemporary = 2    // Temporary - edge has been encountered but there could
@@ -15,9 +16,28 @@ enum EdgeStatusType {
                     //   be "adjacent" to an edge that is permanently labeled.
 };
 
+// Store the edge label status and its index in the EdgeLabels list
+struct EdgeStatusInfo {
+  struct SetAndIndex {
+    uint32_t index : 28;
+    uint32_t set   : 4;
+  };
+  SetAndIndex status;
+
+  EdgeStatusInfo() {
+    status.set   = static_cast<uint32_t>(kUnreached);
+    status.index = 0;
+  }
+
+  EdgeStatusInfo(const EdgeSet set, const uint32_t index) {
+    status.set   = static_cast<uint32_t>(set);
+    status.index = index;
+  }
+};
+
 /**
- * Class to define / lookup the status of an edge during the shortest path
- * algorithm.
+ * Class to define / lookup the status and index of an edge in the edge label
+ * list during the shortest path algorithm.
  */
 class EdgeStatus {
  public:
@@ -34,19 +54,23 @@ class EdgeStatus {
   /**
    * Set the status of a directed edge given its GraphId.
    * @param  edgeid   GraphId of the directed edge to set.
-   * @param  status   Label status for this directed edge.
+   * @param  set      Label set for this directed edge.
+   * @param  index    Index of the edge label.
    */
-  void Set(const baldr::GraphId& edgeid, const EdgeStatusType status);
+  void Set(const baldr::GraphId& edgeid, const EdgeSet set,
+           const uint32_t index);
 
   /**
-   * Get the status of a directed edge given its GraphId.
+   * Get the status info of a directed edge given its GraphId.
+   * @param   edgeid  GraphId of the directed edge.
+   * @return  Returns edge status info.
    */
-  EdgeStatusType Get(const baldr::GraphId& edgeid) const;
+  EdgeStatusInfo Get(const baldr::GraphId& edgeid) const;
 
  private:
-  // Map to store the status of GraphIds that have been encountered.
+  // Map to store the status and index of GraphIds that have been encountered.
   // Any unreached edges are not added to the map.
-  std::unordered_map<baldr::GraphId, EdgeStatusType> edgestatus_;
+  std::unordered_map<baldr::GraphId, EdgeStatusInfo> edgestatus_;
 };
 
 }
