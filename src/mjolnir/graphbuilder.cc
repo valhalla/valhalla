@@ -486,72 +486,6 @@ void ReclassifyLinks(const std::string& ways_file,
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
 
-/**
- * Get the use for a link (either a kRamp or kTurnChannel)
- * TODO - validate logic with some real world cases.
- */
-Use GetLinkUse(const std::pair<Edge, size_t>& edge_pair, const RoadClass rc,
-               const float length, sequence<Node>& nodes, sequence<Edge>& edges) {
-  // Assume link that has highway = motorway or trunk is a ramp.
-  // Also, if length is > kMaxTurnChannelLength we assume this is a ramp
-  if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
-      length > kMaxTurnChannelLength) {
-    return Use::kRamp;
-  }
-
-  // TODO - if there is a exit sign or exit number present this is
-  // considered kRamp. Do we have this information anywhere yet?
-
-  // Both end nodes have to connect to a non-link edge. If either end node
-  // connects only to "links" this likely indicates a split or fork,
-  // which are not so prevalent in turn channels.
-  auto startnode_itr = nodes[edge_pair.first.sourcenode_];
-  auto startnd = collect_node_edges(startnode_itr, nodes, edges);
-  auto endnode_itr = nodes[edge_pair.first.targetnode_];
-  auto endnd = collect_node_edges(endnode_itr, nodes, edges);
-  if (startnd.node.attributes_.non_link_edge && endnd.node.attributes_.non_link_edge) {
-    // If either end node connects to another link then still
-    // call it a ramp. So turn channels are very short and ONLY connect
-    // to non-link edges without any exit signs.
-    for (const auto& edge : startnd.node_edges) {
-      if (edge.second != edge_pair.second && edge.first.attributes.link) {
-        return Use::kRamp;
-      }
-    }
-    for (const auto& edge : endnd.node_edges) {
-      if (edge.second != edge_pair.second && edge.first.attributes.link) {
-        return Use::kRamp;
-      }
-    }
-    return Use::kTurnChannel;
-  }
-  else {
-    return Use::kRamp;
-  }
-}
-
-float UpdateLinkSpeed(const Use use, const RoadClass rc, const float spd) {
-  if (use == Use::kTurnChannel) {
-    return spd * 1.25f;
-  } else if (use == Use::kRamp) {
-    if (rc == RoadClass::kMotorway) {
-      return 95.0f;
-    } else if (rc == RoadClass::kTrunk) {
-      return 80.0f;
-    } else if (rc == RoadClass::kPrimary) {
-      return 65.0f;
-    } else if (rc == RoadClass::kSecondary) {
-      return 50.0f;
-    } else if (rc == RoadClass::kTertiary) {
-      return 40.0f;
-    } else if (rc == RoadClass::kUnclassified) {
-      return 35.0f;
-    } else {
-      return 25.0f;
-    }
-  }
-  return spd;
-}
 /*
 struct DuplicateEdgeInfo {
   uint32_t edgeindex;
@@ -737,19 +671,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if (!forward)
             std::swap(source, target);
 
-          // If link is set test to see if we can infer that the edge
-          // is a turn channel. Update speed for link edges.
-          float speed = w.speed();
-          RoadClass rc = static_cast<RoadClass>(edge.attributes.importance);
-          Use use = w.use();
-          if (w.link()) {
-            use = GetLinkUse(edge_pair, rc, length, nodes, edges);
-            if (use == Use::kTurnChannel)
-              stats.turnchannelcount++;
-            speed = UpdateLinkSpeed(use, rc, w.speed());
-          }
-
           // Validate speed
+          uint32_t speed = static_cast<uint32_t>(w.speed());
           if (speed > kMaxSpeedKph) {
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " +
                        std::to_string(w.way_id()));
@@ -758,6 +681,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Infer cul-de-sac if a road edge is a loop and is low
           // classification. TODO - do we need length limit?
+          Use use = w.use();
+          RoadClass rc = static_cast<RoadClass>(edge.attributes.importance);
           if (use == Use::kRoad && source == target &&
               rc > RoadClass::kTertiary) {
             use = Use::kCuldesac;
