@@ -140,5 +140,12 @@ const std::string Signs::ListToParameterString(
   return sign_string;
 }
 
+bool Signs::operator ==(const Signs& rhs) const {
+  return ((exit_number_list_ == rhs.exit_number_list_)
+      && (exit_branch_list_ == rhs.exit_branch_list_)
+      && (exit_toward_list_ == rhs.exit_toward_list_)
+      && (exit_name_list_ == rhs.exit_name_list_));
+}
+
 }
 }

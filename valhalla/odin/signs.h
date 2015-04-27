@@ -44,6 +44,8 @@ class Signs {
 
   std::string ToParameterString() const;
 
+  bool operator ==(const Signs& rhs) const;
+
  protected:
   const std::string ListToString(const std::vector<Sign>& signs) const;
 

@@ -29,6 +29,10 @@ class ManeuversBuilderTest : public ManeuversBuilder {
     ManeuversBuilder::Combine(maneuvers);
   }
 
+  void CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
+    ManeuversBuilder::CountAndSortExitSigns(maneuvers);
+  }
+
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
     ManeuversBuilder::SetSimpleDirectionalManeuverType(maneuver);
   }
@@ -440,8 +444,9 @@ void PopulateManeuver(
     std::vector<std::vector<std::string>> exit_branches,
     std::vector<std::vector<std::string>> exit_towards,
     std::vector<std::vector<std::string>> exit_names,
-    uint32_t internal_right_turn_count = 0, uint32_t internal_left_turn_count =
-        0) {
+    uint32_t internal_right_turn_count = 0,
+    uint32_t internal_left_turn_count = 0,
+    uint32_t roundabout_exit_count = 0) {
 
   maneuver.set_type(type);
 
@@ -514,6 +519,7 @@ void PopulateManeuver(
 
   maneuver.set_internal_right_turn_count(internal_right_turn_count);
   maneuver.set_internal_left_turn_count(internal_left_turn_count);
+  maneuver.set_roundabout_exit_count(roundabout_exit_count);
 }
 
 void TestLeftInternalStraightCombine() {
@@ -1731,6 +1737,146 @@ void TestSimpleRightTurnChannelCombine() {
   TryCombine(mbTest, maneuvers, expected_maneuvers);
 }
 
+void TryCountAndSortExitSigns(std::list<Maneuver>& maneuvers,
+                              std::list<Maneuver>& expected_maneuvers) {
+  ManeuversBuilderTest mbTest;
+  mbTest.CountAndSortExitSigns(maneuvers);
+
+  if (maneuvers.size() != expected_maneuvers.size())
+    throw std::runtime_error("Incorrect maneuver count");
+  for (auto man = maneuvers.begin(), expected_man = expected_maneuvers.begin();
+      man != maneuvers.end(); ++man, ++expected_man) {
+    if (!(man->signs() == expected_man->signs()))
+      throw std::runtime_error("Maneuver signs do not match expected");
+  }
+}
+
+void TestCountAndSortExitSigns() {
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create maneuver list
+  std::list<Maneuver> maneuvers;
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "I 81 South", "US 322 West",
+                       "American Legion Memorial Highway" },
+                   { }, { }, "", 0.158406, 10, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 262, 270, 0,
+                   1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { }, { }, 0, 0,
+                   0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, TripDirections_Maneuver_Type_kExitRight, {
+                       "US 322 West" },
+                   { }, { }, "", 0.348589, 21, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278, 1,
+                   2, 2, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67A-B", "0" } }, { {
+                       "US 22 East", "0" }, { "PA 230 East", "0" }, {
+                       "US 22 West", "0" }, { "US 322 West", "0" }, {
+                       "Cameron Street", "0" } },
+                   { { "Harrisburg", "0" }, { "Lewistown", "0" }, {
+                       "State College", "0" } },
+                   { }, 0, 0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver3 = maneuvers.back();
+  PopulateManeuver(maneuver3, TripDirections_Maneuver_Type_kExitRight, {
+                       "US 322 West" },
+                   { }, { }, "", 0.633177, 39, 8,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 286, 353, 2,
+                   4, 6, 31, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67B", "0" } }, { {
+                       "US 22 West", "0" }, { "US 322 West", "0" } },
+                   { { "Lewistown", "0" }, { "State College", "0" } }, { }, 0,
+                   0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver4 = maneuvers.back();
+  PopulateManeuver(maneuver4, TripDirections_Maneuver_Type_kMerge, {
+                       "US 322 West" },
+                   { }, { }, "", 55.286610, 3319, 358,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 351, 348,
+                   4, 57, 31, 1303, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { },
+                   { }, 0, 0, 0);
+
+  maneuvers.emplace_back();
+  Maneuver& maneuver5 = maneuvers.back();
+  PopulateManeuver(maneuver5, TripDirections_Maneuver_Type_kDestination, { },
+                   { }, { }, "", 0.000000, 0, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 57,
+                   57, 1303, 1303, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0);
+
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Create expected combined maneuver list
+  std::list<Maneuver> expected_maneuvers;
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver1 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver1, TripDirections_Maneuver_Type_kStart, {
+                       "I 81 South", "US 322 West",
+                       "American Legion Memorial Highway" },
+                   { }, { }, "", 0.158406, 10, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 262, 270, 0,
+                   1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { }, { }, 0, 0,
+                   0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver2 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver2, TripDirections_Maneuver_Type_kExitRight,
+                   { "US 322 West" }, { }, { }, "", 0.348589, 21, 2,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 272, 278, 1,
+                   2, 2, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67A-B", "0" } }, { {
+                       "US 322 West", "2" }, { "US 22 West", "1" }, {
+                       "US 22 East", "0" }, { "PA 230 East", "0" }, {
+                       "Cameron Street", "0" } },
+                   { { "Lewistown", "1" }, { "State College", "1" }, {
+                       "Harrisburg", "0" } },
+                   { }, 0, 0, 0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver3 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver3, TripDirections_Maneuver_Type_kExitRight,
+                   { "US 322 West" }, { }, { }, "", 0.633177, 39, 8,
+                   Maneuver::RelativeDirection::kKeepRight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 286, 353, 2,
+                   4, 6, 31, 1, 0, 0, 0, 0, 0, 0, 0, 0, { { "67B", "0" } }, { {
+                       "US 322 West", "2" }, { "US 22 West", "1" } },
+                   { { "Lewistown", "1" }, { "State College", "1" } }, { }, 0,
+                   0, 0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver4 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver4, TripDirections_Maneuver_Type_kMerge, {
+                       "US 322 West" },
+                   { }, { }, "", 55.286610, 3319, 358,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 351, 348,
+                   4, 57, 31, 1303, 0, 0, 0, 0, 0, 0, 0, 1, 0, { }, { }, { },
+                   { }, 0, 0, 0);
+
+  expected_maneuvers.emplace_back();
+  Maneuver& expected_maneuver5 = expected_maneuvers.back();
+  PopulateManeuver(expected_maneuver5,
+                   TripDirections_Maneuver_Type_kDestination, { }, { }, { }, "",
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 57,
+                   57, 1303, 1303, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0);
+
+  TryCountAndSortExitSigns(maneuvers, expected_maneuvers);
+
+}
+
 }
 
 int main() {
@@ -1775,6 +1921,9 @@ int main() {
 
   // SimpleRightTurnChannelCombine
   suite.test(TEST_CASE(TestSimpleRightTurnChannelCombine));
+
+  // CountAndSortExitSigns
+  suite.test(TEST_CASE(TestCountAndSortExitSigns));
 
   return suite.tear_down();
 }

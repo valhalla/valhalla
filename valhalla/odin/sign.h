@@ -34,6 +34,8 @@ class Sign {
 
   std::string ToParameterString() const;
 
+  bool operator ==(const Sign& rhs) const;
+
  protected:
   std::string text_;
   uint32_t consecutive_count_;
