@@ -65,8 +65,10 @@ do
 
     if [[ "$1" ==  "pg" ]]; then
       echo "copy ${f%%.*}_tmp(${cols}) from '$PWD/$f' with delimiter '|' csv header;" >> data.sql
+      chmod 755 ./data.sql
     elif [[ "$1" ==  "sqlite" ]]; then
       echo "termsql -a -i $PWD/$f -c '${cols}' -1 -d '|' -t ${f%%.*}_tmp -o ${db}" >> data.sql
+      chmod 755 ./data.sql
     fi
   fi
 
@@ -112,6 +114,7 @@ if [[ "$1" ==  "pg" ]]; then
   if [[ "$2" ==  "clean" ]]; then
     psql -U $dbuser $db -c "CREATE INDEX shapes_index ON shapes USING GIST (geom);"
     psql -U $dbuser $db -c "CREATE INDEX shape_index ON shape USING GIST (geom);"
+    psql -U $dbuser $db -c "CREATE INDEX stops_index ON stops USING GIST (geom);"
     psql -U $dbuser $db -c "CREATE INDEX stop_key_index ON stop_times USING btree (stop_key);"
   fi
 
@@ -139,6 +142,11 @@ elif [[ "$1" ==  "sqlite" ]]; then
   spatialite $db "insert into shapes(${cols},geom) select ${cols},geom from shapes_tmp;"
   spatialite $db "insert into shape(shape_id,geom) select shape_id,geom from shape_tmp;"
 
+  cols=$(head -1 stops.txt)
+  cols=$(echo $cols | tr "|" ,)  
+  spatialite $db "insert into stops(${cols},parent_station_key,geom) select ${cols},parent_station_key,NULL from stops_tmp;"
+  spatialite $db "update stops set geom = SetSRID(MakePoint(stop_lon, stop_lat),4326) where geom is null;"
+ 
   spatialite $db "insert into agency select * from agency_tmp;"
   spatialite $db "insert into stops select * from stops_tmp;"
   spatialite $db "insert into routes select * from  routes_tmp;"
@@ -165,6 +173,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
   if [[ "$2" ==  "clean" ]]; then
     echo "SELECT CreateSpatialIndex('shapes', 'geom');" | spatialite $db
     echo "SELECT CreateSpatialIndex('shape', 'geom');" | spatialite $db
+    echo "SELECT CreateSpatialIndex('stops', 'geom');" | spatialite $db
     echo "CREATE INDEX stops_key_index ON stops (stop_key);" | spatialite $db
   fi
 

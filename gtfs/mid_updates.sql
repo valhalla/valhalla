@@ -1,5 +1,6 @@
 UPDATE routes_tmp r set agency_key = (select a.agency_key from agency_tmp a where r.agency_id = a.agency_id);
 
+update stops_tmp set geom = ST_SetSRID(St_MakePoint(stop_lon, stop_lat),4326);
 update shapes_tmp set geom = ST_SetSRID(St_MakePoint(shape_pt_lon, shape_pt_lat),4326);
 
 insert into shape_tmp(shape_id) select distinct shape_id from shapes_tmp;

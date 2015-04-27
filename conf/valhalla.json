@@ -31,6 +31,10 @@
       "admin_dir": "/data/valhalla",
       "db_name": "admin.sqlite"
     },
+    "transit": {
+      "transit_dir": "/data/valhalla",
+      "db_name": "transit.sqlite"
+    },
     "logging": {
       "type": "std_out",
       "color": true
