@@ -246,7 +246,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Get cost
       Cost newcost = pred.cost() +
                      costing->EdgeCost(directededge, nodeinfo->density()) +
-                     costing->TransitionCost(directededge, nodeinfo, pred, i);
+                     costing->TransitionCost(directededge, nodeinfo, pred);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
