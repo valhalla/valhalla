@@ -22,7 +22,8 @@ struct NodeAttributes {
   uint32_t backward_signal  : 1;
   uint32_t non_link_edge    : 1;
   uint32_t link_edge        : 1;
-  uint32_t spare            : 4;
+  uint32_t shortlink        : 1;  // Link edge < kMaxInternalLength
+  uint32_t spare            : 3;
 };
 
 /**

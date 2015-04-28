@@ -57,7 +57,10 @@ struct Edge {
     uint32_t has_names        : 1;
     uint32_t driveforward     : 1;   // For sorting in collect_node_edges
                                      //  - set based on source node
-    uint32_t spare            : 4;
+    uint32_t shortlink        : 1;   // true if this is a link edge and is
+                                     //   short enough it may be internal to
+                                     //   an intersection
+    uint32_t spare            : 3;
   };
   EdgeAttributes attributes;
 
@@ -176,6 +179,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
@@ -191,6 +195,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveablereverse;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
@@ -284,16 +289,23 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
           const std::function<GraphId (const OSMNode&)>& graph_id_predicate) {
   LOG_INFO("Creating graph edges from ways...")
 
-  // Iterate through the OSM ways
-  uint32_t edgeindex = 0;
-  GraphId graphid;
   //so we can read ways and nodes and write edges
   sequence<OSMWay> ways(ways_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, true);
   sequence<Node> nodes(nodes_file, true);
 
+  // Method to get length of an edge (used to find short link edges)
+  const auto Length = [&way_nodes](const size_t idx1, const OSMNode& node2) {
+    auto node1 = (*way_nodes[idx1]).node;
+    PointLL a(node1.lng, node1.lat);
+    PointLL b(node2.lng, node2.lat);
+    return a.Distance(b);
+  };
+
   // For each way traversed via the nodes
+  uint32_t edgeindex = 0;
+  GraphId graphid;
   size_t current_way_node_index = 0;
   while (current_way_node_index < way_nodes.size()) {
     // Grab the way and its first node
@@ -320,6 +332,8 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
       if (way_node.node.intersection()) {
 
         // Finish off this edge
+        edge.attributes.shortlink = (way.link() &&
+                  Length(edge.llindex_, way_node.node) < kMaxInternalLength);
         way_node.node.attributes_.link_edge = way.link();
         way_node.node.attributes_.non_link_edge = !way.link();
         nodes.push_back({way_node.node, static_cast<uint32_t>(-1), static_cast<uint32_t>(edges.size()), graph_id_predicate(way_node.node)});
@@ -345,7 +359,6 @@ void ConstructEdges(const OSMData& osmdata, const std::string& ways_file,
       }
     }
   }
-
   LOG_INFO("Finished with " + std::to_string(edges.size()) + " graph edges");
 }
 
@@ -369,8 +382,9 @@ uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   return bestrc;
 }
 
-
-// Reclassify links (ramps and turn channels).
+// Reclassify links (ramps and turn channels). OSM usually classifies links as
+// the best classification, while to more effectively create shortcuts it is
+// better to "downgrade" link edges to the lower classification.
 void ReclassifyLinks(const std::string& ways_file,
                      const std::string& nodes_file,
                      const std::string& edges_file,
@@ -395,12 +409,18 @@ void ReclassifyLinks(const std::string& ways_file,
     // Add the classification if there is a driveable non-link edge
     if (end_node_bundle.node.attributes_.non_link_edge) {
       endrc.insert(GetBestNonLinkClass(end_node_bundle.node_edges));
-    }
 
-    // Add the end node to the expandset if link_count > 1 (another link edge
-    // other than the incoming) and end node has not already been visited
-    if (end_node_bundle.link_count > 1 &&
-        visitedset.find(end_node_itr.position()) == visitedset.end()) {
+      // Expand if the link count > 1 and a "short link" is present (could be
+      // an internal intersection link). Do not want to expand in cases where
+      // an exit ramp crosses onto an entrance back onto the same highway
+      // that was exited. But there are cases with internal intersection links
+      // that we do need to expand.
+      if (end_node_bundle.link_count > 1 &&
+          end_node_bundle.node.attributes_.shortlink &&
+          visitedset.find(end_node_itr.position()) == visitedset.end()) {
+       expandset.insert(end_node_itr.position());
+      }
+    } else if (visitedset.find(end_node_itr.position()) == visitedset.end()) {
       expandset.insert(end_node_itr.position());
     }
   };
