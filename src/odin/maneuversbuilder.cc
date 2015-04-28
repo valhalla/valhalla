@@ -237,8 +237,15 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
+      // Do not combine if travel mode is different
+      if (curr_man->travel_mode() != next_man->travel_mode()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // Combine current internal maneuver with next maneuver
-      if (curr_man->internal_intersection() && (curr_man != next_man)) {
+      else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
                                            next_man,
                                            (curr_man == maneuvers.begin()));
@@ -554,6 +561,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->internal_intersection()) {
     maneuver.set_internal_intersection(true);
   }
+
+  // Travel mode
+  maneuver.set_travel_mode(prev_edge->travel_mode());
 
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, node_index);
@@ -906,6 +916,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
 
   /////////////////////////////////////////////////////////////////////////////
+  // Process travel mode
+  if (maneuver.travel_mode() != prev_edge->travel_mode()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process internal intersection
   if (prev_edge->internal_intersection() && !maneuver.internal_intersection()) {
     return false;
@@ -1010,7 +1026,6 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
 
   IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
-  // TODO driveable
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                  xedge_counts);
 
@@ -1018,16 +1033,34 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepRight);
-  } else if ((xedge_counts.right_similar > 0)
-      && (xedge_counts.left_similar == 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepLeft);
 
+  // Process driving mode
+  if ((maneuver.travel_mode() == TripPath_TravelMode_kDrive)
+      || (maneuver.travel_mode() == TripPath_TravelMode_kBicycle)) {
+    if ((xedge_counts.right_similar_driveable_outbound == 0)
+        && (xedge_counts.left_similar_driveable_outbound > 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar_driveable_outbound > 0)
+        && (xedge_counts.left_similar_driveable_outbound == 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    }
+  }
+  // Process non-driving mode
+  else {
+    if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar > 0)
+        && (xedge_counts.left_similar == 0)
+        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    }
   }
 }
 

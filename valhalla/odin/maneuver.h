@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 
+#include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/odin/signs.h>
@@ -65,6 +66,7 @@ class Maneuver {
   TripDirections_Maneuver_CardinalDirection begin_cardinal_direction() const;
   void set_begin_cardinal_direction(
       TripDirections_Maneuver_CardinalDirection begin_cardinal_direction);
+
   uint32_t begin_heading() const;
   void set_begin_heading(uint32_t beginHeading);
 
@@ -129,6 +131,9 @@ class Maneuver {
   uint32_t roundabout_exit_count() const;
   void set_roundabout_exit_count(uint32_t roundabout_exit_count);
 
+  TripPath_TravelMode travel_mode() const;
+  void set_travel_mode(TripPath_TravelMode travel_mode);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -163,6 +168,7 @@ class Maneuver {
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
   uint32_t roundabout_exit_count_;
+  TripPath_TravelMode travel_mode_;
 
   // TODO notes
 
