@@ -14,9 +14,9 @@ if [ $? != "0" ]; then
    exit 0
 fi
 
-extracts=${extracts_dir}/*.pbf
+cd ${extracts_dir}
 # update each pbf
-for file in $(extracts); do
+for file in *.pbf ; do
   ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
 done
 
