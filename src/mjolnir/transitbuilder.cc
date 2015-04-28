@@ -30,6 +30,46 @@ struct builder_stats {
   }
 };
 
+void GetStops(sqlite3 *db_handle, const AABB2& aabb) {
+
+  if (!db_handle)
+    return;
+
+  sqlite3_stmt *stmt = 0;
+  uint32_t ret;
+  char *err_msg = nullptr;
+  uint32_t result = 0;
+  std::string geom;
+
+  std::string sql = "SELECT stop_key,stop_id,stop_code,stop_name,stop_desc,zone_id,";
+  sql += "stop_url,location_type, parent_station_key from stops where ";
+  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + ")) ";
+  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+  sql += "'stops' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + "));";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK) {
+    result = sqlite3_step(stmt);
+
+    while (result == SQLITE_ROW) {
+
+      int stop_key = sqlite3_column_int(stmt, 0);
+
+      result = sqlite3_step(stmt);
+    }
+  }
+  if (stmt) {
+
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+}
+
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the done map as well
 void build(const boost::property_tree::ptree& pt, GraphReader& reader,
@@ -108,7 +148,7 @@ void build(const boost::property_tree::ptree& pt, GraphReader& reader,
 
     // Iterate through tiles?
 
-    // Query to find all stops within the tile's bounding box
+    GetStops(db_handle,tiles.TileBounds(id));
 
     // Add these stops to the tile
 
