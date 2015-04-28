@@ -12,6 +12,7 @@ DataQuality::DataQuality()
     : nodecount(0),
       directededge_count(0),
       simplerestrictions(0),
+      timedrestrictions(0),
       culdesaccount(0),
       node_counts{} {
 }
