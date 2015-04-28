@@ -15,11 +15,11 @@ if [ $? != "0" ]; then
    exit 1
 fi
 
-cd ${extracts_dir}
+#cd ${extracts_dir}
 # update each pbf
-for file in *.pbf ; do
-  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
-done
+#for file in *.pbf ; do
+#  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
+#done
 
 mjolnir_tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
