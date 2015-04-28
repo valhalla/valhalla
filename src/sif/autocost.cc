@@ -88,13 +88,11 @@ class AutoCost : public DynamicCost {
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param   to_idx Index of the "to" directed edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const uint32_t to_idx) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -211,8 +209,7 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
-                               const EdgeLabel& pred,
-                               const uint32_t to_idx) const {
+                               const EdgeLabel& pred) const {
   // Special cases: gate, toll booth, false intersections
   // TODO - do we want toll booth penalties?
 
@@ -231,7 +228,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     float seconds = edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
                          edge->edge_to_right(idx) && edge->edge_to_left(idx),
                          edge->drive_on_right());
-    return (node->name_consistency(idx, to_idx)) ?
+    return (node->name_consistency(idx, edge->localedgeidx())) ?
               Cost(seconds, seconds) :
               Cost(seconds + maneuver_penalty_, seconds);
   }
