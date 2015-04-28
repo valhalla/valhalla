@@ -68,13 +68,11 @@ class PedestrianCost : public DynamicCost {
    * @param  edge  Directed edge (the to edge)
    * @param  node  Node (intersection) where transition occurs.
    * @param  pred  Predecessor edge information.
-   * @param  to_idx Index of the "to" directed edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const uint32_t to_idx) const;
+                              const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -177,8 +175,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
-                               const EdgeLabel& pred,
-                               const uint32_t to_idx) const {
+                               const EdgeLabel& pred) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return { step_penalty_, 0.0f };
