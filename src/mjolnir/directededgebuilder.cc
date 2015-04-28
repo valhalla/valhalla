@@ -36,7 +36,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder()
 DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                    const GraphId& endnode,
                    const bool forward, const uint32_t length,
-                   const float speed, const baldr::Use use,
+                   const uint32_t speed, const baldr::Use use,
                    const RoadClass rc, const uint32_t localidx,
                    const bool signal, const uint32_t restrictions)
      :  DirectedEdge() {
@@ -371,13 +371,13 @@ void DirectedEdgeBuilder::set_hovaccess(const bool forward, const bool hov) {
 }
 
 // Sets the speed in KPH.
-void DirectedEdgeBuilder::set_speed(const float speed) {
+void DirectedEdgeBuilder::set_speed(const uint32_t speed) {
   // TODO - protect against exceeding max speed
   if (speed > kMaxSpeed) {
     LOG_ERROR("Exceeding maximum speed: " + std::to_string(speed));
     speed_ = static_cast<unsigned char>(kMaxSpeed);
   } else {
-    speed_ = static_cast<unsigned char>(speed + 0.5f);
+    speed_ = static_cast<unsigned char>(speed);
   }
 }
 

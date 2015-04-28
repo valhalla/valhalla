@@ -70,6 +70,8 @@ struct enhancer_stats {
   uint32_t not_thru;
   uint32_t no_country_found;
   uint32_t internalcount;
+  uint32_t turnchannelcount;
+  uint32_t rampcount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
     if(max_density < other.max_density)
@@ -78,6 +80,8 @@ struct enhancer_stats {
     not_thru += other.not_thru;
     no_country_found += other.no_country_found;
     internalcount += other.internalcount;
+    turnchannelcount += other.turnchannelcount;
+    rampcount += other.rampcount;
     for (uint32_t i = 0; i < 16; i++) {
       density_counts[i] += other.density_counts[i];
     }
@@ -91,8 +95,31 @@ struct enhancer_stats {
  * @param  density       Relative road density.
  */
 void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
-  // Do not change speed on ramps or turn channels
+  // Set speed on ramps / turn channels
   if (directededge.link()) {
+    uint32_t speed = directededge.speed();
+    Use use = directededge.use();
+    if (use == Use::kTurnChannel) {
+      speed = static_cast<uint32_t>((speed * 1.25f) + 0.5f);
+    } else if (use == Use::kRamp) {
+      RoadClass rc = directededge.classification();
+      if (rc == RoadClass::kMotorway) {
+        speed = 95;
+      } else if (rc == RoadClass::kTrunk) {
+        speed = 80;
+      } else if (rc == RoadClass::kPrimary) {
+        speed = 65;
+      } else if (rc == RoadClass::kSecondary) {
+        speed = 50;
+      } else if (rc == RoadClass::kTertiary) {
+        speed = 40;
+      } else if (rc == RoadClass::kUnclassified) {
+        speed = 35;
+      } else {
+        speed = 25;
+      }
+    }
+    directededge.set_speed(speed);
     return;
   }
 
@@ -159,6 +186,65 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
       }
     }
   }
+}
+
+/**
+ * Update the use for a link (either a kRamp or kTurnChannel)
+ * TODO - validate logic with some real world cases.
+ */
+void UpdateLinkUse(const GraphTile* tile,
+                   const GraphTile* endnodetile,
+                   const NodeInfoBuilder& nodeinfo,
+                   DirectedEdgeBuilder& directededge) {
+  // Assume link that has highway = motorway or trunk is a ramp.
+  // Also, if length is > kMaxTurnChannelLength or there is an exit
+  // sign on the edge we assume this is a ramp
+  RoadClass rc = directededge.classification();
+  if (rc == RoadClass::kMotorway || rc == RoadClass::kTrunk ||
+      directededge.length() > kMaxTurnChannelLength ||
+      directededge.exitsign()) {
+    directededge.set_use(Use::kRamp);
+    return;
+  }
+
+  // Both end nodes have to connect to a non-link edge and only 1 link
+  // edge (assumed to be this edge). If either end node connects only
+  // to "links" this likely indicates a split or fork, which are not so
+  // prevalent in turn channels.
+  uint32_t nonlinkcount = 0;
+  uint32_t linkcount = 0;
+  const DirectedEdge* edge = tile->directededge(nodeinfo.edge_index());
+  for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++, edge++) {
+    if (edge->link()) {
+      linkcount++;
+    } else {
+      nonlinkcount++;
+    }
+  }
+  if (nonlinkcount == 0 || linkcount > 1) {
+    directededge.set_use(Use::kRamp);
+    return;
+  }
+
+  // Get node info at the end node
+  // Get the tile at the end node and get the node info
+  nonlinkcount = 0;
+  linkcount = 0;
+  GraphId endnode = directededge.endnode();
+  const NodeInfo* node = endnodetile->node(endnode.id());
+  edge = endnodetile->directededge(node->edge_index());
+  for (uint32_t j = 0; j <  node->edge_count(); j++, edge++) {
+    if (edge->link()) {
+      linkcount++;
+    } else {
+      nonlinkcount++;
+    }
+  }
+  if (nonlinkcount == 0 || linkcount > 1) {
+    directededge.set_use(Use::kRamp);
+    return;
+  }
+  directededge.set_use(Use::kTurnChannel);
 }
 
 /**
@@ -858,6 +944,26 @@ void enhance(const boost::property_tree::ptree& pt,
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
         DirectedEdgeBuilder& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
 
+        // Get the tile at the end node
+        if (tile->id() == directededge.endnode().Tile_Base()) {
+          endnodetile = tile;
+        } else {
+          lock.lock();
+          endnodetile = reader.GetGraphTile(directededge.endnode());
+          lock.unlock();
+        }
+
+        // If this edge is a link, update its use (potenitally change short
+        // links to turn channels)
+        if (directededge.link()) {
+          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
+          if (directededge.use() == Use::kTurnChannel) {
+            stats.turnchannelcount++;
+          } else {
+            stats.rampcount++;
+          }
+        }
+
         // Update speed.
         UpdateSpeed(directededge, density);
 
@@ -897,13 +1003,6 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Set the opposing index on the local level
-        if (tile->id() == directededge.endnode().Tile_Base()) {
-          endnodetile = tile;
-        } else {
-          lock.lock();
-          endnodetile = reader.GetGraphTile(directededge.endnode());
-          lock.unlock();
-        }
         directededge.set_opp_local_idx(
             GetOpposingEdgeIndex(endnodetile, startnode, directededge));
 
@@ -1025,6 +1124,8 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
   LOG_INFO("no country found = " + std::to_string(stats.no_country_found));
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
+  LOG_INFO("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
+  LOG_INFO("Ramp Count = " + std::to_string(stats.rampcount));
   for (auto density : stats.density_counts) {
     LOG_INFO("Density: " + std::to_string(density));
   }

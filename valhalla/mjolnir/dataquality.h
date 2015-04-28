@@ -74,7 +74,6 @@ class DataQuality {
   uint32_t directededge_count;
   uint32_t simplerestrictions;
   uint32_t timedrestrictions;
-  uint32_t turnchannelcount;
   uint32_t culdesaccount;
   uint32_t node_counts[128];
 
