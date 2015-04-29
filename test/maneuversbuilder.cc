@@ -55,8 +55,24 @@ class ManeuversBuilderTest : public ManeuversBuilder {
 
 void TrySetSimpleDirectionalManeuverType(
     uint32_t turn_degree, TripDirections_Maneuver_Type expected) {
-  ManeuversBuilderTest mbTest;
+  DirectionsOptions directions_options;
+  TripPath path;
+  TripPath_Node* node;
+
+  // node:0
+  node = path.add_node();
+
+  // node:1
+  node = path.add_node();
+  node->mutable_edge()->set_drive_on_right(true);
+
+  // node:2 dummy last node
+  node = path.add_node();
+
+  ManeuversBuilderTest mbTest(directions_options,
+                              static_cast<EnhancedTripPath*>(&path));
   Maneuver maneuver;
+  maneuver.set_begin_node_index(1);
   maneuver.set_turn_degree(turn_degree);
   mbTest.SetSimpleDirectionalManeuverType(maneuver);
   if (maneuver.type() != expected) {

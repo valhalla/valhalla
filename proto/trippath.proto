@@ -113,6 +113,7 @@ message TripPath {
     optional PedestrianType pedestrian_type = 24;
     optional BicycleType bicycle_type = 25;
     optional TransitType transit_type = 26;
+    optional bool drive_on_right = 27 [default = true];
   }
   
   message IntersectingEdge {
