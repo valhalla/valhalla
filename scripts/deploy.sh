@@ -15,6 +15,8 @@ if [ $? != "0" ]; then
    exit 1
 fi
 
+extracts=${extracts_dir}/*.pbf
+
 #cd ${extracts_dir}
 # update each pbf
 #for file in *.pbf ; do
