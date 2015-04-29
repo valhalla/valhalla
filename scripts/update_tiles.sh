@@ -15,14 +15,12 @@ if [ $? != "0" ]; then
 fi
 
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
+files=`find ${extracts_dir} -type f -name "*.pbf" -printf '%f '`
 
-cd ${extracts_dir}
 # update each pbf
-for file in *.pbf ; do
+for file in ${files}; do
   ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
 done
-
-cd ${base_dir}
 
 mjolnir_tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
