@@ -43,6 +43,12 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
+    header_builder_.set_departurecount(departures_.size());
+    header_builder_.set_tripcount(transit_trips_.size());
+    header_builder_.set_stopcount(transit_stops_.size());
+    header_builder_.set_routecount(transit_routes_.size());
+    header_builder_.set_transfercount(transit_transfers_.size());
+    header_builder_.set_calendarcount(transit_exceptions_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
