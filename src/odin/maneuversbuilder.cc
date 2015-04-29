@@ -591,10 +591,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_distance(
       maneuver.distance() + prev_edge->GetLength(directions_options_.units()));
 
-  // Time
-  maneuver.set_time(
-      maneuver.time() + GetTime(prev_edge->length(), prev_edge->speed()));
-
   // Portions Toll
   if (prev_edge->toll()) {
     maneuver.set_portions_toll(true);
@@ -677,6 +673,12 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Calculate and set the relative direction for the specified maneuver
     DetermineRelativeDirection(maneuver);
+
+    // Set the time based on the delta of the elapsed time between the begin
+    // and end nodes
+    maneuver.set_time(
+        trip_path_->node(maneuver.end_node_index()).elapsed_time()
+            - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
 
     // TODO - determine if we want to count right driveable at entrance node
     // Roundabouts
