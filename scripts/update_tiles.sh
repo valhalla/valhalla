@@ -45,7 +45,6 @@ mv ${mjolnir_tile_dir}/* ${tile_dir}/ || exit $?
 
 # cp admin db
 db_name=`cat ${config} | jq '.mjolnir.admin.db_name' | sed 's/^"\(.*\)"$/\1/'` || exit $?
-echo "${tile_dir}/${db_name} ${mjolnir_tile_dir}/${db_name}"
 cp ${tile_dir}/${db_name} ${mjolnir_tile_dir}/${db_name} || exit $?
 
 # clean backup tiles
