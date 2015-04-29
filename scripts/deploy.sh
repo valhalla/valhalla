@@ -23,8 +23,10 @@ extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 #  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
 #done
 
-mjolnir_tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
-tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
+tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
+mjolnir_tile_dir=$(echo ${tile_dir} | sed 's/tiles/mjolnir_tiles/g') || exit $?
+
+sed -i 's/tiles/mjolnir_tiles/g' ${config} || exit $?
 
 # clean mjolnir tiles
 rm -rf ${mjolnir_tile_dir}/* || exit $?
@@ -34,6 +36,8 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib pbfadminbuilder -c ${config} ${e
 
 # move the admin log
 mv ${log} ${log}.admins || exit $?
+
+log_dir=$(dirname "${log}") || exit $?
 
 # cut tiles from the data
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib pbfgraphbuilder -c ${config} ${extracts} || exit $?
@@ -51,7 +55,7 @@ rm -rf ${base_dir}/*.bin || exit $?
 crontab -r
 
 # add new cron job for updates.
-(crontab -l 2>/dev/null; echo "*/5 * * * * ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir}") | crontab -
+(crontab -l 2>/dev/null; echo "*/5 * * * * cd ${base_dir}; ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir} >> ${log_dir}/update_cron.log 2>&1") | crontab -
 
 rm ${LOCK_FILE} || exit $?
 
