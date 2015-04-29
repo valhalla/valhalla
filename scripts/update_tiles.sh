@@ -43,6 +43,10 @@ rm -rf ${tile_dir}/* || exit $?
 # move the newly created tiles to the tile dir
 mv ${mjolnir_tile_dir}/* ${tile_dir}/ || exit $?
 
+# cp admin db
+db_name=`cat ${config} | jq '.mjolnir.admin.db_name' | sed 's/^"\(.*\)"$/\1/'` || exit $?
+cp ${tile_dir}/${db_name} ${mjolnir_tile_dir}/${db_name}
+
 # clean backup tiles
 ${src_dir}/mjolnir/scripts/clean_tiles.sh ${tile_dir} 2 || exit $?
 
