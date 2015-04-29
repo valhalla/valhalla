@@ -16,14 +16,19 @@ fi
 
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 
-#cd ${extracts_dir}
+cd ${extracts_dir}
 # update each pbf
-#for file in *.pbf ; do
-#  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
-#done
+for file in *.pbf ; do
+  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
+done
+
+cd ${base_dir}
 
 mjolnir_tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
+
+# clean mjolnir tiles
+rm -rf ${mjolnir_tile_dir}/* || exit $?
 
 export PATH=$PATH:/usr/local/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
@@ -51,6 +56,4 @@ ${src_dir}/mjolnir/scripts/clean_tiles.sh ${tile_dir} 2 || exit $?
 rm -rf ${base_dir}/*.bin || exit $?
 
 rm ${LOCK_FILE} || exit $?
-
-
 

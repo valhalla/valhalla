@@ -17,11 +17,13 @@ fi
 
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 
-#cd ${extracts_dir}
+cd ${extracts_dir}
 # update each pbf
-#for file in *.pbf ; do
-#  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
-#done
+for file in *.pbf ; do
+  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
+done
+
+cd ${base_dir}
 
 tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 mjolnir_tile_dir=$(echo ${tile_dir} | sed 's/tiles/mjolnir_tiles/g') || exit $?
