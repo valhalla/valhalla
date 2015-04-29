@@ -23,7 +23,7 @@ class DirectionsBuilder {
   void UpdateHeading(EnhancedTripPath* etp);
 
   TripDirections PopulateTripDirections(
-      const DirectionsOptions& directions_options, TripPath& trip_path,
+      const DirectionsOptions& directions_options, EnhancedTripPath* etp,
       std::list<Maneuver>& maneuvers);
 
 };

@@ -36,6 +36,11 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
                                         TripPath& trip_path) {
+  // Validate trip path node list
+  if (trip_path.node_size() < 1) {
+    throw std::runtime_error("Trip path does not have any nodes");
+  }
+
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
   // Update the heading of ~0 length edges
@@ -50,7 +55,7 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
   NarrativeBuilder::Build(directions_options, maneuvers);
 
   // Return trip directions
-  return PopulateTripDirections(directions_options, trip_path, maneuvers);
+  return PopulateTripDirections(directions_options, etp, maneuvers);
 }
 
 void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
@@ -80,17 +85,17 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
 }
 
 TripDirections DirectionsBuilder::PopulateTripDirections(
-    const DirectionsOptions& directions_options, TripPath& trip_path,
+    const DirectionsOptions& directions_options, EnhancedTripPath* etp,
     std::list<Maneuver>& maneuvers) {
   TripDirections trip_directions;
 
   // Populate trip and leg IDs
-  trip_directions.set_trip_id(trip_path.trip_id());
-  trip_directions.set_leg_id(trip_path.leg_id());
-  trip_directions.set_leg_count(trip_path.leg_count());
+  trip_directions.set_trip_id(etp->trip_id());
+  trip_directions.set_leg_id(etp->leg_id());
+  trip_directions.set_leg_count(etp->leg_count());
 
   // Populate locations
-  for (const auto& path_location : trip_path.location()) {
+  for (const auto& path_location : etp->location()) {
     auto* direction_location = trip_directions.add_location();
     direction_location->mutable_ll()->set_lat(path_location.ll().lat());
     direction_location->mutable_ll()->set_lng(path_location.ll().lng());
@@ -118,7 +123,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
   // Populate maneuvers
   float leg_length = 0.0f;
-  uint32_t leg_time = 0;
   for (const auto& maneuver : maneuvers) {
     auto* trip_maneuver = trip_directions.add_maneuver();
     trip_maneuver->set_type(maneuver.type());
@@ -129,7 +133,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     trip_maneuver->set_length(maneuver.distance());
     leg_length += maneuver.distance();
     trip_maneuver->set_time(maneuver.time());
-    leg_time += maneuver.time();
     trip_maneuver->set_begin_cardinal_direction(
         maneuver.begin_cardinal_direction());
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
@@ -141,10 +144,11 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
   // Populate summary
   trip_directions.mutable_summary()->set_length(leg_length);
-  trip_directions.mutable_summary()->set_time(leg_time);
+  trip_directions.mutable_summary()->set_time(
+      etp->node(etp->GetLastNodeIndex()).elapsed_time());
 
   // Populate shape
-  trip_directions.set_shape(trip_path.shape());
+  trip_directions.set_shape(etp->shape());
 
   return trip_directions;
 }
