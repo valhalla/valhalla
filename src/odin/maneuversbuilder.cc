@@ -237,8 +237,11 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
-      // Do not combine if travel mode is different
-      if (curr_man->travel_mode() != next_man->travel_mode()) {
+      // Do not combine
+      // if travel mode is different
+      // OR next maneuver is destination
+      if ((curr_man->travel_mode() != next_man->travel_mode())
+          || (next_man->type() == TripDirections_Maneuver_Type_kDestination)) {
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
