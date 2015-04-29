@@ -480,6 +480,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   trip_edge->set_bridge(directededge->bridge());
   trip_edge->set_roundabout(directededge->roundabout());
   trip_edge->set_internal_intersection(directededge->internal());
+  trip_edge->set_drive_on_right(directededge->drive_on_right());
 
   return trip_edge;
 }
