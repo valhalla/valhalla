@@ -31,6 +31,7 @@ sed -i 's/tiles/mjolnir_tiles/g' ${config} || exit $?
 # clean mjolnir tiles
 rm -rf ${mjolnir_tile_dir}/* || exit $?
 
+export PATH=$PATH:/usr/local/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 # create admins
