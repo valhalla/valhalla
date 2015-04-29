@@ -14,7 +14,7 @@ if [ $? != "0" ]; then
    exit 0
 fi
 
-extracts=${extracts_dir}/*.pbf
+extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 
 #cd ${extracts_dir}
 # update each pbf
