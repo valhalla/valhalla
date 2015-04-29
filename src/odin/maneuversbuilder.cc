@@ -612,7 +612,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     trip_path_->GetEnhancedNode(node_index)
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
                                                    xedge_counts);
-    if (IsRightSideOfStreetDriving()) {
+    if (prev_edge->drive_on_right()) {
       maneuver.set_roundabout_exit_count(
           maneuver.roundabout_exit_count()
               + xedge_counts.right_driveable_outbound);
@@ -687,7 +687,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 //      trip_path_->GetEnhancedNode(node_index)
 //            ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
 //                                                       xedge_counts);
-//      if (IsRightSideOfStreetDriving()) {
+//      if (curr_edge->drive_on_right()) {
 //        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
 //                                           + xedge_counts.right_driveable_outbound);
 //      } else {
@@ -863,7 +863,8 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
       } else if (maneuver.internal_right_turn_count()
           > maneuver.internal_left_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
-      } else if (IsRightSideOfStreetDriving()) {
+      } else if (trip_path_->GetCurrEdge(maneuver.begin_node_index())
+          ->drive_on_right()) {
         if (maneuver.turn_degree() < 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
         } else {
@@ -1083,11 +1084,6 @@ Maneuver::RelativeDirection ManeuversBuilder::DetermineRelativeDirection(
     return Maneuver::RelativeDirection::kNone;
 }
 
-bool ManeuversBuilder::IsRightSideOfStreetDriving() const {
-  // TODO: use value from edgeto return proper value
-  return true;
-}
-
 bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver,
                                                       int node_index) const {
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
@@ -1105,9 +1101,9 @@ bool ManeuversBuilder::UsableInternalIntersectionName(Maneuver& maneuver,
   // Left turn for right side of the street driving
   // Right turn for left side of the street driving
   if (maneuver.internal_intersection()
-      && ((IsRightSideOfStreetDriving()
+      && ((prev_edge->drive_on_right()
           && (relative_direction == Maneuver::RelativeDirection::kLeft))
-          || (!IsRightSideOfStreetDriving()
+          || (!prev_edge->drive_on_right()
               && (relative_direction == Maneuver::RelativeDirection::kRight)))) {
     return true;
   }
