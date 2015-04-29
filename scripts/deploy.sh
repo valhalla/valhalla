@@ -31,8 +31,10 @@ sed -i 's/tiles/mjolnir_tiles/g' ${config} || exit $?
 # clean mjolnir tiles
 rm -rf ${mjolnir_tile_dir}/* || exit $?
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
 # create admins
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib pbfadminbuilder -c ${config} ${extracts} || exit $?
+pbfadminbuilder -c ${config} ${extracts} || exit $?
 
 # move the admin log
 mv ${log} ${log}.admins || exit $?
@@ -40,7 +42,7 @@ mv ${log} ${log}.admins || exit $?
 log_dir=$(dirname "${log}") || exit $?
 
 # cut tiles from the data
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib pbfgraphbuilder -c ${config} ${extracts} || exit $?
+pbfgraphbuilder -c ${config} ${extracts} || exit $?
 
 # clean tile dir 
 rm -rf ${tile_dir}/* || exit $?

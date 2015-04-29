@@ -28,8 +28,10 @@ tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
 # clean mjolnir tiles
 rm -rf ${mjolnir_tile_dir}/* || exit $?
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
 # cut tiles from the data
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib pbfgraphbuilder -c ${config} ${extracts} || exit $?
+pbfgraphbuilder -c ${config} ${extracts} || exit $?
 
 # backup tiles
 ${src_dir}/mjolnir/scripts/backup_tiles.sh ${tile_dir} || exit $?
