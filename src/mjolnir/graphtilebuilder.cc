@@ -55,6 +55,12 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
         (sizeof(GraphTileHeaderBuilder))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+            + (departures_.size() * sizeof(TransitDeparture))
+            + (transit_trips_.size() * sizeof(TransitTrip))
+            + (transit_stops_.size() * sizeof(TransitStop))
+            + (transit_routes_.size() * sizeof(TransitRoute))
+            + (transit_transfers_.size() * sizeof(TransitTransfer))
+            + (transit_exceptions_.size() * sizeof(TransitCalendar))
             + (signs_builder_.size() * sizeof(SignBuilder))
             + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
 
