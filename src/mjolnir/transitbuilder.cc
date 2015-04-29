@@ -139,7 +139,8 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
 
 // Lock on queue access since we are using it in different threads. No need
 // to lock graphreader since no threads are writing tiles yet.
-void assign_graphids(const boost::property_tree::ptree& pt, GraphReader& reader,
+void assign_graphids(const boost::property_tree::ptree& pt,
+           boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<stop_results>& stop_res) {
   // Construct the transit database
@@ -180,7 +181,8 @@ void assign_graphids(const boost::property_tree::ptree& pt, GraphReader& reader,
     return;
   }
 
-  // Get tile information so we can find bounding boxes
+  // Local Graphreader. Get tile information so we can find bounding boxes
+  GraphReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
@@ -367,7 +369,8 @@ std::vector<TransitCalendar> GetCalendar(sqlite3* db_handle,
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const boost::property_tree::ptree& pt, GraphReader& reader,
+void build(const boost::property_tree::ptree& pt,
+           boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::vector<Stop>& stops,
            std::mutex& lock, std::promise<builder_stats>& results) {
   // Construct the transit database
@@ -410,6 +413,9 @@ void build(const boost::property_tree::ptree& pt, GraphReader& reader,
 
   // Get some things we need throughout
   builder_stats stats{};
+
+  // Local Graphreader. Get tile information so we can find bounding boxes
+  GraphReader reader(hierarchy_properties);
 
   lock.lock();
   auto tile_hierarchy = reader.GetTileHierarchy();
@@ -533,9 +539,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     stop_res.emplace_back();
     thread.reset(new std::thread(assign_graphids,
-                                 std::ref(pt.get_child("mjolnir.transit")),
-                                 std::ref(reader), std::ref(tilequeue),
-                                 std::ref(lock), std::ref(stop_res.back())));
+                     std::ref(pt.get_child("mjolnir.transit")),
+                     std::ref(hierarchy_properties), std::ref(tilequeue),
+                     std::ref(lock), std::ref(stop_res.back())));
   }
 
   // Wait for them to finish up their work
@@ -580,9 +586,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(build, std::ref(pt.get_child("mjolnir.transit")),
-                                 std::ref(reader), std::ref(transit_tiles),
-                                 std::ref(all_stops.stops), std::ref(lock),
-                                 std::ref(results.back())));
+                     std::ref(hierarchy_properties), std::ref(transit_tiles),
+                     std::ref(all_stops.stops), std::ref(lock),
+                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
