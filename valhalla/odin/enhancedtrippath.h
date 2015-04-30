@@ -10,6 +10,7 @@ namespace odin {
 class EnhancedTripPath;
 class EnhancedTripPath_Edge;
 class EnhancedTripPath_Node;
+class EnhancedTripPath_Admin;
 
 class EnhancedTripPath : public TripPath {
  public:
@@ -30,6 +31,10 @@ class EnhancedTripPath : public TripPath {
   bool IsLastNodeIndex(int node_index) const;
 
   int GetLastNodeIndex() const;
+
+  EnhancedTripPath_Admin* GetAdmin(size_t index);
+
+  std::string GetCountryCode(int node_index);
 
 };
 
@@ -119,6 +124,14 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
   void CalculateRightLeftIntersectingEdgeCounts(
       uint32_t from_heading, IntersectingEdgeCounts& xedge_counts);
+
+  std::string ToString() const;
+
+};
+
+class EnhancedTripPath_Admin : public TripPath_Admin {
+ public:
+  EnhancedTripPath_Admin() = delete;
 
   std::string ToString() const;
 

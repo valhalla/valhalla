@@ -64,6 +64,14 @@ int EnhancedTripPath::GetLastNodeIndex() const {
   return (node_size() - 1);
 }
 
+EnhancedTripPath_Admin* EnhancedTripPath::GetAdmin(size_t index) {
+  return static_cast<EnhancedTripPath_Admin*>(mutable_admin(index));
+}
+
+std::string EnhancedTripPath::GetCountryCode(int node_index) {
+  return GetAdmin(node(node_index).admin_index())->country_code();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
 
@@ -430,6 +438,40 @@ std::string EnhancedTripPath_Node::ToString() const {
 
   str += " | toll_booth=";
   str += std::to_string(toll_booth());
+
+  str += " | elapsed_time=";
+  str += std::to_string(elapsed_time());
+
+  str += " | admin_index=";
+  str += std::to_string(admin_index());
+
+  return str;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// EnhancedTripPath_Admin
+
+std::string EnhancedTripPath_Admin::ToString() const {
+  std::string str;
+  str.reserve(256);
+
+  str += "country_code=";
+  str += country_code();
+
+  str += " | country_text=";
+  str += country_text();
+
+  str += " | state_code=";
+  str += state_code();
+
+  str += " | state_text=";
+  str += state_text();
+
+  str += " | start_dst=";
+  str += start_dst();
+
+  str += " | end_dst=";
+  str += end_dst();
 
   return str;
 }

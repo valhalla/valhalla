@@ -56,9 +56,9 @@ Maneuver::Maneuver()
       internal_left_turn_count_(0),
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive) {
-  street_names_ = make_unique<StreetNamesUs>();
-  begin_street_names_ = make_unique<StreetNamesUs>();
-  cross_street_names_ = make_unique<StreetNamesUs>();
+  street_names_ = make_unique<StreetNames>();
+  begin_street_names_ = make_unique<StreetNames>();
+  cross_street_names_ = make_unique<StreetNames>();
 }
 
 const TripDirections_Maneuver_Type& Maneuver::type() const {

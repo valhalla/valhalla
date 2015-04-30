@@ -128,7 +128,17 @@ message TripPath {
     repeated IntersectingEdge intersecting_edge = 2; 
     optional bool gate = 3;
     optional bool toll_booth = 4;
-    optional uint32 elapsed_time = 5;        // seconds from start of leg
+    optional uint32 elapsed_time = 5;       // seconds from start of leg
+    optional uint32 admin_index = 6;        // index into the admin list
+  }
+  
+  message Admin {
+    optional string country_code = 1;
+    optional string country_text = 2;
+    optional string state_code = 3;
+    optional string state_text = 4;
+    optional string start_dst = 5;
+    optional string end_dst = 6;
   }
   
   optional uint64 trip_id = 1;
@@ -136,7 +146,8 @@ message TripPath {
   optional uint32 leg_count = 3;
   repeated Location location = 4;
   repeated Node node = 5;
-  optional string shape = 6;
+  repeated Admin admin = 6;
+  optional string shape = 7;
 
 }
 
