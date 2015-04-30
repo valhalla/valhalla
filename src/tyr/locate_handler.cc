@@ -89,7 +89,7 @@ LocateHandler::LocateHandler(const boost::property_tree::ptree& config, const bo
   try {
     for(const auto& location : request.get_child("locations"))
       locations_.emplace_back(std::move(baldr::Location::FromPtree(location.second)));
-    if(locations_.size() < 2)
+    if(locations_.size() < 1)
       throw;
     //TODO: bail if this is too many
   }
