@@ -12,7 +12,7 @@ import tyr_service
 '''
 sample url looks like this:
 
-http://localhost:8002/viaroute?z=17&output=json&instructions=true&loc=40.657912,-73.914450&loc=40.040501,-76.306271&costing_method=auto
+http://localhost:8002/viaroute?z=17&output=json&instructions=true&loc=40.657912,-73.914450&loc=40.040501,-76.306271&costing=auto
 http://localhost:8002/locate?loc=40.657912,-73.914450
 http://localhost:8002/nearest?loc=40.657912,-73.914450
 '''
