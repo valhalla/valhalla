@@ -46,7 +46,8 @@ CREATE TABLE "routes"
 DROP TABLE IF EXISTS "trips" CASCADE;
 CREATE TABLE "trips"
 (
-  route_key integer primary key,
+  trip_key integer primary key,
+  route_key integer,
   route_id text,
   service_id text,
   trip_id text,
@@ -61,12 +62,13 @@ CREATE TABLE "trips"
 DROP TABLE IF EXISTS "stop_times" CASCADE;
 CREATE TABLE "stop_times"
 (
-  trip_key integer primary key,
+  stop_times_key integer primary key,
+  stop_key integer,
+  trip_key integer,
   trip_id text,
   arrival_time text,
   departure_time text,
   stop_id text,
-  stop_key integer,
   stop_sequence integer,
   stop_headsign text,
   pickup_type text,
@@ -194,7 +196,8 @@ CREATE TABLE "routes_tmp"
 DROP TABLE IF EXISTS "trips_tmp" CASCADE;
 CREATE TABLE "trips_tmp"
 (
-  route_key serial primary key,
+  trip_key serial primary key,
+  route_key integer,
   route_id text,
   service_id text,
   trip_id text,
@@ -209,12 +212,13 @@ CREATE TABLE "trips_tmp"
 DROP TABLE IF EXISTS "stop_times_tmp" CASCADE;
 CREATE TABLE "stop_times_tmp"
 (
-  trip_key serial primary key,
+  stop_times_key serial primary key,
+  stop_key integer,
+  trip_key integer,
   trip_id text,
   arrival_time text,
   departure_time text,
   stop_id text,
-  stop_key integer,
   stop_sequence integer,
   stop_headsign text,
   pickup_type text,
