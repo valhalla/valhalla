@@ -54,7 +54,8 @@ CREATE TABLE "trips"
   trip_short_name text,
   direction_id text,
   block_id text,
-  shape_id text
+  shape_id text,
+  shape_key integer
 );
 
 DROP TABLE IF EXISTS "stop_times" CASCADE;
@@ -101,7 +102,7 @@ CREATE TABLE "calendar_dates"
 DROP TABLE IF EXISTS "shapes" CASCADE;
 CREATE TABLE "shapes"
 (
-  shape_key integer primary key,
+  shape_key integer,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,
@@ -201,7 +202,8 @@ CREATE TABLE "trips_tmp"
   trip_short_name text,
   direction_id text,
   block_id text,
-  shape_id text
+  shape_id text,
+  shape_key integer
 );
 
 DROP TABLE IF EXISTS "stop_times_tmp" CASCADE;
@@ -248,7 +250,7 @@ CREATE TABLE "calendar_dates_tmp"
 DROP TABLE IF EXISTS "shapes_tmp" CASCADE;
 CREATE TABLE "shapes_tmp"
 (
-  shape_key serial primary key,
+  shape_key integer,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,

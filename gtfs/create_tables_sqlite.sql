@@ -54,7 +54,8 @@ CREATE TABLE "trips"
   trip_short_name text,
   direction_id text,
   block_id text,
-  shape_id text
+  shape_id text,
+  shape_key integer
 );
 
 DROP TABLE IF EXISTS "stop_times";
@@ -101,7 +102,7 @@ CREATE TABLE "calendar_dates"
 DROP TABLE IF EXISTS "shapes";
 CREATE TABLE "shapes"
 (
-  shape_key integer primary key autoincrement,
+  shape_key integer,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,
@@ -112,7 +113,7 @@ CREATE TABLE "shapes"
 DROP TABLE IF EXISTS "shape"; 
 CREATE TABLE "shape"
 (
-  shape_key integer primary key autoincrement,
+  shape_key integer primary key,
   shape_id text
 );
 
@@ -201,7 +202,8 @@ CREATE TABLE "trips_tmp"
   trip_short_name text,
   direction_id text,
   block_id text,
-  shape_id text
+  shape_id text,
+  shape_key integer
 );
 
 DROP TABLE IF EXISTS "stop_times_tmp";
@@ -248,6 +250,7 @@ CREATE TABLE "calendar_dates_tmp"
 DROP TABLE IF EXISTS "shapes_tmp";
 CREATE TABLE "shapes_tmp"
 (
+  shape_key integer,
   shape_id text,
   shape_pt_lat double precision,
   shape_pt_lon double precision,
@@ -258,6 +261,7 @@ CREATE TABLE "shapes_tmp"
 DROP TABLE IF EXISTS "shape_tmp";
 CREATE TABLE "shape_tmp"
 (
+  shape_key integer primary key autoincrement,
   shape_id text
 );
 

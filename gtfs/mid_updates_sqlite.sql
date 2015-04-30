@@ -5,6 +5,9 @@ update shapes_tmp set geom = SetSRID(MakePoint(shape_pt_lon, shape_pt_lat),4326)
 insert into shape_tmp(shape_id) select distinct shape_id from shapes_tmp;
 update shape_tmp set geom = (select SetSRID(MakeLine(geom),4326) FROM shapes_tmp where shapes_tmp.shape_id = shape_tmp.shape_id GROUP BY shape_id);
 
+update shapes_tmp set shape_key = (select shape_key from shape_tmp where shapes_tmp.shape_id = shape_tmp.shape_id);
+update trips_tmp set shape_key = (select shape_key from shape_tmp where trips_tmp.shape_id = shape_tmp.shape_id);
+
 update stop_times_tmp set stop_key = (select stop_key from stops_tmp b where b.stop_id = stop_times_tmp.stop_id);
 update stops_tmp set parent_station_key = (select stop_key from stops_tmp b where b.location_type=1 and b.stop_id = stops_tmp.parent_station);
 
