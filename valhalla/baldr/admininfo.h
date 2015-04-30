@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/admin.h>
 #include <iostream>
+#include <boost/functional/hash.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -25,6 +26,14 @@ class AdminInfo {
   AdminInfo(const std::string& country_text, const std::string& state_text,
             const std::string& country_iso, const std::string& state_iso,
             const std::string& start_dst, const std::string& end_dst);
+
+  /**
+   * Returns true if the specified object is equal to this object.
+   * @param  rhs  the specified object to compare against this object.
+   * @return true if the specified object is equal to this object.
+   */
+  bool operator ==(const AdminInfo& rhs) const;
+
   /**
    * Returns the country text.
    * @return  Returns the country text as a const reference to the text string.
@@ -60,6 +69,21 @@ class AdminInfo {
    * @return  Returns the end dst
    */
   const std::string& end_dst() const;
+
+  struct AdminInfoHasher {
+    std::size_t operator()(const AdminInfo& ai) const {
+      std::size_t seed = 13;
+      boost::hash_combine(seed, string_hasher(ai.country_iso_));
+      boost::hash_combine(seed, string_hasher(ai.country_text_));
+      boost::hash_combine(seed, string_hasher(ai.state_iso_));
+      boost::hash_combine(seed, string_hasher(ai.state_text_));
+      boost::hash_combine(seed, string_hasher(ai.start_dst_));
+      boost::hash_combine(seed, string_hasher(ai.end_dst_));
+      return seed;
+    }
+    //function to hash string
+    std::hash<std::string> string_hasher;
+  };
 
  protected:
   std::string country_text_;
