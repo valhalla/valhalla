@@ -4,6 +4,7 @@
 #include <valhalla/baldr/turn.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
+#include "valhalla/baldr/streetnames_factory.h"
 #include <proto/tripdirections.pb.h>
 #include <proto/directions_options.pb.h>
 #include <valhalla/odin/maneuversbuilder.h>
@@ -206,6 +207,12 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     auto* intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
   }
+  LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+  for (size_t z = 0; z < trip_path_->admin_size(); ++z) {
+    auto* admin = trip_path_->GetAdmin(z);
+    LOG_TRACE("ADMIN " + std::to_string(z) + ": " + admin->ToString());
+  }
+
 #endif
 
   // Process the Start maneuver
@@ -581,7 +588,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // or usable internal intersection name exists
   if ((maneuver.street_names().empty() && !maneuver.internal_intersection())
       || UsableInternalIntersectionName(maneuver, node_index)) {
-    maneuver.set_street_names(prev_edge->GetNameList());
+    maneuver.set_street_names(std::move(StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), prev_edge->GetNameList())));
   }
 
   // Update the internal turn count
@@ -1005,9 +1013,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   // TODO: add logic for 'T' and pencil point u-turns
 
-  // TODO: update to use factory and country code
-  std::unique_ptr<StreetNames> prev_edge_names = make_unique<StreetNamesUs>(
-      prev_edge->GetNameList());
+  std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
+      trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
 
   // Process same names
   // TODO - do we need this anymore?
