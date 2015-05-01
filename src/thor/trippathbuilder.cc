@@ -79,6 +79,33 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
   }
 }
 
+uint32_t GetAdminIndex(
+    const AdminInfo& admin_info,
+    std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher>& admin_info_map,
+    std::vector<AdminInfo>& admin_info_list) {
+
+  uint32_t admin_index = 0;
+  auto existing_admin = admin_info_map.find(admin_info);
+
+  // If admin was not processed yet
+  if (existing_admin == admin_info_map.end()) {
+
+    // Assign new admin index
+    admin_index = admin_info_list.size();
+
+    // Add admin info to list
+    admin_info_list.emplace_back(admin_info);
+
+    // Add admin info/index pair to map
+    admin_info_map.emplace(admin_info, admin_index);
+  }
+  // Use known admin
+  else {
+    admin_index = existing_admin->second;
+  }
+  return admin_index;
+}
+
 }
 
 namespace valhalla {
@@ -187,6 +214,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     return trip_path;
   }
 
+  // Structures to process admins
+  std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
+  std::vector<AdminInfo> admin_info_list;
+  uint32_t last_node_admin_index;
+
   // Iterate through path
   float elapsedtime = 0.0f;
   uint32_t prior_opp_local_index = -1;
@@ -217,9 +249,17 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //if (startnode.Is_Valid()) {
     // TODO:  Add the trip_node for exits.
     //}
+
+    trip_node->set_admin_index(
+        GetAdminIndex(
+            graphtile->admininfo(graphtile->node(startnode)->admin_index()),
+            admin_info_map, admin_info_list));
     trip_node->set_elapsed_time(elapsedtime);
-    trip_node->set_gate(graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
-    trip_node->set_toll_booth(graphtile->node(startnode)->type() == NodeType::kTollBooth ? true : false);
+    trip_node->set_gate(
+        graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
+    trip_node->set_toll_booth(
+        graphtile->node(startnode)->type() == NodeType::kTollBooth ?
+            true : false);
 
     // Add edge to the trip node and set its attributes
     auto is_first_edge = (path_itr == path.begin());
@@ -306,14 +346,32 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
 
+    // Assign the last node admin index
+    if (is_last_edge) {
+      last_node_admin_index = GetAdminIndex(
+          graphtile->admininfo(graphtile->node(startnode)->admin_index()),
+          admin_info_map, admin_info_list);
+    }
+
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
   }
 
   // Add the last node and set the elapsed time at the end node
   TripPath_Node* trip_node = trip_path.add_node();
+  trip_node->set_admin_index(last_node_admin_index);
   trip_node->set_elapsed_time(elapsedtime);
 
+  // Assign the admins
+  for (const auto& admin_info : admin_info_list) {
+    TripPath_Admin* trip_admin = trip_path.add_admin();
+    trip_admin->set_country_code(admin_info.country_iso());
+    trip_admin->set_country_text(admin_info.country_text());
+    trip_admin->set_state_code(admin_info.state_iso());
+    trip_admin->set_state_text(admin_info.state_text());
+    trip_admin->set_start_dst(admin_info.start_dst());
+    trip_admin->set_end_dst(admin_info.end_dst());
+  }
   // Encode shape and add to trip path.
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
