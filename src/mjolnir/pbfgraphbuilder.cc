@@ -127,8 +127,6 @@ int main(int argc, char** argv) {
       return false;  //unknown value;
   }*/
 
-  TransitBuilder::Build(pt);
-
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
