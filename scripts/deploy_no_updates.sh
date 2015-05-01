@@ -15,6 +15,15 @@ if [ $? != "0" ]; then
    exit 1
 fi
 
+conf_dir=$(dirname "${src_dir}/mjolnir/conf") || exit $?
+config_dir=$(dirname "${src_dir}") || exit $?
+lua_files=`find ${conf_dir} -type f -name "*.lua"` || exit $?
+
+for file in ${lua_files} ; do
+  file_name=`find ${file} -type f -name "*.lua" -printf '%f '` || exit $?
+  ln -s ${conf_dir}/${file_name} ${config_dir}/${file} || exit $?
+done
+
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 
 tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
