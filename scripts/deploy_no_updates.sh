@@ -21,7 +21,7 @@ lua_files=`find ${conf_dir} -type f -name "*.lua"` || exit $?
 
 for file in ${lua_files} ; do
   file_name=`find ${file} -type f -name "*.lua" -printf '%f '` || exit $?
-  ln -s ${config_dir}/${file_name} ${file} || exit $?
+  ln -s ${file} ${config_dir}/${file_name} || exit $?
 done
 
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
