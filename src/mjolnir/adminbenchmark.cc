@@ -103,16 +103,16 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
       std::string state_iso = "";
 
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
-        country_name = (char*)sqlite3_column_text(stmt, 1);
+        country_name = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 1)));
 
       if (sqlite3_column_type(stmt, 2) == SQLITE_TEXT)
-        state_name = (char*)sqlite3_column_text(stmt, 2);
+        state_name = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2)));
 
       if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT)
-        country_iso = (char*)sqlite3_column_text(stmt, 3);
+        country_iso = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 3)));
 
       if (sqlite3_column_type(stmt, 4) == SQLITE_TEXT)
-        state_iso = (char*)sqlite3_column_text(stmt, 4);
+        state_iso = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 4)));
 
       bool dor = true;
       if (sqlite3_column_type(stmt, 5) == SQLITE_INTEGER)
@@ -120,7 +120,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
 
       std::string geom = "";
       if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT)
-        geom = (char*)sqlite3_column_text(stmt, 6);
+        geom = std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6)));
 
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);

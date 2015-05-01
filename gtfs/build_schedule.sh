@@ -14,6 +14,9 @@ elif [[ "$2" ==  "sqlite" ]]; then
   sqlite3 $db -csv "select stop_key,trip_key,trip_id,route_key,service_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,headsign from s_tmp order by trip_id, stop_sequence;" > ./schedule.tmp
 fi
 
+tr -d '"' < ./schedule.tmp > ./schedule.tmp.new
+mv ./schedule.tmp.new ./schedule.tmp
+
 NONE=0
 SUNDAY=1
 MONDAY=2

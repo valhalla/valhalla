@@ -137,10 +137,8 @@ elif [[ "$1" ==  "sqlite" ]]; then
   ./build_schedule.sh $db $1
 
 #think geom makes you call out the col names....not sure.
-  cols=$(head -1 shapes.txt)
-  cols=$(echo $cols | tr "|" ,)
-  spatialite $db "insert into shapes(${cols},geom) select ${cols},geom from shapes_tmp;"
-  spatialite $db "insert into shape(shape_id,geom) select shape_id,geom from shape_tmp;"
+  spatialite $db "insert into shapes select * from shapes_tmp;"
+  spatialite $db "insert into shape select * from shape_tmp;"
 
   cols=$(head -1 stops.txt)
   cols=$(echo $cols | tr "|" ,)  
@@ -156,7 +154,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
   spatialite $db "insert into calendar_dates select * from calendar_dates_tmp;"
   spatialite $db "insert into transfers select * from transfers_tmp;"
   spatialite $db "insert into schedule select * from schedule_tmp;"
-  
+ 
   spatialite $db "DELETE from shapes_tmp;"
   spatialite $db "DELETE from agency_tmp;"
   spatialite $db "DELETE from stops_tmp;"
