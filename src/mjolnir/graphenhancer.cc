@@ -376,10 +376,13 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   uint32_t heading = startnodeinfo.heading(idx);
   const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
-    // Skip the current directed edge and any inbound edges not oneway
-    if (i == idx ||
-        !((diredge->reverseaccess() & kAutoAccess) &&
-         !(diredge->forwardaccess() & kAutoAccess))) {
+    // Skip the current directed edge
+    // and any inbound edges not oneway
+    // and any link edge
+    if (i == idx
+        || (!((diredge->reverseaccess() & kAutoAccess)
+            && !(diredge->forwardaccess() & kAutoAccess)))
+        || diredge->link()) {
       continue;
     }
 
@@ -409,10 +412,13 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   const NodeInfo* node = tile->node(directededge.endnode());
   diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
-    // Skip opposing directed edge and any outbound edges not oneway
-    if (i == directededge.opp_local_idx() ||
-        !((diredge->forwardaccess() & kAutoAccess) &&
-          !(diredge->reverseaccess() & kAutoAccess))) {
+    // Skip opposing directed edge
+    // and any outbound edges not oneway
+    // and any link edge
+    if (i == directededge.opp_local_idx()
+        || (!((diredge->forwardaccess() & kAutoAccess)
+            && !(diredge->reverseaccess() & kAutoAccess)))
+        || diredge->link()) {
       continue;
     }
 
