@@ -4,6 +4,7 @@
 #include "../../valhalla/mjolnir/graphvalidator.h"
 #include "../../valhalla/mjolnir/pbfgraphparser.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/hierarchybuilder.h"
 #include "config.h"
@@ -125,6 +126,8 @@ int main(int argc, char** argv) {
     else
       return false;  //unknown value;
   }*/
+
+  TransitBuilder::Build(pt);
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative

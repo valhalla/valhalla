@@ -110,17 +110,17 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
     while (result == SQLITE_ROW) {
       Stop stop;
       stop.key    = sqlite3_column_int(stmt, 0);
-      stop.id     = (char*)(sqlite3_column_text(stmt, 1));
+      stop.id     = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 1))));
       stop.code   = (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) ?
-                      (char*)sqlite3_column_text(stmt, 2) : "";
+                    std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2))) : "";
       stop.name   = (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) ?
-                      (char*)(sqlite3_column_text(stmt, 3)) : "";
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 3)))) : "";
       stop.desc   = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
-                      (char*)(sqlite3_column_text(stmt, 4)) : "";
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 4)))) : "";
       stop.zoneid = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
-                      (char*)(sqlite3_column_text(stmt, 5)) : "";
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 5)))) : "";
       stop.url    = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
-                      (char*)(sqlite3_column_text(stmt, 6)) : "";
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
       stop.type   = sqlite3_column_int(stmt, 7);
       stop.parent = sqlite3_column_int(stmt, 8);
       stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 9)),
@@ -130,6 +130,7 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
       result = sqlite3_step(stmt);
     }
   }
+
   if (stmt) {
     sqlite3_finalize(stmt);
     stmt = 0;
@@ -258,17 +259,17 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
 
       // TODO - convert times and date to int values
       std::string t1 = (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) ?
-                         (char*)sqlite3_column_text(stmt, 6) : "";
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6))) : "";
       std::string t2 = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
-                         (char*)sqlite3_column_text(stmt, 7) : "";
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))) : "";
       std::string d1 = (sqlite3_column_type(stmt, 8) == SQLITE_TEXT) ?
-                         (char*)sqlite3_column_text(stmt, 8) : "";
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))) : "";
       std::string d2 = (sqlite3_column_type(stmt, 9) == SQLITE_TEXT) ?
-                         (char*)sqlite3_column_text(stmt, 9) : "";
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))) : "";
 
       dep.dow        = sqlite3_column_int(stmt, 10);
       dep.headsign   = (sqlite3_column_type(stmt, 11) == SQLITE_TEXT) ?
-                         (char*)sqlite3_column_text(stmt, 11) : "";
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 11))) : "";
       departures.emplace_back(std::move(dep));
 
       result = sqlite3_step(stmt);
