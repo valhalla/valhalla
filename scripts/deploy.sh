@@ -15,6 +15,15 @@ if [ $? != "0" ]; then
    exit 1
 fi
 
+conf_dir=$(dirname "${src_dir}/mjolnir/conf") || exit $?
+config_dir=$(dirname "${config}") || exit $?
+lua_files=`find ${conf_dir} -type f -name "*.lua"` || exit $?
+
+for file in ${lua_files} ; do
+  file_name=`find ${file} -type f -name "*.lua" -printf '%f '` || exit $?
+  ln -s ${config_dir}/${file_name} ${file} || exit $?
+done
+
 extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 files=`find ${extracts_dir} -type f -name "*.pbf" -printf '%f '`
 
