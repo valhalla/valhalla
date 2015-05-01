@@ -19,7 +19,7 @@ update stop_times_tmp a set trip_key = (select trip_key from trips_tmp b where a
 update transfers_tmp set from_stop_key = (select stop_key from stops_tmp where stop_id = from_stop_id);
 update transfers_tmp set to_stop_key = (select stop_key from stops_tmp where stop_id = to_stop_id);
 
-create table s_tmp as select trips_tmp.trip_key, trips_tmp.trip_id, trips_tmp.service_id, route_key, stop_id, stop_key, stop_sequence, departure_time, arrival_time,service_key,sunday,monday,tuesday,wednesday,thursday,friday,saturday,start_date,end_date, CASE WHEN stop_times_tmp.stop_headsign IS NOT NULL THEN stop_times_tmp.stop_headsign ELSE trips_tmp.trip_headsign END AS headsign from trips_tmp, stop_times_tmp, calendar_tmp where trips_tmp.trip_id = stop_times_tmp.trip_id and calendar_tmp.service_id = trips_tmp.service_id order by stop_times_tmp.trip_id, stop_sequence;
+create table s_tmp as select trips_tmp.trip_key, trips_tmp.trip_id, trips_tmp.service_id, route_key, stop_id, stop_key, stop_sequence, departure_time, arrival_time,service_key,sunday,monday,tuesday,wednesday,thursday,friday,saturday,start_date,end_date, CASE WHEN (stop_times_tmp.stop_headsign IS NOT NULL and stop_times_tmp.stop_headsign <> "") THEN stop_times_tmp.stop_headsign ELSE trips_tmp.trip_headsign END AS headsign from trips_tmp, stop_times_tmp, calendar_tmp where trips_tmp.trip_id = stop_times_tmp.trip_id and calendar_tmp.service_id = trips_tmp.service_id order by stop_times_tmp.trip_id, stop_sequence;
 
 VACUUM ANALYZE;
 
