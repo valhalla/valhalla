@@ -3,25 +3,6 @@
 namespace valhalla {
 namespace baldr {
 
-// Constructor given a pointer to memory.
-EdgeInfo::EdgeInfo(char* ptr)
-    : names_list_(nullptr),
-      names_list_length_(0) {
-  wayid_ = *(reinterpret_cast<uint64_t*>(ptr));
-  ptr += sizeof(uint64_t);
-
-  item_ = reinterpret_cast<PackedItem*>(ptr);
-  ptr += sizeof(PackedItem);
-
-  // Set street_name_offset_list_ pointer
-  street_name_offset_list_ = reinterpret_cast<uint32_t*>(ptr);
-  ptr += (name_count() * sizeof(uint32_t));
-
-  // Set encoded_shape_ pointer
-  encoded_shape_ = ptr;
-  ptr += (encoded_shape_size() * sizeof(char));
-}
-
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list,
                    const size_t names_list_length)
   : names_list_(names_list), names_list_length_(names_list_length) {

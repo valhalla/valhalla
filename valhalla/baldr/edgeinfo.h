@@ -28,12 +28,6 @@ class EdgeInfo {
   EdgeInfo(const EdgeInfo& other) = delete;
 
   /**
-   * Constructor given a pointer to memory. No access to names list.
-   * @param  ptr  Pointer to a bit of memory that has the info for this edge
-   */
-  EdgeInfo(char* ptr);
-
-  /**
    * Constructor
    * @param  ptr  Pointer to a bit of memory that has the info for this edge
    * @param  names_list  Pointer to the start of the text/names list.
