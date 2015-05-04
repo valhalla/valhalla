@@ -78,6 +78,12 @@ class EdgeInfo {
    */
   const std::vector<PointLL>& shape() const;
 
+  /**
+   * Returns the encoded shape string.
+   * @return  Returns the encoded shape string.
+   */
+  std::string encoded_shape() const;
+
   // Operator EqualTo based on nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;
 

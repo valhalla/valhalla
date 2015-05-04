@@ -39,7 +39,7 @@ uint32_t EdgeInfo::name_count() const {
 
 // Get the size of the encoded shape (number of bytes).
 uint32_t EdgeInfo::encoded_shape_size() const {
-  return item_->encoded_shape_size ;
+  return item_->encoded_shape_size;
 }
 
 uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
@@ -49,6 +49,7 @@ uint32_t EdgeInfo::GetStreetNameOffset(uint8_t index) const {
     throw std::runtime_error("StreetNameOffset index was out of bounds");
 }
 
+// Get a list of names
 const std::vector<std::string> EdgeInfo::GetNames() const {
   // Get each name
   std::vector<std::string> names;
@@ -64,6 +65,7 @@ const std::vector<std::string> EdgeInfo::GetNames() const {
   return names;
 }
 
+// Returns shape as a vector of PointLL
 const std::vector<PointLL>& EdgeInfo::shape() const {
   //if we haven't yet decoded the shape, do so
   if(encoded_shape_ != nullptr) {
@@ -74,6 +76,15 @@ const std::vector<PointLL>& EdgeInfo::shape() const {
 
   //hand it back
   return shape_;
+}
+
+// Returns the encoded shape string
+std::string EdgeInfo::encoded_shape() const {
+  if (encoded_shape_ == nullptr) {
+    return midgard::encode(shape_);
+  } else {
+    return std::string(encoded_shape_, item_->encoded_shape_size);
+  }
 }
 
 }
