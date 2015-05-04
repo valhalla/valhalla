@@ -71,7 +71,7 @@ rm -rf ${base_dir}/*.bin || exit $?
 crontab -r
 
 # add new cron job for updates.
-#(crontab -l 2>/dev/null; echo "*/5 * * * * cd ${base_dir}; ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir} >> ${log_dir}/update_cron.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "*/5 * * * * cd ${base_dir}; ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir} >> ${log_dir}/update_cron.log 2>&1") | crontab -
 
 rm ${LOCK_FILE} || exit $?
 
