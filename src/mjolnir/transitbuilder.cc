@@ -142,8 +142,8 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
                     std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
       stop.type   = sqlite3_column_int(stmt, 7);
       stop.parent = sqlite3_column_int(stmt, 8);
-      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 9)),
-                  static_cast<float>(sqlite3_column_double(stmt, 10)));
+      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 10)),
+                  static_cast<float>(sqlite3_column_double(stmt, 9)));
       stops.emplace_back(std::move(stop));
 
       // TODO - perhaps keep a map of parent/child relations
@@ -231,10 +231,12 @@ void assign_graphids(const boost::property_tree::ptree& pt,
 
       // Get the number of nodes in the tile so we can assign graph Ids
       uint32_t n = reader.GetGraphTile(tile_id)->header()->nodecount();
+LOG_INFO("Tile has " + std::to_string(n) + " nodes");
       for (auto& stop : stops) {
         stop.graphid = GraphId(tile_id.tileid(), tile_id.level(), n);
         n++;
       }
+LOG_INFO("Added " + std::to_string(stops.size()) + " stop nodes");
 
       // Add all stops and the tile to the results
       if (stats.stops.empty()) {
@@ -335,13 +337,11 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(sqlite3* db_handle,
                     (char*)sqlite3_column_text(stmt, 4) : "";
         uint32_t type = sqlite3_column_int(stmt, 5);
 
-        // TODO - add to text list and form offsets
-        uint32_t shortname_offset = 0;
-        uint32_t longname_offset = 0;
-        uint32_t desc_offset = 0;
+        // Add names and create the transit route
         TransitRoute route(routeid, agencyid, tl_routeid.c_str(),
-                           shortname_offset, longname_offset,
-                           desc_offset);
+                           tilebuilder.AddName(shortname),
+                           tilebuilder.AddName(longname),
+                           tilebuilder.AddName(desc));
         tilebuilder.AddTransitRoute(route);
         n++;
 
@@ -390,11 +390,10 @@ std::unordered_map<uint32_t, uint32_t> AddTrips(sqlite3* db_handle,
                                     (char*)sqlite3_column_text(stmt, 3) : "";
         uint32_t shapeid = sqlite3_column_int(stmt, 4);
 
-        // TODO - add to text list and get offset
-        uint32_t shortname_offset = 0;
-        uint32_t headsign_offset = 0;
-        TransitTrip trip(tripid, routeid, tl_tripid, shortname_offset,
-                          headsign_offset);
+        // Add names and create transit trip
+        TransitTrip trip(tripid, routeid, tl_tripid,
+                         tilebuilder.AddName(shortname),
+                         tilebuilder.AddName(headsign));
         tilebuilder.AddTransitTrip(trip);
         n++;
 
@@ -476,7 +475,6 @@ void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
     stmt = 0;
   }
 }
-
 
 // Get Use given the transit route type
 Use GetTransitUse(const uint32_t rt) {
@@ -568,7 +566,8 @@ void build(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id);
+    // Read in the existing tile - deserialize it so we can add to it
+    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
     lock.unlock();
 
     // Get the current number of directed edges
@@ -607,8 +606,8 @@ void build(const boost::property_tree::ptree& pt,
         std::vector<Departure> departures = GetDepartures(db_handle, stop.key);
 
 LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
-                     + std::to_string(stop.key) + " location_type = "
-                     + std::to_string(stop.type));
+          + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
+
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
           trip_keys.insert(dep.trip);
@@ -631,20 +630,21 @@ LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
           // Form transit departures
           uint32_t edgeid  = diredgeid;
           uint32_t blockid = 0;  // TODO - not part of the schedule?
-          uint32_t headsign_offset = 0; // TODO
+          uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          transit_departures.emplace_back(edgeid, dep.trip, dep.route,
-                          blockid, headsign_offset, dep.dep_time, elapsed_time,
-                          dep.start_date, dep.end_date, dep.dow, dep.service);
+          TransitDeparture td(edgeid, dep.trip, dep.route,
+                      blockid, headsign_offset, dep.dep_time, elapsed_time,
+                      dep.start_date, dep.end_date, dep.dow, dep.service);
+          tilebuilder.AddTransitDeparture(td);
         }
 
         // Get any transfers from this stop
         AddTransfers(db_handle, stop.key, tilebuilder);
 
         // Store stop information in TransitStops
-        // TODO - tl_stop_id, name offset, desc offset
-        uint32_t name_offset = 0;
-        uint32_t desc_offset = 0;
+        // TODO - tl_stop_id
+        uint32_t name_offset = tilebuilder.AddName(stop.name);
+        uint32_t desc_offset = tilebuilder.AddName(stop.desc);
         uint32_t farezone = 0;
         TransitStop ts(stop.key, "", name_offset, desc_offset,
                        stop.parent, farezone);
@@ -654,9 +654,6 @@ LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
         stop_edge_map[stop.key] = std::move(stopedges);
       }
     }
-
-    LOG_INFO("Tile has " + std::to_string(route_keys.size()) + " routes and " +
-             std::to_string(trip_keys.size()) + " trips");
 
     // Add routes to the tile. Get map of route types.
     std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(db_handle,
@@ -669,6 +666,7 @@ LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
     // Add calendar exceptions (using service Id)
     AddCalendar(db_handle, service_keys, tilebuilder);
 
+/*
     // Add nodes, directededges, and edgeinfo
     // TODO - move to a method
     uint32_t diredgeid = tilebuilder.header()->directededgecount();
@@ -701,6 +699,9 @@ LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
         bool forward = true;          // TBD
         DirectedEdgeBuilder directededge;
         directededge.set_endnode(stops[endstop].graphid);
+if (stops[endstop].graphid.id() == 0) {
+  LOG_ERROR("GraphId with id = 0");
+}
         directededge.set_length(stop.ll.Distance(stops[endstop].ll));
         directededge.set_use(Use::kTransitConnection);
         directededge.set_speed(5);
@@ -746,9 +747,11 @@ uint32_t tc = directededges.size();
     }
 uint32_t count = diredgeid - tilebuilder.header()->directededgecount();
 LOG_INFO("Added " + std::to_string(count) + " directed edges");
+*/
+
     // Write the new file
     lock.lock();
-//    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
     lock.unlock();
   }
 
