@@ -28,9 +28,9 @@ extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 files=`find ${extracts_dir} -type f -name "*.pbf" -printf '%f '`
 
 # update each pbf
-#for file in ${files} ; do
-#  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
-#done
+for file in ${files} ; do
+  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
+done
 
 tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 mjolnir_tile_dir=$(echo ${tile_dir} | sed 's/tiles/mjolnir_tiles/g') || exit $?
