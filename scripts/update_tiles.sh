@@ -37,6 +37,8 @@ ${src_dir}/mjolnir/scripts/backup_tiles.sh ${tile_dir} || exit $?
 # clean tile dir 
 rm -rf ${tile_dir}/* || exit $?
 
+exit
+
 # move the newly created tiles to the tile dir
 mv ${mjolnir_tile_dir}/* ${tile_dir}/ || exit $?
 
