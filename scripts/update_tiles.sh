@@ -25,9 +25,6 @@ files=`find ${extracts_dir} -type f -name "*.pbf" -printf '%f '`
 mjolnir_tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 tile_dir=$(echo ${mjolnir_tile_dir} | sed 's/mjolnir_tiles/tiles/g') || exit $?
 
-# clean mjolnir tiles
-rm -rf ${mjolnir_tile_dir}/* || exit $?
-
 export PATH=$PATH:/usr/local/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
