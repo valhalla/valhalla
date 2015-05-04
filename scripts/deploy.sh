@@ -28,9 +28,9 @@ extracts=`find ${extracts_dir} -type f -name "*.pbf"`
 files=`find ${extracts_dir} -type f -name "*.pbf" -printf '%f '`
 
 # update each pbf
-#for file in ${files} ; do
-#  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
-#done
+for file in ${files} ; do
+  ${src_dir}/mjolnir/scripts/minutely_update.sh update ${extracts_dir} ${file} || exit $?
+done
 
 tile_dir=`cat ${config} | jq '.mjolnir.hierarchy.tile_dir' | sed 's/^"\(.*\)"$/\1/'` || exit $?
 mjolnir_tile_dir=$(echo ${tile_dir} | sed 's/tiles/mjolnir_tiles/g') || exit $?
@@ -72,6 +72,9 @@ crontab -r
 
 # add new cron job for updates.
 (crontab -l 2>/dev/null; echo "*/5 * * * * cd ${base_dir}; ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir} >> ${log_dir}/update_cron.log 2>&1") | crontab -
+
+# add new cron job for log clean up.
+(crontab -l 2>/dev/null; echo "0 0 * * 0 rm ${log_dir}/update_cron.log") | crontab -
 
 rm ${LOCK_FILE} || exit $?
 
