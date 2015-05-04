@@ -600,12 +600,13 @@ void FormTilesInNewLevel(
 
 // Add connections to the base tile. Rewrites the base tile with updated
 // header information, node, and directed edge information.
-void AddConnectionsToBaseTile(
-    const uint32_t basetileid, const std::vector<NodeConnection>& connections, const TileHierarchy& tile_hierarchy) {
+void AddConnectionsToBaseTile(const uint32_t basetileid,
+                              const std::vector<NodeConnection>& connections,
+                              const TileHierarchy& tile_hierarchy) {
   // Read in existing tile
   uint8_t baselevel = connections[0].basenode.level();
   GraphId basetile(basetileid, baselevel, 0);
-  GraphTileBuilder tilebuilder(tile_hierarchy, basetile);
+  GraphTileBuilder tilebuilder(tile_hierarchy, basetile, false);
 
   // TODO - anything index by directed edge index (e.g. Signs) needs
   // to be updated!

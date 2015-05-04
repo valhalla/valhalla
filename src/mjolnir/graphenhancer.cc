@@ -362,8 +362,9 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
                             DirectedEdgeBuilder& directededge,
                             const uint32_t idx) {
   // Internal intersection edges must be short and cannot be a roundabout
-  if (directededge.length() > kMaxInternalLength ||
-      directededge.roundabout()) {
+  if (directededge.use() < Use::kRail &&
+      (directededge.length() > kMaxInternalLength ||
+      directededge.roundabout())) {
     return false;
   }
 
@@ -864,7 +865,7 @@ void enhance(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id);
+    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
@@ -1000,8 +1001,10 @@ void enhance(const boost::property_tree::ptree& pt,
           stats.unreachable++;
         }
 
-        // Check for not_thru edge (only on low importance edges)
-        if (directededge.classification() > RoadClass::kTertiary) {
+        // Check for not_thru edge (only on low importance edges). Exclude
+        // transit edges
+        if (directededge.classification() > RoadClass::kTertiary &&
+            directededge.use() < Use::kRail) {
           if (IsNotThruEdge(reader, lock, startnode, directededge)) {
             directededge.set_not_thru(true);
             stats.not_thru++;
