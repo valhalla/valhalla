@@ -10,10 +10,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-/**
- * Set the OSM way Id.
- * @param wayid  Way Id.
- */
+// Set the OSM way Id.
 void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
   wayid_ = wayid;
 }
@@ -36,7 +33,7 @@ void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
 
 // Set the encoded shape string.
 void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
-  std::copy(encoded_shape.begin(),encoded_shape.end(),
+  std::copy(encoded_shape.begin(), encoded_shape.end(),
             back_inserter(encoded_shape_));
 }
 
@@ -49,6 +46,7 @@ std::size_t EdgeInfoBuilder::SizeOf() const {
   return size;
 }
 
+// Output edge info to output stream
 std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Pack the name count and encoded shape size. Check against limits.
   baldr::EdgeInfo::PackedItem item;
