@@ -16,7 +16,7 @@ namespace valhalla {
 namespace mjolnir {
 
 /**
- * Edge information not required in shortest path algorithm and is
+ * Edge information. Not required in shortest path algorithm and is
  * common among the 2 directions.
   */
 class EdgeInfoBuilder {
@@ -29,18 +29,33 @@ class EdgeInfoBuilder {
 
   /**
    * Set the indexes to names used by this edge
-   * @param  text_name_offset_list  a list of name indexes.
+   * @param  offsets  List of name offsets.
    */
-  void set_text_name_offset_list(const std::vector<uint32_t>& text_name_offset_list);
+  void set_text_name_offset_list(const std::vector<uint32_t>& offsets);
+
+  /**
+   * Add a name offset to the list.
+   * @param  offset  Offset into the text list.
+   */
+  void AddNameOffset(const uint32_t offset);
 
   /**
    * Set the shape of the edge.
-   * @param  shape  the the list of lat,lng points describing the
-   * *        shape of the edge.
+   * @param  shape  List of lat,lng points describing the
+   *                shape of the edge.
    */
   void set_shape(const std::vector<PointLL>& shape);
 
-  // Returns the size in bytes of this object.
+  /**
+   * Set the encoded shape string.
+   * @param  encoded_shape  Encoded shape string
+   */
+  void set_encoded_shape(const std::string& encoded_shape);
+
+  /**
+   * Get the size of this edge info.
+   * @return  Returns the size in bytes of this object.
+   */
   std::size_t SizeOf() const;
 
  protected:
@@ -55,7 +70,6 @@ class EdgeInfoBuilder {
   std::string encoded_shape_;
 
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
-
 };
 
 }

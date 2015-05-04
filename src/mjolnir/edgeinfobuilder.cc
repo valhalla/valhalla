@@ -24,9 +24,20 @@ void EdgeInfoBuilder::set_text_name_offset_list(
   text_name_offset_list_ = text_name_offset_list;
 }
 
+// Set the indexes to names used by this edge.
+void EdgeInfoBuilder::AddNameOffset(const uint32_t offset) {
+  text_name_offset_list_.push_back(offset);
+}
+
 // Set the shape of the edge. Encode the vector of lat,lng to a string.
 void EdgeInfoBuilder::set_shape(const std::vector<PointLL>& shape) {
   encoded_shape_ = midgard::encode<std::vector<PointLL> >(shape);
+}
+
+// Set the encoded shape string.
+void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
+  std::copy(encoded_shape.begin(),encoded_shape.end(),
+            back_inserter(encoded_shape_));
 }
 
 // Get the size of the edge info (including name offsets and shape string)
