@@ -864,7 +864,8 @@ void enhance(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
-    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id);
+    // Tile builder - serialize in existing tile so we can add admin names
+    GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
     const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
@@ -884,15 +885,12 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
-    // Update nodes and directed edges as needed
-    std::vector<NodeInfoBuilder> nodes;
-    std::vector<DirectedEdgeBuilder> directededges;
-
-    // Iterate through the nodes
+    // Iterate through the nodes. Update nodeinfo and directed edges as
+    // needed
     const GraphTile* endnodetile = nullptr;
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
-      NodeInfoBuilder nodeinfo = tilebuilder.node(i);
+      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),
@@ -922,8 +920,9 @@ void enhance(const boost::property_tree::ptree& pt,
       uint32_t heading[ntrans];
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
-        DirectedEdgeBuilder& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
-        auto shape = tile->edgeinfo(directededge.edgeinfo_offset())->shape();
+        DirectedEdgeBuilder& directededge =
+            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+        auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
         heading[j] = std::round(PointLL::HeadingAlongPolyline(shape, kMetersOffsetForHeading));
@@ -948,7 +947,8 @@ void enhance(const boost::property_tree::ptree& pt,
       // Go through directed edges and "enhance" directed edge attributes
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdgeBuilder& directededge = tilebuilder.directededge(nodeinfo.edge_index() + j);
+        DirectedEdgeBuilder& directededge =
+            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Get the tile at the end node
         if (tile->id() == directededge.endnode().Tile_Base()) {
@@ -959,7 +959,7 @@ void enhance(const boost::property_tree::ptree& pt,
           lock.unlock();
         }
 
-        // If this edge is a link, update its use (potenitally change short
+        // If this edge is a link, update its use (potentially change short
         // links to turn channels)
         if (directededge.link()) {
           UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
@@ -984,44 +984,45 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Name continuity - set in NodeInfo
         for (uint32_t k = (j + 1); k < ntrans; k++) {
-          if (ConsistentNames(
-              country_code,
-              tile->edgeinfo(directededge.edgeinfo_offset())->GetNames(),
-              tile->edgeinfo(
+          if (ConsistentNames(country_code,
+              tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+              tilebuilder.edgeinfo(
                   tilebuilder.directededge(nodeinfo.edge_index() + k)
                       .edgeinfo_offset())->GetNames())) {
             nodeinfo.set_name_consistency(j, k, true);
           }
         }
 
-        // Set unreachable (driving) flag
-        if (IsUnreachable(reader, lock, directededge)) {
-          directededge.set_unreachable(true);
-          stats.unreachable++;
-        }
+        // Set unreachable, not_thru, or internal intersection (except
+        // for transit)
+        if (directededge.use() < Use::kRail) {
+          // Set unreachable (driving) flag
+          if (IsUnreachable(reader, lock, directededge)) {
+            directededge.set_unreachable(true);
+            stats.unreachable++;
+          }
 
-        // Check for not_thru edge (only on low importance edges)
-        if (directededge.classification() > RoadClass::kTertiary) {
-          if (IsNotThruEdge(reader, lock, startnode, directededge)) {
-            directededge.set_not_thru(true);
-            stats.not_thru++;
+          // Check for not_thru edge (only on low importance edges). Exclude
+          // transit edges
+          if (directededge.classification() > RoadClass::kTertiary) {
+            if (IsNotThruEdge(reader, lock, startnode, directededge)) {
+              directededge.set_not_thru(true);
+              stats.not_thru++;
+            }
+          }
+
+          // Test if an internal intersection edge. Must do this after setting
+          // opposing edge index
+          if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
+                                      directededge, j)) {
+            directededge.set_internal(true);
+            stats.internalcount++;
           }
         }
 
         // Set the opposing index on the local level
         directededge.set_opp_local_idx(
             GetOpposingEdgeIndex(endnodetile, startnode, directededge));
-
-        // Test if an internal intersection edge. Must do this after setting
-        // opposing edge index
-        if (IsIntersectionInternal(reader, lock, startnode, nodeinfo,
-                                   directededge, j)) {
-          directededge.set_internal(true);
-          stats.internalcount++;
-        }
-
-        // Add the directed edge
-        directededges.emplace_back(std::move(directededge));
       }
 
       // Set the intersection type
@@ -1035,17 +1036,11 @@ void enhance(const boost::property_tree::ptree& pt,
           nodeinfo.set_intersection(IntersectionType::kFalse);
         }
       }
-
-      // Add the node to the list
-      nodes.emplace_back(std::move(nodeinfo));
     }
 
     // Write the new file
     lock.lock();
-    GraphTileHeader existinghdr = *(tilebuilder.header());
-    GraphTileHeaderBuilder hdrbuilder =
-          static_cast<GraphTileHeaderBuilder&>(existinghdr);
-    tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
+    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
     LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
 
     // Check if we need to clear the tile cache

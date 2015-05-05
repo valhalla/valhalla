@@ -154,7 +154,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     uint32_t ntiles = tiles.TileCount();
     for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
       // Get the graph tile. Skip if no tile exists (common case)
-      GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0));
+      GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0), false);
       if (tilebuilder.size() == 0) {
         continue;
       }

@@ -38,7 +38,6 @@ using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
- * @author  David W. Nesbitt
  */
 class GraphTileBuilder : public baldr::GraphTile {
  public:
@@ -50,11 +49,17 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Constructor given an existing tile. This is used to read in the tile
    * data and then add to it (e.g. adding node connections between hierarchy
-   * levels.
+   * levels. If the deserialize flag is set then all objects are serialized
+   * from memory into builders that can be added to and then stored using
+   * StoreTileData.
    * @param  basedir  Base directory path
    * @param  graphid  GraphId used to determine the tileid and level
+   * @param  deserialize  If true the existing objects in the tile are
+   *                      converted into builders so they can be added to.
    */
-  GraphTileBuilder(const baldr::TileHierarchy& hierarchy, const GraphId& graphid);
+  GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
+                   const GraphId& graphid,
+                   const bool deserialize);
 
   /**
    * Output the tile to file. Stores as binary data.
@@ -65,28 +70,15 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
- * Update a graph tile with new header, nodes, and directed edges. Used
- * in GraphOptimizer to update directed edge information.
- * @param hierarchy How the tiles are setup on disk
- * @param hdr Update header
- * @param nodes Update list of nodes
- * @param directededges Updated list of edges.
- */
- void Update(const baldr::TileHierarchy& hierarchy,
-             const GraphTileHeaderBuilder& hdr,
-             const std::vector<NodeInfoBuilder>& nodes,
-             const std::vector<DirectedEdgeBuilder>& directededges);
-
- /**
-* Update a graph tile with new header, nodes, and directed edges. Used
-* in GraphOptimizer to update directed edge information.
-* @param hierarchy How the tiles are setup on disk
-* @param hdr Update header
-* @param nodes Update list of nodes
-* @param directededges Updated list of edges.
-*/
-void Update(const baldr::TileHierarchy& hierarchy,
-            GraphTileHeaderBuilder& hdr,
+   * Update a graph tile with new header, nodes, and directed edges. Used
+   * in GraphValidator to update directed edge information.
+   * @param hierarchy How the tiles are setup on disk
+   * @param hdr Updated header
+   * @param nodes Updated list of nodes
+   * @param directededges Updated list of edges.
+   */
+  void Update(const baldr::TileHierarchy& hierarchy,
+            const GraphTileHeaderBuilder& hdr,
             const std::vector<NodeInfoBuilder>& nodes,
             const std::vector<DirectedEdgeBuilder>& directededges);
 
@@ -163,6 +155,7 @@ void Update(const baldr::TileHierarchy& hierarchy,
 
   /**
    * Add edge info to the tile.
+   * TODO - comments
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
@@ -170,17 +163,21 @@ void Update(const baldr::TileHierarchy& hierarchy,
                        const std::vector<PointLL>& lls,
                        const std::vector<std::string>& names,
                        bool& added);
+
+  /**
+   * Add a name to the text list.
+   * @param  name  Name/text to add.
+   * @return  Returns offset (bytes) to the name.
+   */
+  uint32_t AddName(const std::string& name);
+
   /**
    * Add admin info to the tile.
+   * TODO - comments!
    */
   uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
                     const std::string& country_iso, const std::string& state_iso,
                     const std::string& start_dst, const std::string& end_dst);
-
-  /**
-   * Get the admin index.
-   */
-  uint32_t GetAdminIndex(const std::string& country_iso);
 
   /**
    * Gets a builder for a node from an existing tile.
@@ -189,10 +186,22 @@ void Update(const baldr::TileHierarchy& hierarchy,
   NodeInfoBuilder& node(const size_t idx);
 
   /**
+   * Get the node builder at the specified index.
+   * @param  idx  Index of the node builder.
+   */
+  NodeInfoBuilder& node_builder(const size_t idx);
+
+  /**
    * Gets a builder for a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
    */
   DirectedEdgeBuilder& directededge(const size_t idx);
+
+  /**
+   * Get the directed edge builder at the specified index.
+   * @param  idx  Index of the directed edge builder.
+   */
+  DirectedEdgeBuilder& directededge_builder(const size_t idx);
 
   /**
    * Gets a non-const sign (builder) from existing tile data.
@@ -236,9 +245,6 @@ void Update(const baldr::TileHierarchy& hierarchy,
   // Write all textlist items to specified stream
   void SerializeTextListToOstream(std::ostream& out);
 
-  // Write all edgeinfo items to specified stream
-  void SerializeAdminInfosToOstream(std::ostream& out);
-
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
 
@@ -252,22 +258,22 @@ void Update(const baldr::TileHierarchy& hierarchy,
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time
-  std::vector<baldr::TransitDeparture> departures_;
+  std::vector<baldr::TransitDeparture> departure_builder_;
 
   // Transit trips. Sorted by trip Id.
-  std::vector<baldr::TransitTrip> transit_trips_;
+  std::vector<baldr::TransitTrip> trip_builder_;
 
   // Transit stops. Sorted by stop Id.
-  std::vector<baldr::TransitStop> transit_stops_;
+  std::vector<baldr::TransitStop> stop_builder_;
 
   // Transit route. Sorted by route Id.
-  std::vector<baldr::TransitRoute> transit_routes_;
+  std::vector<baldr::TransitRoute> route_builder_;
 
   // Transit transfers. Sorted by from stop Id.
-  std::vector<baldr::TransitTransfer> transit_transfers_;
+  std::vector<baldr::TransitTransfer> transfer_builder_;
 
   // Transit calendar exceptions. Sorted by service Id.
-  std::vector<baldr::TransitCalendar> transit_exceptions_;
+  std::vector<baldr::TransitCalendar> exception_builder_;
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
@@ -278,23 +284,21 @@ void Update(const baldr::TileHierarchy& hierarchy,
   std::vector<AdminInfoBuilder> admins_builder_;
 
   // Admin info offset
-  size_t admin_info_offset_ = 0;
-  std::unordered_map<std::string,size_t> admin_info_offset_map;
+  std::unordered_map<std::string,size_t> admin_info_offset_map_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
-  std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
+  std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map_;
 
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;
 
   // Text list offset and map
   uint32_t text_list_offset_ = 0;
-  std::unordered_map<std::string, uint32_t> text_offset_map;
+  std::unordered_map<std::string, uint32_t> text_offset_map_;
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
-
 };
 
 }
