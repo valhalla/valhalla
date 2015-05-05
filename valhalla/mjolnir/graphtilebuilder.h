@@ -70,28 +70,15 @@ class GraphTileBuilder : public baldr::GraphTile {
                      const baldr::GraphId& graphid);
 
   /**
- * Update a graph tile with new header, nodes, and directed edges. Used
- * in GraphOptimizer to update directed edge information.
- * @param hierarchy How the tiles are setup on disk
- * @param hdr Update header
- * @param nodes Update list of nodes
- * @param directededges Updated list of edges.
- */
- void Update(const baldr::TileHierarchy& hierarchy,
-             const GraphTileHeaderBuilder& hdr,
-             const std::vector<NodeInfoBuilder>& nodes,
-             const std::vector<DirectedEdgeBuilder>& directededges);
-
- /**
-* Update a graph tile with new header, nodes, and directed edges. Used
-* in GraphOptimizer to update directed edge information.
-* @param hierarchy How the tiles are setup on disk
-* @param hdr Update header
-* @param nodes Update list of nodes
-* @param directededges Updated list of edges.
-*/
-void Update(const baldr::TileHierarchy& hierarchy,
-            GraphTileHeaderBuilder& hdr,
+   * Update a graph tile with new header, nodes, and directed edges. Used
+   * in GraphValidator to update directed edge information.
+   * @param hierarchy How the tiles are setup on disk
+   * @param hdr Updated header
+   * @param nodes Updated list of nodes
+   * @param directededges Updated list of edges.
+   */
+  void Update(const baldr::TileHierarchy& hierarchy,
+            const GraphTileHeaderBuilder& hdr,
             const std::vector<NodeInfoBuilder>& nodes,
             const std::vector<DirectedEdgeBuilder>& directededges);
 
@@ -199,10 +186,22 @@ void Update(const baldr::TileHierarchy& hierarchy,
   NodeInfoBuilder& node(const size_t idx);
 
   /**
+   * Get the node builder at the specified index.
+   * @param  idx  Index of the node builder.
+   */
+  NodeInfoBuilder& node_builder(const size_t idx);
+
+  /**
    * Gets a builder for a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
    */
   DirectedEdgeBuilder& directededge(const size_t idx);
+
+  /**
+   * Get the directed edge builder at the specified index.
+   * @param  idx  Index of the directed edge builder.
+   */
+  DirectedEdgeBuilder& directededge_builder(const size_t idx);
 
   /**
    * Gets a non-const sign (builder) from existing tile data.
@@ -296,7 +295,7 @@ void Update(const baldr::TileHierarchy& hierarchy,
 
   // Text list offset and map
   uint32_t text_list_offset_ = 0;
-  std::unordered_map<std::string, uint32_t> text_offset_map;
+  std::unordered_map<std::string, uint32_t> text_offset_map_;
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
