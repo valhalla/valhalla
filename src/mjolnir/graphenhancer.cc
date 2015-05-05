@@ -993,6 +993,10 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
+        // Set the opposing index on the local level
+        directededge.set_opp_local_idx(
+              GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+
         // Set unreachable, not_thru, or internal intersection (except
         // for transit)
         if (directededge.use() < Use::kRail) {
@@ -1019,10 +1023,6 @@ void enhance(const boost::property_tree::ptree& pt,
             stats.internalcount++;
           }
         }
-
-        // Set the opposing index on the local level
-        directededge.set_opp_local_idx(
-            GetOpposingEdgeIndex(endnodetile, startnode, directededge));
       }
 
       // Set the intersection type
