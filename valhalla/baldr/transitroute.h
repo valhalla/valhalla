@@ -15,8 +15,8 @@ class TransitRoute {
  public:
   // Constructor with arguments
   TransitRoute(const uint32_t routeid, const uint32_t agencyid,
-               const char* tl_routeid, const uint32_t short_name_index,
-               const uint32_t long_name_index, const uint32_t desc_index);
+               const char* tl_routeid, const uint32_t short_name_offset,
+               const uint32_t long_name_offset, const uint32_t desc_offset);
 
   /**
    * Get the internal route Id.
@@ -37,22 +37,22 @@ class TransitRoute {
   const char* tl_routeid() const;
 
   /**
-   * Get the text/name index for the short route name.
-   * @return  Returns the short name index in the text/name list.
+   * Get the text/name offset for the short route name.
+   * @return  Returns the short name offset in the text/name list.
    */
-  uint32_t short_name_index() const;
+  uint32_t short_name_offset() const;
 
   /**
-   * Get the text/name index for the long route name.
-   * @return  Returns the short name index in the text/name list.
+   * Get the text/name offset for the long route name.
+   * @return  Returns the short name offset in the text/name list.
    */
-  uint32_t long_name_index() const;
+  uint32_t long_name_offset() const;
 
   /**
-   * Get the text/name index for the route description.
-   * @return  Returns the description index in the text/name list.
+   * Get the text/name offset for the route description.
+   * @return  Returns the description offset in the text/name list.
    */
-  uint32_t desc_index() const;
+  uint32_t desc_offset() const;
 
   /**
    * operator < - for sorting. Sort by route Id.
@@ -72,13 +72,13 @@ class TransitRoute {
   char tl_routeid_[kOneStopIdSize];
 
   // Short route name offset in the text/name list.
-  uint32_t short_name_index_;
+  uint32_t short_name_offset_;
 
   // Long route name offset in the text/name list.
-  uint32_t long_name_index_;
+  uint32_t long_name_offset_;
 
   // Stop description offset in the text/name list.
-  uint32_t desc_index_;
+  uint32_t desc_offset_;
 };
 
 }

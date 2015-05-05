@@ -6,13 +6,13 @@ namespace baldr {
 
 // Constructor with arguments
 TransitRoute:: TransitRoute(const uint32_t routeid, const uint32_t agencyid,
-            const char* tl_routeid, const uint32_t short_name_index,
-            const uint32_t long_name_index, const uint32_t desc_index)
+            const char* tl_routeid, const uint32_t short_name_offset,
+            const uint32_t long_name_offset, const uint32_t desc_offset)
     : routeid_(routeid),
       agencyid_(agencyid),
-      short_name_index_(short_name_index),
-      long_name_index_(long_name_index),
-      desc_index_(desc_index) {
+      short_name_offset_(short_name_offset),
+      long_name_offset_(long_name_offset),
+      desc_offset_(desc_offset) {
   strncpy(tl_routeid_, tl_routeid, kOneStopIdSize);
 }
 
@@ -38,27 +38,27 @@ const char* TransitRoute::tl_routeid() const {
 }
 
 /**
-* Get the text/name index for the short route name.
-* @return  Returns the short name index in the text/name list.
+* Get the text/name offset for the short route name.
+* @return  Returns the short name offset in the text/name list.
 */
-uint32_t TransitRoute::short_name_index() const {
-  return short_name_index_;
+uint32_t TransitRoute::short_name_offset() const {
+  return short_name_offset_;
 }
 
 /**
-* Get the text/name index for the long route name.
-* @return  Returns the short name index in the text/name list.
+* Get the text/name offset for the long route name.
+* @return  Returns the short name offset in the text/name list.
 */
-uint32_t TransitRoute::long_name_index() const {
-  return long_name_index_;
+uint32_t TransitRoute::long_name_offset() const {
+  return long_name_offset_;
 }
 
 /**
-* Get the text/name index for the route description.
-* @return  Returns the description index in the text/name list.
+* Get the text/name offset for the route description.
+* @return  Returns the description offset in the text/name list.
 */
-uint32_t TransitRoute::desc_index() const {
-  return desc_index_;
+uint32_t TransitRoute::desc_offset() const {
+  return desc_offset_;
 }
 
 // operator < - for sorting. Sort by route Id.
