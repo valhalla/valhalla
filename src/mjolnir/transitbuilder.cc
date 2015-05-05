@@ -167,6 +167,7 @@ void assign_graphids(const boost::property_tree::ptree& pt,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<stop_results>& stop_res) {
   // Construct the transit database
+  stop_results stats{};
   std::string dir = pt.get<std::string>("transit_dir");
   std::string db_name = pt.get<std::string>("db_name");
   std::string database = dir + "/" +  db_name;
@@ -201,6 +202,7 @@ void assign_graphids(const boost::property_tree::ptree& pt,
   }
   else {
     LOG_INFO("Transit db " + database + " not found.  Transit will not be added.");
+    stop_res.set_value(stats);
     return;
   }
 
@@ -211,7 +213,6 @@ void assign_graphids(const boost::property_tree::ptree& pt,
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
   // Iterate through the tiles in the queue and find any that include stops
-  stop_results stats{};
   while (true) {
     // Get the next tile Id from the queue
     lock.lock();
@@ -873,6 +874,10 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   LOG_INFO("Done first pass. Total Stops = " +
              std::to_string(all_stops.stops.size()) +
              " tiles: " + std::to_string(all_stops.tiles.size()));
+
+  if (all_stops.tiles.size() == 0) {
+    return;
+  }
 
   /** Might be useful for debugging...
   for (auto& stop : all_stops.stops) {
