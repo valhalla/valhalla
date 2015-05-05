@@ -470,8 +470,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        bool& added) {
   // If we haven't yet added edge info for this edge tuple
   auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
-  auto existing_edge_offset_item = edge_offset_map.find(edge_tuple_item);
-  if (existing_edge_offset_item == edge_offset_map.end()) {
+  auto existing_edge_offset_item = edge_offset_map_.find(edge_tuple_item);
+  if (existing_edge_offset_item == edge_offset_map_.end()) {
     // Add a new EdgeInfo to the list and get a reference to it
     edgeinfo_list_.emplace_back();
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
@@ -491,7 +491,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo.set_text_name_offset_list(text_name_offset_list);
 
     // Add to the map
-    edge_offset_map.emplace(edge_tuple_item, edge_info_offset_);
+    edge_offset_map_.emplace(edge_tuple_item, edge_info_offset_);
 
     // Set current edge offset
     uint32_t current_edge_offset = edge_info_offset_;
@@ -539,8 +539,8 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
             const std::string& state_iso,const std::string& start_dst,
             const std::string& end_dst) {
   // Check if admin already exists
-  auto existing_admin_info_offset_item = admin_info_offset_map.find(country_iso+state_name);
-  if (existing_admin_info_offset_item == admin_info_offset_map.end()) {
+  auto existing_admin_info_offset_item = admin_info_offset_map_.find(country_iso+state_name);
+  if (existing_admin_info_offset_item == admin_info_offset_map_.end()) {
     // Add names and add to the admin builder
     uint32_t country_offset = AddName(country_name);
     uint32_t state_offset   = AddName(state_name);
@@ -549,7 +549,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
                                  start_dst, end_dst);
 
     // Add to the map
-    admin_info_offset_map.emplace(country_iso+state_name, admins_builder_.size()-1);
+    admin_info_offset_map_.emplace(country_iso+state_name, admins_builder_.size()-1);
     return admins_builder_.size()-1;
   } else {
     // Already have this admin - return the offset

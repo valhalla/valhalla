@@ -284,11 +284,11 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::vector<AdminInfoBuilder> admins_builder_;
 
   // Admin info offset
-  std::unordered_map<std::string,size_t> admin_info_offset_map;
+  std::unordered_map<std::string,size_t> admin_info_offset_map_;
 
   // Edge info offset and map
   size_t edge_info_offset_ = 0;
-  std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map;
+  std::unordered_map<edge_tuple, size_t, EdgeTupleHasher> edge_offset_map_;
 
   // The edgeinfo list
   std::list<EdgeInfoBuilder> edgeinfo_list_;

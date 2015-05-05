@@ -12,7 +12,7 @@ namespace {
 
 class test_graph_tile_builder : public GraphTileBuilder {
  public:
-  using GraphTileBuilder::edge_offset_map;
+  using GraphTileBuilder::edge_offset_map_;
   using GraphTileBuilder::EdgeTupleHasher;
   using GraphTileBuilder::EdgeTuple;
 
@@ -39,11 +39,11 @@ void TestDuplicateEdgeInfo() {
   //add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0,2,0), GraphId(0,2,1), 1234, {{0, 0}, {1, 1}}, {"einzelweg"}, added);
-  if(test.edge_offset_map.size() != 1)
+  if(test.edge_offset_map_.size() != 1)
     throw std::runtime_error("There should be exactly one of these in here");
   //add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0,2,1), GraphId(0,2,0), 1234, {{1, 1}, {0, 0}}, {"einzelweg"}, added);
-  if(test.edge_offset_map.size() != 1)
+  if(test.edge_offset_map_.size() != 1)
     throw std::runtime_error("There should still be exactly one of these in here");
 }
 
