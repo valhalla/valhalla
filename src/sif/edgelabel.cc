@@ -12,7 +12,11 @@ EdgeLabel::EdgeLabel()
       cost_{0.0f, 0.0f},
       sortcost_(0.0f),
       distance_(0.0f),
-      attributes_{} {
+      attributes_{},
+      tripid_(0),
+      prior_stopid_(0),
+      blockid_(0),
+      walking_distance_(0.0f) {
 }
 
 // Constructor with values.
@@ -27,7 +31,37 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
-      distance_(dist) {
+      distance_(dist),
+      tripid_(0),
+      prior_stopid_(0),
+      blockid_(0),
+      walking_distance_(0.0f) {
+  attributes_.opp_local_idx = opp_local_idx;
+  attributes_.restrictions  = restrictions;
+  attributes_.trans_up      = edge->trans_up();
+  attributes_.trans_down    = edge->trans_down();
+  attributes_.shortcut      = edge->shortcut();
+  attributes_.mode          = static_cast<uint32_t>(mode);
+}
+
+// Constructor with values.  Used for multi-modal path.
+EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+          const baldr::DirectedEdge* edge, const Cost& cost,
+          const float sortcost, const float dist,
+          const uint32_t restrictions, const uint32_t opp_local_idx,
+          const TravelMode mode, const uint32_t tripid,
+          const uint32_t prior_stopid, const uint32_t blockid,
+          const float walking_distance)
+    : predecessor_(predecessor),
+      edgeid_(edgeid),
+      endnode_(edge->endnode()),
+      cost_(cost),
+      sortcost_(sortcost),
+      distance_(dist),
+      tripid_(tripid),
+      prior_stopid_(prior_stopid),
+      blockid_(blockid),
+      walking_distance_(walking_distance) {
   attributes_.opp_local_idx = opp_local_idx;
   attributes_.restrictions  = restrictions;
   attributes_.trans_up      = edge->trans_up();
@@ -115,6 +149,26 @@ bool EdgeLabel::shortcut() const {
 // Get the travel mode along this edge.
 TravelMode EdgeLabel::mode() const {
   return static_cast<TravelMode>(attributes_.mode);
+}
+
+// Get the transit trip Id.
+uint32_t EdgeLabel::tripid() const {
+  return tripid_;
+}
+
+// Get the prior transit stop Id.
+uint32_t EdgeLabel::prior_stopid() const {
+  return prior_stopid_;
+}
+
+// Return the transit block Id of the prior trip.
+uint32_t EdgeLabel::blockid() const {
+  return blockid_;
+}
+
+// Get the current walking distance.
+float EdgeLabel::walking_distance() const {
+  return walking_distance_;
 }
 
 // Operator for sorting.

@@ -46,6 +46,33 @@ class EdgeLabel {
             const TravelMode mode);
 
   /**
+   * Constructor with values.  Used for multi-modal path.
+   * @param predecessor Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
+   * @param edgeid    Directed edge.
+   * @param endnode   End node of the directed edge.
+   * @param cost      True cost (cost and elapsed time in seconds) to the edge.
+   * @param sortcost  Cost for sorting (includes A* heuristic)
+   * @param dist      Distance meters to the destination
+   * @param restrictions Restriction mask from prior edge - this is used
+   *                  if edge is a transition edge. This allows restrictions
+   *                  to be carried across different hierarchy levels.
+   * @param mode      Mode of travel along this edge.
+   * @param tripid    Trip Id for a transit edge.
+   * @param prior_stopid  Prior transit stop Id.
+   * @param blockid   Transit trip block Id.
+   * @param walking_distance  Accumulated walking distance (reset when mode
+   *                          changes.
+   */
+  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+            const baldr::DirectedEdge* edge, const Cost& cost,
+            const float sortcost, const float dist,
+            const uint32_t restrictions, const uint32_t opp_local_idx,
+            const TravelMode mode, const uint32_t tripid,
+            const uint32_t prior_stopid, const uint32_t blockid,
+            const float walking_distance);
+
+  /**
    * Destructor.
    */
   virtual ~EdgeLabel();
@@ -149,14 +176,35 @@ class EdgeLabel {
   TravelMode mode() const;
 
   /**
+   * Get the transit trip Id.
+   * @return   Returns the transit trip Id of the prior edge.
+   */
+  uint32_t tripid() const;
+
+  /**
+   * Get the prior transit stop Id.
+   * @return  Returns the prior transit stop Id.
+   */
+  uint32_t prior_stopid() const;
+
+  /**
+   * Return the transit block Id of the prior trip.
+   * @return  Returns the block Id.
+   */
+  uint32_t blockid() const;
+
+  /**
+   * Get the current walking distance.
+   * @return  Returns the current walking distance accumulated since last stop.
+   */
+  float walking_distance() const;
+
+  /**
    * Operator < used for sorting.
    */
   bool operator < (const EdgeLabel& other) const;
 
  private:
-  // Index to the predecessor edge label information.
-  uint32_t predecessor_;
-
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
@@ -167,6 +215,9 @@ class EdgeLabel {
 
   // Cost and elapsed time along the path
   Cost cost_;
+
+  // Index to the predecessor edge label information.
+  uint32_t predecessor_;
 
   // Sort cost - includes A* heuristic
   float sortcost_;
@@ -184,7 +235,6 @@ class EdgeLabel {
    * shortcut:      Was the prior edge a shortcut edge?
    * restrictions:  Bit mask of edges (by local edge index at the end node)
    *                that are restricted (simple turn restrictions)
-
    */
   struct Attributes {
     uint32_t opp_local_idx : 7;
@@ -199,6 +249,18 @@ class EdgeLabel {
 
   // Transit information...trip ID , prior stop ID, time at stop? This
   // could be be part of a derived class used only in multimodal routes?
+
+  // Transit trip Id
+  uint32_t tripid_;
+
+  // Prior stop Id
+  uint32_t prior_stopid_;
+
+  // Block Id
+  uint32_t blockid_;
+
+  // Current walking distance. Resets to 0 when changing to a non-walking mode.
+  float walking_distance_;
 };
 
 }
