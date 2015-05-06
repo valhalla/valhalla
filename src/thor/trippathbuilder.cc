@@ -106,6 +106,20 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
+void AssignAdmins(TripPath& trip_path,
+                  const std::vector<AdminInfo>& admin_info_list) {
+  // Assign the admins
+  for (const auto& admin_info : admin_info_list) {
+    TripPath_Admin* trip_admin = trip_path.add_admin();
+    trip_admin->set_country_code(admin_info.country_iso());
+    trip_admin->set_country_text(admin_info.country_text());
+    trip_admin->set_state_code(admin_info.state_iso());
+    trip_admin->set_state_text(admin_info.state_text());
+    trip_admin->set_start_dst(admin_info.start_dst());
+    trip_admin->set_end_dst(admin_info.end_dst());
+  }
+}
+
 }
 
 namespace valhalla {
@@ -191,6 +205,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if(dest.edges()[i].id == path.back().edgeid.id())
       end_pct = dest.edges()[i].dist;
 
+  // Structures to process admins
+  std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
+  std::vector<AdminInfo> admin_info_list;
+  uint32_t last_node_admin_index;
+
   // If the path was only one edge we have a special case
   if(path.size() == 1) {
     if(end_pct < start_pct)
@@ -209,15 +228,19 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                      trip_path.add_node(), tile, end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
-    trip_path.add_node();
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
+    TripPath_Node* trip_node = trip_path.add_node();
+    trip_node->set_admin_index(
+        GetAdminIndex(
+            tile->admininfo(tile->node(edge->endnode())->admin_index()),
+            admin_info_map, admin_info_list));
+    trip_node->set_elapsed_time(path.front().elapsed_time);
+
+    // Assign the trip path admins
+    AssignAdmins(trip_path, admin_info_list);
+
     return trip_path;
   }
-
-  // Structures to process admins
-  std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
-  std::vector<AdminInfo> admin_info_list;
-  uint32_t last_node_admin_index;
 
   // Iterate through path
   float elapsedtime = 0.0f;
@@ -362,16 +385,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   trip_node->set_admin_index(last_node_admin_index);
   trip_node->set_elapsed_time(elapsedtime);
 
-  // Assign the admins
-  for (const auto& admin_info : admin_info_list) {
-    TripPath_Admin* trip_admin = trip_path.add_admin();
-    trip_admin->set_country_code(admin_info.country_iso());
-    trip_admin->set_country_text(admin_info.country_text());
-    trip_admin->set_state_code(admin_info.state_iso());
-    trip_admin->set_state_text(admin_info.state_text());
-    trip_admin->set_start_dst(admin_info.start_dst());
-    trip_admin->set_end_dst(admin_info.end_dst());
-  }
+  // Assign the trip path admins
+  AssignAdmins(trip_path, admin_info_list);
+
   // Encode shape and add to trip path.
   std::string encoded_shape_ = encode<std::vector<PointLL> >(trip_shape);
   trip_path.set_shape(encoded_shape_);
