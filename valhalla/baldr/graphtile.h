@@ -152,11 +152,14 @@ class GraphTile {
    * time (seconds from midnight). TODO - what if crosses midnight?
    * @param   edgeid  Directed edge Id.
    * @param   current_time  Current time (seconds from midnight).
+   * @param   date    Date (TODO - comment on standard used).
+   * @param   dow     Day of week (TODO - comment on DOW mask)
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
-                                           const uint32_t current_time) const;
+              const uint32_t current_time, const uint32_t date,
+              const uint32_t dow) const;
 
   /**
    * Get the transit trip given its trip Id.
