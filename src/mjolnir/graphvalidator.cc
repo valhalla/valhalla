@@ -63,25 +63,35 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   }
 
   if (opp_index == absurd_index) {
-    bool sc = edge.shortcut();
-    LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
-      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
-      % startnode % edge.endnode() % sc).str());
+    if (edge.use() >= Use::kRail) {
+      // Ignore any except for parent / child stop connections and
+      // stop-road connections
+      // TODO - verify if we need opposing directed edges for transit lines
+      if (edge.use() == Use::kTransitConnection)
+        LOG_ERROR("No opposing transit connection edge: endstop = " +
+                  std::to_string(nodeinfo->stop_id()) + " has " +
+                  std::to_string(nodeinfo->edge_count()));
+    } else {
+      bool sc = edge.shortcut();
+      LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
+        % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
+        % startnode % edge.endnode() % sc).str());
 
-    uint32_t n = 0;
-    directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
-        LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
-          % directededge->length() % directededge->endnode()).str());
-        n++;
+      uint32_t n = 0;
+      directededge = tile->directededge(nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+        if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
+          LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
+            % directededge->length() % directededge->endnode()).str());
+          n++;
+        }
       }
-    }
-    if (n == 0) {
-      if (sc) {
-        LOG_WARN("   No Shortcut edges found from end node");
-      } else {
-        LOG_WARN("   No regular edges found from end node");
+      if (n == 0) {
+        if (sc) {
+          LOG_WARN("   No Shortcut edges found from end node");
+        } else {
+          LOG_WARN("   No regular edges found from end node");
+        }
       }
     }
     return kMaxEdgesPerNode;
@@ -173,7 +183,6 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node(tileid, level, 0);
       for (uint32_t i = 0; i < nodecount; i++, node++) {
-
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
 
         const GraphTile* tile = graphreader_.GetGraphTile(node);
