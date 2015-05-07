@@ -40,6 +40,7 @@ lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
 	valhalla/baldr/admin.h \
         valhalla/baldr/admininfo.h \
+	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
 	valhalla/baldr/graphconstants.h \
@@ -69,6 +70,7 @@ nobase_include_HEADERS = \
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
+	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
 	src/baldr/graphid.cc \
@@ -107,6 +109,7 @@ srtmtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ -lz libvalhall
 # tests
 check_PROGRAMS = \
 	test/location \
+	test/datetime \
 	test/directededge \
 	test/graphid \
 	test/tilehierarchy \
@@ -122,6 +125,9 @@ check_PROGRAMS = \
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_datetime_SOURCES = test/datetime.cc test/test.cc
+test_datetime_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_datetime_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 test_directededge_SOURCES = test/directededge.cc test/test.cc
 test_directededge_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_directededge_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
