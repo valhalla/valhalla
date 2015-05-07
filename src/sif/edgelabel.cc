@@ -13,10 +13,10 @@ EdgeLabel::EdgeLabel()
       sortcost_(0.0f),
       distance_(0.0f),
       attributes_{},
+      walking_distance_(0.0f),
       tripid_(0),
       prior_stopid_(0),
-      blockid_(0),
-      walking_distance_(0.0f) {
+      blockid_(0) {
 }
 
 // Constructor with values.
@@ -25,17 +25,19 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const float sortcost, const float dist,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
-                     const TravelMode mode)
+                     const TravelMode mode,
+                     const uint32_t walking_distance)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
       distance_(dist),
+      walking_distance_(walking_distance),
       tripid_(0),
       prior_stopid_(0),
-      blockid_(0),
-      walking_distance_(0.0f) {
+      blockid_(0) {
+  attributes_.use           = static_cast<uint32_t>(edge->use());
   attributes_.opp_local_idx = opp_local_idx;
   attributes_.restrictions  = restrictions;
   attributes_.trans_up      = edge->trans_up();
@@ -49,19 +51,20 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
           const baldr::DirectedEdge* edge, const Cost& cost,
           const float sortcost, const float dist,
           const uint32_t restrictions, const uint32_t opp_local_idx,
-          const TravelMode mode, const uint32_t tripid,
-          const uint32_t prior_stopid, const uint32_t blockid,
-          const float walking_distance)
+          const TravelMode mode, const uint32_t walking_distance,
+          const uint32_t tripid, const uint32_t prior_stopid,
+          const uint32_t blockid)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
       distance_(dist),
+      walking_distance_(walking_distance),
       tripid_(tripid),
       prior_stopid_(prior_stopid),
-      blockid_(blockid),
-      walking_distance_(walking_distance) {
+      blockid_(blockid) {
+  attributes_.use           = static_cast<uint32_t>(edge->use());
   attributes_.opp_local_idx = opp_local_idx;
   attributes_.restrictions  = restrictions;
   attributes_.trans_up      = edge->trans_up();
@@ -118,6 +121,11 @@ float EdgeLabel::distance() const {
   return distance_;
 }
 
+// Get the use of the directed edge.
+Use EdgeLabel::use() const {
+  return static_cast<Use>(attributes_.use);
+}
+
 // Get the opposing local index. This is the index of the incoming edge
 // (on the local hierarchy) at the end node of the predecessor directed
 // edge. This is used for edge transition costs and Uturn detection.
@@ -151,6 +159,11 @@ TravelMode EdgeLabel::mode() const {
   return static_cast<TravelMode>(attributes_.mode);
 }
 
+// Get the current walking distance in meters.
+uint32_t EdgeLabel::walking_distance() const {
+  return walking_distance_;
+}
+
 // Get the transit trip Id.
 uint32_t EdgeLabel::tripid() const {
   return tripid_;
@@ -164,11 +177,6 @@ uint32_t EdgeLabel::prior_stopid() const {
 // Return the transit block Id of the prior trip.
 uint32_t EdgeLabel::blockid() const {
   return blockid_;
-}
-
-// Get the current walking distance.
-float EdgeLabel::walking_distance() const {
-  return walking_distance_;
 }
 
 // Operator for sorting.

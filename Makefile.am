@@ -43,6 +43,7 @@ nobase_include_HEADERS = \
 	valhalla/sif/autocost.h \
 	valhalla/sif/bicyclecost.h \
 	valhalla/sif/pedestriancost.h \
+	valhalla/sif/transitcost.h \
 	valhalla/sif/dynamiccost.h \
 	valhalla/sif/hierarchylimits.h \
 	valhalla/sif/edgelabel.h
@@ -50,6 +51,7 @@ libvalhalla_sif_la_SOURCES = \
 	src/sif/autocost.cc \
 	src/sif/bicyclecost.cc \
 	src/sif/pedestriancost.cc \
+	src/sif/transitcost.cc \
 	src/sif/dynamiccost.cc \
 	src/sif/edgelabel.cc
 libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@

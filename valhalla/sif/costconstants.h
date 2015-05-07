@@ -51,6 +51,17 @@ struct Cost {
   }
 
   /**
+   * Add to this cost .
+   * @param   other  Cost to add to the current cost.
+   * @return  Returns address of this cost.
+   */
+  Cost& operator += (const Cost& other) {
+    cost += other.cost;
+    secs += other.secs;
+    return *this;
+  }
+
+  /**
    * Scale this cost by a factor (for partial costs along edges).
    * @param  f  Scale / multiplication factor.
    * @return  Returns address of this cost.

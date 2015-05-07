@@ -38,12 +38,13 @@ class EdgeLabel {
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
    * @param mode      Mode of travel along this edge.
+   * @param walking_distance  Accumulated walking distance.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode);
+            const TravelMode mode, const uint32_t walking_distance);
 
   /**
    * Constructor with values.  Used for multi-modal path.
@@ -58,19 +59,18 @@ class EdgeLabel {
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
    * @param mode      Mode of travel along this edge.
+   * @param walking_distance  Accumulated walking distance.
    * @param tripid    Trip Id for a transit edge.
    * @param prior_stopid  Prior transit stop Id.
    * @param blockid   Transit trip block Id.
-   * @param walking_distance  Accumulated walking distance (reset when mode
-   *                          changes.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode, const uint32_t tripid,
-            const uint32_t prior_stopid, const uint32_t blockid,
-            const float walking_distance);
+            const TravelMode mode, const uint32_t walking_distance,
+            const uint32_t tripid, const uint32_t prior_stopid,
+            const uint32_t blockid);
 
   /**
    * Destructor.
@@ -136,6 +136,12 @@ class EdgeLabel {
   float distance() const;
 
   /**
+   * Get the use of the directed edge.
+   * @return  Returns edge use.
+   */
+  baldr::Use use() const;
+
+  /**
    * Get the opposing local index. This is the index of the incoming edge
    * (on the local hierarchy) at the end node of the predecessor directed
    * edge. This is used for edge transition costs and Uturn detection.
@@ -176,6 +182,12 @@ class EdgeLabel {
   TravelMode mode() const;
 
   /**
+   * Get the current walking distance in meters.
+   * @return  Returns the current walking distance accumulated since last stop.
+   */
+  uint32_t walking_distance() const;
+
+  /**
    * Get the transit trip Id.
    * @return   Returns the transit trip Id of the prior edge.
    */
@@ -192,12 +204,6 @@ class EdgeLabel {
    * @return  Returns the block Id.
    */
   uint32_t blockid() const;
-
-  /**
-   * Get the current walking distance.
-   * @return  Returns the current walking distance accumulated since last stop.
-   */
-  float walking_distance() const;
 
   /**
    * Operator < used for sorting.
@@ -227,28 +233,30 @@ class EdgeLabel {
 
   /**
    * Attributes to carry along with the edge label.
+   * use:           Use of the prior edge.
    * opp_local_idx: Index at the end node of the opposing local edge. This
    *                value can be compared to the directed edge local_edge_idx
    *                for edge transition costing and Uturn detection.
+   * restrictions:  Bit mask of edges (by local edge index at the end node)
+   *                that are restricted (simple turn restrictions)
    * trans_up:      Was the prior edge a transition up to a higher level?
    * trans_down:    Was the prior edge a transition down to a lower level?
    * shortcut:      Was the prior edge a shortcut edge?
-   * restrictions:  Bit mask of edges (by local edge index at the end node)
-   *                that are restricted (simple turn restrictions)
    */
   struct Attributes {
+    uint32_t use           : 8;
     uint32_t opp_local_idx : 7;
     uint32_t restrictions  : 7;
     uint32_t trans_up      : 1;
     uint32_t trans_down    : 1;
     uint32_t shortcut      : 1;
     uint32_t mode          : 4;
-    uint32_t spare         : 11;
+    uint32_t spare         : 3;
   };
   Attributes attributes_;
 
-  // Transit information...trip ID , prior stop ID, time at stop? This
-  // could be be part of a derived class used only in multimodal routes?
+  // Current walking distance
+  uint32_t walking_distance_;
 
   // Transit trip Id
   uint32_t tripid_;
@@ -258,9 +266,6 @@ class EdgeLabel {
 
   // Block Id
   uint32_t blockid_;
-
-  // Current walking distance. Resets to 0 when changing to a non-walking mode.
-  float walking_distance_;
 };
 
 }

@@ -32,13 +32,23 @@ bool DynamicCost::AllowMultiPass() const {
   return false;
 }
 
+// Get the cost to traverse the specified directed edge using a transit
+// departure (schedule based edge traversal). Cost includes
+// the time (seconds) to traverse the edge. Only transit cost models override
+// this method.
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
+              const baldr::TransitDeparture* departure,
+              const uint32_t curr_time) const {
+  return { 0.0f, 0.0f };
+}
+
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
 Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
                                  const NodeInfo* node,
                                  const EdgeLabel& pred) const {
-  return Cost(0.0f, 0.0f);
+  return { 0.0f, 0.0f };
 }
 
 // Get the general unit size that can be considered as equal for sorting

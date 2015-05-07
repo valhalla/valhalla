@@ -10,6 +10,7 @@ namespace sif {
 // Default options/values
 namespace {
 constexpr uint32_t kUnitSize = 2;
+constexpr uint32_t kMaxWalkingDistance = 100000; // 100 km
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
@@ -102,6 +103,10 @@ class PedestrianCost : public DynamicCost {
   }
 
  private:
+  // Maximum walking distance in meters. For multimodal routes this is the maximum
+  // distance for any single leg.
+  uint32_t max_distance_;
+
   // Walking speed (default to 5.1 km / hour)
   float walking_speed_;
 
@@ -125,6 +130,7 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
+  max_distance_    = pt.get<uint32_t>("max_distance", kMaxWalkingDistance);
   walking_speed_   = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
   walkway_factor_  = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
   alley_factor_    = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
@@ -141,13 +147,15 @@ PedestrianCost::~PedestrianCost() {
 
 // Check if access is allowed on the specified edge. Disallow if no pedestrian
 // access. Disallow Uturns or entering not-thru edges except near the
-// destination. Do not allow if surface is impassable
+// destination. Do not allow if surface is impassable. Disallow edges
+// where max. walking distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred) const {
   return ((edge->forwardaccess() & kPedestrianAccess) &&
            pred.opp_local_idx() != edge->localedgeidx()  &&
          !(edge->not_thru() && pred.distance() > not_thru_distance_) &&
-           edge->surface() != Surface::kImpassable);
+           edge->surface() != Surface::kImpassable &&
+          (pred.walking_distance() + edge->length()) < max_distance_);
 }
 
 // Check if access is allowed at the specified node.

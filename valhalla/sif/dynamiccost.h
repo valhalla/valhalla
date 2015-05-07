@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/transitdeparture.h>
 #include <memory>
 
 #include <valhalla/sif/hierarchylimits.h>
@@ -88,6 +89,19 @@ class DynamicCost {
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const uint32_t density) const = 0;
+
+  /**
+   * Get the cost to traverse the specified directed edge using a transit
+   * departure (schedule based edge traversal). Cost includes
+   * the time (seconds) to traverse the edge.
+   * @param   edge      Pointer to a directed edge.
+   * @param   departure Transit departure record.
+   * @param   curr_time Current local time (seconds from midnight).
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::TransitDeparture* departure,
+                        const uint32_t curr_time) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
