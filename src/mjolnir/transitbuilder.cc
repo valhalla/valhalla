@@ -12,12 +12,14 @@
 #include <spatialite.h>
 #include <boost/filesystem/operations.hpp>
 
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::baldr::DateTime;
 using namespace valhalla::mjolnir;
 
 namespace {
@@ -260,6 +262,7 @@ LOG_INFO("Added " + std::to_string(stops.size()) + " stop nodes");
 // Get scheduled departures for a stop
 std::vector<Departure> GetDepartures(sqlite3* db_handle,
                                      const uint32_t stop_key) {
+
   // Form query
   std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
   sql += "trip_key, route_key, service_key, departure_time, arrival_time,";
@@ -280,15 +283,10 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
       dep.route     = sqlite3_column_int(stmt, 4);
       dep.service   = sqlite3_column_int(stmt, 5);
 
-      // TODO - convert times and dates to int values
-      std::string t1 = (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6))) : "";
-      std::string t2 = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))) : "";
-      std::string d1 = (sqlite3_column_type(stmt, 8) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))) : "";
-      std::string d2 = (sqlite3_column_type(stmt, 9) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))) : "";
+      dep.dep_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6))));
+      dep.arr_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))));
+      dep.start_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))));
+      dep.end_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))));
 
       dep.dow        = sqlite3_column_int(stmt, 10);
       dep.headsign   = (sqlite3_column_type(stmt, 11) == SQLITE_TEXT) ?
@@ -414,6 +412,7 @@ std::unordered_map<uint32_t, uint32_t> AddTrips(sqlite3* db_handle,
 // Add calendar exceptions
 void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
                  GraphTileBuilder& tilebuilder) {
+
   // Query each unique service Id and add any calendar exceptions
   for (const auto& key : keys) {
     // Skip service_id
@@ -426,9 +425,7 @@ void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
       uint32_t result = sqlite3_step(stmt);
       while (result == SQLITE_ROW) {
         uint32_t serviceid = sqlite3_column_int(stmt, 0);
-        std::string d = (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) ?
-            (char*)sqlite3_column_text(stmt, 2) : "";
-        uint32_t date = 0;  // TODO
+        uint32_t date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2))));
         uint32_t t = sqlite3_column_int(stmt, 3);
 
         TransitCalendar calendar(serviceid, date,
