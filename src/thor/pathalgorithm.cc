@@ -171,20 +171,19 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       return FormPath(best_destination_.first, graphreader, loop_edge_info);
     }
 
-    // Get the end node of the prior directed edge and the current distance
-    // to the destination.
-    GraphId node    = pred.endnode();
-    float dist2dest = pred.distance();
-    uint32_t level  = node.level();
-
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
+    float dist2dest = pred.distance();
     if (dist2dest < mindist) {
       mindist = dist2dest;
       nc = 0;
     } else if (nc++ > 500000) {
       return {};
     }
+
+    // Get the end node of the prior directed edge
+    GraphId node   = pred.endnode();
+    uint32_t level = node.level();
 
     // Check hierarchy. Count upward transitions (counted on the level
     // transitioned from). Do not expand based on hierarchy level based on
@@ -273,17 +272,17 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add edge label, add to the adjacency list and set edge status
+      uint32_t walking_distance = (mode_ == TravelMode::kPedestrian) ?
+                        pred.walking_distance() + directededge->length() : 0;
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                         newcost, sortcost, dist, directededge->restrictions(),
-                        directededge->opp_local_idx(), mode_);
+                        directededge->opp_local_idx(), mode_, walking_distance);
       adjacencylist_->Add(edgelabel_index_, sortcost);
       edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
     }
   }
-
-  // Failure! Return empty list of edges
-  return {};
+  return {};      // Should never get here
 }
 
 void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
@@ -302,7 +301,7 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   // predecessor information. Transition edges have no length.
   edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), pred.distance(),
-                pred.restrictions(), pred.opp_local_idx(), mode_);
+                pred.restrictions(), pred.opp_local_idx(), mode_, 0);
 
   // Add to the adjacency list and set edge status
   adjacencylist_->Add(edgelabel_index_, pred.sortcost());
@@ -354,7 +353,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     // to invalid to indicate the origin of the path.
     edgelabels_.emplace_back(kInvalidLabel, edgeid,
             directededge, cost, sortcost, dist, 0,
-            directededge->opp_local_idx(), mode_);
+            directededge->opp_local_idx(), mode_, 0);
     adjacencylist_->Add(edgelabel_index_, sortcost);
     edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
     edgelabel_index_++;
