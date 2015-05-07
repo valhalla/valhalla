@@ -3,15 +3,10 @@
 
 #include <string>
 #include <memory>
-#include "boost/date_time/gregorian/gregorian.hpp"
 
 namespace valhalla {
 namespace baldr {
-
-//Date and time class for transit departure and arrival date and times.
-class DateTime {
- public:
-  DateTime();
+namespace DateTime {
 
   /**
    * Get the number of days elapsed from the pivot date until
@@ -29,12 +24,7 @@ class DateTime {
    */
   uint32_t seconds_from_midnight(std::string time);
 
- protected:
-  //This is our pivot date for transit.  No dates will be older than this date.
-  boost::gregorian::date pivot_date_;
-};
-
 }
 }
-
+}
 #endif  // VALHALLA_BALDR_DATETIME_H_

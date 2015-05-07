@@ -1,8 +1,7 @@
 #include "test.h"
 
-#include "valhalla/baldr/datetime.h"
-
 #include <string>
+#include <valhalla/baldr/datetime.h>
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -10,8 +9,7 @@ using namespace valhalla::baldr;
 namespace {
 
 void TryGetDaysFromPivotDate(std::string date, uint32_t expected_days) {
-  DateTime dt;
-  if (dt.days_from_pivot_date(date) != expected_days) {
+  if (DateTime::days_from_pivot_date(date) != expected_days) {
     throw std::runtime_error(
         std::string("Incorrect number of days from ")
     + date);
@@ -19,8 +17,7 @@ void TryGetDaysFromPivotDate(std::string date, uint32_t expected_days) {
 }
 
 void TryGetSecondsFromMidnight(std::string time, uint32_t expected_seconds) {
-  DateTime dt;
-  if (dt.seconds_from_midnight(time) != expected_seconds) {
+  if (DateTime::seconds_from_midnight(time) != expected_seconds) {
     throw std::runtime_error(
         std::string("Incorrect number of seconds from ")
     + time);

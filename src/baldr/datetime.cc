@@ -1,20 +1,18 @@
 #include <iostream>
 
-#include "baldr/datetime.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {
+namespace DateTime {
 
-DateTime::DateTime()
-{
-  //This is our pivot date for transit.  No dates will be older than this date.
-  std::string p_date = "20140101";  //January 1, 2014
-  pivot_date_ = boost::gregorian::from_undelimited_string(p_date);
-}
+boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
-uint32_t DateTime::days_from_pivot_date(std::string date) {
+uint32_t days_from_pivot_date(std::string date) {
   boost::gregorian::date e_date = boost::gregorian::from_undelimited_string(date);
   if (e_date <= pivot_date_)
     return 0;
@@ -23,7 +21,7 @@ uint32_t DateTime::days_from_pivot_date(std::string date) {
 }
 
 //Get the number of seconds midnight that have elapsed.
-uint32_t DateTime::seconds_from_midnight(std::string time) {
+uint32_t seconds_from_midnight(std::string time) {
   //time is in the format of hh::mm::ss
   //hours can be greater than 24.
   //please see GTFS spec:
@@ -32,5 +30,6 @@ uint32_t DateTime::seconds_from_midnight(std::string time) {
   return static_cast<uint32_t>(td.total_seconds());
 }
 
+}
 }
 }
