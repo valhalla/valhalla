@@ -52,6 +52,13 @@ void Log(const std::string&, const std::string& custom_directive = " [TRACE] ");
 //logging::Configure({ {"type", "file"}, {"file_name", "test.log"}, {"reopen_interval", "1"} })
 void Configure(const LoggingConfig& config);
 
+//guarding against redefinitions
+#ifndef LOG_ERROR
+#ifndef LOG_WARN
+#ifndef LOG_INFO
+#ifndef LOG_DEBUG
+#ifndef LOG_TRACE
+
 //convenience macros stand out when reading code
 //default to seeing INFO and up if nothing was specified
 #ifndef LOGGING_LEVEL_NONE
@@ -128,6 +135,13 @@ void Configure(const LoggingConfig& config);
   #else
     #define LOG_TRACE(x)
   #endif
+#endif
+
+//guarding against redefinitions
+#endif
+#endif
+#endif
+#endif
 #endif
 
 }
