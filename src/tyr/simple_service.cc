@@ -91,7 +91,7 @@ namespace {
          throw std::runtime_error("Try any of: '/route' '/via_route' '/locate' '/nearest'"); //TODO: 404
 
         auto body = handler->Action();
-        http_response_t response(200, "OK", body);
+        http_response_t response(200, "OK", body, headers_t{{"Content-type", "application/json;charset=utf-8"}});
         response.from_info(static_cast<http_request_t::info_t*>(request_info));
         result.messages.emplace_back(response.to_string());
       }
