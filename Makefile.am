@@ -54,6 +54,13 @@ libvalhalla_tyr_la_SOURCES = \
 libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
 libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB)
 
+#distributed executables
+bin_PROGRAMS = tyr_simple_service
+tyr_simple_service_SOURCES = \
+        src/tyr/simple_service.cc
+tyr_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+tyr_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_tyr.la
+
 # python bindings
 pyexec_LTLIBRARIES = tyr_service.la
 tyr_service_la_SOURCES = \

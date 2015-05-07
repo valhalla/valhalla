@@ -45,6 +45,9 @@ AX_PROG_LUA([5.2],[],[
     ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
 ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
+# check zeromq version
+PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0])
+
 # optionally enable coverage information
 CHECK_COVERAGE
 
