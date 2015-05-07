@@ -115,6 +115,12 @@ class NodeInfo {
   NodeType type() const;
 
   /**
+   * Checks if this node is a transit node.
+   * @return  Returns true if this node is a transit node.
+   */
+  bool is_transit() const;
+
+  /**
    * Get the number of edges on the local level (up to kMaxLocalEdgeIndex+1).
    * @return  Returns the number of edges on the local level.
    */
@@ -155,7 +161,7 @@ class NodeInfo {
   /**
    * Gets the transit stop Id. This is used for schedule lookups
    * and possibly queries to a transit service.
-   * @return  Returns the transit stop Id.
+   * @return  Returns the transit stop Id or 0 if this is not a transit node.
    */
   uint32_t stop_id() const;
 
