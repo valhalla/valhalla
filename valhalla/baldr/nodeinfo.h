@@ -115,6 +115,12 @@ class NodeInfo {
   NodeType type() const;
 
   /**
+   * Checks if this node is a transit node.
+   * @return  Returns true if this node is a transit node.
+   */
+  bool is_transit() const;
+
+  /**
    * Get the number of edges on the local level (up to kMaxLocalEdgeIndex+1).
    * @return  Returns the number of edges on the local level.
    */

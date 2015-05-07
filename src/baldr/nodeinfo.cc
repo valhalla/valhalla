@@ -83,6 +83,13 @@ NodeType NodeInfo::type() const {
   return static_cast<NodeType>(type_.type);
 }
 
+// Checks if this node is a transit node.
+bool NodeInfo::is_transit() const {
+  NodeType nt = type();
+  return (nt == NodeType::kRailStop || nt == NodeType::kBusStop ||
+          nt == NodeType::kMultiUseTransitStop);
+}
+
 // Get the number of edges on the local level. We add 1 to allow up to
 // up to kMaxLocalEdgeIndex + 1.
 uint32_t NodeInfo::local_edge_count() const {
@@ -119,7 +126,7 @@ bool NodeInfo::traffic_signal() const {
 // Gets the transit stop Id. This is used for schedule lookups
 // and possibly queries to a transit service.
 uint32_t NodeInfo::stop_id() const {
-  return stop_.stop_id;
+  return (is_transit()) ? stop_.stop_id : 0;
 }
 
 // Get the name consistency between a pair of local edges. This is limited
