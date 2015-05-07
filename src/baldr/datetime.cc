@@ -14,8 +14,7 @@ DateTime::DateTime()
 }
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
-uint32_t DateTime::getDaysFromPivotDate(std::string date)
-{
+uint32_t DateTime::days_from_pivot_date(std::string date) {
   boost::gregorian::date e_date = boost::gregorian::from_undelimited_string(date);
   if (e_date <= pivot_date_)
     return 0;
@@ -24,8 +23,7 @@ uint32_t DateTime::getDaysFromPivotDate(std::string date)
 }
 
 //Get the number of seconds midnight that have elapsed.
-uint32_t DateTime::getSecondsFromMidnight(std::string time)
-{
+uint32_t DateTime::seconds_from_midnight(std::string time) {
   //time is in the format of hh::mm::ss
   //hours can be greater than 24.
   //please see GTFS spec:

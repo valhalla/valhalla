@@ -19,7 +19,7 @@ class DateTime {
    * @param   date in the format of 20150516
    * @return  Returns the number of days.
    */
-  uint32_t getDaysFromPivotDate(std::string date);
+  uint32_t days_from_pivot_date(std::string date);
 
   /**
    * Get the number of seconds elapsed from midnight.
@@ -27,7 +27,7 @@ class DateTime {
    * @param   time in the format of 01:34:15
    * @return  Returns the seconds from midnight.
    */
-  uint32_t getSecondsFromMidnight(std::string time);
+  uint32_t seconds_from_midnight(std::string time);
 
  protected:
   //This is our pivot date for transit.  No dates will be older than this date.

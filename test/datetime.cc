@@ -11,7 +11,7 @@ namespace {
 
 void TryGetDaysFromPivotDate(std::string date, uint32_t expected_days) {
   DateTime dt;
-  if (dt.getDaysFromPivotDate(date) != expected_days) {
+  if (dt.days_from_pivot_date(date) != expected_days) {
     throw std::runtime_error(
         std::string("Incorrect number of days from ")
     + date);
@@ -20,7 +20,7 @@ void TryGetDaysFromPivotDate(std::string date, uint32_t expected_days) {
 
 void TryGetSecondsFromMidnight(std::string time, uint32_t expected_seconds) {
   DateTime dt;
-  if (dt.getSecondsFromMidnight(time) != expected_seconds) {
+  if (dt.seconds_from_midnight(time) != expected_seconds) {
     throw std::runtime_error(
         std::string("Incorrect number of seconds from ")
     + time);
