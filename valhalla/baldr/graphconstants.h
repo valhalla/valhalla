@@ -175,7 +175,7 @@ enum class DOW : uint8_t {
 };
 
 // Used for transit DOW mask.
-constexpr uint8_t kNone       = 0;
+constexpr uint8_t kDOWNone    = 0;
 constexpr uint8_t kSunday     = 1;
 constexpr uint8_t kMonday     = 2;
 constexpr uint8_t kTuesday    = 4;
