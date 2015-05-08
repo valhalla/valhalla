@@ -2,6 +2,7 @@ machine:
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     #- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo rm /etc/apt/sources.list.d/neo4j.list
     - sudo apt-get update
 
 checkout:
