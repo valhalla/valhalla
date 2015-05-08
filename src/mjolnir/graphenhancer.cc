@@ -689,7 +689,7 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
   // Logic for drive on left
   else {
     // If the turn is a sharp right (149 < turn < 181)
-    //    or short distance (< 50m) and wider sharp left (134 < turn < 181)
+    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
     // and oneway edges
     // and an intersecting right road exists
     // and no intersecting left road exists
