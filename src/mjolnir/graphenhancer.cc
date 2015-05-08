@@ -643,6 +643,77 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
 }
 
 /**
+ * Returns true if edge transition is a pencil point u-turn, false otherwise.
+ * A pencil point intersection happens when a doubly-digitized road transitions
+ * to a singly-digitized road - which looks like a pencil point - for example:
+ *        -----\____
+ *        -----/
+ *
+ * @param  from_index  Index of the 'from' directed edge.
+ * @param  to_index  Index of the 'to' directed edge.
+ * @param  directededge  Directed edge builder.
+ * @param  edges  Directed edges outbound from a node.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return true if edge transition is a pencil point u-turn, false otherwise.
+ */
+bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
+                        const DirectedEdgeBuilder& directededge,
+                        const DirectedEdge* edges,
+                        const NodeInfoBuilder& node_info,
+                        uint32_t turn_degree) {
+  // Logic for drive on right
+  if (directededge.drive_on_right()) {
+    // If the turn is a sharp left (179 < turn < 211)
+    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+    // and oneway edges
+    // and an intersecting right road exists
+    // and no intersecting left road exists
+    // and the from and to edges have a common base name
+    // then it is a left pencil point u-turn
+    if ((((turn_degree > 179) && (turn_degree < 211))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 179) && (turn_degree < 226)))
+      && (!(edges[from_index].forwardaccess() & kAutoAccess)
+          && (edges[from_index].reverseaccess() & kAutoAccess))
+      && ((directededge.forwardaccess() & kAutoAccess)
+          && !(directededge.reverseaccess() & kAutoAccess))
+      && directededge.edge_to_right(from_index)
+      && !directededge.edge_to_left(from_index)
+      && node_info.name_consistency(from_index, to_index)) {
+      return true;
+    }
+
+  }
+  // Logic for drive on left
+  else {
+    // If the turn is a sharp left (149 < turn < 181)
+    //    or short distance (< 50m) and wider sharp left (134 < turn < 181)
+    // and oneway edges
+    // and an intersecting right road exists
+    // and no intersecting left road exists
+    // and the from and to edges have a common base name
+    // then it is a left pencil point u-turn
+    if ((((turn_degree > 149) && (turn_degree < 181))
+        || (((edges[from_index].length() < 50) || (directededge.length() < 50))
+            && (turn_degree > 134) && (turn_degree < 181)))
+      && (!(edges[from_index].forwardaccess() & kAutoAccess)
+          && (edges[from_index].reverseaccess() & kAutoAccess))
+      && ((directededge.forwardaccess() & kAutoAccess)
+          && !(directededge.reverseaccess() & kAutoAccess))
+      && !directededge.edge_to_right(from_index)
+      && directededge.edge_to_left(from_index)
+      && node_info.name_consistency(from_index, to_index)) {
+      return true;
+    }
+
+  }
+
+  return false;
+}
+
+/**
  * Gets the stop likelihoood / impact at an intersection when transitioning
  * from one edge to another. This depends on the difference between the
  * classifications/importance of the from and to edge and the highest
@@ -662,22 +733,38 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
  * a higher class road. Special cases occur for links (ramps/turn channels).
  * @param  from  Index of the from directed edge.
  * @param  to    Index of the to directed edge.
+ * @param  directededge   Directed edge builder - set values.
  * @param  edges Directed edges outbound from a node.
  * @param  count Number of outbound directed edges to consider.
  * @return  Returns stop impact ranging from 0 (no likely impact) to
  *          7 - large impact.
  */
-uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
-                       const DirectedEdge* edges, const uint32_t count) {
-  // Special cases. TODO - others?
+uint32_t GetStopImpact(uint32_t from, uint32_t to,
+                       const DirectedEdgeBuilder& directededge,
+                       const DirectedEdge* edges, const uint32_t count,
+                       const NodeInfoBuilder& nodeinfo, uint32_t turn_degree) {
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Special cases.
+
+  // Handle Roundabouts
   if (edges[from].roundabout() && edges[to].roundabout()) {
     return 0;
   }
+
+  // Handle Turn channels
   if (edges[to].use() == Use::kTurnChannel) {
     return 0;
   } else if (edges[from].use() == Use::kTurnChannel) {
     return 2;
   }
+
+  // Handle Pencil point u-turn
+  if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo,
+                         turn_degree)) {
+    return 7;
+  }
+  ///////////////////////////////////////////////////////////////////////////
 
   // Get the highest classification of other roads at the intersection
   const DirectedEdge* edge = &edges[0];
@@ -710,23 +797,19 @@ uint32_t GetStopImpact(const uint32_t from, const uint32_t to,
  * specified outbound directed edge.
  * @param  idx            Index of the directed edge - the to edge.
  * @param  directededge   Directed edge builder - set values.
- * @param  edge           Other directed edges at the node.
+ * @param  edges          Other directed edges at the node.
  * @param  ntrans         Number of transitions (either number of edges or max)
- * @param  start_heading  Headings of directed edges.
+ * @param  headings       Headings of directed edges.
  */
 void ProcessEdgeTransitions(const uint32_t idx,
           DirectedEdgeBuilder& directededge, const DirectedEdge* edges,
-          const uint32_t ntrans, uint32_t* heading) {
+          const uint32_t ntrans, uint32_t* headings, const NodeInfoBuilder& nodeinfo) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
-    uint32_t from_heading = ((heading[i] + 180) % 360);
-    uint32_t turn_degree  = GetTurnDegree(from_heading, heading[idx]);
+    uint32_t from_heading = ((headings[i] + 180) % 360);
+    uint32_t turn_degree  = GetTurnDegree(from_heading, headings[idx]);
     directededge.set_turntype(i, Turn::GetType(turn_degree));
-
-    // Get stop impact
-    uint32_t stopimpact = GetStopImpact(i, idx, edges, ntrans);
-    directededge.set_stopimpact(i, stopimpact);
 
     // Set the edge_to_left and edge_to_right flags
     uint32_t right_count = 0;
@@ -740,7 +823,7 @@ void ProcessEdgeTransitions(const uint32_t idx,
 
         // Get the turn degree from incoming edge i to j and check if right
         // or left of the turn degree from incoming edge i onto idx
-        uint32_t degree = GetTurnDegree(from_heading, heading[j]);
+        uint32_t degree = GetTurnDegree(from_heading, headings[j]);
         if (turn_degree > 180) {
           if (degree > turn_degree || degree < 180) {
             ++right_count;
@@ -758,7 +841,14 @@ void ProcessEdgeTransitions(const uint32_t idx,
     }
     directededge.set_edge_to_left(i, (left_count > 0));
     directededge.set_edge_to_right(i, (right_count > 0));
+
+    // Get stop impact
+    // NOTE: stop impact uses the right and left edges so this logic must
+    // come after the right/left edge logic
+    uint32_t stopimpact = GetStopImpact(i, idx, directededge, edges, ntrans, nodeinfo, turn_degree);
+    directededge.set_stopimpact(i, stopimpact);
   }
+
 }
 
 /**
@@ -977,11 +1067,6 @@ void enhance(const boost::property_tree::ptree& pt,
         if (admin_index != 0)
           directededge.set_drive_on_right(drive_on_right[admin_index]);
 
-        // Edge transitions.
-        if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading);
-        }
-
         // Name continuity - set in NodeInfo
         for (uint32_t k = (j + 1); k < ntrans; k++) {
           if (ConsistentNames(country_code,
@@ -991,6 +1076,11 @@ void enhance(const boost::property_tree::ptree& pt,
                       .edgeinfo_offset())->GetNames())) {
             nodeinfo.set_name_consistency(j, k, true);
           }
+        }
+
+        // Edge transitions.
+        if (j < kNumberOfEdgeTransitions) {
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading, nodeinfo);
         }
 
         // Set the opposing index on the local level
