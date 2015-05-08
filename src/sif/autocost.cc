@@ -272,6 +272,9 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
 
   case Turn::Type::kSharpLeft:
     return (drive_on_right) ? 3.5f : 1.25f;
+
+  case Turn::Type::kReverse:
+    return 5.0f;
   }
 }
 
