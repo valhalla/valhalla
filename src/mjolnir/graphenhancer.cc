@@ -72,6 +72,7 @@ struct enhancer_stats {
   uint32_t internalcount;
   uint32_t turnchannelcount;
   uint32_t rampcount;
+  uint32_t pencilucount;
   uint32_t density_counts[16];
   void operator()(const enhancer_stats& other) {
     if(max_density < other.max_density)
@@ -82,6 +83,7 @@ struct enhancer_stats {
     internalcount += other.internalcount;
     turnchannelcount += other.turnchannelcount;
     rampcount += other.rampcount;
+    pencilucount += other.pencilucount;
     for (uint32_t i = 0; i < 16; i++) {
       density_counts[i] += other.density_counts[i];
     }
@@ -745,7 +747,8 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
 uint32_t GetStopImpact(uint32_t from, uint32_t to,
                        const DirectedEdgeBuilder& directededge,
                        const DirectedEdge* edges, const uint32_t count,
-                       const NodeInfoBuilder& nodeinfo, uint32_t turn_degree) {
+                       const NodeInfoBuilder& nodeinfo, uint32_t turn_degree,
+                       enhancer_stats& stats) {
 
   ///////////////////////////////////////////////////////////////////////////
   // Special cases.
@@ -765,6 +768,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   // Handle Pencil point u-turn
   if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo,
                          turn_degree)) {
+    stats.pencilucount++;
     return 7;
   }
   ///////////////////////////////////////////////////////////////////////////
@@ -806,7 +810,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
  */
 void ProcessEdgeTransitions(const uint32_t idx,
           DirectedEdgeBuilder& directededge, const DirectedEdge* edges,
-          const uint32_t ntrans, uint32_t* headings, const NodeInfoBuilder& nodeinfo) {
+          const uint32_t ntrans, uint32_t* headings,
+          const NodeInfoBuilder& nodeinfo,
+          enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
     // it is incoming
@@ -848,7 +854,8 @@ void ProcessEdgeTransitions(const uint32_t idx,
     // Get stop impact
     // NOTE: stop impact uses the right and left edges so this logic must
     // come after the right/left edge logic
-    uint32_t stopimpact = GetStopImpact(i, idx, directededge, edges, ntrans, nodeinfo, turn_degree);
+    uint32_t stopimpact = GetStopImpact(i, idx, directededge, edges, ntrans,
+                                        nodeinfo, turn_degree, stats);
     directededge.set_stopimpact(i, stopimpact);
   }
 
@@ -1083,7 +1090,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Edge transitions.
         if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading, nodeinfo);
+          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
+                                 nodeinfo, stats);
         }
 
         // Set the opposing index on the local level
@@ -1220,6 +1228,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
   LOG_INFO("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
   LOG_INFO("Ramp Count = " + std::to_string(stats.rampcount));
+  LOG_INFO("Pencil Point Uturn count = " + std::to_string(stats.pencilucount));
   for (auto density : stats.density_counts) {
     LOG_INFO("Density: " + std::to_string(density));
   }
