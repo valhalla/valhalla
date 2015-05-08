@@ -50,6 +50,20 @@ class PathAlgorithm {
           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Form multi-modal path between and origin and destination location using
+   * the supplied costing method.
+   * @param  origin  Origin location
+   * @param  dest    Destination location
+   * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  costing  An array of costing methods, one per TravelMode.
+   * @return  Returns the path edges (and elapsed time/modes at end of
+   *          each edge).
+   */
+  std::vector<PathInfo> GetBestPathMM(const baldr::PathLocation& origin,
+           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+           std::shared_ptr<sif::DynamicCost>* mode_costing);
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   void Clear();
