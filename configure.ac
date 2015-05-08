@@ -46,7 +46,7 @@ AX_PROG_LUA([5.2],[],[
 ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
 
 # check zeromq version
-PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libcurl >= 7.22.0])
+PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.1.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE
