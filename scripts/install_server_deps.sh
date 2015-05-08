@@ -1,9 +1,10 @@
 #!/bin/bash
+set -e
 
 # grab the latest zmq library:
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
 pushd libzmq
-./autogen.sh && ./configure --without-libsodium --without-documentation && make check -j2
+./autogen.sh && ./configure --without-libsodium --without-documentation && make check
 sudo make install
 popd
 rm -rf libzmq
