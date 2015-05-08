@@ -45,6 +45,7 @@ struct Departure {
   uint32_t dest_stop;
   uint32_t trip;
   uint32_t route;
+  uint32_t blockid;
   uint32_t service;
   uint32_t dep_time;
   uint32_t arr_time;
@@ -262,7 +263,6 @@ void assign_graphids(const boost::property_tree::ptree& pt,
 // Get scheduled departures for a stop
 std::vector<Departure> GetDepartures(sqlite3* db_handle,
                                      const uint32_t stop_key) {
-
   // Form query
   std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
   sql += "trip_key, route_key, service_key, departure_time, arrival_time,";
@@ -291,6 +291,10 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
       dep.dow        = sqlite3_column_int(stmt, 10);
       dep.headsign   = (sqlite3_column_type(stmt, 11) == SQLITE_TEXT) ?
                          std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 11))) : "";
+
+      // TODO need to add block Id (default to 0)
+      dep.blockid = 0;
+
       departures.emplace_back(std::move(dep));
 
       result = sqlite3_step(stmt);
@@ -507,8 +511,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     }
 
     // Build the node info
-    // TODO - how to differentiate bus from rail, from multi-use?
-    // TODO - do we need any name consistency/heading stuff?
+    // TODO - how to differentiate bus from rail, from multi-use or
+    // should we always keep them generic?
     uint32_t edgeindex = diredgeid;
     uint32_t edgecount = stop_edges.second.intrastation.size() +
                          stop_edges.second.lines.size();
@@ -585,7 +589,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_pedestrianaccess(false, true);
 
       // Add edge info to the tile and set the offset in the directed edge
-      // TODO - add the route name to edge info?
+      // Leave the name empty. Use the trip Id to look up the route Id and
+      // route within TripPathBuilder.
       // TODO - get the shape from transit DB
       bool added = false;
       std::vector<std::string> names;
@@ -749,11 +754,10 @@ void build(const boost::property_tree::ptree& pt,
 
           // Form transit departures
           uint32_t edgeid  = diredgeid;
-          uint32_t blockid = 0;  // TODO - not part of the schedule?
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
           TransitDeparture td(edgeid, dep.trip, dep.route,
-                      blockid, headsign_offset, dep.dep_time, elapsed_time,
+                      dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
           tilebuilder.AddTransitDeparture(td);
         }
