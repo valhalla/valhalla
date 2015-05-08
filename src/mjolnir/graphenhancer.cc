@@ -693,10 +693,10 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
     // If the turn is a sharp right (149 < turn < 181)
     //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
     // and oneway edges
-    // and an intersecting right road exists
-    // and no intersecting left road exists
+    // and no intersecting right road exists
+    // and an intersecting left road exists
     // and the from and to edges have a common base name
-    // then it is a left pencil point u-turn
+    // then it is a right pencil point u-turn
     if ((((turn_degree > 149) && (turn_degree < 181))
         || (((edges[from_index].length() < 50) || (directededge.length() < 50))
             && (turn_degree > 134) && (turn_degree < 181)))
