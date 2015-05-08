@@ -688,7 +688,7 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
   }
   // Logic for drive on left
   else {
-    // If the turn is a sharp left (149 < turn < 181)
+    // If the turn is a sharp right (149 < turn < 181)
     //    or short distance (< 50m) and wider sharp left (134 < turn < 181)
     // and oneway edges
     // and an intersecting right road exists
@@ -736,6 +736,9 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
  * @param  directededge   Directed edge builder - set values.
  * @param  edges Directed edges outbound from a node.
  * @param  count Number of outbound directed edges to consider.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
  * @return  Returns stop impact ranging from 0 (no likely impact) to
  *          7 - large impact.
  */
