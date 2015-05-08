@@ -79,14 +79,30 @@ class EdgeLabel {
 
   /**
    * Update an existing edge label with new predecessor and cost information.
-   * The edge Id and end node remain the same.
+   * The mode, edge Id, and end node remain the same.
    * @param predecessor Predecessor directed edge in the shortest path.
    * @param cost        True cost (and elapsed time in seconds) to the edge.
-   * @param sortcost    Cost for sorting (includes A* heuristic)
-   * @param mode        Mode of travel along the edge
+   * @param sortcost    Cost for sorting (includes A* heuristic).
+   * @param walking_distance  Accumulated walking distance.
    */
   void Update(const uint32_t predecessor, const Cost& cost,
-            const float sortcost, const TravelMode mode);
+            const float sortcost, const uint32_t walking_distance);
+
+  /**
+   * Update an existing edge label with new predecessor and cost information.
+   * Update transit information: prior stop Id will stay the same but trip Id
+   * and block Id may change (a new trip at an earlier departure time).
+   * The mode, edge Id, and end node remain the same.
+   * @param predecessor Predecessor directed edge in the shortest path.
+   * @param cost        True cost (and elapsed time in seconds) to the edge.
+   * @param sortcost    Cost for sorting (includes A* heuristic).
+   * @param walking_distance  Accumulated walking distance.
+   * @param tripid      Trip Id for a transit edge.
+   * @param blockid     Transit trip block Id.
+   */
+  void Update(const uint32_t predecessor, const Cost& cost,
+            const float sortcost, const uint32_t walking_distance,
+            const uint32_t tripid, const uint32_t blockid);
 
   /**
    * Get the predecessor edge label.
