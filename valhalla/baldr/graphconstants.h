@@ -162,17 +162,30 @@ enum class Surface : uint8_t {
   kImpassable = 7
 };
 
-// TODO - add comment and explicit values
+// Used for restrictions.  A restriction starts and ends on a particular day
 enum class DOW : uint8_t {
-  kNone,
-  kSunday,
-  kMonday,
-  kTuesday,
-  kWednesday,
-  kThursday,
-  kFriday,
-  kSaturday,
+  kNone = 0,
+  kSunday = 1,
+  kMonday = 2,
+  kTuesday = 3,
+  kWednesday = 4,
+  kThursday = 5,
+  kFriday = 6,
+  kSaturday = 7
 };
+
+//This is our pivot date for transit.  No dates will be older than this date.
+const std::string kPivotDate = "20140101";  //January 1, 2014
+
+// Used for transit DOW mask.
+constexpr uint8_t kDOWNone    = 0;
+constexpr uint8_t kSunday     = 1;
+constexpr uint8_t kMonday     = 2;
+constexpr uint8_t kTuesday    = 4;
+constexpr uint8_t kWednesday  = 8;
+constexpr uint8_t kThursday   = 16;
+constexpr uint8_t kFriday     = 32;
+constexpr uint8_t kSaturday   = 64;
 
 // Restriction types. If a restriction exists this value will be set.
 // Restrictions with "Only" will restrict all turns not adhering to the

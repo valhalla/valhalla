@@ -124,7 +124,15 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    // Set a pointer to the transit calendar exception list
    transit_exceptions_ = reinterpret_cast<TransitCalendar*>(ptr);
    ptr += header_->calendarcount() * sizeof(TransitCalendar);
-
+/*
+LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
+LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
+         " Trips: " + std::to_string(header_->tripcount()) +
+         " Stops: " + std::to_string(header_->stopcount()) +
+         " Routes: " + std::to_string(header_->routecount()) +
+         " Transfers: " + std::to_string(header_->transfercount()) +
+         " Exceptions: " + std::to_string(header_->calendarcount()));
+*/
    // Set a pointer to the sign list
    signs_ = reinterpret_cast<Sign*>(ptr);
    ptr += header_->signcount() * sizeof(Sign);
@@ -324,13 +332,15 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 // Get the next departure given the directed edge Id and the current
 // time (seconds from midnight).
 const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
-                 const uint32_t current_time) const {
+                 const uint32_t current_time, const uint32_t date,
+                 const uint32_t dow) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
     return nullptr;
   }
 
-  // Binary search
+  // Departures are sorted by edge Id and then by departure time.
+  // Binary search to find a departure with matching edge Id.
   int32_t low = 0;
   int32_t high = count-1;
   int32_t mid;
@@ -348,37 +358,65 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
     }
   }
 
-  if (found) {
-    if (departures_[mid].departure_time() > current_time) {
-      // Back up until a departure from this edge has departure time
-      // less than the current time
-      while (mid > 0 &&
-             departures_[mid-1].edgeid() == edgeid &&
-             departures_[mid-1].departure_time() >= current_time) {
-        mid--;
-      }
-      return &departures_[mid];
-    } else {
-      // Iterate through departures until one is found that departs after
-      // current time
-      while (mid+1 < count &&
-          departures_[mid+1].edgeid() == edgeid &&
-          departures_[mid+1].departure_time() <= current_time) {
-        mid++;
-      }
-      if (departures_[mid].departure_time() >= current_time) {
-        return &departures_[mid];
-      } else {
-        // TODO - maybe wrap around, try next day?
-        LOG_WARN("No more departures  found for edgeid = " +
-                std::to_string(edgeid));
-        return nullptr;
-      }
-    }
-  } else {
-    LOG_ERROR("No departures  found for edgeid = " + std::to_string(edgeid));
+  if (!found) {
+    LOG_INFO("No departures  found for edgeid = " + std::to_string(edgeid));
     return nullptr;
   }
+
+  // Back up until the prior departure from this edge has departure time
+  // less than the current time
+  while (mid > 0 &&
+         departures_[mid-1].edgeid() == edgeid &&
+         departures_[mid-1].departure_time() >= current_time) {
+    mid--;
+  }
+
+  // Iterate through departures until one is found with valid date, dow or
+  // calendar date, and does not have a calendar exception.
+  while (true) {
+    // If date range is only one date and this date matches it is
+    // a calendar date "addition"
+    const TransitDeparture& dep = departures_[mid];
+    if (dep.start_date() == dep.end_date()) {
+      // If this date equals the added date we use this departure, else skip it
+      if (date == dep.start_date()) {
+        return &departures_[mid];
+      }
+    } else if (dep.start_date() <= date && date <= dep.end_date()) {
+      // Within valid date range for this departure. Check the day of week mask
+      if ((dep.days() & dow) > 0) {
+        // Check that there are no calendar exceptions
+        if (dep.serviceid() == 0) {
+          return &departures_[mid];
+        } else {
+          // Check if there is a calendar exception for this date.
+          bool except = false;
+          auto exceptions = GetCalendarExceptions(dep.serviceid());
+          TransitCalendar* calendar = exceptions.first;
+          for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
+            if (calendar->date() == date) {
+              except = true;
+              break;
+            }
+          }
+          if (!except) {
+            return &departures_[mid];
+          }
+        }
+      }
+    }
+
+    // Advance to next departure
+    if (mid+1 < count && departures_[mid+1].edgeid() == edgeid) {
+      mid++;
+    } else {
+      break;
+    }
+  }
+
+  // TODO - maybe wrap around, try next day?
+  LOG_WARN("No more departures found for edgeid = " + std::to_string(edgeid));
+  return nullptr;
 }
 
 // Get the transit trip given its trip Id.
@@ -515,7 +553,7 @@ std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
 
 // Get a pointer to the first calendar exception record given the service
 // Id and compute the number of calendar exception records.
- std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
+std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
                const uint32_t serviceid) const {
   uint32_t count = header_->calendarcount();
   if (count == 0) {
