@@ -247,6 +247,10 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
                      costing->EdgeCost(directededge, nodeinfo->density()) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
 
+      // Update walking distance
+      uint32_t walking_distance = (mode_ == TravelMode::kPedestrian) ?
+                    pred.walking_distance() + directededge->length() : 0;
+
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
@@ -256,7 +260,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
         if (dc > 0) {
           float oldsortcost = edgelabels_[idx].sortcost();
           float newsortcost = oldsortcost - dc;
-          edgelabels_[idx].Update(predindex, newcost, newsortcost, mode_);
+          edgelabels_[idx].Update(predindex, newcost, newsortcost,
+                                  walking_distance);
           adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
         }
         continue;
@@ -272,8 +277,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add edge label, add to the adjacency list and set edge status
-      uint32_t walking_distance = (mode_ == TravelMode::kPedestrian) ?
-                        pred.walking_distance() + directededge->length() : 0;
+
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                         newcost, sortcost, dist, directededge->restrictions(),
                         directededge->opp_local_idx(), mode_, walking_distance);
@@ -283,6 +287,259 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     }
   }
   return {};      // Should never get here
+}
+
+// Calculate best path for a multi-modal route. An array of costing methods
+// (one for each TravelMode) is passed into the algorithm.
+// Currently not using hierarchy levels (and thus shortcuts).
+std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
+             const PathLocation& dest, GraphReader& graphreader,
+             std::shared_ptr<DynamicCost>* mode_costing) {
+  // TODO - some means of setting an initial mode and probably a dest/end mode
+  mode_ = TravelMode::kPedestrian;
+  std::shared_ptr<DynamicCost>& costing = mode_costing[static_cast<uint32_t>(mode_)];
+
+  // Check for trivial path
+  auto trivial_id = trivial(origin, dest);
+  if (trivial_id.Is_Valid()) {
+    std::vector<PathInfo> trivialpath;
+    trivialpath.emplace_back(mode_, 0, trivial_id);
+    return trivialpath;
+  }
+
+  // Set route start time (seconds from midnight), date, and day of week
+  uint32_t start_time = 0;
+  uint32_t localtime = start_time;
+  uint32_t date = 0;
+  uint32_t dow  = 0;
+
+  // Check for loop path
+  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest));
+
+  // Initialize - create adjacency list, edgestatus support, A*, etc.
+  Init(origin.vertex(), dest.vertex(), costing);
+  float mindist = astarheuristic_.GetDistance(origin.vertex());
+
+  // Initialize the origin and destination locations
+  SetOrigin(graphreader, origin, costing, loop_edge_info);
+  SetDestination(graphreader, dest, costing);
+
+  // Find shortest path
+  float walking_distance = 0.0f;
+  uint32_t blockid, tripid, prior_stop;
+  uint32_t nc = 0;       // Count of iterations with no convergence
+                         // towards destination
+  const GraphTile* tile;
+  while (true) {
+    // Get next element from adjacency list. Check that it is valid. An
+    // invalid label indicates there are no edges that can be expanded.
+    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    if (predindex == kInvalidLabel) {
+      // If we had a destination but we were waiting on other possible ones
+      if(best_destination_.first != kInvalidLabel)
+        return FormPath(best_destination_.first, graphreader, loop_edge_info);
+
+      // We didn't find any destination edge - return empty list of edges
+      LOG_ERROR("Route failed after iterations = " +
+                   std::to_string(edgelabel_index_));
+ //     throw std::runtime_error("No path could be found for input");
+      return { };
+    }
+
+    // Remove label from adjacency list, mark it as done - copy the EdgeLabel
+    // for use in costing
+    EdgeLabel pred = edgelabels_[predindex];
+    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
+
+    // Check for completion. Form path and return if complete.
+    if (IsComplete(predindex)) {
+      return FormPath(best_destination_.first, graphreader, loop_edge_info);
+    }
+
+    // Check that distance is converging towards the destination. Return route
+    // failure if no convergence for TODO iterations
+    float dist2dest = pred.distance();
+    if (dist2dest < mindist) {
+      mindist = dist2dest;
+      nc = 0;
+    } else if (nc++ > 500000) {
+      return {};
+    }
+
+    // Get the end node of the prior directed edge. Get its tile.
+    // Skip if tile not found (can happen with regional data sets).
+    GraphId node = pred.endnode();
+    if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
+      continue;
+    }
+
+    // Check access at the node
+    const NodeInfo* nodeinfo = tile->node(node);
+    if (!costing->Allowed(nodeinfo)) {
+      continue;
+    }
+
+    // Set local time. TODO: adjust for time zone
+    uint32_t localtime = start_time + pred.cost().secs;
+
+    // Update current mode and accumulated walking distance
+    mode_ = pred.mode();
+    walking_distance = pred.walking_distance();
+
+    // If this is a transit stop get any transfer times/penalties
+    Cost transfer_cost = { 0.0f, 0.0f };
+    if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
+      // TODO get transfer cost (including any penalty)
+      ;
+    }
+
+    // Allow mode changes at special nodes
+    //      bike share (pedestrian <--> bicycle)
+    //      parking (drive <--> pedestrian)
+    //      transit stop (pedestrian <--> transit).
+    // TODO - evaluate how this will work when an edge may have already
+    // been visited using a different mode.
+    bool mode_change = false;
+/*    if (nodeinfo->type() == NodeType::kBikeShare) {
+      if (mode_ == TravelMode::kBicycle) {
+        mode_ = TravelMode::kPedestrian;
+        mode_change = true;
+      } else if (mode_ == TravelMode::kPedestrian) {
+        mode_ = TravelMode::kBicycle;
+        mode_change = true;
+      }
+    } else if (nodeinfo->type() == NodeType::kParking) {
+      if (mode_ == TravelMode::kDrive) {
+        mode_ = TravelMode::kPedestrian;
+        mode_change = true;
+      } else if (mode_ == TravelMode::kPedestrian) {
+        mode_ = TravelMode::kDrive;
+        mode_change = true;
+      }
+    }*/
+
+    // Expand from end node.
+    GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
+    const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+                i++, directededge++, edgeid++) {
+      // Skip transition edges for now. Should not see any shortcuts since we
+      // never transition upwards.
+      if (directededge->trans_up() || directededge->trans_down()) {
+        continue;
+      }
+
+      // Get the current set. Skip this edge if permanently labeled (best
+      // path already found to this directed edge).
+      EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
+      if (edgestatus.status.set == kPermanent) {
+        continue;
+      }
+
+      // Reset cost
+      Cost newcost = pred.cost();
+
+      // If this is a transit edge - get the next departure
+      if (directededge->use() == Use::kRail ||
+          directededge->use() == Use::kBus) {
+        const TransitDeparture* departure = tile->GetNextDeparture(edgeid.id(),
+                                      localtime, date, dow);
+        if (departure) {
+          // Check if there has been a mode chance
+          mode_change = (mode_ == TravelMode::kPedestrian);
+
+          // Update trip Id and block Id
+          tripid  = departure->tripid();
+          blockid = departure->blockid();
+
+          // There is no cost if continuing along the same trip Id
+          // or (valid) block Id. Make sure we did not walk from stop to stop.
+          if (!mode_change && (tripid == pred.tripid() ||
+              (blockid != 0 && (blockid == pred.blockid())))) {
+            ;
+          } else {
+            // Use the transfer cost computed for the stop
+            newcost += transfer_cost;
+          }
+
+          // Change mode and costing to transit. Add edge cost.
+          mode_ = TravelMode::kPublicTransit;
+          costing = mode_costing[static_cast<uint32_t>(mode_)];
+          newcost += costing->EdgeCost(directededge, departure, localtime);
+        } else {
+          continue;  // No matching departures found for this edge
+        }
+      } else {
+        if (mode_ == TravelMode::kPublicTransit &&
+            directededge->use() == Use::kTransitConnection) {
+          // Disembark from transit and reset walking distance
+          mode_ = TravelMode::kPedestrian;
+          walking_distance = 0.0f;
+          mode_change = true;
+        }
+
+        // Regular edge - use the appropriate costing
+        costing = mode_costing[static_cast<uint32_t>(mode_)];
+        newcost += costing->EdgeCost(directededge, nodeinfo->density());
+      }
+
+      if (mode_change) {
+        ; // TODO: newcost += mode_change_cost
+      } else {
+        // Use the transit costs from the costing model
+        newcost += costing->TransitionCost(directededge, nodeinfo, pred);
+      }
+
+      // Add to walking distance
+      if (mode_ == TravelMode::kPedestrian) {
+        walking_distance += directededge->length();
+      }
+
+      // Check if edge is temporarily labeled and this path has less cost. If
+      // less cost the predecessor is updated and the sort cost is decremented
+      // by the difference in real cost (A* heuristic doesn't change).
+      // Update transit (could be a new tripId with earlier departure time).
+      if (edgestatus.status.set == kTemporary) {
+        uint32_t idx = edgestatus.status.index;
+        float dc = edgelabels_[idx].cost().cost - newcost.cost;
+        if (dc > 0) {
+          float oldsortcost = edgelabels_[idx].sortcost();
+          float newsortcost = oldsortcost - dc;
+          edgelabels_[idx].Update(predindex, newcost, newsortcost,
+                                  walking_distance, tripid, blockid);
+          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+        }
+        continue;
+      }
+
+      // Find the sort cost (with A* heuristic) using the lat,lng at the
+      // end node of the directed edge. Skip if tile not found.
+      if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+        continue;
+      }
+      const NodeInfo* endnode = tile->node(directededge->endnode());
+      float dist = astarheuristic_.GetDistance(endnode->latlng());
+      float sortcost = newcost.cost + astarheuristic_.Get(dist);
+
+      // Prohibit entering the same station as the prior. Could this be done in
+      // costing?
+      if (directededge->use() == Use::kTransitConnection &&
+          endnode->is_transit() &&
+          endnode->stop_id() == pred.prior_stopid()) {
+        continue;
+      }
+
+      // Add edge label, add to the adjacency list and set edge status
+      edgelabels_.emplace_back(predindex, edgeid, directededge,
+                        newcost, sortcost, dist, directededge->restrictions(),
+                        directededge->opp_local_idx(), mode_, tripid,
+                        nodeinfo->stop_id(), blockid, walking_distance);
+      adjacencylist_->Add(edgelabel_index_, sortcost);
+      edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
+      edgelabel_index_++;
+    }
+  }
+  return {};  // Should never get here
 }
 
 void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
