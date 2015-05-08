@@ -26,7 +26,7 @@ using namespace valhalla::tyr;
 namespace {
 
   const std::string ROUTE("/route");
-  const std::string VIA_ROUTE("/via_route");
+  const std::string VIA_ROUTE("/viaroute");
   const std::string LOCATE("/locate");
   const std::string NEAREST("/nearest");
 
@@ -88,7 +88,7 @@ namespace {
         else if(request.path == VIA_ROUTE)
           handler.reset(new NearestHandler(config, request_pt));
         else
-         throw std::runtime_error("Try any of: '/route' '/via_route' '/locate' '/nearest'"); //TODO: 404
+         throw std::runtime_error("Try any of: '/route' '/viaroute' '/locate' '/nearest'"); //TODO: 404
 
         auto body = handler->Action();
         http_response_t response(200, "OK", body, headers_t{{"Content-type", "application/json;charset=utf-8"}});
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
 
   //server
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve,
-    http_server_t(context, server_endpoint, handler_endpoint + "_upstream", result_endpoint)));
+    http_server_t(context, server_endpoint, handler_endpoint + "_upstream", result_endpoint, true)));
 
   //load balancer for handler
   std::thread handler_proxy(std::bind(&proxy_t::forward, proxy_t(context, handler_endpoint + "_upstream", handler_endpoint + "_downstream")));
