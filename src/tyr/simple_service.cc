@@ -36,6 +36,7 @@ namespace {
     //throw the json into the ptree
     auto json = request.query.find("json");
     if(json != request.query.end() && json->second.size()) {
+      LOG_INFO(json->second.front());
       std::istringstream is(json->second.front());
       boost::property_tree::read_json(is, pt);
     }
