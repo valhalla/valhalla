@@ -1,4 +1,6 @@
 machine:
+  environment:
+    LD_LIBRARY_PATH: .:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     #- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -24,7 +26,7 @@ test:
   pre:
     - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local --with-valhalla-sif=/usr/local --with-valhalla-loki=/usr/local --with-valhalla-mjolnir=/usr/local --with-valhalla-odin=/usr/local --with-valhalla-thor=/usr/local
   override:
-    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j4
+    - make test -j4
   post:
     - sudo make install
 
