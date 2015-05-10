@@ -68,9 +68,7 @@ namespace {
 
   class simple_handler_t {
    public:
-    simple_handler_t(const std::string config_file) {
-      boost::property_tree::read_json(config_file, config);
-    }
+    simple_handler_t(const boost::property_tree::ptree& config):config(config) { }
     worker_t::result_t handle(const std::list<zmq::message_t>& job, void* request_info) {
       //request should look like:
       //  /[route|via_route|locate|nearest]?loc=&json=&jsonp=
@@ -112,12 +110,18 @@ namespace {
 int main(int argc, char** argv) {
 
   if(argc < 2) {
-    LOG_ERROR("Usage: " + std::string(argv[0]) + " server_listen_endpoint config/file.json [concurrency]");
+    LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json [concurrency]");
     return 1;
   }
 
+  //config file
+  //TODO: validate the config
+  std::string config_file(argv[1]);
+  boost::property_tree::ptree config;
+  boost::property_tree::read_json(config_file, config);
+
   //server endpoint
-  std::string server_endpoint(argv[1]);
+  std::string server_endpoint = config.get<std::string>("tyr.listen_address");
   if(server_endpoint.find("tcp://") != 0) {
     if(server_endpoint.find("icp://") != 0) {
       LOG_ERROR("You must listen on either tcp://ip:port or ipc://some_socket_file");
@@ -127,14 +131,10 @@ int main(int argc, char** argv) {
       LOG_WARN("Listening on a domain socket limits the server to local requests");
   }
 
-  //config file
-  //TODO: validate the config
-  std::string config_file(argv[2]);
-
   //number of workers to use at each stage
   auto worker_concurrency = std::thread::hardware_concurrency();
-  if(argc > 3)
-    worker_concurrency = std::stoul(argv[3]);
+  if(argc > 2)
+    worker_concurrency = std::stoul(argv[2]);
 
   //change these to tcp://known.ip.address.with:port if you want to do this across machines
   zmq::context_t context;
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
   for(size_t i = 0; i < worker_concurrency; ++i) {
     handler_worker_threads.emplace_back(std::bind(&worker_t::work,
       worker_t(context, handler_endpoint + "_downstream", "ipc://null_endpoint", result_endpoint,
-      std::bind(&simple_handler_t::handle, simple_handler_t(config_file), std::placeholders::_1, std::placeholders::_2)
+      std::bind(&simple_handler_t::handle, simple_handler_t(config), std::placeholders::_1, std::placeholders::_2)
     )));
     handler_worker_threads.back().detach();
   }
