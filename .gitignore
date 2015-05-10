@@ -29,6 +29,7 @@ libtool
 
 # built objects
 loki_benchmark
+loki_service
 *.o
 .deps/
 .dirstamp

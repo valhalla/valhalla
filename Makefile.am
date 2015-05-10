@@ -38,26 +38,29 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_loki.la
 nobase_include_HEADERS = \
-	valhalla/loki/search.h 
+	valhalla/loki/search.h \
+	valhalla/loki/service.h
 libvalhalla_loki_la_SOURCES = \
-	src/loki/search.cc 
+	src/loki/search.cc \
+	src/loki/service.cc
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
+libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = loki_benchmark
-loki_benchmark_SOURCES = \
-        src/loki/benchmark.cc
+bin_PROGRAMS = loki_benchmark loki_service
+loki_benchmark_SOURCES = src/loki/benchmark.cc
 loki_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ libvalhalla_loki.la
-
+loki_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
+loki_service_SOURCES = src/loki/loki_service.cc
+loki_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+loki_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
 
 # tests
 check_PROGRAMS = \
 	test/search 
 test_search_SOURCES = test/search.cc test/test.cc
 test_search_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_loki.la
+test_search_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_loki.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
