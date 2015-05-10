@@ -157,13 +157,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Add the edge info to the tile.
    *
    * @param  edgeindex  The index of the edge - used with nodea and nodeb to
-   *                    form tuple that unique identifies the edge info since
+   *                    form tuple that uniquely identifies the edge info since
    *                    there are two directed edges per edge info.
    * @param  nodea  One of two nodes - used with edgeindex and nodeb to
-   *                form tuple that unique identifies the edge info since
+   *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  nodeb  One of two nodes - used with edgeindex and nodea to
-   *                form tuple that unique identifies the edge info since
+   *                form tuple that uniquely identifies the edge info since
    *                there are two directed edges per edge info.
    * @param  wayid  The target edge is part of this the way id.
    * @param  lls  The shape of the target edge.
