@@ -84,7 +84,7 @@ namespace {
           handler.reset(new RouteHandler(config, request_pt));
         else if(request.path == LOCATE)
           handler.reset(new LocateHandler(config, request_pt));
-        else if(request.path == VIA_ROUTE)
+        else if(request.path == NEAREST)
           handler.reset(new NearestHandler(config, request_pt));
         else
          throw std::runtime_error("Try any of: '/route' '/viaroute' '/locate' '/nearest'"); //TODO: 404
