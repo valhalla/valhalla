@@ -2,8 +2,8 @@
 #include "tyr/route_handler.h"
 #include "tyr/custom_route_handler.h"
 #include "tyr/locate_handler.h"
-#include "tyr/json.h"
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/mjolnir/pbfgraphparser.h>
 #include <valhalla/mjolnir/graphbuilder.h>
 #include <valhalla/mjolnir/graphenhancer.h>

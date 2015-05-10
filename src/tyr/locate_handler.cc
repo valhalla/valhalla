@@ -1,6 +1,6 @@
 #include "tyr/locate_handler.h"
-#include "tyr/json.h"
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/loki/search.h>

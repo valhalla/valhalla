@@ -19,8 +19,7 @@
 #include <valhalla/thor/trippathbuilder.h>
 #include <valhalla/odin/directionsbuilder.h>
 #include <boost/algorithm/string/replace.hpp>
-
-#include "tyr/json.h"
+#include <valhalla/baldr/json.h>
 
 
 namespace {
