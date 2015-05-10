@@ -7,8 +7,6 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/python/str.hpp>
-#include <boost/python/extract.hpp>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>

@@ -29,8 +29,7 @@
     }
   },
   "tyr": {
-    "listen_address": "0.0.0.0",
-    "port": 8002,
+    "listen_address": "tcp://*:8003",
     "logging": {
       "type": "std_out",
       "color": true

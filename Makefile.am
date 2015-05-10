@@ -51,27 +51,23 @@ libvalhalla_tyr_la_SOURCES = \
 	src/tyr/custom_route_handler.cc \
 	src/tyr/locate_handler.cc \
 	src/tyr/nearest_handler.cc
-libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB)
+libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
-# python bindings
-pyexec_LTLIBRARIES = tyr_service.la
-tyr_service_la_SOURCES = \
-src/tyr/service_handlers_python.cc
-tyr_service_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-tyr_service_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB) libvalhalla_tyr.la
-tyr_service_la_LDFLAGS = @COVERAGE_LDFLAGS@ -module -shared
-
-# python scripts
-python_PYTHON = py/tyr_simple_server.py
+#distributed executables
+bin_PROGRAMS = tyr_simple_service
+tyr_simple_service_SOURCES = \
+        src/tyr/simple_service.cc
+tyr_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+tyr_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
 
 # tests
 check_PROGRAMS = \
 	test/handlers \
 	test/json
 test_handlers_SOURCES = test/handlers.cc test/test.cc
-test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-test_handlers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @PYTHON_LDFLAGS@ -l$(BOOST_PYTHON_LIB) libvalhalla_tyr.la
+test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_handlers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
 test_json_SOURCES = test/json.cc test/test.cc
 test_json_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_tyr.la

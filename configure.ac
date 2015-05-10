@@ -35,6 +35,8 @@ AM_PATH_PYTHON([2.6],,)
 
 # check for boost and make sure we have the program options library
 AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are are required for building tyr. Please install libboost-dev.])])
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
 AX_BOOST_PYTHON
 
 # check for Lua libraries and headers
@@ -44,6 +46,9 @@ AX_PROG_LUA([5.2],[],[
         ],[AC_MSG_ERROR([Cannot find Lua libs.   Please install lua5.2 liblua5.2-dev])])
     ],[AC_MSG_ERROR([Cannot find Lua includes.  Please install lua5.2 liblua5.2-dev])])
 ],[AC_MSG_ERROR([Cannot find Lua interpreter.   Please install lua5.2 liblua5.2-dev])])
+
+# check zeromq version
+PKG_CHECK_MODULES([DEPS], [libzmq >= 4.0 libprime_server >= 0.1.0])
 
 # optionally enable coverage information
 CHECK_COVERAGE
