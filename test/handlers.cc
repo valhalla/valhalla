@@ -14,12 +14,8 @@
 
 #include <fstream>
 #include <sstream>
-#include <boost/python/dict.hpp>
-#include <boost/python/str.hpp>
-#include <boost/python/list.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <Python.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::tyr;

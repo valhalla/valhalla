@@ -2,9 +2,6 @@
 
 #include <stdexcept>
 #include <utility>
-#include <boost/python/extract.hpp>
-#include <boost/python/list.hpp>
-#include <boost/python/str.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace valhalla {
