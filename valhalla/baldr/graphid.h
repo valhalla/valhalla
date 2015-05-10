@@ -33,6 +33,12 @@ union GraphId {
   GraphId(const uint32_t tileid, const uint32_t level, const uint64_t id);
 
   /**
+   * Constructor
+   * @param value all the various bits rolled into one
+   */
+  explicit GraphId(const uint64_t value);
+
+  /**
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */

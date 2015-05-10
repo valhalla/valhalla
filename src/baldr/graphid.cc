@@ -31,6 +31,9 @@ GraphId::GraphId(const uint32_t tileid, const uint32_t level,
   Set(tileid, level, id);
 }
 
+GraphId::GraphId(const uint64_t value): value(value){
+}
+
 // Get the tile Id
 uint32_t GraphId::tileid() const {
   return fields.tileid;

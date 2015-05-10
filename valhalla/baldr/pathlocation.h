@@ -6,6 +6,8 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/graphid.h>
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace valhalla{
 namespace baldr{
 
@@ -75,6 +77,18 @@ class PathLocation : public Location {
    * @return true if they are equal
    */
   bool operator==(const PathLocation& other) const;
+
+  /**
+   * Serializes this object to ptree
+   * @return ptree
+   */
+  boost::property_tree::ptree ToPtree(size_t index) const;
+
+  /**
+   * Serializes one of these objects from a ptree and a list of locations
+   * @return PathLocation
+   */
+  static PathLocation FromPtree(const std::vector<Location>& locations, const boost::property_tree::ptree& path_location);
 
  protected:
   //whether or not this location is on a vertex in the graph (intersection)
