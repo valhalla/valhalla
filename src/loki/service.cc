@@ -163,13 +163,13 @@ namespace {
         //parse the querys json
         auto request_pt = from_request(request);
         switch (action->second) {
-        case ROUTE:
-        case VIAROUTE:
-          init_request(request_pt);
-          return route(request_pt, static_cast<http_request_t::info_t*>(request_info));
-        case LOCATE:
-          init_request(request_pt);
-          return locate(request_pt, static_cast<http_request_t::info_t*>(request_info));
+          case ROUTE:
+          case VIAROUTE:
+            init_request(request_pt);
+            return route(action->second, request_pt, static_cast<http_request_t::info_t*>(request_info));
+          case LOCATE:
+            init_request(request_pt);
+            return locate(request_pt, static_cast<http_request_t::info_t*>(request_info));
         }
 
         worker_t::result_t result{false};
@@ -223,7 +223,7 @@ namespace {
       }
       cost = factory.Create(costing, config_costing);
     }
-    worker_t::result_t route(boost::property_tree::ptree& request, const http_request_t::info_t* request_info) {
+    worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, const http_request_t::info_t* request_info) {
       //currently we dont support multipoint, but we will
       if(locations.size() != 2) {
         worker_t::result_t result{false};
@@ -240,6 +240,12 @@ namespace {
       request.put_child("destination", correlated.ToPtree(1));
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
+
+      //let tyr know if its valhalla or osrm format
+      if(action == ROUTE)
+        request.put("osrm_compatibility", "true");
+      else
+        request.put("osrm_compatibility", "false");
 
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
