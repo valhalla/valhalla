@@ -382,6 +382,9 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  // Get something we can use to fetch tiles
+  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
+
   // Construct costing
 //  boost::property_tree::ptree costing = pt.get_child("costing");
 //  for (const auto cm : costing) {
@@ -394,45 +397,64 @@ int main(int argc, char *argv[]) {
   factory.Register("auto-shorter", CreateAutoShorterCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
+  factory.Register("transit", CreateTransitCost);
 
   // Figure out the route type
   for (auto & c : routetype)
     c = std::tolower(c);
 
   // Get the costing method - pass the JSON configuration
-  std::shared_ptr<DynamicCost> cost = factory.Create(
+  TripPath trip_path;
+  if (routetype == "multimodal") {
+    auto t1 = std::chrono::high_resolution_clock::now();
+    // Create array of costing methods per mode
+    std::shared_ptr<DynamicCost> mode_costing[4];
+    mode_costing[0] = factory.Create("auto",
+                         pt.get_child("costing_options.auto"));
+    mode_costing[1] = factory.Create("pedestrian",
+                         pt.get_child("costing_options.pedestrian"));
+    mode_costing[2] = factory.Create("bicycle",
+                         pt.get_child("costing_options.bicycle"));
+    mode_costing[3] = factory.Create("transit",
+                         pt.get_child("costing_options.transit"));
+
+    // For now assume pedestrian mode at origin and destination
+    PathLocation pathOrigin = Search(originloc, reader, mode_costing[1]->GetFilter());
+    PathLocation pathDest = Search(destloc, reader, mode_costing[1]->GetFilter());
+    PathAlgorithm pathalgorithm;
+    std::vector<PathInfo> pathedges = pathalgorithm.GetBestPathMM(pathOrigin,
+                   pathDest, reader, mode_costing);
+    trip_path = TripPathBuilder::Build(reader, pathedges, pathOrigin, pathDest);
+
+  } else {
+    LOG_INFO("routetype: " + routetype);
+    std::shared_ptr<DynamicCost> cost = factory.Create(
       routetype, pt.get_child("costing_options." + routetype));
 
-  LOG_INFO("routetype: " + routetype);
+    // Use Loki to get location information
+    auto t1 = std::chrono::high_resolution_clock::now();
+    PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
+    PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        t2 - t1).count();
+    LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
-  // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-
-  // Use Loki to get location information
-  auto t1 = std::chrono::high_resolution_clock::now();
-  PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
-  PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
-  auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
-      t2 - t1).count();
-  LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
-
-  // TODO - set locations
-
-  // Try the route
-  t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = PathTest(reader, pathOrigin, pathDest, cost);
-  t2 = std::chrono::high_resolution_clock::now();
-  msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
+    // Get the route
+    t1 = std::chrono::high_resolution_clock::now();
+    trip_path = PathTest(reader, pathOrigin, pathDest, cost);
+    t2 = std::chrono::high_resolution_clock::now();
+    msecs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
+  }
 
   // Try the the directions
-  t1 = std::chrono::high_resolution_clock::now();
+  auto t1 = std::chrono::high_resolution_clock::now();
   TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
                                                   originloc, destloc);
-  t2 = std::chrono::high_resolution_clock::now();
-  msecs =
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
 
