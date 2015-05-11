@@ -30,6 +30,7 @@ libtool
 # built objects
 pathtest
 citytest
+thor_service
 *.o
 .deps/
 .dirstamp

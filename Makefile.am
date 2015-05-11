@@ -43,29 +43,36 @@ nobase_include_HEADERS = \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
-	valhalla/thor/trippathbuilder.h 
+	valhalla/thor/trippathbuilder.h \
+	valhalla/thor/service.h
 libvalhalla_thor_la_SOURCES = \
 	src/thor/adjacencylist.cc \
 	src/thor/astarheuristic.cc \
 	src/thor/edgestatus.cc \
 	src/thor/formlocalpath.cc \
 	src/thor/pathalgorithm.cc \
-	src/thor/trippathbuilder.cc 
+	src/thor/trippathbuilder.cc \
+	src/thor/service.cc
 libvalhalla_thor_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ @PROTOC_LIBS@
+libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@
 
 #distributed executables
-bin_PROGRAMS = pathtest \
-               citytest 
-
+bin_PROGRAMS = \
+	pathtest \
+	citytest \
+	thor_service
 pathtest_SOURCES = \
 	src/thor/pathtest/pathtest.cc
 pathtest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-pathtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ -lz libvalhalla_thor.la
+pathtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_thor.la
 citytest_SOURCES = \
 	src/thor/citytest/citytest.cc
 citytest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-citytest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIB@ -lz libvalhalla_thor.la
+citytest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_thor.la
+thor_service_SOURCES = \
+        src/thor/thor_service.cc
+thor_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+thor_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) -lz libvalhalla_thor.la
 
 # tests
 check_PROGRAMS = \
