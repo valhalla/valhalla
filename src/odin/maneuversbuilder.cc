@@ -928,6 +928,7 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
   // TODO - fix it
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+  auto* curr_edge = trip_path_->GetCurrEdge(node_index);
 
   /////////////////////////////////////////////////////////////////////////////
   // Process travel mode
@@ -1011,7 +1012,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return true;
   }
 
-  // TODO: add logic for 'T' and pencil point u-turns
+  /////////////////////////////////////////////////////////////////////////////
+  // Process pencil point u-turns
+  if (IsLeftPencilPointUturn(node_index, prev_edge, curr_edge)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+    return false;
+  }
+  if (IsRightPencilPointUturn(node_index, prev_edge, curr_edge)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+    return false;
+  }
+
+  // TODO: add logic for 'T'
 
   std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
       trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
@@ -1032,6 +1044,94 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   return false;
 
+}
+
+bool ManeuversBuilder::IsLeftPencilPointUturn(int node_index,
+    EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const {
+
+  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
+                                       curr_edge->begin_heading());
+
+  // If drive on right
+  // and the the turn is a sharp left (179 < turn < 211)
+  //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+  // and oneway edges
+  if (curr_edge->drive_on_right()
+      && (((turn_degree > 179) && (turn_degree < 211))
+          || (((prev_edge->length() < 50) || (curr_edge->length() < 50))
+              && (turn_degree > 179) && (turn_degree < 226)))
+      && prev_edge->IsOneway() && curr_edge->IsOneway()) {
+    // If the above criteria is met then check the following criteria...
+
+    IntersectingEdgeCounts xedge_counts;
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   xedge_counts);
+
+    std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+
+    std::unique_ptr<StreetNames> curr_edge_names = StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+
+    // Process common base names
+    std::unique_ptr<StreetNames> common_base_names = prev_edge_names
+        ->FindCommonBaseNames(*curr_edge_names);
+
+    // If no intersecting driveable left road exists
+    // and the from and to edges have a common base name
+    // then it is a left pencil point u-turn
+    if ((xedge_counts.left_driveable_outbound == 0)
+      && !common_base_names->empty()) {
+        return true;
+      }
+  }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsRightPencilPointUturn(int node_index,
+    EnhancedTripPath_Edge* prev_edge, EnhancedTripPath_Edge* curr_edge) const {
+
+  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
+                                       curr_edge->begin_heading());
+
+  // If drive on left
+  // and the turn is a sharp right (149 < turn < 181)
+  //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+  // and oneway edges
+  if (curr_edge->drive_on_right()
+      && (((turn_degree > 149) && (turn_degree < 181))
+          || (((prev_edge->length() < 50) || (curr_edge->length() < 50))
+              && (turn_degree > 134) && (turn_degree < 181)))
+      && prev_edge->IsOneway() && curr_edge->IsOneway()) {
+    // If the above criteria is met then check the following criteria...
+
+    IntersectingEdgeCounts xedge_counts;
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   xedge_counts);
+
+    std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
+
+    std::unique_ptr<StreetNames> curr_edge_names = StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+
+    // Process common base names
+    std::unique_ptr<StreetNames> common_base_names = prev_edge_names
+        ->FindCommonBaseNames(*curr_edge_names);
+
+    // If no intersecting driveable right road exists
+    // and the from and to edges have a common base name
+    // then it is a right pencil point u-turn
+    if ((xedge_counts.right_driveable_outbound == 0)
+      && !common_base_names->empty()) {
+        return true;
+      }
+  }
+
+  return false;
 }
 
 void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {

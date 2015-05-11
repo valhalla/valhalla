@@ -76,15 +76,16 @@ std::string EnhancedTripPath::GetCountryCode(int node_index) {
 // EnhancedTripPath_Edge
 
 bool EnhancedTripPath_Edge::IsUnnamed() const {
-  if (name_size() == 0)
-    return true;
-  return false;
+  return (name_size() == 0);
 }
 
 bool EnhancedTripPath_Edge::IsHighway() const {
-  if ((road_class() == TripPath_RoadClass_kMotorway) && (!ramp()))
-    return true;
-  return false;
+  return ((road_class() == TripPath_RoadClass_kMotorway) && (!ramp()));
+}
+
+bool EnhancedTripPath_Edge::IsOneway() const {
+  return ((driveability() == TripPath_Driveability_kForward)
+      || (driveability() == TripPath_Driveability_kBackward));
 }
 
 std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {

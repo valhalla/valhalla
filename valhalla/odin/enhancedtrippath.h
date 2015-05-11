@@ -46,6 +46,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsHighway() const;
 
+  bool IsOneway() const;
+
   std::vector<std::string> GetNameList() const;
 
   float GetLength(const DirectionsOptions::Units& units);
