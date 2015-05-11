@@ -121,7 +121,8 @@ check_PROGRAMS = \
 	test/streetname_us \
 	test/streetnames \
 	test/streetnames_us \
-	test/streetnames_factory
+	test/streetnames_factory \
+	test/json
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -164,6 +165,10 @@ test_streetnames_us_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.l
 test_streetnames_factory_SOURCES = test/streetnames_factory.cc test/test.cc
 test_streetnames_factory_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_streetnames_factory_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_json_SOURCES = test/json.cc test/test.cc
+test_json_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
+
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

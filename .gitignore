@@ -53,6 +53,7 @@ test/streetnames_us
 test/streetnames_factory
 test/graphreader
 test/turn
+test/json
 test/*.log
 test/*.trs
 
