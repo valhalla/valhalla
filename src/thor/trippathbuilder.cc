@@ -491,13 +491,13 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
   // Test whether edge is traversed forward or reverse and set driveability and heading
   if (directededge->forward()) {
-    if (directededge->forwardaccess() && directededge->reverseaccess())
+    if ((directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if (directededge->forwardaccess() && !directededge->reverseaccess())
+    else if ((directededge->forwardaccess() & kAutoAccess) && !(directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kForward);
-    else if (!directededge->forwardaccess() && directededge->reverseaccess())
+    else if (!(directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBackward);
     else
@@ -512,13 +512,13 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
             PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
   } else {
     // Reverse driveability and heading
-    if (directededge->forwardaccess() && directededge->reverseaccess())
+    if ((directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if (!directededge->forwardaccess() && directededge->reverseaccess())
+    else if (!(directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kForward);
-    else if (directededge->forwardaccess() && !directededge->reverseaccess())
+    else if ((directededge->forwardaccess() & kAutoAccess) && !(directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBackward);
     else
