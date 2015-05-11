@@ -7,6 +7,7 @@
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
+#include <valhalla/sif/transitcost.h>
 
 namespace valhalla {
 namespace sif {

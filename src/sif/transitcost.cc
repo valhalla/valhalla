@@ -220,7 +220,7 @@ uint32_t TransitCost::UnitSize() const {
   return kUnitSize;
 }
 
-cost_ptr_t CreateMultiModalCost(const boost::property_tree::ptree& config) {
+cost_ptr_t CreateTransitCost(const boost::property_tree::ptree& config) {
   return std::make_shared<TransitCost>(config);
 }
 
