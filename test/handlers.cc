@@ -209,19 +209,6 @@ void TestCustomRouteHandler() {
   LOG_DEBUG(handler.Action());
 }
 
-void TestLocateHandler() {
-  boost::property_tree::ptree config;
-  boost::property_tree::read_json("test/test_config", config);
-
-  //make the input
-  boost::property_tree::ptree request =
-    make_json_request(47.139815, 9.525708, 47.167321, 9.509609, "auto");
-
-  //run the route
-  valhalla::tyr::LocateHandler handler(config, request);
-  LOG_DEBUG(handler.Action());
-}
-
 }
 
 int main() {
@@ -230,10 +217,6 @@ int main() {
   suite.test(TEST_CASE(TestRouteHanlder));
 
   suite.test(TEST_CASE(TestCustomRouteHandler));
-
-  //suite.test(TEST_CASE(TestNearestHandler));
-
-  suite.test(TEST_CASE(TestLocateHandler));
 
   return suite.tear_down();
 }
