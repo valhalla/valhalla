@@ -41,7 +41,7 @@ namespace {
     {"/nearest", NEAREST}
   };
 
-  boost::property_tree::ptree from_request(const http_request_t& request) {
+  boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
 
     //throw the json into the ptree
@@ -71,6 +71,20 @@ namespace {
         array.push_back(std::make_pair("", element));
       }
       pt.add_child(kv.first, array);
+    }
+
+
+    //if its osrm compatible lets make the location object conform to our standard input
+    if(action == VIAROUTE) {
+      auto& array = pt.put_child("locations", boost::property_tree::ptree());
+      for(const auto& location : pt.get_child("loc")) {
+        Location l = Location::FromCsv(location.second.get_value<std::string>());
+        boost::property_tree::ptree element;
+        element.put("lon", l.latlng_.first);
+        element.put("lat", l.latlng_.second);
+        array.push_back(std::make_pair("", element));
+      }
+      pt.erase("loc");
     }
 
     return pt;
@@ -162,14 +176,14 @@ namespace {
         }
 
         //parse the querys json
-        auto request_pt = from_request(request);
+        auto request_pt = from_request(action->second, request);
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            init_request(request_pt);
+            init_request(action->second, request_pt);
             return route(action->second, request_pt, static_cast<http_request_t::info_t*>(request_info));
           case LOCATE:
-            init_request(request_pt);
+            init_request(action->second, request_pt);
             return locate(request_pt, static_cast<http_request_t::info_t*>(request_info));
         }
 
@@ -187,9 +201,10 @@ namespace {
         return result;
       }
     }
-    void init_request(const boost::property_tree::ptree& request) {
+    void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       try {
+        locations.clear();
         for(const auto& location : request.get_child("locations"))
           locations.push_back(baldr::Location::FromPtree(location.second));
         if(locations.size() < 1)
@@ -197,7 +212,7 @@ namespace {
         //TODO: bail if this is too many
       }
       catch(...) {
-        throw std::runtime_error("insufficiently specified required parameter 'locations'");
+        throw std::runtime_error("insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
       }
 
       // Parse out the type of route - this provides the costing method to use
