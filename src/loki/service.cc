@@ -243,9 +243,9 @@ namespace {
 
       //let tyr know if its valhalla or osrm format
       if(action == ROUTE)
-        request.put("osrm_compatibility", "true");
+        request.put("osrm_compatibility", false);
       else
-        request.put("osrm_compatibility", "false");
+        request.put("osrm_compatibility", true);
 
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
