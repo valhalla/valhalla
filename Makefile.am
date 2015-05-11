@@ -48,6 +48,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/graphreader.h \
 	valhalla/baldr/graphtile.h \
 	valhalla/baldr/graphtileheader.h \
+	valhalla/baldr/json.h \
 	valhalla/baldr/nodeinfo.h \
 	valhalla/baldr/location.h \
 	valhalla/baldr/pathlocation.h \
