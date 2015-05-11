@@ -325,7 +325,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   SetDestination(graphreader, dest, costing);
 
   // Find shortest path
-  float walking_distance = 0.0f;
+  uint32_t walking_distance = 0;
   uint32_t blockid, tripid, prior_stop;
   uint32_t nc = 0;       // Count of iterations with no convergence
                          // towards destination
@@ -436,6 +436,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
         continue;
       }
 
+      // Skip if no access is allowed to this edge (based on costing method)
+      if (!costing->Allowed(directededge, pred)) {
+        continue;
+      }
+
       // Reset cost
       Cost newcost = pred.cost();
 
@@ -486,7 +491,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       if (mode_change) {
         ; // TODO: newcost += mode_change_cost
       } else {
-        // Use the transit costs from the costing model
+        // Use the transition costs from the costing model
         newcost += costing->TransitionCost(directededge, nodeinfo, pred);
       }
 
@@ -532,8 +537,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       // Add edge label, add to the adjacency list and set edge status
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                         newcost, sortcost, dist, directededge->restrictions(),
-                        directededge->opp_local_idx(), mode_, tripid,
-                        nodeinfo->stop_id(), blockid, walking_distance);
+                        directededge->opp_local_idx(), mode_, walking_distance,
+                        tripid, nodeinfo->stop_id(), blockid);
       adjacencylist_->Add(edgelabel_index_, sortcost);
       edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
