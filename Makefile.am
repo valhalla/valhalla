@@ -53,10 +53,10 @@ tyr_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYS
 
 # tests
 check_PROGRAMS = \
-	test/handlers
-test_handlers_SOURCES = test/handlers.cc test/test.cc
-test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_handlers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
+	test/serializers
+test_serializers_SOURCES = test/serializers.cc test/test.cc
+test_serializers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_serializers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
