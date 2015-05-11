@@ -30,7 +30,7 @@ libtool
 # built objects
 valhalla/proto
 src/proto
-#odin
+odin_service
 *.o
 .deps/
 .dirstamp

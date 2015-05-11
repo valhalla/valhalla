@@ -59,7 +59,8 @@ nobase_include_HEADERS = \
 	valhalla/odin/maneuver.h \
 	valhalla/odin/sign.h \
 	valhalla/odin/signs.h \
-	valhalla/odin/util.h
+	valhalla/odin/util.h \
+	valhalla/odin/service.h
 libvalhalla_odin_la_SOURCES = \
 	src/proto/trippath.pb.cc \
 	src/proto/tripdirections.pb.cc \
@@ -71,15 +72,16 @@ libvalhalla_odin_la_SOURCES = \
 	src/odin/maneuver.cc \
 	src/odin/sign.cc \
 	src/odin/signs.cc \
-	src/odin/util.cc
+	src/odin/util.cc \
+	src/odin/service.cc
 libvalhalla_odin_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
+libvalhalla_odin_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-#bin_PROGRAMS = odin
-#odin_SOURCES = 
-#odin_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-#odin_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ @BOOST_PROGRAM_OPTIONS_LIB@ @BOOST_FILESYSTEM_LIBS@ @PROTOC_LIBS@ -lz libvalhalla_odin.la
+bin_PROGRAMS = odin_service
+odin_service_SOURCES = src/odin/odin_service.cc
+odin_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+odin_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_odin.la
 
 # tests
 check_PROGRAMS = \
