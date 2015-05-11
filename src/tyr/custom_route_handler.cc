@@ -21,8 +21,7 @@
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/odin/util.h>
 #include <boost/algorithm/string/replace.hpp>
-
-#include "tyr/json.h"
+#include <valhalla/baldr/json.h>
 
 
 namespace {
