@@ -78,7 +78,7 @@ namespace baldr{
     PathLocation p(locations[index]);
     p.node_ = path_location.get<bool>("is_node");
     p.vertex_.set_x(path_location.get<float>("vertex.lon"));
-    p.vertex_.set_x(path_location.get<float>("vertex.lat"));
+    p.vertex_.set_y(path_location.get<float>("vertex.lat"));
     for(const auto& edge : path_location.get_child("edges"))
       p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"));
     return p;
