@@ -1,9 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
-AM_LDFLAGS = @PYTHON_LDFLAGS@ @BOOST_LDFLAGS@ @LUA_LIB@ @COVERAGE_LDFLAGS@
-AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@ @PYTHON_CPPFLAGS@
-AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@ @LUA_INCLUDE@
-VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@ @VALHALLA_SIF_LDFLAGS@ @VALHALLA_SIF_LIB@ @VALHALLA_LOKI_LDFLAGS@ @VALHALLA_LOKI_LIB@ @VALHALLA_MJOLNIR_LDFLAGS@ @VALHALLA_MJOLNIR_LIB@ @VALHALLA_ODIN_LDFLAGS@ @VALHALLA_ODIN_LIB@ @VALHALLA_THOR_LDFLAGS@ @VALHALLA_THOR_LIB@
-VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@ @VALHALLA_SIF_CPPFLAGS@ @VALHALLA_LOKI_CPPFLAGS@ @VALHALLA_MJOLNIR_CPPFLAGS@ @VALHALLA_ODIN_CPPFLAGS@ @VALHALLA_THOR_CPPFLAGS@
+AM_LDFLAGS = @BOOST_LDFLAGS@ @COVERAGE_LDFLAGS@
+AM_CPPFLAGS = -Ivalhalla @BOOST_CPPFLAGS@
+AM_CXXFLAGS = -Ivalhalla @COVERAGE_CXXFLAGS@
+VALHALLA_LDFLAGS = @VALHALLA_MIDGARD_LDFLAGS@ @VALHALLA_MIDGARD_LIB@ @VALHALLA_BALDR_LDFLAGS@ @VALHALLA_BALDR_LIB@ @VALHALLA_SIF_LDFLAGS@ @VALHALLA_SIF_LIB@ @VALHALLA_MJOLNIR_LDFLAGS@ @VALHALLA_MJOLNIR_LIB@ @VALHALLA_LOKI_LDFLAGS@ @VALHALLA_LOKI_LIB@ @VALHALLA_THOR_LDFLAGS@ @VALHALLA_THOR_LIB@ @VALHALLA_ODIN_LDFLAGS@ @VALHALLA_ODIN_LIB@
+VALHALLA_CPPFLAGS = @VALHALLA_MIDGARD_CPPFLAGS@ @VALHALLA_BALDR_CPPFLAGS@ @VALHALLA_SIF_CPPFLAGS@ @VALHALLA_MJOLNIR_CPPFLAGS@ @VALHALLA_LOKI_CPPFLAGS@ @VALHALLA_THOR_CPPFLAGS@ @VALHALLA_ODIN_CPPFLAGS@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
@@ -37,35 +37,26 @@ endif
 
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_tyr.la
-nobase_include_HEADERS = \
-	valhalla/tyr/handler.h \
-	valhalla/tyr/route_handler.h \
-	valhalla/tyr/custom_route_handler.h \
-	valhalla/tyr/locate_handler.h \
-	valhalla/tyr/nearest_handler.h
-
-libvalhalla_tyr_la_SOURCES = \
-	src/tyr/handler.cc \
-	src/tyr/route_handler.cc \
-	src/tyr/custom_route_handler.cc \
-	src/tyr/locate_handler.cc \
-	src/tyr/nearest_handler.cc
+nobase_include_HEADERS = valhalla/tyr/service.h
+libvalhalla_tyr_la_SOURCES = src/tyr/service.cc
 libvalhalla_tyr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_tyr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = tyr_simple_service
-tyr_simple_service_SOURCES = \
-        src/tyr/simple_service.cc
+bin_PROGRAMS = tyr_simple_service tyr_service
+tyr_simple_service_SOURCES = src/tyr/simple_service.cc
 tyr_simple_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 tyr_simple_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
+tyr_service_SOURCES = src/tyr/tyr_service.cc
+tyr_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+tyr_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
 
 # tests
 check_PROGRAMS = \
-	test/handlers
-test_handlers_SOURCES = test/handlers.cc test/test.cc
-test_handlers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_handlers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
+	test/serializers
+test_serializers_SOURCES = test/serializers.cc test/test.cc
+test_serializers_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_serializers_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_tyr.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
