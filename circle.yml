@@ -11,7 +11,7 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - for dep in midgard baldr sif mjolnir loki thor odin; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git; done
+    - for dep in midgard baldr sif mjolnir loki odin thor; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git; done
 
 dependencies:
   override:
@@ -20,7 +20,7 @@ dependencies:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     - scripts/install_service_deps.sh
     #valhalla dependencies
-    - cd deps; for dep in midgard baldr sif mjolnir loki thor odin; do cd $dep; ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && sudo make -j4 install; cd ..; done
+    - cd deps; for dep in midgard baldr sif mjolnir loki odin thor; do cd $dep; ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && sudo make -j4 install; cd ..; done
 
 test:
   pre:
