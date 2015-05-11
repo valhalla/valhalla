@@ -141,7 +141,7 @@ std::string LocateHandler::Action() {
   auto json = json::array({});
   for(const auto& location : locations_) {
     try {
-      auto correlated = loki::Search(locations_[0], *reader_, cost_->GetFilter());
+      auto correlated = loki::Search(location, *reader_, cost_->GetFilter());
       json->emplace_back(serialize(correlated, *reader_));
     }
     catch(const std::exception& e) {

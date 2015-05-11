@@ -38,7 +38,6 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_tyr.la
 nobase_include_HEADERS = \
-	valhalla/tyr/json.h \
 	valhalla/tyr/handler.h \
 	valhalla/tyr/route_handler.h \
 	valhalla/tyr/custom_route_handler.h \
