@@ -145,6 +145,7 @@ namespace {
       factory.Register("pedestrian", sif::CreatePedestrianCost);
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+      LOG_INFO("Got Loki Request");
       //request should look like:
       //  /[route|viaroute|locate|nearest]?loc=&json=&jsonp=
 
@@ -238,14 +239,12 @@ namespace {
       request.put_child("origin", correlated.ToPtree(0));
       correlated = loki::Search(locations[1], reader, cost->GetFilter());
       request.put_child("destination", correlated.ToPtree(1));
-      std::stringstream stream;
-      boost::property_tree::write_info(stream, request);
 
       //let tyr know if its valhalla or osrm format
-      if(action == ROUTE)
-        request.put("osrm_compatibility", false);
-      else
-        request.put("osrm_compatibility", true);
+      if(action == ::VIAROUTE)
+        request.put("osrm", "compatibility");
+      std::stringstream stream;
+      boost::property_tree::write_info(stream, request);
 
       //ok send on the request with correlated origin and destination filled out
       //using the boost ptree info format
