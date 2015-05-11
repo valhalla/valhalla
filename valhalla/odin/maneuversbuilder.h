@@ -59,6 +59,12 @@ class ManeuversBuilder {
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
+  bool IsLeftPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
+                              EnhancedTripPath_Edge* curr_edge) const;
+
+  bool IsRightPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
+                              EnhancedTripPath_Edge* curr_edge) const;
+
   void DetermineRelativeDirection(Maneuver& maneuver);
 
   static Maneuver::RelativeDirection DetermineRelativeDirection(
