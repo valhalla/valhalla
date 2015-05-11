@@ -212,12 +212,12 @@ namespace {
       // options for the specified costing method
       std::string method_options = "costing_options." + costing;
       boost::property_tree::ptree config_costing = config.get_child(method_options);
-      auto request_costing = request.get_child_optional(method_options);
+      const auto& request_costing = request.get_child_optional(method_options);
       if (request_costing) {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
-        for (auto r : *request_costing) {
+        for (const auto& r : *request_costing) {
           config_costing.put_child(r.first, r.second);
         }
       }
