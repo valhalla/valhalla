@@ -28,20 +28,63 @@
     "logging": {
       "type": "std_out",
       "color": true
+    },
+    "service": {
+      "proxy": "ipc://loki"
     }
   },
   "thor": {
     "logging": {
       "type": "std_out",
       "color": true
+    },
+    "service": {
+      "proxy": "ipc://thor"
     }
   },
-  "tyr": {
-    "listen_address": "0.0.0.0",
-    "port": 8003,
+  "odin": {
     "logging": {
       "type": "std_out",
       "color": true
+    },
+    "service": {
+      "proxy": "ipc://odin"
+    }
+  },
+  "tyr": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    },
+    "service": {
+      "proxy": "ipc://tyr"
+    }
+  },
+  "httpd": {
+    "service": {
+      "listen": "tcp://*:8002",
+      "loopback": "ipc://loopback"
+    }
+  },
+  "costing_options": {
+    "auto": {
+      "maneuver_penalty": 5.0,
+      "gate_cost": 30.0,
+      "toll_booth_cost": 15.0,
+      "toll_booth_penalty": 0.0,
+      "country_crossing_cost": 600.0,
+      "country_crossing_penalty": 0.0
+    },
+    "auto_shorter": {
+    },
+    "pedestrian": {
+      "walking_speed": 5.1,
+      "walkway_factor": 0.9,
+      "alley_factor": 2.0,
+      "driveway_factor": 2.0,
+      "step_penalty": 30.0
+    },
+    "bicycle": {
     }
   }
 }

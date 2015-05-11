@@ -190,7 +190,7 @@ namespace {
       //we require locations
       try {
         for(const auto& location : request.get_child("locations"))
-          locations.emplace_back(std::move(baldr::Location::FromPtree(location.second)));
+          locations.push_back(baldr::Location::FromPtree(location.second));
         if(locations.size() < 1)
           throw;
         //TODO: bail if this is too many
@@ -290,15 +290,15 @@ namespace valhalla {
   namespace loki {
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from the http server
-      auto upstream_endpoint = config.get<std::string>("loki.proxy");
+      auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
       //sends them on to thor
-      auto downstream_endpoint = config.get<std::string>("thor.proxy");
+      auto downstream_endpoint = config.get<std::string>("thor.service.proxy") + "_in";
       //or returns just location information back to the server
-      auto result_endpoint = config.get<std::string>("server.result_endpoint");
+      auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
 
       //listen for requests
       zmq::context_t context;
-      prime_server::worker_t worker(context, upstream_endpoint + "_downstream", downstream_endpoint + "_upstream", result_endpoint,
+      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
         std::bind(&loki_worker_t::work, loki_worker_t(config), std::placeholders::_1, std::placeholders::_2));
       worker.work();
 
