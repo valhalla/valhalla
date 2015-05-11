@@ -1,16 +1,6 @@
 #include "baldr/pathlocation.h"
 #include <valhalla/midgard/util.h>
 
-namespace {
-  template <class T>
-  std::vector<T> from_ptree_array(const boost::property_tree::ptree& pt, const char* key){
-    std::vector<T> r;
-    for(const auto& item : pt.get_child(key))
-      r.emplace_back(item.second.get_value<T>());
-    return r;
-  }
-}
-
 namespace valhalla{
 namespace baldr{
 
@@ -76,9 +66,9 @@ namespace baldr{
       array.push_back(std::make_pair("", e));
     }
     correlated.put("is_node", IsNode());
-    boost::property_tree::ptree vtx = correlated.put_child("vertex", boost::property_tree::ptree());
-    vtx.put("", vertex_.lng());
-    vtx.put("", vertex_.lat());
+    auto& vtx = correlated.put_child("vertex", boost::property_tree::ptree());
+    vtx.put("lon", vertex_.lng());
+    vtx.put("lat", vertex_.lat());
     correlated.put("location_index", index);
     return correlated;
   }
@@ -87,8 +77,8 @@ namespace baldr{
     auto index = path_location.get<size_t>("location_index");
     PathLocation p(locations[index]);
     p.node_ = path_location.get<bool>("is_node");
-    auto coords = from_ptree_array<float>(path_location, "vertex");
-    p.vertex_.Set(coords[0], coords[1]);
+    p.vertex_.set_x(path_location.get<float>("vertex.lon"));
+    p.vertex_.set_x(path_location.get<float>("vertex.lat"));
     for(const auto& edge : path_location.get_child("edges"))
       p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"));
     return p;
