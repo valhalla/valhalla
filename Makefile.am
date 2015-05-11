@@ -55,7 +55,7 @@ libvalhalla_sif_la_SOURCES = \
 	src/sif/dynamiccost.cc \
 	src/sif/edgelabel.cc
 libvalhalla_sif_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@
+libvalhalla_sif_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
 #bin_PROGRAMS = model_validator 
