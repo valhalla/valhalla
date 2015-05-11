@@ -1,4 +1,6 @@
 machine:
+  environment:
+    LD_LIBRARY_PATH: .:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
   pre:
     - sudo add-apt-repository -y ppa:boost-latest/ppa
     #- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -14,16 +16,16 @@ checkout:
 dependencies:
   override:
     - sudo apt-get remove --purge -y libboost*
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev lcov lua5.2 liblua5.2-dev
+    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-system1.54-dev libboost-thread1.54-dev lcov lua5.2 liblua5.2-dev
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
     #valhalla dependencies
-    - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure && sudo make -j4 install; cd ..; done
+    - cd deps; for dep in midgard baldr; do cd $dep; ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && sudo make -j4 install; cd ..; done
 
 test:
   pre:
-    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local
+    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
   override:
-    - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib make test -j4
+    - make test -j4
   post:
     - sudo make install
 
