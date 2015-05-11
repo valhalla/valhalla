@@ -428,6 +428,7 @@ namespace {
     tyr_worker_t(const boost::property_tree::ptree& config):config(config) {
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
+      LOG_INFO("Got Tyr Request");
       try{
         //get some info about what we need to do
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
@@ -450,7 +451,7 @@ namespace {
         auto jsonp = request.get_optional<std::string>("jsonp");
         if(jsonp)
           json_stream << *jsonp << '(';
-        if(request.get<std::string>("osrm_compatibility", "false") == "true")
+        if(request.get_optional<std::string>("osrm"))
           osrm_serializers::serialize(directions_options, trip_directions, json_stream);
         else
           valhalla_serializers::serialize(directions_options, trip_directions, json_stream);
@@ -458,7 +459,7 @@ namespace {
           json_stream << ')';
 
         worker_t::result_t result{false};
-        http_response_t response(200, "OK", stream.str(), headers_t{{"Content-type", "application/json;charset=utf-8"}});
+        http_response_t response(200, "OK", json_stream.str(), headers_t{{"Content-type", "application/json;charset=utf-8"}});
         response.from_info(static_cast<http_request_t::info_t*>(request_info));
         result.messages.emplace_back(response.to_string());
         return result;
@@ -482,13 +483,13 @@ namespace valhalla {
       //gets requests from thor proxy
       auto upstream_endpoint = config.get<std::string>("tyr.service.proxy") + "_out";
       //sends them on to odin
-      auto downstream_endpoint = config.get<std::string>("tyr.service.proxy_multi") + "_in";
+      //auto downstream_endpoint = config.get<std::string>("tyr.service.proxy_multi") + "_in";
       //or returns just location information back to the server
       auto loopback_endpoint = config.get<std::string>("httpd.service.loopback");
 
       //listen for requests
       zmq::context_t context;
-      prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
+      prime_server::worker_t worker(context, upstream_endpoint, "ipc://NO_ENDPOINT", loopback_endpoint,
         std::bind(&tyr_worker_t::work, tyr_worker_t(config), std::placeholders::_1, std::placeholders::_2));
       worker.work();
 
