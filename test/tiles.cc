@@ -20,13 +20,28 @@ void TestMaxId() {
     throw std::runtime_error("Unexpected maxid result");
 }
 
+void TileList() {
+  Tiles tiles(AABB2(PointLL(-180, -90), PointLL(180, 90)), 1);
+
+  AABB2 bbox(PointLL(-99.5f, 30.5f), PointLL(-90.5f, 39.5f));
+  std::vector<int32_t> tilelist = tiles.TileList(bbox);
+  if (tilelist.size() != 100) {
+    throw std::runtime_error("Wrong number of tiles " +
+                             std::to_string(tilelist.size()) +
+                             " found in TileList");
+  }
+}
+
 }
 
 int main() {
   test::suite suite("tiles");
 
-  // Subtraction of a point from another point yields a vector
+  // Test max. tile Id
   suite.test(TEST_CASE(TestMaxId));
+
+  // Test tile list
+  suite.test(TEST_CASE(TileList));
 
   return suite.tear_down();
 }
