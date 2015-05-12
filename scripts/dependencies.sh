@@ -15,7 +15,7 @@ wait
 
 #build sync
 for dep in midgard; do
-	pushd $dep
+	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
 	make -j4
