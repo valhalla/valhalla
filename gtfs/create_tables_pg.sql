@@ -95,7 +95,7 @@ CREATE TABLE "calendar"
 DROP TABLE IF EXISTS "calendar_dates" CASCADE;
 CREATE TABLE "calendar_dates"
 (
-  service_key integer primary key,
+  service_key integer,
   service_id text,
   date text,
   exception_type integer
@@ -145,6 +145,8 @@ CREATE TABLE "schedule"
   start_date text,
   end_date text,
   dow_mask integer,
+  has_subtractions integer,
+  block_id text,
   headsign text
 );
 
@@ -245,10 +247,17 @@ CREATE TABLE "calendar_tmp"
 DROP TABLE IF EXISTS "calendar_dates_tmp" CASCADE;
 CREATE TABLE "calendar_dates_tmp"
 (
-  service_key serial primary key,
+  service_key integer,
   service_id text,
   date text,
   exception_type integer
+);
+
+DROP TABLE IF EXISTS "cal_dates_tmp" CASCADE;
+CREATE TABLE "cal_dates_tmp"
+(
+  service_key serial primary key,
+  service_id text
 );
 
 DROP TABLE IF EXISTS "shapes_tmp" CASCADE;
@@ -295,6 +304,8 @@ CREATE TABLE "schedule_tmp"
   start_date text,
   end_date text,
   dow_mask integer,
+  has_subtractions integer,
+  block_id text,
   headsign text
 );
 

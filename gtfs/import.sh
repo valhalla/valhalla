@@ -1,7 +1,7 @@
 
 if [[ "$1" == "pg" ]]; then
   db=gtfs
-  #dbuser=<your db user name>
+  dbuser=gknisely
 elif [[ "$1" == "sqlite" ]]; then
   db=transit.sqlite
 fi
@@ -85,6 +85,7 @@ if [[ "$1" ==  "pg" ]]; then
   psql -U $dbuser -f ./mid_updates.sql ${db} || exit $?
 
   ./build_schedule.sh $db $1 $dbuser
+  ./build_schedule_cal_dates.sh $db $1 $dbuser
 
   psql -U $dbuser $db -c "insert into shapes select * from shapes_tmp;"
   psql -U $dbuser $db -c "insert into shape select * from shape_tmp;"
@@ -107,9 +108,11 @@ if [[ "$1" ==  "pg" ]]; then
   psql -U $dbuser $db -c "TRUNCATE TABLE stop_times_tmp;"
   psql -U $dbuser $db -c "TRUNCATE TABLE calendar_tmp;"
   psql -U $dbuser $db -c "TRUNCATE TABLE calendar_dates_tmp;"
+  psql -U $dbuser $db -c "TRUNCATE TABLE cal_dates_tmp;"
   psql -U $dbuser $db -c "TRUNCATE TABLE transfers_tmp;"
   psql -U $dbuser $db -c "TRUNCATE TABLE schedule_tmp;"
   psql -U $dbuser $db -c "DROP Table s_tmp;"
+  psql -U $dbuser $db -c "DROP Table s_dates_tmp;"
 
   if [[ "$2" ==  "clean" ]]; then
     psql -U $dbuser $db -c "CREATE INDEX shapes_index ON shapes USING GIST (geom);"
@@ -131,12 +134,11 @@ elif [[ "$1" ==  "sqlite" ]]; then
     ./data.sql $db || exit $?
     cat ./geom.sql | spatialite $db || exit $?
   fi
-
   cat ./mid_updates_sqlite.sql | spatialite $db || exit $?
 
   ./build_schedule.sh $db $1
+  ./build_schedule_cal_dates.sh $db $1
 
-#think geom makes you call out the col names....not sure.
   spatialite $db "insert into shapes select * from shapes_tmp;"
   spatialite $db "insert into shape select * from shape_tmp;"
 
@@ -144,7 +146,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
   cols=$(echo $cols | tr "|" ,)  
   spatialite $db "insert into stops(${cols},parent_station_key,geom) select ${cols},parent_station_key,NULL from stops_tmp;"
   spatialite $db "update stops set geom = SetSRID(MakePoint(stop_lon, stop_lat),4326) where geom is null;"
- 
+  
   spatialite $db "insert into agency select * from agency_tmp;"
   spatialite $db "insert into stops select * from stops_tmp;"
   spatialite $db "insert into routes select * from  routes_tmp;"
@@ -154,7 +156,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
   spatialite $db "insert into calendar_dates select * from calendar_dates_tmp;"
   spatialite $db "insert into transfers select * from transfers_tmp;"
   spatialite $db "insert into schedule select * from schedule_tmp;"
- 
+
   spatialite $db "DELETE from shapes_tmp;"
   spatialite $db "DELETE from agency_tmp;"
   spatialite $db "DELETE from stops_tmp;"
@@ -163,9 +165,11 @@ elif [[ "$1" ==  "sqlite" ]]; then
   spatialite $db "DELETE from stop_times_tmp;"
   spatialite $db "DELETE from calendar_tmp;"
   spatialite $db "DELETE from calendar_dates_tmp;"
+  spatialite $db "DELETE from cal_dates_tmp;"
   spatialite $db "DELETE from transfers_tmp;"
   spatialite $db "DELETE from schedule_tmp;"
   spatialite $db "DROP Table s_tmp;"
+  spatialite $db "DROP Table s_dates_tmp;"
   spatialite $db "VACUUM ANALYZE;"
  
   if [[ "$2" ==  "clean" ]]; then
