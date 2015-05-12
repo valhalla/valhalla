@@ -87,7 +87,7 @@ namespace {
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what());
-        response.from_info(static_cast<http_request_t::info_t*>(request_info));
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
