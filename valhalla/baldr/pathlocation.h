@@ -73,6 +73,11 @@ class PathLocation : public Location {
   void CorrelateVertex(const midgard::PointLL& correlated);
 
   /**
+   * Clear the list of path edges.
+   */
+  void ClearEdges();
+
+  /**
    * Equality check
    * @return true if they are equal
    */
