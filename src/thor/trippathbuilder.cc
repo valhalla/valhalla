@@ -79,9 +79,7 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
   }
 }
 
-uint32_t GetAdminIndex(
-    const AdminInfo& admin_info,
-    std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher>& admin_info_map,
+uint32_t GetAdminIndex(const AdminInfo& admin_info, std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher>& admin_info_map,
     std::vector<AdminInfo>& admin_info_list) {
 
   uint32_t admin_index = 0;
@@ -106,8 +104,7 @@ uint32_t GetAdminIndex(
   return admin_index;
 }
 
-void AssignAdmins(TripPath& trip_path,
-                  const std::vector<AdminInfo>& admin_info_list) {
+void AssignAdmins(TripPath& trip_path, const std::vector<AdminInfo>& admin_info_list) {
   // Assign the admins
   for (const auto& admin_info : admin_info_list) {
     TripPath_Admin* trip_admin = trip_path.add_admin();
@@ -138,9 +135,9 @@ TripPathBuilder::~TripPathBuilder() {
 // TODO - probably need the location information passed in - to
 // add to the TripPath
 TripPath TripPathBuilder::Build(GraphReader& graphreader,
-                                const std::vector<PathInfo>& path,
-                                const PathLocation& origin,
-                                const PathLocation& dest) {
+    const std::vector<PathInfo>& path,
+    const PathLocation& origin,
+    const PathLocation& dest){
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
@@ -189,8 +186,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   if (!dest.heading_.empty())
     tp_dest->set_heading(std::stoi(dest.heading_));
 
-  // TODO - what about the first node? Probably should pass it in?
-  GraphId startnode;
+  // Get the first nodes graph id by using the end node of the first edge to get the tile with the opposing edge
+  // then use the opposing index to get the opposing edge, and its end node is the begin node of the original edge
+  auto* first_edge = graphreader.GetGraphTile(path.front().edgeid)->directededge(path.front().edgeid);
+  auto* first_tile = graphreader.GetGraphTile(first_edge->endnode());
+  auto* first_node = first_tile->node(first_edge->endnode());
+  GraphId startnode = first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start
   auto start_pct =  origin.edges().front().dist;
@@ -202,7 +203,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   auto end_pct = dest.edges().front().dist;
   auto end_vrt = dest.vertex();
   for(size_t i = 1; i < dest.edges().size(); ++i)
-    if(dest.edges()[i].id == path.back().edgeid.id())
+    if(dest.edges()[i].id == path.back().edgeid)
       end_pct = dest.edges()[i].dist;
 
   // Structures to process admins
@@ -224,21 +225,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(path.front().edgeid.id(), edge,
-                     trip_path.add_node(), tile, end_pct - start_pct);
+    auto trip_edge = AddTripEdge(path.front().edgeid, edge, trip_path.add_node(), tile, end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
+    auto* node = trip_path.add_node();
+    node->set_elapsed_time(path.front().elapsed_time);
+    node->set_admin_index(GetAdminIndex(tile->admininfo(tile->node(edge->endnode())->admin_index()),admin_info_map, admin_info_list));
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
-    TripPath_Node* trip_node = trip_path.add_node();
-    trip_node->set_admin_index(
-        GetAdminIndex(
-            tile->admininfo(tile->node(edge->endnode())->admin_index()),
-            admin_info_map, admin_info_list));
-    trip_node->set_elapsed_time(path.front().elapsed_time);
-
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
-
     return trip_path;
   }
 
@@ -246,8 +241,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   float elapsedtime = 0.0f;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
-  for (auto path_itr = path.begin(); path_itr != path.end(); ++path_itr) {
-    const GraphId& edge = path_itr->edgeid;
+  for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
+    const GraphId& edge = edge_itr->edgeid;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
 
@@ -262,6 +257,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       // Get the end node - set as the startnode (for connected edges at
       // next iteration).
       startnode = directededge->endnode();
+
       continue;
     }
 
@@ -272,25 +268,16 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     //if (startnode.Is_Valid()) {
     // TODO:  Add the trip_node for exits.
     //}
-
-    trip_node->set_admin_index(
-        GetAdminIndex(
-            graphtile->admininfo(graphtile->node(startnode)->admin_index()),
-            admin_info_map, admin_info_list));
+    trip_node->set_gate(graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
+    trip_node->set_toll_booth(graphtile->node(startnode)->type() == NodeType::kTollBooth ? true : false);
     trip_node->set_elapsed_time(elapsedtime);
-    trip_node->set_gate(
-        graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
-    trip_node->set_toll_booth(
-        graphtile->node(startnode)->type() == NodeType::kTollBooth ?
-            true : false);
+    trip_node->set_admin_index(GetAdminIndex(graphtile->admininfo(graphtile->node(startnode)->admin_index()), admin_info_map, admin_info_list));
 
     // Add edge to the trip node and set its attributes
-    auto is_first_edge = (path_itr == path.begin());
-    auto is_last_edge  = (path_itr == path.end() - 1);
-    float length_pct = (is_first_edge ? 1.f - start_pct :
-                       (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge,
-                       trip_node, graphtile, length_pct);
+    auto is_first_edge = edge_itr == path.begin();
+    auto is_last_edge = edge_itr == path.end() - 1;
+    float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge, trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -362,30 +349,24 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       }
     }
 
-    // Update elapsed time at the end of the edge, store this at the
-    // next node.
-    elapsedtime = path_itr->elapsed_time;
+    // Update elapsed time at the end of the edge, store this at the next node.
+    elapsedtime = edge_itr->elapsed_time;
 
     // Set the endnode of this directed edge as the startnode of the next edge.
     startnode = directededge->endnode();
-
-    // Assign the last node admin index
-    if (is_last_edge) {
-      last_node_admin_index = GetAdminIndex(
-          graphtile->admininfo(graphtile->node(startnode)->admin_index()),
-          admin_info_map, admin_info_list);
-    }
 
     // Save the index of the opposing local directed edge at the end node
     prior_opp_local_index = directededge->opp_local_idx();
   }
 
-  // Add the last node and set the elapsed time at the end node
-  TripPath_Node* trip_node = trip_path.add_node();
-  trip_node->set_admin_index(last_node_admin_index);
-  trip_node->set_elapsed_time(elapsedtime);
+  // Add the last node
+  auto* node = trip_path.add_node();
+  auto* last_tile = graphreader.GetGraphTile(startnode);
+  node->set_admin_index(
+    GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map, admin_info_list));
+  node->set_elapsed_time(elapsedtime);
 
-  // Assign the trip path admins
+  // Assign the admins
   AssignAdmins(trip_path, admin_info_list);
 
   // Encode shape and add to trip path.
