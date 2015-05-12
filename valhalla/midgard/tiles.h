@@ -209,7 +209,19 @@ class Tiles {
    *          origin to the destination tile.
    */
   bool PathExists(const std::vector<bool>& tilemap, const uint32_t origin_tile,
-                  const uint32_t dest_tile);
+                  const uint32_t dest_tile) const;
+
+  /**
+   * Generate a "connectivity map" given the map of existing tiles. Any 2 tiles
+   * that have a connected path between them will have the same value in the
+   * connectivity map.
+   * @param  tilemap  Vector of bool for each tile Id where each true value
+   *                  indicates the tile is populated.
+   * @return  Returns a vector with a value for each tile Id. Values of 0 are
+   *          empty tiles (false in the input tilemap). Non-zero values that
+   *          are equal have a path through valid tiles.
+   */
+  std::vector<uint32_t> ConnectivityMap(const std::vector<bool>& tilemap) const;
 
  protected:
   // Bounding box of the tiling system.
