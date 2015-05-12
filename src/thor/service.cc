@@ -77,8 +77,6 @@ namespace {
 
         // Form output information based on path edges
         auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
-        path_algorithm.Clear();
-        locations.clear();
 
         //pass it on
         worker_t::result_t result{true};
@@ -142,6 +140,10 @@ namespace {
       }
       cost = factory.Create(costing, config_costing);
     }
+    void cleanup() {
+      path_algorithm.Clear();
+      locations.clear();
+    }
    protected:
     boost::property_tree::ptree config;
     std::vector<Location> locations;
@@ -165,8 +167,10 @@ namespace valhalla {
 
       //listen for requests
       zmq::context_t context;
+      thor_worker_t thor_worker(config);
       prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-        std::bind(&thor_worker_t::work, thor_worker_t(config), std::placeholders::_1, std::placeholders::_2));
+        std::bind(&thor_worker_t::work, std::ref(thor_worker), std::placeholders::_1, std::placeholders::_2),
+        std::bind(&thor_worker_t::cleanup, std::ref(thor_worker)));
       worker.work();
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
