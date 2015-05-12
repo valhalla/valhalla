@@ -7,7 +7,7 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #clone async
 mkdir -p deps
-for dep in midgard baldr sif; do
+for dep in midgard baldr sif odin; do
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
@@ -17,7 +17,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_service_deps.sh &
 
 #build sync
-for dep in midgard baldr sif; do
+for dep in midgard baldr sif odin; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
