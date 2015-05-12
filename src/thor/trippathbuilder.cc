@@ -225,7 +225,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(path.front().edgeid, edge, trip_path.add_node(), tile, end_pct - start_pct);
+    auto trip_edge = AddTripEdge(path.front().edgeid.id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
     auto* node = trip_path.add_node();
