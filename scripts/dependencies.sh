@@ -17,7 +17,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_service_deps.sh &
 
 #build sync
-for dep in midgard baldr sif; do
+for dep in midgard baldr sif mjolnir; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
@@ -28,7 +28,7 @@ done
 wait
 
 #build sync
-for dep in odin; do
+for dep in loki odin; do
         pushd deps/$dep
         ./autogen.sh
         ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
