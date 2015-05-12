@@ -16,6 +16,25 @@ namespace {
 constexpr uint32_t kBucketCount = 20000;
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
+// If the destination is at a node we want the incoming edge Ids
+// with distance = 1.0 (the full edge). This returns and updated
+// destination PathLocation.
+PathLocation update_destinations(GraphReader& graphreader,
+                                 const PathLocation& destination) {
+  if (destination.IsNode()) {
+    PathLocation dest = destination;
+    dest.ClearEdges();
+    for (const auto& edge : destination.edges()) {
+      GraphId opposing_edge = graphreader.GetOpposingEdgeId(edge.id);
+      dest.CorrelateEdge(opposing_edge, 1.0f);
+    }
+    return dest;
+  } else {
+    // No need to alter destination edges
+    return destination;
+  }
+}
+
 GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
   //check if any of the pairs of origin and destination edges could be a trivial path
   //NOTE: it is true that there could be a shorter path by leaving this edge and coming
@@ -24,7 +43,8 @@ GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
     for(const auto& destination_edge : destination.edges()) {
       //same id and the origin shows up at the beginning of the edge
       //while the destination shows up at the end of the edge
-      if(origin_edge.id == destination_edge.id && origin_edge.dist <= destination_edge.dist) {
+      if (origin_edge.id == destination_edge.id &&
+          origin_edge.dist <= destination_edge.dist) {
         return origin_edge.id;
       }
     }
@@ -119,8 +139,12 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
 
 // Calculate best path.
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
-             const PathLocation& dest, GraphReader& graphreader,
+             const PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>& costing) {
+  // Alter the destination edges if at a node - loki always gives edges
+  // leaving a node, but when a destination we want edges entering the node
+  PathLocation dest = update_destinations(graphreader, destination);
+
   // Check for trivial path
   // TODO -currently mode is the same along entire path.
   mode_ = costing->travelmode();
@@ -294,8 +318,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 // (one for each TravelMode) is passed into the algorithm.
 // Currently not using hierarchy levels (and thus shortcuts).
 std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
-             const PathLocation& dest, GraphReader& graphreader,
+             const PathLocation& destination, GraphReader& graphreader,
              std::shared_ptr<DynamicCost>* mode_costing) {
+  // Alter the destination edges if at a node - loki always gives edges
+  // leaving a node, but when a destination we want edges entering the node
+  PathLocation dest = update_destinations(graphreader, destination);
+
   // TODO - some means of setting an initial mode and probably a dest/end mode
   mode_ = TravelMode::kPedestrian;
   std::shared_ptr<DynamicCost>& costing = mode_costing[static_cast<uint32_t>(mode_)];
