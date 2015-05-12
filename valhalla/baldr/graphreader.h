@@ -70,6 +70,13 @@ class GraphReader {
    */
   bool OverCommitted() const;
 
+  /**
+   * Convenience method to get an opposing directed edge.
+   * @param  edgeid  Graph Id of the directed edge.
+   * @return  Returns the graph Id of the opposing directed edge.
+   */
+  GraphId GetOpposingEdgeId(const GraphId& edgeid);
+
  protected:
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;

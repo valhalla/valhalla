@@ -79,6 +79,17 @@ bool GraphReader::OverCommitted() const {
   return max_cache_size_ < cache_size_;
 }
 
+// Convenience method to get an opposing directed edge.
+GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
+  auto* directededge = GetGraphTile(edgeid)->directededge(edgeid);
+  GraphId endnodeid = directededge->endnode();
+  auto* endnode = GetGraphTile(endnodeid)->node(endnodeid);
+  GraphId opposing_edge_id;
+  opposing_edge_id.Set(endnodeid.tileid(), endnodeid.level(),
+                       endnode->edge_index() + directededge->opp_index());
+  return opposing_edge_id;
+}
+
 
 }
 }
