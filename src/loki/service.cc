@@ -171,7 +171,7 @@ namespace {
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
           http_response_t response(404, "Not Found", "Try any of: '/route' '/viaroute' '/locate' '/nearest'");
-          response.from_info(static_cast<http_request_t::info_t*>(request_info));
+          response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
         }
@@ -182,22 +182,22 @@ namespace {
           case ROUTE:
           case VIAROUTE:
             init_request(action->second, request_pt);
-            return route(action->second, request_pt, static_cast<http_request_t::info_t*>(request_info));
+            return route(action->second, request_pt, info);
           case LOCATE:
             init_request(action->second, request_pt);
-            return locate(request_pt, static_cast<http_request_t::info_t*>(request_info));
+            return locate(request_pt, info);
         }
 
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented");
-        response.from_info(static_cast<http_request_t::info_t*>(request_info));
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what());
-        response.from_info(static_cast<http_request_t::info_t*>(request_info));
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
