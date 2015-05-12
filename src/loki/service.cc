@@ -205,7 +205,6 @@ namespace {
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       try {
-        locations.clear();
         for(const auto& location : request.get_child("locations"))
           locations.push_back(baldr::Location::FromPtree(location.second));
         if(locations.size() < 1)
@@ -298,6 +297,9 @@ namespace {
       result.messages.emplace_back(response.to_string());
       return result;
     }
+    void cleanup() {
+      locations.clear();
+    }
    protected:
     boost::property_tree::ptree config;
     std::vector<Location> locations;
@@ -319,8 +321,10 @@ namespace valhalla {
 
       //listen for requests
       zmq::context_t context;
+      loki_worker_t loki_worker(config);
       prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-        std::bind(&loki_worker_t::work, loki_worker_t(config), std::placeholders::_1, std::placeholders::_2));
+        std::bind(&loki_worker_t::work, std::ref(loki_worker), std::placeholders::_1, std::placeholders::_2),
+        std::bind(&loki_worker_t::cleanup, std::ref(loki_worker)));
       worker.work();
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
