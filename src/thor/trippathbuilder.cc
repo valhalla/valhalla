@@ -199,12 +199,18 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   for(size_t i = 1; i < origin.edges().size(); ++i)
     if(origin.edges()[i].id == path.front().edgeid)
       start_pct = origin.edges()[i].dist;
+
   // Partial edge at the end
   auto end_pct = dest.edges().front().dist;
   auto end_vrt = dest.vertex();
   for(size_t i = 1; i < dest.edges().size(); ++i)
     if(dest.edges()[i].id == path.back().edgeid)
       end_pct = dest.edges()[i].dist;
+
+  // Special case - destination is at a node - end percent is 1
+  if (dest.IsNode()) {
+    end_pct = 1.0f;
+  }
 
   // Structures to process admins
   std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher> admin_info_map;
