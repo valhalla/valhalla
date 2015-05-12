@@ -189,7 +189,17 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   /**
    * Add admin info to the tile.
-   * TODO - comments!
+   * @param  country_name   Country name of the admin
+   * @param  state_name     State name of the admin
+   * @param  country_iso    Country ISO Code.  ISO3166-1
+   * @param  state_iso      State ISO Code.  ISO3166-2  Example://
+   *                        Prince Edward Island = PE
+   *                        Country ISO + dash + state ISO will give
+   *                        you ISO3166-2 for state.
+   * @param  start_dst      Date when daylight savings time starts.
+   * @param  end_dst        Date when daylight savings time ends.
+   *
+   * @return  The admin offset that will be stored on the node.
    */
   uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
                     const std::string& country_iso, const std::string& state_iso,

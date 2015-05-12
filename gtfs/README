@@ -13,7 +13,10 @@ NOTE:  LIRR puts all of the calendar entries in the calendar_dates.txt
 file.  Therefore, you will see an error for their feed:
 ERROR:  could not open file "/data/valhalla/mjolnir/gtfs/schedule.txt" for reading: No such file or directory
 
-Please disregard this error.
+NOTE:  For clean installs, you will see the following error:
+psql:./mid_updates.sql:5: ERROR:  currval of sequence "calendar_tmp_service_key_seq" is not yet defined in this session
+
+Please disregard both of the above errors.
 
 
 sqlite install:

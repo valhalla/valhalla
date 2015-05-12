@@ -9,9 +9,9 @@ fi
 
 if [[ "$2" ==  "pg" ]]; then
   dbuser=$3
-  psql -U $dbuser -c "copy (select stop_key,trip_key,trip_id,route_key,service_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,headsign from s_tmp order by trip_id, stop_sequence) to STDOUT csv" $db > ./schedule.tmp
+  psql -U $dbuser -c "copy (select stop_key,trip_key,trip_id,route_key,service_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,has_subtractions,block_id,headsign from s_tmp order by trip_id, stop_sequence) to STDOUT csv" $db > ./schedule.tmp
 elif [[ "$2" ==  "sqlite" ]]; then 
-  sqlite3 $db -csv "select stop_key,trip_key,trip_id,route_key,service_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,headsign from s_tmp order by trip_id, stop_sequence;" > ./schedule.tmp
+  sqlite3 $db -csv "select stop_key,trip_key,trip_id,route_key,service_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,has_subtractions,block_id,headsign from s_tmp order by trip_id, stop_sequence;" > ./schedule.tmp
 fi
 
 tr -d '"' < ./schedule.tmp > ./schedule.tmp.new
@@ -31,16 +31,18 @@ dest=false
 origin=""
 departure=""
 trip=""
+startdate=""
 
-echo "origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,headsign" >> schedule.txt
+echo "origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign" >> schedule.txt
 
 #Creating the stop pairs and calendar bitmask.
-while IFS=, read stop_key trip_key trip_id route_key service_key departure_time arrival_time start_date end_date sun mon tue wed thu fri sat headsign; do
+while IFS=, read stop_key trip_key trip_id route_key service_key departure_time arrival_time start_date end_date sun mon tue wed thu fri sat has_subtractions block_id headsign; do
 
-      if [[ "$trip_id" ==  "$trip" ]]; then
-         echo "$origin,$stop_key,$trip_key,$route_key,$service_key,$departure,$arrival_time,$start_date,$end_date,$dow_mask,$headsign" >> schedule.txt
-      fi
-    
+    if [[ "$trip_id" ==  "$trip" && "$start_date" == "$startdate" ]]; then
+       echo "$origin,$stop_key,$trip_key,$route_key,$service_key,$departure,$arrival_time,$start_date,$end_date,$dow_mask,$has_subtractions,$block_id,$headsign" >> schedule.txt
+    fi
+
+    startdate=$start_date
     trip=$trip_id
     origin=$stop_key
     departure=$departure_time
@@ -58,10 +60,12 @@ while IFS=, read stop_key trip_key trip_id route_key service_key departure_time 
 done < ./schedule.tmp
 
 if [[ "$2" ==  "pg" ]]; then
-  psql -U $dbuser gtfs -c "copy schedule_tmp(origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,headsign) from '$PWD/schedule.txt' with delimiter ',' csv header;"
-  psql -U $dbuser gtfs -c "VACUUM ANALYZE;"
+  psql -U $dbuser $db -c "copy schedule_tmp(origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign) from '$PWD/schedule.txt' with delimiter ',' csv header;"
+  psql -U $dbuser $db -c "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  psql -U $dbuser $db -c "VACUUM ANALYZE;"
 elif [[ "$2" ==  "sqlite" ]]; then
 
-  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,headsign' -1 -d ',' -t schedule_tmp -o $db
-  sqlite3 $db "VACUUM ANALYZE;"
+  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign' -1 -d ',' -t schedule_tmp -o $db
+  spatialite $db "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  spatialite $db "VACUUM ANALYZE;"
 fi

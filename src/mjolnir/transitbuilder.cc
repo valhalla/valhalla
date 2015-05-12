@@ -52,6 +52,7 @@ struct Departure {
   uint32_t start_date;
   uint32_t end_date;
   uint32_t dow;
+  uint32_t has_subtractions;
   std::string headsign;
 };
 
@@ -266,7 +267,7 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
   // Form query
   std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
   sql += "trip_key, route_key, service_key, departure_time, arrival_time,";
-  sql += "start_date, end_date, dow_mask, headsign from schedule where ";
+  sql += "start_date, end_date, dow_mask, has_subtractions, headsign from schedule where ";
   sql += "origin_stop_key = " + std::to_string(stop_key);
 
   std::vector<Departure> departures;
@@ -289,8 +290,9 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
       dep.end_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))));
 
       dep.dow        = sqlite3_column_int(stmt, 10);
-      dep.headsign   = (sqlite3_column_type(stmt, 11) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 11))) : "";
+      dep.has_subtractions = sqlite3_column_int(stmt, 11);
+      dep.headsign   = (sqlite3_column_type(stmt, 12) == SQLITE_TEXT) ?
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 12))) : "";
 
       // TODO need to add block Id (default to 0)
       dep.blockid = 0;
@@ -429,8 +431,8 @@ void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
       uint32_t result = sqlite3_step(stmt);
       while (result == SQLITE_ROW) {
         uint32_t serviceid = sqlite3_column_int(stmt, 0);
-        uint32_t date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2))));
-        uint32_t t = sqlite3_column_int(stmt, 3);
+        uint32_t date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 1))));
+        uint32_t t = sqlite3_column_int(stmt, 2);
 
         TransitCalendar calendar(serviceid, date,
                                  static_cast<CalendarExceptionType>(t));
