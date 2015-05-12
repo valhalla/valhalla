@@ -78,6 +78,7 @@ void PathAlgorithm::Clear() {
   edgelabels_.clear();
   best_destination_ = std::make_pair(kInvalidLabel,
                          Cost(std::numeric_limits<float>::max(), 0.0f));
+  destinations_.clear();
 
   // Clear elements from the adjacency list
   if(adjacencylist_ != nullptr) {
