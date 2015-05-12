@@ -45,8 +45,7 @@ test-driver
 test/*.log
 test/*.trs
 test/test_config
-test/tiles
-test/handlers
+test/serializers
 
 # test coverage stuff
 *.gcno

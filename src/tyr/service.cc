@@ -428,7 +428,8 @@ namespace {
     tyr_worker_t(const boost::property_tree::ptree& config):config(config) {
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
-      LOG_INFO("Got Tyr Request");
+      auto* info = static_cast<http_request_t::info_t*>(request_info);
+      LOG_INFO("Got Tyr Request " + std::to_string(info->id));
       try{
         //get some info about what we need to do
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
@@ -460,14 +461,14 @@ namespace {
 
         worker_t::result_t result{false};
         http_response_t response(200, "OK", json_stream.str(), headers_t{{"Content-type", "application/json;charset=utf-8"}});
-        response.from_info(static_cast<http_request_t::info_t*>(request_info));
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what());
-        response.from_info(static_cast<http_request_t::info_t*>(request_info));
+        response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
