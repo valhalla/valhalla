@@ -7,7 +7,7 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #clone async
 mkdir -p deps
-for dep in midgard baldr sif odin; do
+for dep in midgard baldr sif mjolnir loki odin; do
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
