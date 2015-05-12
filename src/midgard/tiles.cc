@@ -8,11 +8,10 @@ namespace midgard {
 Tiles::Tiles(const AABB2& bounds, const float tilesize) {
   tilebounds_ = bounds;
   tilesize_ = tilesize;
-  ncolumns_ = (int) ceil((bounds.maxx() - bounds.minx()) / tilesize_);
-  nrows_ = (int) ceil((bounds.maxy() - bounds.miny()) / tilesize_);
-}
-
-Tiles::~Tiles() {
+  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) /
+                                        tilesize_));
+  nrows_    =  static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) /
+                                        tilesize_));
 }
 
 float Tiles::TileSize() const {
@@ -32,7 +31,7 @@ int32_t Tiles::Row(const float y) const {
   if (y == tilebounds_.maxy())
     return nrows_ - 1;
   else {
-    return (int) ((y - tilebounds_.miny()) / tilesize_);
+    return static_cast<int32_t>((y - tilebounds_.miny()) / tilesize_);
   }
 }
 
@@ -46,7 +45,8 @@ int32_t Tiles::Col(const float x) const {
     return ncolumns_ - 1;
   else {
     float col = (x - tilebounds_.minx()) / tilesize_;
-    return (col >= 0.0) ? (int) col : (int) col - 1;
+    return (col >= 0.0) ? static_cast<int32_t>(col) :
+                          static_cast<int32_t>(col - 1);
   }
 }
 
@@ -119,7 +119,7 @@ void Tiles::TileOffsets(const int32_t initial_tileid, const int32_t newtileid,
 
 uint32_t Tiles::TileCount() const {
   float nrows = (tilebounds_.maxy() - tilebounds_.miny()) / tilesize_;
-  return ncolumns_ * (int) ceil(nrows);
+  return ncolumns_ * static_cast<int32_t>(ceil(nrows));
 }
 
 int32_t Tiles::RightNeighbor(const int32_t tileid) const {
@@ -135,16 +135,15 @@ int32_t Tiles::LeftNeighbor(const int32_t tileid) const {
 }
 
 int32_t Tiles::TopNeighbor(const int32_t tileid) const {
-  return
-      (tileid < (int) (TileCount() - ncolumns_)) ? tileid + ncolumns_ : tileid;
+  return (tileid < static_cast<int32_t>((TileCount() - ncolumns_))) ?
+              tileid + ncolumns_ : tileid;
 }
 
 int32_t Tiles::BottomNeighbor(const int32_t tileid) const {
   return (tileid < ncolumns_) ? tileid : tileid - ncolumns_;
 }
 
-const std::vector<int>& Tiles::TileList(const AABB2& boundingbox,
-                                        const uint32_t maxtiles) {
+const std::vector<int>& Tiles::TileList(const AABB2& boundingbox) {
   // Clear lists
   checklist_.clear();
   tilelist_.clear();
@@ -157,78 +156,104 @@ const std::vector<int>& Tiles::TileList(const AABB2& boundingbox,
   if (tileid == -1)
     return tilelist_;
 
-  // Set this tile in the list and it to the list of visited tiles.
-  tilelist_.push_back(tileid);
-  visitedtiles_[tileid] = 1;
-
-  // Add neighbors to the "check" list
-  addNeighbors(tileid);
+  // Set this tile in the checklist and it to the list of visited tiles.
+  checklist_.push_back(tileid);
+  visitedtiles_.insert(tileid);
 
   // Get neighboring tiles in bounding box until NextTile returns -1
   // or the maximum number specified is reached
-  while ((tileid = NextTile(boundingbox)) >= 0) {
+  while (!checklist_.empty()) {
+    // Get the element off the front of the list and add it to the tile list.
+    tileid = checklist_.front();
+    checklist_.pop_front();
     tilelist_.push_back(tileid);
-    if (tilelist_.size() == maxtiles) {
-      break;
+
+    // Check neighbors
+    int32_t neighbor = LeftNeighbor(tileid);
+    if (visitedtiles_.find(neighbor) == visitedtiles_.end() &&
+        boundingbox.Intersects(TileBounds(neighbor))) {
+      checklist_.push_back(neighbor);
+      visitedtiles_.insert(neighbor);
+    }
+    neighbor = RightNeighbor(tileid);
+    if (visitedtiles_.find(neighbor) == visitedtiles_.end() &&
+        boundingbox.Intersects(TileBounds(neighbor))) {
+      checklist_.push_back(neighbor);
+      visitedtiles_.insert(neighbor);
+    }
+    neighbor = TopNeighbor(tileid);
+    if (visitedtiles_.find(neighbor) == visitedtiles_.end() &&
+        boundingbox.Intersects(TileBounds(neighbor))) {
+      checklist_.push_back(neighbor);
+      visitedtiles_.insert(neighbor);
+    }
+    neighbor = BottomNeighbor(tileid);
+    if (visitedtiles_.find(neighbor) == visitedtiles_.end() &&
+        boundingbox.Intersects(TileBounds(neighbor))) {
+      checklist_.push_back(neighbor);
+      visitedtiles_.insert(neighbor);
     }
   }
   return tilelist_;
 }
 
-Tiles::Tiles()
-    : tilesize_(0),
-      nrows_(0),
-      ncolumns_(0) {
-}
+bool Tiles::PathExists(const std::vector<bool>& tilemap,
+                       const uint32_t origin_tile,
+                       const uint32_t dest_tile) {
+  // Add origin tile to list of tiles to check
+  std::list<int32_t> checklist;
+  checklist.push_back(origin_tile);
 
-void Tiles::addNeighbors(const int32_t tileid) {
-  // Make sure we check that the neighbor tile is not equal to the
-  // current tile - that happens at the edge of the coverage
-  int32_t neighbor = LeftNeighbor(tileid);
-  if (neighbor != tileid && !InList(neighbor)) {
-    checklist_.push_back(neighbor);
-    visitedtiles_[neighbor] = 1;
-  }
+  // Visited tiles - add origin tile
+  std::unordered_set<int32_t> visitedset;
+  visitedset.insert(origin_tile);
 
-  neighbor = RightNeighbor(tileid);
-  if (neighbor != tileid && !InList(neighbor)) {
-    checklist_.push_back(neighbor);
-    visitedtiles_[neighbor] = 1;
-  }
-
-  neighbor = TopNeighbor(tileid);
-  if (neighbor != tileid && !InList(neighbor)) {
-    checklist_.push_back(neighbor);
-    visitedtiles_[neighbor] = 1;
-  }
-
-  neighbor = BottomNeighbor(tileid);
-  if (neighbor != tileid && !InList(neighbor)) {
-    checklist_.push_back(neighbor);
-    visitedtiles_[neighbor] = 1;
-  }
-}
-
-int32_t Tiles::NextTile(const AABB2& boundingbox) {
-  int32_t tileid;
-  while (!checklist_.empty()) {
+  // Get neighboring tiles in the tilemap until the dest tile is reached
+  // or no more tiles can be expanded
+  int32_t tileid = 0;
+  while (!checklist.empty()) {
     // Get the element off the front of the list
-    tileid = checklist_.front();
-    checklist_.pop_front();
+    if ((tileid = checklist.front()) == dest_tile) {
+      return true;
+    }
+    checklist.pop_front();
 
-    // Check if tile is visible
-    if (boundingbox.Intersects(TileBounds(tileid))) {
-      // Add neighbors
-      addNeighbors(tileid);
-      return tileid;
+    // Check neighbors.
+    int32_t neighbor = LeftNeighbor(tileid);
+    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
+      if (neighbor == dest_tile) {
+        return true;
+      }
+      checklist.push_back(neighbor);
+      visitedset.insert(neighbor);
+    }
+    neighbor = RightNeighbor(tileid);
+    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
+      if (neighbor == dest_tile) {
+        return true;
+      }
+      checklist.push_back(neighbor);
+      visitedset.insert(neighbor);
+    }
+    neighbor = TopNeighbor(tileid);
+    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
+      if (neighbor == dest_tile) {
+        return true;
+      }
+      checklist.push_back(neighbor);
+      visitedset.insert(neighbor);
+    }
+    neighbor = BottomNeighbor(tileid);
+    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
+      if (neighbor == dest_tile) {
+        return true;
+      }
+      checklist.push_back(neighbor);
+      visitedset.insert(neighbor);
     }
   }
-  return -1;
+  return false;
 }
 
-bool Tiles::InList(const int32_t id) {
-  std::map<int, int>::iterator iter = visitedtiles_.find(id);
-  return (iter != visitedtiles_.end());
-}
 }
 }

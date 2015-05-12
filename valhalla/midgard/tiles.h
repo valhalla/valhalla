@@ -3,7 +3,7 @@
 #define VALHALLA_MIDGARD_TILES_H_
 
 #include <list>
-#include <map>
+#include <unordered_set>
 #include <cstdint>
 
 #include <valhalla/midgard/constants.h>
@@ -14,21 +14,20 @@ namespace midgard {
 
 /**
  * A class that provides a uniform (square) tiling system for a specified
- * bounding box (either in x,y or f,lng) and tile size.
- * A unique tile ID is assigned for each tile based on the following rules:
+ * bounding box (either in x,y or lat,lng) and tile size.
+ * A unique tile Id is assigned for each tile based on the following rules:
  *    Tile numbers start at 0 at the min y, x (lower left)
  *    Tile numbers increase by column (x,longitude) then by row (y,latitude)
  *    Tile numbers increase along each row by increasing x,longitude.
- * Contains methods for converting x,y or lat,lng into tile ID and
+ * Contains methods for converting x,y or lat,lng into tile Id and
  * vice-versa.  Methods for relative tiles (using row and column offsets).
  * are also provided.
- * @author  David W. Nesbitt
  */
 class Tiles {
  public:
   /**
    * Constructor.  A bounding box and tile size is specified.
-   * Sets class data members and precalculates the number of rows and columns
+   * Sets class data members and computes the number of rows and columns
    * based on the bounding box and tile size.
    * @param   bounds    Bounding box
    * @param   tilesize  Tile size
@@ -36,18 +35,13 @@ class Tiles {
   Tiles(const AABB2& bounds, const float tilesize);
 
   /**
-   * Destructor.
+   * Get the tile size.
+   * @return Tile size.
    */
-  virtual ~Tiles();
-
-  /**
-  * Get the tile size.
-  * @return Tile size.
-  */
   float TileSize() const;
 
   /**
-   * Returns the bounding box of the tiling system
+   * Returns the bounding box of the tiling system.
    * @return Bounding box.
    */
   AABB2 TileBounds() const;
@@ -69,30 +63,32 @@ class Tiles {
   int32_t Col(const float x) const;
 
   /**
-   * Converts the center of a bounding box to a tile ID.
+   * Converts the center of a bounding box to a tile Id.
    * @param   c   Center point.
-   * @return  Returns the tile ID. If the latitude, longitude is outside
+   * @return  Returns the tile Id. If the latitude, longitude is outside
    *          the extent, an error (-1) is returned.
    */
   int32_t TileId(const Point2& c) const;
 
   /**
-   * Converts x,y to a tile ID.
-   * @param   y   x (or lng)
-   * @param   x   y (or lat)
-   * @return  Returns the tile ID. -1 (errors( is returned if the x,y is
+   * Converts x,y to a tile Id.
+   * @param   y   y (or lat)
+   * @param   x   x (or lng)
+   * @return  Returns the tile Id. -1 (errors( is returned if the x,y is
    *          outside the bounding box of the tiles.
    */
   int32_t TileId(const float y, const float x) const;
 
   /**
-   * Gets the tile ID given the row ID and column ID.
+   * Gets the tile Id given the row Id and column Id.
+   * @param  col  Tile column.
+   * @param  row  Tile row.
+   * @return  Returns the tile Id.
    */
   int32_t TileId(const int32_t col, const int32_t row) const;
 
   /**
    * Gets a maximum tileid given a bounds and a tile size
-   *
    * @param bound       the region for which to compute the maximum tile id
    * @param tile_size   the size of a tile within the region
    * @return the highest tile number within the region
@@ -101,14 +97,14 @@ class Tiles {
 
   /**
    * Get the base x,y of a specified tile.
-   * @param   tileid   Tile ID.
+   * @param   tileid   Tile Id.
    * @return  The base x,y of the specified tile.
    */
   Point2 Base(const int32_t tileid) const;
 
   /**
    * Gets the y,x extent of the specified tile.
-   * @param   tileid   Tile ID.
+   * @param   tileid   Tile Id.
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2 TileBounds(const int32_t tileid) const;
@@ -129,23 +125,23 @@ class Tiles {
 
   /**
    * Gets the center of the specified tile.
-   * @param   tileid   Tile ID.
+   * @param   tileid   Tile Id.
    * @return  The center x,y of the specified tile.
    */
   Point2 Center(const int32_t tileid) const;
 
   /**
    * Returns the new tile given a previous tile and a row, column offset.
-   * @param   initial_tile      ID of the tile to offset from.
+   * @param   initial_tile      Id of the tile to offset from.
    * @param   delta_rows    Number of rows to offset (can be negative).
    * @param   delta_cols    Number of columns to offset (can be negative).
-   * @return  Tile ID of the new tile.
+   * @return  Tile Id of the new tile.
    */
   int32_t GetRelativeTileId(const int32_t initial_tile, const int32_t delta_rows,
                         const int32_t delta_cols) const;
 
    /**
-    * Returns the tile offsets (row,column) between the previous tile ID and
+    * Returns the tile offsets (row,column) between the previous tile Id and
     * a new tileid.  The offsets are returned through arguments (references).
     * Offsets can be positive or negative or 0.
     * @param   initial_tileid     Original tile.
@@ -164,23 +160,33 @@ class Tiles {
 
   /**
    * Gets the neighboring tileid to the right/east.
+   * @param  tileid   Tile Id.
+   * @return  Returns the tile Id of the tile to the right/east.
    */
   int32_t RightNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the neighboring tileid - west.
+   * @param  tileid   Tile Id.
+   * @return  Returns the tile Id of the tile to the left/west.
    */
   int32_t LeftNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the neighboring tileid - north.
+   * @param  tileid   Tile Id.
+   * @return  Returns the tile Id of the tile to the north. Return tileid
+   *          if tile Id is on the top row (no neighbor to the north).
    */
   int32_t TopNeighbor(const int32_t tileid) const;
 
-   /**
-    * Gets the neighboring tileid - south.
-    */
-   int32_t BottomNeighbor(const int32_t tileid) const;
+  /**
+   * Gets the neighboring tileid - south.
+   * @param  tileid   Tile Id.
+   * @return  Returns the tile Id of the tile to the south. Return tileid
+   *          if tile Id is on the bottom row (no neighbor to the south).
+   */
+  int32_t BottomNeighbor(const int32_t tileid) const;
 
   /**
    * Gets the list of tiles that lie within the specified bounding box.
@@ -190,8 +196,20 @@ class Tiles {
    * @param  boundingbox  Bounding box
    * @param  maxTiles  Maximum number of tiles to find.
    */
-  const std::vector<int32_t>& TileList(const AABB2& boundingbox,
-               const uint32_t maxtiles = 4096);
+  const std::vector<int32_t>& TileList(const AABB2& boundingbox);
+
+  /**
+   * Check if a path from the origin tile to the destination tile exists
+   * given a map of which tiles are populated.
+   * @param  tilemap  Vector of bool for each tile Id where each true value
+   *                  indicates the tile is populated.
+   * @param  origin_tile Tile Id of the origin.
+   * @param  dest_tile   Tile Id of the destination.
+   * @return  Returns true if there is a path through existing tiles from the
+   *          origin to the destination tile.
+   */
+  bool PathExists(const std::vector<bool>& tilemap, const uint32_t origin_tile,
+                  const uint32_t dest_tile);
 
  protected:
   // Bounding box of the tiling system.
@@ -215,23 +233,7 @@ class Tiles {
   std::list<int32_t> checklist_;
 
   // Visited tiles
-  std::map<int32_t, int32_t> visitedtiles_;
-
-  // Default constructor (private).  Forces use of the bounding box
-  Tiles();
-
-  // This function checks neighboring tiles. It adds these tiles to the
-  // end of the CheckList if they are not already in there.
-  void addNeighbors(const int32_t tileid);
-
-  // Returns the next tile from the check list that is inside the bounding
-  // box. Adds its neighbors to the check list.
-  // Returns the tileId or -1 if no more tiles are inside the bounding box.
-  int32_t NextTile(const AABB2& boundingbox);
-
-  // Convenience method to check if the tile has already been considered
-  // (added to tile list or check list)
-  bool InList(const int32_t id);
+  std::unordered_set<int32_t> visitedtiles_;
 };
 
 }
