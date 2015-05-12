@@ -3,9 +3,13 @@ checkout:
     - git submodule sync
     - git submodule update --init
 
+dependencies:
+  override:
+    - scripts/dependencies.sh
+
 test:
   override:
-    - scripts/ci.sh
+    - scripts/install.sh
 
 general:
   artifacts:
