@@ -254,6 +254,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Do not combine
+      // if current or next maneuver is a ferry
+      else if (curr_man->ferry() || next_man->ferry()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // Combine current internal maneuver with next maneuver
       else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
