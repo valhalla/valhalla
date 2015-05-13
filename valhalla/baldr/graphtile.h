@@ -54,6 +54,13 @@ class GraphTile {
   static std::string FileSuffix(const GraphId& graphid, const TileHierarchy& hierarchy);
 
   /**
+   * Get the tile Id given the full path to the file.
+   * @param  fname  Filename with complete path.
+   * @return  Returns the tile Id.
+   */
+  static GraphId GetTileId(const std::string& fname);
+
+  /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
    * of 0 indicates an error reading the tile data.
    * or unsuccessful read.

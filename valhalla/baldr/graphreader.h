@@ -32,6 +32,24 @@ class GraphReader {
   static bool DoesTileExist(const TileHierarchy& tile_hierarchy, const GraphId& graphid);
 
   /**
+   * Get a tile "map" - bool vector identifying which tiles exist.
+   * @param  level  Tile hierarchy level used to get the tile map.
+   * @return  Returns the tile map - vector of bool indicating which tiles
+   *          exist.
+   */
+  std::vector<bool> TileMap(const uint32_t level);
+
+  /**
+   * Get a tile connectivity map. This is a vector where each tile Id is
+   * assigned an integer value. Connected tiles will have the same value
+   * while disconnected (no path using poulated tiles exists) will have
+   * different values.
+   * @param  level  Tile hierarchy level used to get the tile map.
+   * @return  Returns the tile connectivity map.
+   */
+  std::vector<uint32_t> ConnectivityMap(const uint32_t level);
+
+  /**
    * Get a pointer to a graph tile object given a GraphId.
    * @param graphid  the graphid of the tile
    * @return GraphTile* a pointer to the graph tile

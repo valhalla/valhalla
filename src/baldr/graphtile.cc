@@ -12,6 +12,7 @@
 #include <locale>
 #include <iomanip>
 #include <cmath>
+#include <boost/algorithm/string.hpp>
 
 namespace {
   struct dir_facet : public std::numpunct<char> {
@@ -199,6 +200,31 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   //it was something else
   stream << graphid.level() * static_cast<uint32_t>(std::pow(10, max_length)) + graphid.tileid() << ".gph";
   return stream.str();
+}
+
+// Get the tile Id given the full path to the file.
+GraphId GraphTile::GetTileId(const std::string& fname) {
+  // Tokenize the string
+  std::vector<std::string> tokens;
+  boost::split(tokens, fname, boost::is_any_of("/"));
+  size_t n = tokens.size();
+
+  // Strip off the .gph from the last token
+  std::string idn;
+  for (size_t i = 0; i < tokens[n-1].size(); i++) {
+    char c = tokens[n-1].at(i);
+    if (c == '.') {
+      break;
+    }
+    idn += c;
+  }
+
+  // Compute the Id
+  uint32_t id = std::atoi(tokens[n-3].c_str()) * 1000000 +
+                std::atoi(tokens[n-2].c_str()) * 1000 +
+                std::atoi(idn.c_str());
+  uint32_t level = std::atoi(tokens[n-4].c_str());
+  return {id, level, 0};
 }
 
 size_t GraphTile::size() const {
