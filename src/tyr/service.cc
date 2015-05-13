@@ -428,8 +428,8 @@ namespace {
     tyr_worker_t(const boost::property_tree::ptree& config):config(config) {
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
-      auto* info = static_cast<http_request_t::info_t*>(request_info);
-      LOG_INFO("Got Tyr Request " + std::to_string(info->id));
+      auto info = *static_cast<http_request_t::info_t*>(request_info);
+      LOG_INFO("Got Tyr Request " + std::to_string(info.id));
       try{
         //get some info about what we need to do
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
