@@ -15,14 +15,14 @@ message TripPath {
 
     optional LatLng ll = 1;
     optional Type type = 2;
-    optional uint32 heading = 3;        // 0-359
+    optional uint32 heading = 3;      // 0-359
     optional string name = 4;
     optional string street = 5;    
     optional string city = 6;    
     optional string state = 7;
     optional string postal_code = 8;    
     optional string country = 9;    
-    optional string time = 10;
+    optional string date_time = 10;   // ISO 8601 date/time YYYY-MM-DDThh:mm
   }
 
   message Sign {
@@ -86,6 +86,12 @@ message TripPath {
     kAircraft = 2;
   }
 
+  message TransitInfo {
+    optional string short_name = 1;
+    optional string long_name = 2;
+    optional string headsign = 3;
+  }
+
   message Edge {
     repeated string name = 1;               // street names
     optional float length = 2;              // km
@@ -114,8 +120,25 @@ message TripPath {
     optional BicycleType bicycle_type = 25;
     optional TransitType transit_type = 26;
     optional bool drive_on_right = 27 [default = true];
+    optional bool road = 28;
+    optional bool track = 29;
+    optional bool driveway = 30;
+    optional bool alley = 31;
+    optional bool parking_aisle = 32;
+    optional bool emergency_access = 33;
+    optional bool drive_thru = 34;
+    optional bool culdesac = 35;
+    optional bool footway = 36;
+    optional bool stairs = 37;
+    optional bool cycleway = 38;
+    optional bool mountain_bike = 39;
+    optional bool rail = 40;
+    optional bool bus = 41;
+    optional bool transit_connection = 42;
+    optional bool other = 43;
+    optional TransitInfo transit_info = 44;
   }
-  
+
   message IntersectingEdge {
     optional uint32 begin_heading = 1;       // 0-359
     optional Driveability driveability = 2;
@@ -123,15 +146,28 @@ message TripPath {
     optional bool curr_name_consistency = 4;
   }
   
+  message TransitStopInfo {
+    optional string name = 1;                // The name of the stop
+    optional uint32 arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional uint32 departure_date_time = 3; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+  }
+
   message Node {
     optional Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2; 
-    optional bool gate = 3;
-    optional bool toll_booth = 4;
-    optional uint32 elapsed_time = 5;       // seconds from start of leg
-    optional uint32 admin_index = 6;        // index into the admin list
+    optional uint32 elapsed_time = 3;        // seconds from start of leg
+    optional uint32 admin_index = 4;         // index into the admin list
+    optional bool street_intersection = 5;   // Regular intersection of 2 roads
+    optional bool gate = 6;                  // Gate or rising bollard
+    optional bool bollard = 7;               // Bollard (fixed obstruction)
+    optional bool toll_booth = 8;            // toll booth / fare collection
+    optional bool transit_stop = 9;          // Multi-use transit stop (rail and bus)
+    optional bool transit_parent_stop = 10;   // Multi-use transit parent stop
+    optional bool bike_share = 11;           // Bike share location
+    optional bool parking = 12;              // Parking location
+    optional TransitStopInfo transit_stop_info = 13;
   }
-  
+
   message Admin {
     optional string country_code = 1;
     optional string country_text = 2;
