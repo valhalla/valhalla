@@ -4,6 +4,9 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+#include <boost/filesystem.hpp>
+
+#include <valhalla/midgard/logging.h>
 
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
@@ -30,6 +33,44 @@ bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const Graph
     GraphTile::FileSuffix(graphid.Tile_Base(), tile_hierarchy);
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0;
+}
+
+// Get a tile "map" - bool vector identifying which tiles exist.
+std::vector<bool> GraphReader::TileMap(const uint32_t level) {
+  for (auto tile_level : tile_hierarchy_.levels()) {
+    if (tile_level.second.level == level) {
+      Tiles tiles = tile_level.second.tiles;
+      std::vector<bool> tilemap(tiles.TileCount(), false);
+
+      // Get the base directory of this level
+      std::string root_dir = tile_hierarchy_.tile_dir() + "/" +
+                    std::to_string(level);
+      for (boost::filesystem::recursive_directory_iterator i(root_dir),
+                    end; i != end; ++i) {
+        if (!is_directory(i->path())) {
+          GraphId tileid = GraphTile::GetTileId(i->path().string());
+          tilemap[tileid.tileid()] = true;
+        }
+      }
+      return tilemap;
+    }
+  }
+  LOG_ERROR("GraphReader::TileMap invalid level: " + std::to_string(level));
+  return std::vector<bool>(0);
+}
+
+// Get a tile connectivity map. This is a vector where each tile Id is
+std::vector<uint32_t> GraphReader::ConnectivityMap(const uint32_t level) {
+  std::vector<bool> tilemap = TileMap(level);
+  if (tilemap.size() > 0) {
+    for (auto tile_level : tile_hierarchy_.levels()) {
+      if (tile_level.second.level == level) {
+        Tiles tiles = tile_level.second.tiles;
+        return tiles.ConnectivityMap(tilemap);
+      }
+    }
+  }
+  return std::vector<uint32_t>(0);
 }
 
 // Get a pointer to a graph tile object given a GraphId.
