@@ -1,9 +1,3 @@
-machine:
-  pre:
-    #- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - sudo rm -f -f /etc/apt/sources.list.d/neo4j.list
-    - sudo apt-get update
-
 checkout:
   post:
     - git submodule sync
@@ -11,20 +5,14 @@ checkout:
 
 dependencies:
   override:
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 lcov
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+    - scripts/dependencies.sh
 
 test:
-  pre:
-    - ./autogen.sh && ./configure --enable-coverage
   override:
-    - make test -j4
-  post:
-    - sudo make install
+    - scripts/install.sh
 
 general:
   artifacts:
     - config.log
     - test/*.log
     - Makefile
-    - valhalla/config.h
