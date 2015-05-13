@@ -268,16 +268,40 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     }
 
     // Add a node to the trip path and set its attributes.
-    // TODO - What to do on the 1st node of the path (since we just have
-    // a list of path edges).
     TripPath_Node* trip_node = trip_path.add_node();
-    //if (startnode.Is_Valid()) {
-    // TODO:  Add the trip_node for exits.
-    //}
-    trip_node->set_gate(graphtile->node(startnode)->type() == NodeType::kGate ? true : false);
-    trip_node->set_toll_booth(graphtile->node(startnode)->type() == NodeType::kTollBooth ? true : false);
+
+    // Set node attributes - only set if they are true since they are optional
+    if (graphtile->node(startnode)->type() == NodeType::kStreetIntersection)
+      trip_node->set_street_intersection(true);
+
+    if (graphtile->node(startnode)->type() == NodeType::kGate)
+      trip_node->set_gate(true);
+
+    if (graphtile->node(startnode)->type() == NodeType::kBollard)
+      trip_node->set_bollard(true);
+
+    if (graphtile->node(startnode)->type() == NodeType::kTollBooth)
+      trip_node->set_toll_booth(true);
+
+    if (graphtile->node(startnode)->type() == NodeType::kMultiUseTransitStop)
+      trip_node->set_transit_stop(true);
+
+    // TODO
+    //trip_node->set_transit_parent_stop(TBD);
+
+    if (graphtile->node(startnode)->type() == NodeType::kBikeShare)
+      trip_node->set_bike_share(true);
+
+    if (graphtile->node(startnode)->type() == NodeType::kParking)
+      trip_node->set_parking(true);
+
+    // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
+
+    // Assign the admin index
     trip_node->set_admin_index(GetAdminIndex(graphtile->admininfo(graphtile->node(startnode)->admin_index()), admin_info_map, admin_info_list));
+
+    // TODO - transit info
 
     // Add edge to the trip node and set its attributes
     auto is_first_edge = edge_itr == path.begin();
@@ -525,6 +549,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                              kMetersOffsetForHeading) + 180.0f), 360)));
   }
 
+
   // Set ramp / turn channel flag
   if (directededge->link()) {
     if (directededge->use() == Use::kRamp)
@@ -533,15 +558,84 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       trip_edge->set_turn_channel(true);
   }
 
-  trip_edge->set_ferry(directededge->ferry());
-  trip_edge->set_rail_ferry(directededge->railferry());
-  trip_edge->set_toll(directededge->toll());
-  trip_edge->set_unpaved(directededge->unpaved());
-  trip_edge->set_tunnel(directededge->tunnel());
-  trip_edge->set_bridge(directededge->bridge());
-  trip_edge->set_roundabout(directededge->roundabout());
-  trip_edge->set_internal_intersection(directededge->internal());
-  trip_edge->set_drive_on_right(directededge->drive_on_right());
+  // Set all of the use cases - only set if they are true since they are optional
+  if (directededge->use() == Use::kRoad)
+    trip_edge->set_road(true);
+
+  if (directededge->use() == Use::kTrack)
+    trip_edge->set_track(true);
+
+  if (directededge->use() == Use::kDriveway)
+    trip_edge->set_driveway(true);
+
+  if (directededge->use() == Use::kAlley)
+    trip_edge->set_alley(true);
+
+  if (directededge->use() == Use::kParkingAisle)
+    trip_edge->set_parking_aisle(true);
+
+  if (directededge->use() == Use::kEmergencyAccess)
+    trip_edge->set_emergency_access(true);
+
+  if (directededge->use() == Use::kDriveThru)
+    trip_edge->set_drive_thru(true);
+
+  if (directededge->use() == Use::kCuldesac)
+    trip_edge->set_culdesac(true);
+
+  if (directededge->use() == Use::kFootway)
+  trip_edge->set_footway(true);
+
+  if (directededge->use() == Use::kSteps)
+    trip_edge->set_stairs(true);
+
+  if (directededge->use() == Use::kCycleway)
+    trip_edge->set_cycleway(true);
+
+  if (directededge->use() == Use::kMountainBike)
+    trip_edge->set_mountain_bike(true);
+
+  if (directededge->use() == Use::kRail)
+    trip_edge->set_rail(true);
+
+  if (directededge->use() == Use::kBus)
+    trip_edge->set_bus(true);
+
+  if (directededge->use() == Use::kTransitConnection)
+    trip_edge->set_transit_connection(true);
+
+  if (directededge->use() == Use::kOther)
+    trip_edge->set_other(true);
+
+  // Set edge attributes - only set if they are true since they are optional
+  if (directededge->ferry())
+    trip_edge->set_ferry(true);
+
+  if (directededge->railferry())
+    trip_edge->set_rail_ferry(true);
+
+  if (directededge->toll())
+    trip_edge->set_toll(true);
+
+  if (directededge->unpaved())
+    trip_edge->set_unpaved(true);
+
+  if (directededge->tunnel())
+    trip_edge->set_tunnel(true);
+
+  if (directededge->bridge())
+    trip_edge->set_bridge(true);
+
+  if (directededge->roundabout())
+    trip_edge->set_roundabout(true);
+
+  if (directededge->internal())
+    trip_edge->set_internal_intersection(true);
+
+  if (directededge->drive_on_right())
+    trip_edge->set_drive_on_right(true);
+
+  // TODO - tranist stop info
 
   return trip_edge;
 }
