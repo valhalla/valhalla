@@ -1,38 +1,18 @@
-machine:
-  environment:
-    LD_LIBRARY_PATH: .:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
-  pre:
-    - sudo add-apt-repository -y ppa:boost-latest/ppa
-    #- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - sudo rm -f -f /etc/apt/sources.list.d/neo4j.list
-    - sudo apt-get update
-
 checkout:
   post:
     - git submodule sync
     - git submodule update --init
-    - for dep in midgard baldr sif mjolnir; do git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep; done
 
 dependencies:
   override:
-    - sudo apt-get remove --purge -y libboost*
-    - sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev libboost-thread1.54-dev lcov protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-    - scripts/install_service_deps.sh
-    #valhalla dependencies
-    - cd deps; for dep in midgard baldr sif mjolnir; do cd $dep; ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && sudo make -j4 install; cd ..; done
+    - scripts/dependencies.sh
 
 test:
-  pre:
-    - ./autogen.sh && ./configure --enable-coverage --with-valhalla-midgard=/usr/local --with-valhalla-baldr=/usr/local --with-valhalla-sif=/usr/local --with-valhalla-mjolnir=/usr/local CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
   override:
-    - make test -j4
-  post:
-    - sudo make install
+    - scripts/install.sh
 
 general:
   artifacts:
     - config.log
     - test/*.log
     - Makefile
-    - valhalla/config.h
