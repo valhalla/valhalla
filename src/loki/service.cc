@@ -159,8 +159,8 @@ namespace {
       factory.Register("pedestrian", sif::CreatePedestrianCost);
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
-      auto* info = static_cast<http_request_t::info_t*>(request_info);
-      LOG_INFO("Got Loki Request " + std::to_string(info->id));
+      auto& info = *static_cast<http_request_t::info_t*>(request_info);
+      LOG_INFO("Got Loki Request " + std::to_string(info.id));
       //request should look like:
       //  /[route|viaroute|locate|nearest]?loc=&json=&jsonp=
 
@@ -239,7 +239,7 @@ namespace {
       }
       cost = factory.Create(costing, config_costing);
     }
-    worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, const http_request_t::info_t* request_info) {
+    worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //currently we dont support multipoint, but we will
       if(locations.size() != 2) {
         worker_t::result_t result{false};
@@ -269,7 +269,7 @@ namespace {
       result.messages.emplace_back(stream.str());
       return result;
     }
-    worker_t::result_t locate(const boost::property_tree::ptree& request, const http_request_t::info_t* request_info) {
+    worker_t::result_t locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //correlate the various locations to the underlying graph
       auto json = json::array({});
       for(const auto& location : locations) {
