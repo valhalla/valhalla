@@ -41,6 +41,18 @@ class Tiles {
   float TileSize() const;
 
   /**
+   * Get the number of rows in the tiling system.
+   * @return  Returns the number of rows.
+   */
+  int32_t nrows() const;
+
+  /**
+   * Get the number of columns in the tiling system.
+   * @return  Returns the number of columns.
+   */
+  int32_t ncolumns() const;
+
+  /**
    * Returns the bounding box of the tiling system.
    * @return Bounding box.
    */
