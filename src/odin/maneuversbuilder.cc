@@ -351,9 +351,13 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set maneuver type to 'none' so the type will be processed again
-  next_man->set_type(TripDirections_Maneuver_Type_kNone);
-  SetManeuverType(*(next_man));
+  if (start_man) {
+    next_man->set_type(TripDirections_Maneuver_Type_kStart);
+  } else {
+    // Set maneuver type to 'none' so the type will be processed again
+    next_man->set_type(TripDirections_Maneuver_Type_kNone);
+    SetManeuverType(*(next_man));
+  }
 
   return maneuvers.erase(curr_man);
 }
@@ -390,9 +394,13 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineTurnChannelManeuver(
   // Set begin shape index
   next_man->set_begin_shape_index(curr_man->begin_shape_index());
 
-  // Set maneuver type to 'none' so the type will be processed again
-  next_man->set_type(TripDirections_Maneuver_Type_kNone);
-  SetManeuverType(*(next_man));
+  if (start_man) {
+    next_man->set_type(TripDirections_Maneuver_Type_kStart);
+  } else {
+    // Set maneuver type to 'none' so the type will be processed again
+    next_man->set_type(TripDirections_Maneuver_Type_kNone);
+    SetManeuverType(*(next_man));
+  }
 
   return maneuvers.erase(curr_man);
 }
