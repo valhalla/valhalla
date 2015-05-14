@@ -20,6 +20,7 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 // with distance = 1.0 (the full edge). This returns and updated
 // destination PathLocation.
 // TODO - move this logic into Loki
+// TODO - fail the route if no dest edges
 PathLocation update_destinations(GraphReader& graphreader,
                                  const PathLocation& destination,
                                  const EdgeFilter& filter) {
@@ -168,12 +169,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
   auto trivial_id = trivial(origin, dest);
   if (trivial_id.Is_Valid()) {
     std::vector<PathInfo> trivialpath;
-    trivialpath.emplace_back(mode_, 0, trivial_id);
+    trivialpath.emplace_back(mode_, 0, trivial_id, 0);
     return trivialpath;
   }
 
   // Check for loop path
-  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest));
+  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
@@ -350,7 +351,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   auto trivial_id = trivial(origin, dest);
   if (trivial_id.Is_Valid()) {
     std::vector<PathInfo> trivialpath;
-    trivialpath.emplace_back(mode_, 0, trivial_id);
+    trivialpath.emplace_back(mode_, 0, trivial_id, 0);
     return trivialpath;
   }
 
@@ -361,7 +362,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   uint32_t dow  = 0;
 
   // Check for loop path
-  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest));
+  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), dest.vertex(), costing);
@@ -716,15 +717,13 @@ std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
            "  Iterations = " + std::to_string(edgelabel_index_));
 
   // Work backwards from the destination
-  TravelMode mode;
   std::vector<PathInfo> path;
   path.reserve(edgelabels_.size());
   for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    mode = edgelabel.mode();
-    path.emplace_back(mode, edgelabel.cost().secs,
-                      edgelabel.edgeid());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
+                      edgelabel.edgeid(), edgelabel.tripid());
   }
 
   // We had a loop which means we end on the same edge we began
