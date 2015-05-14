@@ -754,7 +754,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           // TODO - Also, we will have to deal with non ramp signs
           // Any exits for this directed edge? is auto and oneway?
           std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(node, w, osmdata);
-          if (!exits.empty() && directededge.forwardaccess()
+          if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess)
                && directededge.link()) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);

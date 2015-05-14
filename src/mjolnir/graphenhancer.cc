@@ -381,10 +381,12 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
     // Skip the current directed edge
     // and any inbound edges not oneway
     // and any link edge
+    // and any link that is not a road
     if (i == idx
         || (!((diredge->reverseaccess() & kAutoAccess)
             && !(diredge->forwardaccess() & kAutoAccess)))
-        || diredge->link()) {
+        || diredge->link()
+        || (diredge->use() != Use::kRoad)) {
       continue;
     }
 
@@ -417,10 +419,12 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
     // Skip opposing directed edge
     // and any outbound edges not oneway
     // and any link edge
+    // and any link that is not a road
     if (i == directededge.opp_local_idx()
         || (!((diredge->forwardaccess() & kAutoAccess)
             && !(diredge->reverseaccess() & kAutoAccess)))
-        || diredge->link()) {
+        || diredge->link()
+        || (diredge->use() != Use::kRoad)) {
       continue;
     }
 
@@ -443,6 +447,8 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
   if (!oneway_outbound) {
     return false;
   }
+
+  // TODO - determine if we need to add name checks
 
   // TODO - do we need to check headings of the inbound and outbound
   // oneway edges
