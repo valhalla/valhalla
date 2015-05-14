@@ -153,6 +153,14 @@ int32_t Tiles::BottomNeighbor(const int32_t tileid) const {
   return (tileid < ncolumns_) ? tileid : tileid - ncolumns_;
 }
 
+// Checks if 2 tiles are neighbors (N,E,S,W).
+bool Tiles::AreNeighbors(const uint32_t id1, const uint32_t id2) const {
+  return (id2 == TopNeighbor(id1) ||
+          id2 == RightNeighbor(id1) ||
+          id2 == BottomNeighbor(id1) ||
+          id2 == LeftNeighbor(id1));
+}
+
 const std::vector<int>& Tiles::TileList(const AABB2& boundingbox) {
   // Clear lists
   checklist_.clear();

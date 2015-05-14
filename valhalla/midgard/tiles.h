@@ -201,6 +201,14 @@ class Tiles {
   int32_t BottomNeighbor(const int32_t tileid) const;
 
   /**
+   * Checks if 2 tiles are neighbors (N,E,S,W).
+   * @param  id1  Tile Id 1
+   * @param  id2  Tile Id 2
+   * @return  Returns true if tile id1 and id2 are neighbors, false if not.
+   */
+  bool AreNeighbors(const uint32_t id1, const uint32_t id2) const;
+
+  /**
    * Gets the list of tiles that lie within the specified bounding box.
    * The method finds the center tile and spirals out by finding neighbors
    * and recursively checking if tile is inside and checking/adding
