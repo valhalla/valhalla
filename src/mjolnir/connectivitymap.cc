@@ -97,6 +97,13 @@ struct RGB {
   }
 };
 
+
+// NOTE: a PPM image can be converted to png using ImageMagick:
+//    convert connectivity.ppm connectivity.png
+// and the image can be flipped vertically:
+//     convert -flip connectivity.png connectivity2.png
+
+// Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
   // Parse command line arguments
   if (!ParseArguments(argc, argv))
@@ -150,6 +157,7 @@ int main(int argc, char** argv) {
   outfile << std::to_string(255) << std::endl;
   outfile.write(reinterpret_cast<char*>(&ppm[0]), height*width*3);
   outfile.close();
+
   return EXIT_SUCCESS;
 }
 
