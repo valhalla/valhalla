@@ -33,12 +33,13 @@ using namespace valhalla::sif;
 
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, NEAREST};
+  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, NEAREST, VERSION};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/route", ROUTE},
     {"/viaroute", VIAROUTE},
     {"/locate", LOCATE},
-    {"/nearest", NEAREST}
+    {"/nearest", NEAREST},
+    {"/version", VERSION}
   };
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
@@ -179,6 +180,8 @@ namespace {
         //parse the querys json
         auto request_pt = from_request(action->second, request);
         switch (action->second) {
+          case VERSION:
+            return version(info);
           case ROUTE:
           case VIAROUTE:
             init_request(action->second, request_pt);
@@ -238,6 +241,14 @@ namespace {
         }
       }
       cost = factory.Create(costing, config_costing);
+    }
+    worker_t::result_t version(http_request_t::info_t& request_info) {
+      worker_t::result_t result{false};
+      //TODO: put real version in here
+      http_response_t response(200, "OK", "0");
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+      return result;
     }
     worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //currently we dont support multipoint, but we will
