@@ -305,6 +305,16 @@ const Admin* GraphTile::admin(const size_t idx) const {
   throw std::runtime_error("GraphTile Admin index out of bounds");
 }
 
+// Convenience method to get the text/name for a given offset to the textlist
+std::string GraphTile::GetName(const uint32_t textlist_offset) const {
+
+  if (textlist_offset < textlist_size_) {
+    return textlist_ + textlist_offset;
+  } else {
+    throw std::runtime_error("GetName: offset exceeds size of text list");
+  }
+}
+
 // Convenience method to get the signs for an edge given the
 // directed edge index.
 std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
@@ -442,6 +452,57 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
 
   // TODO - maybe wrap around, try next day?
   LOG_WARN("No more departures found for edgeid = " + std::to_string(edgeid));
+  return nullptr;
+}
+
+// Get the departure given the directed edge Id and tripid
+const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,const uint32_t tripid) const {
+  uint32_t count = header_->departurecount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Departures are sorted by edge Id and then by departure time.
+  // Binary search to find a departure with matching edge Id.
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (departures_[mid].edgeid() == edgeid) {
+      found = true;
+      break;
+    }
+    if (edgeid < departures_[mid].edgeid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  if (!found) {
+    LOG_INFO("No departures found for edgeid = " + std::to_string(edgeid) +
+             " and tripid = " + std::to_string(tripid));
+    return nullptr;
+  }
+
+  if (found) {
+    // Back up while prior is equal (or at the beginning)
+    while (mid > 0 &&
+        departures_[mid-1].edgeid() == edgeid) {
+      mid--;
+    }
+
+    while (departures_[mid].tripid() != tripid && mid < count) {
+      mid++;
+    }
+    if (departures_[mid].tripid() == tripid)
+      return &departures_[mid];
+  }
+
+  LOG_INFO("No departures found for edgeid = " + std::to_string(edgeid) +
+           " and tripid = " + std::to_string(tripid));
   return nullptr;
 }
 
