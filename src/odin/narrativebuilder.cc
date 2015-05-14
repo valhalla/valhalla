@@ -40,11 +40,14 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
+      case TripDirections_Maneuver_Type_kSlightLeft: {
+        FormBearInstruction(maneuver);
+        break;
+      }
       case TripDirections_Maneuver_Type_kRight:
       case TripDirections_Maneuver_Type_kSharpRight:
       case TripDirections_Maneuver_Type_kSharpLeft:
-      case TripDirections_Maneuver_Type_kLeft:
-      case TripDirections_Maneuver_Type_kSlightLeft: {
+      case TripDirections_Maneuver_Type_kLeft: {
         FormTurnInstruction(maneuver);
         break;
       }
@@ -158,6 +161,21 @@ void NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "Turn ";
   text_instruction += FormTurnTypeInstruction(maneuver.type());
+
+  if (maneuver.HasStreetNames()) {
+    text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Bear ";
+  text_instruction += FormBearTypeInstruction(maneuver.type());
 
   if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
@@ -833,6 +851,19 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
     }
     case TripDirections_Maneuver_Type_kSlightLeft: {
       return "slight left";
+    }
+  }
+
+}
+
+std::string NarrativeBuilder::FormBearTypeInstruction(
+    TripDirections_Maneuver_Type type) {
+  switch (type) {
+    case TripDirections_Maneuver_Type_kSlightRight: {
+      return "right";
+    }
+    case TripDirections_Maneuver_Type_kSlightLeft: {
+      return "left";
     }
   }
 
