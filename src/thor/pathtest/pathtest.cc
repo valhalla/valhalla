@@ -353,7 +353,6 @@ int main(int argc, char *argv[]) {
       directions_options = valhalla::odin::GetDirectionsOptions(
           *directions_options_ptree_ptr);
     }
-
   }
 
   // TODO: remove after input files are transformed
@@ -385,13 +384,26 @@ int main(int argc, char *argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
-  // Construct costing
-//  boost::property_tree::ptree costing = pt.get_child("costing");
-//  for (const auto cm : costing) {
-//    std::cout << "Costing method: " << cm.first << std::endl;
-//  }
+  auto t10 = std::chrono::high_resolution_clock::now();
+  std::vector<uint32_t> connectivity = reader.ConnectivityMap(2);
+  auto t20 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs1 =
+         std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
+  LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
 
-  // Any good way to ties these into the config?
+  auto tile_hierarchy = reader.GetTileHierarchy();
+  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
+  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  uint32_t origin_tile = tiles.TileId(originloc.latlng_.lat(),
+                                      originloc.latlng_.lng());
+  uint32_t dest_tile = tiles.TileId(destloc.latlng_.lat(),
+                                    destloc.latlng_.lng());
+  if (connectivity[origin_tile] != connectivity[dest_tile]) {
+    LOG_INFO("No tile connectivity between origin and destination.");
+    return EXIT_SUCCESS;
+  }
+
+  // Construct costing
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto-shorter", CreateAutoShorterCost);
