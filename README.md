@@ -19,17 +19,13 @@ Build Status
 Building
 --------
 
-Loki uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to get its dependencies with:
+Loki uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev
+    srcipts/dependencies.sh
 
-Then you should be able to bootstrap the build system:
+And then run to install it:
 
-    ./autogen.sh
-
-And then run the standard GNU build install:
-
-    ./configure && make && make install
+    scripts/install.sh
 
 Please see `./configure --help` for more options on how to control the build process.
 
