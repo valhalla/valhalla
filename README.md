@@ -19,18 +19,13 @@ Build Status
 Building
 --------
 
-Tyr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to get its dependencies with:
+Tyr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libpython2.7-dev libboost1.54-dev libboost-python1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev protobuf-compiler libprotobuf-dev lua5.2 liblua5.2-dev libcurl4-openssl-dev
-    scripts/install_server_deps.sh
+    srcipts/dependencies.sh
 
-Then you should then be able to bootstrap the build system:
+And then run to install it:
 
-    ./autogen.sh
-
-And then run the standard GNU build install:
-
-    ./configure && make && make install
+    scripts/install.sh
 
 Please see `./configure --help` for more options on how to control the build process.
 
