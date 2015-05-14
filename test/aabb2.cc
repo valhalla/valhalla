@@ -32,14 +32,37 @@ void TestContainsBb() {
                 AABB2(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryIntesectsLn(const AABB2& a, const AABB2& b) {
-  if (!a.Intersect(a.Center(), b.Center()))
+void TryIntesectsLn(const AABB2& box, const Point2& a,
+                    const Point2& b, bool expected) {
+  if (box.Intersect(a, b) != expected)
     throw runtime_error("Intersects line test failed");
 }
 
 void TestIntersectsLn() {
-  TryIntesectsLn(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                 AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  AABB2 box(40.0f, -76.0f, 41.0f, -75.0f);
+
+  // Test with one or both points in the box
+  TryIntesectsLn(box, Point2(40.5f, -75.5f), Point2(41.5f, -75.5f), true);
+  TryIntesectsLn(box, Point2(38.0f, -80.0f), Point2(40.5f, -75.5f), true);
+  TryIntesectsLn(box, Point2(40.5f, -75.5f), Point2(40.8f, -75.8f), true);
+
+  // Quick rejection tests
+  TryIntesectsLn(box, Point2(42.5f, -76.5f), Point2(41.5f, -75.5f), false);
+  TryIntesectsLn(box, Point2(42.5f, -80.5f), Point2(41.5f, -85.5f), false);
+  TryIntesectsLn(box, Point2(42.5f, -70.5f), Point2(41.5f, -75.5f), false);
+  TryIntesectsLn(box, Point2(26.5f, -80.5f), Point2(39.5f, -85.5f), false);
+
+  // Endpoint on the boundary
+  TryIntesectsLn(box, Point2(40.0f, -75.5f), Point2(36.5f, -74.0f), true);
+  TryIntesectsLn(box, Point2(40.0f, -75.0f), Point2(36.5f, -74.0f), true);
+
+  // Through the box (horizontal, vertical, other)
+  TryIntesectsLn(box, Point2(40.5f, -77.0f), Point2(40.5f, -74.0f), true);
+  TryIntesectsLn(box, Point2(39.5f, -75.5f), Point2(41.5f, -75.5f), true);
+  TryIntesectsLn(box, Point2(39.5f, -75.9f), Point2(40.5f, -74.8f), true);
+
+  // Outside the corner
+  TryIntesectsLn(box, Point2(39.2f, -75.5f), Point2(40.5f, -74.5f), false);
 }
 
 void TryContainsPt(const AABB2& a, const AABB2& b) {

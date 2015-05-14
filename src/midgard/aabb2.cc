@@ -1,4 +1,5 @@
 #include "valhalla/midgard/aabb2.h"
+#include "valhalla/midgard/linesegment2.h"
 
 namespace valhalla {
 namespace midgard {
@@ -106,62 +107,28 @@ bool AABB2::Intersects(const AABB2& r2) const {
 }
 
 bool AABB2::Intersect(const Point2& a, const Point2& b) const {
-  // Trivial case - either point within with the bounding box
+  // Trivial case - either point within the bounding box
   if (Contains(a) || Contains(b))
     return true;
 
-  // Trivial rejection
+  // Trivial rejection - both points outside any one bounding edge
   if ((a.x() < minx_ && b.x() < minx_) ||    // Both left
       (a.y() < miny_ && b.y() < miny_) ||    // Both below
       (a.x() > maxx_ && b.x() > maxx_) ||    // Both right
       (a.y() > maxy_ && b.y() > maxy_))      // Both above
     return false;
 
-  // Vertical - return true if y coordinates are on opposite sides of
-  // either the top or bottom edge. Trivial reject case ensures y is
-  // within the bounding box
-  if (b.x() == a.x()) {
-    if (((a.y() < miny_) != (b.y() < miny_)) ||
-        ((a.y() > maxy_) != (b.y() > maxy_)))
-      return true;
-  }
-
-  // Horizontal - return true if x coordinates are on opposite sides of
-  // either the left or right edge. Trivial reject case ensures x is
-  // within the bounding box
-  if (b.y() == a.y()) {
-    if (((a.x() < minx_) != (b.x() < minx_)) ||
-        ((a.x() > maxx_) != (b.x() > maxx_)))
-      return true;
-  }
-
-  // Find slope and intercept for the line equation and check which
-  // edge(s) the segment crosses. Note that it is possible to cross
-  // multiple edges. If any one crossing is within the bounding box range
-  // we return true.
-  float m = (b.y() - a.y()) / (b.x() - a.x());
-  float s = b.y() - (m * b.x());
-  if ((a.x() < minx_) != (b.x() < minx_)) {   // Crosses left edge
-    float y = m * minx_ + s;
-    if (miny_ <= y && y <= maxy_)
-      return true;
-  }
-  if ((a.x() > maxx_) != (b.x() > maxx_)) {  // Crosses right edge
-    float y = m * maxx_ + s;
-    if (miny_ <= y && y <= maxy_)
-      return true;
-  }
-  if ((a.y() < miny_) != (b.y() < miny_)) {  // Crosses bottom edge
-    float x = (miny_ - s) / m;
-    if (minx_ <= x && x <= maxx_)
-      return true;
-  }
-  if ((a.y() > maxy_) != (b.y() > maxy_)) {  // Crosses top edge
-    float x = (maxy_ - s) / m;
-    if (minx_ <= x && x <= maxx_)
-      return true;
-  }
-  return false;
+  // For LineSegment from a to b check which half plane each corner lies
+  // in. If there is a change (different sign returned from the IsLeft
+  // 2-D cross product for any one corner) then the AABB intersects the
+  // segment. Any corner point on the segment half plane will have
+  // IsLeft == 0 and we count as an intersection (trivial rejection cases
+  // above mean the segment reaches the corner point)
+  LineSegment2 s(a, b);
+  float s1 = s.IsLeft(Point2(minx_, miny_));
+  return ((s1 * s.IsLeft(Point2(minx_, maxy_)) <= 0.0f) ||
+          (s1 * s.IsLeft(Point2(maxx_, maxy_)) <= 0.0f) ||
+          (s1 * s.IsLeft(Point2(maxx_, miny_)) <= 0.0f));
 }
 
 float AABB2::Width() const {
