@@ -28,6 +28,8 @@ class NarrativeBuilder {
 
   static void FormTurnInstruction(Maneuver& maneuver);
 
+  static void FormBearInstruction(Maneuver& maneuver);
+
   static void FormUturnInstruction(Maneuver& maneuver);
 
   static void FormRampStraightInstruction(Maneuver& maneuver);
@@ -56,6 +58,8 @@ class NarrativeBuilder {
       TripDirections_Maneuver_CardinalDirection cardinal_direction);
 
   static std::string FormTurnTypeInstruction(TripDirections_Maneuver_Type type);
+
+  static std::string FormBearTypeInstruction(TripDirections_Maneuver_Type type);
 
   static std::string FormOrdinalValue(uint32_t value);
 
