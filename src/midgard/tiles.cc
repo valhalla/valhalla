@@ -22,6 +22,16 @@ AABB2 Tiles::TileBounds() const {
   return tilebounds_;
 }
 
+// Get the number of rows in the tiling system.
+int32_t Tiles::nrows() const {
+  return nrows_;
+}
+
+// Get the number of columns in the tiling system.
+int32_t Tiles::ncolumns() const {
+  return ncolumns_;
+}
+
 int32_t Tiles::Row(const float y) const {
   // Return -1 if outside the tile system bounds
   if (y < tilebounds_.miny() || y > tilebounds_.maxy())
