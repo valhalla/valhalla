@@ -19,14 +19,30 @@ constexpr uint64_t kInitialEdgeLabelCount = 500000;
 // If the destination is at a node we want the incoming edge Ids
 // with distance = 1.0 (the full edge). This returns and updated
 // destination PathLocation.
+// TODO - move this logic into Loki
 PathLocation update_destinations(GraphReader& graphreader,
-                                 const PathLocation& destination) {
+                                 const PathLocation& destination,
+                                 const EdgeFilter& filter) {
   if (destination.IsNode()) {
+    // Copy the current destination info and clear the edges
     PathLocation dest = destination;
     dest.ClearEdges();
-    for (const auto& edge : destination.edges()) {
-      GraphId opposing_edge = graphreader.GetOpposingEdgeId(edge.id);
-      dest.CorrelateEdge(opposing_edge, 1.0f);
+
+    // Get the node. Iterate through the edges and get opposing edges. Add
+    // to the destination edges if it is allowed by the costing model
+    GraphId destedge = destination.edges()[0].id;
+    GraphId opposing_edge = graphreader.GetOpposingEdgeId(destedge);
+    GraphId endnode = graphreader.GetGraphTile(opposing_edge)->directededge(opposing_edge)->endnode();
+    const GraphTile* tile = graphreader.GetGraphTile(endnode);
+    const NodeInfo* nodeinfo = tile->node(endnode);
+    GraphId edgeid(endnode.tileid(), endnode.level(), nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, edgeid++) {
+      GraphId opposing_edge = graphreader.GetOpposingEdgeId(edgeid);
+      tile = graphreader.GetGraphTile(opposing_edge);
+      const DirectedEdge* edge = tile->directededge(opposing_edge);
+      if (!filter(edge)) {
+        dest.CorrelateEdge(opposing_edge, 1.0f);
+      }
     }
     return dest;
   } else {
@@ -143,7 +159,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const std::shared_ptr<DynamicCost>& costing) {
   // Alter the destination edges if at a node - loki always gives edges
   // leaving a node, but when a destination we want edges entering the node
-  PathLocation dest = update_destinations(graphreader, destination);
+  PathLocation dest = update_destinations(graphreader, destination,
+                                          costing->GetFilter());
 
   // Check for trivial path
   // TODO -currently mode is the same along entire path.
@@ -320,13 +337,14 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
              std::shared_ptr<DynamicCost>* mode_costing) {
-  // Alter the destination edges if at a node - loki always gives edges
-  // leaving a node, but when a destination we want edges entering the node
-  PathLocation dest = update_destinations(graphreader, destination);
-
   // TODO - some means of setting an initial mode and probably a dest/end mode
   mode_ = TravelMode::kPedestrian;
   std::shared_ptr<DynamicCost>& costing = mode_costing[static_cast<uint32_t>(mode_)];
+
+  // Alter the destination edges if at a node - loki always gives edges
+  // leaving a node, but when a destination we want edges entering the node
+  PathLocation dest = update_destinations(graphreader, destination,
+                                          costing->GetFilter());
 
   // Check for trivial path
   auto trivial_id = trivial(origin, dest);
