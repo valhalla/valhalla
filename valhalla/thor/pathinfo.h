@@ -15,12 +15,14 @@ namespace thor {
 struct PathInfo {
   sif::TravelMode mode;    // Travel mode along this edge
   uint32_t elapsed_time;   // Elapsed time in seconds to the end of the edge
+  uint32_t trip_id;        // Trip Id (0 if not a transit edge).
   baldr::GraphId edgeid;   // Directed edge Id
 
   PathInfo(const sif::TravelMode m, const uint32_t t,
-           const baldr::GraphId& edge)
+           const baldr::GraphId& edge, const uint32_t tripid)
       : mode(m),
         elapsed_time(t),
+        trip_id(tripid),
         edgeid(edge) {
   }
 };
