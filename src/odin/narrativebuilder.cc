@@ -3,7 +3,8 @@
 #include "odin/narrativebuilder.h"
 #include "odin/maneuver.h"
 
-#include "boost/format.hpp"
+#include <boost/format.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace {
 // Text instruction initial capacity
@@ -753,9 +754,13 @@ void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   text_instruction += "Take the ";
   if (maneuver.HasStreetNames()) {
     text_instruction += maneuver.street_names().ToString();
-    text_instruction += " ";
   }
-  text_instruction += "ferry";
+
+  // TODO - handle properly with locale narrative builder
+  std::string ferry_label = " Ferry";
+  if (!boost::algorithm::ends_with(text_instruction, ferry_label)) {
+    text_instruction += ferry_label;
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));
