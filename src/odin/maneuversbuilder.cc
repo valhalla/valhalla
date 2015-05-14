@@ -750,7 +750,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     LOG_TRACE("ManeuverType=TURN_CHANNNEL");
   }
   // Process exit
-  else if (maneuver.ramp()
+  else if (maneuver.ramp() && prev_edge
       && (prev_edge->IsHighway() || maneuver.HasExitNumberSign())) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
@@ -774,7 +774,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     }LOG_TRACE("ManeuverType=EXIT");
   }
   // Process on ramp
-  else if (maneuver.ramp() && !prev_edge->IsHighway()) {
+  else if (maneuver.ramp() && prev_edge && !prev_edge->IsHighway()) {
     switch (maneuver.begin_relative_direction()) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
@@ -801,7 +801,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     }LOG_TRACE("ManeuverType=RAMP");
   }
   // Process merge
-  else if (curr_edge->IsHighway() && prev_edge->ramp()) {
+  else if (curr_edge->IsHighway() && prev_edge && prev_edge->ramp()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
     LOG_TRACE("ManeuverType=MERGE");
   }
@@ -811,7 +811,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
   }
   // Process exit roundabout
-  else if (prev_edge->roundabout()) {
+  else if (prev_edge && prev_edge->roundabout()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
     LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
@@ -821,7 +821,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     LOG_TRACE("ManeuverType=FERRY_ENTER");
   }
   // Process exit ferry
-  else if (prev_edge->ferry() || prev_edge->rail_ferry()) {
+  else if (prev_edge && (prev_edge->ferry() || prev_edge->rail_ferry())) {
     maneuver.set_type(TripDirections_Maneuver_Type_kFerryExit);
     LOG_TRACE("ManeuverType=FERRY_EXIT");
   }
