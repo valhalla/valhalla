@@ -148,8 +148,8 @@ message TripPath {
   
   message TransitStopInfo {
     optional string name = 1;                // The name of the stop
-    optional uint32 arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
-    optional uint32 departure_date_time = 3; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    optional string arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional string departure_date_time = 3; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
   }
 
   message Node {
