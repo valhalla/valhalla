@@ -100,6 +100,13 @@ class Tiles {
   int32_t TileId(const int32_t col, const int32_t row) const;
 
   /**
+   * Get the tile row, col based on tile Id.
+   * @param  tileid  Tile Id.
+   * @return  Returns a pair indicating {row, col}
+   */
+  std::pair<int32_t, int32_t> GetRowColumn(const int32_t tileid) const;
+
+  /**
    * Gets a maximum tileid given a bounds and a tile size
    * @param bound       the region for which to compute the maximum tile id
    * @param tile_size   the size of a tile within the region

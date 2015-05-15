@@ -20,6 +20,65 @@ void TestMaxId() {
     throw std::runtime_error("Unexpected maxid result");
 }
 
+void TestRowCol() {
+  Tiles tiles(AABB2(PointLL(-180, -90), PointLL(180, 90)), 1);
+
+  int32_t tileid1 = tiles.TileId(-76.5f, 40.5f);
+  auto rc = tiles.GetRowColumn(tileid1);
+  int32_t tileid2 = tiles.TileId(rc.second, rc.first);
+  if (tileid1 != tileid2) {
+    throw std::runtime_error("TileId does not match using row,col");
+  }
+}
+
+void TestNeighbors() {
+  Tiles tiles(AABB2(PointLL(-180, -90), PointLL(180, 90)), 1);
+
+  // Get a tile
+  int32_t tileid1 = tiles.TileId(-76.5f, 40.5f);
+  auto rc1 = tiles.GetRowColumn(tileid1);
+
+  // Test left neighbor
+  int32_t tileid2 = tiles.LeftNeighbor(tileid1);
+  auto rc2 = tiles.GetRowColumn(tileid2);
+  if (!tiles.AreNeighbors(tileid1, tileid2)) {
+    throw std::runtime_error("Left neighbor not identified as a neighbor");
+  }
+  if (rc1.first != rc2.first || (rc1.second - 1) != rc2.second) {
+    throw std::runtime_error("Left neighbor row,col not correct");
+  }
+
+  // Test right neighbor
+  tileid2 = tiles.RightNeighbor(tileid1);
+  rc2 = tiles.GetRowColumn(tileid2);
+  if (!tiles.AreNeighbors(tileid1, tileid2)) {
+    throw std::runtime_error("Right neighbor not identified as a neighbor");
+  }
+  if (rc1.first != rc2.first || (rc1.second + 1) != rc2.second) {
+    throw std::runtime_error("Right neighbor row,col not correct");
+  }
+
+  // Top neighbor
+  tileid2 = tiles.TopNeighbor(tileid1);
+  rc2 = tiles.GetRowColumn(tileid2);
+  if (!tiles.AreNeighbors(tileid1, tileid2)) {
+    throw std::runtime_error("Top neighbor not identified as a neighbor");
+  }
+  if ((rc1.first + 1) != rc2.first || rc1.second != rc2.second) {
+    throw std::runtime_error("Top neighbor row,col not correct");
+  }
+
+  // Bottom neighbor
+  tileid2 = tiles.BottomNeighbor(tileid1);
+  rc2 = tiles.GetRowColumn(tileid2);
+  if (!tiles.AreNeighbors(tileid1, tileid2)) {
+    throw std::runtime_error("Bottom neighbor not identified as a neighbor");
+  }
+  if ((rc1.first - 1) != rc2.first || rc1.second != rc2.second) {
+    throw std::runtime_error("Bottom neighbor row,col not correct");
+  }
+}
+
 void TileList() {
   Tiles tiles(AABB2(PointLL(-180, -90), PointLL(180, 90)), 1);
 
@@ -36,6 +95,12 @@ void TileList() {
 
 int main() {
   test::suite suite("tiles");
+
+  // Test tile id to row, col and vice-versa
+  suite.test(TEST_CASE(TestRowCol));
+
+  // Test neighbors
+  suite.test(TEST_CASE(TestNeighbors));
 
   // Test max. tile Id
   suite.test(TEST_CASE(TestMaxId));
