@@ -365,6 +365,11 @@ function filter_tags_generic(kv)
     kv["bike_backward"] = forwards
   end
 
+  --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
+  if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
+    return 1
+  end
+
   --if none of the modes were set we are done looking at this junker
   if kv["auto_forward"] == "false" and kv["bike_forward"] == "false" and kv["auto_backward"] == "false" and kv["bike_backward"] == "false" and kv["pedestrian"] == "false" then
     return 1
