@@ -708,14 +708,17 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     if (transit_route->short_name_offset())
       transit_info->set_short_name(
           graphtile->GetName(transit_route->short_name_offset()));
-    else
+    else if (transit_trip->short_name_offset())
       transit_info->set_short_name(
           graphtile->GetName(transit_trip->short_name_offset()));
 
-    transit_info->set_long_name(
-        graphtile->GetName(transit_route->long_name_offset()));
-    transit_info->set_headsign(
-        graphtile->GetName(transit_departure->headsign_offset()));
+    if (transit_route->long_name_offset())
+      transit_info->set_long_name(
+          graphtile->GetName(transit_route->long_name_offset()));
+
+    if (transit_departure->headsign_offset())
+      transit_info->set_headsign(
+          graphtile->GetName(transit_departure->headsign_offset()));
   }
 
   return trip_edge;
