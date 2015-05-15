@@ -307,6 +307,11 @@ function filter_tags_generic(kv)
     kv["bike_forward"] = bicycle[kv["bicycle"]] or bicycle[kv["cycleway"]] or default_val
   end
 
+  --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
+  if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
+    return 1
+  end
+
   --service=driveway means all are routable
   if kv["service"] == "driveway" and kv["access"] == nil then
     kv["auto_forward"] = "true"
@@ -363,11 +368,6 @@ function filter_tags_generic(kv)
     forwards = kv["bike_forward"]
     kv["bike_forward"] = kv["bike_backward"]
     kv["bike_backward"] = forwards
-  end
-
-  --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
-  if ((kv["access"] == "permissive" or kv["access"] == "hov") and kv["oneway"] == "reversible") then
-    return 1
   end
 
   --if none of the modes were set we are done looking at this junker
@@ -584,5 +584,3 @@ function rel_members_proc (keyvalues, keyvaluemembers, roles, membercount)
 
   return 1, keyvalues, membersuperseeded, 0, 0, 0
 end
-
-
