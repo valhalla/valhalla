@@ -146,6 +146,13 @@ class GraphTile {
    */
   const Admin* admin(const size_t idx) const;
 
+ /**
+  * Convenience method to get the text/name for a given offset to the textlist
+  * @param   textlist_offset  offset into the text list.
+  * @return  Returns the desired string
+  */
+  std::string GetName(const uint32_t textlist_offset) const;
+
   /**
    * Convenience method to get the signs for an edge given the directed
    * edge index.
@@ -167,6 +174,16 @@ class GraphTile {
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
               const uint32_t current_time, const uint32_t date,
               const uint32_t dow) const;
+
+  /**
+   * Get the departure given the directed edge Id and tripid
+   * @param   edgeid  Directed edge Id.
+   * @param   tripid  Trip Id.
+   * @return  Returns a pointer to the transit departure information.
+   *          Returns nullptr if no departure is found.
+   */
+   const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
+                                               const uint32_t tripid) const;
 
   /**
    * Get the transit trip given its trip Id.
