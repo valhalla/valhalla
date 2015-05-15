@@ -22,7 +22,7 @@ message TripDirections {
     optional string state = 7;
     optional string postal_code = 8;
     optional string country = 9;
-    optional string time = 10;
+    optional string date_time = 10;
   }
 
   message Summary {
