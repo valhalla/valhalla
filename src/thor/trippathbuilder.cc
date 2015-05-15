@@ -243,9 +243,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(path.front().edgeid.id(),
-                                 path.front().trip_id,edge,
-                                 trip_path.add_node(), tile,
+    auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id,
+                                 edge, trip_path.add_node(), tile,
                                  end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
@@ -318,10 +317,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       const TransitStop* stop = graphtile->GetTransitStop(
           graphtile->node(startnode)->stop_id());
 
-      TripPath_TransitStopInfo* transit_stop_info = trip_node->mutable_transit_stop_info();
+      TripPath_TransitStopInfo* transit_stop_info = trip_node
+          ->mutable_transit_stop_info();
       transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
       if (trip_id) {
-        const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(edge.id(),trip_id);
+        const TransitDeparture* transit_departure = graphtile
+            ->GetTransitDeparture(edge.id(), trip_id);
 
         // TODO:  date/time logic.
         // transit_stop_info->set_arrival_date_time();
@@ -340,8 +341,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, directededge, trip_node,
-                                           graphtile, length_pct);
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, directededge,
+                                           trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -689,24 +690,32 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
     if (directededge->use() == Use::kRail)
-      trip_edge->set_transit_type(TripPath_TransitType::TripPath_TransitType_kTrain);
+      trip_edge->set_transit_type(
+          TripPath_TransitType::TripPath_TransitType_kTrain);
 
     if (directededge->use() == Use::kBus)
-      trip_edge->set_transit_type(TripPath_TransitType::TripPath_TransitType_kBus);
+      trip_edge->set_transit_type(
+          TripPath_TransitType::TripPath_TransitType_kBus);
 
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
-    const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(idx,trip_id);
-    const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeid());
+    const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
+        idx, trip_id);
+    const TransitRoute* transit_route = graphtile->GetTransitRoute(
+        transit_departure->routeid());
     const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
     //use route short name if available otherwise trip short name.
     if (transit_route->short_name_offset())
-      transit_info->set_short_name(graphtile->GetName(transit_route->short_name_offset()));
+      transit_info->set_short_name(
+          graphtile->GetName(transit_route->short_name_offset()));
     else
-      transit_info->set_short_name(graphtile->GetName(transit_trip->short_name_offset()));
+      transit_info->set_short_name(
+          graphtile->GetName(transit_trip->short_name_offset()));
 
-    transit_info->set_long_name(graphtile->GetName(transit_route->long_name_offset()));
-    transit_info->set_headsign(graphtile->GetName(transit_departure->headsign_offset()));
+    transit_info->set_long_name(
+        graphtile->GetName(transit_route->long_name_offset()));
+    transit_info->set_headsign(
+        graphtile->GetName(transit_departure->headsign_offset()));
   }
 
   return trip_edge;
