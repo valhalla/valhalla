@@ -489,14 +489,18 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,con
 
   if (found) {
     // Back up while prior is equal (or at the beginning)
-    while (mid > 0 &&
-        departures_[mid-1].edgeid() == edgeid) {
+    while (mid > 0 && departures_[mid-1].edgeid() == edgeid) {
+
+      if (departures_[mid].tripid() == tripid)
+        return &departures_[mid];
+
       mid--;
     }
 
     while (departures_[mid].tripid() != tripid && mid < count) {
       mid++;
     }
+
     if (departures_[mid].tripid() == tripid)
       return &departures_[mid];
   }
