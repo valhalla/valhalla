@@ -584,5 +584,3 @@ function rel_members_proc (keyvalues, keyvaluemembers, roles, membercount)
 
   return 1, keyvalues, membersuperseeded, 0, 0, 0
 end
-
-
