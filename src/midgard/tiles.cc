@@ -78,6 +78,11 @@ int32_t Tiles::TileId(const int32_t col, const int32_t row) const {
   return (row * ncolumns_) + col;
 }
 
+// Get the tile row, col based on tile Id.
+std::pair<int32_t, int32_t> Tiles::GetRowColumn(const int32_t tileid) const {
+  return { tileid / ncolumns_, tileid % ncolumns_ };
+}
+
 uint32_t Tiles::MaxTileId(const AABB2& bounds, const float tile_size) {
   uint32_t cols = static_cast<uint32_t>(std::ceil(bounds.Width() / tile_size));
   uint32_t rows = static_cast<uint32_t>(std::ceil(bounds.Height() / tile_size));
