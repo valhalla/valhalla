@@ -457,6 +457,12 @@ function filter_tags_generic(kv)
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]
 
+  --use unsigned_ref if all the conditions are met.
+  if ((kv["name"] == nil and kv["name:en"] == nil and kv["alt_name"] == nil and kv["official_name"] == nil and kv["ref"] == nil and kv["int_ref"] == nil) and
+      (kv["highway"] == "motorway" or kv["highway"] == "trunk" or kv["highway"] == "primary") and kv["unsigned_ref"] ~= nil) then
+        kv["ref"] = kv["unsigned_ref"]
+  end
+
   lane_count = numeric_prefix(kv["lanes"])
   if lane_count and lane_count > 10 then
     lane_count = 10
