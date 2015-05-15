@@ -20,25 +20,27 @@ namespace {
 // Meters offset from start/end of shape for finding heading
 constexpr float kMetersOffsetForHeading = 30.0f;
 
-template <class iter>
-void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float partial_length, bool back_insert, const PointLL& last) {
+template<class iter>
+void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end,
+                     float partial_length, bool back_insert,
+                     const PointLL& last) {
   auto push = [&shape, &back_insert] (const PointLL& point) {
     if(back_insert)
-      shape.push_back(point);
+    shape.push_back(point);
     else
-      shape.insert(shape.begin(), point);
+    shape.insert(shape.begin(), point);
   };
 
   //yeah we dont add shape if we dont have any length to add
-  if(partial_length > 0.f) {
+  if (partial_length > 0.f) {
     //if we are adding on to a shape that already has points we dont want to actually add the first one
-    if(!back_insert)
+    if (!back_insert)
       push(*start);
     //for each segment
-    for(; start != end - 1; ++start) {
+    for (; start != end - 1; ++start) {
       //is this segment longer than what we have left, then we found the segment the point lies on
       const auto length = (start + 1)->Distance(*start);
-      if(length > partial_length) {
+      if (length > partial_length) {
         push(last);
         return;
       }
@@ -49,14 +51,16 @@ void AddPartialShape(std::vector<PointLL>& shape, iter start, iter end, float pa
   }
 }
 
-void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& start_vertex, const float end, const PointLL& end_vertex) {
+void TrimShape(std::vector<PointLL>& shape, const float start,
+               const PointLL& start_vertex, const float end,
+               const PointLL& end_vertex) {
   //clip up to the start point
   float along = 0.f;
   auto current = shape.begin();
-  while(current != shape.end() - 1) {
+  while (current != shape.end() - 1) {
     along += (current + 1)->Distance(*current);
     //just crossed it
-    if(along > start){
+    if (along > start) {
       along = start;
       *current = start_vertex;
       shape.erase(shape.begin(), current);
@@ -67,10 +71,10 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
 
   //clip after the end point
   current = shape.begin();
-  while(current != shape.end() - 1) {
+  while (current != shape.end() - 1) {
     along += (current + 1)->Distance(*current);
     //just crossed it
-    if(along > end) {
+    if (along > end) {
       *(++current) = end_vertex;
       shape.erase(++current, shape.end());
       break;
@@ -79,7 +83,9 @@ void TrimShape(std::vector<PointLL>& shape, const float start, const PointLL& st
   }
 }
 
-uint32_t GetAdminIndex(const AdminInfo& admin_info, std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher>& admin_info_map,
+uint32_t GetAdminIndex(
+    const AdminInfo& admin_info,
+    std::unordered_map<AdminInfo, uint32_t, AdminInfo::AdminInfoHasher>& admin_info_map,
     std::vector<AdminInfo>& admin_info_list) {
 
   uint32_t admin_index = 0;
@@ -104,7 +110,8 @@ uint32_t GetAdminIndex(const AdminInfo& admin_info, std::unordered_map<AdminInfo
   return admin_index;
 }
 
-void AssignAdmins(TripPath& trip_path, const std::vector<AdminInfo>& admin_info_list) {
+void AssignAdmins(TripPath& trip_path,
+                  const std::vector<AdminInfo>& admin_info_list) {
   // Assign the admins
   for (const auto& admin_info : admin_info_list) {
     TripPath_Admin* trip_admin = trip_path.add_admin();
@@ -122,7 +129,6 @@ void AssignAdmins(TripPath& trip_path, const std::vector<AdminInfo>& admin_info_
 namespace valhalla {
 namespace thor {
 
-
 // Default constructor
 TripPathBuilder::TripPathBuilder() {
 }
@@ -135,9 +141,9 @@ TripPathBuilder::~TripPathBuilder() {
 // TODO - probably need the location information passed in - to
 // add to the TripPath
 TripPath TripPathBuilder::Build(GraphReader& graphreader,
-    const std::vector<PathInfo>& path,
-    const PathLocation& origin,
-    const PathLocation& dest){
+                                const std::vector<PathInfo>& path,
+                                const PathLocation& origin,
+                                const PathLocation& dest) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
@@ -148,7 +154,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
   tp_orig->set_type(
-      (origin.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
+      (origin.stoptype_ == Location::StopType::BREAK) ?
+          TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
@@ -170,7 +177,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
   tp_dest->set_type(
-      (dest.stoptype_ == Location::StopType::BREAK) ? TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
+      (dest.stoptype_ == Location::StopType::BREAK) ?
+          TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
@@ -188,23 +196,26 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the opposing edge
   // then use the opposing index to get the opposing edge, and its end node is the begin node of the original edge
-  auto* first_edge = graphreader.GetGraphTile(path.front().edgeid)->directededge(path.front().edgeid);
+  auto* first_edge =
+      graphreader.GetGraphTile(path.front().edgeid)->directededge(
+          path.front().edgeid);
   auto* first_tile = graphreader.GetGraphTile(first_edge->endnode());
   auto* first_node = first_tile->node(first_edge->endnode());
-  GraphId startnode = first_tile->directededge(first_node->edge_index() + first_edge->opp_index())->endnode();
+  GraphId startnode = first_tile->directededge(
+      first_node->edge_index() + first_edge->opp_index())->endnode();
 
   // Partial edge at the start
-  auto start_pct =  origin.edges().front().dist;
+  auto start_pct = origin.edges().front().dist;
   auto start_vrt = origin.vertex();
-  for(size_t i = 1; i < origin.edges().size(); ++i)
-    if(origin.edges()[i].id == path.front().edgeid)
+  for (size_t i = 1; i < origin.edges().size(); ++i)
+    if (origin.edges()[i].id == path.front().edgeid)
       start_pct = origin.edges()[i].dist;
 
   // Partial edge at the end
   auto end_pct = dest.edges().front().dist;
   auto end_vrt = dest.vertex();
-  for(size_t i = 1; i < dest.edges().size(); ++i)
-    if(dest.edges()[i].id == path.back().edgeid)
+  for (size_t i = 1; i < dest.edges().size(); ++i)
+    if (dest.edges()[i].id == path.back().edgeid)
       end_pct = dest.edges()[i].dist;
 
   // Special case - destination is at a node - end percent is 1
@@ -218,25 +229,32 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t last_node_admin_index;
 
   // If the path was only one edge we have a special case
-  if(path.size() == 1) {
-    if(end_pct < start_pct)
-       throw std::runtime_error("Generated reverse trivial path, report this bug!");
+  if (path.size() == 1) {
+    if (end_pct < start_pct)
+      throw std::runtime_error(
+          "Generated reverse trivial path, report this bug!");
     const auto tile = graphreader.GetGraphTile(path.front().edgeid);
     const auto edge = tile->directededge(path.front().edgeid);
 
     // Sort out the shape
     auto shape = tile->edgeinfo(edge->edgeinfo_offset())->shape();
-    if(!edge->forward())
+    if (!edge->forward())
       std::reverse(shape.begin(), shape.end());
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(path.front().edgeid.id(), edge, trip_path.add_node(), tile, end_pct - start_pct);
+    auto trip_edge = AddTripEdge(path.front().edgeid.id(),
+                                 path.front().trip_id,edge,
+                                 trip_path.add_node(), tile,
+                                 end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
     auto* node = trip_path.add_node();
     node->set_elapsed_time(path.front().elapsed_time);
-    node->set_admin_index(GetAdminIndex(tile->admininfo(tile->node(edge->endnode())->admin_index()),admin_info_map, admin_info_list));
+    node->set_admin_index(
+        GetAdminIndex(
+            tile->admininfo(tile->node(edge->endnode())->admin_index()),
+            admin_info_map, admin_info_list));
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
@@ -249,6 +267,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   std::vector<PointLL> trip_shape;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
     const GraphId& edge = edge_itr->edgeid;
+    const uint32_t trip_id = edge_itr->trip_id;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
 
@@ -283,12 +302,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (graphtile->node(startnode)->type() == NodeType::kTollBooth)
       trip_node->set_toll_booth(true);
 
-    if (graphtile->node(startnode)->type() == NodeType::kMultiUseTransitStop)
-      trip_node->set_transit_stop(true);
-
-    // TODO
-    //trip_node->set_transit_parent_stop(TBD);
-
     if (graphtile->node(startnode)->type() == NodeType::kBikeShare)
       trip_node->set_bike_share(true);
 
@@ -298,47 +311,70 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
 
-    // Assign the admin index
-    trip_node->set_admin_index(GetAdminIndex(graphtile->admininfo(graphtile->node(startnode)->admin_index()), admin_info_map, admin_info_list));
+    if (graphtile->node(startnode)->is_transit()) {
+      trip_node->set_transit_stop(true);
+      trip_node->set_transit_parent_stop(graphtile->node(startnode)->parent());
 
-    // TODO - transit info
+      const TransitStop* stop = graphtile->GetTransitStop(
+          graphtile->node(startnode)->stop_id());
+
+      TripPath_TransitStopInfo* transit_stop_info = trip_node->mutable_transit_stop_info();
+      transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+      if (trip_id) {
+        const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(edge.id(),trip_id);
+
+        // TODO:  date/time logic.
+        // transit_stop_info->set_arrival_date_time();
+        // transit_stop_info->set_departure_date_time();
+      }
+    }
+
+    // Assign the admin index
+    trip_node->set_admin_index(
+        GetAdminIndex(
+            graphtile->admininfo(graphtile->node(startnode)->admin_index()),
+            admin_info_map, admin_info_list));
 
     // Add edge to the trip node and set its attributes
     auto is_first_edge = edge_itr == path.begin();
     auto is_last_edge = edge_itr == path.end() - 1;
-    float length_pct = (is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), directededge, trip_node, graphtile, length_pct);
+    float length_pct = (
+        is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, directededge, trip_node,
+                                           graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
-    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(directededge->edgeinfo_offset());
+    std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
+        directededge->edgeinfo_offset());
     if (is_first_edge) {
       trip_edge->set_begin_shape_index(0);
     } else {
-      trip_edge->set_begin_shape_index(trip_shape.size()-1);
+      trip_edge->set_begin_shape_index(trip_shape.size() - 1);
     }
 
     // We need to clip the shape if its at the beginning or end and isnt a full length
-    if(is_first_edge || is_last_edge) {
+    if (is_first_edge || is_last_edge) {
       float length = static_cast<float>(directededge->length()) * length_pct;
-      if(directededge->forward() == is_last_edge) {
-        AddPartialShape<std::vector<PointLL>::const_iterator>
-          (trip_shape, edgeinfo->shape().begin(), edgeinfo->shape().end(),
-          length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
+      if (directededge->forward() == is_last_edge) {
+        AddPartialShape<std::vector<PointLL>::const_iterator>(
+            trip_shape, edgeinfo->shape().begin(), edgeinfo->shape().end(),
+            length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
+      } else {
+        AddPartialShape<std::vector<PointLL>::const_reverse_iterator>(
+            trip_shape, edgeinfo->shape().rbegin(), edgeinfo->shape().rend(),
+            length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
       }
-      else {
-        AddPartialShape<std::vector<PointLL>::const_reverse_iterator>
-          (trip_shape, edgeinfo->shape().rbegin(), edgeinfo->shape().rend(),
-          length, is_last_edge, is_last_edge ? end_vrt : start_vrt);
-      }
-    }// Just get the shape in there in the right direction
+    }    // Just get the shape in there in the right direction
     else {
-      if(directededge->forward())
-        trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() +  1, edgeinfo->shape().end());
+      if (directededge->forward())
+        trip_shape.insert(trip_shape.end(), edgeinfo->shape().begin() + 1,
+                          edgeinfo->shape().end());
       else
-        trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() +  1, edgeinfo->shape().rend());
+        trip_shape.insert(trip_shape.end(), edgeinfo->shape().rbegin() + 1,
+                          edgeinfo->shape().rend());
     }
-    trip_edge->set_end_shape_index(trip_shape.size()-1);
+    trip_edge->set_end_shape_index(trip_shape.size() - 1);
 
     // Add connected edges from the start node. Do this after the first trip
     // edge is added
@@ -393,7 +429,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   auto* node = trip_path.add_node();
   auto* last_tile = graphreader.GetGraphTile(startnode);
   node->set_admin_index(
-    GetAdminIndex(last_tile->admininfo(last_tile->node(startnode)->admin_index()), admin_info_map, admin_info_list));
+      GetAdminIndex(
+          last_tile->admininfo(last_tile->node(startnode)->admin_index()),
+          admin_info_map, admin_info_list));
   node->set_elapsed_time(elapsedtime);
 
   // Assign the admins
@@ -446,6 +484,7 @@ TripPath_Driveability GetTripPathDriveability(Driveability driveability) {
 
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
+                                            const uint32_t trip_id,
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
@@ -455,7 +494,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
   // Get the edgeinfo and list of names - add to the trip edge.
   std::unique_ptr<const EdgeInfo> edgeinfo = graphtile->edgeinfo(
-     directededge->edgeinfo_offset());
+      directededge->edgeinfo_offset());
   std::vector<std::string> names = edgeinfo->GetNames();
   for (const auto& name : names) {
     trip_edge->add_name(name);
@@ -494,7 +533,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   }
 
   // Set road class
-  trip_edge->set_road_class(GetTripPathRoadClass(directededge->classification()));
+  trip_edge->set_road_class(
+      GetTripPathRoadClass(directededge->classification()));
 
   // Set speed and length
   trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
@@ -502,13 +542,16 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
   // Test whether edge is traversed forward or reverse and set driveability and heading
   if (directededge->forward()) {
-    if ((directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
+    if ((directededge->forwardaccess() & kAutoAccess)
+        && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if ((directededge->forwardaccess() & kAutoAccess) && !(directededge->reverseaccess() & kAutoAccess))
+    else if ((directededge->forwardaccess() & kAutoAccess)
+        && !(directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kForward);
-    else if (!(directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
+    else if (!(directededge->forwardaccess() & kAutoAccess)
+        && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBackward);
     else
@@ -517,19 +560,24 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
     trip_edge->set_begin_heading(
         std::round(
-            PointLL::HeadingAlongPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
+            PointLL::HeadingAlongPolyline(edgeinfo->shape(),
+                                          kMetersOffsetForHeading)));
     trip_edge->set_end_heading(
         std::round(
-            PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(), kMetersOffsetForHeading)));
+            PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
+                                            kMetersOffsetForHeading)));
   } else {
     // Reverse driveability and heading
-    if ((directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
+    if ((directededge->forwardaccess() & kAutoAccess)
+        && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if (!(directededge->forwardaccess() & kAutoAccess) && (directededge->reverseaccess() & kAutoAccess))
+    else if (!(directededge->forwardaccess() & kAutoAccess)
+        && (directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kForward);
-    else if ((directededge->forwardaccess() & kAutoAccess) && !(directededge->reverseaccess() & kAutoAccess))
+    else if ((directededge->forwardaccess() & kAutoAccess)
+        && !(directededge->reverseaccess() & kAutoAccess))
       trip_edge->set_driveability(
           TripPath_Driveability::TripPath_Driveability_kBackward);
     else
@@ -540,15 +588,17 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
         std::round(
             fmod(
                 (PointLL::HeadingAtEndOfPolyline(edgeinfo->shape(),
-                             kMetersOffsetForHeading) + 180.0f), 360)));
+                                                 kMetersOffsetForHeading)
+                    + 180.0f),
+                360)));
 
     trip_edge->set_end_heading(
         std::round(
             fmod(
                 (PointLL::HeadingAlongPolyline(edgeinfo->shape(),
-                             kMetersOffsetForHeading) + 180.0f), 360)));
+                                               kMetersOffsetForHeading) + 180.0f),
+                360)));
   }
-
 
   // Set ramp / turn channel flag
   if (directededge->link()) {
@@ -584,7 +634,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->set_culdesac(true);
 
   if (directededge->use() == Use::kFootway)
-  trip_edge->set_footway(true);
+    trip_edge->set_footway(true);
 
   if (directededge->use() == Use::kSteps)
     trip_edge->set_stairs(true);
@@ -635,7 +685,29 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   if (directededge->drive_on_right())
     trip_edge->set_drive_on_right(true);
 
-  // TODO - tranist stop info
+  if (trip_id
+      && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
+
+    if (directededge->use() == Use::kRail)
+      trip_edge->set_transit_type(TripPath_TransitType::TripPath_TransitType_kTrain);
+
+    if (directededge->use() == Use::kBus)
+      trip_edge->set_transit_type(TripPath_TransitType::TripPath_TransitType_kBus);
+
+    TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
+    const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(idx,trip_id);
+    const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeid());
+    const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
+
+    //use route short name if available otherwise trip short name.
+    if (transit_route->short_name_offset())
+      transit_info->set_short_name(graphtile->GetName(transit_route->short_name_offset()));
+    else
+      transit_info->set_short_name(graphtile->GetName(transit_trip->short_name_offset()));
+
+    transit_info->set_long_name(graphtile->GetName(transit_route->long_name_offset()));
+    transit_info->set_headsign(graphtile->GetName(transit_departure->headsign_offset()));
+  }
 
   return trip_edge;
 }

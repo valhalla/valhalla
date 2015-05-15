@@ -40,6 +40,7 @@ class TripPathBuilder {
   /**
    * Add trip edge. (TODO more comments)
    * @param  idx  Index of the directed edge within the tile.
+   * @param  trip_id       Trip Id (0 if not a transit edge).
    * @param  directededge  Directed edge information.
    * @param  trip_node     Trip node to add the edge information to.
    * @param  graphtile     Graph tile for accessing data.
@@ -47,6 +48,7 @@ class TripPathBuilder {
    *                       at begin and end edges
    */
   static odin::TripPath_Edge* AddTripEdge(const uint32_t idx,
+                                          const uint32_t trip_id,
                                           const baldr::DirectedEdge* directededge,
                                           odin::TripPath_Node* trip_node,
                                           const baldr::GraphTile* graphtile,
