@@ -771,7 +771,7 @@ void GetNodesInNewLevel(
 
     // Get the graph tile. Skip if no tile exists (common case)
     tile = info.graphreader_.GetGraphTile(GraphId(basetileid, baselevel, 0));
-    if (tile == nullptr) {
+    if (tile == nullptr || tile->header()->nodecount() == 0) {
       continue;
     }
 
