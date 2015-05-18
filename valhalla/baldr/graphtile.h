@@ -56,9 +56,10 @@ class GraphTile {
   /**
    * Get the tile Id given the full path to the file.
    * @param  fname  Filename with complete path.
+   * @param  hierarchy the tile hierarchy this tile is under
    * @return  Returns the tile Id.
    */
-  static GraphId GetTileId(const std::string& fname);
+  static GraphId GetTileId(const std::string& fname, const TileHierarchy& hierarchy);
 
   /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value

@@ -7,10 +7,43 @@
 #include <boost/filesystem.hpp>
 
 #include <valhalla/midgard/logging.h>
+using namespace valhalla::baldr;
 
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
   constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
+
+  struct connectivity_map_t {
+    connectivity_map_t(const TileHierarchy& tile_hierarchy) {
+      // Populate a map for each level of the tiles that exist
+      for (const auto& tile_level : tile_hierarchy.levels()) {
+        auto level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
+        std::string root_dir = tile_hierarchy.tile_dir() + "/" + std::to_string(tile_level.first);
+        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+          if (!is_directory(i->path())) {
+            GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy);
+            level_colors.insert({id.tileid(), 0});
+          }
+        }
+      }
+
+      // All tiles have color 0 (not connected), go through each level and connect them
+      for(auto& level_colors : colors) {
+        auto level = tile_hierarchy.levels().find(level_colors.first);
+        level->second.tiles.ColorMap(level_colors.second);
+      }
+    }
+    size_t get_color(const GraphId& id) const {
+      auto level = colors.find(id.level());
+      if(level == colors.cend())
+        return 0;
+      auto color = level->second.find(id.tileid());
+      if(color == level->second.cend())
+        return 0;
+      return color->second;
+    }
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, size_t> > colors;
+  };
 }
 
 namespace valhalla {
@@ -35,42 +68,14 @@ bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const Graph
   return stat(file_location.c_str(), &buffer) == 0;
 }
 
-// Get a tile "map" - bool vector identifying which tiles exist.
-std::vector<bool> GraphReader::TileMap(const uint32_t level) {
-  for (auto tile_level : tile_hierarchy_.levels()) {
-    if (tile_level.second.level == level) {
-      Tiles tiles = tile_level.second.tiles;
-      std::vector<bool> tilemap(tiles.TileCount(), false);
+bool GraphReader::AreConnected(const GraphId& first, const GraphId& second) const {
+  //singleton is efficient here but does mean we cant reconfigure the tiles on the fly
+  static const connectivity_map_t connectivity_map(this->tile_hierarchy_);
 
-      // Get the base directory of this level
-      std::string root_dir = tile_hierarchy_.tile_dir() + "/" +
-                    std::to_string(level);
-      for (boost::filesystem::recursive_directory_iterator i(root_dir),
-                    end; i != end; ++i) {
-        if (!is_directory(i->path())) {
-          GraphId tileid = GraphTile::GetTileId(i->path().string());
-          tilemap[tileid.tileid()] = true;
-        }
-      }
-      return tilemap;
-    }
-  }
-  LOG_ERROR("GraphReader::TileMap invalid level: " + std::to_string(level));
-  return std::vector<bool>(0);
-}
-
-// Get a tile connectivity map. This is a vector where each tile Id is
-std::vector<uint32_t> GraphReader::ConnectivityMap(const uint32_t level) {
-  std::vector<bool> tilemap = TileMap(level);
-  if (tilemap.size() > 0) {
-    for (auto tile_level : tile_hierarchy_.levels()) {
-      if (tile_level.second.level == level) {
-        Tiles tiles = tile_level.second.tiles;
-        return tiles.ConnectivityMap(tilemap);
-      }
-    }
-  }
-  return std::vector<uint32_t>(0);
+  //both must be the same color but also neither must be 0
+  auto first_color = connectivity_map.get_color(first.Tile_Base());
+  auto second_color = connectivity_map.get_color(second.Tile_Base());
+  return first_color == second_color && first_color != 0;
 }
 
 // Get a pointer to a graph tile object given a GraphId.

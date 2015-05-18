@@ -56,12 +56,30 @@ void TestCacheLimits() {
     throw std::runtime_error("Cache should be over committed");
 }
 
+void TestConnectivityMap() {
+  std::stringstream json; json << "\
+  {\
+    \"tile_dir\": \"test/tiles\",\
+    \"levels\": [\
+      {\"name\": \"local\", \"level\": 2, \"size\": 0.25},\
+      {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Trunk\"},\
+      {\"name\": \"highway\", \"level\": 0, \"size\": 4}\
+    ]\
+  }";
+
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(json, pt);
+
+}
+
 }
 
 int main() {
   test::suite suite("graphtile");
 
   suite.test(TEST_CASE(TestCacheLimits));
+
+  suite.test(TEST_CASE(TestConnectivityMap));
 
   return suite.tear_down();
 }
