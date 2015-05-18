@@ -911,7 +911,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), std::ref(tiles), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(tiles), tile_start, tile_end,
                       std::ref(results[i]))
     );
   }
