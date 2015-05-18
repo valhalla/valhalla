@@ -4,6 +4,7 @@
 
 #include <list>
 #include <unordered_set>
+#include <unordered_map>
 #include <cstdint>
 
 #include <valhalla/midgard/constants.h>
@@ -226,29 +227,13 @@ class Tiles {
   const std::vector<int32_t>& TileList(const AABB2& boundingbox);
 
   /**
-   * Check if a path from the origin tile to the destination tile exists
-   * given a map of which tiles are populated.
-   * @param  tilemap  Vector of bool for each tile Id where each true value
-   *                  indicates the tile is populated.
-   * @param  origin_tile Tile Id of the origin.
-   * @param  dest_tile   Tile Id of the destination.
-   * @return  Returns true if there is a path through existing tiles from the
-   *          origin to the destination tile.
+   * Color a "connectivity map" starting with a sparse map of uncolored tiles.
+   * Any 2 tiles that have a connected path between them will have the same
+   * value in the connectivity map.
+   * @param  tilemap  map of tileid to color value
+   * @return
    */
-  bool PathExists(const std::vector<bool>& tilemap, const uint32_t origin_tile,
-                  const uint32_t dest_tile) const;
-
-  /**
-   * Generate a "connectivity map" given the map of existing tiles. Any 2 tiles
-   * that have a connected path between them will have the same value in the
-   * connectivity map.
-   * @param  tilemap  Vector of bool for each tile Id where each true value
-   *                  indicates the tile is populated.
-   * @return  Returns a vector with a value for each tile Id. Values of 0 are
-   *          empty tiles (false in the input tilemap). Non-zero values that
-   *          are equal have a path through valid tiles.
-   */
-  std::vector<uint32_t> ConnectivityMap(const std::vector<bool>& tilemap) const;
+  void ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const;
 
  protected:
   // Bounding box of the tiling system.

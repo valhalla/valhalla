@@ -220,119 +220,57 @@ const std::vector<int>& Tiles::TileList(const AABB2& boundingbox) {
   return tilelist_;
 }
 
-bool Tiles::PathExists(const std::vector<bool>& tilemap,
-                       const uint32_t origin_tile,
-                       const uint32_t dest_tile) const {
-  // Add origin tile to list of tiles to check
-  std::list<int32_t> checklist;
-  checklist.push_back(origin_tile);
-
-  // Visited tiles - add origin tile
-  std::unordered_set<int32_t> visitedset;
-  visitedset.insert(origin_tile);
-
-  // Get neighboring tiles in the tilemap until the dest tile is reached
-  // or no more tiles can be expanded
-  int32_t tileid = 0;
-  while (!checklist.empty()) {
-    // Get the element off the front of the list
-    if ((tileid = checklist.front()) == dest_tile) {
-      return true;
-    }
-    checklist.pop_front();
-
-    // Check neighbors.
-    int32_t neighbor = LeftNeighbor(tileid);
-    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
-      if (neighbor == dest_tile) {
-        return true;
-      }
-      checklist.push_back(neighbor);
-      visitedset.insert(neighbor);
-    }
-    neighbor = RightNeighbor(tileid);
-    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
-      if (neighbor == dest_tile) {
-        return true;
-      }
-      checklist.push_back(neighbor);
-      visitedset.insert(neighbor);
-    }
-    neighbor = TopNeighbor(tileid);
-    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
-      if (neighbor == dest_tile) {
-        return true;
-      }
-      checklist.push_back(neighbor);
-      visitedset.insert(neighbor);
-    }
-    neighbor = BottomNeighbor(tileid);
-    if (tilemap[neighbor] && visitedset.find(neighbor) == visitedset.end()) {
-      if (neighbor == dest_tile) {
-        return true;
-      }
-      checklist.push_back(neighbor);
-      visitedset.insert(neighbor);
-    }
-  }
-  return false;
-}
-
-
-std::vector<uint32_t> Tiles::ConnectivityMap(const std::vector<bool>& tilemap) const {
-  // Connecctivity map - all connected regions will have a unique Id. If any 2
+void Tiles::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) const {
+  // Connectivity map - all connected regions will have a unique Id. If any 2
   // tile Ids have a different Id they are judged to be not-connected.
-  std::vector<uint32_t> connectivity(TileCount(), 0);
 
   // Iterate through tiles
-  uint32_t color = 1;
-  for (uint32_t tileid = 0; tileid < TileCount(); tileid++) {
-    if (!tilemap[tileid]) {
-      connectivity[tileid] = 0;
-      continue;
-    }
-
+  size_t color = 1;
+  for (auto& tile : connectivity_map) {
     // Continue if already visited
-    if (connectivity[tileid] > 0) {
+    if (tile.second > 0) {
       continue;
     }
 
     // Mark this tile Id with the current color and find all its
     // accessible neighbors
-    connectivity[tileid] = color;
-    std::list<int32_t> checklist;
-    checklist.push_back(tileid);
+    tile.second = color;
+    std::list<uint32_t> checklist;
+    checklist.push_back(tile.first);
     while (!checklist.empty()) {
       uint32_t next_tile = checklist.front();
       checklist.pop_front();
 
       // Check neighbors.
       int32_t neighbor = LeftNeighbor(next_tile);
-      if (tilemap[neighbor] && connectivity[neighbor] == 0) {
+      auto neighbor_itr = connectivity_map.find(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
         checklist.push_back(neighbor);
-        connectivity[neighbor] = color;
+        neighbor_itr->second = color;
       }
       neighbor = RightNeighbor(next_tile);
-      if (tilemap[neighbor] && connectivity[neighbor] == 0) {
+      neighbor_itr = connectivity_map.find(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
         checklist.push_back(neighbor);
-        connectivity[neighbor] = color;
+        neighbor_itr->second = color;
       }
       neighbor = TopNeighbor(next_tile);
-      if (tilemap[neighbor] && connectivity[neighbor] == 0) {
+      neighbor_itr = connectivity_map.find(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
         checklist.push_back(neighbor);
-        connectivity[neighbor] = color;
+        neighbor_itr->second = color;
       }
       neighbor = BottomNeighbor(next_tile);
-      if (tilemap[neighbor] && connectivity[neighbor] == 0) {
+      neighbor_itr = connectivity_map.find(neighbor);
+      if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
         checklist.push_back(neighbor);
-        connectivity[neighbor] = color;
+        neighbor_itr->second = color;
       }
     }
 
     // Increment color
     color++;
   }
-  return connectivity;
 }
 
 }
