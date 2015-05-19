@@ -27,10 +27,12 @@ namespace {
 struct Stop {
   // Need to add onestop Id, connections (wayid, lat,lon)
   GraphId graphid;
+  uint64_t way_id;
   uint32_t key;
   uint32_t type;
   uint32_t parent;
   PointLL  ll;
+  std::string onestop_id;
   std::string id;
   std::string code;
   std::string name;
@@ -115,9 +117,9 @@ struct builder_stats {
 // Get stops within a tile's bounding box
 std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
   // Form query
-  std::string sql = "SELECT stop_key, stop_id, stop_code, stop_name,";
-  sql += "stop_desc, zone_id, stop_url, location_type, parent_station_key,";
-  sql += "stop_lat, stop_lon from stops where ";
+  std::string sql = "SELECT stop_key, stop_id, onestop_id, osm_way_id,";
+  sql += "stop_code, stop_name,stop_desc, zone_id, stop_url, location_type, ";
+  sql += "parent_station_key,stop_lat, stop_lon from stops where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) ";
@@ -135,20 +137,23 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
       Stop stop;
       stop.key    = sqlite3_column_int(stmt, 0);
       stop.id     = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 1))));
-      stop.code   = (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 2))) : "";
-      stop.name   = (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 3)))) : "";
-      stop.desc   = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 4)))) : "";
-      stop.zoneid = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
+      stop.onestop_id = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 2))));
+      stop.way_id = sqlite3_column_int64(stmt, 3);
+      stop.code   = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
+                    std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 4))) : "";
+      stop.name   = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
                     std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 5)))) : "";
-      stop.url    = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
+      stop.desc   = (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) ?
                     std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
-      stop.type   = sqlite3_column_int(stmt, 7);
-      stop.parent = sqlite3_column_int(stmt, 8);
-      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 10)),
-                  static_cast<float>(sqlite3_column_double(stmt, 9)));
+      stop.zoneid = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 7)))) : "";
+      stop.url    = (sqlite3_column_type(stmt, 8) == SQLITE_TEXT) ?
+                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 8)))) : "";
+      stop.type   = sqlite3_column_int(stmt, 9);
+      stop.parent = sqlite3_column_int(stmt, 10);
+      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 12)),
+                  static_cast<float>(sqlite3_column_double(stmt, 11)));
+
       stops.emplace_back(std::move(stop));
 
       // TODO - perhaps keep a map of parent/child relations
