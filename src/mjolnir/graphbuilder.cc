@@ -17,6 +17,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
+#include <valhalla/baldr/graphreader.h>
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
@@ -621,10 +622,64 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   return mask;
 }
 
+// Walk the shape and look for any empty tiles that the shape intersects
+void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
+                const Tiles& tiling, std::vector<PointLL>& shape,
+                const std::map<GraphId, size_t>& tiles,
+                DataQuality& stats) {
+  // Walk the shape segments until we are outside
+  uint32_t current_tile = tile1.tileid();
+  auto shape1 = shape.begin();
+  auto shape2 = shape1 + 1;
+  while (shape2 < shape.end()) {
+    uint32_t next_tile = tiling.TileId(shape2->lat(), shape2->lng());
+    if (next_tile != current_tile) {
+      // If a neighbor we can just add this tile
+      if (tiling.AreNeighbors(current_tile, next_tile)) {
+        GraphId id(next_tile, 2, 0);
+        if (tiles.find(id) == tiles.end()) {
+          stats.AddIntersectedTile(id);
+        }
+      } else {
+        // Not a neighbor - find any intermediate intersecting tiles
+
+        // Get a bounding box or row, col surrounding the 2 tiles
+        auto rc1 = tiling.GetRowColumn(current_tile);
+        auto rc2 = tiling.GetRowColumn(next_tile);
+        for (int32_t row = std::min(rc1.first, rc2.first);
+             row <= std::max(rc1.first, rc2.first); row++) {
+          for (int32_t col = std::min(rc1.second, rc2.second);
+                       col <= std::max(rc1.second, rc2.second); col++) {
+            // Get the tile Id for the row,col. Skip if either of the 2 tiles
+            // or if the tile is populated.
+            int32_t tileid = tiling.TileId(row, col);
+            GraphId id(tileid, 2, 0);
+            if (tileid == current_tile || tileid == next_tile ||
+                tiles.find(id) != tiles.end()) {
+              continue;
+            }
+
+            // Check if the shape segment intersects the tile
+            if (tiling.TileBounds(tileid).Intersect(*shape1, *shape2)) {
+              stats.AddIntersectedTile(id);
+            }
+          }
+        }
+      }
+    }
+
+    // Increment
+    shape1 = shape2;
+    shape2++;
+  }
+}
+
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
-    std::map<GraphId, size_t>::const_iterator tile_start, std::map<GraphId, size_t>::const_iterator tile_end,
+    const std::map<GraphId, size_t>& tiles,
+    std::map<GraphId, size_t>::const_iterator tile_start,
+    std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
 
   std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
@@ -634,6 +689,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
+
+  const auto& tl = hierarchy.levels().rbegin();
+  Tiles tiling = tl->second.tiles;
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -654,13 +712,14 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     try {
       // What actually writes the tile
       GraphTileBuilder graphtile;
+      GraphId tileid1 = tile_start->first.Tile_Base();
 
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
       //for each node in the tile
       auto node_itr = nodes[tile_start->second];
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_start->first.Tile_Base()) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -769,6 +828,15 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             directededges.emplace_back();
           }*/
 
+          // If the end node is in a different tile and the tile is not
+          // a neighboring tile then check for possible shape intersection with
+          // empty tiles
+          GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
+          if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2)) {
+            CheckForIntersectingTiles(tileid1, tileid2, tiling,
+                     shape, tiles, stats);
+          }
+
           // Increment the directed edge index within the tile
           idx++;
           n++;
@@ -843,7 +911,8 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), tile_start, tile_end, std::ref(results[i]))
+                      std::cref(osmdata), std::cref(tiles), tile_start, tile_end,
+                      std::ref(results[i]))
     );
   }
 
@@ -867,6 +936,19 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
       //TODO: throw further up the chain?
     }
   }
+
+  // Add "empty" tiles for any intersected tiles
+  for (auto& empty_tile : stats.intersected_tiles) {
+    if (GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
+      LOG_ERROR("Writing an empty tile over a valid tile!");
+    } else {
+      GraphTileBuilder graphtile;
+      LOG_INFO("Add empty tile for: " + std::to_string(empty_tile.tileid()));
+      graphtile.StoreTileData(tile_hierarchy, empty_tile);
+    }
+  }
+  LOG_INFO("Added " + std::to_string(stats.intersected_tiles.size()) +
+           " empty, intersected tiles");
 }
 
 }
