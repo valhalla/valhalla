@@ -242,7 +242,7 @@ void Tiles::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) con
       checklist.pop_front();
 
       // Check neighbors.
-      int32_t neighbor = LeftNeighbor(next_tile);
+      uint32_t neighbor = LeftNeighbor(next_tile);
       auto neighbor_itr = connectivity_map.find(neighbor);
       if (neighbor_itr != connectivity_map.cend() && neighbor_itr->second == 0) {
         checklist.push_back(neighbor);
