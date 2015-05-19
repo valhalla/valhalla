@@ -17,13 +17,19 @@ namespace {
     connectivity_map_t(const TileHierarchy& tile_hierarchy) {
       // Populate a map for each level of the tiles that exist
       for (const auto& tile_level : tile_hierarchy.levels()) {
-        auto level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
-        std::string root_dir = tile_hierarchy.tile_dir() + "/" + std::to_string(tile_level.first);
-        for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-          if (!is_directory(i->path())) {
-            GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy);
-            level_colors.insert({id.tileid(), 0});
+        try {
+          auto& level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
+          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level.first) + '/');
+          if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
+            for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+              if (!boost::filesystem::is_directory(i->path())) {
+                GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy);
+                level_colors.insert({id.tileid(), 0});
+              }
+            }
           }
+        }
+        catch(...) {
         }
       }
 
