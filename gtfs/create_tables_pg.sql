@@ -15,6 +15,8 @@ CREATE TABLE "stops"
 (
   stop_key integer primary key,
   stop_id text,
+  onestop_id text,
+  osm_way_id bigint,
   stop_code text,
   stop_name text,
   stop_desc text,
@@ -167,6 +169,8 @@ CREATE TABLE "stops_tmp"
 (
   stop_key serial primary key,
   stop_id text,
+  onestop_id text,
+  osm_way_id bigint,
   stop_code text,
   stop_name text,
   stop_desc text,
