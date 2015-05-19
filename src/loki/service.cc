@@ -260,6 +260,21 @@ namespace {
         return result;
       }
 
+      //see if any locations pairs are unreachable
+      auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
+      for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
+        uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
+        uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
+        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
+          worker_t::result_t result{false};
+          http_response_t response(404, "Not Found",
+            "Locations are in unconnected regions. Go check/edit the map at osm.org");
+          response.from_info(request_info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+      }
+
       //correlate the various locations to the underlying graph
       auto correlated = loki::Search(locations[0], reader, cost->GetFilter());
       request.put_child("origin", correlated.ToPtree(0));
