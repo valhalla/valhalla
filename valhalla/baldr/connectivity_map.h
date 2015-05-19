@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
-#include "baldr/tilehierarchy.h"
+#include <valhalla/baldr/tilehierarchy.h>
 
 #include <vector>
 #include <unordered_map>
