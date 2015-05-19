@@ -7,6 +7,8 @@
 #include <boost/filesystem.hpp>
 
 #include <valhalla/midgard/logging.h>
+#include "baldr/connectivity_map.h"
+using namespace valhalla::baldr;
 
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
@@ -35,42 +37,14 @@ bool GraphReader::DoesTileExist(const TileHierarchy& tile_hierarchy, const Graph
   return stat(file_location.c_str(), &buffer) == 0;
 }
 
-// Get a tile "map" - bool vector identifying which tiles exist.
-std::vector<bool> GraphReader::TileMap(const uint32_t level) {
-  for (auto tile_level : tile_hierarchy_.levels()) {
-    if (tile_level.second.level == level) {
-      Tiles tiles = tile_level.second.tiles;
-      std::vector<bool> tilemap(tiles.TileCount(), false);
+bool GraphReader::AreConnected(const GraphId& first, const GraphId& second) const {
+  //singleton is efficient here but does mean we cant reconfigure the tiles on the fly
+  static const connectivity_map_t connectivity_map(this->tile_hierarchy_);
 
-      // Get the base directory of this level
-      std::string root_dir = tile_hierarchy_.tile_dir() + "/" +
-                    std::to_string(level);
-      for (boost::filesystem::recursive_directory_iterator i(root_dir),
-                    end; i != end; ++i) {
-        if (!is_directory(i->path())) {
-          GraphId tileid = GraphTile::GetTileId(i->path().string());
-          tilemap[tileid.tileid()] = true;
-        }
-      }
-      return tilemap;
-    }
-  }
-  LOG_ERROR("GraphReader::TileMap invalid level: " + std::to_string(level));
-  return std::vector<bool>(0);
-}
-
-// Get a tile connectivity map. This is a vector where each tile Id is
-std::vector<uint32_t> GraphReader::ConnectivityMap(const uint32_t level) {
-  std::vector<bool> tilemap = TileMap(level);
-  if (tilemap.size() > 0) {
-    for (auto tile_level : tile_hierarchy_.levels()) {
-      if (tile_level.second.level == level) {
-        Tiles tiles = tile_level.second.tiles;
-        return tiles.ConnectivityMap(tilemap);
-      }
-    }
-  }
-  return std::vector<uint32_t>(0);
+  //both must be the same color but also neither must be 0
+  auto first_color = connectivity_map.get_color(first.Tile_Base());
+  auto second_color = connectivity_map.get_color(second.Tile_Base());
+  return first_color == second_color && first_color != 0;
 }
 
 // Get a pointer to a graph tile object given a GraphId.

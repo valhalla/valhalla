@@ -203,27 +203,35 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
 }
 
 // Get the tile Id given the full path to the file.
-GraphId GraphTile::GetTileId(const std::string& fname) {
-  // Tokenize the string
-  std::vector<std::string> tokens;
-  boost::split(tokens, fname, boost::is_any_of("/"));
-  size_t n = tokens.size();
+GraphId GraphTile::GetTileId(const std::string& fname, const TileHierarchy& hierarchy) {
+  //strip off the unuseful part
+  auto pos = fname.find(hierarchy.tile_dir());
+  if(pos == std::string::npos)
+    throw std::runtime_error("File name for tile does not match hierarchy root dir");
+  auto name = fname.substr(pos + hierarchy.tile_dir().size());
+  boost::algorithm::trim_if(name, boost::is_any_of("/.gph"));
 
-  // Strip off the .gph from the last token
-  std::string idn;
-  for (size_t i = 0; i < tokens[n-1].size(); i++) {
-    char c = tokens[n-1].at(i);
-    if (c == '.') {
-      break;
-    }
-    idn += c;
-  }
+  //split on slash
+  std::vector<std::string> tokens;
+  boost::split(tokens, name, boost::is_any_of("/"));
+
+  //need at least level and id
+  if(tokens.size() < 2)
+    throw std::runtime_error("Invalid tile path");
 
   // Compute the Id
-  uint32_t id = std::atoi(tokens[n-3].c_str()) * 1000000 +
-                std::atoi(tokens[n-2].c_str()) * 1000 +
-                std::atoi(idn.c_str());
-  uint32_t level = std::atoi(tokens[n-4].c_str());
+  uint32_t id = 0;
+  uint32_t multiplier = std::pow(1000, tokens.size() - 2);
+  bool first = true;
+  for(const auto& token : tokens) {
+    if(first) {
+      first = false;
+      continue;
+    }
+    id += std::atoi(token.c_str()) * multiplier;
+    multiplier /= 1000;
+  }
+  uint32_t level = std::atoi(tokens.front().c_str());
   return {id, level, 0};
 }
 
