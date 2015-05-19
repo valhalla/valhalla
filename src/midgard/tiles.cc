@@ -1,5 +1,5 @@
-#include "valhalla/midgard/tiles.h"
-#include "valhalla/midgard/distanceapproximator.h"
+#include "midgard/tiles.h"
+#include "midgard/distanceapproximator.h"
 #include <cmath>
 
 namespace valhalla {
@@ -235,8 +235,7 @@ void Tiles::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity_map) con
     // Mark this tile Id with the current color and find all its
     // accessible neighbors
     tile.second = color;
-    std::list<uint32_t> checklist;
-    checklist.push_back(tile.first);
+    std::list<uint32_t> checklist{tile.first};
     while (!checklist.empty()) {
       uint32_t next_tile = checklist.front();
       checklist.pop_front();
