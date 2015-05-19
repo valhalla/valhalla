@@ -384,24 +384,21 @@ int main(int argc, char *argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
-  auto t10 = std::chrono::high_resolution_clock::now();
-  std::vector<uint32_t> connectivity = reader.ConnectivityMap(2);
-  auto t20 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs1 =
-         std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
-  LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
 
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  uint32_t origin_tile = tiles.TileId(originloc.latlng_.lat(),
-                                      originloc.latlng_.lng());
-  uint32_t dest_tile = tiles.TileId(destloc.latlng_.lat(),
-                                    destloc.latlng_.lng());
-  if (connectivity[origin_tile] != connectivity[dest_tile]) {
+  uint32_t origin_tile = tiles.TileId(originloc.latlng_);
+  uint32_t dest_tile = tiles.TileId(destloc.latlng_);
+  auto t10 = std::chrono::high_resolution_clock::now();
+  if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
     LOG_INFO("No tile connectivity between origin and destination.");
     return EXIT_SUCCESS;
   }
+  auto t20 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs1 =
+         std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
+  LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
 
   // Construct costing
   CostFactory<DynamicCost> factory;
