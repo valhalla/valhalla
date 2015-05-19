@@ -7,49 +7,12 @@
 #include <boost/filesystem.hpp>
 
 #include <valhalla/midgard/logging.h>
+#include "baldr/connectivity_map.h"
 using namespace valhalla::baldr;
 
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
   constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
-
-  struct connectivity_map_t {
-    connectivity_map_t(const TileHierarchy& tile_hierarchy) {
-      // Populate a map for each level of the tiles that exist
-      for (const auto& tile_level : tile_hierarchy.levels()) {
-        try {
-          auto& level_colors = colors.insert({tile_level.first, std::unordered_map<uint32_t, size_t>{}}).first->second;
-          boost::filesystem::path root_dir(tile_hierarchy.tile_dir() + '/' + std::to_string(tile_level.first) + '/');
-          if(boost::filesystem::exists(root_dir) && boost::filesystem::is_directory(root_dir)) {
-            for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
-              if (!boost::filesystem::is_directory(i->path())) {
-                GraphId id = GraphTile::GetTileId(i->path().string(), tile_hierarchy);
-                level_colors.insert({id.tileid(), 0});
-              }
-            }
-          }
-        }
-        catch(...) {
-        }
-      }
-
-      // All tiles have color 0 (not connected), go through each level and connect them
-      for(auto& level_colors : colors) {
-        auto level = tile_hierarchy.levels().find(level_colors.first);
-        level->second.tiles.ColorMap(level_colors.second);
-      }
-    }
-    size_t get_color(const GraphId& id) const {
-      auto level = colors.find(id.level());
-      if(level == colors.cend())
-        return 0;
-      auto color = level->second.find(id.tileid());
-      if(color == level->second.cend())
-        return 0;
-      return color->second;
-    }
-    std::unordered_map<uint32_t, std::unordered_map<uint32_t, size_t> > colors;
-  };
 }
 
 namespace valhalla {

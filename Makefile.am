@@ -40,6 +40,7 @@ lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
 	valhalla/baldr/admin.h \
         valhalla/baldr/admininfo.h \
+	valhalla/baldr/connectivity_map.h \
 	valhalla/baldr/datetime.h \
 	valhalla/baldr/directededge.h \
 	valhalla/baldr/edgeinfo.h \
@@ -71,6 +72,7 @@ nobase_include_HEADERS = \
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
+	src/baldr/connectivity_map.cc \
 	src/baldr/datetime.cc \
 	src/baldr/directededge.cc \
 	src/baldr/edgeinfo.cc \
