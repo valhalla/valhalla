@@ -154,9 +154,6 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
       stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 12)),
                   static_cast<float>(sqlite3_column_double(stmt, 11)));
 
-      std::cout << stop.onestop_id << std::endl;
-
-
       stops.emplace_back(std::move(stop));
 
       // TODO - perhaps keep a map of parent/child relations
