@@ -14,8 +14,8 @@ namespace sif {
 // Default options/values
 namespace {
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
-constexpr float kDefaultDestinationOnlyPenalty  = 5.0f;   // Seconds
-constexpr float kDefaultAlleyPenalty            = 600.0f; // Seconds
+constexpr float kDefaultDestinationOnlyPenalty  = 600.0f;   // Seconds
+constexpr float kDefaultAlleyPenalty            = 5.0f; // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
@@ -234,7 +234,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     float penalty = 0.0f;
     if (!pred.destonly() && edge->destonly())
-      penalty = destination_only_penalty_;
+      penalty += destination_only_penalty_;
 
     if (pred.use() != Use::kAlley && edge->use() == Use::kAlley)
       penalty += alley_penalty_;
