@@ -100,14 +100,37 @@ class GraphTileBuilder : public baldr::GraphTile {
               const std::vector<SignBuilder>& signs);
 
   /**
-   * Add a node and its outbound edges.
+   * Add a node and its outbound edges. Sets the node's edge index
+   * and edge count.
    * @param  node   Node information builder.
    * @param  directededges  List of directed edges (builders) outbound
    *                        from the node.
    */
   void AddNodeAndDirectedEdges(
-      const NodeInfoBuilder& node,
+      NodeInfoBuilder& node,
       const std::vector<DirectedEdgeBuilder>& directededges);
+
+  /**
+   * Get the current list of node builders.
+   * @return  Returns the node info builders.
+   */
+  const std::vector<NodeInfoBuilder>& nodes() const;
+
+  /**
+   * Gets the current list of directed edge (builders).
+   * @return  Returns the directed edge builders.
+   */
+  const std::vector<DirectedEdgeBuilder>& directededges() const;
+
+  /**
+   * Clear the current list of nodes (builders).
+   */
+  void ClearNodes();
+
+  /**
+   * Clear the current list of directed edges (builders).
+   */
+  void ClearDirectedEdges();
 
   /**
    * Add a transit departure.
