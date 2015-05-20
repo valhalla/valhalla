@@ -4,7 +4,7 @@
 namespace valhalla{
 namespace baldr{
 
-  PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist): id(id), dist(dist) {
+  PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist, const SideOfStreet sos): id(id), dist(dist), sos(sos) {
   }
 
   PathLocation::PathLocation(const Location& location):Location(location) {
