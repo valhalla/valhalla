@@ -14,12 +14,16 @@ namespace sif {
 // Default options/values
 namespace {
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
+constexpr float kDefaultDestinationOnlyPenalty  = 5.0f;   // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
+constexpr float kDefaultAlleyCost               = 5.0f;   // Seconds
+constexpr float kDefaultAlleyPenalty            = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 }
+
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -118,11 +122,14 @@ class AutoCost : public DynamicCost {
 
  protected:
   float speedfactor_[256];
-  float density_factor_[16]; // Density factor
-  float maneuver_penalty_;   // Penalty (seconds) when inconsistent names
-  float gate_cost_;          // Cost (seconds) to go through gate
-  float tollbooth_cost_;     // Cost (seconds) to go through toll booth
-  float tollbooth_penalty_;  // Penalty (seconds) to go through a toll booth
+  float density_factor_[16];        // Density factor
+  float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
+  float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
+  float gate_cost_;                 // Cost (seconds) to go through gate
+  float tollbooth_cost_;            // Cost (seconds) to go through toll booth
+  float tollbooth_penalty_;         // Penalty (seconds) to go through a toll booth
+  float alley_cost_;                // Cost (seconds) to use a alley
+  float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
 
@@ -143,11 +150,15 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kDrive) {
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
+  destination_only_penalty_ = pt.get<float>("destination_only_penalty",
+                                            kDefaultDestinationOnlyPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
   tollbooth_cost_ = pt.get<float>("toll_booth_cost", kDefaultTollBoothCost);
   tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
                                      kDefaultTollBoothPenalty);
-
+  alley_cost_ = pt.get<float>("alley_cost", kDefaultAlleyCost);
+  alley_penalty_ = pt.get<float>("alley_penalty",
+                                 kDefaultAlleyPenalty);
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
                                            kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
@@ -213,6 +224,9 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Special cases: gate, toll booth, false intersections
   // TODO - do we want toll booth penalties?
 
+  constexpr float kDefaultAlleyCost           = 5.0f;   // Seconds
+  constexpr float kDefaultAlleyPenalty        = 0.0f;   // Seconds
+
   if (edge->ctry_crossing()) {
     return { country_crossing_cost_ + country_crossing_penalty_,
              country_crossing_cost_ };
@@ -222,15 +236,23 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     return { tollbooth_cost_ + tollbooth_penalty_, tollbooth_cost_ };
   } else if (node->intersection() == IntersectionType::kFalse) {
       return { 0.0f, 0.0f };
+  } else if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    return { alley_cost_ + alley_penalty_, alley_cost_};
   } else {
+
+    float dest_only_penalty = 0.0f;  // Penalty (seconds) using a driveway or parking aisle
+
+    if (!pred.destonly() && edge->destonly())
+      dest_only_penalty = destination_only_penalty_;
+
     // Transition cost = stopimpact * turncost + maneuverpenalty
     uint32_t idx = pred.opp_local_idx();
     float seconds = edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
                          edge->edge_to_right(idx) && edge->edge_to_left(idx),
                          edge->drive_on_right());
     return (node->name_consistency(idx, edge->localedgeidx())) ?
-              Cost(seconds, seconds) :
-              Cost(seconds + maneuver_penalty_, seconds);
+              Cost(seconds + dest_only_penalty, seconds) :
+              Cost(seconds + maneuver_penalty_ + dest_only_penalty, seconds);
   }
 }
 
