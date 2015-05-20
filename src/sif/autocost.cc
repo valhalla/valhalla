@@ -224,9 +224,6 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Special cases: gate, toll booth, false intersections
   // TODO - do we want toll booth penalties?
 
-  constexpr float kDefaultAlleyCost           = 5.0f;   // Seconds
-  constexpr float kDefaultAlleyPenalty        = 0.0f;   // Seconds
-
   if (edge->ctry_crossing()) {
     return { country_crossing_cost_ + country_crossing_penalty_,
              country_crossing_cost_ };
