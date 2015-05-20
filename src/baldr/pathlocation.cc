@@ -49,7 +49,7 @@ namespace baldr{
     for(const auto& edge : edges_) {
       bool found = false;
       for(const auto& other_edge : other.edges_) {
-        if(edge.id == other_edge.id && midgard::equal<float>(edge.dist, other_edge.dist)){
+        if(edge.id == other_edge.id && edge.sos == other_edge.sos && midgard::equal<float>(edge.dist, other_edge.dist)){
           found = true;
           break;
         }
