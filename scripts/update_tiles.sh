@@ -42,7 +42,13 @@ mv ${mjolnir_tile_dir}/* ${tile_dir}/ || exit $?
 
 # cp admin db
 db_name=`cat ${config} | jq '.mjolnir.admin.db_name' | sed 's/^"\(.*\)"$/\1/'` || exit $?
-cp ${tile_dir}/${db_name} ${mjolnir_tile_dir}/${db_name} || exit $?
+cp -rp ${tile_dir}/${db_name} ${mjolnir_tile_dir}/${db_name} || exit $?
+
+# generate connectivity map geojson, tile dir is as good a place as any
+# we can ship the whole tile dir to s3 anyway, admin connectivity and all
+pushd ${tile_dir}/
+connectivitymap -c ${config}
+popd
 
 # clean backup tiles
 ${src_dir}/mjolnir/scripts/clean_tiles.sh ${tile_dir} 2 || exit $?
