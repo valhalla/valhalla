@@ -14,8 +14,6 @@ namespace baldr{
 /**
  * The graph correlated location object providing the path finding
  * algorithm the information to actually compute a path
- *
- * @author  Kevin Kreiser
  */
 class PathLocation : public Location {
  public:
@@ -25,12 +23,15 @@ class PathLocation : public Location {
   /**
    * Structure to store information about a given location correlated edge
    */
+  enum SideOfStreet { NONE = 0, LEFT, RIGHT };
   struct PathEdge {
-    PathEdge(const GraphId& id, const float dist);
+    PathEdge(const GraphId& id, const float dist, const SideOfStreet sos = NONE);
     //the directed edge it appears on
     GraphId id;
     //how far along the edge it is (as a percentage  from 0 - 1)
     float dist;
+    //what side of the edge is it on
+    SideOfStreet sos;
   };
 
   /**
@@ -59,7 +60,7 @@ class PathLocation : public Location {
    * @param id      the graphid of the edge
    * @param dist    the distance along the provided edge where the location was correlated
    */
-  void CorrelateEdge(const GraphId& id, const float dist);
+  void CorrelateEdge(const GraphId& id, const float dist, const SideOfStreet sos = NONE);
 
   /**
    * @return true if the point has been correlated to the route network, false otherwise

@@ -4,7 +4,7 @@
 namespace valhalla{
 namespace baldr{
 
-  PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist): id(id), dist(dist) {
+  PathLocation::PathEdge::PathEdge(const GraphId& id, const float dist, const SideOfStreet sos): id(id), dist(dist), sos(sos) {
   }
 
   PathLocation::PathLocation(const Location& location):Location(location) {
@@ -16,11 +16,11 @@ namespace baldr{
     return node_;
   }
 
-  void PathLocation::CorrelateEdge(const GraphId& id, const float dist) {
+  void PathLocation::CorrelateEdge(const GraphId& id, const float dist, const SideOfStreet sos) {
     //whether or not we are only correlated to nodes in the graph
     node_ = (node_ || edges_.size() == 0) && (1 == dist || dist == 0);
     //add the edge
-    edges_.emplace_back(id, dist);
+    edges_.emplace_back(id, dist, sos);
   }
 
   const std::vector<PathLocation::PathEdge>& PathLocation::edges() const {
@@ -67,6 +67,7 @@ namespace baldr{
       boost::property_tree::ptree e;
       e.put("id", edge.id.value);
       e.put("dist", edge.dist);
+      e.put("sos", edge.sos);
       array.push_back(std::make_pair("", e));
     }
     correlated.put("is_node", IsNode());
@@ -84,7 +85,7 @@ namespace baldr{
     p.vertex_.set_x(path_location.get<float>("vertex.lon"));
     p.vertex_.set_y(path_location.get<float>("vertex.lat"));
     for(const auto& edge : path_location.get_child("edges"))
-      p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"));
+      p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"), static_cast<SideOfStreet>(edge.second.get<int>("sos")));
     return p;
   }
 
