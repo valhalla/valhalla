@@ -44,6 +44,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
   attributes_.trans_down    = edge->trans_down();
   attributes_.shortcut      = edge->shortcut();
   attributes_.mode          = static_cast<uint32_t>(mode);
+  attributes_.dest_only     = edge->destonly();
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -71,6 +72,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
   attributes_.trans_down    = edge->trans_down();
   attributes_.shortcut      = edge->shortcut();
   attributes_.mode          = static_cast<uint32_t>(mode);
+  attributes_.dest_only     = edge->destonly();
 }
 
 // Destructor
@@ -173,6 +175,11 @@ bool EdgeLabel::shortcut() const {
 // Get the travel mode along this edge.
 TravelMode EdgeLabel::mode() const {
   return static_cast<TravelMode>(attributes_.mode);
+}
+
+// Get the destination only flag.
+bool EdgeLabel::destonly() const {
+  return attributes_.dest_only;
 }
 
 // Get the current walking distance in meters.

@@ -198,6 +198,13 @@ class EdgeLabel {
   TravelMode mode() const;
 
   /**
+   * Get the dest only flag.
+   * @return  Returns true if the edge is part of a private or no through road that allows access
+   *          only if required to get to a destination?
+   */
+  bool destonly() const;
+
+  /**
    * Get the current walking distance in meters.
    * @return  Returns the current walking distance accumulated since last stop.
    */
@@ -267,7 +274,8 @@ class EdgeLabel {
     uint32_t trans_down    : 1;
     uint32_t shortcut      : 1;
     uint32_t mode          : 4;
-    uint32_t spare         : 3;
+    uint32_t dest_only     : 1;
+    uint32_t spare         : 2;
   };
   Attributes attributes_;
 
