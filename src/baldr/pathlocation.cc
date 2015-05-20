@@ -16,11 +16,11 @@ namespace baldr{
     return node_;
   }
 
-  void PathLocation::CorrelateEdge(const GraphId& id, const float dist) {
+  void PathLocation::CorrelateEdge(const GraphId& id, const float dist, const SideOfStreet sos) {
     //whether or not we are only correlated to nodes in the graph
     node_ = (node_ || edges_.size() == 0) && (1 == dist || dist == 0);
     //add the edge
-    edges_.emplace_back(id, dist);
+    edges_.emplace_back(id, dist, sos);
   }
 
   const std::vector<PathLocation::PathEdge>& PathLocation::edges() const {
