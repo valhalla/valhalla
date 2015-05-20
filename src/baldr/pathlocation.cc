@@ -67,6 +67,7 @@ namespace baldr{
       boost::property_tree::ptree e;
       e.put("id", edge.id.value);
       e.put("dist", edge.dist);
+      e.put("sos", edge.sos);
       array.push_back(std::make_pair("", e));
     }
     correlated.put("is_node", IsNode());
@@ -84,7 +85,7 @@ namespace baldr{
     p.vertex_.set_x(path_location.get<float>("vertex.lon"));
     p.vertex_.set_y(path_location.get<float>("vertex.lat"));
     for(const auto& edge : path_location.get_child("edges"))
-      p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"));
+      p.edges_.emplace_back(GraphId(edge.second.get<uint64_t>("id")), edge.second.get<float>("dist"), static_cast<SideOfStreet>(edge.second.get<int>("sos")));
     return p;
   }
 
