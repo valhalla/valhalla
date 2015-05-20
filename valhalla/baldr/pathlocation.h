@@ -14,8 +14,6 @@ namespace baldr{
 /**
  * The graph correlated location object providing the path finding
  * algorithm the information to actually compute a path
- *
- * @author  Kevin Kreiser
  */
 class PathLocation : public Location {
  public:
