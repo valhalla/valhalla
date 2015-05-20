@@ -61,7 +61,8 @@ struct Edge {
     uint32_t shortlink        : 1;   // true if this is a link edge and is
                                      //   short enough it may be internal to
                                      //   an intersection
-    uint32_t spare            : 3;
+    uint32_t ferry            : 1;
+    uint32_t spare            : 2;
   };
   EdgeAttributes attributes;
 
@@ -92,6 +93,7 @@ struct Edge {
       e.attributes.driveablereverse = way.auto_backward();
     }
     e.attributes.link = way.link();
+    e.attributes.ferry = way.ferry() || way.rail();
     e.attributes.reclass_link = false;
     e.attributes.has_names = (way.name_index_ != 0
                            || way.name_en_index_ != 0
@@ -180,10 +182,13 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.ferry;
       bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
-      // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
+      // Do not count non-driveable (e.g. emergency service roads) as a
+      // non-link edge or non-ferry edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.ferry;
       }
       if (edge.attributes.link) {
         bundle.link_count++;
@@ -196,10 +201,12 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveablereverse;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
+      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.ferry;
       bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
+        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.ferry;
       }
       if (edge.attributes.link) {
         bundle.link_count++;
@@ -507,6 +514,122 @@ void ReclassifyLinks(const std::string& ways_file,
   LOG_INFO("Finished with " + std::to_string(count) + " reclassified.");
 }
 
+/**
+ * Get the best classification for any driveable non-ferry edges from a node.
+ * @param  edges The file backed list of edges in the graph.
+ * @return  Returns the best (most important) classification
+ */
+uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
+  uint32_t bestrc = kAbsurdRoadClass;
+  for (const auto& edge : edges) {
+    if (!edge.first.attributes.ferry &&
+        (edge.first.attributes.driveableforward ||
+         edge.first.attributes.driveablereverse)) {
+      if (edge.first.attributes.importance < bestrc) {
+        bestrc = edge.first.attributes.importance;
+      }
+    }
+  }
+  return bestrc;
+}
+
+// Reclassify links (ramps and turn channels). OSM usually classifies links as
+// the best classification, while to more effectively create shortcuts it is
+// better to "downgrade" link edges to the lower classification.
+void ReclassifyFerryConnections(const std::string& ways_file,
+                     const std::string& nodes_file,
+                     const std::string& edges_file,
+                     const uint32_t rc,
+                     DataQuality& stats) {
+  LOG_INFO("Reclassifying ferry connection graph edges...")
+
+  uint32_t count = 0;
+  std::unordered_set<size_t> doneset;     // Nodes to which shortest path found
+  std::unordered_set<size_t> adjset;      // Set of nodes to expand
+  std::list<size_t> connedgeindexes;      // Edge indexes to reclassify
+  sequence<OSMWay> ways(ways_file, false);
+  sequence<Edge> edges(edges_file, false);
+  sequence<Node> nodes(nodes_file, false);
+
+ /*
+  // try to expand
+  auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
+    auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
+    auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
+
+    // Add the classification if there is a driveable non-link edge
+    if (end_node_bundle.node.attributes_.non_link_edge) {
+      endrc.insert(GetBestNonLinkClass(end_node_bundle.node_edges));
+      if (end_node_bundle.link_count > 1 &&
+          end_node_bundle.node.attributes_.shortlink &&
+          visitedset.find(end_node_itr.position()) == visitedset.end()) {
+       expandset.insert(end_node_itr.position());
+      }
+    } else if (visitedset.find(end_node_itr.position()) == visitedset.end()) {
+      expandset.insert(end_node_itr.position());
+    }
+  };
+*/
+  // Need to expand from the end of the ferry until we meet a road with primary
+  // classification. Want to do simple shortest path (time based only) and obey
+  // driveability. If the starting connection is oneway onto the ferry we need
+  // to check opposing driveability
+
+  // Iterate through nodes and find any that connect to both a ferry and a
+  // regular (non-ferry) edge
+  sequence<Node>::iterator node_itr = nodes.begin();
+  while (node_itr != nodes.end()) {
+    auto bundle = collect_node_edges(node_itr, nodes, edges);
+    if (bundle.node.attributes_.ferry_edge &&
+        bundle.node.attributes_.non_ferry_edge &&
+        GetBestNonFerryClass(bundle.node_edges) > rc) {
+
+      // Clear the adjacency set and done set
+      doneset = {};
+      adjset  = {};
+
+      // Add node to the adjacency set
+  //    adjset.insert()
+
+      // Expand edges until a node connected to specified road classification
+      // is reached
+      while (!adjset.empty()) {
+ //       expand(startedge.first, node_itr);
+
+
+        // Expand all edges from this node and pop from expand set
+        auto expand_node_itr = nodes[*adjset.begin()];
+        auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+        doneset.insert(expand_node_itr.position());
+        adjset.erase(adjset.begin());
+
+
+        for (const auto& expandededge : expanded.node_edges) {
+
+          // Expand from end node of this link edge
+   //       expand(expandededge.first, expand_node_itr);
+        }
+      }
+
+      // Trace shortest path backwards and upgrade classification on
+      // any edges below the specified classification.
+ /*     for (auto idx : linkedgeindexes) {
+        sequence<Edge>::iterator element = edges[idx];
+        auto edge = *element;
+        if (edge.attributes.importance > rc) {
+          edge.attributes.importance = rc;
+          element = edge;
+          count++;
+        }
+      } */
+    }
+
+    // Go to the next node
+    node_itr += bundle.node_count;
+  }
+  LOG_INFO("Finished. " + std::to_string(count) + " edges reclassified.");
+}
+
 /*
 struct DuplicateEdgeInfo {
   uint32_t edgeindex;
@@ -625,7 +748,6 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
 // Walk the shape and look for any empty tiles that the shape intersects
 void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
                 const Tiles& tiling, std::vector<PointLL>& shape,
-                const std::map<GraphId, size_t>& tiles,
                 DataQuality& stats) {
   // Walk the shape segments until we are outside
   uint32_t current_tile = tile1.tileid();
@@ -636,10 +758,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
     if (next_tile != current_tile) {
       // If a neighbor we can just add this tile
       if (tiling.AreNeighbors(current_tile, next_tile)) {
-        GraphId id(next_tile, 2, 0);
-        if (tiles.find(id) == tiles.end()) {
-          stats.AddIntersectedTile(id);
-        }
+        stats.AddIntersectedTile(GraphId(next_tile, 2, 0));
       } else {
         // Not a neighbor - find any intermediate intersecting tiles
 
@@ -650,12 +769,10 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
              row <= std::max(rc1.first, rc2.first); row++) {
           for (int32_t col = std::min(rc1.second, rc2.second);
                        col <= std::max(rc1.second, rc2.second); col++) {
-            // Get the tile Id for the row,col. Skip if either of the 2 tiles
-            // or if the tile is populated.
+            // Get the tile Id for the row,col. Skip if either of the 2 tiles.
             int32_t tileid = tiling.TileId(row, col);
             GraphId id(tileid, 2, 0);
-            if (tileid == current_tile || tileid == next_tile ||
-                tiles.find(id) != tiles.end()) {
+            if (tileid == current_tile || tileid == next_tile) {
               continue;
             }
 
@@ -677,7 +794,6 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
-    const std::map<GraphId, size_t>& tiles,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
@@ -834,7 +950,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
           if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2)) {
             CheckForIntersectingTiles(tileid1, tileid2, tiling,
-                     shape, tiles, stats);
+                     shape, stats);
           }
 
           // Increment the directed edge index within the tile
@@ -845,7 +961,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        NodeInfoBuilder nodebuilder(node_ll, directededgecount, n, bestclass, node.access_mask(),
+        NodeInfoBuilder nodebuilder(node_ll, bestclass, node.access_mask(),
                                     node.type(), (n == 1), node.traffic_signal());
 
         directededgecount += n;
@@ -911,7 +1027,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), std::cref(tiles), tile_start, tile_end,
+                      std::cref(osmdata), tile_start, tile_end,
                       std::ref(results[i]))
     );
   }
@@ -939,9 +1055,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
 
   // Add "empty" tiles for any intersected tiles
   for (auto& empty_tile : stats.intersected_tiles) {
-    if (GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
-      LOG_ERROR("Writing an empty tile over a valid tile!");
-    } else {
+    if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
       GraphTileBuilder graphtile;
       LOG_INFO("Add empty tile for: " + std::to_string(empty_tile.tileid()));
       graphtile.StoreTileData(tile_hierarchy, empty_tile);
