@@ -70,10 +70,11 @@ namespace {
     });
   }
 
-  std::string to_feature_collection(const std::unordered_map<size_t, std::list<PointLL> >& regions) {
+  template <class T>
+  std::string to_feature_collection(const std::unordered_map<size_t, std::list<PointLL> >& regions, const std::multimap<size_t, size_t, T>& arities) {
     auto features = json::array({});
-    for(const auto& region : regions)
-      features->emplace_back(to_feature(region));
+    for(const auto& arity : arities)
+      features->emplace_back(to_feature(*regions.find(arity.second)));
     std::stringstream ss;
     ss << *json::map({
       {std::string("type"), std::string("FeatureCollection")},
@@ -132,12 +133,19 @@ namespace valhalla {
       for(const auto& tile : level->second) {
         auto region = regions.find(tile.second);
         if(region == regions.end())
-          regions.insert({tile.second, {bbox->second.tiles.Center(tile.first)}});
+          regions.emplace(tile.second, std::list<PointLL>{bbox->second.tiles.Center(tile.first)});
         else
           region->second.push_back(bbox->second.tiles.Center(tile.first));
       }
+
+      //record the arity of each region so we can put the biggest ones first
+      auto comp = [](const size_t& a, const size_t& b){return a > b;};
+      std::multimap<size_t, size_t, decltype(comp)> arities(comp);
+      for(const auto& region : regions)
+        arities.emplace(region.second.size(), region.first);
+
       //turn it into geojson
-      return to_feature_collection(regions);
+      return to_feature_collection<decltype(comp)>(regions, arities);
     }
 
     std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
