@@ -15,25 +15,55 @@
       "node_script": "conf/vertices.lua",
       "node_function": "nodes_proc",
       "way_script": "conf/edges.lua",
-      "way_function": "ways_proc"
+      "way_function": "ways_proc",
+      "relation_script": "conf/relations.lua",
+      "relation_function": "rels_proc"
     },
     "logging": {
       "type": "std_out",
       "color": true
     }
   },
+  "loki": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    },
+    "service": {
+      "proxy": "ipc://loki"
+    }
+  },
   "thor": {
     "logging": {
       "type": "std_out",
       "color": true
+    },
+    "service": {
+      "proxy": "ipc://thor"
     }
   },
-  "tyr": {
-    "listen_address": "0.0.0.0",
-    "port": 8002,
+  "odin": {
     "logging": {
       "type": "std_out",
       "color": true
+    },
+    "service": {
+      "proxy": "ipc://odin"
+    }
+  },
+  "tyr": {
+    "logging": {
+      "type": "std_out",
+      "color": true
+    },
+    "service": {
+      "proxy": "ipc://tyr"
+    }
+  },
+  "httpd": {
+    "service": {
+      "listen": "tcp://*:8002",
+      "loopback": "ipc://loopback"
     }
   },
   "costing_options": {

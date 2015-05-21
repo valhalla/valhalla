@@ -29,13 +29,14 @@ libtool
 py-compile
 
 # built objects
+tyr_service
+tyr_simple_service
 *.o
 .deps/
 .dirstamp
 *.lo
 .libs/
 libvalhalla_tyr.la
-tyr_service.la
 
 # tests
 test-suite.log
@@ -44,9 +45,7 @@ test-driver
 test/*.log
 test/*.trs
 test/test_config
-test/tiles
-test/handlers
-test/json
+test/serializers
 
 # test coverage stuff
 *.gcno
