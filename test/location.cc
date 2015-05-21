@@ -124,6 +124,8 @@ void test_from_json() {
       make_json(lat, lng, type_default, boost::none, name));
   if ((loc.name_ != name))
     throw std::runtime_error("Json location parsing failed");
+  if (loc.heading_)
+    throw std::runtime_error("Json location parsing failed");
 
   // Test street
   loc = Location::FromJson(
