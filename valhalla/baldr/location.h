@@ -71,6 +71,7 @@ struct Location {
   std::string country_;
 
   boost::optional<int> heading_;
+  boost::optional<uint64_t> way_id_;
 
   //TODO: fill these out in constructors and add getters and setters
 /*

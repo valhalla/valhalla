@@ -50,7 +50,8 @@ std::string make_json(float lat, float lng,
                       std::string city = "",
                       std::string state = "",
                       std::string postal_code = "",
-                      std::string country = "") {
+                      std::string country = "",
+                      boost::optional<uint64_t> way_id = boost::none) {
   std::string json = "{";
   json += "\"lat\":" + std::to_string(lat);
   json += ",\"lon\":" + std::to_string(lng);
@@ -59,6 +60,8 @@ std::string make_json(float lat, float lng,
     json += ",\"type\":\"" + type + "\"";
   if (heading)
     json += ",\"heading\":" + std::to_string(*heading);
+  if (way_id)
+    json += ",\"way_id\":" + std::to_string(*way_id);
   if (!name.empty())
     json += ",\"name\":\"" + name + "\"";
   if (!street.empty())
@@ -90,6 +93,7 @@ void test_from_json() {
   std::string state = "NY";
   std::string postal_code = "10118-0110";
   std::string country = "US";
+  uint64_t way_id = 12987234107;
 
   try {
     Location loc = Location::FromJson("something");
@@ -153,8 +157,10 @@ void test_from_json() {
 
   // Test country
   loc = Location::FromJson(
-      make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country));
+      make_json(lat, lng, type_default, boost::none, name, street, city, state, postal_code, country, way_id));
   if ((loc.country_ != country))
+    throw std::runtime_error("Json location parsing failed");
+  if (*loc.way_id_ != way_id)
     throw std::runtime_error("Json location parsing failed");
 
   // Test wrong thing is always break
