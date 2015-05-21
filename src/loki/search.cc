@@ -24,6 +24,10 @@ constexpr float NODE_SNAP = 12.5f * 12.5f;
 //look at the shape of edges (expensive) for edges that are probably very far from your location
 constexpr float EDGE_RADIUS = 250.f * 250.f;
 
+bool HeadingFilter(const DirectedEdge* edge, boost::optional<int> heading) {
+  return false;
+}
+
 PathLocation::SideOfStreet FlipSide(const PathLocation::SideOfStreet side) {
   if(side != PathLocation::SideOfStreet::NONE)
     return side == PathLocation::SideOfStreet::LEFT ? PathLocation::SideOfStreet::RIGHT : PathLocation::SideOfStreet::LEFT;
@@ -90,17 +94,26 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
   //now that we have a node we can pass back all the edges leaving it
   PathLocation correlated(location);
   correlated.CorrelateVertex(node->latlng());
-  const auto start_edge = tile->directededge(node->edge_index());
-  const auto end_edge = start_edge + node->edge_count();
-  for(auto edge = start_edge; edge < end_edge; ++edge) {
+  const auto* start_edge = tile->directededge(node->edge_index());
+  const auto* end_edge = start_edge + node->edge_count();
+  std::list<PathLocation::PathEdge> heading_filtered;
+  for(const auto* edge = start_edge; edge < end_edge; ++edge) {
     if(!filter(edge)) {
       GraphId id(tile->id());
       id.fields.id = node->edge_index() + (edge - start_edge);
-      correlated.CorrelateEdge(std::move(id), 0.f);
+      if(!HeadingFilter(edge, location.heading_))
+        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), 0.f, PathLocation::NONE});
+      else
+        heading_filtered.emplace_back(std::move(id), 0.f, PathLocation::NONE);
     }
   }
 
-  //if we found nothing that is no good..
+  //if we have nothing because of heading we'll just ignore it
+  if(correlated.edges().size() == 0 && heading_filtered.size())
+    for(auto& path_edge : heading_filtered)
+      correlated.CorrelateEdge(std::move(path_edge));
+
+  //if we still found nothing that is no good..
   if(correlated.edges().size() == 0)
     throw std::runtime_error("Unable to find any paths leaving this location");
 
@@ -274,14 +287,26 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     //side of street
     auto side = GetSide(closest_edge, closest_edge_info, closest_point, location.latlng_);
     //correlate the edge we found
-    correlated.CorrelateEdge(closest_edge_id, length_ratio, side);
+    std::list<PathLocation::PathEdge> heading_filtered;
+    if(HeadingFilter(closest_edge, location.heading_))
+      heading_filtered.emplace_back(closest_edge_id, length_ratio, side);
+    else
+      correlated.CorrelateEdge(PathLocation::PathEdge{closest_edge_id, length_ratio, side});
     //correlate its evil twin
-    const auto other_tile = reader.GetGraphTile(closest_edge->endnode());
-    const auto end_node = other_tile->node(closest_edge->endnode());
-    auto opposing_edge_id = other_tile->header()->graphid();
-    opposing_edge_id.fields.id = end_node->edge_index() + closest_edge->opp_index();
-    if(!filter(other_tile->directededge(opposing_edge_id)))
-      correlated.CorrelateEdge(opposing_edge_id, 1 - length_ratio, FlipSide(side));
+    auto opposing_edge_id = reader.GetOpposingEdgeId(closest_edge_id);
+    const auto* other_tile = reader.GetGraphTile(opposing_edge_id);
+    const auto* other_edge = other_tile->directededge(opposing_edge_id);
+    if(!filter(other_edge)) {
+      if(HeadingFilter(other_edge, location.heading_))
+        heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, FlipSide(side));
+      else
+        correlated.CorrelateEdge(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, FlipSide(side)});
+    }
+
+    //if we have nothing because of heading we'll just ignore it
+    if(correlated.edges().size() == 0 && heading_filtered.size())
+      for(auto& path_edge : heading_filtered)
+        correlated.CorrelateEdge(std::move(path_edge));
   }
 
   //if we found nothing that is no good..

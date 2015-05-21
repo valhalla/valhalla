@@ -143,7 +143,7 @@ void search(const valhalla::baldr::Location& location, const valhalla::midgard::
   valhalla::baldr::PathLocation answer(location);
   answer.CorrelateVertex(expected_point);
   for(const auto& expected_edge : expected_edges)
-    answer.CorrelateEdge(expected_edge.id, expected_edge.dist, expected_edge.sos);
+    answer.CorrelateEdge(PathLocation::PathEdge{expected_edge.id, expected_edge.dist, expected_edge.sos});
   if(!(answer == p)) {
     throw std::runtime_error("Did not find expected edges");
   }
