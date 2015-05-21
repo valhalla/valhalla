@@ -1,5 +1,6 @@
 #include "loki/search.h"
 #include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/linesegment2.h>
 
 #include <unordered_set>
 #include <list>
@@ -12,9 +13,15 @@ using namespace valhalla::loki;
 
 namespace {
 
+//during side of street computations we figured you're on the street if you are less than
+//5 meters (16) feet from the centerline. this is actually pretty large (with accurate shape
+//data for the roads it might want half that) but its better to assume on street than not
+constexpr float NONE_SNAP = 5.f * 5.f;
 //during edge searching we snap to vertices if you are closer than
 //12.5 meters (40 feet) to a given vertex.
 constexpr float NODE_SNAP = 12.5f * 12.5f;
+//if you arent in this vicinity from an edge then you arent very close to it, helps to not
+//look at the shape of edges (expensive) for edges that are probably very far from your location
 constexpr float EDGE_RADIUS = 250.f * 250.f;
 
 PathLocation::SideOfStreet FlipSide(const PathLocation::SideOfStreet side) {
@@ -23,9 +30,23 @@ PathLocation::SideOfStreet FlipSide(const PathLocation::SideOfStreet side) {
   return side;
 }
 
-PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info, const std::tuple<PointLL, float, int>& point){
+PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info,
+  const std::tuple<PointLL, float, int>& point, const PointLL& original){
 
-  return PathLocation::SideOfStreet::NONE;
+  //its so close to the edge that its basically on the edge
+  if(std::get<1>(point) < NONE_SNAP)
+    return PathLocation::SideOfStreet::NONE;
+
+  //if the projected point is way too close to the begin or end of the shape
+  //TODO: if the original point is really far away side of street may also not make much sense..
+  if(std::get<0>(point).DistanceSquared(info->shape().front()) < NODE_SNAP ||
+     std::get<0>(point).DistanceSquared(info->shape().back()) < NODE_SNAP)
+    return PathLocation::SideOfStreet::NONE;
+
+  //what side
+  auto index = std::get<2>(point);
+  LineSegment2 segment(info->shape()[index], info->shape()[index + 1]);
+  return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
 }
 
 const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
@@ -251,7 +272,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     if(!closest_edge->forward())
       length_ratio = 1.f - length_ratio;
     //side of street
-    auto side = GetSide(closest_edge, closest_edge_info, closest_point);
+    auto side = GetSide(closest_edge, closest_edge_info, closest_point, location.latlng_);
     //correlate the edge we found
     correlated.CorrelateEdge(closest_edge_id, length_ratio, side);
     //correlate its evil twin

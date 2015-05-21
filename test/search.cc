@@ -184,6 +184,10 @@ void TestEdgeSearch() {
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
   search({answer}, answer, { PE{{t, l, 0}, ratio, S::NONE}, PE{{t, l, 7}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  //check for side of street by offsetting the test point from the line orthogonally
+  ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
+  test.Set(answer.first + ortho.x(), answer.second + ortho.y());
+  search({test}, answer, { PE{{t, l, 0}, ratio, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, S::RIGHT} }, valhalla::loki::SearchStrategy::EDGE);
 }
 
 }
