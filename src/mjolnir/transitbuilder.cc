@@ -792,9 +792,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   }
 
   // TODO - more complete shape
-  std::vector<PointLL> shape;
-  shape.push_back(tile->node(startnode)->latlng());
-  shape.push_back(stop.ll);
+  std::vector<PointLL> shape{tile->node(startnode)->latlng(), stop.ll};
   float length = PointLL::Length(shape);
 
   // Add connection to start node
@@ -908,7 +906,7 @@ void build(const boost::property_tree::ptree& pt,
         }
       }
     }
-LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
+    LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
 
     // Get the current number of directed edges. Add those needed for
