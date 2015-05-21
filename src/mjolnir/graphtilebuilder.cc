@@ -106,8 +106,10 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (auto offset : edge_info_offsets) {
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
-      LOG_ERROR("offset = " + std::to_string(offset) + " ei offset= " +
-                std::to_string(edge_info_offset_));
+      LOG_ERROR("GraphTileBuilder TileID: " +
+            std::to_string(header_->graphid().tileid()) +
+            " offset stored in directed edge: = " + std::to_string(offset) +
+            " current ei offset= " + std::to_string(edge_info_offset_));
     }
     EdgeInfo ei(edgeinfo_ + offset, textlist_, textlist_size_);
     EdgeInfoBuilder eib;
@@ -406,15 +408,38 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
 
 // Add a node and list of directed edges
 void GraphTileBuilder::AddNodeAndDirectedEdges(
-    const NodeInfoBuilder& node,
+    NodeInfoBuilder& node,
     const std::vector<DirectedEdgeBuilder>& directededges) {
-  // Add the node to the list
+  // Set the index to the first directed edge from this node and
+  // set its count. Add the node to the list
+  node.set_edge_index(directededges_builder_.size());
+  node.set_edge_count(directededges.size());
   nodes_builder_.push_back(node);
 
   // Add directed edges to the list
   for (const auto& directededge : directededges) {
     directededges_builder_.push_back(directededge);
   }
+}
+
+// Get the current list of node builders.
+const std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() const {
+  return nodes_builder_;
+}
+
+// Gets the current list of directed edge (builders).
+const std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() const {
+  return directededges_builder_;
+}
+
+// Clear the current list of nodes (builders).
+void GraphTileBuilder::ClearNodes() {
+  nodes_builder_.clear();
+}
+
+// Clear the current list of directed edges (builders).
+void GraphTileBuilder::ClearDirectedEdges() {
+  directededges_builder_.clear();
 }
 
 // Add a transit departure.
@@ -603,6 +628,13 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
 SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
     return static_cast<SignBuilder&>(signs_[idx]);
+  throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+// Gets a sign builder at the specified index.
+SignBuilder& GraphTileBuilder::sign_builder(const size_t idx) {
+  if (idx < header_->signcount())
+    return signs_builder_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 

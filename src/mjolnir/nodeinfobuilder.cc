@@ -33,8 +33,6 @@ NodeInfoBuilder::NodeInfoBuilder()
 }
 
 NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
-                                 const uint32_t edge_index,
-                                 const uint32_t edge_count,
                                  const RoadClass rc,
                                  const uint32_t access,
                                  const NodeType type,
@@ -42,8 +40,6 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const bool traffic_signal)
     : NodeInfo() {
   set_latlng(ll);
-  set_edge_index(edge_index);
-  set_edge_count(edge_count);
   set_bestrc(rc);
   set_access(access);
   set_type(type);
