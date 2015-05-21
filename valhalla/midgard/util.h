@@ -140,6 +140,29 @@ std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
 }
 
+/* circular range clamp
+ */
+template <class T>
+T circular_range_clamp(T value, T lower, T upper) {
+  //easy case
+  if(lower <= value and value <= upper)
+    return value;
+
+  //get some info about the clamp region
+  auto interval = upper - lower;
+  auto half = interval / 2;
+  auto mid = upper - half;
+  //get some sign specific info
+  auto h = value < mid ? half : -half;
+  auto i = value < mid ? -interval : interval;
+  //shift by half interval
+  value += h;
+  //move into first interval
+  value -= static_cast<int>(value / interval) * interval;
+  //shift by half again
+  return value + h;
+}
+
 }
 }
 #endif  // VALHALLA_MIDGARD_UTIL_H_

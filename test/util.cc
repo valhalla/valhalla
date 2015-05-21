@@ -78,6 +78,25 @@ void MemoryStatus() {
   }
 }
 
+void TestClamp() {
+  if(!equal<float>(circular_range_clamp<float>(467, -90, 90),-73))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-467, -90, 90), 73))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(7, -90, 90), 7))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-67, -90, 90), -67))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-97, -90, 90), 83))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-97.2, -90, 90), 82.8))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-180, -90, 90), 0))
+    throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(270, -90, 90), -90))
+    throw std::runtime_error("Wrong clamp value");
+}
+
 }
 
 int main() {
@@ -92,6 +111,8 @@ int main() {
   suite.test(TEST_CASE(AppxEqual));
 
   suite.test(TEST_CASE(MemoryStatus));
+
+  suite.test(TEST_CASE(TestClamp));
 
   return suite.tear_down();
 }
