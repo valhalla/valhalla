@@ -149,7 +149,7 @@ T circular_range_clamp(T value, T lower, T upper) {
     throw std::runtime_error("invalid range for clamp");
 
   //easy case
-  if(lower <= value and value <= upper)
+  if(lower <= value && value <= upper)
     return value;
 
   //see how far off the bottom of the range it is
