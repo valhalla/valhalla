@@ -70,7 +70,7 @@ struct Location {
   std::string zip_;
   std::string country_;
 
-  std::string heading_;
+  boost::optional<int> heading_;
 
   //TODO: fill these out in constructors and add getters and setters
 /*
