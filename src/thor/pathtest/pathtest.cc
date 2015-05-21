@@ -128,9 +128,9 @@ std::string to_json(const valhalla::baldr::Location& l) {
           "through" : "break";
   json += "\"";
 
-  if (!l.heading_.empty()) {
+  if (l.heading_) {
     json += ",\"heading\":";
-    json += l.heading_;
+    json += *l.heading_;
   }
 
   if (!l.name_.empty()) {

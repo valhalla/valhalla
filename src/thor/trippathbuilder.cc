@@ -168,8 +168,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_postal_code(origin.zip_);
   if (!origin.country_.empty())
     tp_orig->set_country(origin.country_);
-  if (!origin.heading_.empty())
-    tp_orig->set_heading(std::stoi(origin.heading_));
+  if (origin.heading_)
+    tp_orig->set_heading(*origin.heading_);
 
   // Set destination
   TripPath_Location* tp_dest = trip_path.add_location();
@@ -191,8 +191,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_postal_code(dest.zip_);
   if (!dest.country_.empty())
     tp_dest->set_country(dest.country_);
-  if (!dest.heading_.empty())
-    tp_dest->set_heading(std::stoi(dest.heading_));
+  if (dest.heading_)
+    tp_dest->set_heading(*dest.heading_);
 
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the opposing edge
   // then use the opposing index to get the opposing edge, and its end node is the begin node of the original edge
