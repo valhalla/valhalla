@@ -95,6 +95,12 @@ void TestClamp() {
     throw std::runtime_error("Wrong clamp value");
   if(!equal<float>(circular_range_clamp<float>(270, -90, 90), -90))
     throw std::runtime_error("Wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(369, 0, 360), 9))
+    throw std::runtime_error("wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(-369, 0, 360), 351))
+    throw std::runtime_error("wrong clamp value");
+  if(!equal<float>(circular_range_clamp<float>(739, -45, -8), -38))
+    throw std::runtime_error("wrong clamp value");
 }
 
 }

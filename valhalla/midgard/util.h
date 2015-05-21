@@ -144,23 +144,26 @@ std::unique_ptr<T> make_unique(Args&&... args) {
  */
 template <class T>
 T circular_range_clamp(T value, T lower, T upper) {
+  //yeah..
+  if(lower >= upper)
+    throw std::runtime_error("invalid range for clamp");
+
   //easy case
   if(lower <= value and value <= upper)
     return value;
 
-  //get some info about the clamp region
-  auto interval = upper - lower;
-  auto half = interval / 2;
-  auto mid = upper - half;
-  //get some sign specific info
-  auto h = value < mid ? half : -half;
-  auto i = value < mid ? -interval : interval;
-  //shift by half interval
-  value += h;
-  //move into first interval
-  value -= static_cast<int>(value / interval) * interval;
-  //shift by half again
-  return value + h;
+  //see how far off the bottom of the range it is
+  auto i = upper - lower;
+  if(value < lower) {
+    auto d = lower - value;
+    d -= (static_cast<int>(d / i) * i);
+    return upper - d;
+  }
+
+  //its past the top of the range
+  auto d = value - upper;
+  d -= (static_cast<int>(d / i) * i);
+  return lower + d;
 }
 
 }
