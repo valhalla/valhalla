@@ -13,9 +13,20 @@ using namespace valhalla::loki;
 namespace {
 
 //during edge searching we snap to vertices if you are closer than
-//15 meters to a given vertex.
-constexpr float NODE_SNAP = 15 * 15;
-constexpr float EDGE_RADIUS = 250 * 250;
+//12.5 meters (40 feet) to a given vertex.
+constexpr float NODE_SNAP = 12.5f * 12.5f;
+constexpr float EDGE_RADIUS = 250.f * 250.f;
+
+PathLocation::SideOfStreet FlipSide(const PathLocation::SideOfStreet side) {
+  if(side != PathLocation::SideOfStreet::NONE)
+    return side == PathLocation::SideOfStreet::LEFT ? PathLocation::SideOfStreet::RIGHT : PathLocation::SideOfStreet::LEFT;
+  return side;
+}
+
+PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info, const std::tuple<PointLL, float, int>& point){
+
+  return PathLocation::SideOfStreet::NONE;
+}
 
 const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
   //get the node at the end of this edge
@@ -116,7 +127,7 @@ PathLocation NodeSearch(const Location& location, GraphReader& reader, EdgeFilte
   return CorrelateNode(node, location, tile, filter);
 }
 
-std::tuple<PointLL, float, int> Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator) {
+std::tuple<PointLL, float, size_t> Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator) {
   size_t closest_segment = 0;
   float closest_distance = std::numeric_limits<float>::max();
   PointLL closest_point{};
@@ -153,7 +164,7 @@ std::tuple<PointLL, float, int> Project(const PointLL& p, const std::vector<Poin
     }
   }
 
-  return std::make_tuple(std::move(closest_point), std::move(closest_distance), std::move(closest_segment));
+  return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
 }
 
 PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilter filter, float sq_search_radius = EDGE_RADIUS, float sq_node_snap = NODE_SNAP) {
@@ -239,15 +250,17 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
     if(!closest_edge->forward())
       length_ratio = 1.f - length_ratio;
+    //side of street
+    auto side = GetSide(closest_edge, closest_edge_info, closest_point);
     //correlate the edge we found
-    correlated.CorrelateEdge(closest_edge_id, length_ratio);
+    correlated.CorrelateEdge(closest_edge_id, length_ratio, side);
     //correlate its evil twin
     const auto other_tile = reader.GetGraphTile(closest_edge->endnode());
     const auto end_node = other_tile->node(closest_edge->endnode());
     auto opposing_edge_id = other_tile->header()->graphid();
     opposing_edge_id.fields.id = end_node->edge_index() + closest_edge->opp_index();
     if(!filter(other_tile->directededge(opposing_edge_id)))
-      correlated.CorrelateEdge(opposing_edge_id, 1 - length_ratio);
+      correlated.CorrelateEdge(opposing_edge_id, 1 - length_ratio, FlipSide(side));
   }
 
   //if we found nothing that is no good..
