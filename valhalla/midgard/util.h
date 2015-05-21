@@ -140,6 +140,32 @@ std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>{new T{std::forward<Args>(args)...}};
 }
 
+/* circular range clamp
+ */
+template <class T>
+T circular_range_clamp(T value, T lower, T upper) {
+  //yeah..
+  if(lower >= upper)
+    throw std::runtime_error("invalid range for clamp");
+
+  //easy case
+  if(lower <= value && value <= upper)
+    return value;
+
+  //see how far off the bottom of the range it is
+  auto i = upper - lower;
+  if(value < lower) {
+    auto d = lower - value;
+    d -= (static_cast<int>(d / i) * i);
+    return upper - d;
+  }
+
+  //its past the top of the range
+  auto d = value - upper;
+  d -= (static_cast<int>(d / i) * i);
+  return lower + d;
+}
+
 }
 }
 #endif  // VALHALLA_MIDGARD_UTIL_H_
