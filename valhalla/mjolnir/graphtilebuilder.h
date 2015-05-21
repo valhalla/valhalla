@@ -231,24 +231,28 @@ class GraphTileBuilder : public baldr::GraphTile {
   /**
    * Gets a builder for a node from an existing tile.
    * @param  idx  Index of the node within the tile.
+   * @return  Returns a reference to the node builder.
    */
   NodeInfoBuilder& node(const size_t idx);
 
   /**
    * Get the node builder at the specified index.
    * @param  idx  Index of the node builder.
+   * @return  Returns a reference to the node builder.
    */
   NodeInfoBuilder& node_builder(const size_t idx);
 
   /**
    * Gets a builder for a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
+   * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdgeBuilder& directededge(const size_t idx);
 
   /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
+   * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdgeBuilder& directededge_builder(const size_t idx);
 
@@ -256,8 +260,16 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Gets a non-const sign (builder) from existing tile data.
    * @param  idx  Index of the sign (index in the array, not the
    *              directed edge index) within the tile.
+   * @return  Returns a reference to the sign builder.
    */
   SignBuilder& sign(const size_t idx);
+
+  /**
+   * Get the sign builder at the specified index.
+   * @param  idx  Index of the sign builder.
+   * @return  Returns a reference to the sign builder.
+   */
+  SignBuilder& sign_builder(const size_t idx);
 
   /**
    * Gets a const admin builder at specified index.

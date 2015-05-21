@@ -434,7 +434,7 @@ const std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() const 
 
 // Clear the current list of nodes (builders).
 void GraphTileBuilder::ClearNodes() {
-  nodes_builder_.size();
+  nodes_builder_.clear();
 }
 
 // Clear the current list of directed edges (builders).
@@ -628,6 +628,13 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
 SignBuilder& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
     return static_cast<SignBuilder&>(signs_[idx]);
+  throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
+}
+
+// Gets a sign builder at the specified index.
+SignBuilder& GraphTileBuilder::sign_builder(const size_t idx) {
+  if (idx < header_->signcount())
+    return signs_builder_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
