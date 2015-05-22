@@ -227,6 +227,11 @@ namespace {
         throw std::runtime_error("No edge/node costing provided");
       }
 
+      if (costing == "multimodal") {
+        // TODO - have a way of specifying mode at the location
+        costing = "pedestrian";
+      }
+
       // Get the costing options. Get the base options from the config and the
       // options for the specified costing method
       std::string method_options = "costing_options." + costing;
