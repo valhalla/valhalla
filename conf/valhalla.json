@@ -87,6 +87,8 @@
       "step_penalty": 30.0
     },
     "bicycle": {
+    },
+    "transit": {
     }
   }
 }
