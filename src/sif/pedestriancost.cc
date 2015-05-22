@@ -9,7 +9,7 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr uint32_t kUnitSize = 2;
+constexpr uint32_t kUnitSize = 1;
 constexpr uint32_t kMaxWalkingDistance = 100000; // 100 km
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
