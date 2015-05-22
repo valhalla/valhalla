@@ -160,6 +160,9 @@ void TestNodeSearch() {
   search({c.second}, c.second, { PE{{t, l, 5}, 0, S::NONE}, PE{{t, l, 6}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
   search({d.second}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
 
+  //slightly off the node
+  search({d.second + PointLL(.0001, .0001)}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+
   //with heading
   Location x{a.second};
   x.heading_ = 90;
