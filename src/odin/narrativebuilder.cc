@@ -219,6 +219,16 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
   // 3 Stay straight to take the I 95 South ramp toward Baltimore
   // 4 Stay straight to take the Gettysburg Pike ramp
 
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  uint32_t name_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+  bool name_limit_by_consecutive_count = true;
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
@@ -235,29 +245,29 @@ void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
     // 1 Stay straight to take the I 95 South ramp
     case 1: {
       text_instruction += (boost::format("Stay straight to take the %1% ramp")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 2 Stay straight to take the ramp toward Baltimore
     case 2: {
       text_instruction += (boost::format(
           "Stay straight to take the ramp toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 3 Stay straight to take the I 95 South ramp toward Baltimore
     case 3: {
       text_instruction += (boost::format(
           "Stay straight to take the %1% ramp toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 4 Stay straight to take the Gettysburg Pike ramp
     case 4: {
       text_instruction += (boost::format(
           "Stay straight to take the %1% ramp")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
     default: {
@@ -288,6 +298,16 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
   // 11 Turn right to take the I 95 South ramp toward Baltimore
   // 12 Turn right to take the Gettysburg Pike ramp
 
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  uint32_t name_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+  bool name_limit_by_consecutive_count = true;
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
@@ -306,28 +326,28 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
     // 1 Take the I 95 South ramp on the right
     case 1: {
       text_instruction += (boost::format("Take the %1% ramp on the right")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 2 Take the ramp on the right toward Baltimore
     case 2: {
       text_instruction += (boost::format(
           "Take the ramp on the right toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 3 Take the I 95 South ramp on the right toward Baltimore
     case 3: {
       text_instruction += (boost::format(
           "Take the %1% ramp on the right toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 4 Take the Gettysburg Pike ramp on the right
     case 4: {
       text_instruction += (boost::format("Take the %1% ramp on the right")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
       // 8 Turn right to take the ramp
@@ -338,28 +358,28 @@ void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
       // 9 Turn right to take the I 95 South ramp
     case 9: {
       text_instruction += (boost::format("Turn right to take the %1% ramp")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 10 Turn right to take the ramp toward Baltimore
     case 10: {
       text_instruction += (boost::format(
           "Turn right to take the ramp toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 11 Turn right to take the I 95 South ramp toward Baltimore
     case 11: {
       text_instruction += (boost::format(
           "Turn right to take the %1% ramp toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 12 Turn right to take the Gettysburg Pike ramp
     case 12: {
       text_instruction += (boost::format("Turn right to take the %1% ramp")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
     default: {
@@ -391,6 +411,16 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
   // 11 Turn left to take the I 95 South ramp toward Baltimore
   // 12 Turn left to take the Gettysburg Pike ramp
 
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  uint32_t name_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+  bool name_limit_by_consecutive_count = true;
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
@@ -409,27 +439,27 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
     // 1 Take the I 95 South ramp on the left
     case 1: {
       text_instruction += (boost::format("Take the %1% ramp on the left")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 2 Take the ramp on the left toward Baltimore
     case 2: {
       text_instruction += (boost::format("Take the ramp on the left toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 3 Take the I 95 South ramp on the left toward Baltimore
     case 3: {
       text_instruction += (boost::format(
           "Take the %1% ramp on the left toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 4 Take the Gettysburg Pike ramp on the left
     case 4: {
       text_instruction += (boost::format("Take the %1% ramp on the left")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
       // 8 Turn left to take the ramp
@@ -440,28 +470,28 @@ void NarrativeBuilder::FormRampLeftInstruction(Maneuver& maneuver) {
       // 9 Turn left to take the I 95 South ramp
     case 9: {
       text_instruction += (boost::format("Turn left to take the %1% ramp")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 10 Turn left to take the ramp toward Baltimore
     case 10: {
       text_instruction += (boost::format(
           "Turn left to take the ramp toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 11 Turn left to take the I 95 South ramp toward Baltimore
     case 11: {
       text_instruction += (boost::format(
           "Turn left to take the %1% ramp toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 12 Turn left to take the Gettysburg Pike ramp
     case 12: {
       text_instruction += (boost::format("Turn left to take the %1% ramp")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
     default: {
@@ -497,6 +527,16 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
   // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
   // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
 
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  uint32_t name_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+  bool name_limit_by_consecutive_count = true;
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
@@ -514,83 +554,83 @@ void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
     // 1 Take exit 67A on the right
     case 1: {
       text_instruction += (boost::format("Take exit %1% on the right")
-          % maneuver.signs().GetExitNumberString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
       break;
     }
       // 2 Take the I 95 South exit on the right
     case 2: {
       text_instruction += (boost::format("Take the %1% exit on the right")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 3 Take exit 67A on the right onto I 95 South
     case 3: {
       text_instruction += (boost::format("Take exit %1% on the right onto %2%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 4 Take the exit on the right toward Baltimore
     case 4: {
       text_instruction += (boost::format(
           "Take the exit on the right toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 5 Take exit 67A on the right toward Baltimore
     case 5: {
       text_instruction += (boost::format(
           "Take exit %1% on the right toward %2%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 6 Take the I 95 South exit on the right toward Baltimore
     case 6: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 7 Take exit 67A on the right onto I 95 South toward Baltimore
     case 7: {
       text_instruction += (boost::format(
           "Take exit %1% on the right onto %2% toward %3%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 8 Take the Gettysburg Pike exit on the right
     case 8: {
       text_instruction += (boost::format("Take the %1% exit on the right")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
       // 10 Take the Gettysburg Pike exit on the right onto US 15
     case 10: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right onto %2%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
     case 12: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right toward %2%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
     case 14: {
       text_instruction += (boost::format(
           "Take the %1% exit on the right onto %2% toward %3%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
     default: {
@@ -610,6 +650,16 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
   // 4 = toward
   // 8 = name (when no number)
 
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  uint32_t name_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+  bool name_limit_by_consecutive_count = true;
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
@@ -627,81 +677,81 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
     // 1 Take exit 67A on the left
     case 1: {
       text_instruction += (boost::format("Take exit %1% on the left")
-          % maneuver.signs().GetExitNumberString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
       break;
     }
       // 2 Take the I 95 South exit on the left
     case 2: {
       text_instruction += (boost::format("Take the %1% exit on the left")
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 3 Take exit 67A on the left onto I 95 South
     case 3: {
       text_instruction += (boost::format("Take exit %1% on the left onto %2%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 4 Take the exit on the left toward Baltimore
     case 4: {
       text_instruction += (boost::format("Take the exit on the left toward %1%")
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 5 Take exit 67A on the left toward Baltimore
     case 5: {
       text_instruction += (boost::format("Take exit %1% on the left toward %2%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 6 Take the I 95 South exit on the left toward Baltimore
     case 6: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left toward %2%")
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 7 Take exit 67A on the left onto I 95 South toward Baltimore
     case 7: {
       text_instruction += (boost::format(
           "Take exit %1% on the left onto %2% toward %3%")
-          % maneuver.signs().GetExitNumberString()
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 8 Take the Gettysburg Pike exit on the left
     case 8: {
       text_instruction += (boost::format("Take the %1% exit on the left")
-          % maneuver.signs().GetExitNameString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
       break;
     }
       // 10 Take the Gettysburg Pike exit on the left onto US 15
     case 10: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left onto %2%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitBranchString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
       break;
     }
       // 12 Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg
     case 12: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left toward %2%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
       // 14 Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg
     case 14: {
       text_instruction += (boost::format(
           "Take the %1% exit on the left onto %2% toward %3%")
-          % maneuver.signs().GetExitNameString()
-          % maneuver.signs().GetExitBranchString()
-          % maneuver.signs().GetExitTowardString()).str();
+          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
+          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
       break;
     }
     default: {

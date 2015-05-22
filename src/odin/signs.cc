@@ -14,8 +14,9 @@ std::vector<Sign>* Signs::mutable_exit_number_list() {
   return &exit_number_list_;
 }
 
-const std::string Signs::GetExitNumberString() const {
-  return ListToString(exit_number_list_);
+const std::string Signs::GetExitNumberString(
+    uint32_t max_count, bool limit_by_consecutive_count) const {
+  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count);
 }
 
 const std::vector<Sign>& Signs::exit_branch_list() const {
@@ -26,8 +27,9 @@ std::vector<Sign>* Signs::mutable_exit_branch_list() {
   return &exit_branch_list_;
 }
 
-const std::string Signs::GetExitBranchString() const {
-  return ListToString(exit_branch_list_);
+const std::string Signs::GetExitBranchString(
+    uint32_t max_count, bool limit_by_consecutive_count) const {
+  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count);
 }
 
 const std::vector<Sign>& Signs::exit_toward_list() const {
@@ -38,8 +40,9 @@ std::vector<Sign>* Signs::mutable_exit_toward_list() {
   return &exit_toward_list_;
 }
 
-const std::string Signs::GetExitTowardString() const {
-  return ListToString(exit_toward_list_);
+const std::string Signs::GetExitTowardString(
+    uint32_t max_count, bool limit_by_consecutive_count) const {
+  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count);
 }
 
 const std::vector<Sign>& Signs::exit_name_list() const {
@@ -50,8 +53,9 @@ std::vector<Sign>* Signs::mutable_exit_name_list() {
   return &exit_name_list_;
 }
 
-const std::string Signs::GetExitNameString() const {
-  return ListToString(exit_name_list_);
+const std::string Signs::GetExitNameString(
+    uint32_t max_count, bool limit_by_consecutive_count) const {
+  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count);
 }
 
 bool Signs::HasExit() const {
@@ -111,14 +115,44 @@ std::string Signs::ToParameterString() const {
   return signs_string;
 }
 
-const std::string Signs::ListToString(const std::vector<Sign>& signs) const {
+const std::string Signs::ListToString(const std::vector<Sign>& signs,
+                                      uint32_t max_count,
+                                      bool limit_by_consecutive_count) const {
   std::string sign_string;
+  uint32_t count = 0;
+  uint32_t consecutive_count = -1;
+
   for (auto& sign : signs) {
+    // If supplied, limit by max count
+    if ((max_count > 0) && (count == max_count)) {
+      break;
+    }
+
+    // if requested, process consecutive exit counts
+    if (limit_by_consecutive_count) {
+
+      // Set consecutive count if first sign
+      if (count == 0) {
+        consecutive_count = sign.consecutive_count();
+      }
+      // Limit if consecutive count does not match
+      // Therefore, the most consistent information is displayed for user
+      // and reduces clutter
+      else if (sign.consecutive_count() != consecutive_count) {
+        break;
+      }
+    }
+
+    // Add delimiter
     if (!sign_string.empty()) {
       sign_string += "/";
     }
+
+    // Concatenate exit text and update count
     sign_string += sign.text();
+    ++count;
   }
+
   return sign_string;
 }
 
