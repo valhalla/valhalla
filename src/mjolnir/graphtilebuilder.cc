@@ -444,32 +444,32 @@ void GraphTileBuilder::ClearDirectedEdges() {
 
 // Add a transit departure.
 void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
-  departure_builder_.emplace_back(departure);
+  departure_builder_.emplace_back(std::move(departure));
 }
 
 // Add a transit trip.
 void GraphTileBuilder::AddTransitTrip(const TransitTrip& trip) {
-  trip_builder_.emplace_back(trip);
+  trip_builder_.emplace_back(std::move(trip));
 }
 
 // Add a transit stop.
 void GraphTileBuilder::AddTransitStop(const TransitStop& stop)  {
-  stop_builder_.emplace_back(stop);
+  stop_builder_.emplace_back(std::move(stop));
 }
 
 // Add a transit route.
 void GraphTileBuilder::AddTransitRoute(const TransitRoute& route)  {
-  route_builder_.emplace_back(route);
+  route_builder_.emplace_back(std::move(route));
 }
 
 // Add a transit transfer.
 void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
-  transfer_builder_.emplace_back(transfer);
+  transfer_builder_.emplace_back(std::move(transfer));
 }
 
 // Add a transit calendar exception.
 void GraphTileBuilder::AddTransitCalendar(const TransitCalendar& exception)  {
-  exception_builder_.emplace_back(exception);
+  exception_builder_.emplace_back(std::move(exception));
 }
 
 // Add signs
