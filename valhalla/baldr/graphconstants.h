@@ -119,15 +119,15 @@ enum class Use : uint8_t {
   kCycleway = 20,          // Dedicated bicycle path
   kMountainBike = 21,      // Mountain bike trail
 
-  // Transit specific uses
-  kRail = 30,              // Rail line
-  kBus = 31,               // Bus line
-  kRailConnection = 32,    // Connection to a rail stop
-  kBusConnection = 33,     // Connection to a bus stop
-  kTransitConnection = 34, // Connection to multi-use transit stop
-
   // Other...
-  kOther = 63
+  kOther = 40,
+
+  // Transit specific uses. Must be last in the list
+  kRail = 50,              // Rail line
+  kBus = 51,               // Bus line
+  kRailConnection = 52,    // Connection to a rail stop
+  kBusConnection = 53,     // Connection to a bus stop
+  kTransitConnection = 54  // Connection to multi-use transit stop
 };
 
 // Speed type
