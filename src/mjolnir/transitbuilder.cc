@@ -61,12 +61,12 @@ struct Departure {
 
 // Unique route and stop
 struct TransitLine {
-  uint32_t diredgeid;
+  uint32_t lineid;
   uint32_t routeid;
   uint32_t stopid;
 
   TransitLine(const uint32_t d, const uint32_t r, const uint32_t s)
-      : diredgeid(d),
+      : lineid(d),
         routeid(r),
         stopid(s) {
   }
@@ -329,7 +329,10 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
       // TODO need to add block Id (default to 0)
       dep.blockid = 0;
 
-      departures.emplace_back(std::move(dep));
+      // TODO - configure to reject any where calendar end date is in the past!
+      if (dep.end_date > 500) {
+        departures.emplace_back(std::move(dep));
+      }
 
       result = sqlite3_step(stmt);
     }
@@ -541,7 +544,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   std::vector<DirectedEdgeBuilder> currentedges(tilebuilder.directededges());
   tilebuilder.ClearDirectedEdges();
 
-LOG_INFO("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
+  LOG_INFO("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
          " current directed edge count = " + std::to_string(currentedges.size()) +
          " current node count = " + std::to_string(currentnodes.size()));
 
@@ -602,7 +605,8 @@ LOG_INFO("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphi
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
       directededges.emplace_back(std::move(directededge));
-LOG_INFO("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
+
+      LOG_INFO("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
       // increment to next connection edge
       added_edges++;
@@ -612,17 +616,17 @@ LOG_INFO("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_of
     tilebuilder.AddNodeAndDirectedEdges(nb, directededges);
     nodeid++;
   }
-if (tilebuilder.nodes().size() != currentnodes.size()) {
-  throw std::runtime_error("Node sizes do not match!");
-}
-LOG_INFO("Done adding " + std::to_string(added_edges) +
-         " connections edges from OSM to transit stops");
-LOG_INFO("Current count = " + std::to_string(tilebuilder.directededges().size()));
-if (added_edges != connection_edges.size()) {
-  LOG_ERROR("Part 1: Added " + std::to_string(added_edges) + " but there are " +
-            std::to_string(connection_edges.size()) + " connections");
-}
 
+  if (tilebuilder.nodes().size() != currentnodes.size()) {
+    throw std::runtime_error("Node sizes do not match!");
+  }
+  LOG_INFO("Done adding " + std::to_string(added_edges) +
+           " connections edges from OSM to transit stops");
+  LOG_INFO("Current count = " + std::to_string(tilebuilder.directededges().size()));
+  if (added_edges != connection_edges.size()) {
+    LOG_ERROR("Part 1: Added " + std::to_string(added_edges) + " but there are " +
+              std::to_string(connection_edges.size()) + " connections");
+  }
 
   // Iterate through the stops and their edges
   uint32_t nadded = 0;
@@ -646,7 +650,7 @@ if (added_edges != connection_edges.size()) {
     node.set_parent(parent);
     node.set_mode_change(true);
     node.set_stop_id(stop.key);
-LOG_INFO("Add node for stop id = " + std::to_string(stop.key));
+    LOG_INFO("Add node for stop id = " + std::to_string(stop.key));
 
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
@@ -668,7 +672,7 @@ LOG_INFO("Add node for stop id = " + std::to_string(stop.key));
         std::vector<std::string> names;
         uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(0, conn.stop_node,
                        conn.osm_node, 0, conn.shape, names, added);
-LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
+        LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(added);
 
@@ -687,10 +691,6 @@ LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_of
         LOG_ERROR("End stop key not equal");
       }
       directededge.set_endnode(endstop.graphid);
-/*LOG_INFO("Add parent/child directededge - endnode stop id = " +
-         std::to_string(endstop.key) + " GraphId: " +
-         std::to_string(endstop.graphid.tileid()) + "," +
-         std::to_string(endstop.graphid.id()));*/
       directededge.set_length(stop.ll.Distance(endstop.ll));
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
@@ -698,6 +698,11 @@ LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_of
       directededge.set_localedgeidx(directededges.size());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
+
+      LOG_INFO("Add parent/child directededge - endnode stop id = " +
+               std::to_string(endstop.key) + " GraphId: " +
+               std::to_string(endstop.graphid.tileid()) + "," +
+               std::to_string(endstop.graphid.id()));
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
@@ -723,10 +728,6 @@ LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_of
       Use use = GetTransitUse(route_types[transitedge.routeid]);
       DirectedEdgeBuilder directededge;
       directededge.set_endnode(endstop.graphid);
-/*LOG_INFO("Add directededge - endnode stop id = " + std::to_string(endstop.key) +
-         " Route Key = " + std::to_string(transitedge.routeid) +
-         " GraphId: " + std::to_string(endstop.graphid.tileid()) + "," +
-         std::to_string(endstop.graphid.id()));*/
       directededge.set_length(stop.ll.Distance(endstop.ll));
       directededge.set_use(use);
       directededge.set_speed(5);
@@ -734,6 +735,13 @@ LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_of
       directededge.set_localedgeidx(directededges.size());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
+      directededge.set_lineid(transitedge.lineid);
+
+      LOG_INFO("Add directededge - lineId = " + std::to_string(transitedge.lineid) +
+         " endnode stop id = " + std::to_string(endstop.key) +
+         " Route Key = " + std::to_string(transitedge.routeid) +
+         " GraphId: " + std::to_string(endstop.graphid.tileid()) + "," +
+         std::to_string(endstop.graphid.id()));
 
       // Add edge info to the tile and set the offset in the directed edge
       // Leave the name empty. Use the trip Id to look up the route Id and
@@ -763,6 +771,9 @@ LOG_INFO("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_of
     LOG_ERROR("Added " + std::to_string(nadded) + " but there are " +
               std::to_string(connection_edges.size()) + " connections");
   }
+
+  LOG_INFO("AddToGraph tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
+           " done. New directed edge count = " + std::to_string(tilebuilder.directededges().size()));
 }
 
 void AddOSMConnection(Stop& stop, const GraphTile* tile,
@@ -909,29 +920,18 @@ void build(const boost::property_tree::ptree& pt,
     LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
 
-    // Get the current number of directed edges. Add those needed for
-    // OSM connections (from OSM nodes to the stop)
-    uint32_t diredgecount = tilebuilder.header()->directededgecount() +
-                            connection_edges.size();
-
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
     std::unordered_set<uint32_t> route_keys;
     std::unordered_set<uint32_t> trip_keys;
     std::unordered_set<uint32_t> service_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
-
+    uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
     for (auto& stop : stops) {
       if (stop.graphid.Tile_Base() == tile_id) {
         StopEdges stopedges;
         stopedges.stop_key = stop.key;
-
-        // Reserve directed edges for connections from the stop
-        // to the OSM node
-        if (stop.parent != 0) {
-          diredgecount += stop.conn_count;
-        }
 
         // Identify any parent-child edge connections (to add later)
         if (stop.type == 1) {
@@ -945,13 +945,12 @@ void build(const boost::property_tree::ptree& pt,
         } else if (stop.parent != 0) {
           stopedges.intrastation.push_back(stop.parent);
         }
-        diredgecount += stopedges.intrastation.size();
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
         std::vector<Departure> departures = GetDepartures(db_handle, stop.key);
 
-//        LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
-//          + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
+        LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
+          + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
 
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
@@ -959,26 +958,32 @@ void build(const boost::property_tree::ptree& pt,
           service_keys.insert(dep.service);
 
           // Identify unique route and arrival stop pairs - associate to a
-          // directed edge id.
-          uint32_t diredgeid;
+          // unique line Id stored in the directed edge.
+          uint32_t lineid;
           auto m = unique_transit_edges.find({dep.route, dep.dest_stop});
           if (m == unique_transit_edges.end()) {
-            // Add to the map and update the directed edge id
-            diredgeid = diredgecount;
-            unique_transit_edges[{dep.route, dep.dest_stop}] = diredgeid;
-            diredgecount++;
-            stopedges.lines.emplace_back(diredgeid, dep.route, dep.dest_stop);
+            // Add to the map and update the line id
+            lineid = unique_lineid;
+            unique_transit_edges[{dep.route, dep.dest_stop}] = unique_lineid;
+            unique_lineid++;
+            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop);
           } else {
-            diredgeid = m->second;
+            lineid = m->second;
           }
 
           // Form transit departures
-          uint32_t edgeid  = diredgeid;
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          TransitDeparture td(edgeid, dep.trip, dep.route,
+          TransitDeparture td(lineid, dep.trip, dep.route,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
+
+          LOG_INFO("Add departure: " + std::to_string(td.lineid()) +
+                       " trip key = " + std::to_string(td.tripid()) +
+                       " dep time = " + std::to_string(td.departure_time()) +
+                       " start_date = " + std::to_string(td.start_date()) +
+                       " end date = " + std::to_string(td.end_date()));
+
           tilebuilder.AddTransitDeparture(td);
         }
 
@@ -995,7 +1000,7 @@ void build(const boost::property_tree::ptree& pt,
         tilebuilder.AddTransitStop(ts);
 
         // Add to stop edge map - track edges that need to be added. This is
-        // sorted by graph Id so the stop nodess are added in proper order
+        // sorted by graph Id so the stop nodes are added in proper order
         stop_edge_map.insert({stop.graphid, stopedges});
       }
     }
