@@ -333,6 +333,8 @@ namespace {
           loc->emplace("country",location.country());
         if (location.has_heading())
           loc->emplace("heading",static_cast<uint64_t>(location.heading()));
+        if (!location.date_time().empty())
+          loc->emplace("date_time",location.date_time());
 
         //loc->emplace("sideOfStreet",location.side_of_street());
 
