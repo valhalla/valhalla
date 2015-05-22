@@ -70,6 +70,7 @@ struct Location {
   std::string zip_;
   std::string country_;
 
+  boost::optional<std::string> date_time_;
   boost::optional<int> heading_;
   boost::optional<uint64_t> way_id_;
 
