@@ -23,9 +23,29 @@ constexpr float NODE_SNAP = 12.5f * 12.5f;
 //if you arent in this vicinity from an edge then you arent very close to it, helps to not
 //look at the shape of edges (expensive) for edges that are probably very far from your location
 constexpr float EDGE_RADIUS = 250.f * 250.f;
+//if you are this far away from the edge we are considering and you set a heading we will
+//ignore it because its not really useful at this distance from the geometry
+constexpr float NO_HEADING = 30.f * 30.f;
+//how much of the shape should be sampled to get heading
+constexpr float HEADING_SAMPLE = 30.f;
+//cone width to use for cosine similarity comparisons for favoring heading
+constexpr float ANGLE_WIDTH = 89.f;
 
-bool HeadingFilter(const DirectedEdge* edge, boost::optional<int> heading) {
-  return false;
+bool HeadingFilter(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info,
+  const std::tuple<PointLL, float, int>& point, boost::optional<int> heading) {
+  //if its far enough away from the edge, the heading is pretty useless
+  if(!heading || std::get<1>(point) > NO_HEADING)
+    return false;
+
+  //get the angle of the shape from this point
+  std::vector<PointLL> sub_shape(info->shape().begin() + std::get<2>(point), info->shape().end());
+  sub_shape.front() = std::get<0>(point);
+  auto angle = std::fmod(PointLL::HeadingAlongPolyline(sub_shape, HEADING_SAMPLE) + (180.f * !edge->forward()), 360.f);
+  //we want the closest distance between two angles which can be had
+  //across 0 or between the two so we just need to know which is bigger
+  if(*heading > angle)
+    return std::min(*heading - angle, (360.f - *heading) + angle) > ANGLE_WIDTH;
+  return std::min(angle - *heading, (360.f - angle) + *heading) > ANGLE_WIDTH;
 }
 
 PathLocation::SideOfStreet FlipSide(const PathLocation::SideOfStreet side) {
@@ -90,7 +110,7 @@ bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter fi
   return true;
 }
 
-PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const GraphTile* tile, EdgeFilter filter){
+PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const GraphTile* tile, EdgeFilter filter, const float sqdist){
   //now that we have a node we can pass back all the edges leaving it
   PathLocation correlated(location);
   correlated.CorrelateVertex(node->latlng());
@@ -101,8 +121,8 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
     if(!filter(edge)) {
       GraphId id(tile->id());
       id.fields.id = node->edge_index() + (edge - start_edge);
-      if(!HeadingFilter(edge, location.heading_))
-        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), 0.f, PathLocation::NONE});
+      if(!HeadingFilter(edge, tile->edgeinfo(edge->edgeinfo_offset()), std::make_tuple(node->latlng(), 0.f, 0), location.heading_))
+        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), sqdist, PathLocation::NONE});
       else
         heading_filtered.emplace_back(std::move(id), 0.f, PathLocation::NONE);
     }
@@ -121,10 +141,10 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
   return correlated;
 }
 
-const NodeInfo* FindClosestNode(const Location& location, const GraphTile* tile, EdgeFilter filter){
+const NodeInfo* FindClosestNode(const Location& location, const GraphTile* tile, EdgeFilter filter, float& sqdist){
   //a place to keep track of which node is closest to our location
   const NodeInfo* closest = nullptr;
-  float sqdist = std::numeric_limits<float>::max();
+  sqdist = std::numeric_limits<float>::max();
   DistanceApproximator approximator(location.latlng_);
 
   //for each node
@@ -152,13 +172,14 @@ PathLocation NodeSearch(const Location& location, GraphReader& reader, EdgeFilte
     throw std::runtime_error("No data found for location");
 
   //grab the absolute closest node to this location
-  const auto node = FindClosestNode(location, tile, filter);
+  float square_distance = 0.f;
+  const auto node = FindClosestNode(location, tile, filter, square_distance);
   //TODO: look in other tiles
   if(node == nullptr)
     throw std::runtime_error("No data found for location");
 
   //get some information about it that we can use to make a path from it
-  return CorrelateNode(node, location, tile, filter);
+  return CorrelateNode(node, location, tile, filter, square_distance);
 }
 
 std::tuple<PointLL, float, size_t> Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator) {
@@ -227,11 +248,12 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
       auto start_node = GetBeginNode(reader, edge);
 
       //is it basically right on the start of the edge
-      if(approximator.DistanceSquared(start_node->latlng()) < sq_node_snap) {
-        return CorrelateNode(start_node, location, tile, filter);
+      float sqdist;
+      if((sqdist = approximator.DistanceSquared(start_node->latlng())) < sq_node_snap) {
+        return CorrelateNode(start_node, location, tile, filter, sqdist);
       }//is it basically right on the end of the edge
-      else if(approximator.DistanceSquared(end_node->latlng()) < sq_node_snap) {
-        return CorrelateNode(end_node, location, reader.GetGraphTile(edge->endnode()), filter);
+      else if((sqdist = approximator.DistanceSquared(end_node->latlng())) < sq_node_snap) {
+        return CorrelateNode(end_node, location, reader.GetGraphTile(edge->endnode()), filter, sqdist);
       }
 
       //we take the mid point of the edges end points and make a radius of half the length of the edge around it
@@ -288,7 +310,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     auto side = GetSide(closest_edge, closest_edge_info, closest_point, location.latlng_);
     //correlate the edge we found
     std::list<PathLocation::PathEdge> heading_filtered;
-    if(HeadingFilter(closest_edge, location.heading_))
+    if(HeadingFilter(closest_edge, closest_edge_info, closest_point, location.heading_))
       heading_filtered.emplace_back(closest_edge_id, length_ratio, side);
     else
       correlated.CorrelateEdge(PathLocation::PathEdge{closest_edge_id, length_ratio, side});
@@ -297,7 +319,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     const auto* other_tile = reader.GetGraphTile(opposing_edge_id);
     const auto* other_edge = other_tile->directededge(opposing_edge_id);
     if(!filter(other_edge)) {
-      if(HeadingFilter(other_edge, location.heading_))
+      if(HeadingFilter(other_edge, closest_edge_info, closest_point, location.heading_))
         heading_filtered.emplace_back(opposing_edge_id, 1 - length_ratio, FlipSide(side));
       else
         correlated.CorrelateEdge(PathLocation::PathEdge{opposing_edge_id, 1 - length_ratio, FlipSide(side)});
