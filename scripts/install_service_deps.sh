@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-if [ -z $1 ] && [ -d $1 ]; then
-	pushd $1
+if [ -n "$1" ] && [ -d "$1" ]; then
+	pushd "$1"
 else
 	pushd .
 fi

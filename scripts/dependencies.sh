@@ -9,10 +9,10 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #install the service deps in the background
-$DIR/install_service_deps.sh $1 &
+$DIR/install_service_deps.sh "$1" &
 
-if [ -z $1 ] && [ -d $1 ]; then
-        pushd $1
+if [ -n "$1" ] && [ -d "$1" ]; then
+        pushd "$1"
 else
         pushd .
 fi
