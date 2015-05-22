@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-# a place to put dependencies that are build from source
-mkdir -p deps
-pushd deps
+if [ -z $1 ] && [ -d $1 ]; then
+	pushd $1
+else
+	pushd .
+fi
 
 # grab the latest zmq library:
 rm -rf libzmq
