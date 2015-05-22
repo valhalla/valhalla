@@ -57,10 +57,11 @@ class PathLocation : public Location {
   /**
    * Adds a correlated edge to the path location
    *
-   * @param id      the graphid of the edge
-   * @param dist    the distance along the provided edge where the location was correlated
+   * @param the edge     the edge to correlate
    */
-  void CorrelateEdge(const GraphId& id, const float dist, const SideOfStreet sos = NONE);
+  void CorrelateEdge(const PathEdge& edge);
+  void CorrelateEdge(PathEdge&& edge);
+
 
   /**
    * @return true if the point has been correlated to the route network, false otherwise
