@@ -159,6 +159,15 @@ void TestNodeSearch() {
   search({a.second}, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, {{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
   search({c.second}, c.second, { PE{{t, l, 5}, 0, S::NONE}, PE{{t, l, 6}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
   search({d.second}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+
+  //with heading
+  Location x{a.second};
+  x.heading_ = 90;
+  search(x, a.second, { PE{{t, l, 3}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  x.heading_ = 270;
+  search(x, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  x.heading_ = 269;
+  search(x, a.second, { PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
 }
 
 void TestEdgeSearch() {
@@ -170,24 +179,38 @@ void TestEdgeSearch() {
   //degenerate to node searches
   search({a.second}, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
   search({d.second}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+
   //mid point search
   search({a.second.MidPoint(d.second)}, a.second.MidPoint(d.second), { PE{{t, l, 3}, .5f, S::NONE}, PE{{t, l, 8}, .5f, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+
   //set a point 40% along the edge runs with the shape direction
   PointLL answer = a.second.AffineCombination(.6f, .4f, d.second);
   auto ratio = a.second.Distance(answer) / a.second.Distance(d.second);
   search({answer}, answer, { PE{{t, l, 3}, ratio, S::NONE}, PE{{t, l, 8}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+
   //check for side of street by offsetting the test point from the line orthogonally
   auto ortho = (d.second - a.second).GetPerpendicular(true).Normalize() * .01;
   PointLL test{answer.first + ortho.x(), answer.second + ortho.y()};
   search({test}, answer, { PE{{t, l, 3}, ratio, S::RIGHT}, PE{{t, l, 8}, 1.f - ratio, S::LEFT} }, valhalla::loki::SearchStrategy::EDGE);
+
   //set a point 40% along the edge that runs in reverse of the shape
   answer = b.second.AffineCombination(.6f, .4f, d.second);
   ratio = b.second.Distance(answer) / b.second.Distance(d.second);
   search({answer}, answer, { PE{{t, l, 0}, ratio, S::NONE}, PE{{t, l, 7}, 1.f - ratio, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+
   //check for side of street by offsetting the test point from the line orthogonally
   ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, answer, { PE{{t, l, 0}, ratio, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, S::RIGHT} }, valhalla::loki::SearchStrategy::EDGE);
+
+  //with heading
+  Location x{a.second.AffineCombination(.6f, .4f, d.second)};
+  x.heading_ = 90;
+  search(x, a.second, { PE{{t, l, 3}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  x.heading_ = 0;
+  search(x, a.second, { PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
+  x.heading_ = 269;
+  search(x, a.second, { PE{{t, l, 8}, 0, S::NONE} }, valhalla::loki::SearchStrategy::EDGE);
 }
 
 }
