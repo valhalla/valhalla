@@ -121,8 +121,8 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
     if(!filter(edge)) {
       GraphId id(tile->id());
       id.fields.id = node->edge_index() + (edge - start_edge);
-      if(!HeadingFilter(edge, tile->edgeinfo(edge->edgeinfo_offset()), std::make_tuple(node->latlng(), 0.f, 0), location.heading_))
-        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), sqdist, PathLocation::NONE});
+      if(!HeadingFilter(edge, tile->edgeinfo(edge->edgeinfo_offset()), std::make_tuple(node->latlng(), sqdist, 0), location.heading_))
+        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), 0.f, PathLocation::NONE});
       else
         heading_filtered.emplace_back(std::move(id), 0.f, PathLocation::NONE);
     }
