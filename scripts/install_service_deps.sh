@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# a place to put dependencies that are build from source
+mkdir -p deps
+pushd deps
+
 # grab the latest zmq library:
 rm -rf libzmq
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
@@ -19,4 +23,6 @@ pushd prime_server
 ./configure
 make -j4
 sudo make install
+popd
+
 popd
