@@ -42,7 +42,7 @@ PathLocation update_destinations(GraphReader& graphreader,
       tile = graphreader.GetGraphTile(opposing_edge);
       const DirectedEdge* edge = tile->directededge(opposing_edge);
       if (!filter(edge)) {
-        dest.CorrelateEdge(opposing_edge, 1.0f);
+        dest.CorrelateEdge(PathLocation::PathEdge{opposing_edge, 1.0f});
       }
     }
     return dest;
