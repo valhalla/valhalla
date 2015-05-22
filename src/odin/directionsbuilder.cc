@@ -119,6 +119,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       direction_location->set_postal_code(path_location.postal_code());
     if (path_location.has_country())
       direction_location->set_country(path_location.country());
+    if (path_location.has_date_time())
+      direction_location->set_date_time(path_location.date_time());
   }
 
   // Populate maneuvers
