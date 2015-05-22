@@ -2,6 +2,7 @@
 
 #include <string>
 #include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -13,6 +14,14 @@ void TryGetDaysFromPivotDate(std::string date_time, uint32_t expected_days) {
     throw std::runtime_error(
         std::string("Incorrect number of days from ")
     + date_time);
+  }
+}
+
+void TryGetDOW(std::string date_time, uint32_t expected_dow) {
+
+  if (DateTime::day_of_week_mask(date_time) != expected_dow) {
+    throw std::runtime_error(
+        std::string("Incorrect dow ") + date_time);
   }
 }
 
@@ -38,6 +47,20 @@ void TestGetDaysFromPivotDate() {
   TryGetDaysFromPivotDate("2015-05-06T08:00", 490);
 }
 
+void TestDOW() {
+
+  TryGetDOW("20140101", kWednesday);
+  TryGetDOW("20140102", kThursday);
+  TryGetDOW("19990101", kDOWNone);
+  TryGetDOW("20150508", kFriday);
+
+  TryGetDOW("20140101T07:01", kWednesday);
+  TryGetDOW("20140102T15:00", kThursday);
+  TryGetDOW("19990101T:00:00", kDOWNone);
+  TryGetDOW("2015-05-09T08:00", kSaturday);
+
+}
+
 void TestGetSecondsFromMidnight() {
   TryGetSecondsFromMidnight("00:00:00", 0);
   TryGetSecondsFromMidnight("01:00:00", 3600);
@@ -59,6 +82,7 @@ int main(void) {
 
   suite.test(TEST_CASE(TestGetDaysFromPivotDate));
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
+  suite.test(TEST_CASE(TestDOW));
 
   return suite.tear_down();
 }

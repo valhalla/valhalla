@@ -5,7 +5,7 @@
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-\
+
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
 
@@ -30,6 +30,48 @@ uint32_t days_from_pivot_date(std::string date_time) {
     return 0;
   boost::gregorian::date_period range(pivot_date_, e_date);
   return static_cast<uint32_t>(range.length().days());
+}
+
+//Get the dow mask
+//Date in the format of 20150516 or 2015-05-06T08:00
+uint32_t day_of_week_mask(std::string date_time) {
+  boost::gregorian::date date;
+  if (date_time.find("T") != std::string::npos) {
+    date_time.erase(boost::remove_if(date_time, boost::is_any_of("-,:")), date_time.end());
+    date = boost::gregorian::date_from_iso_string(date_time);
+  }
+  else
+    date = boost::gregorian::from_undelimited_string(date_time);
+
+  if (date < pivot_date_)
+    return kDOWNone;
+
+  boost::gregorian::greg_weekday wd = date.day_of_week();
+
+  switch (wd.as_enum()) {
+    case boost::date_time::Sunday:
+      return kSunday;
+      break;
+    case boost::date_time::Monday:
+      return kMonday;
+      break;
+    case boost::date_time::Tuesday:
+      return kTuesday;
+      break;
+    case boost::date_time::Wednesday:
+      return kWednesday;
+      break;
+    case boost::date_time::Thursday:
+      return kThursday;
+      break;
+    case boost::date_time::Friday:
+      return kFriday;
+      break;
+    case boost::date_time::Saturday:
+      return kSaturday;
+      break;
+  }
+  return kDOWNone;
 }
 
 //Get the number of seconds midnight that have elapsed.

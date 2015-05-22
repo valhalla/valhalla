@@ -17,6 +17,13 @@ namespace DateTime {
   uint32_t days_from_pivot_date(std::string date_time);
 
   /**
+   * Get the dow mask.
+   * @param   date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the dow mask.
+   */
+  uint32_t day_of_week_mask(std::string date_time);
+
+  /**
    * Get the number of seconds elapsed from midnight.
    * Hours can be greater than 24.
    * @param   time in the format of 01:34:15 or 2015-05-06T08:00
