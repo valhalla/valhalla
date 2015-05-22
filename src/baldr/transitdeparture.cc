@@ -4,31 +4,34 @@ namespace valhalla {
 namespace baldr {
 
 // Construct with arguments
-TransitDeparture::TransitDeparture(const uint32_t edgeid, const uint32_t tripid,
-                 const uint32_t routeid, const uint32_t blockid,
+TransitDeparture::TransitDeparture(const uint32_t lineid,
+                 const uint32_t tripid, const uint32_t routeid,
+                 const uint32_t blockid,
                  const uint32_t headsign_offset,
                  const uint32_t departure_time,
                  const uint32_t elapsed_time,
                  const uint32_t start_date,
                  const uint32_t end_date, const uint32_t days,
                  const uint32_t serviceid)
-    : edgeid_(edgeid),
+    : lineid_(lineid),
       tripid_(tripid),
       routeid_(routeid),
       blockid_(blockid),
       headsign_offset_(headsign_offset),
       serviceid_(serviceid) {
+  // TODO - protect against max values...
   times_.departure = departure_time;
-  times_.elapsed   = elapsed_time;
+  uint32_t elapsed = (elapsed_time < 32767) ? elapsed_time : 32767;
+  times_.elapsed   = elapsed;
   dates_.start     = start_date;
   dates_.end       = end_date;
   dates_.days      = days;
 }
 
-// Get the edge Id - for lookup of all departures along this edge. Each edge
+// Get the line Id - for lookup of all departures along an edge. Each line Id
 // represents a unique departure/arrival stop pair and route Id.
-uint32_t TransitDeparture::edgeid() const {
-  return edgeid_;
+uint32_t TransitDeparture::lineid() const {
+  return lineid_;
 }
 
 // Get the internal trip Id for this departure.
@@ -81,12 +84,12 @@ uint32_t TransitDeparture::serviceid() const {
   return serviceid_;
 }
 
-// operator < - for sorting. Sort by edge Id and departure time.
+// operator < - for sorting. Sort by line Id and departure time.
 bool TransitDeparture::operator < (const TransitDeparture& other) const {
-  if (edgeid() == other.edgeid()) {
+  if (lineid() == other.lineid()) {
     return departure_time() < other.departure_time();
   } else {
-    return edgeid() < other.edgeid();
+    return lineid() < other.lineid();
   }
 }
 
