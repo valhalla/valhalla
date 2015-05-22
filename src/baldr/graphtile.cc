@@ -383,7 +383,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 
 // Get the next departure given the directed edge Id and the current
 // time (seconds from midnight).
-const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
+const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
                  const uint32_t current_time, const uint32_t date,
                  const uint32_t dow) const {
   uint32_t count = header_->departurecount();
@@ -399,11 +399,11 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
   bool found = false;
   while (low <= high) {
     mid = (low + high) / 2;
-    if (departures_[mid].edgeid() == edgeid) {
+    if (departures_[mid].lineid() == lineid) {
       found = true;
       break;
     }
-    if (edgeid < departures_[mid].edgeid() ) {
+    if (lineid < departures_[mid].lineid() ) {
       high = mid - 1;
     } else {
       low = mid + 1;
@@ -411,14 +411,14 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
   }
 
   if (!found) {
-    LOG_INFO("No departures  found for edgeid = " + std::to_string(edgeid));
+    LOG_WARN("No departures found for lineid = " + std::to_string(lineid));
     return nullptr;
   }
 
   // Back up until the prior departure from this edge has departure time
   // less than the current time
   while (mid > 0 &&
-         departures_[mid-1].edgeid() == edgeid &&
+         departures_[mid-1].lineid() == lineid &&
          departures_[mid-1].departure_time() >= current_time) {
     mid--;
   }
@@ -458,8 +458,9 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
       }
     }
 
+
     // Advance to next departure
-    if (mid+1 < count && departures_[mid+1].edgeid() == edgeid) {
+    if (mid+1 < count && departures_[mid+1].lineid() == lineid) {
       mid++;
     } else {
       break;
@@ -467,12 +468,13 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t edgeid,
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_WARN("No more departures found for edgeid = " + std::to_string(edgeid));
+  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid));
   return nullptr;
 }
 
-// Get the departure given the directed edge Id and tripid
-const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,const uint32_t tripid) const {
+// Get the departure given the line Id and tripid
+const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
+                     const uint32_t tripid) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
     return nullptr;
@@ -486,11 +488,11 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,con
   bool found = false;
   while (low <= high) {
     mid = (low + high) / 2;
-    if (departures_[mid].edgeid() == edgeid) {
+    if (departures_[mid].lineid() == lineid) {
       found = true;
       break;
     }
-    if (edgeid < departures_[mid].edgeid() ) {
+    if (lineid < departures_[mid].lineid() ) {
       high = mid - 1;
     } else {
       low = mid + 1;
@@ -498,14 +500,14 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,con
   }
 
   if (!found) {
-    LOG_INFO("No departures found for edgeid = " + std::to_string(edgeid) +
+    LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
              " and tripid = " + std::to_string(tripid));
     return nullptr;
   }
 
   if (found) {
     // Back up while prior is equal (or at the beginning)
-    while (mid > 0 && departures_[mid-1].edgeid() == edgeid) {
+    while (mid > 0 && departures_[mid-1].lineid() == lineid) {
 
       if (departures_[mid].tripid() == tripid)
         return &departures_[mid];
@@ -521,7 +523,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t edgeid,con
       return &departures_[mid];
   }
 
-  LOG_INFO("No departures found for edgeid = " + std::to_string(edgeid) +
+  LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
            " and tripid = " + std::to_string(tripid));
   return nullptr;
 }

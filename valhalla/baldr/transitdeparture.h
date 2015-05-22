@@ -14,7 +14,7 @@ namespace baldr {
 class TransitDeparture {
  public:
   // Construct with arguments
-  TransitDeparture(const uint32_t edgeid, const uint32_t tripid,
+  TransitDeparture(const uint32_t lineid, const uint32_t tripid,
                    const uint32_t routeid, const uint32_t blockid,
                    const uint32_t headsign_offset,
                    const uint32_t departure_time,
@@ -24,11 +24,11 @@ class TransitDeparture {
                    const uint32_t serviceid);
 
   /**
-   * Get the edge Id - for lookup of all departures along this edge. Each edge
-   * represents a unique departure/arrival stop pair and route Id.
-   * @return  Returns the departure stop Id.
+   * Get the line Id - for lookup of all departures along this edge. Each
+   * line Id represents a unique departure/arrival stop pair and route Id.
+   * @return  Returns the departure line Id.
    */
-  uint32_t edgeid() const;
+  uint32_t lineid() const;
 
   /**
    * Get the internal trip Id for this departure.
@@ -93,17 +93,17 @@ class TransitDeparture {
   uint32_t serviceid() const;
 
   /**
-   * operator < - for sorting. Sort by edge Id and departure time.
+   * operator < - for sorting. Sort by line Id and departure time.
    * @param  other  Other transit departure to compare to.
-   * @return  Returns true if edge Id < other edge Id or if edge Ids are
+   * @return  Returns true if line Id < other line Id or if line Ids are
    *          equal and departure < other departure.
    */
   bool operator < (const TransitDeparture& other) const;
 
  protected:
-  // Edge Id - lookup departures by unique edge Id (which indicates a unique
+  // Line Id - lookup departures by unique line Id (which indicates a unique
   // departure / arrival stop pair.
-  uint32_t edgeid_;
+  uint32_t lineid_;
 
   // TripId (internal).
   uint32_t tripid_;
@@ -124,7 +124,7 @@ class TransitDeparture {
   };
   ScheduleTimes times_;
 
-  union ScheduleDates {
+  struct ScheduleDates {
     uint32_t start   : 12;     // Start date for the scheduled departure
     uint32_t end     : 12;     // End date for the scheduled departure
     uint32_t days    : 7;      // Days of the week

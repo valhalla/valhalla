@@ -250,6 +250,12 @@ class DirectedEdge {
   Use use() const;
 
   /**
+   * Is this edge a transit line (bus or rail)?
+   * @return  Returns true if this edge is a transit line.
+   */
+  bool IsTransitLine() const;
+
+  /**
    * Get the speed type (see graphconstants.h)
    * @return  Returns the speed type.
    */
@@ -330,6 +336,12 @@ class DirectedEdge {
    * @return  Returns the relative stop impact from low (0) to high (7).
    */
   uint32_t stopimpact(const uint32_t localidx) const;
+
+  /**
+   * Get the transit line Id (for departure lookups along an edge)
+   * @return  Returns the transit line Id.
+   */
+  uint32_t lineid() const;
 
   /**
    * Is there an edge to the right, in between the from edge and this edge.
@@ -501,7 +513,15 @@ class DirectedEdge {
     uint32_t edge_to_right   :  8; // Is there an edge to the right (between
                                    // "from edge" and this edge)
   };
-  StopImpact stopimpact_;
+
+  // Store either the stop impact or the transit line identifier. Since
+  // transit lines are schedule based they have no need for edge transition
+  // logic so we can safely share this field.
+  union StopOrLine {
+    StopImpact s;
+    uint32_t   lineid;
+  };
+  StopOrLine stopimpact_;
 
   // Hierarchy transitions and shortcut information
   struct Hierarchy {

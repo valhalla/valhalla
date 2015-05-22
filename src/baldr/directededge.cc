@@ -180,6 +180,11 @@ Use DirectedEdge::use() const {
   return static_cast<Use>(attributes_.use);
 }
 
+// Is this edge a transit line (bus or rail)?
+bool DirectedEdge::IsTransitLine() const {
+  return (use() == Use::kRail || use() == Use::kBus);
+}
+
 // Get the speed type (see graphconstants.h)
 SpeedType DirectedEdge::speed_type() const {
   return static_cast<SpeedType>(attributes_.speed_type);
@@ -251,12 +256,17 @@ bool DirectedEdge::edge_to_left(const uint32_t localidx) const {
 uint32_t DirectedEdge::stopimpact(const uint32_t localidx) const {
   // Stop impact is 3 bits per index
   uint32_t shift = localidx * 3;
-  return (stopimpact_.stopimpact & (7 << shift)) >> shift;
+  return (stopimpact_.s.stopimpact & (7 << shift)) >> shift;
+}
+
+// Get the transit line Id (for departure lookups along an edge)
+uint32_t DirectedEdge::lineid() const {
+  return stopimpact_.lineid;
 }
 
 // Is there an edge to the right, in between the from edge and this edge.
 bool DirectedEdge::edge_to_right(const uint32_t localidx) const {
-  return (stopimpact_.edge_to_right & (1 << localidx));
+  return (stopimpact_.s.edge_to_right & (1 << localidx));
 }
 
 // Get the index of the directed edge on the local level of the graph
@@ -421,10 +431,10 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.turntypes_.edge_to_left+1)-1);
 
   // Stop impact
-  de.stopimpact_.stopimpact = ~de.stopimpact_.stopimpact;
-  boost::hash_combine(seed,ffs(de.stopimpact_.stopimpact+1)-1);
-  de.stopimpact_.edge_to_right = ~de.stopimpact_.edge_to_right;
-  boost::hash_combine(seed,ffs(de.stopimpact_.edge_to_right+1)-1);
+  de.stopimpact_.s.stopimpact = ~de.stopimpact_.s.stopimpact;
+  boost::hash_combine(seed,ffs(de.stopimpact_.s.stopimpact+1)-1);
+  de.stopimpact_.s.edge_to_right = ~de.stopimpact_.s.edge_to_right;
+  boost::hash_combine(seed,ffs(de.stopimpact_.s.edge_to_right+1)-1);
 
   // Hierarchy and shortcut information
   de.hierarchy_.localedgeidx = ~de.hierarchy_.localedgeidx;
