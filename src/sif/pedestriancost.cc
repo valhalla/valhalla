@@ -9,7 +9,6 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr uint32_t kUnitSize = 2;
 constexpr uint32_t kMaxWalkingDistance = 100000; // 100 km
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
@@ -84,11 +83,6 @@ class PedestrianCost : public DynamicCost {
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const;
-
-  /**
-   * Override unit size since walking costs are higher range of vales
-   */
-  virtual uint32_t UnitSize() const;
 
   /**
    * Returns a function/functor to be used in location searching which will
@@ -211,11 +205,6 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 float PedestrianCost::AStarCostFactor() const {
   // Use the factor to favor walkways/paths if < 1.0f
   return (walkway_factor_ < 1.0f) ? walkway_factor_ * speedfactor_ : speedfactor_;
-}
-
-//  Override unit size since walking costs are higher range of values
-uint32_t PedestrianCost::UnitSize() const {
-  return kUnitSize;
 }
 
 cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
