@@ -433,10 +433,10 @@ void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
                                          const uint32_t stopimpact) {
   if (stopimpact > kMaxStopImpact) {
     LOG_ERROR("Exceeding maximum stop impact: " + std::to_string(stopimpact));
-    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact,
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact,
                                            kMaxStopImpact, localidx, 3);
   } else {
-    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact, stopimpact,
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact, stopimpact,
                                            localidx, 3);
   }
 }
@@ -448,9 +448,14 @@ void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_right. Skipping");
   } else {
-    stopimpact_.edge_to_right = OverwriteBits(stopimpact_.edge_to_right,
+    stopimpact_.s.edge_to_right = OverwriteBits(stopimpact_.s.edge_to_right,
                                 right, localidx, 1);
   }
+}
+
+// Set the unique transit line Id.
+void DirectedEdgeBuilder::set_lineid(const uint32_t lineid) {
+  stopimpact_.lineid = lineid;
 }
 
 DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {
