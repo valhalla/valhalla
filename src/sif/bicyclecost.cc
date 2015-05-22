@@ -1,6 +1,7 @@
 #include "sif/bicyclecost.h"
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/midgard/constants.h>
 
 using namespace valhalla::baldr;
 
@@ -11,8 +12,16 @@ namespace sif {
 // Equal to about 0.5km.
 const Cost kBicycleStepsCost = { 500.0f, 30.0f };
 
-// How much to favor bicycle networks
+// How much to favor bicycle networks. TODO - make a config option
 constexpr float kBicycleNetworkFactor = 0.8f;
+
+// Default options/values
+namespace {
+constexpr float kDefaultCyclingSpeed   = 25.0f;  // ~15.5 MPH
+constexpr float kDefaultUseRoadsFactor = 0.5f;   // Default factor for roads
+constexpr float kDefaultSmoothFactor   = 0.9f;   // Prefer smooth surfaces
+constexpr float kDefaultSurfaceFactor  = 0.2f;   // TODO
+}
 
 /**
  * Derived class providing dynamic edge costing for bicycle routes.
@@ -93,6 +102,9 @@ class BicycleCost : public DynamicCost {
   // Bicycling speed (default to 25 kph)
   float speed_;
 
+  // Speed factor for costing. Based on cycling speed.
+  float speedfactor_;
+
   // Bicycle type
   BicycleType bicycletype_;
 
@@ -151,13 +163,18 @@ class BicycleCost : public DynamicCost {
 // TODO - how to handle time/speed for estimating time on path
 
 // Constructor
-BicycleCost::BicycleCost(const boost::property_tree::ptree& config)
-    : DynamicCost(config, TravelMode::kBicycle),
-      speed_(25.0f),
-      bicycletype_(BicycleType::kRoad),
-      smooth_surface_factor_(0.9f),
-      bicycle_surface_factor_(0.2f),
-      useroads_(0.5f) {
+BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
+    : DynamicCost(pt, TravelMode::kBicycle) {
+  smooth_surface_factor_  = pt.get<float>("smoothness_factor", kDefaultSmoothFactor);
+  bicycle_surface_factor_ = pt.get<float>("surface_factor", kDefaultSurfaceFactor);
+  useroads_    = pt.get<float>("useroads_", kDefaultUseRoadsFactor);
+  speed_       = pt.get<float>("cycling_speed", kDefaultCyclingSpeed);
+
+  // TODO - bicycle type - enter as string and convert to enum
+  bicycletype_ = BicycleType::kRoad;
+
+  // Set the speed factor (to avoid division in costing)
+  speedfactor_ = (kSecPerHour * 0.001f) / speed_;
 }
 
 // Destructor
@@ -246,7 +263,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
    if (edge->bikenetwork() > 0) {
      factor *= kBicycleNetworkFactor;
    }
-   return Cost(edge->length() * factor, edge->length() / speed_);
+   return Cost(edge->length() * factor, edge->length() * speedfactor_);
 }
 
 /**
