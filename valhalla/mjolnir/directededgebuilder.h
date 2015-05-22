@@ -384,6 +384,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_stopimpact(const uint32_t localidx, const uint32_t stopimpact);
 
   /**
+   * Set the unique transit line Id.
+   * @param  lineid  Line Id indicating a unique stop-pair and route.
+   */
+  void set_lineid(const uint32_t lineid);
+
+  /**
    * Set the flag indicating there is an edge to the right, in between
    * the from edge and this edge.
    * @param  localidx  Local index at the node of the inbound edge.
