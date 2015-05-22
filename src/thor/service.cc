@@ -36,13 +36,14 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
-    thor_worker_t(const boost::property_tree::ptree& config):config(config),
+    thor_worker_t(const boost::property_tree::ptree& config): config(config),
     origin(PointLL()), destination(PointLL()), reader(config.get_child("mjolnir.hierarchy")) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
+      factory.Register("transit", sif::CreateTransitCost);
     }
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -53,25 +54,33 @@ namespace {
         std::stringstream stream(request_str);
         boost::property_tree::ptree request;
         boost::property_tree::read_info(stream, request);
-        init_request(request);
 
-        //find a path
-        auto path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-        if (path_edges.size() == 0) {
-          if (cost->AllowMultiPass()) {
-            LOG_INFO("Try again with relaxed hierarchy limits");
-            path_algorithm.Clear();
-            cost->RelaxHierarchyLimits(16.0f);
-            path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-          }
-        }
-        if (path_edges.size() == 0) {
-          path_algorithm.Clear();
-          cost->DisableHighwayTransitions();
+        // Initialize request - check if multimodal
+        bool multimodal = init_request(request);
+
+        // Find the path. Multimodal is a separate case.
+        std::vector<thor::PathInfo> path_edges;
+        if (multimodal) {
+          path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
+        } else {
+          //find a path
           path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
           if (path_edges.size() == 0) {
+            if (cost->AllowMultiPass()) {
+              LOG_INFO("Try again with relaxed hierarchy limits");
+              path_algorithm.Clear();
+              cost->RelaxHierarchyLimits(16.0f);
+              path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+            }
+          }
+          if (path_edges.size() == 0) {
             path_algorithm.Clear();
-            throw std::runtime_error("No path could be found for input");
+            cost->DisableHighwayTransitions();
+            path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+            if (path_edges.size() == 0) {
+              path_algorithm.Clear();
+              throw std::runtime_error("No path could be found for input");
+            }
           }
         }
 
@@ -92,7 +101,27 @@ namespace {
         return result;
       }
     }
-    void init_request(const boost::property_tree::ptree& request) {
+
+    // Get the costing options. Get the base options from the config and the
+    // options for the specified costing method. Merge in any request costing
+    // options.
+    valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request,
+                                          const std::string& costing) {
+      std::string method_options = "costing_options." + costing;
+      boost::property_tree::ptree config_costing = config.get_child(method_options);
+      const auto& request_costing = request.get_child_optional(method_options);
+      if (request_costing) {
+        // If the request has any options for this costing type, merge the 2
+        // costing options - override any config options that are in the request.
+        // and add any request options not in the config.
+        for (const auto& r : *request_costing) {
+          config_costing.put_child(r.first, r.second);
+        }
+      }
+      return factory.Create(costing, config_costing);
+    }
+
+    bool init_request(const boost::property_tree::ptree& request) {
       //we require locations
       try {
         for(const auto& location : request.get_child("locations"))
@@ -125,20 +154,17 @@ namespace {
         throw std::runtime_error("No edge/node costing provided");
       }
 
-      // Get the costing options. Get the base options from the config and the
-      // options for the specified costing method
-      std::string method_options = "costing_options." + costing;
-      boost::property_tree::ptree config_costing = config.get_child(method_options);
-      const auto& request_costing = request.get_child_optional(method_options);
-      if (request_costing) {
-        // If the request has any options for this costing type, merge the 2
-        // costing options - override any config options that are in the request.
-        // and add any request options not in the config.
-        for (const auto& r : *request_costing) {
-          config_costing.put_child(r.first, r.second);
-        }
+      // Construct costing. For multi-modal we construct costing for all modes
+      if (costing == "multimodal") {
+        mode_costing[0] = get_costing(request, "auto");
+        mode_costing[1] = get_costing(request, "pedestrian");
+        mode_costing[2] = get_costing(request, "bicycle");
+        mode_costing[3] = get_costing(request, "transit");
+        return true;
+      } else {
+        cost = get_costing(request, costing);
+        return false;
       }
-      cost = factory.Create(costing, config_costing);
     }
     void cleanup() {
       path_algorithm.Clear();
@@ -150,6 +176,7 @@ namespace {
     PathLocation origin, destination;
     sif::CostFactory<sif::DynamicCost> factory;
     valhalla::sif::cost_ptr_t cost;
+    valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
     valhalla::baldr::GraphReader reader;
     valhalla::thor::PathAlgorithm path_algorithm;
   };

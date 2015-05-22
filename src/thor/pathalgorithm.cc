@@ -320,7 +320,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add edge label, add to the adjacency list and set edge status
-
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                         newcost, sortcost, dist, directededge->restrictions(),
                         directededge->opp_local_idx(), mode_, walking_distance);
@@ -340,7 +339,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
              std::shared_ptr<DynamicCost>* mode_costing) {
   // TODO - some means of setting an initial mode and probably a dest/end mode
   mode_ = TravelMode::kPedestrian;
-  std::shared_ptr<DynamicCost>& costing = mode_costing[static_cast<uint32_t>(mode_)];
+  auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
   // Alter the destination edges if at a node - loki always gives edges
   // leaving a node, but when a destination we want edges entering the node
@@ -356,10 +355,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   }
 
   // Set route start time (seconds from midnight), date, and day of week
-  uint32_t start_time = 0;
+  uint32_t start_time = 28800;       // 08:00
   uint32_t localtime = start_time;
-  uint32_t date = 0;
-  uint32_t dow  = 0;
+  uint32_t date = 515;               // Days since 1/1/2014 -
+                                     //   needed for schedule validity
+  uint32_t dow  = 2;                 // Monday
 
   // Check for loop path
   PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
@@ -484,21 +484,19 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
         continue;
       }
 
-      // Skip if no access is allowed to this edge (based on costing method)
-      if (!costing->Allowed(directededge, pred)) {
-        continue;
-      }
-
       // Reset cost
       Cost newcost = pred.cost();
 
-      // If this is a transit edge - get the next departure
+      // If this is a transit edge - get the next departure. Do not check
+      // if allowed by costing - assume if you get a transit edge you
+      // walked to the transit stop
+      tripid = 0;
       if (directededge->use() == Use::kRail ||
           directededge->use() == Use::kBus) {
-        const TransitDeparture* departure = tile->GetNextDeparture(edgeid.id(),
-                                      localtime, date, dow);
+        const TransitDeparture* departure = tile->GetNextDeparture(
+                  directededge->lineid(), localtime, date, dow);
         if (departure) {
-          // Check if there has been a mode chance
+          // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);
 
           // Update trip Id and block Id
@@ -517,30 +515,38 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
 
           // Change mode and costing to transit. Add edge cost.
           mode_ = TravelMode::kPublicTransit;
-          costing = mode_costing[static_cast<uint32_t>(mode_)];
-          newcost += costing->EdgeCost(directededge, departure, localtime);
+          newcost += mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
+                    directededge, departure, localtime);
         } else {
           continue;  // No matching departures found for this edge
         }
       } else {
         if (mode_ == TravelMode::kPublicTransit &&
             directededge->use() == Use::kTransitConnection) {
+
           // Disembark from transit and reset walking distance
           mode_ = TravelMode::kPedestrian;
           walking_distance = 0.0f;
           mode_change = true;
         }
 
-        // Regular edge - use the appropriate costing
-        costing = mode_costing[static_cast<uint32_t>(mode_)];
-        newcost += costing->EdgeCost(directededge, nodeinfo->density());
+        // Regular edge - use the appropriate costing and check if access
+        // is allowed. If mode is pedestrian this will validate walking
+        // distance has not been exceeded.
+        if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(
+                    directededge, pred)) {
+          continue;
+        }
+        newcost += mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
+                  directededge, nodeinfo->density());
       }
 
       if (mode_change) {
         ; // TODO: newcost += mode_change_cost
       } else {
         // Use the transition costs from the costing model
-        newcost += costing->TransitionCost(directededge, nodeinfo, pred);
+        newcost += mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(
+                  directededge, nodeinfo, pred);
       }
 
       // Add to walking distance
@@ -565,14 +571,13 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
         continue;
       }
 
-      // Find the sort cost (with A* heuristic) using the lat,lng at the
-      // end node of the directed edge. Skip if tile not found.
+      // Disable A* for multimodal for now.
       if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
         continue;
       }
       const NodeInfo* endnode = tile->node(directededge->endnode());
       float dist = astarheuristic_.GetDistance(endnode->latlng());
-      float sortcost = newcost.cost + astarheuristic_.Get(dist);
+      float sortcost = newcost.cost; //  + astarheuristic_.Get(dist);
 
       // Prohibit entering the same station as the prior. Could this be done in
       // costing?
