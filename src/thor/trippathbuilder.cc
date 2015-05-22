@@ -322,7 +322,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
       if (trip_id) {
         const TransitDeparture* transit_departure = graphtile
-            ->GetTransitDeparture(edge.id(), trip_id);
+            ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
 
         // TODO:  date/time logic.
         // transit_stop_info->set_arrival_date_time();
@@ -699,7 +699,7 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
-        idx, trip_id);
+        directededge->lineid(), trip_id);
     const TransitRoute* transit_route = graphtile->GetTransitRoute(
         transit_departure->routeid());
     const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
