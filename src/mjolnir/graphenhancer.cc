@@ -1104,15 +1104,18 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // Edge transitions.
-        if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
-                                 nodeinfo, stats);
-        }
+        // No need for edge transitions and opposing index on transit edges
+        if (!directededge.IsTransitLine()) {
+          // Edge transitions.
+          if (j < kNumberOfEdgeTransitions) {
+            ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
+                                   nodeinfo, stats);
+          }
 
-        // Set the opposing index on the local level
-        directededge.set_opp_local_idx(
-              GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+          // Set the opposing index on the local level
+          directededge.set_opp_local_idx(
+                GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+        }
 
         // Set unreachable, not_thru, or internal intersection (except
         // for transit)
