@@ -5,6 +5,7 @@
 
 #include "thor/trippathbuilder.h"
 
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -170,6 +171,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_country(origin.country_);
   if (origin.heading_)
     tp_orig->set_heading(*origin.heading_);
+  if (origin.date_time_)
+    tp_orig->set_date_time(*origin.date_time_);
 
   // Set destination
   TripPath_Location* tp_dest = trip_path.add_location();
@@ -193,6 +196,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_country(dest.country_);
   if (dest.heading_)
     tp_dest->set_heading(*dest.heading_);
+  if (dest.date_time_)
+    tp_dest->set_date_time(*dest.date_time_);
+
+  uint32_t origin_sec_from_mid = DateTime::seconds_from_midnight(
+      *origin.date_time_);
 
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the opposing edge
   // then use the opposing index to get the opposing edge, and its end node is the begin node of the original edge
@@ -324,9 +332,15 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
 
-        // TODO:  date/time logic.
-        // transit_stop_info->set_arrival_date_time();
-        // transit_stop_info->set_departure_date_time();
+        transit_stop_info->set_departure_date_time(
+            DateTime::get_duration(*origin.date_time_,
+                                   transit_departure->departure_time() -
+                                   origin_sec_from_mid));
+        transit_stop_info->set_departure_date_time(
+            DateTime::get_duration(*origin.date_time_,
+                                   (transit_departure->departure_time() +
+                                       transit_departure->elapsed_time()) -
+                                       origin_sec_from_mid));
       }
     }
 
