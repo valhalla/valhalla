@@ -25,6 +25,15 @@ void TryGetDOW(std::string date_time, uint32_t expected_dow) {
   }
 }
 
+void TryGetDuration(std::string date_time, uint32_t seconds, std::string expected_date_time) {
+
+  if (DateTime::get_duration(date_time,seconds) != expected_date_time) {
+    throw std::runtime_error(
+        std::string("Incorrect duration ") + DateTime::get_duration(date_time,seconds) +
+        std::string(" ") + expected_date_time);
+  }
+}
+
 void TryGetSecondsFromMidnight(std::string date_time, uint32_t expected_seconds) {
   if (DateTime::seconds_from_midnight(date_time) != expected_seconds) {
     throw std::runtime_error(
@@ -61,6 +70,17 @@ void TestDOW() {
 
 }
 
+void TestDuration() {
+
+  TryGetDuration("20140101",30,"2014-01-01T00:00");
+  TryGetDuration("20140102",60,"2014-01-02T00:01");
+  TryGetDuration("19990101",89, "");
+  TryGetDuration("20140101T07:01",61,"2014-01-01T07:02");
+  TryGetDuration("20140102T15:00",61,"2014-01-02T15:01");
+  TryGetDuration("20140102T15:00",86400,"2014-01-03T15:00");
+
+}
+
 void TestGetSecondsFromMidnight() {
   TryGetSecondsFromMidnight("00:00:00", 0);
   TryGetSecondsFromMidnight("01:00:00", 3600);
@@ -83,6 +103,7 @@ int main(void) {
   suite.test(TEST_CASE(TestGetDaysFromPivotDate));
   suite.test(TEST_CASE(TestGetSecondsFromMidnight));
   suite.test(TEST_CASE(TestDOW));
+  suite.test(TEST_CASE(TestDuration));
 
   return suite.tear_down();
 }

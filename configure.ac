@@ -29,6 +29,8 @@ AX_BOOST_BASE([1.54], , [AC_MSG_ERROR([cannot find Boost libraries, which are ar
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+AX_BOOST_SERIALIZATION
+AX_BOOST_DATE_TIME
 
 # optionally enable coverage information
 CHECK_COVERAGE
