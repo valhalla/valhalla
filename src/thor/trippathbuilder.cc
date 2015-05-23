@@ -336,7 +336,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
             DateTime::get_duration(*origin.date_time_,
                                    transit_departure->departure_time() -
                                    origin_sec_from_mid));
-        transit_stop_info->set_departure_date_time(
+        transit_stop_info->set_arrival_date_time(
             DateTime::get_duration(*origin.date_time_,
                                    (transit_departure->departure_time() +
                                        transit_departure->elapsed_time()) -
