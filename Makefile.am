@@ -100,7 +100,7 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/transittransfer.cc \
 	src/baldr/transittrip.cc 
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB)
+libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
 
 #distributed executables
 bin_PROGRAMS = srtmtest
