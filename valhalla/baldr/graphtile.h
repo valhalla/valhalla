@@ -221,6 +221,17 @@ class GraphTile {
                 const uint32_t stopid) const;
 
   /**
+   * Get a pointer to the transfer record given the from stop Id and
+   * the to stop id.
+   * @param   from_stopid  From stop Id.
+   * @param   to_stopid    To stop Id.
+   * @return  Returns a pointer to the transfer record between the 2 stops.
+   *          Returns nullptr if no transfer record exists.
+   */
+  TransitTransfer* GetTransfer(const uint32_t from_stopid,
+                               const uint32_t to_stopid) const;
+
+  /**
    * Get a pointer to the first calendar exception record given the service
    * Id and compute the number of calendar exception records.
    * @param   serviceid  Service Id.
