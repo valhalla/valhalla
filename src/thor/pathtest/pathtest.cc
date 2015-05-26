@@ -356,9 +356,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  originloc.date_time_ = "2015-07-01T08:00";
-
-
   // TODO: remove after input files are transformed
 #ifdef LOGGING_LEVEL_DEBUG
   std::string json_input = "-j '{\"locations\":[";
