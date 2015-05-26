@@ -347,7 +347,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
                                           costing->GetFilter());
 
   // Check for trivial path
-  mode_ = costing->travelmode();
   auto trivial_id = trivial(origin, dest);
   if (trivial_id.Is_Valid()) {
     std::vector<PathInfo> trivialpath;
@@ -425,9 +424,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
     // Set local time. TODO: adjust for time zone
     uint32_t localtime = start_time + pred.cost().secs;
 
-    // Update accumulated walking distance
-    walking_distance_ = pred.walking_distance();
-
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
@@ -465,6 +461,9 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
         mode_change = true;
       }
     }*/
+
+    // Set the accumulated walking distance
+    walking_distance_ = pred.walking_distance();
 
     // Expand from end node.
     uint32_t shortcuts = 0;
