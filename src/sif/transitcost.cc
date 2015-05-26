@@ -195,11 +195,6 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   float elapsedtime = static_cast<float>(departure->departure_time() -
                         curr_time + departure->elapsed_time());
 
-  // TODO - temporary
-  if (elapsedtime < 0.0f) {
-    LOG_ERROR("Negative elapsed time!");
-  }
-
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
   if (edge->use() == Use::kBus) {
@@ -234,12 +229,12 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   }
   switch (transfer->type()) {
   case TransferType::kRecommended:
-    return { 15.0f, 15.0f + transfer_penalty_};
+    return { 15.0f + transfer_penalty_, 15.0f };
   case TransferType::kTimed:
-    return { 15.0f, 15.0f + transfer_penalty_};
+    return { 15.0f + transfer_penalty_, 15.0f };
   case TransferType::kMinTime:
-    return { static_cast<float>(transfer->mintime()),
-             static_cast<float>(transfer->mintime()) + transfer_penalty_};
+    return { static_cast<float>(transfer->mintime() + transfer_penalty_),
+             static_cast<float>(transfer->mintime()) };
   case TransferType::kNotPossible:
     return kImpossibleCost;
   }
