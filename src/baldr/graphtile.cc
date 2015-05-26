@@ -655,10 +655,66 @@ std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
     }
     return {start, n};
   } else {
-    LOG_ERROR("No transfers found from stopid = " + std::to_string(stopid));
+    LOG_DEBUG("No transfers found from stopid = " + std::to_string(stopid));
     return {nullptr, 0};
   }
 }
+
+// Get a pointer to the transfer record given the from stop Id and
+// the to stop id.
+TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
+                                        const uint32_t to_stopid) const {
+  uint32_t count = header_->transfercount();
+  if (count == 0) {
+    return nullptr;
+  }
+
+  // Binary search
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (transit_transfers_[mid].from_stopid() == from_stopid) {
+      found = true;
+      break;
+    }
+    if (from_stopid < transit_transfers_[mid].from_stopid() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  if (found) {
+    // Back up while prior is equal (or at the beginning)
+    uint32_t m = mid;
+    while (mid > 0 &&
+          transit_transfers_[mid-1].from_stopid() == from_stopid) {
+      if (transit_transfers_[mid-1].to_stopid() == to_stopid) {
+        return &transit_transfers_[mid-1];
+      }
+      mid--;
+    }
+
+    // Set the start and increment until not equal to get the count
+    mid = m;
+    TransitTransfer* start = &transit_transfers_[mid];
+    while (transit_transfers_[mid].from_stopid() == from_stopid && mid < count) {
+      if (transit_transfers_[mid].to_stopid() == to_stopid) {
+        return &transit_transfers_[mid];
+      }
+      mid++;
+    }
+    return nullptr;
+  } else {
+    LOG_DEBUG("No transfers found from stopid = " + std::to_string(from_stopid) +
+              " to stopid " + std::to_string(to_stopid));
+    return nullptr;
+  }
+}
+
 
 // Get a pointer to the first calendar exception record given the service
 // Id and compute the number of calendar exception records.
