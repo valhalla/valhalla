@@ -126,6 +126,7 @@ class PedestrianCost : public DynamicCost {
 // not present, set the default.
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
+  allow_transit_connections_ = false;
   max_distance_    = pt.get<uint32_t>("max_distance", kMaxWalkingDistance);
   walking_speed_   = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
   walkway_factor_  = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
@@ -147,6 +148,9 @@ PedestrianCost::~PedestrianCost() {
 // where max. walking distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred) const {
+  if (!allow_transit_connections_ && edge->use() == Use::kTransitConnection) {
+    return false;
+  }
   return ((edge->forwardaccess() & kPedestrianAccess) &&
            pred.opp_local_idx() != edge->localedgeidx()  &&
          !(edge->not_thru() && pred.distance() > not_thru_distance_) &&
@@ -183,6 +187,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return { step_penalty_, 0.0f };
+  }
+
+  // No cost from transit connection
+  if (pred.use() == Use::kTransitConnection) {
+    return { 0.0f, 0.0f };
   }
 
   // Costs for crossing an intersection.
