@@ -61,7 +61,7 @@ class PathAlgorithm {
    */
   std::vector<PathInfo> GetBestPathMM(const baldr::PathLocation& origin,
            const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
-           std::shared_ptr<sif::DynamicCost>* mode_costing);
+           const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
    * Clear the temporary information generated during path construction.
@@ -74,6 +74,9 @@ class PathAlgorithm {
 
   // Current travel mode
   sif::TravelMode mode_;
+
+  // Current walking distance.
+  uint32_t walking_distance_;
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
@@ -102,9 +105,23 @@ class PathAlgorithm {
    * @param  origll  Lat,lng of the origin.
    * @param  destll  Lat,lng of the destination.
    * @param  costing Dynamic costing method.
+   * @param  multimodal  Is this a multimodal path.
    */
   void Init(const PointLL& origll, const PointLL& destll,
-      const std::shared_ptr<sif::DynamicCost>& costing);
+            const std::shared_ptr<sif::DynamicCost>& costing,
+            const bool multimodal);
+
+  /**
+   * Check if edge is temporarily labeled and this path has less cost. If
+   * less cost the predecessor is updated and the sort cost is decremented
+   * by the difference in real cost (A* heuristic doesn't change).
+   * @param  idx        Index into the edge status list.
+   * @param  predindex  Index of the predecessor edge.
+   * @param  newcost    Cost of the new path.
+   */
+  void CheckIfLowerCostPath(const uint32_t idx,
+                            const uint32_t predindex,
+                            const sif::Cost& newcost);
 
   /**
    * Handle transition edges. Will add any that are allowed to the
