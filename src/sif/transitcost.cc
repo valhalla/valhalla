@@ -1,6 +1,7 @@
 #include "sif/transitcost.h"
 
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
@@ -18,6 +19,10 @@ constexpr float kDefaultBusFactor   = 1.0f;
 constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
+constexpr float kDefaultTransferCost = 60.0f;
+constexpr float kDefaultTransferPenalty = 120.0f;  // 2 minute default
+
+Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
 
 /**
@@ -92,6 +97,13 @@ class TransitCost : public DynamicCost {
                               const EdgeLabel& pred) const;
 
   /**
+   * Returns the transfer cost between 2 transit stops.
+   * @param  transfer  Pointer to transit transfer record.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the
@@ -126,6 +138,8 @@ class TransitCost : public DynamicCost {
   float bus_penalty_;
   float rail_factor_;
   float rail_penalty_;
+  float transfer_cost_;     // Transfer cost when no transfer record exists
+  float transfer_penalty_;  // Transfer penalty
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -138,6 +152,8 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
   bus_penalty_  = pt.get<float>("bus_penalty", kDefaultBusPenalty);
   rail_factor_  = pt.get<float>("rail_factor", kDefaultRailFactor);
   rail_penalty_ = pt.get<float>("rail_penalty", kDefaultRailPenalty);
+  transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
+  transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
 }
 
 // Destructor
@@ -164,6 +180,7 @@ bool TransitCost::Allowed(const baldr::NodeInfo* node) const {
 // (in seconds) to traverse the edge.
 Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
                            const uint32_t density) const {
+  LOG_ERROR("Wrong transit edge cost called");
   return { 0.0f, 0.0f };
 }
 
@@ -177,6 +194,11 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
   // wait time + time on transit until arrival at next stop
   float elapsedtime = static_cast<float>(departure->departure_time() -
                         curr_time + departure->elapsed_time());
+
+  // TODO - temporary
+  if (elapsedtime < 0.0f) {
+    LOG_ERROR("Negative elapsed time!");
+  }
 
   // Cost is modulated by mode-based weight factor
   float weight = 1.0f;
@@ -204,6 +226,25 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
   return { 0.0f, 0.0f };
 }
 
+// Returns the transfer cost between 2 transit stops.
+Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
+  if (transfer == nullptr) {
+    // No transfer record exists - use defaults
+    return { transfer_cost_, transfer_cost_ +  transfer_penalty_ };
+  }
+  switch (transfer->type()) {
+  case TransferType::kRecommended:
+    return { 15.0f, 15.0f + transfer_penalty_};
+  case TransferType::kTimed:
+    return { 15.0f, 15.0f + transfer_penalty_};
+  case TransferType::kMinTime:
+    return { static_cast<float>(transfer->mintime()),
+             static_cast<float>(transfer->mintime()) + transfer_penalty_};
+  case TransferType::kNotPossible:
+    return kImpossibleCost;
+  }
+}
+
 // Get the cost factor for A* heuristics. This factor is multiplied
 // with the distance to the destination to produce an estimate of the
 // minimum cost to the destination. The A* heuristic must underestimate the
@@ -211,8 +252,7 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TransitCost::AStarCostFactor() const {
-  // TODO
-  return 1.0f;
+  return 0.0f;
 }
 
 //  Override unit size since walking costs are higher range of values
