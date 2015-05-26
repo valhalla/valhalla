@@ -232,8 +232,6 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
     // No transfer record exists - use defaults
     return { transfer_cost_, transfer_cost_ +  transfer_penalty_ };
   }
-LOG_INFO("Transfer found");
-LOG_INFO("Transfer type = " + std::to_string(static_cast<uint32_t>(transfer->type())));
   switch (transfer->type()) {
   case TransferType::kRecommended:
     return { 15.0f, 15.0f + transfer_penalty_};
