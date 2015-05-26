@@ -7,7 +7,8 @@ namespace sif {
 
 DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
                          const TravelMode mode)
-    : travelmode_(mode),
+    : allow_transit_connections_(false),
+      travelmode_(mode),
       not_thru_distance_(5000.0f) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
@@ -56,6 +57,12 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 uint32_t DynamicCost::UnitSize() const {
   return kDefaultUnitSize;
 }
+
+// Set to allow use of transit connections.
+void DynamicCost::SetAllowTransitConnections(const bool allow) {
+  allow_transit_connections_ = allow;
+}
+
 
 // Gets the hierarchy limits.
 std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {

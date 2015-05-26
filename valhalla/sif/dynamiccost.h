@@ -140,6 +140,12 @@ class DynamicCost {
   virtual uint32_t UnitSize() const;
 
   /**
+   * Set to allow use of transit connections.
+   * @param  allow  Flag indicating whether transit connections are allowed.
+   */
+  virtual void SetAllowTransitConnections(const bool allow);
+
+  /**
    * Set the current travel mode.
    * @param  mode  Travel mode
    */
@@ -186,6 +192,9 @@ class DynamicCost {
   void ResetHierarchyLimits();
 
  protected:
+  // Flag indicating whether transit connections are allowed.
+  bool allow_transit_connections_;
+
   // Travel mode
   TravelMode travelmode_;
 
