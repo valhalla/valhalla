@@ -354,6 +354,9 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
     return trivialpath;
   }
 
+  if (!origin.date_time_)
+    return { };
+
   // Set route start time (seconds from midnight), date, and day of week
   uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
   uint32_t localtime = start_time;
