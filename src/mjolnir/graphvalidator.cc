@@ -117,46 +117,11 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
   // Iterate through all levels and all tiles.
+	// Variables beginning with 'sign' are required for sign validation
   // TODO - concurrency
-  LOG_INFO("GraphValidator - validate signs first");
+  LOG_INFO("GraphValidator - Validating signs and connectivity");
 
-  // Validate signs
-  for (auto tile_level :  tile_hierarchy_.levels()) {
-    uint32_t level = (uint32_t)tile_level.second.level;
-    uint32_t ntiles = tile_level.second.tiles.TileCount();
-    for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
-      // Get the graph tile. Skip if no tile exists (common case)
-      const GraphTile tile(tile_hierarchy_, GraphId(tileid, level, 0));
-      if (tile.size() == 0) {
-        continue;
-      }
-
-      // Iterate through the tile and validate signs
-      for (uint32_t i = 0; i < tile.header()->nodecount(); i++) {
-        const NodeInfo* nodeinfo = tile.node(i);
-
-        // Go through directed edges and update data
-        uint32_t idx = nodeinfo->edge_index();
-        for (uint32_t j = 0, n = nodeinfo->edge_count(); j < n; j++, idx++) {
-          const DirectedEdge* directededge = tile.directededge(idx);
-
-          // Validate signs
-          if (directededge->exitsign()) {
-            if (tile.GetSigns(idx).size() == 0) {
-              LOG_ERROR("Directed edge marked as having signs but none found");
-            }
-          }
-        }
-      }
-
-      // Check if we need to clear the tile cache
-      if(graphreader_.OverCommitted())
-        graphreader_.Clear();
-    }
-  }
-  LOG_INFO("Validation signs is done. Validate connectivity.");
-
-  for (auto tile_level :  tile_hierarchy_.levels()) {
+  for (auto tile_level : tile_hierarchy_.levels()) {
     dupcount_ = 0;
     std::vector<float> densities;
     uint32_t level = (uint32_t)tile_level.second.level;
@@ -165,6 +130,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     for (uint32_t tileid = 0; tileid < ntiles; tileid++) {
       // Get the graph tile. Skip if no tile exists (common case)
       GraphTileBuilder tilebuilder(tile_hierarchy_, GraphId(tileid, level, 0), false);
+      const GraphTile signtile(tile_hierarchy_, GraphId(tileid, level, 0));
       if (tilebuilder.size() == 0) {
         continue;
       }
@@ -184,13 +150,24 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       GraphId node(tileid, level, 0);
       for (uint32_t i = 0; i < nodecount; i++, node++) {
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
+				const NodeInfo* signnodeinfo = signtile.node(i);
 
         const GraphTile* tile = graphreader_.GetGraphTile(node);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
         // Go through directed edges and update data
-        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++) {
-          DirectedEdgeBuilder& directededge = tilebuilder.directededge(
+        uint32_t idx = signnodeinfo->edge_index();
+        for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
+
+          const DirectedEdge* signdirectededge = signtile.directededge(idx);
+          // Validate signs
+          if (signdirectededge->exitsign()) {
+            if (signtile.GetSigns(idx).size() == 0) {
+              LOG_ERROR("Directed edge marked as having signs but none found");
+            }
+          }
+					
+					DirectedEdgeBuilder& directededge = tilebuilder.directededge(
                                   nodeinfo.edge_index() + j);
           // Stats...
           if (!directededge.shortcut() && !directededge.trans_up() &&
@@ -226,7 +203,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
       if(graphreader_.OverCommitted())
         graphreader_.Clear();
     }
-    LOG_INFO("Validation of connectivity is done");
+    LOG_INFO("Validation of signs and connectivity is done");
     LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
         % level % dupcount_).str());
 
