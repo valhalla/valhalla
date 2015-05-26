@@ -72,8 +72,7 @@
       "gate_cost": 30.0,
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0,
-      "country_crossing_cost": 600.0,
-      "country_crossing_penalty": 0.0
+      "country_crossing_cost": 600.0
     },
     "auto_shorter": {
     },
