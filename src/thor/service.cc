@@ -62,6 +62,9 @@ namespace {
         std::vector<thor::PathInfo> path_edges;
         if (multimodal) {
           path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
+          if (path_edges.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
         } else {
           //find a path
           path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
@@ -78,7 +81,6 @@ namespace {
             cost->DisableHighwayTransitions();
             path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
             if (path_edges.size() == 0) {
-              path_algorithm.Clear();
               throw std::runtime_error("No path could be found for input");
             }
           }
