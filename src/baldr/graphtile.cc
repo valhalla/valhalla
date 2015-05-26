@@ -660,8 +660,8 @@ std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
   }
 }
 
-// Get a pointer to the first transfer record given the stop Id and also
-// compute the number of transfer records for the stop.
+// Get a pointer to the transfer record given the from stop Id and
+// the to stop id.
 TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
                                         const uint32_t to_stopid) const {
   uint32_t count = header_->transfercount();
