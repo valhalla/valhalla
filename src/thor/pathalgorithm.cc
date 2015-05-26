@@ -354,6 +354,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
     return trivialpath;
   }
 
+  // For now the date_time must be set on the origin.
   if (!origin.date_time_)
     return { };
 
