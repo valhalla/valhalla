@@ -655,7 +655,7 @@ std::pair<TransitTransfer*, uint32_t> GraphTile::GetTransfers(
     }
     return {start, n};
   } else {
-    LOG_ERROR("No transfers found from stopid = " + std::to_string(stopid));
+    LOG_DEBUG("No transfers found from stopid = " + std::to_string(stopid));
     return {nullptr, 0};
   }
 }
@@ -709,7 +709,7 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
     }
     return nullptr;
   } else {
-    LOG_ERROR("No transfers found from stopid = " + std::to_string(from_stopid) +
+    LOG_DEBUG("No transfers found from stopid = " + std::to_string(from_stopid) +
               " to stopid " + std::to_string(to_stopid));
     return nullptr;
   }
