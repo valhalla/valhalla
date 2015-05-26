@@ -52,6 +52,11 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
   return { 0.0f, 0.0f };
 }
 
+// Returns the transfer cost between 2 transit stops.
+Cost DynamicCost::TransferCost(const TransitTransfer* transfer) const {
+  return { 0.0f, 0.0f };
+}
+
 // Get the general unit size that can be considered as equal for sorting
 // purposes. Defaults to 1 (second).
 uint32_t DynamicCost::UnitSize() const {

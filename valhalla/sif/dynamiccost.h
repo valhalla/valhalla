@@ -4,6 +4,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transittransfer.h>
 #include <memory>
 
 #include <valhalla/sif/hierarchylimits.h>
@@ -115,6 +116,13 @@ class DynamicCost {
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred) const;
+
+  /**
+   * Returns the transfer cost between 2 transit stops.
+   * @param  transfer  Pointer to transit transfer record.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
