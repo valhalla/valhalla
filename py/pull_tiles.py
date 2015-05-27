@@ -9,4 +9,4 @@ if __name__ == "__main__":
   bucket = s3.get_bucket('mapzen.valhalla')
   keys = sorted([ k.key for k in bucket.get_all_keys() if k.key.startswith('tiles_') ])
   keys.reverse()
-  print(keys[0])
+  print('https://s3.amazonaws.com/mapzen.valhalla/' + keys[0])
