@@ -5,7 +5,7 @@ base_dir=$1
 config=$2
 src_dir=$3
 extracts_dir=$4
-log=$5
+log_dir=$5
 
 # make sure only one is running at any time...
 LOCK_FILE="${base_dir}/locks/mjolnir.lock"
