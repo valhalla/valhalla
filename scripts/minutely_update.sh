@@ -99,14 +99,11 @@ CHANGESET_DIR="$WORKDIR_OSM/minutely"
 # make sure only one is running at any time...
 LOCK_FILE="$WORKDIR_OSM/locks/minutely.lock"
 mkdir -p "$WORKDIR_OSM/locks"
-
 (set -C; : > $LOCK_FILE) 2> /dev/null
-
 if [ $? != "0" ]; then
-   echo "Lock File exists - exiting"
+   echo "Lock file exists"
    exit 1
 fi
-
 trap 'rm $LOCK_FILE' EXIT 1 2 3 6
 
 case "$1" in

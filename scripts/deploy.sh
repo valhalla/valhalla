@@ -8,15 +8,14 @@ extracts_dir=$4
 log_dir=$5
 
 # make sure only one is running at any time...
-LOCK_FILE="${base_dir}/locks/mjolnir.lock"
+LOCK_FILE="${base_dir}/locks/deploy.lock"
 mkdir -p "${base_dir}/locks"
-
 (set -C; : > ${LOCK_FILE}) 2> /dev/null
-
 if [ $? != "0" ]; then
    echo "Lock file exists"
    exit 1
 fi
+trap 'rm $LOCK_FILE' EXIT 1 2 3 6
 
 # if they want updates then we need to install crontabs
 if [ $WITH_UPDATES ]; then

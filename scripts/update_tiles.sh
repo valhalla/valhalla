@@ -7,15 +7,14 @@ src_dir=$3
 extracts_dir=$4
 
 # make sure only one is running at any time...
-LOCK_FILE="${base_dir}/locks/mjolnir.lock"
+LOCK_FILE="${base_dir}/locks/update_tiles.lock"
 mkdir -p "${base_dir}/locks"
 (set -C; : > ${LOCK_FILE}) 2> /dev/null
-
-# try again later when lock is removed 
 if [ $? != "0" ]; then
    echo "Lock file exists"
    exit 0
 fi
+trap 'rm $LOCK_FILE' EXIT 1 2 3 6
 
 export PATH=$PATH:/usr/local/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
@@ -65,6 +64,3 @@ for dir in $(ls -d tiles_.* | sort -r); do
    fi
    let count=count+1
 done
-
-rm ${LOCK_FILE}
-
