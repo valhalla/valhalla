@@ -14,7 +14,7 @@ constexpr uint8_t kBicycleAccess    = 4;
 constexpr uint8_t kTruckAccess      = 8;
 constexpr uint8_t kEmergencyAccess  = 16;
 constexpr uint8_t kTaxiAccess       = 32;
-constexpr uint8_t kHorseAccess      = 64;
+constexpr uint8_t kBusAccess        = 64;
 constexpr uint8_t kHOVAccess        = 128;
 constexpr uint8_t kAllAccess        = 255;
 
@@ -32,7 +32,7 @@ union Access {
     uint8_t truck        : 1; // Truck / heavy good vehicle access
     uint8_t emergency    : 1; // Emergency vehicle access
     uint8_t taxi         : 1; // Taxi access
-    uint8_t horse        : 1; // Horse access
+    uint8_t bus          : 1; // Bus access
     uint8_t hov          : 1; // High occupancy vehicle access
   } fields;
   uint8_t v;
