@@ -253,10 +253,14 @@ struct graph_callback : public OSMPBF::Callback {
 
       else if (tag.first == "auto_forward")
         w.set_auto_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "bus_forward")
+        w.set_bus_forward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_forward")
         w.set_bike_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "bus_backward")
+        w.set_bus_backward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_backward")
         w.set_bike_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
