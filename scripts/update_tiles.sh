@@ -54,7 +54,7 @@ popd
 # backup files and tile dirs, keep the admin stuff though
 mkdir -p ${cur_tile_dir}
 mv ${tile_dir}/* ${cur_tile_dir}
-cp -rp ${cur_tile_dir}/$(basename admin_file) ${tile_dir}
+cp -rp ${cur_tile_dir}/$(basename ${admin_file}) ${tile_dir}
 
 # trim backed up tile directories to a certain number
 count=0
