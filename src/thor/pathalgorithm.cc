@@ -337,6 +337,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   // TODO - some means of setting an initial mode and probably a dest/end mode
    mode_ = TravelMode::kPedestrian;
    const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+   const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
 
    // For pedestrian - set flag allowing use of transit connections
    costing->SetAllowTransitConnections(true);
@@ -430,11 +431,18 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       continue;
     }
 
-    // If this is a transit stop get any transfer times/penalties
+    // Get any transfer times and penalties if this is a transit stop
+    // and mode is pedestrian
+    uint32_t prior_stop = pred.prior_stopid();
     Cost transfer_cost = { 0.0f, 0.0f };
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
-      // TODO get transfer cost (including any penalty)
-      transfer_cost = { 60.0f, 90.0f };
+      if (mode_ == TravelMode::kPedestrian) {
+        transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
+                                      nodeinfo->stop_id()));
+      }
+
+      // Update prior stop
+      prior_stop = nodeinfo->stop_id();
     }
 
      // Allow mode changes at special nodes
@@ -504,19 +512,19 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
 
           // There is no cost if continuing along the same trip Id
           // or (valid) block Id. Make sure we did not walk from stop to stop.
-          if (!mode_change && (tripid == pred.tripid() ||
+          if (prior_stop == 0) {
+            ;
+          } else if (!mode_change && (tripid == pred.tripid() ||
               (blockid != 0 && (blockid == pred.blockid())))) {
-            LOG_INFO("Stay on trip Id = " + std::to_string(tripid));
+            ; // LOG_INFO("Stay on trip Id = " + std::to_string(tripid));
           } else {
             // Use the transfer cost computed for the stop
-            LOG_INFO("Add transfer cost");
             newcost += transfer_cost;
           }
 
           // Change mode and costing to transit. Add edge cost.
           mode_ = TravelMode::kPublicTransit;
-          newcost += mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
-                directededge, departure, localtime);
+          newcost += tc->EdgeCost(directededge, departure, localtime);
         } else {
           continue;  // No matching departures found for this edge
         }
@@ -524,12 +532,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
         // If current mode is public transit we should only connect to
         // transit connection edges or transit edges
         if (mode_ == TravelMode::kPublicTransit) {
-          if (directededge->use() != Use::kTransitConnection) {
-            LOG_ERROR("Mode is transit - not on a transit connection! use = "
-                  + std::to_string(static_cast<uint32_t>(directededge->use())) +
-                  " Node Type = " + std::to_string(static_cast<uint32_t>(nodeinfo->type())));
-          }
-
           // Disembark from transit and reset walking distance
           mode_ = TravelMode::kPedestrian;
           walking_distance_ = 0;
@@ -548,8 +550,9 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       }
 
       if (mode_change) {
-        // TODO: make mode change cost configurable
-        newcost += {10.0f, 10.0f };
+        // TODO: make mode change cost configurable. No cost for entering
+        // a transit line (assume the wait time is the cost)
+        ;  //newcost += {10.0f, 10.0f };
       } else {
         // Use the transition costs from the costing model
         newcost += mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(
@@ -562,13 +565,14 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       }
 
       // Skip if the end node tile is not found
-      if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+      const GraphTile* endtile;
+      if ((endtile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
         continue;
       }
 
       // Prohibit entering the same station as the prior. Could this be done in
       // costing?
-      const NodeInfo* endnode = tile->node(directededge->endnode());
+      const NodeInfo* endnode = endtile->node(directededge->endnode());
       if (directededge->use() == Use::kTransitConnection &&
           endnode->is_transit() &&
           endnode->stop_id() == pred.prior_stopid()) {
@@ -591,7 +595,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_,  walking_distance_,
-                    tripid, nodeinfo->stop_id(),  blockid);
+                    tripid, prior_stop,  blockid);
       adjacencylist_->Add(edgelabel_index_, sortcost);
       edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
