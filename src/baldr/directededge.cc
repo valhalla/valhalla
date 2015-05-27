@@ -406,8 +406,8 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.emergency+1)-1);
   de.forwardaccess_.fields.taxi  = ~de.forwardaccess_.fields.taxi;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.taxi+1)-1);
-  de.forwardaccess_.fields.horse  = ~de.forwardaccess_.fields.horse;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.horse+1)-1);
+  de.forwardaccess_.fields.bus  = ~de.forwardaccess_.fields.bus;
+  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.bus+1)-1);
   de.forwardaccess_.fields.hov  = ~de.forwardaccess_.fields.hov;
   boost::hash_combine(seed,ffs(de.forwardaccess_.fields.hov+1)-1);
 

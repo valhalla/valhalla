@@ -189,8 +189,8 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed,ffs(ni.access_.fields.emergency+1)-1);
   ni.access_.fields.taxi  = ~ni.access_.fields.taxi;
   boost::hash_combine(seed,ffs(ni.access_.fields.taxi+1)-1);
-  ni.access_.fields.horse  = ~ni.access_.fields.horse;
-  boost::hash_combine(seed,ffs(ni.access_.fields.horse+1)-1);
+  ni.access_.fields.bus  = ~ni.access_.fields.bus;
+  boost::hash_combine(seed,ffs(ni.access_.fields.bus+1)-1);
   ni.access_.fields.hov  = ~ni.access_.fields.hov;
   boost::hash_combine(seed,ffs(ni.access_.fields.hov+1)-1);
 
