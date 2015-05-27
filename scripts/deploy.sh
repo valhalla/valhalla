@@ -31,7 +31,3 @@ if [ $WITH_UPDATES ]; then
 else
   ${src_dir}/mjolnir/scripts/update_tiles.sh ${base_dir} ${config} ${src_dir} ${extracts_dir}
 fi
-
-# unlock so the next run can go
-rm ${LOCK_FILE}
-
