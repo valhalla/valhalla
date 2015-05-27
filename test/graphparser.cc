@@ -72,7 +72,7 @@ OSMWay GetWay(uint64_t way_id, sequence<OSMWay>& ways) {
   return target;
 }
 
-void BollardsGates(const std::string& config_file) {
+void BollardsGatesAndAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
 
@@ -81,6 +81,28 @@ void BollardsGates(const std::string& config_file) {
   auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/liechtenstein-latest.osm.pbf"}, ways_file, way_nodes_file);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
+
+  sequence<OSMWay> ways(ways_file, false);
+  ways.sort(way_predicate);
+
+  // bus access tests.
+  auto way = GetWay(85744121, ways);
+  if (way.auto_forward() != false || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+    throw std::runtime_error("Access is not set correctly for way 85744121.");
+  }
+
+  way = GetWay(86260080, ways);
+  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+    throw std::runtime_error("Access is not set correctly for way 86260080.");
+  }
+
+  way = GetWay(161683833, ways);
+  if (way.auto_forward() != true || way.bike_forward() != true || way.bus_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+    throw std::runtime_error("Access is not set correctly for way 161683833.");
+  }
 
   //We split set the uses at bollards and gates.
   auto node = GetNode(392700757, way_nodes);
@@ -259,9 +281,9 @@ void DoConfig() {
   write_config("test/test_config");
 }
 
-void TestBollardsGates() {
+void TestBollardsGatesAndAccess() {
   //write the tiles with it
-  BollardsGates("test/test_config");
+  BollardsGatesAndAccess("test/test_config");
 }
 
 void TestRemovableBollards() {
@@ -298,7 +320,7 @@ int main() {
   test::suite suite("parser");
 
   suite.test(TEST_CASE(DoConfig));
-  suite.test(TEST_CASE(TestBollardsGates));
+  suite.test(TEST_CASE(TestBollardsGatesAndAccess));
   suite.test(TEST_CASE(TestRemovableBollards));
   suite.test(TEST_CASE(TestBicycleTrafficSignals));
   suite.test(TEST_CASE(TestExits));
