@@ -101,7 +101,7 @@ void BollardsGates(const std::string& config_file) {
   //Is a bollard with foot and bike flags set.
   node = GetNode(569645326, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 6)
+      node.type() != NodeType::kBollard || node.access_mask() != 70)
     throw std::runtime_error("Bollard(with flags) not marked as intersection.");
 
   //Is a bollard=block with foot flag set.

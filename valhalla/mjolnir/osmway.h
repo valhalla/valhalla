@@ -242,6 +242,42 @@ struct OSMWay {
   bool auto_forward() const;
 
   /**
+   * Sets the bus_forward flag.
+   * @param  bus_forward   Can a bus drive in the forward direction?
+   */
+  void set_bus_forward(const bool bus_forward);
+
+  /**
+   * Get the bus forward flag.
+   * @return  Returns bus forward flag.
+   */
+  bool bus_forward() const;
+
+  /**
+   * Sets the taxi_forward flag.
+   * @param  taxi_forward   Can a taxi drive in the forward direction?
+   */
+  void set_taxi_forward(const bool taxi_forward);
+
+  /**
+   * Get the taxi forward flag.
+   * @return  Returns taxi forward flag.
+   */
+  bool taxi_forward() const;
+
+  /**
+   * Sets the truck_forward flag.
+   * @param  truck_forward   Can a truck drive in the forward direction?
+   */
+  void set_truck_forward(const bool truck_forward);
+
+  /**
+   * Get the truck forward flag.
+   * @return  Returns truck forward flag.
+   */
+  bool truck_forward() const;
+
+  /**
    * Sets the bike_forward flag.
    * @param  bike_forward   Can you bike in the forward direction?
    */
@@ -264,6 +300,42 @@ struct OSMWay {
    * @return  Returns auto backward flag.
    */
   bool auto_backward() const;
+
+  /**
+   * Sets the bus_backward flag.
+   * @param  bus_backward   Can you take a bus in the reverse direction?
+   */
+  void set_bus_backward(const bool bus_backward);
+
+  /**
+   * Get the bus backward flag.
+   * @return  Returns bus backward flag.
+   */
+  bool bus_backward() const;
+
+  /**
+   * Sets the taxi_backward flag.
+   * @param  taxi_backward   Can take a taxi in the reverse direction?
+   */
+  void set_taxi_backward(const bool taxi_backward);
+
+  /**
+   * Get the taxi backward flag.
+   * @return  Returns taxi backward flag.
+   */
+  bool taxi_backward() const;
+
+  /**
+   * Sets the truck_backward flag.
+   * @param  truck_backward   Can you drive in the reverse direction?
+   */
+  void set_truck_backward(const bool truck_backward);
+
+  /**
+   * Get the truck backward flag.
+   * @return  Returns truck backward flag.
+   */
+  bool truck_backward() const;
 
   /**
    * Sets the bike_backward flag.
@@ -582,11 +654,6 @@ struct OSMWay {
   // Way attributes
   union WayAttributes {
     struct Fields {
-      uint32_t auto_forward     :1;
-      uint32_t bike_forward     :1;
-      uint32_t auto_backward    :1;
-      uint32_t bike_backward    :1;
-      uint32_t pedestrian       :1;
       uint32_t destination_only :1;
       uint32_t no_thru_traffic  :1;
       uint32_t oneway           :1;
@@ -605,10 +672,31 @@ struct OSMWay {
       uint32_t bikenetwork      :4;
       uint32_t exit             :1;
       uint32_t tagged_speed     :1;
+      uint32_t spare            :5;
     } fields;
     uint32_t v;
   };
   WayAttributes attributes_;
+
+  // Access
+  union WayAccess {
+    struct Fields {
+      uint16_t auto_forward     :1;
+      uint16_t bus_forward      :1;
+      uint16_t taxi_forward     :1;
+      uint16_t truck_forward    :1;
+      uint16_t bike_forward     :1;
+      uint16_t auto_backward    :1;
+      uint16_t bus_backward     :1;
+      uint16_t taxi_backward    :1;
+      uint16_t truck_backward   :1;
+      uint16_t bike_backward    :1;
+      uint16_t pedestrian       :1;
+      uint16_t spare            :5;
+    } fields;
+    uint16_t v;
+  };
+  WayAccess access_;
 
   uint16_t nodecount_;
 

@@ -66,11 +66,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Set forward flag and access (based on direction)
   set_forward(forward);
   set_caraccess(forward, way.auto_forward());
+  set_busaccess(forward, way.bus_forward());
   set_bicycleaccess(forward, way.bike_forward());
   set_pedestrianaccess(forward, way.pedestrian());
 
   // Access for opposite direction
   set_caraccess(!forward, way.auto_backward());
+  set_busaccess(!forward, way.bus_backward());
   set_bicycleaccess(!forward, way.bike_backward());
   set_pedestrianaccess(!forward, way.pedestrian());
 }
@@ -350,13 +352,13 @@ void DirectedEdgeBuilder::set_emergencyaccess(const bool forward,
   }
 }
 
-// Sets the horse access of the edge in the specified direction.
-void DirectedEdgeBuilder::set_horseaccess(const bool forward,
-                                          const bool horse) {
+// Sets the bus access of the edge in the specified direction.
+void DirectedEdgeBuilder::set_busaccess(const bool forward,
+                                        const bool bus) {
   if (forward) {
-    forwardaccess_.fields.horse = horse;
+    forwardaccess_.fields.bus = bus;
   } else {
-    reverseaccess_.fields.horse = horse;
+    reverseaccess_.fields.bus = bus;
   }
 }
 
