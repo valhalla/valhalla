@@ -57,6 +57,7 @@ mkdir -p ${cur_tile_dir}
 mv ${tile_dir}/* ${cur_tile_dir}
 cp -rp ${cur_tile_dir}/$(basename ${admin_file}) ${tile_dir}
 
+# do we want to send this update to s3
 if [ $WITH_UPDATES]; then
-#call python script '978e7e69-0c63-46da-9e12-39a25a1f6078', 'c39b1588-3824-464e-9fbc-99d9882e39cc'
+  ${src_dir}/mjolnir/py/push_tiles.py ${cur_tile_dir} 978e7e69-0c63-46da-9e12-39a25a1f6078 c39b1588-3824-464e-9fbc-99d9882e39cc this_isnt_a_recipe
 fi

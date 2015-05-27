@@ -49,6 +49,7 @@ def push_to_s3(file_name):
     key.send_file(f)
   if bucket.get_key(file_name) is None:
     raise 'Failed to push file to s3'
+  #key.make_public()
 
 #get all the instances of a layer and run some recipes on each
 def update_instances(stack, layer, recipes):
@@ -80,11 +81,11 @@ if __name__ == "__main__":
     sys.exit(1)
 
   #zip up the tiles
-  tgz_file = datetime.utcnow().strftime("%Y_%m_%d-%H_%M_%S.tgz")
+  tgz_file = datetime.utcnow().strftime("tiles_%Y_%m_%d-%H_%M_%S.tgz")
   targzip(tgz_file, sys.argv[1])
 
   #push them to s3
   push_to_s3(tgz_file)
 
   #update the service instances
-  update_instances(sys.argv[2], sys.argv[3], [sys.argv[4:])
+  update_instances(sys.argv[2], sys.argv[3], [sys.argv[4:]])
