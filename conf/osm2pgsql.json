@@ -10,8 +10,10 @@
     "tags": [
       {"name": "road_class",              "type": "smallint"},
       {"name": "auto_forward",            "type": "boolean"},
+      {"name": "bus_forward",             "type": "boolean"},
       {"name": "bike_forward",            "type": "boolean"},
       {"name": "auto_backward",           "type": "boolean"},
+      {"name": "bus_backward",            "type": "boolean"},
       {"name": "bike_backward",           "type": "boolean"},
       {"name": "pedestrian",              "type": "boolean"},
       {"name": "private",                 "type": "boolean"},
@@ -64,7 +66,7 @@
       {"name": "gate",                    "type": "boolean"},
       {"name": "bollard",                 "type": "boolean"},
       {"name": "bicycle_rental",          "type": "boolean"},
-      {"name": "modes_mask",              "type": "smallint"}
+      {"name": "access_mask",              "type": "smallint"}
     ]
   }
 ]
