@@ -75,7 +75,7 @@ def update_instances(stack, layer, recipes):
 
 #entry point for script
 if __name__ == "__main__":
-  if len(sys.argv) < 2:
+  if len(sys.argv) < 5:
     print('Wrong arguments', file=sys.stderr)
     sys.exit(1)
 
@@ -87,4 +87,4 @@ if __name__ == "__main__":
   push_to_s3(tgz_file)
 
   #update the service instances
-  update_instances('978e7e69-0c63-46da-9e12-39a25a1f6078', 'c39b1588-3824-464e-9fbc-99d9882e39cc', ['valhalla::noop_test'])
+  update_instances(sys.argv[2], sys.argv[3], [sys.argv[4:])

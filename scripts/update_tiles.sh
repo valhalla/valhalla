@@ -32,6 +32,7 @@ cp -rp ${src_dir}/mjolnir/conf/*.lua $(dirname ${config})
 
 # make the dir where this will go
 tile_dir=$(jq -r '.mjolnir.hierarchy.tile_dir' ${config})
+rm -rf $(dirname ${tile_dir})/tiles_*
 cur_tile_dir=$(dirname ${tile_dir})/tiles_$(date +%Y_%m_%d-%H_%M_%S)/
 
 # if we dont have admins we must create them
@@ -56,11 +57,6 @@ mkdir -p ${cur_tile_dir}
 mv ${tile_dir}/* ${cur_tile_dir}
 cp -rp ${cur_tile_dir}/$(basename ${admin_file}) ${tile_dir}
 
-# trim backed up tile directories to a certain number
-count=0
-for dir in $(find $(dirname ${tile_dir})/tiles_* -maxdepth 1 -type d); do
-   if [ $count -ge 3 ]; then
-      rm -rf $dir
-   fi
-   let count=count+1
-done
+if [ $WITH_UPDATES]; then
+#call python script '978e7e69-0c63-46da-9e12-39a25a1f6078', 'c39b1588-3824-464e-9fbc-99d9882e39cc'
+fi
