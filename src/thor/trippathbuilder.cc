@@ -199,8 +199,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   if (dest.date_time_)
     tp_dest->set_date_time(*dest.date_time_);
 
-  uint32_t origin_sec_from_mid = DateTime::seconds_from_midnight(
-      *origin.date_time_);
+  uint32_t origin_sec_from_mid = 0;
+  if (origin.date_time_)
+    origin_sec_from_mid = DateTime::seconds_from_midnight(*origin.date_time_);
 
   // Get the first nodes graph id by using the end node of the first edge to get the tile with the opposing edge
   // then use the opposing index to get the opposing edge, and its end node is the begin node of the original edge

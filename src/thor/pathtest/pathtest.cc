@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
       "Route Type: auto|bicycle|pedestrian|auto-shorter")(
       "json,j",
       boost::program_options::value<std::string>(&json),
-      "JSON Example: json={\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}")
+      "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
   // positional arguments
   ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -335,6 +335,7 @@ int main(int argc, char *argv[]) {
       throw std::runtime_error(
           "insufficiently specified required parameter 'locations'");
     }
+
     originloc = locations.at(0);
     destloc = locations.at(locations.size() - 1);
 
@@ -383,7 +384,6 @@ int main(int argc, char *argv[]) {
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-
 
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
