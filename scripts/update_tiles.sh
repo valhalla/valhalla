@@ -58,7 +58,7 @@ cp -rp ${cur_tile_dir}/$(basename ${admin_file}) ${tile_dir}
 
 # trim backed up tile directories to a certain number
 count=0
-for dir in $(ls -d tiles_.* | sort -r); do
+for dir in $(find $(dirname ${tile_dir})/tiles_* -maxdepth 1 -type d); do
    if [ $count -ge 3 ]; then
       rm -rf $dir
    fi

@@ -50,7 +50,6 @@ def push_to_s3(file_name):
   if bucket.get_key(file_name) is None:
     raise 'Failed to push file to s3'
 
-
 #get all the instances of a layer and run some recipes on each
 def update_instances(stack, layer, recipes):
   #connect to opsworks
