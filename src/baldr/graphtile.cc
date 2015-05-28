@@ -426,33 +426,36 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
   while (true) {
-    // If date range is only one date and this date matches it is
-    // a calendar date "addition"
-    const TransitDeparture& dep = departures_[mid];
-    if (dep.start_date() == dep.end_date()) {
-      // If this date equals the added date we use this departure, else skip it
-      if (date == dep.start_date()) {
-        return &departures_[mid];
-      }
-    } else if (dep.start_date() <= date && date <= dep.end_date()) {
-      // Within valid date range for this departure. Check the day of week mask
-      if ((dep.days() & dow) > 0) {
-        // Check that there are no calendar exceptions
-        if (dep.serviceid() == 0) {
+    // Make sure valid departure time
+    if (departures_[mid].departure_time() >= current_time) {
+      // If date range is only one date and this date matches it is
+      // a calendar date "addition"
+      const TransitDeparture& dep = departures_[mid];
+      if (dep.start_date() == dep.end_date()) {
+        // If date equals the added date we use this departure, else skip it
+        if (date == dep.start_date()) {
           return &departures_[mid];
-        } else {
-          // Check if there is a calendar exception for this date.
-          bool except = false;
-          auto exceptions = GetCalendarExceptions(dep.serviceid());
-          TransitCalendar* calendar = exceptions.first;
-          for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
-            if (calendar->date() == date) {
-              except = true;
-              break;
-            }
-          }
-          if (!except) {
+        }
+      } else if (dep.start_date() <= date && date <= dep.end_date()) {
+        // Within valid date range for departure. Check the day of week mask
+        if ((dep.days() & dow) > 0) {
+          // Check that there are no calendar exceptions
+          if (dep.serviceid() == 0) {
             return &departures_[mid];
+          } else {
+            // Check if there is a calendar exception for this date.
+            bool except = false;
+            auto exceptions = GetCalendarExceptions(dep.serviceid());
+            TransitCalendar* calendar = exceptions.first;
+            for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
+              if (calendar->date() == date) {
+                except = true;
+                break;
+              }
+            }
+            if (!except) {
+              return &departures_[mid];
+            }
           }
         }
       }
