@@ -337,9 +337,11 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge
-      if (n == 0 && diredge->endnode() == startnode)
+      // Do not allow use of the start edge or any transit edges
+      if ((n == 0 && diredge->endnode() == startnode) ||
+          diredge->use() >= Use::kRail) {
         continue;
+      }
 
       // Return false if we get back to the start node or hit an
       // edge with higher classification
