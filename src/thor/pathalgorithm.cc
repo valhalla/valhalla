@@ -440,7 +440,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
     uint32_t prior_stop = pred.prior_stopid();
     Cost transfer_cost = { 0.0f, 0.0f };
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
-      if (mode_ == TravelMode::kPedestrian) {
+      if (mode_ == TravelMode::kPedestrian && prior_stop != 0) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
                                       nodeinfo->stop_id()));
       }
