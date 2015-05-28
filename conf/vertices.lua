@@ -76,9 +76,9 @@ function nodes_proc (kv, nokeys)
   local access = access[kv["access"]] or "true"
   local foot = foot[kv["foot"]] or 0
   local bike = bicycle[kv["bicycle"]] or 0
-  local auto = motor_vehicle[kv["motor_vehicle"]]
+  local auto = motor_vehicle[kv["motorcar"]]
   if auto == nil then
-    auto = motor_vehicle[kv["motorcar"]]
+    auto = motor_vehicle[kv["motor_vehicle"]]
   end
   local bus = bus[kv["bus"]]
   if bus == nil then
