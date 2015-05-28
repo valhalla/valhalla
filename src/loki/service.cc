@@ -269,7 +269,7 @@ namespace {
       //see if any locations pairs are unreachable
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
       std::string costing = request.get<std::string>("costing");
-      float max_distance = config.get<float>("costing_options." + costing + ".max_distance");
+      auto max_distance = config.get<float>("costing_options." + costing + ".max_distance");
 
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
