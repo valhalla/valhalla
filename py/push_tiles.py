@@ -13,11 +13,11 @@ def targzip(dst_file, src_dir):
     tgz.add(src_dir, arcname=os.path.basename(src_dir))
 
 #do some maintainance on s3, including pushing the new data up there
-def push_to_s3(file_name):
+def push_to_s3(file_name, prefix):
   #check what we have in s3
   s3 = boto.connect_s3()
   bucket = s3.get_bucket('mapzen.valhalla')
-  keys = sorted([ k.key for k in bucket.get_all_keys() ])
+  keys = sorted([ k.key for k in bucket.get_all_keys() if k.key.startswith(prefix + '/tiles_') if k.key.endswith('.tgz') ])
   keys.reverse()
 
   #remove it if its there
@@ -42,14 +42,14 @@ def push_to_s3(file_name):
       md5.update(buf)
 
   #put it up there
-  key = bucket.new_key(file_name)
+  key = bucket.new_key(prefix + '/' + file_name)
   key.size = size
   key.md5 = md5.hexdigest()
   with open(file_name) as f:
     key.send_file(f)
-  if bucket.get_key(file_name) is None:
-    raise 'Failed to push file to s3'
-  #key.make_public()
+  if bucket.get_key(key.key) is None:
+    raise Exception('Failed to push file to s3')
+  key.make_public()
 
 #get all the instances of a layer and run some recipes on each
 def update_instances(stack, layer, recipes):
@@ -63,7 +63,7 @@ def update_instances(stack, layer, recipes):
   #if we dont have enough machines to feel safe we give up
   instances = [ instance for instance in instances['Instances'] if instance.get('Status') == 'online' ]
   if len(instances) < 3:
-    raise 'Not enough instances in layer to risk the update'
+    raise Exception('Not enough instances in layer to risk the update')
 
   #for each one
   for instance in instances:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
   targzip(tgz_file, sys.argv[1])
 
   #push them to s3
-  push_to_s3(tgz_file)
+  push_to_s3(tgz_file, 'dev')
 
   #update the service instances
   update_instances(sys.argv[2], sys.argv[3], [sys.argv[4:]])
