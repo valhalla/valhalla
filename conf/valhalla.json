@@ -69,6 +69,8 @@
   "costing_options": {
     "auto": {
       "maneuver_penalty": 5.0,
+      "destination_only_penalty": 600.0,
+      "alley_penalty": 5.0,
       "gate_cost": 30.0,
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0,
