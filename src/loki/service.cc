@@ -156,6 +156,7 @@ namespace {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
+      factory.Register("bus", sif::CreateBusCost);
       factory.Register("bicycle", sif::CreateBicycleCost);
       factory.Register("pedestrian", sif::CreatePedestrianCost);
     }
