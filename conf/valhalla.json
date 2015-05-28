@@ -80,6 +80,8 @@
     },
     "auto_shorter": {
     },
+    "bus": {
+    },
     "pedestrian": {
       "walking_speed": 5.1,
       "walkway_factor": 0.9,
@@ -90,6 +92,8 @@
     },
     "bicycle": {
       "max_distance": 500000.0
+    },
+    "transit": {
     }
   }
 }
