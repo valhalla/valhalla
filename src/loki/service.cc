@@ -14,6 +14,7 @@
 using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -66,8 +67,8 @@ namespace {
 
       //make an array of values for this key
       boost::property_tree::ptree array;
-      for(const auto& value : kv.second) {
         boost::property_tree::ptree element;
+      for(const auto& value : kv.second) {
         element.put("", value);
         array.push_back(std::make_pair("", element));
       }
@@ -126,7 +127,7 @@ namespace {
       }
       catch(...) {
         //this really shouldnt ever get hit
-        LOG_WARN("Expected edge no found in graph but found by loki::search!");
+        LOG_WARN("Expected edge not found in graph but found by loki::search!");
       }
     }
     return array;
@@ -267,9 +268,23 @@ namespace {
 
       //see if any locations pairs are unreachable
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
+      std::string costing = request.get<std::string>("costing");
+      float max_distance = config.get<float>("costing_options." + costing + ".max_distance");
+
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
+        float pathDistance = (float) std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
+        LOG_INFO("Square Root of the distance approximator is "+ std::to_string(pathDistance) + " meters; max distance is " + std::to_string(max_distance) + " meters.");
+        //check if distance between latlngs exceed max distance limit for each mode of travel
+        if (pathDistance > max_distance) {
+          worker_t::result_t result { false };
+          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
+          response.from_info(request_info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
         if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
           worker_t::result_t result{false};
           http_response_t response(404, "Not Found",
