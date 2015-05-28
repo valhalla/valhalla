@@ -320,10 +320,10 @@ function filter_tags_generic(kv)
     end  
 
     --check for auto_forward overrides
-    kv["auto_forward"] = motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorcar"]] or kv["auto_forward"]
+    kv["auto_forward"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or kv["auto_forward"]
 
     --check for bus_forward overrides
-    kv["bus_forward"] = psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or bus[kv["bus"]] or kv["bus_forward"]
+    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or kv["bus_forward"]
 
     --check for ped overrides
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or kv["pedestrian"] 
@@ -347,10 +347,10 @@ function filter_tags_generic(kv)
     end      
 
     --check for auto_forward overrides
-    kv["auto_forward"] = motor_vehicle[kv["motor_vehicle"]] or motor_vehicle[kv["motorcar"]] or default_val
+    kv["auto_forward"] = motor_vehicle[kv["motorcar"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
 
     --check for bus_forward overrides
-    kv["bus_forward"] = psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or bus[kv["bus"]] or default_val
+    kv["bus_forward"] = bus[kv["bus"]] or psv[kv["psv"]] or psv[kv["lanes:psv:forward"]] or default_val
 
     --check for ped overrides
     kv["pedestrian"] = foot[kv["foot"]] or foot[kv["pedestrian"]] or default_val
