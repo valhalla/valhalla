@@ -42,6 +42,24 @@ foot = {
 ["crossing"] = 2
 }
 
+bus = {
+["no"] = 0,
+["yes"] = 64,
+["designated"] = 64,
+["permissive"] = 64,
+["restricted"] = 64,
+["destination"] = 0,
+["delivery"] = 0
+}
+
+psv = {
+["bus"] = 64,
+["no"] = 0,
+["yes"] = 64,
+["1"] = 64,
+["2"] = 64
+}
+
 --TODO: snowmobile might not really be passable for much other than ped..
 toll = {
 ["yes"] = "true",
@@ -62,10 +80,15 @@ function nodes_proc (kv, nokeys)
   if auto == nil then
     auto = motor_vehicle[kv["motorcar"]]
   end
+  local bus = bus[kv["bus"]]
+  if bus == nil then
+    bus = psv[kv["psv"]]
+  end
   auto = auto or 0
-
-  --access was set, but foot, bike, and auto tags were not.
-  if access == "true" and bit32.bor(auto, bike, foot) == 0 then
+  bus = bus or 0
+  --access was set, but foot, bus, bike, and auto tags were not.
+  if access == "true" and bit32.bor(auto, bike, foot, bus) == 0 then
+    bus  = 64
     bike = 4
     foot = 2
     auto = 1
@@ -139,7 +162,7 @@ function nodes_proc (kv, nokeys)
   end
  
   --store a mask denoting access
-  kv["access_mask"] = bit32.bor(auto, bike, foot)
+  kv["access_mask"] = bit32.bor(auto, bike, foot, bus)
 
   return 0, kv
 end

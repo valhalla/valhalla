@@ -66,11 +66,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Set forward flag and access (based on direction)
   set_forward(forward);
   set_caraccess(forward, way.auto_forward());
+  set_busaccess(forward, way.bus_forward());
   set_bicycleaccess(forward, way.bike_forward());
   set_pedestrianaccess(forward, way.pedestrian());
 
   // Access for opposite direction
   set_caraccess(!forward, way.auto_backward());
+  set_busaccess(!forward, way.bus_backward());
   set_bicycleaccess(!forward, way.bike_backward());
   set_pedestrianaccess(!forward, way.pedestrian());
 }
@@ -350,13 +352,13 @@ void DirectedEdgeBuilder::set_emergencyaccess(const bool forward,
   }
 }
 
-// Sets the horse access of the edge in the specified direction.
-void DirectedEdgeBuilder::set_horseaccess(const bool forward,
-                                          const bool horse) {
+// Sets the bus access of the edge in the specified direction.
+void DirectedEdgeBuilder::set_busaccess(const bool forward,
+                                        const bool bus) {
   if (forward) {
-    forwardaccess_.fields.horse = horse;
+    forwardaccess_.fields.bus = bus;
   } else {
-    reverseaccess_.fields.horse = horse;
+    reverseaccess_.fields.bus = bus;
   }
 }
 
@@ -433,10 +435,10 @@ void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
                                          const uint32_t stopimpact) {
   if (stopimpact > kMaxStopImpact) {
     LOG_ERROR("Exceeding maximum stop impact: " + std::to_string(stopimpact));
-    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact,
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact,
                                            kMaxStopImpact, localidx, 3);
   } else {
-    stopimpact_.stopimpact = OverwriteBits(stopimpact_.stopimpact, stopimpact,
+    stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact, stopimpact,
                                            localidx, 3);
   }
 }
@@ -448,9 +450,14 @@ void DirectedEdgeBuilder::set_edge_to_right(const uint32_t localidx,
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index in set_edge_to_right. Skipping");
   } else {
-    stopimpact_.edge_to_right = OverwriteBits(stopimpact_.edge_to_right,
+    stopimpact_.s.edge_to_right = OverwriteBits(stopimpact_.s.edge_to_right,
                                 right, localidx, 1);
   }
+}
+
+// Set the unique transit line Id.
+void DirectedEdgeBuilder::set_lineid(const uint32_t lineid) {
+  stopimpact_.lineid = lineid;
 }
 
 DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {

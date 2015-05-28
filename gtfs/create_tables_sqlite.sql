@@ -15,6 +15,8 @@ CREATE TABLE "stops"
 (
   stop_key integer primary key,
   stop_id text,
+  onestop_id text,
+  osm_way_id INTEGER,
   stop_code text,
   stop_name text,
   stop_desc text,
@@ -167,6 +169,8 @@ CREATE TABLE "stops_tmp"
 (
   stop_key integer primary key autoincrement,
   stop_id text,
+  onestop_id text,
+  osm_way_id INTEGER,
   stop_code text,
   stop_name text,
   stop_desc text,
@@ -309,6 +313,12 @@ CREATE TABLE "schedule_tmp"
   headsign text
 );
 
+
+CREATE INDEX t_trip_id_index ON trips_tmp (trip_id);
+CREATE INDEX s_trip_id_index ON stop_times_tmp (trip_id);
+CREATE INDEX c_service_id_index ON calendar_tmp (service_id);
+CREATE INDEX t_service_id_index ON trips_tmp (service_id);
+CREATE INDEX cd_service_id_index ON calendar_dates_tmp (service_id);
 
 SELECT AddGeometryColumn('shapes', 'geom', 4326, 'POINT', 2);
 SELECT AddGeometryColumn('stops', 'geom', 4326, 'POINT', 2);

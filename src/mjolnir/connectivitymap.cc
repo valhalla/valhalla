@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/connectivity_map.h>
 #include "config.h"
 
 using namespace valhalla::baldr;
@@ -114,18 +114,30 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file_path.c_str(), pt);
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-  std::vector<uint32_t> connectivity = reader.ConnectivityMap(2);
+  valhalla::baldr::TileHierarchy tile_hierarchy(pt.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::connectivity_map_t connectivity_map(tile_hierarchy);
+
+  // Make the vector representation of it
+  std::ofstream geojson_file("connectivity.geojson", std::ios::out);
+  if (!geojson_file) {
+    std::cout << "Unable to open output file: " << "connectivity.geojson" << std::endl;
+    return EXIT_FAILURE;
+  }
+  geojson_file << connectivity_map.to_geojson(tile_hierarchy.levels().rbegin()->first);
+  geojson_file.close();
+
+
+  // Make the ppm file for raster images
+  std::vector<size_t> connectivity_image = connectivity_map.to_image(tile_hierarchy.levels().rbegin()->first);
 
   // Create output file
   std::string fname = "connectivity.ppm";
   std::ofstream outfile(fname, std::ios::binary | std::ios::out);
   if (!outfile) {
     std::cout << "Unable to open output file: " << fname << std::endl;
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
   }
 
-  auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
@@ -133,13 +145,13 @@ int main(int argc, char** argv) {
   uint32_t height = tiles.nrows();
 
   // Add background color: white
-  std::unordered_map<uint32_t, RGB> colormap;
+  std::unordered_map<size_t, RGB> colormap;
   RGB white(255, 255, 255);
   colormap[0] = white;
 
   // Create an array of RGB values
   std::vector<RGB> ppm;
-  for (auto c : connectivity) {
+  for (auto c : connectivity_image) {
     auto color = colormap.find(c);
     if (color == colormap.end()) {
       // Add a random color to the colormap

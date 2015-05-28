@@ -337,9 +337,11 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-      // Do not allow use of the start edge
-      if (n == 0 && diredge->endnode() == startnode)
+      // Do not allow use of the start edge or any transit edges
+      if ((n == 0 && diredge->endnode() == startnode) ||
+          diredge->use() >= Use::kRail) {
         continue;
+      }
 
       // Return false if we get back to the start node or hit an
       // edge with higher classification
@@ -490,11 +492,12 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   // the radius (squared) and add lengths of directed edges
   float roadlengths = 0.0f;
   for (auto t : tilelist) {
-    // Check all the nodes within the tile
+    // Check all the nodes within the tile. Skip if tile has no nodes (can be
+    // an empty tile added for connectivity map logic).
     lock.lock();
     const GraphTile* newtile = reader.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
-    if(!newtile)
+    if (!newtile || newtile->header()->nodecount() == 0)
       continue;
     const auto start_node = newtile->node(0);
     const auto end_node   = start_node + newtile->header()->nodecount();
@@ -970,9 +973,18 @@ void enhance(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
+
+    // Get a readable tile.If the tile is empty, skip it. Empty tiles are
+    // added where ways go through a tile but no end not is within the tile.
+    // This allows creation of connectivity maps using the tile set,
+    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    if (tile->header()->nodecount() == 0) {
+      lock.unlock();
+      continue;
+    }
+
     // Tile builder - serialize in existing tile so we can add admin names
     GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, true);
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
     lock.unlock();
 
     // Create a dummy admin record at index 0. Used if admin records
@@ -1094,15 +1106,18 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // Edge transitions.
-        if (j < kNumberOfEdgeTransitions) {
-          ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
-                                 nodeinfo, stats);
-        }
+        // No need for edge transitions and opposing index on transit edges
+        if (!directededge.IsTransitLine()) {
+          // Edge transitions.
+          if (j < kNumberOfEdgeTransitions) {
+            ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
+                                   nodeinfo, stats);
+          }
 
-        // Set the opposing index on the local level
-        directededge.set_opp_local_idx(
-              GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+          // Set the opposing index on the local level
+          directededge.set_opp_local_idx(
+                GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+        }
 
         // Set unreachable, not_thru, or internal intersection (except
         // for transit)

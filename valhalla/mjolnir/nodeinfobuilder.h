@@ -26,8 +26,6 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   /**
    * Constructor with arguments
    * @param  ll  Lat,lng position of the node.
-   * @param  edge_index     The GraphId of the first outbound edge.
-   * @param  edge_count     The number of outbound directed edges.
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
@@ -35,8 +33,7 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  traffic_signal Has a traffic signal at this node?
    *
    */
-  NodeInfoBuilder(const std::pair<float, float>& ll, const uint32_t edge_index,
-                  const uint32_t edge_count, const baldr::RoadClass rc,
+  NodeInfoBuilder(const std::pair<float, float>& ll, const baldr::RoadClass rc,
                   const uint32_t access, const baldr::NodeType type,
                   const bool end, const bool traffic_signal);
 

@@ -15,6 +15,8 @@ CREATE TABLE "stops"
 (
   stop_key integer primary key,
   stop_id text,
+  onestop_id text,
+  osm_way_id bigint,
   stop_code text,
   stop_name text,
   stop_desc text,
@@ -167,6 +169,8 @@ CREATE TABLE "stops_tmp"
 (
   stop_key serial primary key,
   stop_id text,
+  onestop_id text,
+  osm_way_id bigint,
   stop_code text,
   stop_name text,
   stop_desc text,
@@ -308,6 +312,12 @@ CREATE TABLE "schedule_tmp"
   block_id text,
   headsign text
 );
+
+CREATE INDEX t_trip_id_index ON trips USING btree (trip_id);
+CREATE INDEX s_trip_id_index ON stop_times USING btree (trip_id);
+CREATE INDEX c_service_id_index ON calendar USING btree (service_id);
+CREATE INDEX t_service_id_index ON trips USING btree (service_id);
+CREATE INDEX cd_service_id_index ON calendar_dates USING btree (service_id);
 
 SELECT AddGeometryColumn('shapes', 'geom', 4326, 'POINT', 2);
 SELECT AddGeometryColumn('shape', 'geom', 4326, 'LINESTRING', 2);

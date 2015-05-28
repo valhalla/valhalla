@@ -308,12 +308,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_emergencyaccess(const bool forward, const bool emergency);
 
   /**
-   * Sets the horse access of the edge in the specified direction.
+   * Sets the bus access of the edge in the specified direction.
    * @param  forward  Set access for forward direction if true, otherwise
    *                  setting access for reverse direction.
-   * @param  horse    Is horse access allowed?
+   * @param  bus    Is bus access allowed?
    */
-  void set_horseaccess(const bool forward, const bool horse);
+  void set_busaccess(const bool forward, const bool bus);
 
   /**
    * Sets the high occupancy vehicle (HOV) access of the edge in the specified
@@ -382,6 +382,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  stopimpact  Relative stop impact from low (0) to high (7).
    */
   void set_stopimpact(const uint32_t localidx, const uint32_t stopimpact);
+
+  /**
+   * Set the unique transit line Id.
+   * @param  lineid  Line Id indicating a unique stop-pair and route.
+   */
+  void set_lineid(const uint32_t lineid);
 
   /**
    * Set the flag indicating there is an edge to the right, in between
