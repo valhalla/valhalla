@@ -409,8 +409,6 @@ class BusCost : public AutoCost {
    */
   virtual const EdgeFilter GetFilter() const;
 
- protected:
-  float adjspeedfactor_[256];
 };
 
 
