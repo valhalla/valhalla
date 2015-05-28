@@ -33,6 +33,7 @@ src/proto
 adminbenchmark
 pbfgraphbuilder
 pbfadminbuilder
+connectivitymap
 *.o
 .deps/
 .dirstamp
