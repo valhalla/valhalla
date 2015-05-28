@@ -76,76 +76,78 @@ public:
 
 namespace {
 
-  // Get the GraphId of the opposing edge.
-  uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-                                GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_) {
+// Get the GraphId of the opposing edge.
+uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
+                              GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_, std::mutex& lock) {
 
-    // Get the tile at the end node and get the node info
-    GraphId endnode = edge.endnode();
-    const GraphTile* tile = graphreader_.GetGraphTile(endnode);
-    const NodeInfo* nodeinfo = tile->node(endnode.id());
+  // Get the tile at the end node and get the node info
+  GraphId endnode = edge.endnode();
+  lock.lock();
+  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
+  lock.unlock();
+  const NodeInfo* nodeinfo = tile->node(endnode.id());
 
-    // Set the end node iso.  Used for country crossings.
-    endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
+  // Set the end node iso.  Used for country crossings.
+  endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
 
-    // TODO - check if more than 1 edge has matching startnode and
-    // distance!
+  // TODO - check if more than 1 edge has matching startnode and
+  // distance!
 
-    // Get the directed edges and return when the end node matches
-    // the specified node and length matches
-    constexpr uint32_t absurd_index = 777777;
-    uint32_t opp_index = absurd_index;
-    const DirectedEdge* directededge = tile->directededge(
-        nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-      // End node must match the start node, shortcut (bool) must match
-      // and lengths must match
-      if (directededge->endnode() == startnode &&
-          edge.is_shortcut() == directededge->is_shortcut() &&
-          directededge->length() == edge.length()) {
-        if (opp_index != absurd_index) {
-          dupcount_++;
-        }
-        opp_index = i;
+  // Get the directed edges and return when the end node matches
+  // the specified node and length matches
+  constexpr uint32_t absurd_index = 777777;
+  uint32_t opp_index = absurd_index;
+  const DirectedEdge* directededge = tile->directededge(
+      nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // End node must match the start node, shortcut (bool) must match
+    // and lengths must match
+    if (directededge->endnode() == startnode &&
+        edge.is_shortcut() == directededge->is_shortcut() &&
+        directededge->length() == edge.length()) {
+      if (opp_index != absurd_index) {
+        dupcount_++;
       }
+      opp_index = i;
     }
-
-    if (opp_index == absurd_index) {
-      if (edge.use() >= Use::kRail) {
-        // Ignore any except for parent / child stop connections and
-        // stop-road connections
-        // TODO - verify if we need opposing directed edges for transit lines
-        if (edge.use() == Use::kTransitConnection)
-          LOG_ERROR("No opposing transit connection edge: endstop = " +
-                    std::to_string(nodeinfo->stop_id()) + " has " +
-                    std::to_string(nodeinfo->edge_count()));
-      } else {
-        bool sc = edge.shortcut();
-        LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
-        % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
-        % startnode % edge.endnode() % sc).str());
-
-        uint32_t n = 0;
-        directededge = tile->directededge(nodeinfo->edge_index());
-        for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-          if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
-            LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
-            % directededge->length() % directededge->endnode()).str());
-            n++;
-          }
-        }
-        if (n == 0) {
-          if (sc) {
-            LOG_WARN("   No Shortcut edges found from end node");
-          } else {
-            LOG_WARN("   No regular edges found from end node");
-          }
-        }
-      }
-      return kMaxEdgesPerNode;
-    }
-    return opp_index;
   }
+
+  if (opp_index == absurd_index) {
+    if (edge.use() >= Use::kRail) {
+      // Ignore any except for parent / child stop connections and
+      // stop-road connections
+      // TODO - verify if we need opposing directed edges for transit lines
+      if (edge.use() == Use::kTransitConnection)
+        LOG_ERROR("No opposing transit connection edge: endstop = " +
+                  std::to_string(nodeinfo->stop_id()) + " has " +
+                  std::to_string(nodeinfo->edge_count()));
+    } else {
+      bool sc = edge.shortcut();
+      LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
+      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
+      % startnode % edge.endnode() % sc).str());
+
+      uint32_t n = 0;
+      directededge = tile->directededge(nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+        if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
+          LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
+          % directededge->length() % directededge->endnode()).str());
+          n++;
+        }
+      }
+      if (n == 0) {
+        if (sc) {
+          LOG_WARN("   No Shortcut edges found from end node");
+        } else {
+          LOG_WARN("   No regular edges found from end node");
+        }
+      }
+    }
+    return kMaxEdgesPerNode;
+  }
+  return opp_index;
+}
 
 void validate(const boost::property_tree::ptree& hierarchy_properties,
               std::queue<GraphId>& tilequeue, std::mutex& lock,
@@ -158,7 +160,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
     GraphReader propreader(hierarchy_properties);
 
     // Get some things we need throughout
+    lock.lock();
     auto tile_hierarchy = propreader.GetTileHierarchy();
+    lock.unlock();
     std::vector<Tiles> levels;
     for (auto level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
@@ -205,7 +209,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
         const NodeInfo* signnodeinfo = signtile.node(i);
 
+        lock.lock();
         const GraphTile* tile = propreader.GetGraphTile(node);
+        lock.unlock();
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
         // Go through directed edges and update data
@@ -231,13 +237,11 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           // end node)
           std::string end_node_iso;
           directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                                                          propreader, dupcount, end_node_iso));
-
+                                                          propreader, dupcount, end_node_iso, lock));
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
               begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
-
           directededges.emplace_back(std::move(directededge));
         }
 
@@ -250,11 +254,15 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       threadStat.add_density(density, level);
 
       // Write the new file
+      lock.lock();
       tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
+      lock.unlock();
 
       // Check if we need to clear the tile cache
+      lock.lock();
       if (propreader.OverCommitted())
         propreader.Clear();
+      lock.unlock();
 
       // Add possible duplicates to stat class
       threadStat.add_dup(dupcount, level);
