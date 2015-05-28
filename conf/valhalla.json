@@ -75,7 +75,8 @@
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0,
       "country_crossing_cost": 600.0,
-      "country_crossing_penalty": 0.0
+      "country_crossing_penalty": 0.0,
+      "max_distance": 5000000.0
     },
     "auto_shorter": {
     },
@@ -86,9 +87,11 @@
       "walkway_factor": 0.9,
       "alley_factor": 2.0,
       "driveway_factor": 2.0,
-      "step_penalty": 30.0
+      "step_penalty": 30.0,
+      "max_distance": 100000.0
     },
     "bicycle": {
+      "max_distance": 500000.0
     },
     "transit": {
     }
