@@ -276,7 +276,7 @@ namespace {
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
 
         //check if distance between latlngs exceed max distance limit for each mode of travel
-        float pathDistance = static_cast<float>(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
+        float pathDistance = midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_);
         if (pathDistance > (max_distance*max_distance)) {
           worker_t::result_t result { false };
           http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
