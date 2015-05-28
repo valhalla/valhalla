@@ -32,6 +32,8 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
+namespace {
+
 class validator_stats {
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
@@ -73,8 +75,6 @@ public:
     }
   }
 };
-
-namespace {
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
@@ -157,12 +157,10 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
     validator_stats threadStat;
 
     // Local Graphreader
-    GraphReader propreader(hierarchy_properties);
+    GraphReader graph_reader(hierarchy_properties);
 
     // Get some things we need throughout
-    lock.lock();
-    auto tile_hierarchy = propreader.GetTileHierarchy();
-    lock.unlock();
+    auto tile_hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles> levels;
     for (auto level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
@@ -178,12 +176,11 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       }
       // Get the next tile Id
       GraphId tile_id = tilequeue.front();
-      uint32_t id = tile_id.tileid();
       tilequeue.pop();
       lock.unlock();
 
       // Point tiles to the set we need for current level
-      int level = (int)tile_id.level();
+      size_t level = tile_id.level();
       tiles = &levels[level];
 
       uint32_t dupcount = 0;
@@ -210,7 +207,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
         const NodeInfo* signnodeinfo = signtile.node(i);
 
         lock.lock();
-        const GraphTile* tile = propreader.GetGraphTile(node);
+        const GraphTile* tile = graph_reader.GetGraphTile(node);
         lock.unlock();
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
@@ -237,7 +234,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           // end node)
           std::string end_node_iso;
           directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                                                          propreader, dupcount, end_node_iso, lock));
+                                                          graph_reader, dupcount, end_node_iso, lock));
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
               begin_node_iso != end_node_iso)
@@ -250,7 +247,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       }
 
       // Add density to stat class
-      float density = (roadlength * 0.0005f) / tiles->Area(id);
+      float density = (roadlength * 0.0005f) / tiles->Area(tile_id.tileid());
       threadStat.add_density(density, level);
 
       // Write the new file
@@ -260,8 +257,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Check if we need to clear the tile cache
       lock.lock();
-      if (propreader.OverCommitted())
-        propreader.Clear();
+      if (graph_reader.OverCommitted())
+        graph_reader.Clear();
       lock.unlock();
 
       // Add possible duplicates to stat class
@@ -316,46 +313,46 @@ namespace mjolnir {
     std::mutex lock;
 
     LOG_INFO("GraphValidator - Validating signs and connectivity");
-      // Spawn the threads
-      for (auto& thread : threads) {
-        results.emplace_back();
-        thread.reset(new std::thread(validate, std::cref(hierarchy_properties),
-                                     std::ref(tilequeue),
-                                     std::ref(lock), std::ref(results.back())));
-      }
-
-      // Wait for threads to finish
-      for (auto& thread : threads) {
-        thread->join();
-      }
-
-      // Add up total dupcount_ and find densities
-      validator_stats stats;
-      for (auto& result : results) {
-        validator_stats data = result.get_future().get();
-        stats.add_stat(data);
-      }
-
-      LOG_INFO("Validation of signs and connectivity is done");
-      for (uint8_t level = 0; level <= 2; level++) {
-        // Print duplicates info for level
-        std::vector<uint32_t> dups = stats.get_dups(level);
-        uint32_t dupcount = std::accumulate(dups.begin(), dups.end(), 0);
-        LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
-        % std::to_string(level) % dupcount).str());
-        // Get the average density and the max density
-        float max_density = 0.0f;
-        float sum = 0.0f;
-        for (auto density : stats.get_densities(level)) {
-          if (density > max_density) {
-            max_density = density;
-          }
-          sum += density;
-        }
-        float average_density = sum / stats.get_densities(level).size();
-        LOG_INFO("Average density = " + std::to_string(average_density) +
-                 " max = " + std::to_string(max_density));
-      }
+    // Spawn the threads
+    for (auto& thread : threads) {
+      results.emplace_back();
+      thread.reset(new std::thread(validate, std::cref(hierarchy_properties),
+                                   std::ref(tilequeue),
+                                   std::ref(lock), std::ref(results.back())));
     }
+
+    // Wait for threads to finish
+    for (auto& thread : threads) {
+      thread->join();
+    }
+
+    // Add up total dupcount_ and find densities
+    validator_stats stats;
+    for (auto& result : results) {
+      validator_stats data = result.get_future().get();
+      stats.add_stat(data);
+    }
+
+    LOG_INFO("Validation of signs and connectivity is done");
+    for (uint8_t level = 0; level <= 2; level++) {
+      // Print duplicates info for level
+      std::vector<uint32_t> dups = stats.get_dups(level);
+      uint32_t dupcount = std::accumulate(dups.begin(), dups.end(), 0);
+      LOG_WARN((boost::format("Possible duplicates at level: %1% = %2%")
+      % std::to_string(level) % dupcount).str());
+      // Get the average density and the max density
+      float max_density = 0.0f;
+      float sum = 0.0f;
+      for (auto density : stats.get_densities(level)) {
+        if (density > max_density) {
+          max_density = density;
+        }
+        sum += density;
+      }
+      float average_density = sum / stats.get_densities(level).size();
+      LOG_INFO("Average density = " + std::to_string(average_density) +
+               " max = " + std::to_string(max_density));
+    }
+  }
 }
 }
