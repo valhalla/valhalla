@@ -776,6 +776,8 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
 
   float mindist = 10000000.0f;
   GraphId startnode, endnode;
+  std::vector<PointLL> closest_shape;
+  std::tuple<PointLL,float,int> closest;
   for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
     const NodeInfo* node = tile->node(i);
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
@@ -783,36 +785,76 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
       if (edgeinfo->wayid() == wayid) {
         // Get shape and find closest point
-        auto shape = edgeinfo->shape();
-        auto closest = ll.ClosestPoint(shape);
-        if (std::get<1>(closest) < mindist) {
+        auto this_shape = edgeinfo->shape();
+        auto this_closest = ll.ClosestPoint(this_shape);
+        if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),
                         tile->header()->graphid().level(), i);
           endnode = directededge->endnode();
-          mindist = std::get<1>(closest);
+          mindist = std::get<1>(this_closest);
+          closest = this_closest;
+          closest_shape = this_shape;
+
+          // Reverse the shape if directed edge is not the forward direction
+          // along the shape
+          if (!directededge->forward()) {
+            std::reverse(closest_shape.begin(), closest_shape.end());
+          }
         }
       }
     }
   }
 
-  // TODO - more complete shape
-  std::vector<PointLL> shape{tile->node(startnode)->latlng(), stop.ll};
-  float length = PointLL::Length(shape);
-
-  // Add connection to start node
-  connection_edges.push_back({startnode, stop.graphid, stop.key, length, shape});
-  stop.conn_count = 1;
-
-  // Add connection to end node. TODO - what if it is in different tile?
-  // for now just add if in same tile
-  if (startnode.tileid() == endnode.tileid()) {
-    std::vector<PointLL> shape2;
-    shape2.push_back(tile->node(startnode)->latlng());
-    shape2.push_back(stop.ll);
-    float length2= PointLL::Length(shape);
-    connection_edges.push_back({endnode, stop.graphid, stop.key, length2, shape2});
-    stop.conn_count = 2;
+  // Check for invalid tile Ids
+  if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
+    stop.conn_count = 0;
+    LOG_ERROR("No closest edge found for this stop: way Id = " +
+              std::to_string(wayid));
+    return;
   }
+
+  // Check if stop is in same tile as the start node
+  stop.conn_count = 0;
+  if (stop.graphid.Tile_Base() == startnode.Tile_Base()) {
+    // Add shape from node along the edge until the closest point, then add
+    // the closest point and a straight line to the stop lat,lng
+    std::vector<PointLL> shape;
+    for (uint32_t i = 0; i < std::get<2>(closest); i++) {
+      shape.push_back(closest_shape[i]);
+    }
+    shape.push_back(std::get<0>(closest));
+    shape.push_back(stop.ll);
+    float length = PointLL::Length(shape);
+
+    // Add connection to start node
+    connection_edges.push_back({startnode, stop.graphid, stop.key, length, shape});
+    stop.conn_count++;
+  }
+
+  // Check if stop is in same tile as end node
+  if (stop.graphid.Tile_Base() == endnode.Tile_Base()) {
+    // Add connection to end node
+    if (startnode.tileid() == endnode.tileid()) {
+      // Add shape from the end to
+      std::vector<PointLL> shape2;
+      for (int32_t i = closest_shape.size()-1; i > std::get<2>(closest); i--) {
+        shape2.push_back(closest_shape[i]);
+      }
+      shape2.push_back(std::get<0>(closest));
+      shape2.push_back(stop.ll);
+      float length2= PointLL::Length(shape2);
+      connection_edges.push_back({endnode, stop.graphid, stop.key, length2, shape2});
+      stop.conn_count++;
+    }
+  }
+
+  if (stop.conn_count == 0) {
+    LOG_ERROR("Stop has no connections to OSM! Stop TileId = " +
+              std::to_string(stop.graphid.tileid()) + " Start Node Tile: " +
+              std::to_string(startnode.tileid()) + " End Node Tile: " +
+              std::to_string(endnode.tileid()));
+  }
+
 }
 
 // We make sure to lock on reading and writing since tiles are now being
