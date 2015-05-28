@@ -22,6 +22,13 @@ cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config);
  */
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config);
 
+/**
+ * Create a bus cost method. This is derived from auto costing and
+ * uses the same rules except for using the bus access flag instead
+ * of the auto access flag.
+ */
+cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config);
+
 }
 }
 
