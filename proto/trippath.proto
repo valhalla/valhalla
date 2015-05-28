@@ -136,7 +136,8 @@ message TripPath {
     optional bool bus = 41;
     optional bool transit_connection = 42;
     optional bool other = 43;
-    optional TransitInfo transit_info = 44;
+    optional uint32 transit_trip_id = 44;
+    optional TransitInfo transit_info = 45;
   }
 
   message IntersectingEdge {
