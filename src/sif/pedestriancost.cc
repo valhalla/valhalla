@@ -148,14 +148,27 @@ PedestrianCost::~PedestrianCost() {
 // where max. walking distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const EdgeLabel& pred) const {
+  // Disallow if no pedestrian access, surface marked as impassible,
+  // edge is not-thru and we are far from destination, or if max
+  // walking distance is exceeded.
+  if (!(edge->forwardaccess() & kPedestrianAccess) ||
+       (edge->surface() == Surface::kImpassable) ||
+       (edge->not_thru() && pred.distance() > not_thru_distance_) ||
+      ((pred.walking_distance() + edge->length()) > max_distance_)) {
+    return false;
+  }
+
+  // Check for U-turn (if predecessor mode is also pedestrian)
+  if (pred.mode() == TravelMode::kPedestrian &&
+      pred.opp_local_idx() == edge->localedgeidx()) {
+    return false;
+  }
+
+  // Disallow transit connections (except when set for multi-modal routes)
   if (!allow_transit_connections_ && edge->use() == Use::kTransitConnection) {
     return false;
   }
-  return ((edge->forwardaccess() & kPedestrianAccess) &&
-           pred.opp_local_idx() != edge->localedgeidx()  &&
-         !(edge->not_thru() && pred.distance() > not_thru_distance_) &&
-           edge->surface() != Surface::kImpassable &&
-          (pred.walking_distance() + edge->length()) < max_distance_);
+  return true;
 }
 
 // Check if access is allowed at the specified node.
