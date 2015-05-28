@@ -252,6 +252,9 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | other=";
   str += std::to_string(other());
 
+  str += " | transit_trip_id=";
+  str += std::to_string(transit_trip_id());
+
   // Process transit info, if needed
   if (this->has_transit_info()) {
     str += " | transit_info.short_name=";
@@ -432,6 +435,9 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(other());
+
+  str += delim;
+  str += std::to_string(transit_trip_id());
 
   str += delim;
   if (this->transit_info().has_short_name()) {
