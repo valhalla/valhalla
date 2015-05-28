@@ -253,7 +253,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
     auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id,
-                                 edge, trip_path.add_node(), tile,
+                                 path.front().mode, edge, trip_path.add_node(), tile,
                                  end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
@@ -278,6 +278,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     const uint32_t trip_id = edge_itr->trip_id;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
+    const sif::TravelMode mode = edge_itr->mode;
 
     // Skip transition edges
     if (directededge->trans_up() || directededge->trans_down()) {
@@ -356,7 +357,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, directededge,
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, mode, directededge,
                                            trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
@@ -501,6 +502,7 @@ TripPath_Driveability GetTripPathDriveability(Driveability driveability) {
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             const uint32_t trip_id,
+                                            const sif::TravelMode mode,
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
@@ -700,6 +702,15 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
   if (directededge->drive_on_right())
     trip_edge->set_drive_on_right(true);
+
+  if (mode == sif::TravelMode::kBicycle)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
+  else if (mode == sif::TravelMode::kDrive)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);
+  else if (mode == sif::TravelMode::kPedestrian)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
+  else if (mode == sif::TravelMode::kPublicTransit)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPublicTransit);
 
   if (trip_id
       && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
