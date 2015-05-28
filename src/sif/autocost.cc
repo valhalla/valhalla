@@ -186,12 +186,12 @@ bool AutoCost::AllowMultiPass() const {
   return true;
 }
 
-// Check if access is allowed on the specified edge. Not worh checking
+// Check if access is allowed on the specified edge. Not worth checking
 // not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const EdgeLabel& pred) const {
-  // Check access, Uturn, and simple turn restriction.
-  // TODO - perhaps allow Uturns at dead-end nodes?
+  // Check access, U-turn, and simple turn restriction.
+  // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kAutoAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
@@ -299,7 +299,8 @@ cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
 }
 
 /**
- * Derived class providing dynamic edge costing for pedestrian routes.
+ * Derived class providing an alternate costing for driving that is intended
+ * to provide a short path.
  */
 class AutoShorterCost : public AutoCost {
  public:
@@ -366,6 +367,93 @@ float AutoShorterCost::AStarCostFactor() const {
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
   return std::make_shared<AutoShorterCost>(config);
 }
+
+/**
+ * Derived class providing bus costing for driving.
+ */
+class BusCost : public AutoCost {
+ public:
+  /**
+   * Construct auto costing for shorter (not absolute shortest) path.
+   * Pass in configuration using property tree.
+   * @param  config  Property tree with configuration/options.
+   */
+  BusCost(const boost::property_tree::ptree& config);
+
+  virtual ~BusCost();
+
+  /**
+   * Checks if access is allowed for the provided directed edge.
+   * This is generally based on mode of travel and the access modes
+   * allowed on the edge. However, it can be extended to exclude access
+   * based on other parameters.
+   * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred) const;
+
+  /**
+   * Checks if access is allowed for the provided node. Node access can
+   * be restricted if bollards or gates are present.
+   * @param  edge  Pointer to node information.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool Allowed(const baldr::NodeInfo* node) const;
+
+  /**
+   * Returns a function/functor to be used in location searching which will
+   * exclude results from the search by looking at each edges attribution
+   * @return Function/functor to be used in filtering out edges
+   */
+  virtual const EdgeFilter GetFilter() const;
+
+};
+
+
+// Constructor
+BusCost::BusCost(const boost::property_tree::ptree& pt)
+    : AutoCost(pt) {
+}
+
+// Destructor
+BusCost::~BusCost() {
+}
+
+// Check if access is allowed on the specified edge. Not worth checking
+// not_thru due to hierarchy transitions
+bool BusCost::Allowed(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred) const {
+  // Check access, U-turn, and simple turn restriction.
+  // TODO - perhaps allow U-turns at dead-end nodes?
+  if (!(edge->forwardaccess() & kBusAccess) ||
+      (pred.opp_local_idx() == edge->localedgeidx()) ||
+      (pred.restrictions() & (1 << edge->localedgeidx())) ||
+       edge->surface() == Surface::kImpassable) {
+    return false;
+  }
+
+  return true;
+}
+
+// Check if access is allowed at the specified node.
+bool BusCost::Allowed(const baldr::NodeInfo* node) const  {
+  return (node->access() & kBusAccess);
+}
+
+// Function/functor to be used in filtering out edges
+const EdgeFilter BusCost::GetFilter() const {
+  //throw back a lambda that checks the access for this type of costing
+  return [](const baldr::DirectedEdge* edge){
+    return edge->trans_up() || edge->trans_down() || !(edge->forwardaccess() & kBusAccess);
+  };
+}
+
+cost_ptr_t CreateBusCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<BusCost>(config);
+}
+
 
 }
 }
