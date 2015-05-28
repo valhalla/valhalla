@@ -225,7 +225,7 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
     // No transfer record exists - use defaults
-    return { transfer_cost_, transfer_cost_ +  transfer_penalty_ };
+    return { transfer_cost_ +  transfer_penalty_, transfer_cost_  };
   }
   switch (transfer->type()) {
   case TransferType::kRecommended:
