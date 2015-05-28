@@ -403,7 +403,8 @@ int main(int argc, char *argv[]) {
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
-  factory.Register("auto-shorter", CreateAutoShorterCost);
+  factory.Register("auto_shorter", CreateAutoShorterCost);
+  factory.Register("bus", CreateBusCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
   factory.Register("transit", CreateTransitCost);

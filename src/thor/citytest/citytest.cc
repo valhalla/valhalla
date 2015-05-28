@@ -245,7 +245,8 @@ int main(int argc, char *argv[]) {
   // Any good way to ties these into the config?
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
-  factory.Register("auto-shorter", CreateAutoShorterCost);
+  factory.Register("auto_shorter", CreateAutoShorterCost);
+  factory.Register("bus", CreateBusCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
 

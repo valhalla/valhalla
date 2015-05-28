@@ -723,6 +723,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       trip_edge->set_transit_type(
           TripPath_TransitType::TripPath_TransitType_kBus);
 
+    trip_edge->set_transit_trip_id(trip_id);
+
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
