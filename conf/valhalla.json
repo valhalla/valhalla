@@ -99,7 +99,6 @@
       "max_distance": 500000.0
     },
     "transit": {
-      "max_distance": 5000000.0
     }
   }
 }
