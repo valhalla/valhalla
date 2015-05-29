@@ -79,8 +79,10 @@
       "max_distance": 5000000.0
     },
     "auto_shorter": {
+      "max_distance": 5000000.0
     },
     "bus": {
+      "max_distance": 5000000.0
     },
     "pedestrian": {
       "walking_speed": 5.1,
@@ -91,6 +93,9 @@
       "max_distance": 100000.0
     },
     "bicycle": {
+      "max_distance": 500000.0
+    },
+    "multimodal": {
       "max_distance": 500000.0
     },
     "transit": {
