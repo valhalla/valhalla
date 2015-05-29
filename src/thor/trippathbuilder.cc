@@ -737,9 +737,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   if (trip_id
       && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
+    // TODO: Need to set based on GTFS values
     if (directededge->use() == Use::kRail)
       trip_edge->set_transit_type(
-          TripPath_TransitType::TripPath_TransitType_kTrain);
+          TripPath_TransitType::TripPath_TransitType_kSubway);
 
     if (directededge->use() == Use::kBus)
       trip_edge->set_transit_type(
