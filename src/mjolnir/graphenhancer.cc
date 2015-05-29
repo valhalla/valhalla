@@ -170,7 +170,8 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
           directededge.set_speed(50);  // 30 MPH
         } else if (directededge.classification() == RoadClass::kTertiary) {
           directededge.set_speed(40);  // 25 MPH
-        } else if (directededge.classification() == RoadClass::kResidential) {
+        } else if (directededge.classification() == RoadClass::kResidential ||
+                   directededge.classification() == RoadClass::kUnclassified) {
           directededge.set_speed(35);  // 20 MPH
         } else {
           directededge.set_speed(25);  // 15 MPH (service/alley)
