@@ -41,6 +41,7 @@ class TripPathBuilder {
    * Add trip edge. (TODO more comments)
    * @param  idx  Index of the directed edge within the tile.
    * @param  trip_id       Trip Id (0 if not a transit edge).
+   * @param  block_id      Transit block Id (0 if not a transit edge)
    * @param  mode          Travel mode for the edge: Biking, walking, etc.
    * @param  directededge  Directed edge information.
    * @param  trip_node     Trip node to add the edge information to.
@@ -50,6 +51,7 @@ class TripPathBuilder {
    */
   static odin::TripPath_Edge* AddTripEdge(const uint32_t idx,
                                           const uint32_t trip_id,
+                                          const uint32_t block_id,
                                           const sif::TravelMode mode,
                                           const baldr::DirectedEdge* directededge,
                                           odin::TripPath_Node* trip_node,
