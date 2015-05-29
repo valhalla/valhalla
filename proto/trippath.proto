@@ -81,9 +81,14 @@ message TripPath {
   
   // TODO: review and update as needed
   enum TransitType {
-    kTrain = 0;
-    kBus = 1;
-    kAircraft = 2;
+    kTram = 0;
+    kSubway = 1;
+    kRail = 2;
+    kBus = 3;
+    kFerry = 4;
+    kCableCar = 5;
+    kGondola = 6;
+    kFenicular = 7;
   }
 
   message TransitInfo {
@@ -120,7 +125,7 @@ message TripPath {
     optional BicycleType bicycle_type = 25;
     optional TransitType transit_type = 26;
     optional bool drive_on_right = 27 [default = true];
-    optional bool road = 28;
+    optional bool road = 28;                 // TODO: Use enum?
     optional bool track = 29;
     optional bool driveway = 30;
     optional bool alley = 31;

@@ -382,7 +382,7 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   }
 
   str += delim;
-  if (this->has_bicycle_type()) {
+  if (this->has_transit_type()) {
     str += "TripPath_TransitType_";
     str += TripPath_TransitType_descriptor()->FindValueByNumber(transit_type())
           ->name();
