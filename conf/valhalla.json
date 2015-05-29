@@ -69,24 +69,34 @@
   "costing_options": {
     "auto": {
       "maneuver_penalty": 5.0,
+      "destination_only_penalty": 600.0,
+      "alley_penalty": 5.0,
       "gate_cost": 30.0,
       "toll_booth_cost": 15.0,
       "toll_booth_penalty": 0.0,
       "country_crossing_cost": 600.0,
-      "country_crossing_penalty": 0.0
+      "country_crossing_penalty": 0.0,
+      "max_distance": 5000000.0
     },
     "auto_shorter": {
+      "max_distance": 5000000.0
     },
     "bus": {
+      "max_distance": 5000000.0
     },
     "pedestrian": {
       "walking_speed": 5.1,
       "walkway_factor": 0.9,
       "alley_factor": 2.0,
       "driveway_factor": 2.0,
-      "step_penalty": 30.0
+      "step_penalty": 30.0,
+      "max_distance": 100000.0
     },
     "bicycle": {
+      "max_distance": 500000.0
+    },
+    "multimodal": {
+      "max_distance": 500000.0
     },
     "transit": {
     }
