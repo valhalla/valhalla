@@ -252,6 +252,9 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | other=";
   str += std::to_string(other());
 
+  str += " | transit_block_id=";
+  str += std::to_string(transit_block_id());
+
   str += " | transit_trip_id=";
   str += std::to_string(transit_trip_id());
 
@@ -435,6 +438,9 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(other());
+
+  str += delim;
+  str += std::to_string(transit_block_id());
 
   str += delim;
   str += std::to_string(transit_trip_id());
