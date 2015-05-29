@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.
-  GraphValidator::Validate(pt.get_child("mjolnir.hierarchy"));
+  GraphValidator::Validate(pt);
 
   return EXIT_SUCCESS;
 }
