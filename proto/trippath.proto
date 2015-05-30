@@ -169,7 +169,7 @@ message TripPath {
     optional bool bollard = 7;               // Bollard (fixed obstruction)
     optional bool toll_booth = 8;            // toll booth / fare collection
     optional bool transit_stop = 9;          // Multi-use transit stop (rail and bus)
-    optional bool transit_parent_stop = 10;   // Multi-use transit parent stop
+    optional bool transit_parent_stop = 10;  // Multi-use transit parent stop
     optional bool bike_share = 11;           // Bike share location
     optional bool parking = 12;              // Parking location
     optional TransitStopInfo transit_stop_info = 13;
