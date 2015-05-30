@@ -74,6 +74,13 @@ message TripDirections {
       kRoundaboutExit = 27;
       kFerryEnter = 28;
       kFerryExit = 29;
+      kTransit = 30;
+      kTransitTransfer = 31;
+      kTransitRemainOn = 32;
+      kTransitConnectionStart = 33;
+      kTransitConnectionTransfer = 34;
+      kTransitConnectionDestination = 35;
+      kPostTransitConnectionDestination = 36;
     }
   
     optional Type type = 1;                                  // Maneuver type
