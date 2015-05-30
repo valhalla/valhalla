@@ -100,6 +100,22 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         FormExitFerryInstruction(maneuver);
         break;
       }
+      case TripDirections_Maneuver_Type_kTransitConnectionStart: {
+        FormTransitConnectionStartInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
+        FormTransitConnectionTransferInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kTransitConnectionDestination: {
+        FormTransitConnectionDestinationInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kPostTransitConnectionDestination: {
+        FormPostTransitConnectionDestinationInstruction(maneuver);
+        break;
+      }
       default: {
         FormContinueInstruction(maneuver);
         break;
@@ -835,6 +851,46 @@ void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
 }
 
 void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Go ";
+  text_instruction += FormCardinalDirection(
+      maneuver.begin_cardinal_direction());
+  if (maneuver.HasStreetNames()) {
+    text_instruction += " on ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormTransitConnectionStartInstruction(
+    Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Enter station.";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormTransitConnectionTransferInstruction(
+    Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Transfer at station.";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormTransitConnectionDestinationInstruction(
+    Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Exit station.";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
+    Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "Go ";

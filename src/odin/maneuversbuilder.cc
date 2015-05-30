@@ -547,6 +547,7 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
 void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
+  auto* curr_edge = trip_path_->GetCurrEdge(node_index);
 
   // Set the end heading
   maneuver.set_end_heading(prev_edge->end_heading());
@@ -590,6 +591,22 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
+
+  // Transit connection
+  if (prev_edge->transit_connection()) {
+    maneuver.set_transit_connection(true);
+    // If current edge is transit then mark maneuver as transit connection start
+    if (curr_edge
+        && (curr_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
+      maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
+      LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
+    }
+    // else mark it as transit connection destination
+    else {
+      maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionDestination);
+      LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_DESTINATION");
+    }
+  }
 
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, node_index);
@@ -668,12 +685,12 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     for (auto& text : prev_edge->sign().exit_name()) {
       maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(text);
     }
-
   }
 
 }
 
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
+  auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
 
   // Set begin cardinal direction
@@ -690,7 +707,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_begin_shape_index(curr_edge->begin_shape_index());
 
   // if possible, set the turn degree and relative direction
-  auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   if (prev_edge) {
     maneuver.set_turn_degree(
         GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()));
@@ -722,6 +738,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   }
 
+  // Mark transit connection transfer
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
+      && prev_edge && (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionTransfer);
+    LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_TRANSFER");
+
+  }
+
   // Set the maneuver type
   SetManeuverType(maneuver);
 
@@ -741,14 +765,18 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
 
   // TODO - iterate and expand
   // TripDirections_Maneuver_Type_kBecomes
-  // TripDirections_Maneuver_Type_kUturnRight
-  // TripDirections_Maneuver_Type_kUturnLeft
   // TripDirections_Maneuver_Type_kStayStraight
   // TripDirections_Maneuver_Type_kStayRight
   // TripDirections_Maneuver_Type_kStayLeft
 
+  // Process post transit connection destination
+  if (prev_edge && prev_edge->transit_connection()
+      && (maneuver.travel_mode() != TripPath_TravelMode_kPublicTransit)) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kPostTransitConnectionDestination);
+    LOG_TRACE("ManeuverType=POST_TRANSIT_CONNECTION_DESTINATION");
+  }
   // Process Internal Intersection
-  if (maneuver.internal_intersection()) {
+  else if (maneuver.internal_intersection()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kNone);
     LOG_TRACE("ManeuverType=INTERNAL_INTERSECTION");
   }
@@ -945,6 +973,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   // TODO - fix it
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process transit connection
+  if (maneuver.transit_connection() && !prev_edge->transit_connection()) {
+    return false;
+  }
+  if (prev_edge->transit_connection() && !maneuver.transit_connection()) {
+    return false;
+  }
+  if (maneuver.transit_connection() && prev_edge->transit_connection()) {
+    return true;
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Process travel mode
