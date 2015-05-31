@@ -441,6 +441,27 @@ std::string Maneuver::GetTransitName() const {
   return "train";
 }
 
+std::string Maneuver::GetTransitArrivalTime() const {
+  // TODO: format time
+  return transit_info_.transit_stops.back().arrival_date_time;
+}
+
+std::string Maneuver::GetTransitDepartureTime() const {
+  // TODO: format time
+  return transit_info_.transit_stops.front().departure_date_time;
+}
+
+size_t Maneuver::GetTransitStopCount() const {
+  return transit_info_.transit_stops.size();
+}
+
+void Maneuver::InsertTransitStop(std::string name,
+                                 std::string arrival_date_time,
+                                 std::string departure_date_time) {
+  transit_info_.transit_stops.emplace_front(name, arrival_date_time,
+                                            departure_date_time);
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);

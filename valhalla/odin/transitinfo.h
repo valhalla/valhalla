@@ -2,6 +2,8 @@
 #define VALHALLA_ODIN_TRANSIT_INFO_H_
 
 #include <string>
+#include <list>
+#include <valhalla/odin/transitstop.h>
 
 namespace valhalla {
 namespace odin {
@@ -16,7 +18,7 @@ struct TransitInfo {
   std::string short_name;
   std::string long_name;
   std::string headsign;
-  //List<TransitStop> transit_stops;
+  std::list<TransitStop> transit_stops;
 
 };
 

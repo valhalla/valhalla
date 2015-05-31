@@ -161,6 +161,15 @@ class Maneuver {
 
   std::string GetTransitName() const;
 
+  std::string GetTransitArrivalTime() const;
+
+  std::string GetTransitDepartureTime() const;
+
+  size_t GetTransitStopCount() const;
+
+  void InsertTransitStop(std::string name, std::string arrival_date_time,
+                         std::string departure_date_time);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;

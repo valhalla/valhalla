@@ -601,7 +601,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_transit_short_name(prev_edge->transit_info().short_name());
     maneuver.set_transit_long_name(prev_edge->transit_info().long_name());
     maneuver.set_transit_headsign(prev_edge->transit_info().headsign());
-    // TODO: final transit stop from curr_edge
+
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    maneuver.InsertTransitStop(node->transit_stop_info().name(),
+                               node->transit_stop_info().arrival_date_time(),
+                               node->transit_stop_info().departure_date_time());
   }
 
   // Transit connection
@@ -704,7 +708,10 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
   // Transit stop
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
-    // TODO: insert transit stop
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    maneuver.InsertTransitStop(node->transit_stop_info().name(),
+                               node->transit_stop_info().arrival_date_time(),
+                               node->transit_stop_info().departure_date_time());
   }
 
 }
@@ -764,6 +771,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       && (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionTransfer);
     LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_TRANSFER");
+  }
+
+  // Insert first transit stop
+  if (maneuver.travel_mode() == TripPath_TravelMode_kPublicTransit) {
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    maneuver.InsertTransitStop(node->transit_stop_info().name(),
+                               node->transit_stop_info().arrival_date_time(),
+                               node->transit_stop_info().departure_date_time());
   }
 
   // Set the maneuver type

@@ -905,13 +905,17 @@ void NarrativeBuilder::FormTransitInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "DEPART: Take the ";
+  text_instruction += "DEPART: ";
+  text_instruction += maneuver.GetTransitDepartureTime();
+  text_instruction += " - Take the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE";
+  text_instruction += ". ARRIVE: ";
+  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += ".";
 
   maneuver.set_instruction(std::move(text_instruction));
 }
@@ -920,13 +924,17 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "DEPART: Remain on the ";
+  text_instruction += "DEPART: ";
+  text_instruction += maneuver.GetTransitDepartureTime();
+  text_instruction += " - Remain on the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE";
+  text_instruction += ". ARRIVE: ";
+  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += ".";
 
   maneuver.set_instruction(std::move(text_instruction));
 }
@@ -935,13 +943,18 @@ void NarrativeBuilder::FormTransitTransferInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "DEPART: Transfer to take the ";
+  text_instruction += "DEPART: ";
+  text_instruction += maneuver.GetTransitDepartureTime();
+  text_instruction += " - Transfer to take the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE";
+  text_instruction += ". ARRIVE: ";
+  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += ".";
+
 
   maneuver.set_instruction(std::move(text_instruction));
 }
