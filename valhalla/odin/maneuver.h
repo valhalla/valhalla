@@ -159,6 +159,8 @@ class Maneuver {
   std::string transit_headsign() const;
   void set_transit_headsign(std::string transit_headsign);
 
+  std::string GetTransitName() const;
+
   std::string ToString() const;
 
   std::string ToParameterString() const;

@@ -7,6 +7,7 @@ namespace valhalla {
 namespace odin {
 
 struct TransitInfo {
+
   // TODO: do we need?
   std::string ToParameterString() const;
 

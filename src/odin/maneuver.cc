@@ -430,6 +430,17 @@ void Maneuver::set_transit_headsign(std::string transit_headsign) {
   transit_info_.headsign = transit_headsign;
 }
 
+std::string Maneuver::GetTransitName() const {
+  if (!transit_short_name().empty()) {
+    return transit_short_name();
+  } else if (!transit_long_name().empty()) {
+    return (transit_long_name());
+  } else if (bus()) {
+    return "bus";
+  }
+  return "train";
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
