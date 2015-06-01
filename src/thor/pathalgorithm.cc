@@ -426,36 +426,41 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       continue;
     }
 
-    // Set local time. TODO: adjust for time zone
-    uint32_t localtime = start_time + pred.cost().secs;
-
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
       continue;
     }
 
-    // Get any transfer times and penalties if this is a transit stop
-    // and mode is pedestrian
+    // Get any transfer times and penalties if this is a transit stop (and
+    // transit has been taken at some point on the path) and mode is pedestrian
+    bool has_transit = pred.has_transit();
     uint32_t prior_stop = pred.prior_stopid();
     Cost transfer_cost = { 0.0f, 0.0f };
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
-      if (mode_ == TravelMode::kPedestrian && prior_stop != 0) {
+      if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
                                       nodeinfo->stop_id()));
       }
 
-      // Update prior stop
+      // Update prior stop.
+      // TODO - parent/child stop info?
       prior_stop = nodeinfo->stop_id();
     }
 
-     // Allow mode changes at special nodes
-     //      bike share (pedestrian <--> bicycle)
-     //      parking (drive <--> pedestrian)
-     //      transit stop (pedestrian <--> transit).
-     // TODO - evaluate how this will work when an edge may have already
-     // been visited using a different mode.
-     bool mode_change = false;
+    // Set local time. TODO: adjust for time zone. Add true transfer time.
+    // Update transfer cost so all that remains is the cost penalty
+    uint32_t localtime = start_time + pred.cost().secs + transfer_cost.secs;
+    transfer_cost.cost -= transfer_cost.secs;
+    transfer_cost.secs = 0.0f;
+
+    // Allow mode changes at special nodes
+    //      bike share (pedestrian <--> bicycle)
+    //      parking (drive <--> pedestrian)
+    //      transit stop (pedestrian <--> transit).
+    // TODO - evaluate how this will work when an edge may have already
+    // been visited using a different mode.
+    bool mode_change = false;
    /*if (nodeinfo->type() == NodeType::kBikeShare) {
       if (mode_ == TravelMode::kBicycle) {
         mode_ = TravelMode::kPedestrian;
@@ -513,16 +518,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
           // Update trip Id and block Id
           tripid  = departure->tripid();
           blockid = departure->blockid();
+          has_transit = true;
 
-          // There is no cost if continuing along the same trip Id
-          // or (valid) block Id. Make sure we did not walk from stop to stop.
-          if (prior_stop == 0) {
-            ;
-          } else if (!mode_change && (tripid == pred.tripid() ||
-              (blockid != 0 && (blockid == pred.blockid())))) {
-            ; // LOG_INFO("Stay on trip Id = " + std::to_string(tripid));
-          } else {
-            // Use the transfer cost computed for the stop
+          // Add transfer cost. There is no cost if continuing along the
+          // same trip Id or (valid) block Id.
+          if (mode_change || tripid != pred.tripid() ||
+             (blockid != 0 && blockid != pred.blockid())) {
             newcost += transfer_cost;
           }
 
@@ -549,23 +550,26 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
                 directededge, pred)) {
           continue;
         }
-        newcost += mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
+
+        Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(
             directededge, nodeinfo->density());
+        c.cost *= 2.0f;  // TODO - mode weight...so transit mode is favored
+        newcost += c;
+
+        // Add to walking distance
+        if (mode_ == TravelMode::kPedestrian) {
+          walking_distance_ += directededge->length();
+        }
       }
 
+      // Add mode change cost or edge transition cost from the costing model
       if (mode_change) {
         // TODO: make mode change cost configurable. No cost for entering
         // a transit line (assume the wait time is the cost)
         ;  //newcost += {10.0f, 10.0f };
       } else {
-        // Use the transition costs from the costing model
         newcost += mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(
                directededge, nodeinfo, pred);
-      }
-
-      // Add to walking distance
-      if (mode_ == TravelMode::kPedestrian) {
-        walking_distance_ += directededge->length();
       }
 
       // Skip if the end node tile is not found
@@ -585,9 +589,18 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
-      // by the difference in real cost (A* heuristic doesn't change)
+      // by the difference in real cost (A* heuristic doesn't change). Update
+      // trip Id and block Id.
       if (edgestatus.status.set == kTemporary) {
-        CheckIfLowerCostPath(edgestatus.status.index, predindex, newcost);
+        uint32_t idx = edgestatus.status.index;
+        float dc = edgelabels_[idx].cost().cost - newcost.cost;
+        if (dc > 0) {
+          float oldsortcost = edgelabels_[idx].sortcost();
+          float newsortcost = oldsortcost - dc;
+          edgelabels_[idx].Update(predindex, newcost, newsortcost,
+                                  walking_distance_, tripid, blockid);
+          adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
+        }
         continue;
       }
 
@@ -599,7 +612,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_,  walking_distance_,
-                    tripid, prior_stop,  blockid);
+                    tripid, prior_stop,  blockid, has_transit);
       adjacencylist_->Add(edgelabel_index_, sortcost);
       edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
