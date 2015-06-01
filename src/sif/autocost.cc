@@ -131,6 +131,9 @@ class AutoCost : public DynamicCost {
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
 
+  // Density factor used in edge transition costing
+  std::vector<float> trans_density_factor_;
+
   /**
    * Compute a turn cost based on the turn type, crossing flag,
    * and whether right or left side of road driving.
@@ -145,7 +148,11 @@ class AutoCost : public DynamicCost {
 
 // Constructor
 AutoCost::AutoCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kDrive) {
+    : DynamicCost(pt, TravelMode::kDrive),
+      trans_density_factor_{ 1.0f, 1.0f, 1.0f, 1.0f,
+                             1.0f, 1.1f, 1.2f, 1.3f,
+                             1.4f, 1.6f, 1.9f, 2.2f,
+                             2.5f, 2.8f, 3.1f, 3.5f } {
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
   destination_only_penalty_ = pt.get<float>("destination_only_penalty",
@@ -239,9 +246,10 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (pred.use() != Use::kAlley && edge->use() == Use::kAlley)
       penalty += alley_penalty_;
 
-    // Transition cost = stopimpact * turncost + maneuverpenalty
+    // Transition cost = density * stopimpact * turncost + maneuverpenalty
     uint32_t idx = pred.opp_local_idx();
-    float seconds = edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
+    float seconds = trans_density_factor_[node->density()] *
+                    edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
                          edge->edge_to_right(idx) && edge->edge_to_left(idx),
                          edge->drive_on_right());
     return (node->name_consistency(idx, edge->localedgeidx())) ?
