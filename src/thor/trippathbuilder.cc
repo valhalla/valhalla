@@ -252,8 +252,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     float total = static_cast<float>(edge->length());
     TrimShape(shape, start_pct * total, start_vrt, end_pct * total, end_vrt);
 
-    auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id,
-                                 edge, trip_path.add_node(), tile,
+    auto trip_edge = AddTripEdge(path.front().edgeid.id(), path.front().trip_id, 0,
+                                 path.front().mode, edge, trip_path.add_node(), tile,
                                  end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
     trip_edge->set_end_shape_index(shape.size());
@@ -271,13 +271,16 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   // Iterate through path
   float elapsedtime = 0.0f;
+  uint32_t block_id = 0;
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
+  std::string arrival_time;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
     const GraphTile* graphtile = graphreader.GetGraphTile(edge);
     const DirectedEdge* directededge = graphtile->directededge(edge);
+    const sif::TravelMode mode = edge_itr->mode;
 
     // Skip transition edges
     if (directededge->trans_up() || directededge->trans_down()) {
@@ -319,29 +322,48 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
 
+    // Add transit information if this is a transit stop
     if (graphtile->node(startnode)->is_transit()) {
       trip_node->set_transit_stop(true);
       trip_node->set_transit_parent_stop(graphtile->node(startnode)->parent());
 
+      // Get the transit stop information and add transit stop info
       const TransitStop* stop = graphtile->GetTransitStop(
           graphtile->node(startnode)->stop_id());
-
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
       transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+
+      // Set the arrival time at this node (based on schedule from last trip
+      // departure)
+      if (!arrival_time.empty()) {
+        transit_stop_info->set_arrival_date_time(arrival_time);
+      }
+
+      // If this edge has a trip id then there is a transit departure
       if (trip_id) {
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
 
+        // Set departure time from this transit stop
         transit_stop_info->set_departure_date_time(
             DateTime::get_duration(*origin.date_time_,
                                    transit_departure->departure_time() -
                                    origin_sec_from_mid));
-        transit_stop_info->set_arrival_date_time(
-            DateTime::get_duration(*origin.date_time_,
+
+        // Copy the arrival time for use at the next transit stop
+        arrival_time = DateTime::get_duration(*origin.date_time_,
                                    (transit_departure->departure_time() +
                                        transit_departure->elapsed_time()) -
-                                       origin_sec_from_mid));
+                                       origin_sec_from_mid);
+
+        // Get the block Id
+        block_id = transit_departure->blockid();
+      } else {
+        // No departing trip, set the arrival time (for next stop) to empty
+        // and set block Id to 0
+        arrival_time = "";
+        block_id = 0;
       }
     }
 
@@ -356,8 +378,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     auto is_last_edge = edge_itr == path.end() - 1;
     float length_pct = (
         is_first_edge ? 1.f - start_pct : (is_last_edge ? end_pct : 1.f));
-    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, directededge,
-                                           trip_node, graphtile, length_pct);
+    TripPath_Edge* trip_edge = AddTripEdge(edge.id(), trip_id, block_id, mode,
+                      directededge, trip_node, graphtile, length_pct);
 
     // Get the shape and set shape indexes (directed edge forward flag
     // determines whether shape is traversed forward or reverse).
@@ -501,6 +523,8 @@ TripPath_Driveability GetTripPathDriveability(Driveability driveability) {
 // Add a trip edge to the trip node and set its attributes
 TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             const uint32_t trip_id,
+                                            const uint32_t block_id,
+                                            const sif::TravelMode mode,
                                             const DirectedEdge* directededge,
                                             TripPath_Node* trip_node,
                                             const GraphTile* graphtile,
@@ -701,16 +725,29 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   if (directededge->drive_on_right())
     trip_edge->set_drive_on_right(true);
 
+  if (mode == sif::TravelMode::kBicycle)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
+  else if (mode == sif::TravelMode::kDrive)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kDrive);
+  else if (mode == sif::TravelMode::kPedestrian)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPedestrian);
+  else if (mode == sif::TravelMode::kPublicTransit)
+    trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPublicTransit);
+
   if (trip_id
       && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
+    // TODO: Need to set based on GTFS values
     if (directededge->use() == Use::kRail)
       trip_edge->set_transit_type(
-          TripPath_TransitType::TripPath_TransitType_kTrain);
+          TripPath_TransitType::TripPath_TransitType_kSubway);
 
     if (directededge->use() == Use::kBus)
       trip_edge->set_transit_type(
           TripPath_TransitType::TripPath_TransitType_kBus);
+
+    trip_edge->set_transit_trip_id(trip_id);
+    trip_edge->set_transit_block_id(block_id);
 
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
