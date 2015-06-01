@@ -54,7 +54,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
           const uint32_t restrictions, const uint32_t opp_local_idx,
           const TravelMode mode, const uint32_t walking_distance,
           const uint32_t tripid, const uint32_t prior_stopid,
-          const uint32_t blockid)
+          const uint32_t blockid, const bool has_transit)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
@@ -73,6 +73,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
   attributes_.shortcut      = edge->shortcut();
   attributes_.mode          = static_cast<uint32_t>(mode);
   attributes_.dest_only     = edge->destonly();
+  attributes_.has_transit   = has_transit;
 }
 
 // Destructor
@@ -180,6 +181,11 @@ TravelMode EdgeLabel::mode() const {
 // Get the destination only flag.
 bool EdgeLabel::destonly() const {
   return attributes_.dest_only;
+}
+
+// Has any transit been taken up to this point on the path.
+bool EdgeLabel::has_transit() const {
+  return attributes_.has_transit;
 }
 
 // Get the current walking distance in meters.
