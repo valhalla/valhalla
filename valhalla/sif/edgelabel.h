@@ -63,6 +63,7 @@ class EdgeLabel {
    * @param tripid    Trip Id for a transit edge.
    * @param prior_stopid  Prior transit stop Id.
    * @param blockid   Transit trip block Id.
+   * @param has_transit Does the path to this edge have any transit.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
@@ -70,7 +71,7 @@ class EdgeLabel {
             const uint32_t restrictions, const uint32_t opp_local_idx,
             const TravelMode mode, const uint32_t walking_distance,
             const uint32_t tripid, const uint32_t prior_stopid,
-            const uint32_t blockid);
+            const uint32_t blockid, const bool has_transit);
 
   /**
    * Destructor.
@@ -205,6 +206,12 @@ class EdgeLabel {
   bool destonly() const;
 
   /**
+   * Has any transit been taken up to this point on the path.
+   * @return  Returns true if any transit has been taken, false if not.
+   */
+  bool has_transit() const;
+
+  /**
    * Get the current walking distance in meters.
    * @return  Returns the current walking distance accumulated since last stop.
    */
@@ -265,6 +272,8 @@ class EdgeLabel {
    * trans_up:      Was the prior edge a transition up to a higher level?
    * trans_down:    Was the prior edge a transition down to a lower level?
    * shortcut:      Was the prior edge a shortcut edge?
+   * dest_only      Was the prior edge destination only.
+   * has_transit    True if any transit taken along the path to this edge.
    */
   struct Attributes {
     uint32_t use           : 8;
@@ -275,7 +284,8 @@ class EdgeLabel {
     uint32_t shortcut      : 1;
     uint32_t mode          : 4;
     uint32_t dest_only     : 1;
-    uint32_t spare         : 2;
+    uint32_t has_transit   : 1;
+    uint32_t spare         : 1;
   };
   Attributes attributes_;
 
