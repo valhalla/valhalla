@@ -9,6 +9,7 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/odin/signs.h>
+#include <valhalla/odin/transitinfo.h>
 
 using namespace valhalla::baldr;
 
@@ -134,6 +135,41 @@ class Maneuver {
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
+  bool transit_connection() const;
+  void set_transit_connection(bool transit_connection);
+
+  bool rail() const;
+  void set_rail(bool rail);
+
+  bool bus() const;
+  void set_bus(bool bus);
+
+  uint32_t transit_block_id() const;
+  void set_transit_block_id(uint32_t transit_block_id);
+
+  uint32_t transit_trip_id() const;
+  void set_transit_trip_id(uint32_t transit_trip_id);
+
+  std::string transit_short_name() const;
+  void set_transit_short_name(std::string transit_short_name);
+
+  std::string transit_long_name() const;
+  void set_transit_long_name(std::string transit_long_name);
+
+  std::string transit_headsign() const;
+  void set_transit_headsign(std::string transit_headsign);
+
+  std::string GetTransitName() const;
+
+  std::string GetTransitArrivalTime() const;
+
+  std::string GetTransitDepartureTime() const;
+
+  size_t GetTransitStopCount() const;
+
+  void InsertTransitStop(std::string name, std::string arrival_date_time,
+                         std::string departure_date_time);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -169,6 +205,10 @@ class Maneuver {
   uint32_t internal_left_turn_count_;
   uint32_t roundabout_exit_count_;
   TripPath_TravelMode travel_mode_;
+  bool transit_connection_;
+  bool rail_;
+  bool bus_;
+  TransitInfo transit_info_;
 
   // TODO notes
 

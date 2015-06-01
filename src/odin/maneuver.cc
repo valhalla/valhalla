@@ -55,7 +55,10 @@ Maneuver::Maneuver()
       internal_right_turn_count_(0),
       internal_left_turn_count_(0),
       roundabout_exit_count_(0),
-      travel_mode_(TripPath_TravelMode_kDrive) {
+      travel_mode_(TripPath_TravelMode_kDrive),
+      transit_connection_(false),
+      rail_(false),
+      bus_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -363,6 +366,102 @@ void Maneuver::set_travel_mode(TripPath_TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
+bool Maneuver::transit_connection() const {
+  return transit_connection_;
+}
+
+void Maneuver::set_transit_connection(bool transit_connection) {
+  transit_connection_ = transit_connection;
+}
+
+bool Maneuver::rail() const {
+  return rail_;
+}
+
+void Maneuver::set_rail(bool rail) {
+  rail_ = rail;
+}
+
+bool Maneuver::bus() const {
+  return bus_;
+}
+
+void Maneuver::set_bus(bool bus) {
+  bus_ = bus;
+}
+
+uint32_t Maneuver::transit_block_id() const {
+  return transit_info_.block_id;
+}
+
+void Maneuver::set_transit_block_id(uint32_t transit_block_id) {
+  transit_info_.block_id = transit_block_id;
+}
+
+uint32_t Maneuver::transit_trip_id() const {
+  return transit_info_.trip_id;
+}
+
+void Maneuver::set_transit_trip_id(uint32_t transit_trip_id) {
+  transit_info_.trip_id = transit_trip_id;
+}
+
+std::string Maneuver::transit_short_name() const {
+  return transit_info_.short_name;
+}
+
+void Maneuver::set_transit_short_name(std::string transit_short_name) {
+  transit_info_.short_name = transit_short_name;
+}
+
+std::string Maneuver::transit_long_name() const {
+  return transit_info_.long_name;
+}
+
+void Maneuver::set_transit_long_name(std::string transit_long_name) {
+  transit_info_.long_name = transit_long_name;
+}
+
+std::string Maneuver::transit_headsign() const {
+  return transit_info_.headsign;
+}
+
+void Maneuver::set_transit_headsign(std::string transit_headsign) {
+  transit_info_.headsign = transit_headsign;
+}
+
+std::string Maneuver::GetTransitName() const {
+  if (!transit_short_name().empty()) {
+    return transit_short_name();
+  } else if (!transit_long_name().empty()) {
+    return (transit_long_name());
+  } else if (bus()) {
+    return "bus";
+  }
+  return "train";
+}
+
+std::string Maneuver::GetTransitArrivalTime() const {
+  // TODO: format time
+  return transit_info_.transit_stops.back().arrival_date_time;
+}
+
+std::string Maneuver::GetTransitDepartureTime() const {
+  // TODO: format time
+  return transit_info_.transit_stops.front().departure_date_time;
+}
+
+size_t Maneuver::GetTransitStopCount() const {
+  return transit_info_.transit_stops.size();
+}
+
+void Maneuver::InsertTransitStop(std::string name,
+                                 std::string arrival_date_time,
+                                 std::string departure_date_time) {
+  transit_info_.transit_stops.emplace_front(name, arrival_date_time,
+                                            departure_date_time);
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -456,6 +555,17 @@ std::string Maneuver::ToString() const {
 
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
+
+  man_str += " | transit_connection=";
+  man_str += std::to_string(transit_connection_);
+
+  man_str += " | rail=";
+  man_str += std::to_string(rail_);
+
+  man_str += " | bus=";
+  man_str += std::to_string(bus_);
+
+  // TODO: transit_info
 
   return man_str;
 }
@@ -562,6 +672,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += "TripPath_TravelMode_";
   man_str += TripPath_TravelMode_descriptor()
       ->FindValueByNumber(travel_mode_)->name();
+
+  // TODO: transit_info
 
   return man_str;
 }
