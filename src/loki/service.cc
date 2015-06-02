@@ -346,6 +346,8 @@ namespace {
     }
     void cleanup() {
       locations.clear();
+      if(reader.OverCommitted())
+        reader.Clear();
     }
    protected:
     boost::property_tree::ptree config;
