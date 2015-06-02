@@ -755,9 +755,9 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
 // Form the path from the adjacency list.
 std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
              GraphReader& graphreader, const PathInfo& loop_edge_info) {
-  // TODO - leave in for now!
-  LOG_INFO("PathCost = " + std::to_string(edgelabels_[dest].cost().cost) +
-           "  Iterations = " + std::to_string(edgelabel_index_));
+  //good metrics to track
+  LOG_INFO("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
+  LOG_INFO("path_iterations::" + std::to_string(edgelabel_index_));
 
   // Work backwards from the destination
   std::vector<PathInfo> path;
