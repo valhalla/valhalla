@@ -215,6 +215,7 @@ namespace {
         if(locations.size() < 1)
           throw;
         //TODO: bail if this is too many
+        LOG_INFO("location_count::" + std::to_string(locations.size()));
       }
       catch(...) {
         throw std::runtime_error("insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
@@ -267,25 +268,23 @@ namespace {
         return result;
       }
 
-      //see if any locations pairs are unreachable
+      //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
       std::string costing = request.get<std::string>("costing");
       auto max_distance = config.get<float>("costing_options." + costing + ".max_distance");
-
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
-        uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
-        uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
-
         //check if distance between latlngs exceed max distance limit for each mode of travel
-        auto pathDistance = midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_);
-        if (pathDistance > (max_distance*max_distance)) {
+        auto path_distance = midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_);
+        if (path_distance > (max_distance*max_distance)) {
           worker_t::result_t result { false };
           http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
           response.from_info(request_info);
           result.messages.emplace_back(response.to_string());
           return result;
         }
-
+        //check connectivity
+        uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
+        uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
         if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
           worker_t::result_t result{false};
           http_response_t response(404, "Not Found",
@@ -294,6 +293,8 @@ namespace {
           result.messages.emplace_back(response.to_string());
           return result;
         }
+
+        LOG_INFO("location_distance::" + std::to_string(path_distance));
       }
 
       //correlate the various locations to the underlying graph
