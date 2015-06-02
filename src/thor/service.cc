@@ -172,6 +172,8 @@ namespace {
     void cleanup() {
       path_algorithm.Clear();
       locations.clear();
+      if(reader.OverCommitted())
+        reader.Clear();
     }
    protected:
     boost::property_tree::ptree config;
