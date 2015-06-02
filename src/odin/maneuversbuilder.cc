@@ -809,7 +809,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     if (prev_edge
         && prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
       // Process transit remain on
-      if ((maneuver.transit_block_id() == prev_edge->transit_block_id())
+      if ((maneuver.transit_block_id() != 0)
+          && (maneuver.transit_block_id() == prev_edge->transit_block_id())
           && (maneuver.transit_trip_id() != prev_edge->transit_trip_id())) {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransitRemainOn);
       }
