@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza","date_time":"2015-07-01T08:00"},{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"}],"costing":"multimodal","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
