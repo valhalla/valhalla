@@ -55,6 +55,8 @@ namespace {
         odin::DirectionsBuilder directions;
         odin::TripDirections trip_directions = directions.Build(directions_options, trip_path);
 
+        LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
+
         //pass it on
         worker_t::result_t result{true};
         result.messages.emplace_back(std::move(request_str)); //the original request
