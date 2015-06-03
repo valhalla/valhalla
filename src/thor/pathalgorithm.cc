@@ -432,11 +432,14 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       continue;
     }
 
+    // Set a default transfer at a stop (if not same trip Id and block Id)
+    // TODO - support in transit costing method
+    Cost transfer_cost = { 300.0f, 60.0f };
+
     // Get any transfer times and penalties if this is a transit stop (and
     // transit has been taken at some point on the path) and mode is pedestrian
     bool has_transit = pred.has_transit();
     uint32_t prior_stop = pred.prior_stopid();
-    Cost transfer_cost = { 0.0f, 0.0f };
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
