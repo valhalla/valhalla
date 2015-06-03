@@ -118,16 +118,10 @@ void PathAlgorithm::Clear() {
   destinations_.clear();
 
   // Clear elements from the adjacency list
-  if(adjacencylist_ != nullptr) {
-    adjacencylist_->Clear();
-    adjacencylist_ = nullptr;
-  }
+  adjacencylist_.reset();
 
   // Clear the edge status flags
-  if (edgestatus_ != nullptr) {
-    delete edgestatus_;
-    edgestatus_ = nullptr;
-  }
+  edgestatus_.reset();
 }
 
 // Initialize prior to finding best path
@@ -152,8 +146,8 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = costing->UnitSize();
   float range = kBucketCount * bucketsize;
-  adjacencylist_ = new AdjacencyList(mincost, range, bucketsize);
-  edgestatus_ = new EdgeStatus();
+  adjacencylist_.reset(new AdjacencyList(mincost, range, bucketsize));
+  edgestatus_.reset(new EdgeStatus());
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
