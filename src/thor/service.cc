@@ -69,11 +69,10 @@ namespace {
           std::vector<thor::PathInfo> path_edges;
           if (multimodal) {
             path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
-            if (path_edges.size() == 0) {
+            if (path_edges.size() == 0)
               throw std::runtime_error("No path could be found for input");
-            }
-          } else {
-            //find a path
+          } // Find a path in a single mode
+          else {
             path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
             if (path_edges.size() == 0) {
               if (cost->AllowMultiPass()) {
@@ -97,6 +96,9 @@ namespace {
           auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
           // The protobuf path
           result.messages.emplace_back(trip_path.SerializeAsString());
+          //if we have another one coming we need to clear
+          if(--correlated.cend() != path_location)
+            path_algorithm.Clear();
         }
 
         return result;
