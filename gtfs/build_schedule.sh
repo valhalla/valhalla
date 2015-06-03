@@ -61,11 +61,13 @@ done < ./schedule.tmp
 
 if [[ "$2" ==  "pg" ]]; then
   psql -U $dbuser $db -c "copy schedule_tmp(origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign) from '$PWD/schedule.txt' with delimiter ',' csv header;"
-  psql -U $dbuser $db -c "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  psql -U $dbuser $db -c "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
+  psql -U $dbuser $db -c "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   psql -U $dbuser $db -c "VACUUM ANALYZE;"
 elif [[ "$2" ==  "sqlite" ]]; then
 
   termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign' -1 -d ',' -t schedule_tmp -o $db
-  spatialite $db "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  spatialite $db "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
+  spatialite $db "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   spatialite $db "VACUUM ANALYZE;"
 fi
