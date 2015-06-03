@@ -39,8 +39,7 @@ namespace {
     {"/route", ROUTE},
     {"/viaroute", VIAROUTE},
     {"/locate", LOCATE},
-    {"/nearest", NEAREST},
-    {"/version", VERSION}
+    {"/nearest", NEAREST}
   };
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
@@ -153,7 +152,9 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class loki_worker_t {
    public:
-    loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")) {
+    loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
+      max_route_locations(config.get<size_t>("service_limits.max_route_locations")) {
+
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -173,23 +174,20 @@ namespace {
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/viaroute' '/locate' '/nearest'");
+          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate'");
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
         }
 
-        //parse the querys json
+        //parse the query's json
         auto request_pt = from_request(action->second, request);
+        init_request(action->second, request_pt);
         switch (action->second) {
-          case VERSION:
-            return version(info);
           case ROUTE:
           case VIAROUTE:
-            init_request(action->second, request_pt);
             return route(action->second, request_pt, info);
           case LOCATE:
-            init_request(action->second, request_pt);
             return locate(request_pt, info);
         }
 
@@ -210,8 +208,11 @@ namespace {
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       try {
-        for(const auto& location : request.get_child("locations"))
+        for(const auto& location : request.get_child("locations")) {
           locations.push_back(baldr::Location::FromPtree(location.second));
+          if(action != LOCATE && locations.size() > max_route_locations)
+            throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
+        }
         if(locations.size() < 1)
           throw;
         //TODO: bail if this is too many
@@ -250,38 +251,12 @@ namespace {
       }
       cost = factory.Create(costing, config_costing);
     }
-    worker_t::result_t version(http_request_t::info_t& request_info) {
-      worker_t::result_t result{false};
-      //TODO: put real version in here
-      http_response_t response(200, "OK", "0");
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
-      return result;
-    }
     worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      //currently we dont support multipoint, but we will
-      if(locations.size() != 2) {
-        worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented", "Only two locations supported at the moment");
-        response.from_info(request_info);
-        result.messages.emplace_back(response.to_string());
-        return result;
-      }
-
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      std::string costing = request.get<std::string>("costing");
-      auto max_distance = config.get<float>("costing_options." + costing + ".max_distance");
+      auto max_distance = config.get<float>("service_limits.max_distance." + request.get<std::string>("costing"));
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
-        //check if distance between latlngs exceed max distance limit for each mode of travel
-        auto path_distance = midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_);
-        if (path_distance > (max_distance*max_distance)) {
-          worker_t::result_t result { false };
-          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
@@ -294,14 +269,24 @@ namespace {
           return result;
         }
 
+        //check if distance between latlngs exceed max distance limit for each mode of travel
+        auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
+        if (path_distance > max_distance) {
+          worker_t::result_t result { false };
+          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
+          response.from_info(request_info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
         LOG_INFO("location_distance::" + std::to_string(path_distance));
       }
 
       //correlate the various locations to the underlying graph
-      auto correlated = loki::Search(locations[0], reader, cost->GetFilter());
-      request.put_child("origin", correlated.ToPtree(0));
-      correlated = loki::Search(locations[1], reader, cost->GetFilter());
-      request.put_child("destination", correlated.ToPtree(1));
+      for(size_t i = 0; i < locations.size(); ++i) {
+        auto correlated = loki::Search(locations[i], reader, cost->GetFilter());
+        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
+      }
 
       //let tyr know if its valhalla or osrm format
       if(action == ::VIAROUTE)
@@ -356,6 +341,7 @@ namespace {
     sif::CostFactory<sif::DynamicCost> factory;
     valhalla::sif::cost_ptr_t cost;
     valhalla::baldr::GraphReader reader;
+    size_t max_route_locations;
   };
 }
 
