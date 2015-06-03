@@ -47,20 +47,26 @@ namespace {
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        //crack open the path
-        odin::TripPath trip_path;
-        trip_path.ParseFromArray(job.back().data(), static_cast<int>(job.back().size()));
-
-        //get some annotated directions
-        odin::DirectionsBuilder directions;
-        odin::TripDirections trip_directions = directions.Build(directions_options, trip_path);
-
-        LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
-
-        //pass it on
+        //forward the original request
         worker_t::result_t result{true};
-        result.messages.emplace_back(std::move(request_str)); //the original request
-        result.messages.emplace_back(trip_directions.SerializeAsString()); //the protobuf directions
+        result.messages.emplace_back(std::move(request_str));
+
+        //for each leg
+        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
+          //crack open the path
+          odin::TripPath trip_path;
+          trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+
+          //get some annotated directions
+          odin::DirectionsBuilder directions;
+          odin::TripDirections trip_directions = directions.Build(directions_options, trip_path);
+
+          LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
+
+          //the protobuf directions
+          result.messages.emplace_back(trip_directions.SerializeAsString());
+        }
+
         return result;
       }
       catch(const std::exception& e) {
