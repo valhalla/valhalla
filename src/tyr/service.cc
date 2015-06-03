@@ -191,34 +191,39 @@ namespace {
     }
 
     void serialize(const valhalla::odin::DirectionsOptions& directions_options,
-      const valhalla::odin::TripDirections& trip_directions,
-      std::ostringstream& stream) {
+      const std::list<valhalla::odin::TripDirections>& legs, std::ostringstream& stream) {
+      stream << '[';
+      bool first = true;
+      for(const auto& leg : legs) {
+        //separator
+        if(!first)
+          stream << ',';
+        first = false;
 
-      //TODO: worry about multipoint routes
+        //leg
+        auto json = json::map
+        ({
+          {"hint_data", json::map
+            ({
+              {"locations", json::array({ string(""), string("") })}, //TODO: are these internal ids?
+              {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
+            })
+          },
+          {"route_name", route_name(leg)}, //TODO: list of all of the streets or just the via points?
+          {"via_indices", via_indices(leg)}, //maneuver index
+          {"found_alternative", static_cast<bool>(false)}, //no alt route support
+          {"route_summary", route_summary(leg)}, //start/end name, total time/distance
+          {"via_points", via_points(leg)}, //array of lat,lng pairs
+          {"route_instructions", route_instructions(leg)}, //array of maneuvers
+          {"route_geometry", leg.shape()}, //polyline encoded shape
+          {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
+          {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
+        });
 
-
-      //build up the json object
-      auto json = json::map
-      ({
-        {"hint_data", json::map
-          ({
-            {"locations", json::array({ string(""), string("") })}, //TODO: are these internal ids?
-            {"checksum", static_cast<uint64_t>(0)} //TODO: what is this exactly?
-          })
-        },
-        {"route_name", route_name(trip_directions)}, //TODO: list of all of the streets or just the via points?
-        {"via_indices", via_indices(trip_directions)}, //maneuver index
-        {"found_alternative", static_cast<bool>(false)}, //no alt route support
-        {"route_summary", route_summary(trip_directions)}, //start/end name, total time/distance
-        {"via_points", via_points(trip_directions)}, //array of lat,lng pairs
-        {"route_instructions", route_instructions(trip_directions)}, //array of maneuvers
-        {"route_geometry", trip_directions.shape()}, //polyline encoded shape
-        {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-        {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
-      });
-
-      //serialize it
-      stream << *json;
+        //serialize it
+        stream << *json;
+      }
+      stream << ']';
     }
   }
 
@@ -296,124 +301,132 @@ namespace {
     */
     using namespace std;
 
-    json::MapPtr summary(const valhalla::odin::TripDirections& trip_directions){
+    json::MapPtr summary(const std::list<valhalla::odin::TripDirections>& legs){
 
-      // TODO: multiple legs.
+      uint64_t time = 0;
+      long double length = 0;
+      for(const auto& leg : legs) {
+        time += static_cast<uint64_t>(leg.summary().time());
+        length += leg.summary().length();
+      }
 
       auto route_summary = json::map({});
-      route_summary->emplace("time", static_cast<uint64_t>(trip_directions.summary().time()));
-      route_summary->emplace("length", json::fp_t{trip_directions.summary().length(), 3});
+      route_summary->emplace("time", time);
+      route_summary->emplace("length", json::fp_t{length, 3});
       return route_summary;
     }
 
-    json::ArrayPtr locations(const valhalla::odin::TripDirections& trip_directions){
+    json::ArrayPtr locations(const std::list<valhalla::odin::TripDirections>& legs){
       auto locations = json::array({});
-      for(const auto& location : trip_directions.location()) {
 
-        auto loc = json::map({});
+      for(auto leg = legs.begin(); leg != legs.end(); ++leg) {
+        for(auto location = (leg == legs.begin() ? leg->location().begin() : leg->location().begin()++);
+            location != leg->location().end(); ++location) {
 
-        if (location.type() == valhalla::odin::TripDirections_Location_Type_kThrough) {
-          loc->emplace("type", std::string("through"));
-        } else {
-          loc->emplace("type", std::string("break"));
+          auto loc = json::map({});
+          if (location->type() == valhalla::odin::TripDirections_Location_Type_kThrough) {
+            loc->emplace("type", std::string("through"));
+          } else {
+            loc->emplace("type", std::string("break"));
+          }
+          loc->emplace("lat", json::fp_t{location->ll().lat(), 6});
+          loc->emplace("lon",json::fp_t{location->ll().lng(), 6});
+          if (!location->name().empty())
+            loc->emplace("name",location->name());
+          if (!location->street().empty())
+            loc->emplace("street",location->street());
+          if (!location->city().empty())
+            loc->emplace("city",location->city());
+          if (!location->state().empty())
+            loc->emplace("state",location->state());
+          if (!location->postal_code().empty())
+            loc->emplace("postal_code",location->postal_code());
+          if (!location->country().empty())
+            loc->emplace("country",location->country());
+          if (location->has_heading())
+            loc->emplace("heading",static_cast<uint64_t>(location->heading()));
+          if (!location->date_time().empty())
+            loc->emplace("date_time",location->date_time());
+
+          //loc->emplace("sideOfStreet",location->side_of_street());
+
+          locations->emplace_back(loc);
         }
-        loc->emplace("lat", json::fp_t{location.ll().lat(), 6});
-        loc->emplace("lon",json::fp_t{location.ll().lng(), 6});
-        if (!location.name().empty())
-          loc->emplace("name",location.name());
-        if (!location.street().empty())
-          loc->emplace("street",location.street());
-        if (!location.city().empty())
-          loc->emplace("city",location.city());
-        if (!location.state().empty())
-          loc->emplace("state",location.state());
-        if (!location.postal_code().empty())
-          loc->emplace("postal_code",location.postal_code());
-        if (!location.country().empty())
-          loc->emplace("country",location.country());
-        if (location.has_heading())
-          loc->emplace("heading",static_cast<uint64_t>(location.heading()));
-        if (!location.date_time().empty())
-          loc->emplace("date_time",location.date_time());
-
-        //loc->emplace("sideOfStreet",location.side_of_street());
-
-        locations->emplace_back(loc);
       }
 
       return locations;
     }
 
 
-    json::ArrayPtr legs(const valhalla::odin::TripDirections& trip_directions){
+    json::ArrayPtr legs(const std::list<valhalla::odin::TripDirections>& directions_legs){
 
       // TODO: multiple legs.
       auto legs = json::array({});
-      auto leg = json::map({});
-      auto summary = json::map({});
-      auto maneuvers = json::array({});
+      for(const auto& directions_leg : directions_legs) {
+        auto leg = json::map({});
+        auto summary = json::map({});
+        auto maneuvers = json::array({});
 
-      for(const auto& maneuver : trip_directions.maneuver()) {
+        for(const auto& maneuver : directions_leg.maneuver()) {
 
-        auto man = json::map({});
+          auto man = json::map({});
 
-        man->emplace("type", static_cast<uint64_t>(maneuver.type()));
-        man->emplace("instruction", maneuver.text_instruction());
-        //“verbalTransitionAlertInstruction” : “<verbalTransitionAlertInstruction>”,
-        //“verbalPreTransitionInstruction” : “<verbalPreTransitionInstruction>”,
-        //“verbalPostTransitionInstruction” : “<verbalPostTransitionInstruction>”,
-        auto street_names = json::array({});
+          man->emplace("type", static_cast<uint64_t>(maneuver.type()));
+          man->emplace("instruction", maneuver.text_instruction());
+          //“verbalTransitionAlertInstruction” : “<verbalTransitionAlertInstruction>”,
+          //“verbalPreTransitionInstruction” : “<verbalPreTransitionInstruction>”,
+          //“verbalPostTransitionInstruction” : “<verbalPostTransitionInstruction>”,
+          auto street_names = json::array({});
 
-        for (int i = 0; i < maneuver.street_name_size(); i++)
-          street_names->emplace_back(maneuver.street_name(i));
+          for (int i = 0; i < maneuver.street_name_size(); i++)
+            street_names->emplace_back(maneuver.street_name(i));
 
-        if (street_names->size())
-          man->emplace("street_names", street_names);
-        man->emplace("time", static_cast<uint64_t>(maneuver.time()));
-        man->emplace("length", json::fp_t{maneuver.length(), 3});
-        man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
-        man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
+          if (street_names->size())
+            man->emplace("street_names", street_names);
+          man->emplace("time", static_cast<uint64_t>(maneuver.time()));
+          man->emplace("length", json::fp_t{maneuver.length(), 3});
+          man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
+          man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
-        if (maneuver.portions_toll())
-          man->emplace("toll", maneuver.portions_toll());
-        if (maneuver.portions_unpaved())
-          man->emplace("rough", maneuver.portions_unpaved());
+          if (maneuver.portions_toll())
+            man->emplace("toll", maneuver.portions_toll());
+          if (maneuver.portions_unpaved())
+            man->emplace("rough", maneuver.portions_unpaved());
 
-        //  man->emplace("hasGate", maneuver.);
-        //  man->emplace("hasFerry", maneuver.);
-        //“portionsTollNote” : “<portionsTollNote>”,
-        //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
-        //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
-        //“checkFerryInfoNote” : “<checkFerryInfoNote>”
-        maneuvers->emplace_back(man);
+          //  man->emplace("hasGate", maneuver.);
+          //  man->emplace("hasFerry", maneuver.);
+          //“portionsTollNote” : “<portionsTollNote>”,
+          //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
+          //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
+          //“checkFerryInfoNote” : “<checkFerryInfoNote>”
+          maneuvers->emplace_back(man);
 
+        }
+        leg->emplace("maneuvers", maneuvers);
+        summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
+        summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
+        leg->emplace("summary",summary);
+        leg->emplace("shape", directions_leg.shape());
+
+        legs->emplace_back(leg);
       }
-      leg->emplace("maneuvers", maneuvers);
-      summary->emplace("time", static_cast<uint64_t>(trip_directions.summary().time()));
-      summary->emplace("length", json::fp_t{trip_directions.summary().length(), 3});
-      leg->emplace("summary",summary);
-      leg->emplace("shape", trip_directions.shape());
-
-      legs->emplace_back(leg);
       return legs;
     }
 
     void serialize(const valhalla::odin::DirectionsOptions& directions_options,
-                   const valhalla::odin::TripDirections& trip_directions,
+                   const std::list<valhalla::odin::TripDirections>& directions_legs,
                    std::ostringstream& stream) {
-
-      //TODO: worry about multipoint routes
 
       //build up the json object
       auto json = json::map
+      ({
+        {"trip", json::map
           ({
-          {"trip", json::map
-          ({
-              {"locations", locations(trip_directions)},
-              {"summary", summary(trip_directions)},
-              {"legs", legs(trip_directions)},
+              {"locations", locations(directions_legs)},
+              {"summary", summary(directions_legs)},
+              {"legs", legs(directions_legs)},
               {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
-              {"status", static_cast<uint64_t>(0)}, //0 success or 207 no route
+              {"status", static_cast<uint64_t>(0)}, //0 success
               {"units", std::string((directions_options.units() == valhalla::odin::DirectionsOptions::kKilometers) ? "kilometers" : "miles")}
           })
         }
@@ -445,19 +458,23 @@ namespace {
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        //crack open the directions
-        odin::TripDirections trip_directions;
-        trip_directions.ParseFromArray(job.back().data(), static_cast<int>(job.back().size()));
+        //get the legs
+        std::list<odin::TripDirections> legs;
+        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
+          legs.emplace_back();
+          legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+        }
 
         //jsonp callback if need be
         std::ostringstream json_stream;
         auto jsonp = request.get_optional<std::string>("jsonp");
         if(jsonp)
           json_stream << *jsonp << '(';
+        //serialize them
         if(request.get_optional<std::string>("osrm"))
-          osrm_serializers::serialize(directions_options, trip_directions, json_stream);
+          osrm_serializers::serialize(directions_options, legs, json_stream);
         else
-          valhalla_serializers::serialize(directions_options, trip_directions, json_stream);
+          valhalla_serializers::serialize(directions_options, legs, json_stream);
         if(jsonp)
           json_stream << ')';
 
