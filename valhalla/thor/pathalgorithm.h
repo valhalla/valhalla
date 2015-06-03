@@ -5,6 +5,7 @@
 #include <map>
 #include <unordered_map>
 #include <utility>
+#include <memory>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -89,10 +90,10 @@ class PathAlgorithm {
   std::vector<sif::EdgeLabel> edgelabels_;
 
   // Adjacency list
-  AdjacencyList* adjacencylist_;
+  std::shared_ptr<AdjacencyList> adjacencylist_;
 
   // Edge status
-  EdgeStatus* edgestatus_;
+  std::shared_ptr<EdgeStatus> edgestatus_;
 
   // Destinations, id and cost
   std::unordered_map<baldr::GraphId, sif::Cost> destinations_;
