@@ -3,8 +3,11 @@
 #include "odin/maneuver.h"
 
 #include <valhalla/midgard/util.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
+#include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -57,6 +60,7 @@ Maneuver::Maneuver()
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive),
       transit_connection_(false),
+      transit_connection_stop_("", "", ""),
       rail_(false),
       bus_(false) {
   street_names_ = make_unique<StreetNames>();
@@ -372,6 +376,18 @@ bool Maneuver::transit_connection() const {
 
 void Maneuver::set_transit_connection(bool transit_connection) {
   transit_connection_ = transit_connection;
+}
+
+const TransitStop& Maneuver::transit_connection_stop() const {
+  return transit_connection_stop_;
+}
+
+void Maneuver::set_transit_connection_stop(
+    const TransitStop& transit_connection_stop) {
+  transit_connection_stop_ = transit_connection_stop;
+  LOG_TRACE("transit_connection_stop_.name=" + transit_connection_stop_.name);
+  LOG_TRACE("transit_connection_stop_.arrival_date_time=" + transit_connection_stop_.arrival_date_time);
+  LOG_TRACE("transit_connection_stop_.departure_date_time=" + transit_connection_stop_.departure_date_time);
 }
 
 bool Maneuver::rail() const {
