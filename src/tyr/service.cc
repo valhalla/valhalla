@@ -445,19 +445,29 @@ namespace {
         if(options)
           directions_options = valhalla::odin::GetDirectionsOptions(*options);
 
-        //crack open the directions
-        odin::TripDirections trip_directions;
-        trip_directions.ParseFromArray(job.back().data(), static_cast<int>(job.back().size()));
-
         //jsonp callback if need be
         std::ostringstream json_stream;
         auto jsonp = request.get_optional<std::string>("jsonp");
         if(jsonp)
           json_stream << *jsonp << '(';
-        if(request.get_optional<std::string>("osrm"))
-          osrm_serializers::serialize(directions_options, trip_directions, json_stream);
-        else
-          valhalla_serializers::serialize(directions_options, trip_directions, json_stream);
+        //for each leg
+        json_stream << '[';
+        for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg){
+          //if its not the first one we need a comma
+          if(leg != ++job.cbegin())
+            json_stream << ',';
+
+          //crack open the directions
+          odin::TripDirections trip_directions;
+          trip_directions.ParseFromArray(job.back().data(), static_cast<int>(job.back().size()));
+
+          //serialize them
+          if(request.get_optional<std::string>("osrm"))
+            osrm_serializers::serialize(directions_options, trip_directions, json_stream);
+          else
+            valhalla_serializers::serialize(directions_options, trip_directions, json_stream);
+        }
+        json_stream << ']';
         if(jsonp)
           json_stream << ')';
 
