@@ -1,4 +1,5 @@
 #include <iostream>
+#include <list>
 
 #include "odin/maneuver.h"
 
@@ -467,8 +468,14 @@ std::string Maneuver::GetTransitDepartureTime() const {
   return transit_info_.transit_stops.front().departure_date_time;
 }
 
+const std::list<TransitStop>& Maneuver::GetTransitStops() const {
+  return transit_info_.transit_stops;
+}
+
 size_t Maneuver::GetTransitStopCount() const {
-  return transit_info_.transit_stops.size();
+  return
+      (transit_info_.transit_stops.size() > 0) ?
+          (transit_info_.transit_stops.size() - 1) : 0;
 }
 
 void Maneuver::InsertTransitStop(std::string name,

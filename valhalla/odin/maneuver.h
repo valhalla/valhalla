@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_MANEUVER_H_
 
 #include <string>
+#include <list>
 #include <unordered_map>
 #include <memory>
 
@@ -168,6 +169,8 @@ class Maneuver {
   std::string GetTransitArrivalTime() const;
 
   std::string GetTransitDepartureTime() const;
+
+  const std::list<TransitStop>& GetTransitStops() const;
 
   size_t GetTransitStopCount() const;
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <valhalla/midgard/logging.h>
 
 #include "odin/narrativebuilder.h"
 #include "odin/maneuver.h"
@@ -928,7 +929,15 @@ void NarrativeBuilder::FormTransitInstruction(
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE: ";
+  text_instruction += ". (";
+  text_instruction += std::to_string(maneuver.GetTransitStopCount());
+  if (maneuver.GetTransitStopCount() > 1) {
+    text_instruction += " stops";
+  } else {
+    text_instruction += " stop";
+  }
+  text_instruction += ").";
+  text_instruction += " ARRIVE: ";
   text_instruction += maneuver.GetTransitArrivalTime();
   text_instruction += ".";
 
@@ -947,7 +956,15 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE: ";
+  text_instruction += ". (";
+  text_instruction += std::to_string(maneuver.GetTransitStopCount());
+  if (maneuver.GetTransitStopCount() > 1) {
+    text_instruction += " stops";
+  } else {
+    text_instruction += " stop";
+  }
+  text_instruction += ").";
+  text_instruction += " ARRIVE: ";
   text_instruction += maneuver.GetTransitArrivalTime();
   text_instruction += ".";
 
@@ -966,7 +983,15 @@ void NarrativeBuilder::FormTransitTransferInstruction(
     text_instruction += " toward ";
     text_instruction += maneuver.transit_headsign();
   }
-  text_instruction += ". ARRIVE: ";
+  text_instruction += ". (";
+  text_instruction += std::to_string(maneuver.GetTransitStopCount());
+  if (maneuver.GetTransitStopCount() > 1) {
+    text_instruction += " stops";
+  } else {
+    text_instruction += " stop";
+  }
+  text_instruction += ").";
+  text_instruction += " ARRIVE: ";
   text_instruction += maneuver.GetTransitArrivalTime();
   text_instruction += ".";
 
