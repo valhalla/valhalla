@@ -20,7 +20,7 @@ constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
 constexpr float kDefaultTransferCost = 60.0f;
-constexpr float kDefaultTransferPenalty = 120.0f;  // 2 minute default
+constexpr float kDefaultTransferPenalty = 600.0f;  // 5 minute default
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
