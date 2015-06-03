@@ -615,7 +615,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     if (curr_edge
         && (curr_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
       maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
-      LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
+      auto* node = trip_path_->GetEnhancedNode(node_index);
+      maneuver.set_transit_connection_stop(
+          TransitStop(node->transit_stop_info().name(),
+                      node->transit_stop_info().arrival_date_time(),
+                      node->transit_stop_info().departure_date_time()));
     }
     // else mark it as transit connection destination
     else {
@@ -706,7 +710,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
-  // Transit stop
+  // Insert transit stop into the transit maneuver
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_stop_info().name(),
@@ -717,6 +721,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 }
 
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
+
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
 
@@ -771,6 +776,18 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       && (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionTransfer);
     LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_TRANSFER");
+  }
+
+
+  // Add transit connection stop to a transit connection destination
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kTransitConnectionDestination)
+      && prev_edge
+      && (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
+    auto* node = trip_path_->GetEnhancedNode(node_index);
+    maneuver.set_transit_connection_stop(
+        TransitStop(node->transit_stop_info().name(),
+                    node->transit_stop_info().arrival_date_time(),
+                    node->transit_stop_info().departure_date_time()));
   }
 
   // Insert first transit stop

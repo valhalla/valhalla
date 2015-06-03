@@ -881,7 +881,12 @@ void NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Enter station.";
+  text_instruction += "Enter";
+  if (!maneuver.transit_connection_stop().name.empty()) {
+    text_instruction += " the ";
+    text_instruction += maneuver.transit_connection_stop().name;
+  }
+  text_instruction += " station.";
   maneuver.set_instruction(std::move(text_instruction));
 }
 
@@ -889,7 +894,12 @@ void NarrativeBuilder::FormTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Transfer at station.";
+  text_instruction += "Transfer at";
+  if (!maneuver.transit_connection_stop().name.empty()) {
+    text_instruction += " the ";
+    text_instruction += maneuver.transit_connection_stop().name;
+  }
+  text_instruction += " station.";
   maneuver.set_instruction(std::move(text_instruction));
 }
 
@@ -897,7 +907,12 @@ void NarrativeBuilder::FormTransitConnectionDestinationInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Exit station.";
+  text_instruction += "Exit";
+  if (!maneuver.transit_connection_stop().name.empty()) {
+    text_instruction += " the ";
+    text_instruction += maneuver.transit_connection_stop().name;
+  }
+  text_instruction += " station.";
   maneuver.set_instruction(std::move(text_instruction));
 }
 

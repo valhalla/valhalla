@@ -10,6 +10,7 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::baldr;
 
@@ -138,6 +139,9 @@ class Maneuver {
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
 
+  const TransitStop& transit_connection_stop() const;
+  void set_transit_connection_stop(const TransitStop& transit_connection_stop);
+
   bool rail() const;
   void set_rail(bool rail);
 
@@ -206,6 +210,8 @@ class Maneuver {
   uint32_t roundabout_exit_count_;
   TripPath_TravelMode travel_mode_;
   bool transit_connection_;
+  // TODO determine how we want to handle in the future
+  TransitStop transit_connection_stop_;
   bool rail_;
   bool bus_;
   TransitInfo transit_info_;
