@@ -592,7 +592,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
 
-  // Transit info and final transit stop
+  // Transit info
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
@@ -601,11 +601,6 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_transit_short_name(prev_edge->transit_info().short_name());
     maneuver.set_transit_long_name(prev_edge->transit_info().long_name());
     maneuver.set_transit_headsign(prev_edge->transit_info().headsign());
-
-    auto* node = trip_path_->GetEnhancedNode(node_index);
-    maneuver.InsertTransitStop(node->transit_stop_info().name(),
-                               node->transit_stop_info().arrival_date_time(),
-                               node->transit_stop_info().departure_date_time());
   }
 
   // Transit connection
