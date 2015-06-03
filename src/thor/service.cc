@@ -36,8 +36,7 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
-    thor_worker_t(const boost::property_tree::ptree& config): config(config),
-    origin(PointLL()), destination(PointLL()), reader(config.get_child("mjolnir.hierarchy")) {
+    thor_worker_t(const boost::property_tree::ptree& config): config(config), reader(config.get_child("mjolnir.hierarchy")) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -58,42 +57,48 @@ namespace {
 
         // Initialize request - check if multimodal
         bool multimodal = init_request(request);
+        worker_t::result_t result{true};
+        // Forward the original request
+        result.messages.emplace_back(std::move(request_str));
 
-        // Find the path. Multimodal is a separate case.
-        std::vector<thor::PathInfo> path_edges;
-        if (multimodal) {
-          path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
-          if (path_edges.size() == 0) {
-            throw std::runtime_error("No path could be found for input");
-          }
-        } else {
-          //find a path
-          path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-          if (path_edges.size() == 0) {
-            if (cost->AllowMultiPass()) {
-              LOG_INFO("Try again with relaxed hierarchy limits");
-              path_algorithm.Clear();
-              cost->RelaxHierarchyLimits(16.0f);
-              path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-            }
-          }
-          if (path_edges.size() == 0) {
-            path_algorithm.Clear();
-            cost->DisableHighwayTransitions();
-            path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+        // For each pair of origin/destination
+        for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
+          auto origin = *std::prev(path_location);
+          auto destination = *path_location;
+          // Find the path. Multimodal is a separate case.
+          std::vector<thor::PathInfo> path_edges;
+          if (multimodal) {
+            path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
             if (path_edges.size() == 0) {
               throw std::runtime_error("No path could be found for input");
             }
+          } else {
+            //find a path
+            path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+            if (path_edges.size() == 0) {
+              if (cost->AllowMultiPass()) {
+                LOG_INFO("Try again with relaxed hierarchy limits");
+                path_algorithm.Clear();
+                cost->RelaxHierarchyLimits(16.0f);
+                path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+              }
+            }
+            if (path_edges.size() == 0) {
+              path_algorithm.Clear();
+              cost->DisableHighwayTransitions();
+              path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+              if (path_edges.size() == 0) {
+                throw std::runtime_error("No path could be found for input");
+              }
+            }
           }
+
+          // Form output information based on path edges
+          auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
+          // The protobuf path
+          result.messages.emplace_back(trip_path.SerializeAsString());
         }
 
-        // Form output information based on path edges
-        auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
-
-        //pass it on
-        worker_t::result_t result{true};
-        result.messages.emplace_back(std::move(request_str)); //the original request
-        result.messages.emplace_back(trip_path.SerializeAsString()); //the protobuf path
         return result;
       }
       catch(const std::exception& e) {
@@ -139,10 +144,13 @@ namespace {
 
       //we require correlated locations
       try {
-        auto origin_pt = request.get_child("origin");
-        origin = PathLocation::FromPtree(locations, origin_pt);
-        auto destination_pt = request.get_child("destination");
-        destination = PathLocation::FromPtree(locations, destination_pt);
+        size_t i = 0;
+        do {
+          auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+          if(!path_location)
+            break;
+          correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
+        }while(++i);
       }
       catch(...) {
         throw std::runtime_error("path computation requires graph correlated locations");
@@ -178,7 +186,7 @@ namespace {
    protected:
     boost::property_tree::ptree config;
     std::vector<Location> locations;
-    PathLocation origin, destination;
+    std::vector<PathLocation> correlated;
     sif::CostFactory<sif::DynamicCost> factory;
     valhalla::sif::cost_ptr_t cost;
     valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
