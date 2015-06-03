@@ -65,7 +65,8 @@ if [[ "$2" == "pg" ]]; then
   psql -U $dbuser $db -c "copy schedule_tmp(origin_stop_key,dest_stop_key,trip_key,route_key,service_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign) from '$PWD/schedule.txt' with delimiter ',' csv header;"
   psql -U $dbuser $db -c "delete from calendar_dates_tmp where exception_type = 1;"
   psql -U $dbuser $db -c "update schedule_tmp set has_subtractions = 1 from calendar_dates_tmp where schedule_tmp.service_key = calendar_dates_tmp.service_key;"
-  psql -U $dbuser $db -c "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  psql -U $dbuser $db -c "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
+  psql -U $dbuser $db -c "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   psql -U $dbuser $db  -c "VACUUM ANALYZE;"
 elif [[ "$2" == "sqlite" ]]; then
 
@@ -73,6 +74,7 @@ elif [[ "$2" == "sqlite" ]]; then
 
   spatialite $db "delete from calendar_dates_tmp where exception_type = 1;"
   spatialite $db "update schedule_tmp set has_subtractions = 1 from calendar_dates_tmp where schedule_tmp.service_key = calendar_dates_tmp.service_key;"
-  spatialite $db "update trips set block_id = '0' where block_id = '' or block_id is null;"
+  spatialite $db "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
+  spatialite $db "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   spatialite $db "VACUUM ANALYZE;"
 fi
