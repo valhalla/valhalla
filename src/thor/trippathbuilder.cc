@@ -724,6 +724,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
   if (directededge->drive_on_right())
     trip_edge->set_drive_on_right(true);
+  else
+    trip_edge->set_drive_on_right(false);
 
   if (mode == sif::TravelMode::kBicycle)
     trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kBicycle);
