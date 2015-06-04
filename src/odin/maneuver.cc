@@ -459,12 +459,20 @@ std::string Maneuver::GetTransitName() const {
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  // TODO: format time
+  return transit_info_.transit_stops.back().arrival_date_time;
+}
+
+std::string Maneuver::GetFormattedTransitArrivalTime() const {
+  // TODO
   return transit_info_.transit_stops.back().arrival_date_time;
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  // TODO: format time
+  return transit_info_.transit_stops.front().departure_date_time;
+}
+
+std::string Maneuver::GetFormattedTransitDepartureTime() const {
+  // TODO
   return transit_info_.transit_stops.front().departure_date_time;
 }
 

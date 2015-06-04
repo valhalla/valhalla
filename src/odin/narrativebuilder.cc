@@ -919,11 +919,14 @@ void NarrativeBuilder::FormTransitConnectionDestinationInstruction(
 
 void NarrativeBuilder::FormTransitInstruction(
     Maneuver& maneuver) {
+  // TODO - refactor transit instructions
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "DEPART: ";
-  text_instruction += maneuver.GetTransitDepartureTime();
-  text_instruction += " - Take the ";
+  text_instruction += maneuver.GetFormattedTransitDepartureTime();
+  text_instruction += " from ";
+  text_instruction += maneuver.GetTransitStops().front().name;
+  text_instruction += ". Take the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
@@ -938,7 +941,9 @@ void NarrativeBuilder::FormTransitInstruction(
   }
   text_instruction += ").";
   text_instruction += " ARRIVE: ";
-  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += maneuver.GetFormattedTransitArrivalTime();
+  text_instruction += " at ";
+  text_instruction += maneuver.GetTransitStops().back().name;
   text_instruction += ".";
 
   maneuver.set_instruction(std::move(text_instruction));
@@ -946,11 +951,14 @@ void NarrativeBuilder::FormTransitInstruction(
 
 void NarrativeBuilder::FormTransitRemainOnInstruction(
     Maneuver& maneuver) {
+  // TODO - refactor transit instructions
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "DEPART: ";
-  text_instruction += maneuver.GetTransitDepartureTime();
-  text_instruction += " - Remain on the ";
+  text_instruction += maneuver.GetFormattedTransitDepartureTime();
+  text_instruction += " from ";
+  text_instruction += maneuver.GetTransitStops().front().name;
+  text_instruction += ". Remain on the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
@@ -965,7 +973,9 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
   }
   text_instruction += ").";
   text_instruction += " ARRIVE: ";
-  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += maneuver.GetFormattedTransitArrivalTime();
+  text_instruction += " at ";
+  text_instruction += maneuver.GetTransitStops().back().name;
   text_instruction += ".";
 
   maneuver.set_instruction(std::move(text_instruction));
@@ -973,11 +983,14 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
 
 void NarrativeBuilder::FormTransitTransferInstruction(
     Maneuver& maneuver) {
+  // TODO - refactor transit instructions
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "DEPART: ";
-  text_instruction += maneuver.GetTransitDepartureTime();
-  text_instruction += " - Transfer to take the ";
+  text_instruction += maneuver.GetFormattedTransitDepartureTime();
+  text_instruction += " from ";
+  text_instruction += maneuver.GetTransitStops().front().name;
+  text_instruction += ". Transfer to take the ";
   text_instruction += maneuver.GetTransitName();
   if (!maneuver.transit_headsign().empty()) {
     text_instruction += " toward ";
@@ -992,7 +1005,9 @@ void NarrativeBuilder::FormTransitTransferInstruction(
   }
   text_instruction += ").";
   text_instruction += " ARRIVE: ";
-  text_instruction += maneuver.GetTransitArrivalTime();
+  text_instruction += maneuver.GetFormattedTransitArrivalTime();
+  text_instruction += " at ";
+  text_instruction += maneuver.GetTransitStops().back().name;
   text_instruction += ".";
 
 
