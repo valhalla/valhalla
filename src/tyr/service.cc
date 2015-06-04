@@ -192,14 +192,7 @@ namespace {
 
     void serialize(const valhalla::odin::DirectionsOptions& directions_options,
       const std::list<valhalla::odin::TripDirections>& legs, std::ostringstream& stream) {
-      stream << '[';
-      bool first = true;
       for(const auto& leg : legs) {
-        //separator
-        if(!first)
-          stream << ',';
-        first = false;
-
         //leg
         auto json = json::map
         ({
@@ -219,11 +212,12 @@ namespace {
           {"status_message", string("Found route between points")}, //found route between points OR cannot find route between points
           {"status", static_cast<uint64_t>(0)} //0 success or 207 no route
         });
-
         //serialize it
         stream << *json;
+
+        //TODO: only supports one leg right now sorry
+        break;
       }
-      stream << ']';
     }
   }
 
