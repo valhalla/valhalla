@@ -48,7 +48,7 @@ std::string time(const std::string& date_time) {
     boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
     boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
 
-    input_facet->format("%Y%m%dT%H:%M");
+    input_facet->format("%Y-%m-%dT%H:%M");
     output_facet->format("%l:%M %p");
 
     ss.imbue(std::locale(std::locale::classic(), output_facet));
@@ -77,7 +77,7 @@ std::string date(const std::string& date_time) {
     boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
     boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
 
-    input_facet->format("%Y%m%dT%H:%M");
+    input_facet->format("%Y-%m-%dT%H:%M");
     output_facet->format("%Y%m%d");
 
     ss.imbue(std::locale(std::locale::classic(), output_facet));

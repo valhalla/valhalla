@@ -99,11 +99,11 @@ void TestTime() {
 
   TryGetTime("20140101","");
   TryGetTime("Blah","");
-  TryGetTime("20140101T07:01","7:01 AM");
-  TryGetTime("20140102T15:00","3:00 PM");
-  TryGetTime("20140102T23:59","11:59 PM");
-  TryGetTime("20140102T24:00","12:00 AM");
-  TryGetTime("20140102T12:00","12:00 PM");
+  TryGetTime("2014-01-01T07:01","7:01 AM");
+  TryGetTime("2014-01-02T15:00","3:00 PM");
+  TryGetTime("2014-01-02T23:59","11:59 PM");
+  TryGetTime("2014-01-02T24:00","12:00 AM");
+  TryGetTime("2014-01-02T12:00","12:00 PM");
 
 }
 
@@ -111,8 +111,8 @@ void TestDate() {
 
   TryGetDate("20140101","");
   TryGetDate("Blah","");
-  TryGetDate("20140101T07:01","20140101");
-  TryGetDate("20150705T15:00","20150705");
+  TryGetDate("2014-01-01T07:01","20140101");
+  TryGetDate("2015-07-05T15:00","20150705");
 
 }
 
