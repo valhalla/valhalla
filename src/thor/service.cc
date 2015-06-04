@@ -182,6 +182,7 @@ namespace {
     void cleanup() {
       path_algorithm.Clear();
       locations.clear();
+      correlated.clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
