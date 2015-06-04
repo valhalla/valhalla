@@ -17,6 +17,22 @@ namespace DateTime {
   uint32_t days_from_pivot_date(const std::string& date_time);
 
   /**
+   * Get the time from the inputed date.
+   * date_time is in the format of 2015-05-06T08:00
+   * @param   date_time in the format of 2015-05-06T08:00
+   * @return  Returns the formated time 8:00 AM.
+   */
+  std::string time(const std::string& date_time);
+
+  /**
+   * Get the date from the inputed date.
+   * date_time is in the format of 2015-05-06T08:00
+   * @param   date_time in the format of 2015-05-06T08:00
+   * @return  Returns the formated date 2015-05-06.
+   */
+  std::string date(const std::string& date_time);
+
+  /**
    * Get the dow mask.
    * @param   date_time in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the dow mask.
