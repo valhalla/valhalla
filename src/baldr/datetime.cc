@@ -1,10 +1,14 @@
 #include <iostream>
+#include <sstream>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/local_time/local_time_io.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -31,6 +35,63 @@ uint32_t days_from_pivot_date(const std::string& date_time) {
     return 0;
   boost::gregorian::date_period range(pivot_date_, e_date);
   return static_cast<uint32_t>(range.length().days());
+}
+
+//Get the time from the inputed date.
+//date_time is in the format of 2015-05-06T08:00
+std::string time(const std::string& date_time) {
+  std::stringstream ss("");
+  try {
+    if (date_time.find("T") == std::string::npos)
+      return ss.str();
+
+    boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
+    boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
+
+    input_facet->format("%Y%m%dT%H:%M");
+    output_facet->format("%l:%M %p");
+
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    ss.imbue(std::locale(ss.getloc(), input_facet));
+
+    boost::local_time::local_date_time ldt(boost::local_time::not_a_date_time);
+    ss.str(date_time);
+    ss >> ldt;
+    ss.str("");
+    ss << ldt;
+
+  } catch (std::exception& e){}
+  std::string result = ss.str();
+  boost::algorithm::trim(result);
+  return result;
+}
+
+//Get the date from the inputed date.
+//date_time is in the format of 2015-05-06T08:00
+std::string date(const std::string& date_time) {
+  std::stringstream ss("");
+  try {
+    if (date_time.find("T") == std::string::npos)
+      return ss.str();
+
+    boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
+    boost::local_time::local_time_facet* output_facet = new boost::local_time::local_time_facet();
+
+    input_facet->format("%Y%m%dT%H:%M");
+    output_facet->format("%Y%m%d");
+
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    ss.imbue(std::locale(ss.getloc(), input_facet));
+
+    boost::local_time::local_date_time ldt(boost::local_time::not_a_date_time);
+    ss.str(date_time);
+    ss >> ldt;
+    ss.str("");
+    ss << ldt;
+  } catch (std::exception& e){}
+  std::string result = ss.str();
+  boost::algorithm::trim(result);
+  return result;
 }
 
 //Get the dow mask
@@ -111,8 +172,8 @@ std::string get_duration(const std::string& date_time, uint32_t seconds) {
       date = boost::gregorian::from_undelimited_string(date_time);
     }
 
-   if (date < pivot_date_)
-     return formatted_date_time;
+    if (date < pivot_date_)
+      return formatted_date_time;
 
     boost::posix_time::ptime end = start + boost::posix_time::seconds(seconds);
     formatted_date_time = boost::posix_time::to_iso_extended_string(end);
