@@ -18,6 +18,10 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
+/**
+ * This class is a utility class that is used during the creation of the
+ * maneuver list that will be used to populate the trip directions.
+ */
 class Maneuver {
  public:
   enum class RelativeDirection {

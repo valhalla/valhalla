@@ -12,8 +12,20 @@
 namespace valhalla {
 namespace odin {
 
+/**
+ * Builds the maneuver list based on the specified directions options and
+ * enhanced trip path.
+ */
 class ManeuversBuilder {
  public:
+
+  /**
+   * Constructor that assigns the specified directions options and trip path.
+   *
+   * @param directions_options The directions options such as: units and
+   *                           language.
+   * @param trip_path The trip path - list of nodes, edges, attributes and shape.
+   */
   ManeuversBuilder(const DirectionsOptions& directions_options,
                    EnhancedTripPath* trip_path);
 

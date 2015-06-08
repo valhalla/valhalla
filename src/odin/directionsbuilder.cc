@@ -34,6 +34,11 @@ std::string GetStreetName(std::vector<std::string>& maneuver_names) {
 
 }
 
+// Returns the trip directions based on the specified directions options
+// and trip path. This method calls ManeuversBuilder::Build and
+// NarrativeBuilder::Build to form the maneuver list. This method
+// calls PopulateTripDirections to transform the maneuver list into the
+// trip directions.
 TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
                                         TripPath& trip_path) {
   // Validate trip path node list
@@ -58,6 +63,7 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
   return PopulateTripDirections(directions_options, etp, maneuvers);
 }
 
+// Update the heading of ~0 length edges.
 void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
   for (size_t x = 0; x < etp->node_size(); ++x) {
     auto* prev_edge = etp->GetPrevEdge(x);
@@ -84,6 +90,8 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
   }
 }
 
+// Returns the trip directions based on the specified directions options,
+// trip path, and maneuver list.
 TripDirections DirectionsBuilder::PopulateTripDirections(
     const DirectionsOptions& directions_options, EnhancedTripPath* etp,
     std::list<Maneuver>& maneuvers) {
