@@ -742,21 +742,30 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
     new sequence<OSMWayNode>(way_nodes_file, true));
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
+  //hold open all the files so that if something else (like diff application)
+  //needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open())
+      throw std::runtime_error("Unable to open: " + input_file);
+  }
+
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...")
-  for (const auto& input_file : input_files) {
+  for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
   }
   callback.reset(nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " + std::to_string(osmdata.osm_way_node_count) + " nodes");
 
   // Parse relations.
   LOG_INFO("Parsing relations...")
-  for (const auto& input_file : input_files) {
+  for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::RELATIONS, callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
 
@@ -778,12 +787,12 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
-  for (const auto& input_file : input_files) {
+  for (auto& file_handle : file_handles) {
     //each time we parse nodes we have to run through the way nodes file from the beginning because
     //because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ = callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
   }
   callback.reset(nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes contained in routable ways");
