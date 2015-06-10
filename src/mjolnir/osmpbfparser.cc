@@ -232,14 +232,13 @@ Member::Member(const Relation::MemberType type, const uint64_t id, const std::st
 Member::Member(Member&& other): member_type(other.member_type), member_id(other.member_id), role(std::move(other.role)) {
 }
 
-void Parser::parse(const std::string& filename, const Interest interest, Callback& callback) {
+void Parser::parse(std::ifstream& file, const Interest interest, Callback& callback) {
   char* buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
   char* unpack_buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
 
-  //check if the file is open
-  std::ifstream file(filename, std::ios::binary);
-  if (!file.is_open())
-    throw std::runtime_error("Unable to open: " + filename);
+  //start from the top
+  file.clear();
+  file.seekg(0, std::ios::beg);
 
   //while there is more to read
   while (!file.eof()) {

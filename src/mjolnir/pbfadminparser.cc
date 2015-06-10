@@ -142,27 +142,34 @@ OSMData PBFAdminParser::Parse(const boost::property_tree::ptree& pt, const std::
   OSMData osmdata{};
   admin_callback callback(pt, osmdata);
 
+  LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
+
+  //hold open all the files so that if something else (like diff application)
+  //needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open())
+      throw std::runtime_error("Unable to open: " + input_file);
+  }
+
   // Parse each input file for relations
   LOG_INFO("Parsing relations...")
-  for (const auto& input_file : input_files) {
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::RELATIONS, callback);
-  }
+  for (auto& file_handle : file_handles)
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::RELATIONS, callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) + " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
-
 
   // Parse the ways.
   LOG_INFO("Parsing ways...");
-  for (const auto& input_file : input_files) {
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::WAYS, callback);
-  }
+  for (auto& file_handle : file_handles)
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::WAYS, callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " + std::to_string(osmdata.node_count) + " nodes");
 
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes...");
-  for (const auto& input_file : input_files) {
-    OSMPBF::Parser::parse(input_file, OSMPBF::Interest::NODES, callback);
-  }
+  for (auto& file_handle : file_handles)
+    OSMPBF::Parser::parse(file_handle, OSMPBF::Interest::NODES, callback);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 
   //done with pbf

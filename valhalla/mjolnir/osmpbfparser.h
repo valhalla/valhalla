@@ -70,7 +70,7 @@ class Parser {
  public:
   Parser() = delete;
   //parse the pbf file for the things you are interested in
-  static void parse(const std::string& filename, const Interest interest, Callback& callback);
+  static void parse(std::ifstream& file, const Interest interest, Callback& callback);
   //clean up (mainly pbf memory)
   static void free();
 };
