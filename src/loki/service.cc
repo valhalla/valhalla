@@ -51,7 +51,7 @@ namespace {
       std::istringstream is(json->second.front());
       boost::property_tree::read_json(is, pt);
     }//no json parameter, check the body
-    if(!request.body.empty()) {
+    else if(!request.body.empty()) {
       std::istringstream is(request.body);
       boost::property_tree::read_json(is, pt);
     }
