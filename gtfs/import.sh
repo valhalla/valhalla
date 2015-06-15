@@ -3,7 +3,7 @@ PivoteDate=`grep kPivotDate ../../baldr/valhalla/baldr/graphconstants.h | awk -F
 
 if [[ "$1" == "pg" ]]; then
   db=gtfs
-  dbuser=<db user>
+  dbuser=dbuser
 elif [[ "$1" == "sqlite" ]]; then
   db=transit.sqlite
 fi
