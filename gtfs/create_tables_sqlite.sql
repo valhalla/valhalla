@@ -26,7 +26,8 @@ CREATE TABLE "stops"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer
+  parent_station_key integer,
+  wheelchair_boarding integer
 );
 
 DROP TABLE IF EXISTS "routes";
@@ -58,7 +59,9 @@ CREATE TABLE "trips"
   direction_id text,
   block_id text,
   shape_id text,
-  shape_key integer
+  shape_key integer,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "stop_times";
@@ -149,7 +152,9 @@ CREATE TABLE "schedule"
   dow_mask integer,
   has_subtractions integer,
   block_id text,
-  headsign text
+  headsign text,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "agency_tmp";
@@ -180,7 +185,8 @@ CREATE TABLE "stops_tmp"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer
+  parent_station_key integer,
+  wheelchair_boarding integer
 );
 
 DROP TABLE IF EXISTS "routes_tmp";
@@ -212,7 +218,9 @@ CREATE TABLE "trips_tmp"
   direction_id text,
   block_id text,
   shape_id text,
-  shape_key integer
+  shape_key integer,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "stop_times_tmp";
@@ -310,7 +318,9 @@ CREATE TABLE "schedule_tmp"
   dow_mask integer,
   has_subtractions integer,
   block_id text,
-  headsign text
+  headsign text,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 
