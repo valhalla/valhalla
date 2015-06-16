@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <utility>
 #include <queue>
 #include <list>
@@ -19,6 +19,7 @@
 #include <future>
 #include <mutex>
 #include <numeric>
+#include <tuple>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
@@ -67,8 +68,8 @@ public:
       level++;
     }
     level = 0;
-    for (auto& denseityvec : stats.get_densities()) {
-      for (auto& density : denseityvec) {
+    for (auto& densityvec : stats.get_densities()) {
+      for (auto& density : densityvec) {
         this->add_density(density, level);
       }
       level++;
@@ -77,45 +78,46 @@ public:
 };
 
 class validator_stats {
-  std::unordered_map<int32_t, std::unordered_map<RoadClass, float> > tile_maps;
-  std::unordered_map<std::string, std::unordered_map<RoadClass,float> > country_maps;
+  std::map<int32_t, std::map<RoadClass, float> > tile_maps;
+  std::map<std::string, std::map<RoadClass, float> > country_maps;
   std::set<uint32_t> tile_ids;
   std::set<std::string> iso_codes;
-  std::vector<RoadClass> rclasses = {RoadClass::kMotorway, RoadClass::kPrimary,
+  const std::vector<RoadClass> rclasses = {RoadClass::kMotorway, RoadClass::kPrimary,
                                      RoadClass::kResidential, RoadClass::kSecondary,
                                      RoadClass::kServiceOther, RoadClass::kTertiary,
                                      RoadClass::kTrunk, RoadClass::kUnclassified};
-
 public:
 
 	validator_stats () : tile_maps(), country_maps(), iso_codes(), tile_ids() { }
 
-	void add_tile_road (uint32_t& tile_id, RoadClass& rclass, float length) {
+	void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
 	  this->tile_ids.insert(tile_id);
 	  this->tile_maps[tile_id][rclass] += length;
 	}
-	void add_country_road (std::string& ctry_code, RoadClass& rclass, float length) {
+	void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length) {
 	  this->iso_codes.insert(ctry_code);
 	  this->country_maps[ctry_code][rclass] += length;
 	}
-	std::set<uint32_t>& get_ids () { return &tile_ids; }
+	const std::set<uint32_t>& get_ids () const { return tile_ids; }
 
-	std::set<std::string>& get_isos () { return &iso_codes; }
+	const std::set<std::string>& get_isos () const { return iso_codes; }
 
-	std::unordered_map<std::string, std::unordered_map<RoadClass,float> >& get_tile_maps () { return &tile_maps; }
+	const std::map<int32_t, std::map<RoadClass, float> >& get_tile_maps () const { return tile_maps; }
 
-	std::unordered_map<int32_t, std::unordered_map<RoadClass, float> >& get_country_maps () { return &country_maps; }
+	const std::map<std::string, std::map<RoadClass, float> >& get_country_maps () const { return country_maps; }
 
 	void add (const validator_stats& stats) {
 	  auto newTileMaps = stats.get_tile_maps();
 	  auto newCountryMaps = stats.get_country_maps();
 	  auto ids = stats.get_ids();
 	  auto isos = stats.get_isos();
-	  for (auto& rclass : this->rclasses) {
-	    for (auto& id : ids) {
-        this->add_tile_road(id, rclass, newTileMaps[id][rclass]);
-      }
-	    for (auto& iso : isos) {
+	  for (auto& id : ids) {
+	    for (auto& rclass : this->rclasses) {
+	      this->add_tile_road(id, rclass, newTileMaps[id][rclass]);
+	    }
+	  }
+	  for (auto& iso : isos) {
+	    for (auto& rclass : this->rclasses) {
 	      this->add_country_road(iso, rclass, newCountryMaps[iso][rclass]);
 	    }
 	  }
@@ -197,14 +199,13 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
 
 void validate(const boost::property_tree::ptree& hierarchy_properties,
               std::queue<GraphId>& tilequeue, std::mutex& lock,
-              std::promise<return_stats>& result) {
+              std::promise<std::tuple<return_stats, validator_stats> >& result) {
 
     // Our local class for gathering the stats
     return_stats threadStat;
-
+    validator_stats vStats;
     // Local Graphreader
     GraphReader graph_reader(hierarchy_properties);
-
     // Get some things we need throughout
     auto tile_hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles> levels;
@@ -228,6 +229,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       // Point tiles to the set we need for current level
       size_t level = tile_id.level();
       tiles = &levels[level];
+      auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
 
@@ -270,13 +272,16 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
               nodeinfo.edge_index() + j);
-          // Road Length
+          // Road Length and some variables for statistics
+          RoadClass rclass;
+          float tempLength;
+          bool validLength = false;
           if (!directededge.shortcut() && !directededge.trans_up() &&
               !directededge.trans_down()) {
-            roadlength += directededge.length();
+            tempLength = directededge.length();
+            roadlength += tempLength;
+            validLength = true;
           }
-          // TODO - get classification from directed edge to add to the stats
-
           // Set the opposing edge index and get the country ISO at the
           // end node)
           std::string end_node_iso;
@@ -287,15 +292,20 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
           directededges.emplace_back(std::move(directededge));
-        }
 
+          // Add road lengths to stat class for current country and current tile
+          if (validLength) {
+            rclass = directededge.classification();
+            vStats.add_country_road(begin_node_iso, rclass, tempLength);
+            vStats.add_tile_road(tileid, rclass, tempLength);
+          }
+        }
         // Add the node to the list
         nodes.emplace_back(std::move(nodeinfo));
       }
 
       // Add density to return class
-      // TODO - put road length into the stat for the current tile
-      float density = (roadlength * 0.0005f) / tiles->Area(tile_id.tileid());
+      float density = (roadlength * 0.0005f) / tiles->Area(tileid);
       threadStat.add_density(density, level);
 
       // Write the new file
@@ -313,9 +323,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       threadStat.add_dup(dupcount, level);
     }
 
-    // TODO needs to become out return tuple
     // Live up to our promise
-    result.set_value(threadStat);
+    std::tuple<return_stats, validator_stats> statistics (threadStat, vStats);
+    result.set_value(statistics);
   }
 }
 
@@ -338,7 +348,7 @@ namespace mjolnir {
 
     // and promises
     //TODO change this to a tuple type to get two obj back
-    std::list<std::promise<return_stats> > results;
+    std::list<std::promise<std::tuple<return_stats, validator_stats> > > results;
 
     // Create a randomized queue of tiles to work from
     const auto tile_hierarchy = reader.GetTileHierarchy();
@@ -370,18 +380,20 @@ namespace mjolnir {
                                    std::ref(tilequeue),
                                    std::ref(lock), std::ref(results.back())));
     }
-
     // Wait for threads to finish
     for (auto& thread : threads) {
       thread->join();
     }
-
     // Add up total dupcount_ and find densities
     //TODO modify so that it gets the basic stat class not the tuple
     return_stats stats;
+    validator_stats roadStats;
     for (auto& result : results) {
       auto data = result.get_future().get();
-      stats.add_stat(data);
+      auto returnData = std::get<0>(data);
+      stats.add_stat(returnData);
+      auto statsData = std::get<1>(data);
+      roadStats.add(statsData);
     }
 
     LOG_INFO("Validation of signs and connectivity is done");
