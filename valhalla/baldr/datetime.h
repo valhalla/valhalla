@@ -33,6 +33,25 @@ namespace DateTime {
   std::string date(const std::string& date_time);
 
   /**
+   * Get the iso date and time from a DOW mask and time.
+   * @param   dow_mask  Day of the week mask.
+   * @param   time      Time in the format of 08:00
+   * @param   tz        Timezone.  Currently only support 2 timezones.
+   *                    America/New_York and America/Los_Angeles and defaults
+   *                    to America/New_York.
+   */
+  std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
+                            const std::string& tz = "America/New_York");
+
+  /**
+   * Get the iso date and time from the current date and time.
+   * @param   tz        Timezone.  Currently only support 2 timezones.
+   *                    America/New_York and America/Los_Angeles and defaults
+   *                    to America/New_York.
+   */
+  std::string iso_date_time(const std::string& tz = "America/New_York");
+
+  /**
    * Get the dow mask.
    * @param   date_time in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the dow mask.
@@ -53,7 +72,7 @@ namespace DateTime {
    * @param   seconds to add to the date.
    * @return  Returns ISO formatted string
    */
-  std::string get_duration(const std::string& date_time, uint32_t seconds);
+  std::string get_duration(const std::string& date_time, const uint32_t seconds);
 
 }
 }
