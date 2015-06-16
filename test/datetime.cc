@@ -56,6 +56,19 @@ void TryGetDate(std::string date_time, std::string expected_date_time) {
   }
 }
 
+void TryIsoDateTime() {
+
+  std::string current_date_time = DateTime::iso_date_time();
+  std::string time;
+  std::size_t found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  if (found != std::string::npos)
+    time = current_date_time.substr(found+1);
+
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time) != current_date_time) {
+    throw std::runtime_error(
+        std::string("Iso date time failed ") + current_date_time);
+  }
+}
 }
 
 void TestGetDaysFromPivotDate() {
@@ -116,6 +129,10 @@ void TestDate() {
 
 }
 
+void TestIsoDateTime() {
+  TryIsoDateTime();
+}
+
 void TestGetSecondsFromMidnight() {
   TryGetSecondsFromMidnight("00:00:00", 0);
   TryGetSecondsFromMidnight("01:00:00", 3600);
@@ -141,6 +158,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDuration));
   suite.test(TEST_CASE(TestTime));
   suite.test(TEST_CASE(TestDate));
+  suite.test(TEST_CASE(TestIsoDateTime));
 
   return suite.tear_down();
 }
