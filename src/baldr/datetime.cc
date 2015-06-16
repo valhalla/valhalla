@@ -191,7 +191,6 @@ std::string iso_date_time(const std::string& tz) {
     pt = local_date_time.local_time();
     boost::gregorian::date date = pt.date();
 
-    boost::gregorian::date::ymd_type ymd = date.year_month_day();
     std::stringstream ss_time;
     ss_time << pt.time_of_day();
     std::string time = ss_time.str();
