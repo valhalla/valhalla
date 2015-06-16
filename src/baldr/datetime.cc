@@ -165,7 +165,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
       while (date.day_of_week().as_enum() != dow)
         date += boost::gregorian::days(1);
     }
-    boost::gregorian::date::ymd_type ymd = date.year_month_day();
     iso_date_time = to_iso_extended_string(date) + "T" + time;
   } catch (std::exception& e){}
   return iso_date_time;
