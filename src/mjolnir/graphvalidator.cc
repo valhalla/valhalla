@@ -19,7 +19,6 @@
 #include <future>
 #include <mutex>
 #include <numeric>
-#include <tuple>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
@@ -348,7 +347,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       vStats.add_dup(dupcount, level);
     }
 
-    // Create return tuple and put into promise
+    // Fill promise with statistics
     result.set_value(vStats);
   }
 }
