@@ -296,8 +296,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           // Add road lengths to statistics class for current country and current tile
           if (validLength) {
             auto rclass = directededge.classification();
-            vStats.add_country_road(begin_node_iso, rclass, tempLength);
-            vStats.add_tile_road(tileid, rclass, tempLength);
+            vStats.add_country_road(begin_node_iso, rclass, tempLength / 2);
+            vStats.add_tile_road(tileid, rclass, tempLength / 2);
           }
         }
         // Add the node to the list
@@ -383,7 +383,7 @@ namespace mjolnir {
     for (auto& thread : threads) {
       thread->join();
     }
-    // Add up total dupcount_ and find densities
+    // Get the returned objects out of the promise
     return_stats stats;
     validator_stats roadStats;
     for (auto& result : results) {
@@ -393,7 +393,7 @@ namespace mjolnir {
       auto statsData = std::get<1>(data);
       roadStats.add(statsData);
     }
-
+    // Add up total dupcount_ and find densities
     LOG_INFO("Validation of signs and connectivity is done");
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
