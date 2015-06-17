@@ -84,10 +84,12 @@ class validator_stats {
   std::set<std::string> iso_codes;
 
 public:
-  const std::vector<RoadClass> rclasses = {RoadClass::kMotorway, RoadClass::kPrimary,
-                                     RoadClass::kResidential, RoadClass::kSecondary,
-                                     RoadClass::kServiceOther, RoadClass::kTertiary,
-                                     RoadClass::kTrunk, RoadClass::kUnclassified};
+  const std::vector<RoadClass> rclasses =
+    {RoadClass::kMotorway, RoadClass::kPrimary,
+     RoadClass::kResidential, RoadClass::kSecondary,
+     RoadClass::kServiceOther, RoadClass::kTertiary,
+     RoadClass::kTrunk, RoadClass::kUnclassified
+    };
 	validator_stats () : tile_maps(), country_maps(), iso_codes(), tile_ids() { }
 
 	void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
@@ -273,7 +275,6 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
               nodeinfo.edge_index() + j);
           // Road Length and some variables for statistics
-          RoadClass rclass;
           float tempLength;
           bool validLength = false;
           if (!directededge.shortcut() && !directededge.trans_up() &&
@@ -292,10 +293,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
           directededges.emplace_back(std::move(directededge));
-
-          // Add road lengths to stat class for current country and current tile
+          // Add road lengths to statistics class for current country and current tile
           if (validLength) {
-            rclass = directededge.classification();
+            auto rclass = directededge.classification();
             vStats.add_country_road(begin_node_iso, rclass, tempLength);
             vStats.add_tile_road(tileid, rclass, tempLength);
           }
@@ -323,7 +323,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       threadStat.add_dup(dupcount, level);
     }
 
-    // Live up to our promise
+    // Create return tuple and put into promise
     std::tuple<return_stats, validator_stats> statistics (threadStat, vStats);
     result.set_value(statistics);
   }
@@ -346,8 +346,7 @@ namespace mjolnir {
         std::max(static_cast<unsigned int>(1),
                  pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
 
-    // and promises
-    //TODO change this to a tuple type to get two obj back
+    // Setup promises
     std::list<std::promise<std::tuple<return_stats, validator_stats> > > results;
 
     // Create a randomized queue of tiles to work from
@@ -385,7 +384,6 @@ namespace mjolnir {
       thread->join();
     }
     // Add up total dupcount_ and find densities
-    //TODO modify so that it gets the basic stat class not the tuple
     return_stats stats;
     validator_stats roadStats;
     for (auto& result : results) {
@@ -416,14 +414,17 @@ namespace mjolnir {
       LOG_INFO("Average density = " + std::to_string(average_density) +
                " max = " + std::to_string(max_density));
     }
-    bool log_stats = false;
+    // Whether or not to print ALL the stats
+    bool log_stats = true;
     if (log_stats) {
+      // Map to help print the roadway classifications
       std::map<RoadClass, std::string> roadClassToString =
         { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
           {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
           {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
           {RoadClass::kServiceOther, "ServiceOther"}
         };
+      // Print the Country statistics
       auto country_maps = roadStats.get_country_maps();
       for (auto country : roadStats.get_isos()) {
         LOG_INFO("Country: " + country);
@@ -432,6 +433,7 @@ namespace mjolnir {
           LOG_INFO((boost::format("   %1%: %2% Km") % roadStr % country_maps[country][rclass]).str());
         }
       }
+      // Print the tile statistics
       auto tile_maps = roadStats.get_tile_maps();
       for (auto tileid : roadStats.get_ids()) {
         LOG_INFO("Tile: " + std::to_string(tileid));
