@@ -82,12 +82,12 @@ class validator_stats {
   std::map<std::string, std::map<RoadClass, float> > country_maps;
   std::set<uint32_t> tile_ids;
   std::set<std::string> iso_codes;
+
+public:
   const std::vector<RoadClass> rclasses = {RoadClass::kMotorway, RoadClass::kPrimary,
                                      RoadClass::kResidential, RoadClass::kSecondary,
                                      RoadClass::kServiceOther, RoadClass::kTertiary,
                                      RoadClass::kTrunk, RoadClass::kUnclassified};
-public:
-
 	validator_stats () : tile_maps(), country_maps(), iso_codes(), tile_ids() { }
 
 	void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
@@ -416,8 +416,31 @@ namespace mjolnir {
       LOG_INFO("Average density = " + std::to_string(average_density) +
                " max = " + std::to_string(max_density));
     }
-
-    //TODO this is there the real statistics will happen.
+    bool log_stats = false;
+    if (log_stats) {
+      std::map<RoadClass, std::string> roadClassToString =
+        { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
+          {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
+          {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
+          {RoadClass::kServiceOther, "ServiceOther"}
+        };
+      auto country_maps = roadStats.get_country_maps();
+      for (auto country : roadStats.get_isos()) {
+        LOG_INFO("Country: " + country);
+        for (auto rclass : roadStats.rclasses) {
+          std::string roadStr = roadClassToString[rclass];
+          LOG_INFO((boost::format("   %1%: %2% Km") % roadStr % country_maps[country][rclass]).str());
+        }
+      }
+      auto tile_maps = roadStats.get_tile_maps();
+      for (auto tileid : roadStats.get_ids()) {
+        LOG_INFO("Tile: " + std::to_string(tileid));
+        for (auto rclass : roadStats.rclasses) {
+          std::string roadStr = roadClassToString[rclass];
+          LOG_INFO((boost::format("   %1%: %2% Km") % roadStr % tile_maps[tileid][rclass]).str());
+        }
+      }
+    }
   }
 }
 }
