@@ -33,6 +33,8 @@ using namespace valhalla::sif;
 
 
 namespace {
+  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
@@ -105,7 +107,7 @@ namespace {
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what());
+        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
