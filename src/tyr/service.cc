@@ -431,6 +431,9 @@ namespace {
     }
   }
 
+  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+
   //TODO: throw this in the header to make it testable?
   class tyr_worker_t {
    public:
@@ -473,14 +476,14 @@ namespace {
           json_stream << ')';
 
         worker_t::result_t result{false};
-        http_response_t response(200, "OK", json_stream.str(), headers_t{{"Content-type", "application/json;charset=utf-8"}});
+        http_response_t response(200, "OK", json_stream.str(), headers_t{CORS, JSON_MIME});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what());
+        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
