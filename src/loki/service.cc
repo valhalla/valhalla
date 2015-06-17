@@ -41,6 +41,8 @@ namespace {
     {"/locate", LOCATE},
     {"/nearest", NEAREST}
   };
+  const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
@@ -178,7 +180,7 @@ namespace {
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate'");
+          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate'", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -196,14 +198,14 @@ namespace {
         }
 
         worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented");
+        http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
-        http_response_t response(400, "Bad Request", e.what());
+        http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
@@ -267,7 +269,7 @@ namespace {
         if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
           worker_t::result_t result{false};
           http_response_t response(404, "Not Found",
-            "Locations are in unconnected regions. Go check/edit the map at osm.org");
+            "Locations are in unconnected regions. Go check/edit the map at osm.org", headers_t{CORS});
           response.from_info(request_info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -277,7 +279,7 @@ namespace {
         auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
         if (path_distance > max_distance) {
           worker_t::result_t result { false };
-          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.");
+          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.", headers_t{CORS});
           response.from_info(request_info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -329,7 +331,7 @@ namespace {
         stream << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{{"Content-type", "application/json;charset=utf-8"}});
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
       return result;
