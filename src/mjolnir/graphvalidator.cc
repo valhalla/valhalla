@@ -293,11 +293,14 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
           directededges.emplace_back(std::move(directededge));
+
           // Add road lengths to statistics class for current country and current tile
           if (validLength) {
             auto rclass = directededge.classification();
-            vStats.add_country_road(begin_node_iso, rclass, tempLength / 2);
-            vStats.add_tile_road(tileid, rclass, tempLength / 2);
+            auto endnodeid = directededge.endnode().tileid();
+            uint8_t modifier = (tileid == endnodeid) ? 2 : 4;
+            vStats.add_country_road(begin_node_iso, rclass, tempLength / modifier);
+            vStats.add_tile_road(tileid, rclass, tempLength / modifier);
           }
         }
         // Add the node to the list
