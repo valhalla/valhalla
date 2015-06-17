@@ -415,7 +415,7 @@ namespace mjolnir {
                " max = " + std::to_string(max_density));
     }
     // Whether or not to print ALL the stats
-    bool log_stats = true;
+    bool log_stats = false;
     if (log_stats) {
       // Map to help print the roadway classifications
       std::map<RoadClass, std::string> roadClassToString =
