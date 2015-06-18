@@ -35,22 +35,40 @@ using namespace valhalla::mjolnir;
 namespace {
 
 class validator_stats {
+  std::map<int32_t, std::map<RoadClass, float> > tile_maps;
+  std::map<std::string, std::map<RoadClass, float> > country_maps;
+  std::set<uint32_t> tile_ids;
+  std::set<std::string> iso_codes;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
-
+  std::map<RoadClass, std::string> roadClassToString =
+    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
+      {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
+      {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
+      {RoadClass::kServiceOther, "ServiceOther"}
+    };
+  std::vector<RoadClass> rclasses =
+    { RoadClass::kMotorway, RoadClass::kPrimary,
+      RoadClass::kResidential, RoadClass::kSecondary,
+      RoadClass::kServiceOther, RoadClass::kTertiary,
+      RoadClass::kTrunk, RoadClass::kUnclassified
+    };
 public:
 
-  validator_stats () : dupcounts(3), densities(3) { }
+	validator_stats ()
+    : tile_maps(), country_maps(), iso_codes(), tile_ids(), dupcounts(3), densities(3) { }
 
-  std::vector<uint32_t> get_dups(int level) { return dupcounts[level]; }
+	void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
+	  this->tile_ids.insert(tile_id);
+	  this->tile_maps[tile_id][rclass] += length;
+	}
 
-  std::vector<float> get_densities(int level) { return densities[level]; }
+	void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length) {
+	  this->iso_codes.insert(ctry_code);
+	  this->country_maps[ctry_code][rclass] += length;
+	}
 
-  std::vector<std::vector<uint32_t> > get_dups() { return dupcounts; }
-
-  std::vector<std::vector<float> > get_densities() { return densities; }
-
-  void add_density (float density, int level) {
+	void add_density (float density, int level) {
     this->densities[level].push_back(density);
   }
 
@@ -58,7 +76,37 @@ public:
     this->dupcounts[level].push_back(newdup);
   }
 
-  void add_stat (validator_stats& stats) {
+	const std::set<uint32_t>& get_ids () const { return tile_ids; }
+
+	const std::set<std::string>& get_isos () const { return iso_codes; }
+
+	const std::map<int32_t, std::map<RoadClass, float> >& get_tile_maps () const { return tile_maps; }
+
+	const std::map<std::string, std::map<RoadClass, float> >& get_country_maps () const { return country_maps; }
+
+	const std::vector<uint32_t> get_dups(int level) const { return dupcounts[level]; }
+
+  const std::vector<float> get_densities(int level) const { return densities[level]; }
+
+  const std::vector<std::vector<uint32_t> > get_dups() const { return dupcounts; }
+
+  const std::vector<std::vector<float> > get_densities() const { return densities; }
+
+  void add (const validator_stats& stats) {
+    auto newTileMaps = stats.get_tile_maps();
+    auto newCountryMaps = stats.get_country_maps();
+    auto ids = stats.get_ids();
+    auto isos = stats.get_isos();
+    for (auto& id : ids) {
+      for (auto& rclass : this->rclasses) {
+        this->add_tile_road(id, rclass, newTileMaps[id][rclass]);
+      }
+    }
+    for (auto& iso : isos) {
+      for (auto& rclass : this->rclasses) {
+        this->add_country_road(iso, rclass, newCountryMaps[iso][rclass]);
+      }
+    }
     uint32_t level = 0;
     for (auto& dupvec : stats.get_dups()) {
       for (auto& dup : dupvec) {
@@ -67,11 +115,35 @@ public:
       level++;
     }
     level = 0;
-    for (auto& denseityvec : stats.get_densities()) {
-      for (auto& density : denseityvec) {
+    for (auto& densityvec : stats.get_densities()) {
+      for (auto& density : densityvec) {
         this->add_density(density, level);
       }
       level++;
+    }
+  }
+
+  void log_country_stats() {
+    // Print the Country statistics
+    for (auto country : this->iso_codes) {
+      LOG_DEBUG("Country: " + country);
+      for (auto rclass : this->rclasses) {
+        std::string roadStr = roadClassToString[rclass];
+        LOG_DEBUG((boost::format("   %1%: %2% Km")
+          % roadStr % this->country_maps[country][rclass]).str());
+      }
+    }
+  }
+
+  void log_tile_stats() {
+    // Print the tile statistics
+    for (auto tileid : this->tile_ids) {
+      LOG_DEBUG("Tile: " + std::to_string(tileid));
+      for (auto rclass : this->rclasses) {
+        std::string roadStr = roadClassToString[rclass];
+        LOG_DEBUG((boost::format("   %1%: %2% Km")
+          % roadStr % this->tile_maps[tileid][rclass]).str());
+      }
     }
   }
 };
@@ -154,11 +226,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               std::promise<validator_stats>& result) {
 
     // Our local class for gathering the stats
-    validator_stats threadStat;
-
+    validator_stats vStats;
     // Local Graphreader
     GraphReader graph_reader(hierarchy_properties);
-
     // Get some things we need throughout
     auto tile_hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles> levels;
@@ -182,6 +252,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       // Point tiles to the set we need for current level
       size_t level = tile_id.level();
       tiles = &levels[level];
+      auto tileid = tile_id.tileid();
 
       uint32_t dupcount = 0;
 
@@ -224,12 +295,15 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
           DirectedEdgeBuilder& directededge = tilebuilder.directededge(
               nodeinfo.edge_index() + j);
-          // Stats...
+          // Road Length and some variables for statistics
+          float tempLength;
+          bool validLength = false;
           if (!directededge.shortcut() && !directededge.trans_up() &&
               !directededge.trans_down()) {
-            roadlength += directededge.length();
+            tempLength = directededge.length();
+            roadlength += tempLength;
+            validLength = true;
           }
-
           // Set the opposing edge index and get the country ISO at the
           // end node)
           std::string end_node_iso;
@@ -240,15 +314,23 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               begin_node_iso != end_node_iso)
             directededge.set_ctry_crossing(true);
           directededges.emplace_back(std::move(directededge));
-        }
 
+          // Add road lengths to statistics class for current country and current tile
+          if (validLength) {
+            auto rclass = directededge.classification();
+            auto endnodeid = directededge.endnode().tileid();
+            uint8_t modifier = (tileid == endnodeid) ? 2 : 4;
+            vStats.add_country_road(begin_node_iso, rclass, tempLength / modifier);
+            vStats.add_tile_road(tileid, rclass, tempLength / modifier);
+          }
+        }
         // Add the node to the list
         nodes.emplace_back(std::move(nodeinfo));
       }
 
-      // Add density to stat class
-      float density = (roadlength * 0.0005f) / tiles->Area(tile_id.tileid());
-      threadStat.add_density(density, level);
+      // Add density to return class
+      float density = (roadlength * 0.0005f) / tiles->Area(tileid);
+      vStats.add_density(density, level);
 
       // Write the new file
       lock.lock();
@@ -261,12 +343,12 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
         graph_reader.Clear();
       lock.unlock();
 
-      // Add possible duplicates to stat class
-      threadStat.add_dup(dupcount, level);
+      // Add possible duplicates to return class
+      vStats.add_dup(dupcount, level);
     }
 
-    // Live up to our promise
-    result.set_value(threadStat);
+    // Fill promise with statistics
+    result.set_value(vStats);
   }
 }
 
@@ -287,7 +369,7 @@ namespace mjolnir {
         std::max(static_cast<unsigned int>(1),
                  pt.get<unsigned int>("concurrency",std::thread::hardware_concurrency())));
 
-    // and promises
+    // Setup promises
     std::list<std::promise<validator_stats> > results;
 
     // Create a randomized queue of tiles to work from
@@ -320,19 +402,17 @@ namespace mjolnir {
                                    std::ref(tilequeue),
                                    std::ref(lock), std::ref(results.back())));
     }
-
     // Wait for threads to finish
     for (auto& thread : threads) {
       thread->join();
     }
-
-    // Add up total dupcount_ and find densities
+    // Get the returned data from the promise
     validator_stats stats;
     for (auto& result : results) {
-      validator_stats data = result.get_future().get();
-      stats.add_stat(data);
+      auto data = result.get_future().get();
+      stats.add(data);
     }
-
+    // Add up total dupcount_ and find densities
     LOG_INFO("Validation of signs and connectivity is done");
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
@@ -353,6 +433,8 @@ namespace mjolnir {
       LOG_INFO("Average density = " + std::to_string(average_density) +
                " max = " + std::to_string(max_density));
     }
+    stats.log_country_stats();
+    stats.log_tile_stats();
   }
 }
 }
