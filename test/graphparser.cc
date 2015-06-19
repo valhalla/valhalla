@@ -250,6 +250,84 @@ void Baltimore(const std::string& config_file) {
   }
 }
 
+void Bike(const std::string& config_file) {
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(config_file, conf);
+
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bike.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWay> ways(ways_file, false);
+  ways.sort(way_predicate);
+
+  //http://www.openstreetmap.org/way/6885577#map=14/51.9774/5.7718
+  //direction of this way for oneway is flipped.  Confirmed on opencyclemap.org.
+  auto way = GetWay(6885577, ways);
+  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != false || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+    throw std::runtime_error("Access is not correct for way 6885577.");
+  }
+
+  way = GetWay(156539494, ways);
+  if (way.auto_forward() != false || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != false ||
+      way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+    throw std::runtime_error("Access is not correct for way 156539494.");
+  }
+
+  way = GetWay(6885404, ways);
+  if (way.auto_forward() != false || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != false ||
+      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+    throw std::runtime_error("Access is not correct for way 6885404.");
+  }
+
+  way = GetWay(156539492, ways);
+  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != false || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != false || way.bus_backward() != true) {
+    throw std::runtime_error("Access is not correct for way 156539492.");
+  }
+
+  way = GetWay(156539491, ways);
+  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+    throw std::runtime_error("Access is not correct for way 156539491.");
+  }
+}
+
+void Bus(const std::string& config_file) {
+  boost::property_tree::ptree conf;
+  boost::property_tree::json_parser::read_json(config_file, conf);
+
+  std::string ways_file = "test_ways.bin";
+  std::string way_nodes_file = "test_way_nodes.bin";
+  auto osmdata = PBFGraphParser::Parse(conf.get_child("mjolnir"), {"test/data/bus.osm.pbf"}, ways_file, way_nodes_file);
+  sequence<OSMWay> ways(ways_file, false);
+  ways.sort(way_predicate);
+
+  auto way = GetWay(14327599, ways);
+  if (way.auto_forward() != false || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+      way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+      throw std::runtime_error("Access is not correct for way 14327599.");
+  }
+
+  way = GetWay(87358588, ways);
+  if (way.auto_forward() != false || way.bus_forward() != false || way.bike_forward() != true || way.pedestrian() != true ||
+       way.auto_backward() != false || way.bike_backward() != true || way.bus_backward() != false) {
+       throw std::runtime_error("Access is not correct for way 87358588.");
+   }
+
+  way = GetWay(49771553, ways);
+  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+       way.auto_backward() != true || way.bike_backward() != true || way.bus_backward() != true) {
+       throw std::runtime_error("Access is not correct for way 49771553.");
+   }
+
+  way = GetWay(225895737, ways);
+  if (way.auto_forward() != true || way.bus_forward() != true || way.bike_forward() != true || way.pedestrian() != true ||
+       way.auto_backward() != false || way.bike_backward() != false || way.bus_backward() != false) {
+       throw std::runtime_error("Access is not correct for way 225895737.");
+   }
+}
+
 void BicycleTrafficSignals(const std::string& config_file) {
   boost::property_tree::ptree conf;
   boost::property_tree::json_parser::read_json(config_file, conf);
@@ -306,6 +384,16 @@ void TestBaltimoreArea() {
   Baltimore("test/test_config");
 }
 
+void TestBike() {
+  //write the tiles with it
+  Bike("test/test_config");
+}
+
+void TestBus() {
+  //write the tiles with it
+  Bus("test/test_config");
+}
+
 }
 
 int main() {
@@ -325,6 +413,8 @@ int main() {
   suite.test(TEST_CASE(TestBicycleTrafficSignals));
   suite.test(TEST_CASE(TestExits));
   suite.test(TEST_CASE(TestBaltimoreArea));
+  suite.test(TEST_CASE(TestBike));
+  suite.test(TEST_CASE(TestBus));
 
   return suite.tear_down();
 }
