@@ -46,8 +46,10 @@ enum class Driveability {
   kBoth = 3         // Edge is driveable in both directions
 };
 
-// Maximum speed (about 100 MPH)
-constexpr uint32_t kMaxSpeedKph = 160;
+// Maximum speed. This impacts the effectiveness of A* for driving routes
+// so it should be set as low as is reasonable. Speeds above this in OSM are
+// clamped to this maximum value.
+constexpr uint32_t kMaxSpeedKph = 130;      // ~80 MPH
 
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
