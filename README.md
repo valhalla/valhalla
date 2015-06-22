@@ -21,7 +21,7 @@ Building
 
 Mjolnir uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    srcipts/dependencies.sh
+    scripts/dependencies.sh
 
 And then run to install it:
 
@@ -34,7 +34,7 @@ Using
 
 For detailed information about what algorithms, data structures and executables are contained within mjolnir, please see the more [detailed documentation](docs/index.md).
 
-The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Mjolnir for your own projects as well. To simplify the inclusion of the Mjolnir library in another autotoolized project you may make use of [mjolnir m4](m4/valhalla_mjolnir.m4) in your own `configure.ac` file. For an exmample of this please have a look at `configure.ac` in another one of the valhalla projects. Mjolnir, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
+The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Mjolnir for your own projects as well. To simplify the inclusion of the Mjolnir library in another autotoolized project you may make use of [mjolnir m4](m4/valhalla_mjolnir.m4) in your own `configure.ac` file. For an example of this please have a look at `configure.ac` in another one of the valhalla projects. Mjolnir, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
 Contributing
 ------------
