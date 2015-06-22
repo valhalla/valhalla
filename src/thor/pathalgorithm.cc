@@ -99,6 +99,7 @@ PathAlgorithm::PathAlgorithm()
       edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
+      walking_distance_(0),
       best_destination_{kInvalidLabel, Cost(std::numeric_limits<float>::max(), 0.0f)} {
   edgelabels_.reserve(kInitialEdgeLabelCount);
 }
@@ -155,7 +156,7 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   hierarchy_limits_  = costing->GetHierarchyLimits();
 }
 
-// Calculate best path.
+// Calculate best path. This method is single mode, no time dependency.
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>& costing) {
@@ -165,7 +166,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
                                           costing->GetFilter());
 
   // Check for trivial path
-  // TODO -currently mode is the same along entire path.
   mode_ = costing->travelmode();
   auto trivial_id = trivial(origin, dest);
   if (trivial_id.Is_Valid()) {
@@ -291,10 +291,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
                      costing->EdgeCost(directededge, nodeinfo->density()) +
                      costing->TransitionCost(directededge, nodeinfo, pred);
 
-      // Update walking distance
-      walking_distance_ = (mode_ == TravelMode::kPedestrian) ?
-                    pred.walking_distance() + directededge->length() : 0;
-
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
@@ -315,7 +311,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Add edge label, add to the adjacency list and set edge status
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
-                    directededge->opp_local_idx(), mode_, walking_distance_);
+                    directededge->opp_local_idx(), mode_);
       adjacencylist_->Add(edgelabel_index_, sortcost);
       edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
       edgelabel_index_++;
@@ -628,8 +624,7 @@ void PathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
   if (dc > 0) {
     float oldsortcost = edgelabels_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels_[idx].Update(predindex, newcost, newsortcost,
-                            walking_distance_);
+    edgelabels_[idx].Update(predindex, newcost, newsortcost);
     adjacencylist_->DecreaseCost(idx, newsortcost, oldsortcost);
   }
 }
@@ -651,7 +646,7 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   // predecessor information. Transition edges have no length.
   edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), pred.distance(),
-                pred.restrictions(), pred.opp_local_idx(), mode_, 0);
+                pred.restrictions(), pred.opp_local_idx(), mode_);
 
   // Add to the adjacency list and set edge status
   adjacencylist_->Add(edgelabel_index_, pred.sortcost());
@@ -703,7 +698,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     // to invalid to indicate the origin of the path.
     edgelabels_.emplace_back(kInvalidLabel, edgeid,
             directededge, cost, sortcost, dist, 0,
-            directededge->opp_local_idx(), mode_, 0);
+            directededge->opp_local_idx(), mode_);
     adjacencylist_->Add(edgelabel_index_, sortcost);
     edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
     edgelabel_index_++;
