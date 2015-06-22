@@ -7,7 +7,6 @@
 
 #include <ostream>
 #include <boost/format.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <sstream>
 #include <iostream>
 #include <string>

@@ -31,21 +31,21 @@ validator_stats::validator_stats ()
   : tile_maps(), country_maps(), iso_codes(), tile_ids(), dupcounts(3), densities(3) { }
 
 void validator_stats::add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
-  this->tile_ids.insert(tile_id);
-  this->tile_maps[tile_id][rclass] += length;
+  tile_ids.insert(tile_id);
+  tile_maps[tile_id][rclass] += length;
 }
 
 void validator_stats::add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length) {
-  this->iso_codes.insert(ctry_code);
-  this->country_maps[ctry_code][rclass] += length;
+  iso_codes.insert(ctry_code);
+  country_maps[ctry_code][rclass] += length;
 }
 
 void validator_stats::add_density (float density, int level) {
-  this->densities[level].push_back(density);
+  densities[level].push_back(density);
 }
 
 void validator_stats::add_dup (uint32_t newdup, int level) {
-  this->dupcounts[level].push_back(newdup);
+  dupcounts[level].push_back(newdup);
 }
 
 const std::set<uint32_t>& validator_stats::get_ids () const { return tile_ids; }
@@ -70,26 +70,26 @@ void validator_stats::add (const validator_stats& stats) {
   auto ids = stats.get_ids();
   auto isos = stats.get_isos();
   for (auto& id : ids) {
-    for (auto& rclass : this->rclasses) {
-      this->add_tile_road(id, rclass, newTileMaps[id][rclass]);
+    for (auto& rclass : rclasses) {
+      add_tile_road(id, rclass, newTileMaps[id][rclass]);
     }
   }
   for (auto& iso : isos) {
-    for (auto& rclass : this->rclasses) {
-      this->add_country_road(iso, rclass, newCountryMaps[iso][rclass]);
+    for (auto& rclass : rclasses) {
+      add_country_road(iso, rclass, newCountryMaps[iso][rclass]);
     }
   }
   uint32_t level = 0;
   for (auto& dupvec : stats.get_dups()) {
     for (auto& dup : dupvec) {
-      this->add_dup(dup, level);
+      add_dup(dup, level);
     }
     level++;
   }
   level = 0;
   for (auto& densityvec : stats.get_densities()) {
     for (auto& density : densityvec) {
-      this->add_density(density, level);
+      add_density(density, level);
     }
     level++;
   }
@@ -97,24 +97,24 @@ void validator_stats::add (const validator_stats& stats) {
 
 void validator_stats::log_country_stats() {
   // Print the Country statistics
-  for (auto country : this->iso_codes) {
+  for (auto country : iso_codes) {
     LOG_DEBUG("Country: " + country);
-    for (auto rclass : this->rclasses) {
+    for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];
       LOG_DEBUG((boost::format("   %1%: %2% Km")
-        % roadStr % this->country_maps[country][rclass]).str());
+        % roadStr % country_maps[country][rclass]).str());
     }
   }
 }
 
 void validator_stats::log_tile_stats() {
   // Print the tile statistics
-  for (auto tileid : this->tile_ids) {
+  for (auto tileid : tile_ids) {
     LOG_DEBUG("Tile: " + std::to_string(tileid));
-    for (auto rclass : this->rclasses) {
+    for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];
       LOG_DEBUG((boost::format("   %1%: %2% Km")
-        % roadStr % this->tile_maps[tileid][rclass]).str());
+        % roadStr % tile_maps[tileid][rclass]).str());
     }
   }
 }
@@ -197,15 +197,15 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   }
 
   // Fill DB with the tile statistics
-  for (auto tileid : this->tile_ids) {
+  for (auto tileid : tile_ids) {
     uint8_t index = 1;
     sqlite3_reset(stmt);
     sqlite3_clear_bindings;
     sqlite3_bind_int(stmt, index, tileid);
     ++index;
-    for (auto rclass : this->rclasses) {
+    for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];
-      sqlite3_bind_double(stmt, index, this->tile_maps[tileid][rclass]);
+      sqlite3_bind_double(stmt, index, tile_maps[tileid][rclass]);
       ++index;
     }
     ret = sqlite3_step (stmt);
@@ -238,15 +238,15 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   }
 
   // Fill DB with the country statistics
-  for (auto country : this->iso_codes) {
+  for (auto country : iso_codes) {
     uint8_t index = 1;
     sqlite3_reset(stmt);
     sqlite3_clear_bindings;
     sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
     ++index;
-    for (auto rclass : this->rclasses) {
+    for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];
-      sqlite3_bind_double(stmt, index, this->country_maps[country][rclass]);
+      sqlite3_bind_double(stmt, index, country_maps[country][rclass]);
       ++index;
     }
     ret = sqlite3_step (stmt);
