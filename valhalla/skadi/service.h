@@ -4,7 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
-  namespace loki {
+  namespace skadi {
 
     void run_service(const boost::property_tree::ptree& config);
 

@@ -24,8 +24,7 @@ using namespace prime_server;
 #include <valhalla/sif/bicyclecost.h>
 #include <valhalla/sif/pedestriancost.h>
 
-#include "loki/service.h"
-#include "loki/search.h"
+#include "skadi/service.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -132,7 +131,7 @@ namespace {
       }
       catch(...) {
         //this really shouldnt ever get hit
-        LOG_WARN("Expected edge not found in graph but found by loki::search!");
+        LOG_WARN("Expected edge not found in graph but found by skadi::search!");
       }
     }
     return array;
@@ -156,9 +155,9 @@ namespace {
   }
 
   //TODO: throw this in the header to make it testable?
-  class loki_worker_t {
+  class skadi_worker_t {
    public:
-    loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
+    skadi_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
       max_route_locations(config.get<size_t>("service_limits.max_route_locations")) {
 
       // Register edge/node costing methods
@@ -290,7 +289,7 @@ namespace {
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, cost->GetFilter());
+        auto correlated = skadi::Search(locations[i], reader, cost->GetFilter());
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
@@ -313,7 +312,7 @@ namespace {
       auto json = json::array({});
       for(const auto& location : locations) {
         try {
-          auto correlated = loki::Search(location, reader, cost->GetFilter());
+          auto correlated = skadi::Search(location, reader, cost->GetFilter());
           json->emplace_back(serialize(correlated, reader));
         }
         catch(const std::exception& e) {
@@ -352,10 +351,10 @@ namespace {
 }
 
 namespace valhalla {
-  namespace loki {
+  namespace skadi {
     void run_service(const boost::property_tree::ptree& config) {
       //gets requests from the http server
-      auto upstream_endpoint = config.get<std::string>("loki.service.proxy") + "_out";
+      auto upstream_endpoint = config.get<std::string>("skadi.service.proxy") + "_out";
       //sends them on to thor
       auto downstream_endpoint = config.get<std::string>("thor.service.proxy") + "_in";
       //or returns just location information back to the server
@@ -363,10 +362,10 @@ namespace valhalla {
 
       //listen for requests
       zmq::context_t context;
-      loki_worker_t loki_worker(config);
+      skadi_worker_t skadi_worker(config);
       prime_server::worker_t worker(context, upstream_endpoint, downstream_endpoint, loopback_endpoint,
-        std::bind(&loki_worker_t::work, std::ref(loki_worker), std::placeholders::_1, std::placeholders::_2),
-        std::bind(&loki_worker_t::cleanup, std::ref(loki_worker)));
+        std::bind(&skadi_worker_t::work, std::ref(skadi_worker), std::placeholders::_1, std::placeholders::_2),
+        std::bind(&skadi_worker_t::cleanup, std::ref(skadi_worker)));
       worker.work();
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?

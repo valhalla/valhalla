@@ -3,7 +3,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "loki/service.h"
+#include "skadi/service.h"
 
 int main(int argc, char** argv) {
 
@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(config_file, config);
 
   //run the service worker
-  valhalla::loki::run_service(config);
+  valhalla::skadi::run_service(config);
 
   return 0;
 }
