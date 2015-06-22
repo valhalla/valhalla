@@ -1,15 +1,15 @@
-# Loki #
+# Skadi #
 
-The loki library is essentially a set of various data structures and alogrithms which deal with things like: correlating an input location to the underlying graph, partial distance along an edge and filtering edges which shouldn't be considered for correlation.
+The Skadi library is essentially a set of various data structures and alogrithms which deal with things like: sampling elevation data in an adhoc or evenly sampled manner as well as serving elevation data in structured (json) or raw (geotiff) formats.
 
 ## Components ##
 
-What follows are some notable components of the loki library.
+What follows are some notable components of the Skadi library.
 
-### Search ###
+### Sample ###
 
 TODO:
 
-### Benchmark ###
+### Service ###
 
 TODO:
