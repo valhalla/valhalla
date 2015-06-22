@@ -215,8 +215,10 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       }
 
       // Add density to return class
-      float density = (roadlength * 0.0005f) / tiles->Area(tileid);
+      auto area = tiles->Area(tileid);
+      float density = (roadlength * 0.0005f) / area;
       vStats.add_density(density, level);
+      vStats.add_tile_area(tileid, area);
 
       // Write the new file
       lock.lock();

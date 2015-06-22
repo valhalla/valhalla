@@ -28,11 +28,15 @@ namespace valhalla {
 namespace mjolnir {
 
 validator_stats::validator_stats ()
-  : tile_maps(), country_maps(), iso_codes(), tile_ids(), dupcounts(3), densities(3) { }
+  : tile_maps(), tile_areas(), country_maps(), iso_codes(), tile_ids(), dupcounts(3), densities(3) { }
 
 void validator_stats::add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
   tile_ids.insert(tile_id);
   tile_maps[tile_id][rclass] += length;
+}
+
+void validator_stats::add_tile_area (const uint32_t& tile_id, const float area) {
+  tile_areas[tile_id] = area;
 }
 
 void validator_stats::add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length) {
@@ -52,7 +56,9 @@ const std::set<uint32_t>& validator_stats::get_ids () const { return tile_ids; }
 
 const std::set<std::string>& validator_stats::get_isos () const { return iso_codes; }
 
-const std::map<int32_t, std::map<RoadClass, float> >& validator_stats::get_tile_maps () const { return tile_maps; }
+const std::map<uint32_t, std::map<RoadClass, float> >& validator_stats::get_tile_maps () const { return tile_maps; }
+
+const std::map<uint32_t, float>& validator_stats::get_tile_areas() const { return tile_areas; }
 
 const std::map<std::string, std::map<RoadClass, float> >& validator_stats::get_country_maps () const { return country_maps; }
 
@@ -66,12 +72,14 @@ const std::vector<std::vector<float> > validator_stats::get_densities() const { 
 
 void validator_stats::add (const validator_stats& stats) {
   auto newTileMaps = stats.get_tile_maps();
+  auto newTileAreas = stats.get_tile_areas();
   auto newCountryMaps = stats.get_country_maps();
   auto ids = stats.get_ids();
   auto isos = stats.get_isos();
   for (auto& id : ids) {
     for (auto& rclass : rclasses) {
       add_tile_road(id, rclass, newTileMaps[id][rclass]);
+      add_tile_area(id, newTileAreas[id]);
     }
   }
   for (auto& iso : isos) {
@@ -111,16 +119,17 @@ void validator_stats::log_tile_stats() {
   // Print the tile statistics
   for (auto tileid : tile_ids) {
     LOG_DEBUG("Tile: " + std::to_string(tileid));
+    LOG_DEBUG((boost::format("    Tile Area: %1% sq. Km") % tile_areas[tileid]).str());
     for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];
-      LOG_DEBUG((boost::format("   %1%: %2% Km")
+      LOG_DEBUG((boost::format("    %1%: %2% Km")
         % roadStr % tile_maps[tileid][rclass]).str());
     }
   }
 }
 
 void validator_stats::build_db(const boost::property_tree::ptree& pt) {
-  // TODO build an actual location string
+  // Get the location of the db file to write
   std::string dir = pt.get<std::string>("mjolnir.statistics.statistics_dir");
   std::string db_name = pt.get<std::string>("mjolnir.statistics.db_name");
   std::string database = dir + "/" + db_name;
@@ -146,6 +155,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Create table for tiles
   sql = "CREATE TABLE tiledata (";
   sql += "tileid INTEGER,";
+  sql += "tilearea FLOAT,";
   sql += "motorway FLOAT,";
   sql += "trunk FLOAT,";
   sql += "pmary FLOAT,";
@@ -188,8 +198,8 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
   }
-  sql = "INSERT INTO tiledata (tileid, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  sql = "INSERT INTO tiledata (tileid, tilearea, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother) ";
+  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -202,6 +212,8 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_reset(stmt);
     sqlite3_clear_bindings;
     sqlite3_bind_int(stmt, index, tileid);
+    ++index;
+    sqlite3_bind_double(stmt, index, tile_areas[tileid]);
     ++index;
     for (auto rclass : rclasses) {
       std::string roadStr = roadClassToString[rclass];

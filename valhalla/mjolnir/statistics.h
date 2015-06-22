@@ -25,10 +25,11 @@ namespace mjolnir {
  */
 
 class validator_stats {
-  std::map<int32_t, std::map<RoadClass, float> > tile_maps;
+  std::map<uint32_t, std::map<RoadClass, float> > tile_maps;
   std::map<std::string, std::map<RoadClass, float> > country_maps;
   std::set<uint32_t> tile_ids;
   std::set<std::string> iso_codes;
+  std::map<uint32_t, float> tile_areas;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
   std::map<RoadClass, std::string> roadClassToString =
@@ -49,6 +50,8 @@ public:
 
   void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length);
 
+  void add_tile_area (const uint32_t& tile_id, const float area);
+
   void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length);
 
   void add_density (float density, int level);
@@ -59,7 +62,9 @@ public:
 
   const std::set<std::string>& get_isos () const;
 
-  const std::map<int32_t, std::map<RoadClass, float> >& get_tile_maps () const;
+  const std::map<uint32_t, std::map<RoadClass, float> >& get_tile_maps () const;
+
+  const std::map<uint32_t, float>& get_tile_areas() const;
 
   const std::map<std::string, std::map<RoadClass, float> >& get_country_maps () const;
 
