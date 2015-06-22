@@ -38,13 +38,12 @@ class EdgeLabel {
    *                  if edge is a transition edge. This allows restrictions
    *                  to be carried across different hierarchy levels.
    * @param mode      Mode of travel along this edge.
-   * @param walking_distance  Accumulated walking distance.
    */
   EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge, const Cost& cost,
             const float sortcost, const float dist,
             const uint32_t restrictions, const uint32_t opp_local_idx,
-            const TravelMode mode, const uint32_t walking_distance);
+            const TravelMode mode);
 
   /**
    * Constructor with values.  Used for multi-modal path.
@@ -87,7 +86,7 @@ class EdgeLabel {
    * @param walking_distance  Accumulated walking distance.
    */
   void Update(const uint32_t predecessor, const Cost& cost,
-            const float sortcost, const uint32_t walking_distance);
+              const float sortcost);
 
   /**
    * Update an existing edge label with new predecessor and cost information.

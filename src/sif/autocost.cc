@@ -226,8 +226,6 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred) const {
   // Special cases: gate, toll booth, false intersections
-  // TODO - do we want toll booth penalties?
-
   if (edge->ctry_crossing()) {
     return { country_crossing_cost_ + country_crossing_penalty_,
              country_crossing_cost_ };
@@ -369,7 +367,7 @@ Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 float AutoShorterCost::AStarCostFactor() const {
-  return adjspeedfactor_[120];
+  return adjspeedfactor_[kMaxSpeedKph];
 }
 
 cost_ptr_t CreateAutoShorterCost(const boost::property_tree::ptree& config) {
