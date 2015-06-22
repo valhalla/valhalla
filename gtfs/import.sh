@@ -1,7 +1,9 @@
 
+PivoteDate=`grep kPivotDate ../../baldr/valhalla/baldr/graphconstants.h | awk -F'=' '{print $2}' | awk -F';' '{print $1}' | tr -d "\"" | tr -d " "`
+
 if [[ "$1" == "pg" ]]; then
   db=gtfs
-  dbuser=gknisely
+  dbuser=dbuser
 elif [[ "$1" == "sqlite" ]]; then
   db=transit.sqlite
 fi
@@ -84,6 +86,9 @@ if [[ "$1" ==  "pg" ]]; then
   psql -U $dbuser -f ./data.sql ${db} || exit $?
   psql -U $dbuser -f ./mid_updates.sql ${db} || exit $?
 
+  psql -U $dbuser $db -c "delete from calendar_tmp where CAST(end_date as integer) < CAST('${PivoteDate}' as integer);"
+  psql -U $dbuser $db -c "delete from calendar_dates_tmp where CAST(date as integer) < CAST('${PivoteDate}' as integer);"
+
   ./build_schedule.sh $db $1 $dbuser
   ./build_schedule_cal_dates.sh $db $1 $dbuser
 
@@ -134,6 +139,10 @@ elif [[ "$1" ==  "sqlite" ]]; then
     ./data.sql $db || exit $?
     cat ./geom.sql | spatialite $db || exit $?
   fi
+
+  spatialite $db "delete from calendar_tmp where CAST(end_date as integer) < CAST('${PivoteDate}' as integer);" 
+  spatialite $db "delete from calendar_dates_tmp where CAST(date as integer) < CAST('${PivoteDate}' as integer);"
+
   cat ./mid_updates_sqlite.sql | spatialite $db || exit $?
 
   ./build_schedule.sh $db $1

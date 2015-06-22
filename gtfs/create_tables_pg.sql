@@ -26,7 +26,8 @@ CREATE TABLE "stops"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer
+  parent_station_key integer,
+  wheelchair_boarding integer
 );
 
 DROP TABLE IF EXISTS "routes" CASCADE;
@@ -58,7 +59,9 @@ CREATE TABLE "trips"
   direction_id text,
   block_id text,
   shape_id text,
-  shape_key integer
+  shape_key integer,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "stop_times" CASCADE;
@@ -142,6 +145,7 @@ CREATE TABLE "schedule"
   trip_key integer,
   route_key integer,
   service_key integer,
+  shape_key integer,
   departure_time text,
   arrival_time text,
   start_date text,
@@ -149,7 +153,9 @@ CREATE TABLE "schedule"
   dow_mask integer,
   has_subtractions integer,
   block_id text,
-  headsign text
+  headsign text,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "agency_tmp" CASCADE;
@@ -180,7 +186,8 @@ CREATE TABLE "stops_tmp"
   stop_url text,
   location_type integer,
   parent_station text,
-  parent_station_key integer
+  parent_station_key integer,
+  wheelchair_boarding integer
 );
 
 DROP TABLE IF EXISTS "routes_tmp" CASCADE;
@@ -212,7 +219,9 @@ CREATE TABLE "trips_tmp"
   direction_id text,
   block_id text,
   shape_id text,
-  shape_key integer
+  shape_key integer,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 DROP TABLE IF EXISTS "stop_times_tmp" CASCADE;
@@ -303,6 +312,7 @@ CREATE TABLE "schedule_tmp"
   trip_key integer,
   route_key integer,
   service_key integer,
+  shape_key integer,
   departure_time text,
   arrival_time text,
   start_date text,
@@ -310,7 +320,9 @@ CREATE TABLE "schedule_tmp"
   dow_mask integer,
   has_subtractions integer,
   block_id text,
-  headsign text
+  headsign text,
+  wheelchair_accessible integer,
+  bikes_allowed integer
 );
 
 CREATE INDEX t_trip_id_index ON trips USING btree (trip_id);

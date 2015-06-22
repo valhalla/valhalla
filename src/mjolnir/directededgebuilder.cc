@@ -48,6 +48,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_railferry(way.rail());
   set_toll(way.toll());
   set_dest_only(way.destination_only());
+
+  if (!way.destination_only())
+    set_dest_only(way.no_thru_traffic());
+
   set_surface(way.surface());
   set_cyclelane(way.cyclelane());
   set_tunnel(way.tunnel());
