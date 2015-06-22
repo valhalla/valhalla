@@ -25,15 +25,14 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const float sortcost, const float dist,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
-                     const TravelMode mode,
-                     const uint32_t walking_distance)
+                     const TravelMode mode)
     : predecessor_(predecessor),
       edgeid_(edgeid),
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
       distance_(dist),
-      walking_distance_(walking_distance),
+      walking_distance_(0),
       tripid_(0),
       prior_stopid_(0),
       blockid_(0) {
@@ -82,12 +81,10 @@ EdgeLabel::~EdgeLabel() {
 
 // Update predecessor and cost values in the label.
 void EdgeLabel::Update(const uint32_t predecessor, const Cost& cost,
-                       const float sortcost,
-                       const uint32_t walking_distance) {
+                       const float sortcost) {
   predecessor_ = predecessor;
   cost_ = cost;
   sortcost_ = sortcost;
-  walking_distance_ = walking_distance;
 }
 
 // Update an existing edge label with new predecessor and cost information.
@@ -132,7 +129,7 @@ float EdgeLabel::sortcost() const {
 
 // Set the sort cost
 void EdgeLabel::SetSortCost(float sortcost) {
-sortcost_ = sortcost;
+  sortcost_ = sortcost;
 }
 
 // Get the distance to the destination.
