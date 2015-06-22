@@ -155,15 +155,15 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Create table for tiles
   sql = "CREATE TABLE tiledata (";
   sql += "tileid INTEGER,";
-  sql += "tilearea FLOAT,";
-  sql += "motorway FLOAT,";
-  sql += "trunk FLOAT,";
-  sql += "pmary FLOAT,";
-  sql += "secondary FLOAT,";
-  sql += "tertiary FLOAT,";
-  sql += "unclassified FLOAT,";
-  sql += "residential FLOAT,";
-  sql += "serviceother FLOAT";
+  sql += "tilearea REAL,";
+  sql += "motorway REAL,";
+  sql += "trunk REAL,";
+  sql += "pmary REAL,";
+  sql += "secondary REAL,";
+  sql += "tertiary REAL,";
+  sql += "unclassified REAL,";
+  sql += "residential REAL,";
+  sql += "serviceother REAL";
   sql += ")";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -175,14 +175,14 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Create table for countries
   sql = "CREATE TABLE countrydata (";
   sql += "isocode TEXT,";
-  sql += "motorway FLOAT,";
-  sql += "trunk FLOAT,";
-  sql += "pmary FLOAT,";
-  sql += "secondary FLOAT,";
-  sql += "tertiary FLOAT,";
-  sql += "unclassified FLOAT,";
-  sql += "residential FLOAT,";
-  sql += "serviceother FLOAT";
+  sql += "motorway REAL,";
+  sql += "trunk REAL,";
+  sql += "pmary REAL,";
+  sql += "secondary REAL,";
+  sql += "tertiary REAL,";
+  sql += "unclassified REAL,";
+  sql += "residential REAL,";
+  sql += "serviceother REAL";
   sql += ")";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -197,6 +197,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
+    return;
   }
   sql = "INSERT INTO tiledata (tileid, tilearea, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother) ";
   sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -204,6 +205,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    return;
   }
 
   // Fill DB with the tile statistics
@@ -232,6 +234,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free (err_msg);
     sqlite3_close (db_handle);
+    return;
   }
 
   // Begin the prepared statements for country data
@@ -240,6 +243,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
+    return;
   }
   sql = "INSERT INTO countrydata (isocode, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother) ";
   sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -273,6 +277,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free (err_msg);
     sqlite3_close (db_handle);
+    return;
   }
   sqlite3_close(db_handle);
 }
