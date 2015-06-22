@@ -220,7 +220,7 @@ namespace {
             throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
         }
         if(locations.size() < 1)
-          throw std::runtime_error();
+          throw std::runtime_error("Unsufficient number of locations provided");
         //TODO: bail if this is too many
         LOG_INFO("location_count::" + std::to_string(locations.size()));
       }
