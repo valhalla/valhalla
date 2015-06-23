@@ -1,16 +1,11 @@
 #!/bin/bash
 set -e
 
-if [ -n "$1" ] && [ -d "$1" ]; then
-	pushd "$1"
-else
-	pushd .
-fi
-
 # grab the latest zmq library:
 rm -rf libzmq
-git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
+git clone --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
 pushd libzmq
+git checkout b3f2acf7d625daef65d37ffa00dfed753cf2387b
 ./autogen.sh
 ./configure --without-libsodium --without-documentation
 make -j4
@@ -25,6 +20,4 @@ pushd prime_server
 ./configure
 make -j4
 sudo make install
-popd
-
 popd
