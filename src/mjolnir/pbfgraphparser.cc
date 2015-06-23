@@ -50,6 +50,14 @@ struct graph_callback : public OSMPBF::Callback {
     lua_.OpenLib();
 
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
+
+    highway_cutoff_rc_ = RoadClass::kPrimary;
+    for (auto level : tile_hierarchy_.levels()) {
+      if (level.second.name == "highway") {
+        highway_cutoff_rc_ = level.second.importance;
+      }
+    }
+
   }
 
   void node_callback(uint64_t osmid, double lng, double lat, const OSMPBF::Tags &tags) {
@@ -507,15 +515,8 @@ struct graph_callback : public OSMPBF::Callback {
     w.set_drive_on_right(true);
 
     // ferries / auto trains need to be set to highway cut off in config.
-    if (w.ferry() || w.rail()) {
-      RoadClass rc = w.road_class();
-      for (auto level : tile_hierarchy_.levels()) {
-        if (level.second.name == "highway") {
-          rc = level.second.importance;
-        }
-      }
-      w.set_road_class(rc);
-    }
+    if (w.ferry() || w.rail())
+      w.set_road_class(highway_cutoff_rc_);
 
     // Delete the name from from name field if it exists in the ref.
     if (!name.empty() && w.ref_index()) {
@@ -713,6 +714,9 @@ struct graph_callback : public OSMPBF::Callback {
 
   // List of the tile levels to be created
   TileHierarchy tile_hierarchy_;
+
+  //Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
+  RoadClass highway_cutoff_rc_;
 
   // Lua Tag Transformation class
   LuaTagTransform lua_;
