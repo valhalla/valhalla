@@ -205,6 +205,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    sqlite3_close (db_handle);
     return;
   }
 
@@ -251,6 +252,8 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    sqlite3_close (db_handle);
+    return;
   }
 
   // Fill DB with the country statistics
