@@ -1,17 +1,16 @@
 
 #include "mjolnir/graphvalidator.h"
-#include "valhalla/mjolnir/graphtilebuilder.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/statistics.h"
 
 #include <valhalla/midgard/logging.h>
 
 #include <ostream>
-#include <set>
 #include <boost/format.hpp>
 #include <sstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 #include <utility>
 #include <queue>
 #include <list>
@@ -27,126 +26,13 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphreader.h>
 
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
 
-class validator_stats {
-  std::map<int32_t, std::map<RoadClass, float> > tile_maps;
-  std::map<std::string, std::map<RoadClass, float> > country_maps;
-  std::set<uint32_t> tile_ids;
-  std::set<std::string> iso_codes;
-  std::vector<std::vector<uint32_t> > dupcounts;
-  std::vector<std::vector<float> > densities;
-  std::map<RoadClass, std::string> roadClassToString =
-    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
-      {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
-      {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
-      {RoadClass::kServiceOther, "ServiceOther"}
-    };
-  std::vector<RoadClass> rclasses =
-    { RoadClass::kMotorway, RoadClass::kPrimary,
-      RoadClass::kResidential, RoadClass::kSecondary,
-      RoadClass::kServiceOther, RoadClass::kTertiary,
-      RoadClass::kTrunk, RoadClass::kUnclassified
-    };
-public:
 
-	validator_stats ()
-    : tile_maps(), country_maps(), iso_codes(), tile_ids(), dupcounts(3), densities(3) { }
-
-	void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length) {
-	  this->tile_ids.insert(tile_id);
-	  this->tile_maps[tile_id][rclass] += length;
-	}
-
-	void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length) {
-	  this->iso_codes.insert(ctry_code);
-	  this->country_maps[ctry_code][rclass] += length;
-	}
-
-	void add_density (float density, int level) {
-    this->densities[level].push_back(density);
-  }
-
-  void add_dup (uint32_t newdup, int level) {
-    this->dupcounts[level].push_back(newdup);
-  }
-
-	const std::set<uint32_t>& get_ids () const { return tile_ids; }
-
-	const std::set<std::string>& get_isos () const { return iso_codes; }
-
-	const std::map<int32_t, std::map<RoadClass, float> >& get_tile_maps () const { return tile_maps; }
-
-	const std::map<std::string, std::map<RoadClass, float> >& get_country_maps () const { return country_maps; }
-
-	const std::vector<uint32_t> get_dups(int level) const { return dupcounts[level]; }
-
-  const std::vector<float> get_densities(int level) const { return densities[level]; }
-
-  const std::vector<std::vector<uint32_t> > get_dups() const { return dupcounts; }
-
-  const std::vector<std::vector<float> > get_densities() const { return densities; }
-
-  void add (const validator_stats& stats) {
-    auto newTileMaps = stats.get_tile_maps();
-    auto newCountryMaps = stats.get_country_maps();
-    auto ids = stats.get_ids();
-    auto isos = stats.get_isos();
-    for (auto& id : ids) {
-      for (auto& rclass : this->rclasses) {
-        this->add_tile_road(id, rclass, newTileMaps[id][rclass]);
-      }
-    }
-    for (auto& iso : isos) {
-      for (auto& rclass : this->rclasses) {
-        this->add_country_road(iso, rclass, newCountryMaps[iso][rclass]);
-      }
-    }
-    uint32_t level = 0;
-    for (auto& dupvec : stats.get_dups()) {
-      for (auto& dup : dupvec) {
-        this->add_dup(dup, level);
-      }
-      level++;
-    }
-    level = 0;
-    for (auto& densityvec : stats.get_densities()) {
-      for (auto& density : densityvec) {
-        this->add_density(density, level);
-      }
-      level++;
-    }
-  }
-
-  void log_country_stats() {
-    // Print the Country statistics
-    for (auto country : this->iso_codes) {
-      LOG_DEBUG("Country: " + country);
-      for (auto rclass : this->rclasses) {
-        std::string roadStr = roadClassToString[rclass];
-        LOG_DEBUG((boost::format("   %1%: %2% Km")
-          % roadStr % this->country_maps[country][rclass]).str());
-      }
-    }
-  }
-
-  void log_tile_stats() {
-    // Print the tile statistics
-    for (auto tileid : this->tile_ids) {
-      LOG_DEBUG("Tile: " + std::to_string(tileid));
-      for (auto rclass : this->rclasses) {
-        std::string roadStr = roadClassToString[rclass];
-        LOG_DEBUG((boost::format("   %1%: %2% Km")
-          % roadStr % this->tile_maps[tileid][rclass]).str());
-      }
-    }
-  }
-};
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
@@ -319,9 +205,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           if (validLength) {
             auto rclass = directededge.classification();
             auto endnodeid = directededge.endnode().tileid();
-            uint8_t modifier = (tileid == endnodeid) ? 2 : 4;
-            vStats.add_country_road(begin_node_iso, rclass, tempLength / modifier);
-            vStats.add_tile_road(tileid, rclass, tempLength / modifier);
+            tempLength /= (tileid == endnodeid) ? 2 : 4;
+            vStats.add_country_road(begin_node_iso, rclass, tempLength);
+            vStats.add_tile_road(tileid, rclass, tempLength);
           }
         }
         // Add the node to the list
@@ -329,8 +215,10 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       }
 
       // Add density to return class
-      float density = (roadlength * 0.0005f) / tiles->Area(tileid);
+      auto area = tiles->Area(tileid);
+      float density = (roadlength * 0.0005f) / area;
       vStats.add_density(density, level);
+      vStats.add_tile_area(tileid, area);
 
       // Write the new file
       lock.lock();
@@ -435,6 +323,7 @@ namespace mjolnir {
     }
     stats.log_country_stats();
     stats.log_tile_stats();
+    stats.build_db(pt);
   }
 }
 }

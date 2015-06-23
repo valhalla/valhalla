@@ -323,6 +323,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
+    return;
   }
 
   uint32_t count = 0;
@@ -434,7 +435,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free (err_msg);
     sqlite3_close (db_handle);
-
+    return;
   }
   LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
 
