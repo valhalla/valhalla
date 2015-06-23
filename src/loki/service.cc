@@ -61,7 +61,7 @@ namespace {
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
       //skip json or empty entries
-      if(kv.first == "json" || kv.second.size() == 0)
+      if(kv.first == "json" || kv.first.size() == 0 || kv.second.size() == 0)
         continue;
 
       //turn single value entries into single key value
@@ -220,12 +220,12 @@ namespace {
             throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
         }
         if(locations.size() < 1)
-          throw;
+          throw std::runtime_error("Unsufficient number of locations provided");
         //TODO: bail if this is too many
         LOG_INFO("location_count::" + std::to_string(locations.size()));
       }
       catch(...) {
-        throw std::runtime_error("insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
+        throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
       }
 
       // Parse out the type of route - this provides the costing method to use
