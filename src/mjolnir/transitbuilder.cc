@@ -64,11 +64,14 @@ struct TransitLine {
   uint32_t lineid;
   uint32_t routeid;
   uint32_t stopid;
+  uint32_t shapeid;
 
-  TransitLine(const uint32_t d, const uint32_t r, const uint32_t s)
+  TransitLine(const uint32_t d, const uint32_t r, const uint32_t s,
+              const uint32_t sh)
       : lineid(d),
         routeid(r),
-        stopid(s) {
+        stopid(s),
+        shapeid(sh) {
   }
 };
 
@@ -297,6 +300,7 @@ void assign_graphids(const boost::property_tree::ptree& pt,
 std::vector<Departure> GetDepartures(sqlite3* db_handle,
                                      const uint32_t stop_key) {
   // Form query
+  // TODO - add shape Id
   std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
   sql += "trip_key, route_key, service_key, departure_time, arrival_time,";
   sql += "start_date, end_date, dow_mask, has_subtractions, headsign from schedule where ";
@@ -515,6 +519,7 @@ void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
 }
 
 // Get Use given the transit route type
+// TODO - add separate Use for different types
 Use GetTransitUse(const uint32_t rt) {
   switch (rt) {
     default:
@@ -530,6 +535,17 @@ Use GetTransitUse(const uint32_t rt) {
   case 4:       // Ferry (boat)
     return Use::kRail;    // TODO - add ferry use
   }
+}
+
+std::vector<PointLL> GetShape(const PointLL& stop_ll,
+                              const PointLL& endstop_ll,
+                              const uint32_t shapeid) {
+  // TODO - get the shape from the DB and get the portion between the
+  // 2 stop LLs
+  std::vector<PointLL> shape;
+  shape.push_back(stop_ll);
+  shape.push_back(endstop_ll);
+  return shape;
 }
 
 void AddToGraph(GraphTileBuilder& tilebuilder,
@@ -633,9 +649,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       LOG_ERROR("Stop key not equal!");
     }
 
-    // Build the node info
-    // TODO - how to differentiate bus from rail, from multi-use or
-    // should we always keep them generic?
+    // Build the node info. Use generic transit stop type
     uint32_t access = kPedestrianAccess;
     bool child  = (stop.parent != 0);  // TODO verify if this is sufficient
     bool parent = (stop.type == 1);    // TODO verify if this is sufficient
@@ -702,9 +716,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       std::vector<std::string> names;
-      std::vector<PointLL> shape;
-      shape.push_back(stop.ll);
-      shape.push_back(endstop.ll);
+      std::vector<PointLL> shape = { stop.ll, endstop.ll };
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(0, stop.graphid,
                      endstop.graphid, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -741,12 +753,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // Add edge info to the tile and set the offset in the directed edge
       // Leave the name empty. Use the trip Id to look up the route Id and
       // route within TripPathBuilder.
-      // TODO - get the shape from transit DB
       bool added = false;
       std::vector<std::string> names;
-      std::vector<PointLL> shape;
-      shape.push_back(stop.ll);
-      shape.push_back(endstop.ll);
+      std::vector<PointLL> shape = GetShape(stop.ll, endstop.ll, transitedge.shapeid);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            stop.graphid, endstop.graphid, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -995,13 +1004,14 @@ void build(const boost::property_tree::ptree& pt,
           // Identify unique route and arrival stop pairs - associate to a
           // unique line Id stored in the directed edge.
           uint32_t lineid;
+          uint32_t shapeid = 0;  // TODO
           auto m = unique_transit_edges.find({dep.route, dep.dest_stop});
           if (m == unique_transit_edges.end()) {
             // Add to the map and update the line id
             lineid = unique_lineid;
             unique_transit_edges[{dep.route, dep.dest_stop}] = unique_lineid;
             unique_lineid++;
-            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop);
+            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop, shapeid);
           } else {
             lineid = m->second;
           }
