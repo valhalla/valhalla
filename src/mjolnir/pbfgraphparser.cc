@@ -506,8 +506,8 @@ struct graph_callback : public OSMPBF::Callback {
     //default to drive on right.
     w.set_drive_on_right(true);
 
-    // ferries need to be set to highway cut off in config.
-    if (w.ferry()) {
+    // ferries / auto trains need to be set to highway cut off in config.
+    if (w.ferry() || w.rail()) {
       RoadClass rc = w.road_class();
       for (auto level : tile_hierarchy_.levels()) {
         if (level.second.name == "highway") {
