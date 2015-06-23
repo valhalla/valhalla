@@ -52,7 +52,7 @@ struct graph_callback : public OSMPBF::Callback {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
     highway_cutoff_rc_ = RoadClass::kPrimary;
-    for (auto level : tile_hierarchy_.levels()) {
+    for (auto& level : tile_hierarchy_.levels()) {
       if (level.second.name == "highway") {
         highway_cutoff_rc_ = level.second.importance;
       }
