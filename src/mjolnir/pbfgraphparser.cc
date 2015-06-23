@@ -503,8 +503,19 @@ struct graph_callback : public OSMPBF::Callback {
     if (!w.tagged_speed())
       w.set_speed(default_speed);
 
-// TODO  For now...drive on right.
+    //default to drive on right.
     w.set_drive_on_right(true);
+
+    // ferries need to be set to highway cut off in config.
+    if (w.ferry()) {
+      RoadClass rc = w.road_class();
+      for (auto level : tile_hierarchy_.levels()) {
+        if (level.second.name == "highway") {
+          rc = level.second.importance;
+        }
+      }
+      w.set_road_class(rc);
+    }
 
     // Delete the name from from name field if it exists in the ref.
     if (!name.empty() && w.ref_index()) {
