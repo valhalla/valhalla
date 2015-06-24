@@ -17,7 +17,7 @@ constexpr uint32_t kDefaultMaxUpTransitions[] = {
 // Default distances within which expansion is always allowed
 // (per level)
 constexpr float kDefaultExpansionWithinDist[] = {
-    kMaxDistance, 10000.0f, 5000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+    kMaxDistance, 250000.0f, 5000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
 // Default distances outside which upward transitions are allowed
 // (per level)
