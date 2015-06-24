@@ -25,7 +25,7 @@ struct NodeAttributes {
   uint32_t shortlink        : 1;  // Link edge < kMaxInternalLength
   uint32_t non_ferry_edge   : 1;
   uint32_t ferry_edge       : 1;
-  uint32_t spare            : 1;
+  uint32_t spare            : 9;
 };
 
 /**

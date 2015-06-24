@@ -6,6 +6,8 @@
 #include <utility>
 #include <thread>
 #include <set>
+#include <queue>
+#include <unordered_map>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -61,8 +63,10 @@ struct Edge {
     uint32_t shortlink        : 1;   // true if this is a link edge and is
                                      //   short enough it may be internal to
                                      //   an intersection
-    uint32_t ferry            : 1;
-    uint32_t spare            : 2;
+    uint32_t driveable_ferry  : 1;
+    uint32_t reclass_ferry    : 1;   // Has edge been reclassified due to
+                                     // ferry connection
+    uint32_t spare            : 1;
   };
   EdgeAttributes attributes;
 
@@ -93,8 +97,10 @@ struct Edge {
       e.attributes.driveablereverse = way.auto_backward();
     }
     e.attributes.link = way.link();
-    e.attributes.ferry = way.ferry() || way.rail();
+    e.attributes.driveable_ferry = (way.ferry() || way.rail()) &&
+                         (way.auto_forward() || way.auto_backward());
     e.attributes.reclass_link = false;
+    e.attributes.reclass_ferry = false;
     e.attributes.has_names = (way.name_index_ != 0
                            || way.name_en_index_ != 0
                            || way.alt_name_index_ != 0
@@ -182,13 +188,13 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.ferry;
+      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.driveable_ferry;
       bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a
       // non-link edge or non-ferry edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
-        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.ferry;
+        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.driveable_ferry;
       }
       if (edge.attributes.link) {
         bundle.link_count++;
@@ -201,12 +207,12 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr, sequenc
       edge.attributes.driveforward = edge.attributes.driveablereverse;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.attributes_.link_edge = bundle.node.attributes_.link_edge || edge.attributes.link;
-      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.ferry;
+      bundle.node.attributes_.ferry_edge = bundle.node.attributes_.ferry_edge || edge.attributes.driveable_ferry;
       bundle.node.attributes_.shortlink |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
       if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
         bundle.node.attributes_.non_link_edge = bundle.node.attributes_.non_link_edge || !edge.attributes.link;
-        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.ferry;
+        bundle.node.attributes_.non_ferry_edge = bundle.node.attributes_.non_ferry_edge || !edge.attributes.driveable_ferry;
       }
       if (edge.attributes.link) {
         bundle.link_count++;
@@ -515,14 +521,17 @@ void ReclassifyLinks(const std::string& ways_file,
 }
 
 /**
- * Get the best classification for any driveable non-ferry edges from a node.
+ * Get the best classification for any driveable non-ferry and non-link
+ * edges from a node. Skip any reclassified ferry edges
  * @param  edges The file backed list of edges in the graph.
  * @return  Returns the best (most important) classification
  */
 uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
-    if (!edge.first.attributes.ferry &&
+    if (!edge.first.attributes.driveable_ferry &&
+        !edge.first.attributes.link &&
+        !edge.first.attributes.reclass_ferry &&
         (edge.first.attributes.driveableforward ||
          edge.first.attributes.driveablereverse)) {
       if (edge.first.attributes.importance < bestrc) {
@@ -533,101 +542,338 @@ uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
   return bestrc;
 }
 
+// NodeLabel - for simple shortest path
+struct NodeLabel {
+  float cost;
+  uint32_t node_index;
+  uint32_t pred_node_index;
+
+  NodeLabel(const float c, const uint32_t n, const uint32_t p)
+      :  cost(c),
+         node_index(n),
+         pred_node_index(p) {
+  }
+};
+
+// Unreached - not yet encountered in search
+constexpr uint32_t kUnreached = 0;
+
+// Permanent - shortest path to this edge has been found
+constexpr uint32_t kPermanent = 1;
+
+// Temporary - edge has been encountered but there could
+// still be a shorter path to this node. This node will
+// be "adjacent" to an node that is permanently labeled.
+constexpr uint32_t kTemporary = 2;
+
+// Store the node label status and its index in the NodeLabels list
+struct NodeStatusInfo {
+  uint32_t set;
+  uint32_t index;
+  NodeStatusInfo() : set(kUnreached), index(0) { }
+  NodeStatusInfo(const uint32_t s, const uint32_t idx)
+      : set(s),
+        index(idx){
+  }
+};
+
+// Cost comparator for priority_queue
+class CompareCost {
+public:
+  bool operator()(const std::pair<float, uint32_t>& n1,
+                  const std::pair<float, uint32_t>& n2) {
+    return n1.first > n2.first;
+  }
+};
+
+uint32_t ShortestPath(const uint32_t start_node_idx,
+                      const uint32_t node_idx,
+                      sequence<OSMWay>& ways,
+                      sequence<OSMWayNode>& way_nodes,
+                      sequence<Edge>& edges,
+                      sequence<Node>& nodes,
+                      const bool inbound, const uint32_t rc) {
+  // Method to get the shape for an edge - since LL is stored as a pair of
+  // floats we need to change into PointLL to get length of an edge
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+    std::vector<PointLL> shape;
+    shape.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+      auto node = (*way_nodes[idx++]).node;
+      shape.emplace_back(node.lng, node.lat);
+    }
+    return shape;
+  };
+
+  // Map to store the status and index of nodes that have been encountered.
+  // Any unreached nodes are not added to the map.
+  std::unordered_map<uint32_t, NodeStatusInfo> node_status;
+  std::vector<NodeLabel> node_labels;
+
+  // Priority queue for the adjacency list
+  std::priority_queue<std::pair<float, uint32_t>,
+      std::vector<std::pair<float, uint32_t>>, CompareCost> adjset;
+
+  // Add node to list of node labels, set the node status and add
+  // to the adjacency set
+  uint32_t nodelabel_index = 0;
+  node_labels.emplace_back(0.0f, node_idx, node_idx);
+  node_status[node_idx] = { kTemporary, nodelabel_index };
+  adjset.push({0.0f, nodelabel_index});
+  nodelabel_index++;
+
+  // Expand edges until a node connected to specified road classification
+  // is reached
+  uint32_t n = 0;
+  uint32_t index = 0;
+  while (!adjset.empty()) {
+    // Get the next node from the adjacency list/priority queue. Gets its
+    // current cost and index
+    const auto& expand_node = adjset.top();
+    float current_cost = expand_node.first;
+    index = expand_node.second;
+    uint32_t node_index = node_labels[index].node_index;
+    adjset.pop();
+
+    // Skip if already labeled - this can happen if an edge is already in
+    // adj. list and a lower cost is found
+    if (node_status[node_index].set == kPermanent) {
+      continue;
+    }
+
+    // Expand all edges from this node
+    auto expand_node_itr = nodes[node_index];
+    auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+
+    // We are finished if node has RC <= rc (and beyond first edge
+    if (n > 0 && GetBestNonFerryClass(expanded.node_edges) <= rc) {
+      break;
+    }
+    n++;
+
+    // Label the node as done/permanent
+    node_status[node_index] = { kPermanent, index};
+
+    // Expand edges. Skip ferry edges and non-driveable edges (based on
+    // the inbound flag).
+    for (const auto& expandededge : expanded.node_edges) {
+      // Skip any ferry edge and any edge that includes the start node index
+      const auto& edge = expandededge.first;
+      if (edge.attributes.driveable_ferry ||
+          edge.sourcenode_ == start_node_idx ||
+          edge.targetnode_ == start_node_idx)
+        continue;
+
+      // Skip non-driveable edges (based on inbound flag)
+      const OSMWay w = *ways[edge.wayindex_];
+      bool forward = (edge.sourcenode_ == node_index);
+      if (forward) {
+        if (( inbound && !edge.attributes.driveablereverse) ||
+            (!inbound && !edge.attributes.driveableforward)) {
+          continue;
+        }
+      } else {
+        if (( inbound && !edge.attributes.driveableforward) ||
+            (!inbound && !edge.attributes.driveablereverse)) {
+          continue;
+        }
+      }
+
+      // Get the end node. Skip if already permanently labeled or this
+      // edge is a loop
+      uint32_t endnode = forward ? edge.targetnode_ : edge.sourcenode_;
+      if (node_status[endnode].set == kPermanent || endnode == node_index) {
+        continue;
+      }
+
+      // Get cost - need the length and speed of the edge
+      auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+      float cost = current_cost + (PointLL::Length(shape) * 3.6f) / w.speed();
+
+      // Check if already in adj set - skip if cost is higher than prior path
+      if (node_status[endnode].set == kTemporary) {
+        uint32_t endnode_idx = node_status[endnode].index;
+        if (node_labels[endnode_idx].cost < cost) {
+          continue;
+        }
+      }
+
+      // Add to the node labels and adjacency set. Skip if this is a loop.
+      node_labels.emplace_back(cost, endnode, node_index);
+      node_status[endnode] = { kTemporary, nodelabel_index };
+      adjset.push({cost, nodelabel_index});
+      nodelabel_index++;
+    }
+  }
+
+  // If only one label we have immediately found an edge with proper
+  // classification - or we cannot expand due to driveability
+  if (node_labels.size() == 1) {
+      LOG_DEBUG("Only 1 edge reclassified");
+    return 0;
+  }
+
+  // Trace shortest path backwards and upgrade edge classifications
+  uint32_t count = 0;
+  while (true) {
+    // Get the edge between this node and the predecessor
+    uint32_t idx = node_labels[index].node_index;
+    uint32_t pred_node = node_labels[index].pred_node_index;
+    auto expand_node_itr = nodes[idx];
+    auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
+    for (auto& edge : bundle2.node_edges) {
+      if (edge.first.sourcenode_ == pred_node ||
+          edge.first.targetnode_ == pred_node) {
+        sequence<Edge>::iterator element = edges[edge.second];
+        auto update_edge = *element;
+        if (update_edge.attributes.importance > rc) {
+          update_edge.attributes.importance = rc;
+          update_edge.attributes.reclass_ferry = true;
+          element = update_edge;
+          count++;
+        }
+      }
+    }
+
+    // Get the predecessor - break once we have found the start node
+    if (pred_node == node_idx) {
+      break;
+    }
+    index = node_status[pred_node].index;
+  }
+  return count;
+}
+
+// Check if the ferry included in this node bundle is short. Must be
+// just one edge and length < 2 km
+bool ShortFerry(const uint32_t node_index, node_bundle& bundle,
+                sequence<Edge>& edges, sequence<Node>& nodes,
+                sequence<OSMWay>& ways,
+                sequence<OSMWayNode>& way_nodes) {
+  // Method to get the shape for an edge - since LL is stored as a pair of
+  // floats we need to change into PointLL to get length of an edge
+  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
+    std::vector<PointLL> shape;
+    shape.reserve(count);
+    for (size_t i = 0; i < count; ++i) {
+      auto node = (*way_nodes[idx++]).node;
+      shape.emplace_back(node.lng, node.lat);
+    }
+    return shape;
+  };
+  uint32_t wayid = 0;
+  bool short_edge = false;
+  for (const auto& edge : bundle.node_edges) {
+    // Check ferry edge. If the end node has a non-ferry edge check
+    // the length of the edge
+    if (edge.first.attributes.driveable_ferry) {
+      uint32_t endnode = (edge.first.sourcenode_ == node_index) ?
+                          edge.first.targetnode_ : edge.first.sourcenode_;
+      auto end_node_itr = nodes[endnode];
+      auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
+      if (bundle2.node.attributes_.non_ferry_edge) {
+        auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
+        if (PointLL::Length(shape) < 2000.0f) {
+          const OSMWay w = *ways[edge.first.wayindex_];
+          wayid = w.way_id();
+          short_edge = true;
+        }
+      } else {
+        short_edge = false;
+      }
+    }
+  }
+  if (short_edge) {
+    LOG_DEBUG("Skip short ferry: way_id = " + std::to_string(wayid));
+  }
+  return short_edge;
+}
+
 // Reclassify links (ramps and turn channels). OSM usually classifies links as
 // the best classification, while to more effectively create shortcuts it is
 // better to "downgrade" link edges to the lower classification.
 void ReclassifyFerryConnections(const std::string& ways_file,
-                     const std::string& nodes_file,
-                     const std::string& edges_file,
-                     const uint32_t rc,
-                     DataQuality& stats) {
-  LOG_INFO("Reclassifying ferry connection graph edges...")
+                                const std::string& way_nodes_file,
+                                const std::string& nodes_file,
+                                const std::string& edges_file,
+                                const uint32_t rc,
+                                DataQuality& stats) {
+  LOG_INFO("Reclassifying ferry connection graph edges...");
 
-  uint32_t count = 0;
-  std::unordered_set<size_t> doneset;     // Nodes to which shortest path found
-  std::unordered_set<size_t> adjset;      // Set of nodes to expand
-  std::list<size_t> connedgeindexes;      // Edge indexes to reclassify
   sequence<OSMWay> ways(ways_file, false);
+  sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
   sequence<Node> nodes(nodes_file, false);
 
- /*
-  // try to expand
-  auto expand = [&expandset, &endrc, &nodes, &edges, &visitedset] (const Edge& edge, const sequence<Node>::iterator& node_itr) {
-    auto end_node_itr = (edge.sourcenode_ == node_itr.position() ? nodes[edge.targetnode_] : node_itr);
-    auto end_node_bundle = collect_node_edges(end_node_itr, nodes, edges);
-
-    // Add the classification if there is a driveable non-link edge
-    if (end_node_bundle.node.attributes_.non_link_edge) {
-      endrc.insert(GetBestNonLinkClass(end_node_bundle.node_edges));
-      if (end_node_bundle.link_count > 1 &&
-          end_node_bundle.node.attributes_.shortlink &&
-          visitedset.find(end_node_itr.position()) == visitedset.end()) {
-       expandset.insert(end_node_itr.position());
-      }
-    } else if (visitedset.find(end_node_itr.position()) == visitedset.end()) {
-      expandset.insert(end_node_itr.position());
-    }
-  };
-*/
-  // Need to expand from the end of the ferry until we meet a road with primary
-  // classification. Want to do simple shortest path (time based only) and obey
-  // driveability. If the starting connection is oneway onto the ferry we need
-  // to check opposing driveability
+  // Need to expand from the end of the ferry until we meet a road with the
+  // specified classification. Want to do simple shortest path (time based
+  // only) and obey driveability.
 
   // Iterate through nodes and find any that connect to both a ferry and a
-  // regular (non-ferry) edge
+  // regular (non-ferry) edge. Skip short ferry edges (river crossing?)
+  uint32_t ferry_endpoint_count = 0;
+  uint32_t total_count = 0;
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.attributes_.ferry_edge &&
         bundle.node.attributes_.non_ferry_edge &&
-        GetBestNonFerryClass(bundle.node_edges) > rc) {
-
-      // Clear the adjacency set and done set
-      doneset = {};
-      adjset  = {};
-
-      // Add node to the adjacency set
-  //    adjset.insert()
-
-      // Expand edges until a node connected to specified road classification
-      // is reached
-      while (!adjset.empty()) {
- //       expand(startedge.first, node_itr);
-
-
-        // Expand all edges from this node and pop from expand set
-        auto expand_node_itr = nodes[*adjset.begin()];
-        auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
-        doneset.insert(expand_node_itr.position());
-        adjset.erase(adjset.begin());
-
-
-        for (const auto& expandededge : expanded.node_edges) {
-
-          // Expand from end node of this link edge
-   //       expand(expandededge.first, expand_node_itr);
+        GetBestNonFerryClass(bundle.node_edges) > rc &&
+        !ShortFerry(node_itr.position(), bundle, edges,
+                    nodes, ways, way_nodes)) {
+      // Form shortest path from node along each edge connected to the ferry,
+      // track until the specified RC is reached
+      bool oneway_reverse = false;
+      for (const auto& edge : bundle.node_edges) {
+        // Skip ferry edges and non-driveable edges
+        if (edge.first.attributes.driveable_ferry ||
+          (!edge.first.attributes.driveablereverse &&
+           !edge.first.attributes.driveableforward)) {
+          continue;
         }
+
+        // Expand/reclassify from the end node of this edge.
+        uint32_t end_node_idx = (edge.first.sourcenode_ == node_itr.position()) ?
+                    edge.first.targetnode_ : edge.first.sourcenode_;
+
+        // Check if edge is oneway towards the ferry or outbound from the
+        // ferry. If edge is drivable both ways we need to expand it twice-
+        // once with a driveable path towards the ferry and once with a
+        // driveable path away from the ferry
+        if (edge.first.attributes.driveableforward ==
+            edge.first.attributes.driveablereverse) {
+          // Driveable in both directions - get an inbound path and an
+          // outbound path.
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways,
+                            way_nodes,edges, nodes, true, rc);
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways,
+                            way_nodes, edges, nodes, false, rc);
+        } else {
+          // Check if oneway inbound to the ferry
+          bool inbound = (edge.first.sourcenode_ == node_itr.position()) ?
+                          edge.first.attributes.driveablereverse :
+                          edge.first.attributes.driveableforward;
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways,
+                            way_nodes, edges, nodes, inbound, rc);
+        }
+        ferry_endpoint_count++;
+
+        // Reclassify the first/start edge. Do this AFTER finding shortest path so
+        // we do not immediately determine we hit the specified classification
+        sequence<Edge>::iterator element = edges[edge.second];
+        auto update_edge = *element;
+        update_edge.attributes.importance = rc;
+        element = update_edge;
+        total_count++;
       }
-
-      // Trace shortest path backwards and upgrade classification on
-      // any edges below the specified classification.
- /*     for (auto idx : linkedgeindexes) {
-        sequence<Edge>::iterator element = edges[idx];
-        auto edge = *element;
-        if (edge.attributes.importance > rc) {
-          edge.attributes.importance = rc;
-          element = edge;
-          count++;
-        }
-      } */
     }
 
     // Go to the next node
     node_itr += bundle.node_count;
   }
-  LOG_INFO("Finished. " + std::to_string(count) + " edges reclassified.");
+  LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
+           std::to_string(ferry_endpoint_count) + ", " +
+           std::to_string(total_count) + " edges reclassified.");
 }
 
 /*
@@ -1096,8 +1342,19 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   DataQuality stats;
   ReclassifyLinks(ways_file, nodes_file, edges_file, stats);
 
+  // Reclassify ferry connection edges - use the highway classification cutoff
+  RoadClass rc = RoadClass::kPrimary;
+  for (auto& level : tile_hierarchy.levels()) {
+    if (level.second.name == "highway") {
+      rc = level.second.importance;
+    }
+  }
+  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
+                             static_cast<uint32_t>(rc), stats);
+
   // Build tiles at the local level. Form connected graph from nodes and edges.
-  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tiles, tile_hierarchy, stats);
+  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
+                  edges_file, tiles, tile_hierarchy, stats);
 
   stats.LogStatistics();
 }
