@@ -100,4 +100,4 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
 }
 }
-#endif  // VALHALLA_MJOLNIR_NODE_EXPANDER_H_
+#endif  // VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_

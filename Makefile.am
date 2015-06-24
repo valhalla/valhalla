@@ -60,6 +60,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/graphvalidator.h \
 	valhalla/mjolnir/hierarchybuilder.h \
 	valhalla/mjolnir/idtable.h \
+	valhalla/mjolnir/linkclassification.h \
 	valhalla/mjolnir/luatagtransform.h \
 	valhalla/mjolnir/node_expander.h \
 	valhalla/mjolnir/osmadmin.h \
@@ -92,6 +93,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/graphvalidator.cc \
 	src/mjolnir/hierarchybuilder.cc \
 	src/mjolnir/idtable.cc \
+	src/mjolnir/linkclassification.cc \
 	src/mjolnir/luatagtransform.cc \
 	src/mjolnir/node_expander.cc \
 	src/mjolnir/osmadmin.cc \
