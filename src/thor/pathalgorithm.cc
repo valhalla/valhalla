@@ -156,7 +156,36 @@ void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
   hierarchy_limits_  = costing->GetHierarchyLimits();
 }
 
-// Calculate best path. This method is single mode, no time dependency.
+// Modulate the hierarchy expansion within distance based on density at
+// the destination (increase distance for lower densities and decrease
+// for higher densities) and the distance between origin and destination
+// (increase for shorter distances).
+void PathAlgorithm::ModifyHierarchyLimits(const float dist,
+                                          const uint32_t density) {
+  // TODO - default distance below which we increase expansion within
+  // distance. This is somewhat temporary to address route quality on shorter
+  // routes - hopefully we will mark the data somehow to indicate how to
+  // use the hierarchy when approaching the destination (or use a
+  // bi-directional search without hierarchies for shorter routes).
+  float factor = 1.0f;
+  if (25000.0f < dist && dist < 100000.0f) {
+    factor = std::min(3.0f, 100000.0f / dist);
+  }
+  /* TODO - need a reliable density factor near the destination (e.g. tile level?)
+  // Low density - increase expansion within distance.
+  // High density - decrease expansion within distance.
+  if (density < 8) {
+    float f = 1.0f + (8.0f - density) * 0.125f;
+    factor *= f;
+  } else if (density > 8) {
+    float f = 0.5f + (15.0f - density) * 0.0625;
+    factor *= f;
+  }*/
+  // TODO - just arterial for now...investigate whether to alter local as well
+  hierarchy_limits_[1].expansion_within_dist *= factor;
+}
+
+// Calculate best path. This method is single mode, not time-dependent.
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>& costing) {
@@ -183,7 +212,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
   // Initialize the origin and destination locations
   SetOrigin(graphreader, origin, costing, loop_edge_info);
-  SetDestination(graphreader, dest, costing);
+  uint32_t density = SetDestination(graphreader, dest, costing);
+
+  // Update hierarchy limits
+  if (allow_transitions_) {
+    ModifyHierarchyLimits(mindist, density);
+  }
 
   // Find shortest path
   uint32_t nc = 0;       // Count of iterations with no convergence
@@ -706,16 +740,21 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-void PathAlgorithm::SetDestination(GraphReader& graphreader,
+uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
                      const PathLocation& dest,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
+  uint32_t density = 0;
   float seconds = 0.0f;
   for (const auto& edge : dest.edges()) {
     // Keep the id and the cost to traverse the partial distance
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
     destinations_[edge.id] = (costing->EdgeCost(tile->directededge(edge.id), 0.0f) * edge.dist);
+
+    // Get the tile relative density
+    density = tile->header()->density();
   }
+  return density;
 }
 
 // Test is the shortest path has been found.
