@@ -137,16 +137,32 @@ class PathAlgorithm {
                       const sif::EdgeLabel& pred, const uint32_t predindex);
 
   /**
-   * Add edges at the origin to the adjacency list
+   * Modify hierarchy limits.
    */
-  void SetOrigin(baldr::GraphReader& graphreader, const baldr::PathLocation& origin,
-      const std::shared_ptr<sif::DynamicCost>& costing, const PathInfo& loop_edge);
+  void ModifyHierarchyLimits(const float dist, const uint32_t density);
+
+  /**
+   * Add edges at the origin to the adjacency list
+   * @param  graphreader  Graph tile reader.
+   * @param  dest        Location information of the destination
+   * @param  costing     Dynamic costing
+   * @param  loop_edge   Loop edge information
+   */
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 const baldr::PathLocation& origin,
+                 const std::shared_ptr<sif::DynamicCost>& costing,
+                 const PathInfo& loop_edge);
 
   /**
    * Set the destination edge(s).
+   * @param  graphreader  Graph tile reader.
+   * @param  dest        Location information of the destination
+   * @param  costing     Dynamic costing
+   * @return  Returns the relative density near the destination (0-15)
    */
-  void SetDestination(baldr::GraphReader& graphreader, const baldr::PathLocation& dest,
-     const std::shared_ptr<sif::DynamicCost>& costing);
+  uint32_t SetDestination(baldr::GraphReader& graphreader,
+                          const baldr::PathLocation& dest,
+                          const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Return a valid edge id if we've found the destination edge
