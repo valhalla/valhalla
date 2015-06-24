@@ -144,9 +144,9 @@ class PathAlgorithm {
   /**
    * Add edges at the origin to the adjacency list
    * @param  graphreader  Graph tile reader.
-   * @param  dest        Location information of the destination
-   * @param  costing     Dynamic costing
-   * @param  loop_edge   Loop edge information
+   * @param  origin       Location information of the destination
+   * @param  costing      Dynamic costing
+   * @param  loop_edge    Loop edge information
    */
   void SetOrigin(baldr::GraphReader& graphreader,
                  const baldr::PathLocation& origin,
@@ -156,8 +156,8 @@ class PathAlgorithm {
   /**
    * Set the destination edge(s).
    * @param  graphreader  Graph tile reader.
-   * @param  dest        Location information of the destination
-   * @param  costing     Dynamic costing
+   * @param  dest         Location information of the destination
+   * @param  costing      Dynamic costing
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
