@@ -54,12 +54,15 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
 	valhalla/mjolnir/uniquenames.h \
+	valhalla/mjolnir/ferry_connections.h \
 	valhalla/mjolnir/graphbuilder.h \
 	valhalla/mjolnir/graphenhancer.h \
 	valhalla/mjolnir/graphvalidator.h \
 	valhalla/mjolnir/hierarchybuilder.h \
 	valhalla/mjolnir/idtable.h \
+	valhalla/mjolnir/linkclassification.h \
 	valhalla/mjolnir/luatagtransform.h \
+	valhalla/mjolnir/node_expander.h \
 	valhalla/mjolnir/osmadmin.h \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
@@ -84,12 +87,15 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
 	src/proto/osmformat.pb.cc \
+	src/mjolnir/ferry_connections.cc \
 	src/mjolnir/graphbuilder.cc \
 	src/mjolnir/graphenhancer.cc \
 	src/mjolnir/graphvalidator.cc \
 	src/mjolnir/hierarchybuilder.cc \
 	src/mjolnir/idtable.cc \
+	src/mjolnir/linkclassification.cc \
 	src/mjolnir/luatagtransform.cc \
+	src/mjolnir/node_expander.cc \
 	src/mjolnir/osmadmin.cc \
 	src/mjolnir/osmnode.cc \
 	src/mjolnir/osmpbfparser.cc \

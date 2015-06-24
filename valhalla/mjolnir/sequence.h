@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <type_traits>
 #include <iterator>
