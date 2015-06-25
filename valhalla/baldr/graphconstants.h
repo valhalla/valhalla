@@ -86,16 +86,19 @@ enum class NodeType : uint8_t {
   kBusStop = 5,             // Bus stop
   kMultiUseTransitStop = 6, // Multi-use transit stop (rail and bus)
   kBikeShare = 7,           // Bike share location
-  kParking = 8              // Parking location
+  kParking = 8,             // Parking location
+  kMotorWayJunction = 9     // Highway = motorway_junction
 };
 
 // Intersection types. Classifications of various intersections.
 // TODO - enumerate and assign!
 enum class IntersectionType : uint8_t {
-  kRegular = 0,    // Regular, unclassified intersection
-  kFalse = 1,      // False intersection. Only 2 edges connect. Typically
-                   // where 2 ways are split or where attributes force a split.
-  kDeadEnd = 2     // Node only connects to one edge ("dead-end").
+  kRegular = 0,       // Regular, unclassified intersection
+  kFalse = 1,         // False intersection. Only 2 edges connect. Typically
+                      // where 2 ways are split or where attributes force a split.
+  kDeadEnd = 2,       // Node only connects to one edge ("dead-end").
+  kFork = 3           // All edges are links OR all edges are not links
+                      // and node is a motorway_junction.
 };
 
 // Edge use. Indicates specialized uses.
