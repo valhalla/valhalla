@@ -95,8 +95,8 @@ enum class IntersectionType : uint8_t {
   kFalse = 1,         // False intersection. Only 2 edges connect. Typically
                       // where 2 ways are split or where attributes force a split.
   kDeadEnd = 2,       // Node only connects to one edge ("dead-end").
-  kFork = 3           // Motorway junctions that have edges/ways all marked with a
-                      // highway tags are not *_links or they are all *_links
+  kFork = 3           // All edges are links OR all edges are not links
+                      // and node is a motorway_junction.
 };
 
 // Edge use. Indicates specialized uses.
