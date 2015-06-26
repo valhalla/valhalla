@@ -82,6 +82,10 @@ struct graph_callback : public OSMPBF::Callback {
 
     // Create a new node and set its attributes
     OSMNode n{osmid, static_cast<float>(lng), static_cast<float>(lat)};
+
+    if (is_highway_junction)
+      n.set_type(NodeType::kMotorWayJunction);
+
     for (const auto& tag : results) {
 
       if (tag.first == "highway") {
