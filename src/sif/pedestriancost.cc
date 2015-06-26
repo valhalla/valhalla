@@ -9,7 +9,15 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr uint32_t kMaxWalkingDistance = 100000; // 100 km
+
+// Maximum walking distance for any walking leg of a multimodal route.
+// From origin/destination to any transit stop, parking, etc. or between
+// any stops
+constexpr uint32_t kMaxModeDistance    = 3000;   // 3 km
+
+// Maximum distance of a walking route
+constexpr uint32_t kMaxDistance        = 100000; // 100 km
+
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
@@ -30,6 +38,15 @@ class PedestrianCost : public DynamicCost {
   PedestrianCost(const boost::property_tree::ptree& pt);
 
   virtual ~PedestrianCost();
+
+  /**
+   * This method overrides the max_distance with the multi-modal per segment
+   * distance. An example is a pure walking route may have a max distance of
+   * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
+   * meters per segment (e.g. from origin to a transit stop or from the last
+   * transit stop to the destination).
+   */
+  virtual void UseMaxModeDistance();
 
   /**
    * Checks if access is allowed for the provided directed edge.
@@ -99,9 +116,12 @@ class PedestrianCost : public DynamicCost {
   }
 
  private:
-  // Maximum walking distance in meters. For multimodal routes this is the maximum
-  // distance for any single leg.
+  // Maximum walking distance
   uint32_t max_distance_;
+
+  // Maximum walking distance in meters for multimodal routes. This is the maximum
+  // distance for any single walking portion of the route.
+  uint32_t max_mode_distance_;
 
   // Walking speed (default to 5.1 km / hour)
   float walking_speed_;
@@ -127,12 +147,13 @@ class PedestrianCost : public DynamicCost {
 PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kPedestrian) {
   allow_transit_connections_ = false;
-  max_distance_    = pt.get<uint32_t>("max_distance", kMaxWalkingDistance);
-  walking_speed_   = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
-  walkway_factor_  = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
-  alley_factor_    = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
-  driveway_factor_ = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
-  step_penalty_    = pt.get<float>("step_penalty", kDefaultStepPenalty);
+  max_distance_      = pt.get<uint32_t>("max_distance", kMaxDistance);
+  max_mode_distance_ = pt.get<uint32_t>("max_mode_distance", kMaxModeDistance);
+  walking_speed_     = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
+  walkway_factor_    = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
+  alley_factor_      = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
+  driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
+  step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / walking_speed_;
@@ -141,6 +162,16 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
 // Destructor
 PedestrianCost::~PedestrianCost() {
 }
+
+// This method overrides the max_distance with the multi-modal per segment
+// distance. An example is a pure walking route may have a max distance of
+// 10000 meters (10km) but for a multi-modal route a lower limit of 5000
+//  meters per segment (e.g. from origin to a transit stop or from the last
+//  transit stop to the destination).
+void PedestrianCost::UseMaxModeDistance() {
+  max_distance_ = max_mode_distance_;
+}
+
 
 // Check if access is allowed on the specified edge. Disallow if no pedestrian
 // access. Disallow Uturns or entering not-thru edges except near the
