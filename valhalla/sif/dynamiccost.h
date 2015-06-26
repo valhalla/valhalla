@@ -62,6 +62,15 @@ class DynamicCost {
   virtual bool AllowMultiPass() const;
 
   /**
+   * This method overrides the max_distance with the multi-modal per segment
+   * distance. An example is a pure walking route may have a max distance of
+   * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
+   * meters per segment (e.g. from origin to a transit stop or from the last
+   * transit stop to the destination).
+   */
+  virtual void UseMaxModeDistance();
+
+  /**
    * Checks if access is allowed for the provided directed edge.
    * This is generally based on mode of travel and the access modes
    * allowed on the edge. However, it can be extended to exclude access
