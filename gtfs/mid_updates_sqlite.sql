@@ -16,6 +16,7 @@ update shape_tmp set geom = (select SetSRID(MakeLine(geom),4326) FROM shapes_tmp
 
 update shapes_tmp set shape_key = (select shape_key from shape_tmp where shapes_tmp.shape_id = shape_tmp.shape_id);
 update trips_tmp set shape_key = (select shape_key from shape_tmp where trips_tmp.shape_id = shape_tmp.shape_id);
+update trips_tmp set shape_key = 0 where shape_key = '' or shape_key is null;
 
 update stop_times_tmp set stop_key = (select stop_key from stops_tmp b where b.stop_id = stop_times_tmp.stop_id);
 update stops_tmp set parent_station_key = (select stop_key from stops_tmp b where b.location_type=1 and b.stop_id = stops_tmp.parent_station);
