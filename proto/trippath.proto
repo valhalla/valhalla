@@ -173,6 +173,8 @@ message TripPath {
     optional bool bike_share = 11;           // Bike share location
     optional bool parking = 12;              // Parking location
     optional TransitStopInfo transit_stop_info = 13;
+    optional bool motorway_junction = 14;    // Motorway junction
+    optional bool fork = 15;                 // Fork
   }
 
   message Admin {
