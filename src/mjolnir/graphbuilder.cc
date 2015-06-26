@@ -379,6 +379,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   // For each tile in the task
   bool added = false;
   DataQuality stats;
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Iterate over tiles
   for(; tile_start != tile_end; ++tile_start) {
     try {
       // What actually writes the tile
@@ -388,7 +391,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
-      //for each node in the tile
+
+      ////////////////////////////////////////////////////////////////////////
+      // Iterate over nodes in the tile
       auto node_itr = nodes[tile_start->second];
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
         //amalgamate all the node duplicates into one and the edges that connect to it
@@ -400,6 +405,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Look for potential duplicates
         //CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
 
+        // it is a fork if all the edges are links
+        // OR the node is a motorway_junction and none of the edges are links
+        bool fork = ((bundle.link_count == bundle.node_edges.size())
+            || ((node.type() == NodeType::kMotorWayJunction) && (bundle.link_count == 0)));
+
+        //////////////////////////////////////////////////////////////////////
+        // Iterate over edges at node
         // Build directed edges. Track the best classification/importance
         // of outbound edges from this node.
         uint32_t n = 0;
@@ -481,11 +493,15 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           directededge.set_edgeinfo_offset(edge_info_offset);
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
-          // TODO - Also, we will have to deal with non ramp signs
           // Any exits for this directed edge? is auto and oneway?
-          std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(node, w, osmdata);
+          std::vector<SignInfo> exits = GraphBuilder::CreateExitSignInfoList(
+              node, w, osmdata, fork);
+
+          // Add signs if signs exist
+          // and directed edge if forward access and auto use
+          // and directed edge is a link or node is a fork
           if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess)
-               && directededge.link()) {
+               && (directededge.link() || fork)) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
@@ -518,6 +534,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // from the node. Increment directed edge count.
         NodeInfoBuilder nodebuilder(node_ll, bestclass, node.access_mask(),
                                     node.type(), (n == 1), node.traffic_signal());
+        if (fork) {
+          nodebuilder.set_intersection(IntersectionType::kFork);
+        }
 
         directededgecount += n;
 
@@ -701,7 +720,8 @@ std::string GraphBuilder::GetRef(const std::string& way_ref, const std::string& 
   return refs;
 }
 
-std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata) {
+std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(
+    const OSMNode& node, const OSMWay& way, const OSMData& osmdata, bool fork) {
 
   std::vector<SignInfo> exit_list;
 
@@ -712,7 +732,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, 
   if (way.junction_ref_index() != 0) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
             osmdata.ref_offset_map.name(way.junction_ref_index()));
-  }  else if (node.ref()) {
+  }  else if (node.ref() && !fork) {
     exit_list.emplace_back(Sign::Type::kExitNumber,
             osmdata.node_ref.find(node.osmid)->second);
   }
@@ -780,7 +800,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, 
   ////////////////////////////////////////////////////////////////////////////
   // Process exit_to only if other branch or toward info does not exist
   if (!has_branch && !has_toward) {
-    if (node.exit_to()) {
+    if (node.exit_to() && !fork) {
 
       std::string tmp;
       std::size_t pos;
@@ -839,7 +859,7 @@ std::vector<SignInfo> GraphBuilder::CreateExitSignInfoList(const OSMNode& node, 
   // NAME
 
   // Exit sign name
-  if (node.name()) {
+  if (node.name() && !fork) {
     std::vector<std::string> names = GetTagTokens(
             osmdata.node_name.find(node.osmid)->second);
     for (auto& name : names) {
