@@ -576,14 +576,30 @@ std::vector<PointLL> GetShape(sqlite3* db_handle,
     auto start_idx = std::get<2>(start);
     auto end_idx = std::get<2>(end);
 
-    if (start_idx < end_idx) //forward direction
+    shape.push_back(stop_ll);
+
+    if (start_idx < end_idx) { //forward direction
+
+      if ((trip_shape.at(start_idx)) == stop_ll) // avoid dups
+        start_idx++;
+
       std::copy(trip_shape.begin()+start_idx, trip_shape.begin()+end_idx, back_inserter(shape));
-    else if (start_idx > end_idx) //backwards
-      std::reverse_copy(trip_shape.begin()+end_idx, trip_shape.begin()+start_idx, back_inserter(shape));
-    else {
-      shape.push_back(stop_ll);
-      shape.push_back(endstop_ll);
+
+      if ((trip_shape.at(end_idx)) != endstop_ll)
+        shape.push_back(endstop_ll);
     }
+    else if (start_idx > end_idx) { //backwards
+
+      if ((trip_shape.at(end_idx)) == stop_ll)
+        end_idx++;
+
+      std::reverse_copy(trip_shape.begin()+end_idx, trip_shape.begin()+start_idx, back_inserter(shape));
+
+      if ((trip_shape.at(start_idx)) != endstop_ll) // avoid dups
+        shape.push_back(endstop_ll);
+    }
+    else
+      shape.push_back(endstop_ll);
   } else {
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
