@@ -352,7 +352,7 @@ bool PathAlgorithm::CanReachDestination(const PathLocation& destination,
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjlist.Remove(edgelabels);
     if (predindex == kInvalidLabel) {
-      LOG_INFO("Cannot reach destination - exceeding max_mm_distance walking");
+      LOG_INFO("Cannot reach destination - exceeding max_mode_distance walking");
       return false;
     }
 
