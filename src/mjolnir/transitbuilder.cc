@@ -50,6 +50,7 @@ struct Departure {
   uint32_t route;
   uint32_t blockid;
   uint32_t service;
+  uint32_t shapeid;
   uint32_t dep_time;
   uint32_t arr_time;
   uint32_t start_date;
@@ -302,7 +303,7 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
   // Form query
   // TODO - add shape Id
   std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
-  sql += "trip_key, route_key, service_key, departure_time, arrival_time,";
+  sql += "trip_key, route_key, service_key, shape_key, departure_time, arrival_time,";
   sql += "start_date, end_date, dow_mask, has_subtractions, headsign from schedule where ";
   sql += "origin_stop_key = " + std::to_string(stop_key);
 
@@ -319,19 +320,18 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
       dep.trip      = sqlite3_column_int(stmt, 3);
       dep.route     = sqlite3_column_int(stmt, 4);
       dep.service   = sqlite3_column_int(stmt, 5);
+      dep.shapeid   = sqlite3_column_int(stmt, 6);
 
-      dep.dep_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 6))));
-      dep.arr_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))));
-      dep.start_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))));
-      dep.end_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))));
+      dep.dep_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))));
+      dep.arr_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))));
+      dep.start_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))));
+      dep.end_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 10))));
 
-      dep.dow        = sqlite3_column_int(stmt, 10);
-      dep.has_subtractions = sqlite3_column_int(stmt, 11);
-      dep.headsign   = (sqlite3_column_type(stmt, 12) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 12))) : "";
-
-      // TODO need to add block Id (default to 0)
-      dep.blockid = 0;
+      dep.dow        = sqlite3_column_int(stmt, 11);
+      dep.has_subtractions = sqlite3_column_int(stmt, 12);
+      dep.blockid    = sqlite3_column_int(stmt, 13);
+      dep.headsign   = (sqlite3_column_type(stmt, 14) == SQLITE_TEXT) ?
+                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 14))) : "";
 
       // TODO - configure to reject any where calendar end date is in the past!
       if (dep.end_date > 500) {
@@ -416,7 +416,7 @@ std::unordered_map<uint32_t, uint32_t> AddTrips(sqlite3* db_handle,
   for (const auto& key : keys) {
     // Form query. Skip: service_id, trip_id, direction_id
     std::string sql = "SELECT trip_key, route_key, trip_headsign,";
-    sql += "trip_short_name, shape_id from trips where ";
+    sql += "trip_short_name, shape_key from trips where ";
     sql += "trip_key = " + std::to_string(key);
 
     sqlite3_stmt* stmt = 0;
@@ -537,18 +537,79 @@ Use GetTransitUse(const uint32_t rt) {
   }
 }
 
-std::vector<PointLL> GetShape(const PointLL& stop_ll,
+std::vector<PointLL> GetShape(sqlite3* db_handle,
+                              const PointLL& stop_ll,
                               const PointLL& endstop_ll,
                               const uint32_t shapeid) {
-  // TODO - get the shape from the DB and get the portion between the
-  // 2 stop LLs
   std::vector<PointLL> shape;
-  shape.push_back(stop_ll);
-  shape.push_back(endstop_ll);
+
+  if (shapeid != 0 && stop_ll != endstop_ll) {
+    // Query the shape from the DB based on the shapeid.
+    std::string sql = "SELECT shape_pt_lon, shape_pt_lat from shapes ";
+    sql += "where shape_key = ";
+    sql += std::to_string(shapeid);
+    sql += " order by shape_pt_sequence;";
+
+    PointLL  ll;
+    std::vector<PointLL> trip_shape;
+    sqlite3_stmt* stmt = 0;
+    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+    if (ret == SQLITE_OK) {
+      uint32_t result = sqlite3_step(stmt);
+      while (result == SQLITE_ROW) {
+
+        ll.Set(static_cast<float>(sqlite3_column_double(stmt, 0)),
+               static_cast<float>(sqlite3_column_double(stmt, 1)));
+
+        trip_shape.push_back(ll);
+        result = sqlite3_step(stmt);
+      }
+    }
+    if (stmt) {
+      sqlite3_finalize(stmt);
+      stmt = 0;
+    }
+
+    auto start = stop_ll.ClosestPoint(trip_shape);
+    auto end = endstop_ll.ClosestPoint(trip_shape);
+
+    auto start_idx = std::get<2>(start);
+    auto end_idx = std::get<2>(end);
+
+    shape.push_back(stop_ll);
+
+    if (start_idx < end_idx) { //forward direction
+
+      if ((trip_shape.at(start_idx)) == stop_ll) // avoid dups
+        start_idx++;
+
+      std::copy(trip_shape.begin()+start_idx, trip_shape.begin()+end_idx, back_inserter(shape));
+
+      if ((trip_shape.at(end_idx)) != endstop_ll)
+        shape.push_back(endstop_ll);
+    }
+    else if (start_idx > end_idx) { //backwards
+
+      if ((trip_shape.at(end_idx)) == stop_ll)
+        end_idx++;
+
+      std::reverse_copy(trip_shape.begin()+end_idx, trip_shape.begin()+start_idx, back_inserter(shape));
+
+      if ((trip_shape.at(start_idx)) != endstop_ll) // avoid dups
+        shape.push_back(endstop_ll);
+    }
+    else
+      shape.push_back(endstop_ll);
+  } else {
+    shape.push_back(stop_ll);
+    shape.push_back(endstop_ll);
+  }
+
   return shape;
 }
 
-void AddToGraph(GraphTileBuilder& tilebuilder,
+void AddToGraph(sqlite3* db_handle,
+                GraphTileBuilder& tilebuilder,
                 std::map<GraphId, StopEdges>& stop_edge_map,
                 std::vector<Stop>& stops,
                 std::vector<OSMConnectionEdge>& connection_edges,
@@ -755,7 +816,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // route within TripPathBuilder.
       bool added = false;
       std::vector<std::string> names;
-      std::vector<PointLL> shape = GetShape(stop.ll, endstop.ll, transitedge.shapeid);
+      std::vector<PointLL> shape = GetShape(db_handle, stop.ll, endstop.ll, transitedge.shapeid);
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            stop.graphid, endstop.graphid, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -1004,14 +1065,13 @@ void build(const boost::property_tree::ptree& pt,
           // Identify unique route and arrival stop pairs - associate to a
           // unique line Id stored in the directed edge.
           uint32_t lineid;
-          uint32_t shapeid = 0;  // TODO
           auto m = unique_transit_edges.find({dep.route, dep.dest_stop});
           if (m == unique_transit_edges.end()) {
             // Add to the map and update the line id
             lineid = unique_lineid;
             unique_transit_edges[{dep.route, dep.dest_stop}] = unique_lineid;
             unique_lineid++;
-            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop, shapeid);
+            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop, dep.shapeid);
           } else {
             lineid = m->second;
           }
@@ -1062,7 +1122,7 @@ void build(const boost::property_tree::ptree& pt,
     AddCalendar(db_handle, service_keys, tilebuilder);
 
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(tilebuilder, stop_edge_map, stops, connection_edges,
+    AddToGraph(db_handle, tilebuilder, stop_edge_map, stops, connection_edges,
                stop_indexes, route_types);
 
     // Write the new file
