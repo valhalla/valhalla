@@ -21,6 +21,40 @@
 namespace valhalla {
 namespace thor {
 
+constexpr uint32_t kBucketCount = 20000;
+
+// If the destination is at a node we want the incoming edge Ids
+// with distance = 1.0 (the full edge). This returns and updated
+// destination PathLocation.
+// TODO - move this logic into Loki
+baldr::PathLocation update_destinations(baldr::GraphReader& graphreader,
+                                 const baldr::PathLocation& destination,
+                                 const sif::EdgeFilter& filter);
+
+/**
+ * Check if any of the pairs of origin and destination edges could be a
+ * trivial path. This means the origin and destination are on the same edge.
+ * @param   origin  Origin location.
+ * @param   destination  Destination location.
+ * @return  Returns the Graph Id representing the trivial path (invalid graph
+ *          Id indicates the path is not trivial.
+ */
+baldr::GraphId trivial(const baldr::PathLocation& origin,
+                       const baldr::PathLocation& destination);
+
+/**
+ * If we end up with locations where there is a trivial path but you would
+ * have to traverse the edge in reverse to do it we need to mark this as a
+ * loop so that the initial edge can be considered on the path at some later
+ * point in time.
+ * @param   origin  Origin location.
+ * @param   destination  Destination location.
+ * @return  Returns the Graph Id representing the origin edge of the loop path
+ *          (invalid graph Id indicates the path is not a loop.
+ */
+baldr::GraphId loop(const baldr::PathLocation& origin,
+                    const baldr::PathLocation& destination);
+
 /**
  * Algorithm to create shortest path.
  */
@@ -62,6 +96,18 @@ class PathAlgorithm {
    */
   std::vector<PathInfo> GetBestPathMM(const baldr::PathLocation& origin,
            const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+           const std::shared_ptr<sif::DynamicCost>* mode_costing);
+
+  /**
+   * Check if destination can be reached if walking is the last mode. Checks
+   * if there are any transit stops within maximum walking distance from
+   * the destination. This is used to reject impossible routes given the
+   * modes allowed.
+   * TODO - once auto/bicycle are allowed modes we need to check if parking
+   * or bikeshare locations are within walking distance.
+   */
+  bool CanReachDestination(const baldr::PathLocation& destination,
+           baldr::GraphReader& graphreader, const sif::TravelMode dest_mode,
            const std::shared_ptr<sif::DynamicCost>* mode_costing);
 
   /**
