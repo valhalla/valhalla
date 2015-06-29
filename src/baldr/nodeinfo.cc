@@ -165,7 +165,7 @@ const uint64_t NodeInfo::internal_version() {
   ni.stop_ = {};
   ni.type_ = {};
 
-  uint64_t seed = 0;
+  size_t seed = 0;
   boost::hash_combine(seed, ni.latlng_);
 
   //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
