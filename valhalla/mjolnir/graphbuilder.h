@@ -45,7 +45,10 @@ class GraphBuilder {
 
   static std::string GetRef(const std::string& way_ref, const std::string& relation_ref);
 
-  static std::vector<SignInfo> CreateExitSignInfoList(const OSMNode& node, const OSMWay& way, const OSMData& osmdata);
+  static std::vector<SignInfo> CreateExitSignInfoList(const OSMNode& node,
+                                                      const OSMWay& way,
+                                                      const OSMData& osmdata,
+                                                      bool fork);
 
 };
 

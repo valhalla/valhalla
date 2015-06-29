@@ -16,6 +16,7 @@ void ExitToTest() {
   OSMNode node{1234};
   OSMWay way{};
   OSMData osmdata{};
+  bool fork = false;
 
   node.set_exit_to(true);
 
@@ -23,7 +24,7 @@ void ExitToTest() {
   osmdata.node_exit_to[node.osmid] = "US 11;To I 81;Carlisle;Harrisburg";
 
   std::vector<SignInfo> exitsigns;
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork);
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
@@ -40,7 +41,7 @@ void ExitToTest() {
   exitsigns.clear();
   osmdata.node_exit_to[node.osmid] = "US 11;Toward I 81;Carlisle;Harrisburg";
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork);
 
   if (exitsigns.size() == 4) {
     for (auto& exitsign : exitsigns) {
@@ -56,7 +57,7 @@ void ExitToTest() {
   exitsigns.clear();
   osmdata.node_exit_to[node.osmid] = "I 95 To I 695";
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork);
 
   if (exitsigns.size() == 2) {
      if (exitsigns[0].type() != Sign::Type::kExitBranch)
@@ -73,7 +74,7 @@ void ExitToTest() {
   exitsigns.clear();
   osmdata.node_exit_to[node.osmid] = "I 495 Toward I 270";
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork);
 
   if (exitsigns.size() == 2) {
     if (exitsigns[0].type() != Sign::Type::kExitBranch)
@@ -90,7 +91,7 @@ void ExitToTest() {
   exitsigns.clear();
   osmdata.node_exit_to[node.osmid] = "I 495 Toward I 270 To I 95";//default to toward.  Punt on parsing.
 
-  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata);
+  exitsigns = GraphBuilder::CreateExitSignInfoList(node, way, osmdata, fork);
 
   if (exitsigns.size() == 1) {
     if (exitsigns[0].type() != Sign::Type::kExitToward)
