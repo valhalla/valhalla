@@ -29,7 +29,7 @@ struct fp_t {
 };
 
 //a variant of all the possible values to go with keys in json
-using Value = boost::variant<std::string, uint64_t, int64_t, fp_t, bool, nullptr_t, MapPtr, ArrayPtr>;
+using Value = boost::variant<std::string, uint64_t, int64_t, fp_t, bool, std::nullptr_t, MapPtr, ArrayPtr>;
 
 //the map value type in json
 class Jmap : public std::unordered_map<std::string, Value> {
@@ -83,7 +83,7 @@ class OstreamVisitor : public boost::static_visitor<std::ostream&>
   std::ostream& operator()(int64_t value) const { return ostream_ << value; }
   std::ostream& operator()(fp_t value) const { return ostream_ << value; }
   std::ostream& operator()(bool value) const { return ostream_ << (value ? "true" : "false"); }
-  std::ostream& operator()(nullptr_t value) const { return ostream_ << "null"; }
+  std::ostream& operator()(std::nullptr_t value) const { return ostream_ << "null"; }
   std::ostream& operator()(const MapPtr& value) const { return ostream_ << *value; }
   std::ostream& operator()(const ArrayPtr& value) const { return ostream_ << *value; }
  private:
