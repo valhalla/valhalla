@@ -148,7 +148,7 @@ namespace {
 
   json::MapPtr serialize(const PointLL& ll, const std::string& reason) {
     return json::map({
-      {"ways", static_cast<nullptr_t>(nullptr)},
+      {"ways", static_cast<std::nullptr_t>(nullptr)},
       {"input_lat", json::fp_t{ll.lat(), 6}},
       {"input_lon", json::fp_t{ll.lng(), 6}},
       {"reason", reason}
