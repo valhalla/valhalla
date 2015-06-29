@@ -50,6 +50,7 @@ libvalhalla_thor_la_SOURCES = \
 	src/thor/astarheuristic.cc \
 	src/thor/edgestatus.cc \
 	src/thor/formlocalpath.cc \
+	src/thor/multimodal.cc \
 	src/thor/pathalgorithm.cc \
 	src/thor/trippathbuilder.cc \
 	src/thor/service.cc

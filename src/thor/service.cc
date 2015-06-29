@@ -70,6 +70,19 @@ namespace {
           // Find the path. Multimodal is a separate case.
           std::vector<thor::PathInfo> path_edges;
           if (multimodal) {
+            // Have costing models use the per mode max distances
+            for (auto& cost : mode_costing) {
+              cost->UseMaxModeDistance();
+            }
+
+            // Check if there no possible path to destination based on mode
+            // to the destination - for now assume pedestrian
+            if (!path_algorithm.CanReachDestination(destination, reader,
+                                    TravelMode::kPedestrian, mode_costing)) {
+              throw std::runtime_error("Cannot reach destination - too far from a transit stop");
+            }
+
+            // Get the multi-modal path
             path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
             if (path_edges.size() == 0)
               throw std::runtime_error("No path could be found for input");
