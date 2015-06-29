@@ -432,6 +432,20 @@ int main(int argc, char *argv[]) {
     PathLocation pathOrigin = Search(originloc, reader, mode_costing[1]->GetFilter());
     PathLocation pathDest = Search(destloc, reader, mode_costing[1]->GetFilter());
     PathAlgorithm pathalgorithm;
+
+    // Have costing models use the per mode max distances
+    for (auto& cost : mode_costing) {
+      cost->UseMaxModeDistance();
+    }
+
+    // Check if there no possible path to destination based on mode
+    // to the destination - for now assume pedestrian
+    if (!pathalgorithm.CanReachDestination(pathDest, reader,
+                         TravelMode::kPedestrian, mode_costing)) {
+      LOG_INFO("Cannot reach destination - too far from a transit stop");
+      return EXIT_SUCCESS;
+    }
+
     std::vector<PathInfo> pathedges = pathalgorithm.GetBestPathMM(pathOrigin,
                    pathDest, reader, mode_costing);
     trip_path = TripPathBuilder::Build(reader, pathedges, pathOrigin, pathDest);
