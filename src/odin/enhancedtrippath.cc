@@ -672,6 +672,12 @@ std::string EnhancedTripPath_Node::ToString() const {
     str += this->transit_stop_info().departure_date_time();
   }
 
+  str += " | motorway_junction=";
+  str += std::to_string(motorway_junction());
+
+  str += " | fork=";
+  str += std::to_string(fork());
+
   return str;
 }
 
