@@ -319,6 +319,12 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (graphtile->node(startnode)->type() == NodeType::kParking)
       trip_node->set_parking(true);
 
+    if (graphtile->node(startnode)->type() == NodeType::kMotorWayJunction)
+      trip_node->set_motorway_junction(true);
+
+    if (graphtile->node(startnode)->intersection() == IntersectionType::kFork)
+      trip_node->set_fork(true);
+
     // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
 
