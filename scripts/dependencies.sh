@@ -13,7 +13,7 @@ rm -f gdal-2.0.0.tar.gz
 pushd gdal-2.0.0
 ./autogen.sh
 ./configure
-make -j4
+make -j
 sudo make install
 popd
 

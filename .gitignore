@@ -41,8 +41,7 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/tiles
-test/search
+test/sample
 
 # test coverage stuff
 *.gcno
