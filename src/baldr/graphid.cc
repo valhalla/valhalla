@@ -98,7 +98,7 @@ const uint64_t GraphId::internal_version() {
 
   GraphId id{};
 
-  uint64_t seed = 0;
+  size_t seed = 0;
 
   id.fields.id = ~id.fields.id;
   boost::hash_combine(seed,ffs(id.fields.id+1)-1);

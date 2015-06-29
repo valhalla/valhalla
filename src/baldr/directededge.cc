@@ -312,7 +312,7 @@ bool DirectedEdge::is_shortcut() const {
 
 // Get the internal version. Used for data validity checks.
 const uint64_t DirectedEdge::internal_version() {
-  uint64_t seed = 0;
+  size_t seed = 0;
 
   DirectedEdge de;
   de.dataoffsets_ = {};
