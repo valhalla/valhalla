@@ -1,5 +1,6 @@
 #include "mjolnir/dataquality.h"
 #include <fstream>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

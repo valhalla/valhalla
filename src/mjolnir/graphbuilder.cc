@@ -96,7 +96,6 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file,
       //next node
       last_node = node;
       ++node_index;
-      return node;
     }
   );
 
@@ -353,7 +352,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
 
-  std::string thread_id = static_cast<std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
+  std::string thread_id = static_cast<const std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
   LOG_INFO("Thread " + thread_id + " started");
 
   sequence<OSMWay> ways(ways_file, false);
