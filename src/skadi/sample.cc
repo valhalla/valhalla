@@ -2,18 +2,19 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <gdal.h>
 
 namespace valhalla {
 namespace skadi {
 
-  sample::sample(const char* data_source) {
-    GDALDatasetH src_ptr = GDALOpenEx(data_source, GDAL_OF_RASTER, NULL, (const char* const* )NULL, NULL);
+  sample::sample(const std::string& data_source) {
+    GDALDatasetH src_ptr = GDALOpenEx(data_source.c_str(), GDAL_OF_RASTER, NULL, (const char* const* )NULL, NULL);
     if(src_ptr == nullptr)
       throw std::runtime_error("Couldn't open " + data_source);
-    source = std::unique_ptr(src_ptr, GDALClose);
+    source.reset(src_ptr, GDALClose);
   }
 
-  int32_t sample::sample(int32_t x, int32_t y) {
+  int32_t sample::get(int32_t x, int32_t y) {
 
     return 0;
   }

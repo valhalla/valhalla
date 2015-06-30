@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <gdal.h>
+#include <string>
 
 namespace valhalla {
   namespace skadi {
@@ -14,12 +14,12 @@ namespace valhalla {
 
     class sample{
      public:
-      sample(const char* data_source);
+      sample(const std::string& data_source);
       int32_t get(int32_t x, int32_t y/*, filter*/);
       //T<int32_t> get(const T& list*/, filter*/);
 
      protected:
-      std::unique_ptr<GDALDatasetH, decltype(GDALClose)> source;
+      std::shared_ptr<void> source;
     };
 
   }
