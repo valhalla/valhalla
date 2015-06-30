@@ -75,10 +75,16 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         FormExitLeftInstruction(maneuver);
         break;
       }
-      case TripDirections_Maneuver_Type_kStayStraight:
-      case TripDirections_Maneuver_Type_kStayRight:
+      case TripDirections_Maneuver_Type_kStayStraight: {
+        FormStayStraightInstruction(maneuver);
+        break;
+      }
+      case TripDirections_Maneuver_Type_kStayRight: {
+        FormStayRightInstruction(maneuver);
+        break;
+      }
       case TripDirections_Maneuver_Type_kStayLeft: {
-        FormStayInstruction(maneuver);
+        FormStayLeftInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kMerge: {
@@ -793,12 +799,310 @@ void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
   maneuver.set_instruction(std::move(text_instruction));
 }
 
-void NarrativeBuilder::FormStayInstruction(Maneuver& maneuver) {
+void NarrativeBuilder::FormStayStraightInstruction(Maneuver& maneuver) {
+  // 1 Keep straight to take exit 67A
+  // 2 Keep straight to take I 95 South
+  // 3 Keep straight to take exit 67A onto I 95 South
+  // 4 Keep straight toward Baltimore
+  // 5 Keep straight to take exit 67A toward Baltimore
+  // 6 Keep straight to take I 95 South toward Baltimore
+  // 7 Keep straight to take exit 67A onto I 95 South toward Baltimore
+
+  // 0 Keep straight at fork
+  // 1 = exit number
+  // 2 = street or branch
+  // 4 = toward
+
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+
+  // Assign maneuver street name or sign branch name
+  std::string street_name;
+  if (maneuver.HasStreetNames()) {
+    street_name = maneuver.street_names().ToString();
+  } else if (maneuver.HasExitBranchSign()) {
+    street_name = maneuver.signs().GetExitBranchString(
+        branch_max_count, branch_limit_by_consecutive_count);
+  }
+
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Stay";
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign())
+    phrase_id += 1;
+  if (!street_name.empty())
+    phrase_id += 2;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 4;
 
-  // TODO - add relative direction and exit info
+  switch (phrase_id) {
+    // 1 Keep straight to take exit 67A
+    case 1: {
+      text_instruction += (boost::format("Keep straight to take exit %1%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 2 Keep straight to take I 95 South
+    case 2: {
+      text_instruction +=
+          (boost::format("Keep straight to take %1%") % street_name).str();
+      break;
+    }
+    // 3 Keep straight to take exit 67A onto I 95 South
+    case 3: {
+      text_instruction += (boost::format("Keep straight to take exit %1% onto %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name).str();
+      break;
+    }
+    // 4 Keep straight toward Baltimore
+    case 4: {
+      text_instruction += (boost::format(
+          "Keep straight toward %1%")
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 5 Keep straight to take exit 67A toward Baltimore
+    case 5: {
+      text_instruction += (boost::format(
+          "Keep straight to take exit %1% toward %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 6 Keep straight to take I 95 South toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Keep straight to take %1% toward %2%")
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 7 Keep straight to take exit 67A onto I 95 South toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Keep straight to take exit %1% onto %2% toward %3%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    default: {
+      text_instruction += "Keep straight at the fork";
+      break;
+    }
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormStayRightInstruction(Maneuver& maneuver) {
+  // 1 Keep right to take exit 67A
+  // 2 Keep right to take I 95 South
+  // 3 Keep right to take exit 67A onto I 95 South
+  // 4 Keep right toward Baltimore
+  // 5 Keep right to take exit 67A toward Baltimore
+  // 6 Keep right to take I 95 South toward Baltimore
+  // 7 Keep right to take exit 67A onto I 95 South toward Baltimore
+
+  // 0 Keep right at fork
+  // 1 = exit number
+  // 2 = street or branch
+  // 4 = toward
+
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+
+  // Assign maneuver street name or sign branch name
+  std::string street_name;
+  if (maneuver.HasStreetNames()) {
+    street_name = maneuver.street_names().ToString();
+  } else if (maneuver.HasExitBranchSign()) {
+    street_name = maneuver.signs().GetExitBranchString(
+        branch_max_count, branch_limit_by_consecutive_count);
+  }
+
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign())
+    phrase_id += 1;
+  if (!street_name.empty())
+    phrase_id += 2;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 4;
+
+  switch (phrase_id) {
+    // 1 Keep right to take exit 67A
+    case 1: {
+      text_instruction += (boost::format("Keep right to take exit %1%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 2 Keep right to take I 95 South
+    case 2: {
+      text_instruction +=
+          (boost::format("Keep right to take %1%") % street_name).str();
+      break;
+    }
+    // 3 Keep right to take exit 67A onto I 95 South
+    case 3: {
+      text_instruction += (boost::format("Keep right to take exit %1% onto %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name).str();
+      break;
+    }
+    // 4 Keep right toward Baltimore
+    case 4: {
+      text_instruction += (boost::format(
+          "Keep right toward %1%")
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 5 Keep right to take exit 67A toward Baltimore
+    case 5: {
+      text_instruction += (boost::format(
+          "Keep right to take exit %1% toward %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 6 Keep right to take I 95 South toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Keep right to take %1% toward %2%")
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 7 Keep right to take exit 67A onto I 95 South toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Keep right to take exit %1% onto %2% toward %3%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    default: {
+      text_instruction += "Keep right at the fork";
+      break;
+    }
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormStayLeftInstruction(Maneuver& maneuver) {
+  // 1 Keep left to take exit 67A
+  // 2 Keep left to take I 95 South
+  // 3 Keep left to take exit 67A onto I 95 South
+  // 4 Keep left toward Baltimore
+  // 5 Keep left to take exit 67A toward Baltimore
+  // 6 Keep left to take I 95 South toward Baltimore
+  // 7 Keep left to take exit 67A onto I 95 South toward Baltimore
+
+  // 0 Keep left at fork
+  // 1 = exit number
+  // 2 = street or branch
+  // 4 = toward
+
+  // TODO: determine if we want to grab from options
+  uint32_t number_max_count = 0;
+  uint32_t branch_max_count = 4;
+  uint32_t toward_max_count = 4;
+  bool number_limit_by_consecutive_count = false;
+  bool branch_limit_by_consecutive_count = true;
+  bool toward_limit_by_consecutive_count = true;
+
+  // Assign maneuver street name or sign branch name
+  std::string street_name;
+  if (maneuver.HasStreetNames()) {
+    street_name = maneuver.street_names().ToString();
+  } else if (maneuver.HasExitBranchSign()) {
+    street_name = maneuver.signs().GetExitBranchString(
+        branch_max_count, branch_limit_by_consecutive_count);
+  }
+
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign())
+    phrase_id += 1;
+  if (!street_name.empty())
+    phrase_id += 2;
+  if (maneuver.HasExitTowardSign())
+    phrase_id += 4;
+
+  switch (phrase_id) {
+    // 1 Keep left to take exit 67A
+    case 1: {
+      text_instruction += (boost::format("Keep left to take exit %1%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 2 Keep left to take I 95 South
+    case 2: {
+      text_instruction +=
+          (boost::format("Keep left to take %1%") % street_name).str();
+      break;
+    }
+    // 3 Keep left to take exit 67A onto I 95 South
+    case 3: {
+      text_instruction += (boost::format("Keep left to take exit %1% onto %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name).str();
+      break;
+    }
+    // 4 Keep left toward Baltimore
+    case 4: {
+      text_instruction += (boost::format(
+          "Keep left toward %1%")
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 5 Keep left to take exit 67A toward Baltimore
+    case 5: {
+      text_instruction += (boost::format(
+          "Keep left to take exit %1% toward %2%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 6 Keep left to take I 95 South toward Baltimore
+    case 6: {
+      text_instruction += (boost::format(
+          "Keep left to take %1% toward %2%")
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    // 7 Keep left to take exit 67A onto I 95 South toward Baltimore
+    case 7: {
+      text_instruction += (boost::format(
+          "Keep left to take exit %1% onto %2% toward %3%")
+          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
+          % street_name
+          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      break;
+    }
+    default: {
+      text_instruction += "Keep left at the fork";
+      break;
+    }
+  }
 
   text_instruction += ".";
   maneuver.set_instruction(std::move(text_instruction));

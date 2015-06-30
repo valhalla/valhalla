@@ -492,6 +492,14 @@ void Maneuver::InsertTransitStop(std::string name,
                                             departure_date_time);
 }
 
+bool Maneuver::fork() const {
+  return fork_;
+}
+
+void Maneuver::set_fork(bool fork) {
+  fork_ = fork;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);

@@ -255,6 +255,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Do not combine
+      // if next maneuver is a fork
+      else if (next_man->fork()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
       // if current or next maneuver is a ferry
       else if (curr_man->ferry() || next_man->ferry()) {
         // Update with no combine
@@ -812,9 +820,6 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
 
   // TODO - iterate and expand
   // TripDirections_Maneuver_Type_kBecomes
-  // TripDirections_Maneuver_Type_kStayStraight
-  // TripDirections_Maneuver_Type_kStayRight
-  // TripDirections_Maneuver_Type_kStayLeft
 
   // Process the different transit types
   if (maneuver.travel_mode() == TripPath_TravelMode_kPublicTransit) {
@@ -842,6 +847,25 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     maneuver.set_type(
         TripDirections_Maneuver_Type_kPostTransitConnectionDestination);
     LOG_TRACE("ManeuverType=POST_TRANSIT_CONNECTION_DESTINATION");
+  }
+  // Process fork
+  else if (maneuver.fork()) {
+    switch (maneuver.begin_relative_direction()) {
+      case Maneuver::RelativeDirection::kKeepRight:
+      case Maneuver::RelativeDirection::kRight: {
+        maneuver.set_type(TripDirections_Maneuver_Type_kStayRight);
+        break;
+      }
+      case Maneuver::RelativeDirection::kKeepLeft:
+      case Maneuver::RelativeDirection::kLeft: {
+        maneuver.set_type(TripDirections_Maneuver_Type_kStayLeft);
+        break;
+      }
+      default: {
+        maneuver.set_type(TripDirections_Maneuver_Type_kStayStraight);
+      }
+    }
+    LOG_TRACE("ManeuverType=FORK");
   }
   // Process Internal Intersection
   else if (maneuver.internal_intersection()) {
@@ -1038,7 +1062,6 @@ TripDirections_Maneuver_CardinalDirection ManeuversBuilder::DetermineCardinalDir
 
 bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
                                                   int node_index) {
-  // TODO - fix it
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
 
@@ -1082,6 +1105,13 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   /////////////////////////////////////////////////////////////////////////////
   // Process travel mode
   if (maneuver.travel_mode() != prev_edge->travel_mode()) {
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process fork
+  if (IsFork(node_index, prev_edge, curr_edge)) {
+    maneuver.set_fork(true);
     return false;
   }
 
@@ -1193,6 +1223,37 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
 
   return false;
 
+}
+
+bool ManeuversBuilder::IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
+                              EnhancedTripPath_Edge* curr_edge) const {
+
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
+                                       curr_edge->begin_heading());
+
+  // If node is fork
+  // and prev to curr edge is relative straight
+  if (node->fork() && ((turn_degree > 315) || (turn_degree < 45))) {
+    // If the above criteria is met then check the following criteria...
+
+    IntersectingEdgeCounts xedge_counts;
+    // TODO: update to pass similar turn threshold
+    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   xedge_counts);
+
+    // if there is a similar driveable intersecting edge
+    //   or there is a driveable intersecting edge and curr edge is link(ramp)
+    if (((xedge_counts.left_similar_driveable_outbound > 0)
+        || (xedge_counts.right_similar_driveable_outbound > 0))
+        || (((xedge_counts.left_driveable_outbound > 0)
+            || (xedge_counts.right_driveable_outbound > 0)) && curr_edge->ramp())) {
+      return true;
+    }
+
+  }
+
+  return false;
 }
 
 bool ManeuversBuilder::IsLeftPencilPointUturn(
