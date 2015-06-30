@@ -14,7 +14,20 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-
+namespace {
+  const std::map<RoadClass, std::string> roadClassToString =
+    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
+      {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
+      {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
+      {RoadClass::kServiceOther, "ServiceOther"}
+    };
+  const std::vector<RoadClass> rclasses =
+    { RoadClass::kMotorway, RoadClass::kPrimary,
+      RoadClass::kResidential, RoadClass::kSecondary,
+      RoadClass::kServiceOther, RoadClass::kTertiary,
+      RoadClass::kTrunk, RoadClass::kUnclassified
+    };
+}
 namespace valhalla {
 namespace mjolnir {
 
@@ -55,18 +68,7 @@ class validator_stats {
   std::unordered_map<uint32_t, AABB2> tile_geometries;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
-  std::map<RoadClass, std::string> roadClassToString =
-    { {RoadClass::kMotorway, "Motorway"}, {RoadClass::kTrunk, "Trunk"}, {RoadClass::kPrimary, "Primary"},
-      {RoadClass::kSecondary, "Secondary"}, {RoadClass::kTertiary, "Tertiary"},
-      {RoadClass::kUnclassified, "Unclassified"},{RoadClass::kResidential, "Residential"},
-      {RoadClass::kServiceOther, "ServiceOther"}
-    };
-  std::vector<RoadClass> rclasses =
-    { RoadClass::kMotorway, RoadClass::kPrimary,
-      RoadClass::kResidential, RoadClass::kSecondary,
-      RoadClass::kServiceOther, RoadClass::kTertiary,
-      RoadClass::kTrunk, RoadClass::kUnclassified
-    };
+
 
 public:
 

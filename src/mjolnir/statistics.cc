@@ -354,7 +354,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString[rclass];
+      std::string roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, tile_lengths[tileid][rclass]);
       ++index;
     }
@@ -418,7 +418,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
       sqlite3_bind_int(stmt, index, tileid);
       ++index;
       // Roadway type
-      auto type = roadClassToString[rclass];
+      auto type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // One Way data
@@ -476,7 +476,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      std::string roadStr = roadClassToString[rclass];
+      std::string roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, country_lengths[country][rclass]);
       ++index;
     }
@@ -524,7 +524,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
       sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
       ++index;
       // Roadway type
-      auto type = roadClassToString[rclass];
+      auto type = roadClassToString.at(rclass);
       sqlite3_bind_text(stmt, index, type.c_str(), type.length(), SQLITE_STATIC);
       ++index;
       // One Way data

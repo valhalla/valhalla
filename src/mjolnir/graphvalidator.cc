@@ -204,8 +204,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             auto rclass = directededge.classification();
             tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
             //Determine access for directed edge
-            auto fward = ((0x1 & directededge.forwardaccess()) == 0x1);
-            auto bward = ((0x1 & directededge.reverseaccess()) == 0x1);
+            auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
+            auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
             // Check if one way
             if ((!fward || !bward) && (fward || bward)) {
               vStats.add_tile_one_way(tileid, rclass, tempLength);
