@@ -545,6 +545,15 @@ bool EnhancedTripPath_Node::HasIntersectingEdges() const {
   return (intersecting_edge_size() > 0);
 }
 
+bool EnhancedTripPath_Node::HasIntersectingEdgeNameConsistency() const {
+  for (const auto& xedge : intersecting_edge()) {
+    if (xedge.curr_name_consistency()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(
     size_t index) {
   return static_cast<EnhancedTripPath_IntersectingEdge*>(mutable_intersecting_edge(
