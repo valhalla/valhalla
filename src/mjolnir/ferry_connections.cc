@@ -96,8 +96,11 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     auto expand_node_itr = nodes[node_index];
     auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
 
-    // We are finished if node has RC <= rc (and beyond first edge
-    if (n > 0 && GetBestNonFerryClass(expanded.node_edges) <= rc) {
+    // We are finished if node has RC <= rc and beyond first several edges.
+    // Have seen cases where the immediate connections are high class roads
+    // but then there are service roads (lanes) immediately after (like
+    // Twawwassen Terminal near Vancouver,BC)
+    if (n > 400 && GetBestNonFerryClass(expanded.node_edges) <= rc) {
       break;
     }
     n++;
