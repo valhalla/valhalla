@@ -185,6 +185,9 @@ class Maneuver {
   void InsertTransitStop(std::string name, std::string arrival_date_time,
                          std::string departure_date_time);
 
+  bool fork() const;
+  void set_fork(bool fork);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -226,6 +229,7 @@ class Maneuver {
   bool rail_;
   bool bus_;
   TransitInfo transit_info_;
+  bool fork_;
 
   // TODO notes
 
