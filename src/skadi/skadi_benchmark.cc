@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
     throw std::runtime_error("No data source specified");
 
   valhalla::skadi::sample sample(argv[1]);
-  std::cout << sample.get(5.329821, 60.385316) << std::endl;
+  std::cout << sample.get(std::make_pair(5.329821, 60.385316)) << std::endl;
 
   return EXIT_SUCCESS;
 }

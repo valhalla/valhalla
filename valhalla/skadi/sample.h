@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace valhalla {
   namespace skadi {
@@ -11,7 +12,8 @@ namespace valhalla {
     class sample{
      public:
       sample(const std::string& data_source);
-      int32_t get(int32_t x, int32_t y/*, filter*/);
+      template <class T>
+      int32_t get(const std::pair<T, T> coord/*, filter*/);
       //T<int32_t> get(const T& list*/, filter*/);
 
      protected:
