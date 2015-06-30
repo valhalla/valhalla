@@ -32,8 +32,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-
-
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
                               GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_, std::mutex& lock) {
@@ -201,11 +199,33 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             directededge.set_ctry_crossing(true);
           directededges.emplace_back(std::move(directededge));
 
-          // Add road lengths to statistics class for current country and current tile
-          if (validLength) {
+          // Only consider edge if edge is good and it's not a link
+          if (validLength && !directededge.link()) {
             auto rclass = directededge.classification();
-            auto endnodeid = directededge.endnode().tileid();
-            tempLength /= (tileid == endnodeid) ? 2 : 4;
+            tempLength /= (tileid == directededge.endnode().tileid()) ? 2 : 4;
+            //Determine access for directed edge
+            auto fward = ((kAutoAccess & directededge.forwardaccess()) == kAutoAccess);
+            auto bward = ((kAutoAccess & directededge.reverseaccess()) == kAutoAccess);
+            // Check if one way
+            if ((!fward || !bward) && (fward || bward)) {
+              vStats.add_tile_one_way(tileid, rclass, tempLength);
+              vStats.add_country_one_way(begin_node_iso, rclass, tempLength);
+            }
+            // Check if this edge is internal
+            if (directededge.internal()) {
+              vStats.add_tile_int_edge(tileid, rclass);
+              vStats.add_country_int_edge(begin_node_iso, rclass);
+            }
+            // Check if edge has maxspeed tag
+            if (directededge.speed_type() == SpeedType::kTagged){
+              vStats.add_tile_speed_info(tileid, rclass, tempLength);
+              vStats.add_country_speed_info(begin_node_iso, rclass, tempLength);
+            }
+            if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
+              vStats.add_tile_named(tileid, rclass, tempLength);
+              vStats.add_country_named(begin_node_iso, rclass, tempLength);
+            }
+            // Add road lengths to statistics for current country and tile
             vStats.add_country_road(begin_node_iso, rclass, tempLength);
             vStats.add_tile_road(tileid, rclass, tempLength);
           }
@@ -219,8 +239,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       float density = (roadlength * 0.0005f) / area;
       vStats.add_density(density, level);
       vStats.add_tile_area(tileid, area);
+      vStats.add_tile_geom(tileid, tiles->TileBounds(tileid));
 
-      // Write the new file
+      // Write the new tile
       lock.lock();
       tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
       lock.unlock();
@@ -279,7 +300,7 @@ namespace mjolnir {
     LOG_INFO("Done creating queue of tiles: count = " +
              std::to_string(tilequeue.size()));
 
-    // An atomic object we can use to do the synchronization
+    // An mutex we can use to do the synchronization
     std::mutex lock;
 
     LOG_INFO("GraphValidator - Validating signs and connectivity");
@@ -321,8 +342,6 @@ namespace mjolnir {
       LOG_INFO("Average density = " + std::to_string(average_density) +
                " max = " + std::to_string(max_density));
     }
-    stats.log_country_stats();
-    stats.log_tile_stats();
     stats.build_db(pt);
   }
 }
