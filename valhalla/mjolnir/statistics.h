@@ -5,11 +5,15 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 
+#include "valhalla/midgard/aabb2.h"
 #include <valhalla/baldr/graphconstants.h>
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {
@@ -25,11 +29,30 @@ namespace mjolnir {
  */
 
 class validator_stats {
-  std::map<uint32_t, std::map<RoadClass, float> > tile_maps;
-  std::map<std::string, std::map<RoadClass, float> > country_maps;
-  std::set<uint32_t> tile_ids;
-  std::set<std::string> iso_codes;
-  std::map<uint32_t, float> tile_areas;
+  struct rclassHasher {
+    std::size_t operator()(const RoadClass& r) const {
+      return static_cast<size_t>(r);
+    }
+  };
+  // Total Length
+  std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, rclassHasher> > tile_lengths;
+  std::unordered_map<std::string, std::unordered_map<RoadClass, float, rclassHasher> > country_lengths;
+  // Internal Edges Count
+  std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, rclassHasher> > tile_int_edges;
+  std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, rclassHasher> > country_int_edges;
+  // Length of one way road
+  std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, rclassHasher> > tile_one_way;
+  std::unordered_map<std::string, std::unordered_map<RoadClass, float, rclassHasher> > country_one_way;
+  // Length of road with speed info
+  std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, rclassHasher> > tile_speed_info;
+  std::unordered_map<std::string, std::unordered_map<RoadClass, float, rclassHasher> > country_speed_info;
+  // Length of named road
+  std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, rclassHasher> > tile_named;
+  std::unordered_map<std::string, std::unordered_map<RoadClass, float, rclassHasher> > country_named;
+  std::unordered_set<uint32_t> tile_ids;
+  std::unordered_set<std::string> iso_codes;
+  std::unordered_map<uint32_t, float> tile_areas;
+  std::unordered_map<uint32_t, AABB2> tile_geometries;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
   std::map<RoadClass, std::string> roadClassToString =
@@ -44,29 +67,66 @@ class validator_stats {
       RoadClass::kServiceOther, RoadClass::kTertiary,
       RoadClass::kTrunk, RoadClass::kUnclassified
     };
+
 public:
 
   validator_stats ();
 
   void add_tile_road (const uint32_t& tile_id, const RoadClass& rclass, float length);
 
+  void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length);
+
+  void add_tile_int_edge (const uint32_t& tile_id, const RoadClass& rclass, const uint32_t& count = 1);
+
+  void add_country_int_edge (const std::string& ctry_code, const RoadClass& rclass, const uint32_t& count = 1);
+
+  void add_tile_one_way (const uint32_t& tile_id, const RoadClass& rclass, float length);
+
+  void add_country_one_way (const std::string& ctry_code, const RoadClass& rclass, float length);
+
+  void add_tile_speed_info (const uint32_t& tile_id, const RoadClass& rclass, float length);
+
+  void add_country_speed_info (const std::string& ctry_code, const RoadClass& rclass, float length);
+
+  void add_tile_named (const uint32_t& tile_id, const RoadClass& rclass, float length);
+
+  void add_country_named (const std::string& ctry_code, const RoadClass& rclass, float length);
+
   void add_tile_area (const uint32_t& tile_id, const float area);
 
-  void add_country_road (const std::string& ctry_code, const RoadClass& rclass, float length);
+  void add_tile_geom (const uint32_t& tile_id, const AABB2 geom);
 
   void add_density (float density, int level);
 
   void add_dup (uint32_t newdup, int level);
 
-  const std::set<uint32_t>& get_ids () const;
+  const std::unordered_set<uint32_t>& get_ids () const;
 
-  const std::set<std::string>& get_isos () const;
+  const std::unordered_set<std::string>& get_isos () const;
 
-  const std::map<uint32_t, std::map<RoadClass, float> >& get_tile_maps () const;
+  const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_tile_lengths () const;
 
-  const std::map<uint32_t, float>& get_tile_areas() const;
+  const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_country_lengths () const;
 
-  const std::map<std::string, std::map<RoadClass, float> >& get_country_maps () const;
+  const std::unordered_map<uint32_t, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher> >& get_tile_int_edges () const;
+
+  const std::unordered_map<std::string, std::unordered_map<RoadClass, uint32_t, validator_stats::rclassHasher> >& get_country_int_edges () const;
+
+  const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_tile_one_way () const;
+
+  const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_country_one_way () const;
+
+  const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_tile_speed_info () const;
+
+  const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_country_speed_info () const;
+
+  const std::unordered_map<uint32_t, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_tile_named () const;
+
+  const std::unordered_map<std::string, std::unordered_map<RoadClass, float, validator_stats::rclassHasher> >& get_country_named () const;
+
+  const std::unordered_map<uint32_t, float>& get_tile_areas() const;
+
+  const std::unordered_map<uint32_t, AABB2>& get_tile_geometries() const;
 
   const std::vector<uint32_t> get_dups(int level) const;
 
@@ -77,10 +137,6 @@ public:
   const std::vector<std::vector<float> > get_densities() const;
 
   void add (const validator_stats& stats);
-
-  void log_tile_stats();
-
-  void log_country_stats();
 
   void build_db(const boost::property_tree::ptree& pt);
 };
