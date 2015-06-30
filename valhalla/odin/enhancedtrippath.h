@@ -122,6 +122,8 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
   bool HasIntersectingEdges() const;
 
+  bool HasIntersectingEdgeNameConsistency() const;
+
   EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(
