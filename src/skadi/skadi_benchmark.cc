@@ -3,10 +3,13 @@
 
 #include "skadi/sample.h"
 
-int main(int argv, char** argvc) {
+int main(int argc, char** argv) {
 
-  valhalla::skadi::sample sample("/data/elevation/srtm/srtm.vrt");
-  sample.get(5.329821, 60.385316);
+  if(argc < 2)
+    throw std::runtime_error("No data source specified");
+
+  valhalla::skadi::sample sample(argv[1]);
+  std::cout << sample.get(5.329821, 60.385316) << std::endl;
 
   return EXIT_SUCCESS;
 }
