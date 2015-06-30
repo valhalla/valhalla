@@ -43,6 +43,9 @@ namespace skadi {
     //round them
 
     //pull out quad of pixels
+    //GDALRasterBandH band = GDALGetRasterBand(source.get(), 1);
+    //double quad[4];
+    //GDALRasterIO(band, GF_Read, column, row, 2, 2, quad, 2, 2, GDT_CFloat64, 0, 0) == CE_None
 
     //bilinear interpolation
 
