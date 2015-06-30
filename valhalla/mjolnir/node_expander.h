@@ -102,7 +102,7 @@ struct Edge {
     if (targetnode_ == other.targetnode_ &&
         sourcenode_ == other.sourcenode_ &&
         sourcenode_ == targetnode_) {
-      false;
+      return false;
     }
 
     // Sort by driveability (forward, importance, has_names)

@@ -321,7 +321,7 @@ bool OSMWay::pedestrian() const {
 
 // Set no thru traffic flag.
 void OSMWay::set_no_thru_traffic(const bool no_thru_traffic) {
-  attributes_.fields.no_thru_traffic;
+  attributes_.fields.no_thru_traffic = no_thru_traffic;
 }
 
 // Get the no thru traffic flag.
