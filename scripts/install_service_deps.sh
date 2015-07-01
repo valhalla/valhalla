@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+if [ -d "$1" ]; then
+	pushd "$1"
+fi
+
 # grab the latest zmq library:
 rm -rf libzmq
 git clone --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
@@ -21,3 +25,7 @@ pushd prime_server
 make -j4
 sudo make install
 popd
+
+if [ -d "$1" ]; then
+	popd
+fi
