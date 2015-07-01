@@ -93,7 +93,6 @@ GraphId loop(const PathLocation& origin, const PathLocation& destination) {
 // Default constructor
 PathAlgorithm::PathAlgorithm()
     : allow_transitions_(false),
-      edgelabel_index_(0),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
       walking_distance_(0),
@@ -108,8 +107,7 @@ PathAlgorithm::~PathAlgorithm() {
 
 // Clear the temporary information generated during path construction.
 void PathAlgorithm::Clear() {
-  // Set the edge label index back to 0
-  edgelabel_index_ = 0;
+  // Clear the edge labels
   edgelabels_.clear();
   best_destination_ = std::make_pair(kInvalidLabel,
                          Cost(std::numeric_limits<float>::max(), 0.0f));
@@ -226,25 +224,25 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     uint32_t predindex = adjacencylist_->Remove(edgelabels_);
     if (predindex == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
-      if(best_destination_.first != kInvalidLabel)
-        return FormPath(best_destination_.first, graphreader, loop_edge_info);
-
-      // We didn't find any destination edge - return empty list of edges
-      LOG_ERROR("Route failed after iterations = " +
-                   std::to_string(edgelabel_index_));
- //     throw std::runtime_error("No path could be found for input");
-      return { };
+      if (best_destination_.first != kInvalidLabel) {
+        return FormPath(best_destination_.first, loop_edge_info);
+      } else {
+        // Did not find any destination edges - return empty list of edges
+        LOG_ERROR("Route failed after iterations = " +
+                     std::to_string(edgelabels_.size()));
+        return { };
+      }
     }
-
-    // Remove label from adjacency list, mark it as done - copy the EdgeLabel
-    // for use in costing
-    EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
 
     // Check for completion. Form path and return if complete.
     if (IsComplete(predindex)) {
-      return FormPath(best_destination_.first, graphreader, loop_edge_info);
+      return FormPath(best_destination_.first, loop_edge_info);
     }
+
+    // Remove label from adjacency list, mark it as permanently labeled.
+    // Copy the EdgeLabel for use in costing
+    EdgeLabel pred = edgelabels_[predindex];
+    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
@@ -256,21 +254,9 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       return {};
     }
 
-    // Get the end node of the prior directed edge
-    GraphId node   = pred.endnode();
-    uint32_t level = node.level();
-
-    // Check hierarchy. Count upward transitions (counted on the level
-    // transitioned from). Do not expand based on hierarchy level based on
-    // number of upward transitions and distance to the destination
-    if (pred.trans_up()) {
-      hierarchy_limits_[level+1].up_transition_count++;
-    }
-    if (hierarchy_limits_[level].StopExpanding(dist2dest)) {
-      continue;
-    }
-
-    // Skip if tile not found (can happen with regional data sets).
+    // Get the end node of the prior directed edge. Skip if tile not found
+    // (can happen with regional data sets).
+    GraphId node = pred.endnode();
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
@@ -278,6 +264,17 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
+      continue;
+    }
+
+    // Check hierarchy. Count upward transitions (counted on the level
+    // transitioned from). Do not expand based on hierarchy level based on
+    // number of upward transitions and distance to the destination
+    uint32_t level = node.level();
+    if (pred.trans_up()) {
+      hierarchy_limits_[level+1].up_transition_count++;
+    }
+    if (hierarchy_limits_[level].StopExpanding(dist2dest)) {
       continue;
     }
 
@@ -339,16 +336,23 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
                 directededge->endnode())->latlng());
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
-      // Add edge label, add to the adjacency list and set edge status
+      // Add to the adjacency list and edge labels.
+      AddToAdjacencyList(edgeid, sortcost);
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_);
-      adjacencylist_->Add(edgelabel_index_, sortcost);
-      edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
-      edgelabel_index_++;
     }
   }
   return {};      // Should never get here
+}
+
+// Convenience method to add an edge to the adjacency list and temporarily
+// label it.
+void PathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
+                                       const float sortcost) {
+  uint32_t idx = edgelabels_.size();
+  adjacencylist_->Add(idx, sortcost);
+  edgestatus_->Set(edgeid, kTemporary, idx);
 }
 
 // Check if edge is temporarily labeled and this path has less cost. If
@@ -379,16 +383,12 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
     return;
   }
 
-  // Allow the transition edge. Add it to the adjacency list using the
-  // predecessor information. Transition edges have no length.
+  // Allow the transition edge. Add it to the adjacency list and edge labels
+  // using the predecessor information. Transition edges have no length.
+  AddToAdjacencyList(edgeid, pred.sortcost());
   edgelabels_.emplace_back(predindex, edgeid,
                 edge, pred.cost(), pred.sortcost(), pred.distance(),
                 pred.restrictions(), pred.opp_local_idx(), mode_);
-
-  // Add to the adjacency list and set edge status
-  adjacencylist_->Add(edgelabel_index_, pred.sortcost());
-  edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
-  edgelabel_index_++;
 }
 
 // Add an edge at the origin to the adjacency list
@@ -433,12 +433,10 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
+    AddToAdjacencyList(edgeid, sortcost);
     edgelabels_.emplace_back(kInvalidLabel, edgeid,
             directededge, cost, sortcost, dist, 0,
             directededge->opp_local_idx(), mode_);
-    adjacencylist_->Add(edgelabel_index_, sortcost);
-    edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
-    edgelabel_index_++;
   }
 }
 
@@ -488,14 +486,13 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
 
 // Form the path from the adjacency list.
 std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
-             GraphReader& graphreader, const PathInfo& loop_edge_info) {
-  //good metrics to track
+             const PathInfo& loop_edge_info) {
+  // Metrics to track
   LOG_INFO("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
-  LOG_INFO("path_iterations::" + std::to_string(edgelabel_index_));
+  LOG_INFO("path_iterations::" + std::to_string(edgelabels_.size()));
 
   // Work backwards from the destination
   std::vector<PathInfo> path;
-  path.reserve(edgelabels_.size());
   for(auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
