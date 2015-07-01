@@ -77,54 +77,30 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kStayStraight: {
-        // If no similar intersecting edge names
-        if (!maneuver.begin_intersecting_edge_name_consistency()) {
-          // If current maneuver has street names
-          // and previous maneuver exists
-          // and previous and current maneuvers have similar names
-          if (maneuver.HasStreetNames() && prev_maneuver
-              && !(prev_maneuver->street_names().FindCommonBaseNames(
-                  maneuver.street_names())->empty())) {
-            // Call stay on instruction
-            FormStayStraightToStayOnInstruction(maneuver);
-            break;
-          }
+        if (maneuver.HasSimilarNames(prev_maneuver)) {
+          // Call stay on instruction
+          FormStayStraightToStayOnInstruction(maneuver);
+        } else {
+          FormStayStraightInstruction(maneuver);
         }
-        FormStayStraightInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kStayRight: {
-        // If no similar intersecting edge names
-        if (!maneuver.begin_intersecting_edge_name_consistency()) {
-          // If current maneuver has street names
-          // and previous maneuver exists
-          // and previous and current maneuvers have similar names
-          if (maneuver.HasStreetNames() && prev_maneuver
-              && !(prev_maneuver->street_names().FindCommonBaseNames(
-                  maneuver.street_names())->empty())) {
-            // Call stay on instruction
-            FormStayRightToStayOnInstruction(maneuver);
-            break;
-          }
+        if (maneuver.HasSimilarNames(prev_maneuver)) {
+          // Call stay on instruction
+          FormStayRightToStayOnInstruction(maneuver);
+        } else {
+          FormStayRightInstruction(maneuver);
         }
-        FormStayRightInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kStayLeft: {
-        // If no similar intersecting edge names
-        if (!maneuver.begin_intersecting_edge_name_consistency()) {
-          // If current maneuver has street names
-          // and previous maneuver exists
-          // and previous and current maneuvers have similar names
-          if (maneuver.HasStreetNames() && prev_maneuver
-              && !(prev_maneuver->street_names().FindCommonBaseNames(
-                  maneuver.street_names())->empty())) {
-            // Call stay on instruction
-            FormStayLeftToStayOnInstruction(maneuver);
-            break;
-          }
+        if (maneuver.HasSimilarNames(prev_maneuver)) {
+          // Call stay on instruction
+          FormStayLeftToStayOnInstruction(maneuver);
+        } else {
+          FormStayLeftInstruction(maneuver);
         }
-        FormStayLeftInstruction(maneuver);
         break;
       }
       case TripDirections_Maneuver_Type_kMerge: {
