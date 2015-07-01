@@ -192,6 +192,10 @@ class Maneuver {
   void set_begin_intersecting_edge_name_consistency(
       bool begin_intersecting_edge_name_consistency);
 
+  bool HasSimilarNames(
+      const Maneuver* other_maneuver,
+      bool allow_begin_intersecting_edge_name_consistency = false) const;
+
   std::string ToString() const;
 
   std::string ToParameterString() const;

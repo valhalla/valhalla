@@ -510,6 +510,26 @@ void Maneuver::set_begin_intersecting_edge_name_consistency(
       begin_intersecting_edge_name_consistency;
 }
 
+bool Maneuver::HasSimilarNames(
+    const Maneuver* other_maneuver,
+    bool allow_begin_intersecting_edge_name_consistency) const {
+
+  // Allow similar intersecting edge names
+  // OR verify that there are no similar intersecting edge names
+  if (allow_begin_intersecting_edge_name_consistency
+      || !begin_intersecting_edge_name_consistency()) {
+    // If this maneuver has street names
+    // and other maneuver exists
+    // and other and this maneuvers have similar names
+    if (HasStreetNames() && other_maneuver
+        && !(other_maneuver->street_names().FindCommonBaseNames(street_names())
+            ->empty())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
