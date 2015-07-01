@@ -651,6 +651,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
     sqlite3_finalize(stmt);
     stmt = 0;
   }
+
   return polys;
 }
 
@@ -961,9 +962,8 @@ void enhance(const boost::property_tree::ptree& pt,
   lock.unlock();
 
   // Iterate through the tiles in the queue and perform enhancements
-  std::unordered_map<uint32_t,multi_polygon_type> polys;
-  std::unordered_map<uint32_t,bool> drive_on_right;
   while (true) {
+
     // Get the next tile Id from the queue and get writeable
     // and readable tile
     lock.lock();
@@ -974,6 +974,9 @@ void enhance(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
+
+    std::unordered_map<uint32_t,multi_polygon_type> polys;
+    std::unordered_map<uint32_t,bool> drive_on_right;
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
     // added where ways go through a tile but no end not is within the tile.
