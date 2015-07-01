@@ -727,6 +727,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
   auto* prev_edge = trip_path_->GetPrevEdge(node_index);
   auto* curr_edge = trip_path_->GetCurrEdge(node_index);
+  auto* node = trip_path_->GetEnhancedNode(node_index);
 
   // Set begin cardinal direction
   maneuver.set_begin_cardinal_direction(
@@ -800,6 +801,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
                                node->transit_stop_info().arrival_date_time(),
                                node->transit_stop_info().departure_date_time());
   }
+
+  // Set the begin intersecting edge name consistency
+  maneuver.set_begin_intersecting_edge_name_consistency(
+      node->HasIntersectingEdgeNameConsistency());
 
   // Set the maneuver type
   SetManeuverType(maneuver);

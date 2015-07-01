@@ -188,6 +188,10 @@ class Maneuver {
   bool fork() const;
   void set_fork(bool fork);
 
+  bool begin_intersecting_edge_name_consistency() const;
+  void set_begin_intersecting_edge_name_consistency(
+      bool begin_intersecting_edge_name_consistency);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -230,6 +234,7 @@ class Maneuver {
   bool bus_;
   TransitInfo transit_info_;
   bool fork_;
+  bool begin_intersecting_edge_name_consistency_;
 
   // TODO notes
 

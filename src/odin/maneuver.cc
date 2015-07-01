@@ -500,6 +500,16 @@ void Maneuver::set_fork(bool fork) {
   fork_ = fork;
 }
 
+bool Maneuver::begin_intersecting_edge_name_consistency() const {
+  return begin_intersecting_edge_name_consistency_;
+}
+
+void Maneuver::set_begin_intersecting_edge_name_consistency(
+    bool begin_intersecting_edge_name_consistency) {
+  begin_intersecting_edge_name_consistency_ =
+      begin_intersecting_edge_name_consistency;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
