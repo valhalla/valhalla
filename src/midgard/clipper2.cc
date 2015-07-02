@@ -3,29 +3,22 @@
 namespace valhalla {
 namespace midgard {
 
-Clipper2::Clipper2()
-    : minx_(0),
-      maxx_(0),
-      miny_(0),
-      maxy_(0) {
-}
-
-Clipper2::~Clipper2() {
-}
-
-unsigned int Clipper2::Clip(const AABB2& bdry, std::vector<Point2>& pts,
-                            bool closed) {
+// Clips the input set of vertices to the specified boundary.  Uses a
+// method where the shape is clipped against each edge in succession.
+uint32_t Clipper2::Clip(const AABB2& bbox, std::vector<Point2>& pts,
+                        const bool closed) {
   // Save the boundary
-  minx_ = bdry.minx();
-  maxx_ = bdry.maxx();
-  miny_ = bdry.miny();
-  maxy_ = bdry.maxy();
+  minx_ = bbox.minx();
+  maxx_ = bbox.maxx();
+  miny_ = bbox.miny();
+  maxy_ = bbox.maxy();
 
   // Temporary vertex list
   std::vector<Point2> tmp_pts;
 
-  // Clip against each edge in succession. If at any time there are
-  // no points kLeft we return 0 (everything outside)
+  // Clip against each edge in succession. At each step we swap the roles
+  // of the 2 vertex lists. If at any time there are no points remaining we
+  // return 0 (everything outside)
   if (ClipAgainstEdge(kLeft, closed, pts, tmp_pts) == 0) {
     return 0;
   }
@@ -43,43 +36,45 @@ unsigned int Clipper2::Clip(const AABB2& bdry, std::vector<Point2>& pts,
   return pts.size();
 }
 
-int Clipper2::ClipAgainstEdge(const ClipEdge bdry, bool closed,
-                              std::vector<Point2>& vin,
+// Clips the polyline/polygon against a single edge.
+uint32_t Clipper2::ClipAgainstEdge(const ClipEdge bdry, const bool closed,
+                              const std::vector<Point2>& vin,
                               std::vector<Point2>& vout) {
   // Clear the output vector
   vout.clear();
 
   // Special case for the 1st vertex. For polygons (closed) connect
   // last vertex to first vertex. For polylines repeat the first vertex
-  unsigned int n = vin.size();
-  unsigned int v1 = closed ? n - 1 : 0;
+  uint32_t n  = vin.size();
+  uint32_t v1 = closed ? n - 1 : 0;
 
   // Loop through all vertices (edges are created from v1 to v2).
-  bool v1in, v2in;
-  for (unsigned int v2 = 0; v2 < n; v1 = v2, v2++) {
+  for (uint32_t v2 = 0; v2 < n; v1 = v2, v2++) {
     // Relation of v1 and v2 with the bdry
-    v1in = Inside(bdry, vin[v1]);
-    v2in = Inside(bdry, vin[v2]);
+    bool v1in = Inside(bdry, vin[v1]);
+    bool v2in = Inside(bdry, vin[v2]);
 
     // Add vertices to the output list based on the 4 cases
     if (v1in && v2in) {
-      // Case 1: both vertices inside - output v2
+      // Both vertices inside - output v2
       Add(vin[v2], vout);
     } else if (!v1in && v2in) {
-      // Case 2: v1 is outside and v2 is inside - clip and
-      // add intersection followed by v2
+      // v1 is outside and v2 is inside - clip and add intersection
+      // followed by v2
       Add(ClipIntersection(bdry, vin[v2], vin[v1]), vout);
       Add(vin[v2], vout);
     } else if (v1in && !v2in) {
-      // Case 3: v1 is inside and v2 is outside - clip and
-      // add the intersection
+      // v1 is inside and v2 is outside - clip and add the intersection
       Add(ClipIntersection(bdry, vin[v1], vin[v2]), vout);
     }
-    // Case 4: both are outside - do nothing
+    // Both are outside - do nothing
   }
   return vout.size();
 }
 
+// Finds the intersection of the segment from insidept to outsidept with the
+// specified boundary edge.  Finds the intersection using the parametric
+// line equation.
 Point2 Clipper2::ClipIntersection(const ClipEdge bdry, const Point2& insidept,
                                   const Point2& outsidept) {
   float t = 0.0;
@@ -106,6 +101,8 @@ Point2 Clipper2::ClipIntersection(const ClipEdge bdry, const Point2& insidept,
   return Point2(inx + t * dx, iny + t * dy);
 }
 
+// Tests if the vertex is inside the rectangular boundary with respect to
+// the specified edge.
 bool Clipper2::Inside(const ClipEdge edge, const Point2& v) const {
   switch (edge) {
     case kLeft:
@@ -122,7 +119,7 @@ bool Clipper2::Inside(const ClipEdge edge, const Point2& v) const {
 
 // Add vertex to clip output (if not same as prior vertex)
 void Clipper2::Add(const Point2& pt, std::vector<Point2>& vout) {
-  if (vout.size() == 0 || *(vout.end() - 1) != pt) {
+  if (vout.size() == 0 || vout.back() != pt) {
     vout.push_back(pt);
   }
 }
