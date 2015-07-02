@@ -64,7 +64,8 @@ class ManeuversBuilder {
 
   void SetManeuverType(Maneuver& maneuver);
 
-  void SetSimpleDirectionalManeuverType(Maneuver& maneuver);
+  void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
+                                        bool prev_edge_has_names = false);
 
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading);
