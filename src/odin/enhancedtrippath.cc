@@ -547,7 +547,7 @@ bool EnhancedTripPath_Node::HasIntersectingEdges() const {
 
 bool EnhancedTripPath_Node::HasIntersectingEdgeNameConsistency() const {
   for (const auto& xedge : intersecting_edge()) {
-    if (xedge.curr_name_consistency()) {
+    if (xedge.curr_name_consistency() || xedge.prev_name_consistency()) {
       return true;
     }
   }
