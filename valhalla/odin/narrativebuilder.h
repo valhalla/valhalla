@@ -24,6 +24,9 @@ class NarrativeBuilder {
 
   static void FormDestinationInstruction(Maneuver& maneuver);
 
+  static void FormBecomesInstruction(Maneuver& maneuver,
+                                     Maneuver* prev_maneuver);
+
   static void FormContinueInstruction(Maneuver& maneuver);
 
   static void FormTurnInstruction(Maneuver& maneuver);

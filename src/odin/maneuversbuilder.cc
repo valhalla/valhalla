@@ -823,9 +823,6 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   auto* prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
   auto* curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
 
-  // TODO - iterate and expand
-  // TripDirections_Maneuver_Type_kBecomes
-
   // Process the different transit types
   if (maneuver.travel_mode() == TripPath_TravelMode_kPublicTransit) {
     if (prev_edge
@@ -960,19 +957,21 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   }
   // Process simple direction
   else {
-    SetSimpleDirectionalManeuverType(maneuver);
+    SetSimpleDirectionalManeuverType(maneuver, (prev_edge ? !prev_edge->IsUnnamed() : false));
     LOG_TRACE("ManeuverType=SIMPLE");
   }
 
 }
 
-void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
+void ManeuversBuilder::SetSimpleDirectionalManeuverType(
+    Maneuver& maneuver, bool prev_edge_has_names) {
   switch (Turn::GetType(maneuver.turn_degree())) {
     case Turn::Type::kStraight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
       if (trip_path_) {
         auto* man_begin_edge = trip_path_->GetCurrEdge(
             maneuver.begin_node_index());
+        auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
 
         ////////////////////////////////////////////////////////////////////
         // If the maneuver begin edge is a turn channel
@@ -989,6 +988,21 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(Maneuver& maneuver) {
               == Maneuver::RelativeDirection::kKeepLeft) {
             maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
           }
+        }
+        ////////////////////////////////////////////////////////////////////
+        // turn type is straight and the following...
+        // If maneuver is named
+        // and previous edge is named
+        // and no intersecting edge name consistency
+        // and node is not a motorway_junction
+        // and maneuver is not a highway with intersecting edges
+        // then it is a "becomes" maneuver
+        else if (maneuver.HasStreetNames() && prev_edge_has_names && node
+            && !node->HasIntersectingEdgeNameConsistency()
+            && !node->motorway_junction()
+            && !(man_begin_edge && man_begin_edge->IsHighway()
+                && node->HasIntersectingEdges())) {
+          maneuver.set_type(TripDirections_Maneuver_Type_kBecomes);
         }
       }
       break;
