@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/linesegment2.h>
 
 namespace valhalla {
 namespace midgard {
@@ -72,13 +73,13 @@ class AABB2 {
   float maxy() const;
 
   /**
-   * Get the point at the minimum x,y,z.
+   * Get the point at the minimum x,y.
    * @return  Returns the min. point.
    */
   Point2 minpt() const;
 
   /**
-   * Get the point at the maximum x,y,z.
+   * Get the point at the maximum x,y.
    * @return  Returns the max. point.
    */
   Point2 maxpt() const;
@@ -87,7 +88,7 @@ class AABB2 {
    * Creates an AABB given a list of points.
    * @param  pts  Vertex list.
    */
-  void Create(std::vector<Point2>& pts);
+  void Create(const std::vector<Point2>& pts);
 
   /**
    * Gets the center of the bounding box.
@@ -104,7 +105,8 @@ class AABB2 {
   bool Contains(const Point2& pt) const;
 
   /**
-   * Checks to determine if another bounding box is inside this bounding box.
+   * Checks to determine if another bounding box is completely inside this
+   * bounding box.
    * @param   r2    Test bounding box
    * @return  Returns false if the bounding box is not entirely inside,
    *          true if it is inside.
@@ -120,6 +122,14 @@ class AABB2 {
 
   /**
    * Tests whether the segment intersects the bounding box.
+   * @param   seg  Line segment
+   * @return  Returns true if the segment intersects (or lies completely
+   *          within) the bounding box.
+   */
+  bool Intersect(const LineSegment2& seg) const;
+
+  /**
+   * Tests whether the segment intersects the bounding box.
    * @param   a  Endpoint of the segment
    * @param   b  Endpoint of the segment
    * @return  Returns true if the segment intersects (or lies completely
@@ -128,13 +138,13 @@ class AABB2 {
   bool Intersect(const Point2& a, const Point2& b) const;
 
   /**
-   * Gets the width of the bounding box
+   * Gets the width of the bounding box.
    * @return  Returns the width of this bounding box.
    */
   float Width() const;
 
   /**
-   * Gets the height of the bounding box
+   * Gets the height of the bounding box.
    * @return  Returns the height of this bounding box.
    */
   float Height() const;
@@ -146,13 +156,14 @@ class AABB2 {
   float Area() const;
 
   /**
-   * Expands (if necessary) the bounding box.
+   * Expands (if necessary) the bounding box to include the specified
+   * bounding box.
    * @param  r2  Bounding bounding box to "combine" with this
    */
   void Expand(const AABB2& r2);
 
  protected:
-  // Minimum and maximum x,y values (lower right and upper left corners
+  // Minimum and maximum x,y values (lower left and upper right corners)
   // of a rectangle / bounding box.
   float minx_;
   float miny_;

@@ -4,6 +4,7 @@
 namespace valhalla {
 namespace midgard {
 
+// Default constructor
 AABB2::AABB2()
     : minx_(0.0f),
       miny_(0.0f),
@@ -11,6 +12,7 @@ AABB2::AABB2()
       maxy_(0.0f) {
 }
 
+// Construct an AABB given a minimum and maximum point.
 AABB2::AABB2(const Point2& minpt, const Point2& maxpt) {
   minx_ = minpt.x();
   miny_ = minpt.y();
@@ -18,6 +20,7 @@ AABB2::AABB2(const Point2& minpt, const Point2& maxpt) {
   maxy_ = maxpt.y();
 }
 
+// Constructor with specified bounds.
 AABB2::AABB2(const float minx, const float miny, const float maxx,
              const float maxy) {
   minx_ = minx;
@@ -26,54 +29,62 @@ AABB2::AABB2(const float minx, const float miny, const float maxx,
   maxy_ = maxy;
 }
 
+// Construct an AABB given a list of points.
 AABB2::AABB2(std::vector<Point2>& pts) {
   Create(pts);
 }
 
+// Equality operator.
 bool AABB2::operator ==(const AABB2& r2) const {
   return (minx_ == r2.minx() && maxx_ == r2.maxx() &&
           miny_ == r2.miny() && maxy_ == r2.maxy());
 }
 
+// Get the minimum x.
 float AABB2::minx() const {
   return minx_;
 }
 
+// Get the maximum x.
 float AABB2::maxx() const {
   return maxx_;
 }
 
+// Get the minimum y.
 float AABB2::miny() const {
   return miny_;
 }
 
+// Get the maximum y.
 float AABB2::maxy() const {
   return maxy_;
 }
 
+// Get the point at the minimum x,y.
 Point2 AABB2::minpt() const {
   return Point2(minx_, miny_);
 }
 
+// Get the point at the maximum x,y.
 Point2 AABB2::maxpt() const {
   return Point2(maxx_, maxy_);
 }
 
-void AABB2::Create(std::vector<Point2>& pts) {
-  float x, y;
-  const Point2* p = &pts[0];
+// Creates an AABB given a list of points.
+void AABB2::Create(const std::vector<Point2>& pts) {
+  auto p = pts.begin();
   minx_ = p->x();
   maxx_ = minx_;
   miny_ = p->y();
   maxy_ = miny_;
   p++;
-  for (unsigned int i = 1, n = pts.size(); i < n; i++, p++) {
-    x = p->x();
+  for ( ; p < pts.end(); p++) {
+    float x = p->x();
     if (x < minx_)
       minx_ = x;
     else if (x > maxx_)
       maxx_ = x;
-    y = p->y();
+    float y = p->y();
     if (y < miny_)
       miny_ = y;
     else if (y > maxy_)
@@ -81,19 +92,24 @@ void AABB2::Create(std::vector<Point2>& pts) {
   }
 }
 
+// Gets the center of the bounding box.
 Point2 AABB2::Center() const {
   return Point2((minx_ + maxx_) * 0.5f, (miny_ + maxy_) * 0.5f);
 }
 
+// Tests if a specified point is within the bounding box.
 bool AABB2::Contains(const Point2& pt) const {
   return (pt.x() >= minx_ && pt.y() >= miny_ &&
           pt.x() <  maxx_ && pt.y() <  maxy_);
 }
 
+// Checks to determine if another bounding box is completely inside
+// this bounding box.
 bool AABB2::Contains(const AABB2& r2) const {
   return (Contains(r2.minpt()) && Contains(r2.maxpt()));
 }
 
+// Test if this bounding box intersects another bounding box.
 bool AABB2::Intersects(const AABB2& r2) const {
   // The bounding boxes do NOT intersect if the other bounding box (r2) is
   // entirely LEFT, BELOW, RIGHT, or ABOVE this bounding box.
@@ -106,6 +122,12 @@ bool AABB2::Intersects(const AABB2& r2) const {
   return true;
 }
 
+// Tests whether the segment intersects the bounding box.
+bool AABB2::Intersect(const LineSegment2& seg) const {
+  return Intersect(seg.a(), seg.b());
+}
+
+// Tests whether the segment intersects the bounding box.
 bool AABB2::Intersect(const Point2& a, const Point2& b) const {
   // Trivial case - either point within the bounding box
   if (Contains(a) || Contains(b))
@@ -131,18 +153,23 @@ bool AABB2::Intersect(const Point2& a, const Point2& b) const {
           (s1 * s.IsLeft(Point2(maxx_, miny_)) <= 0.0f));
 }
 
+// Gets the width of the bounding box.
 float AABB2::Width() const {
   return maxx_ - minx_;
 }
 
+// Gets the height of the bounding box.
 float AABB2::Height() const {
   return maxy_ - miny_;
 }
 
+// Gets the area of the bounding box.
 float AABB2::Area() const {
   return Width() * Height();
 }
 
+// Expands (if necessary) the bounding box to include the specified
+// bounding box.
 void AABB2::Expand(const AABB2& r2) {
   if (r2.minx() < minx_)
     minx_ = r2.minx();
