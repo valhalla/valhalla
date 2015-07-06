@@ -155,8 +155,7 @@ void TestArea() {
 
 void TryTestVector(const AABB2& a, std::vector<Point2>& pts) {
 
-  AABB2 b;
-  b.Create(pts);
+  AABB2 b(pts);
   if (!(a == b))
     throw runtime_error("Test Vector test failed");
 }
