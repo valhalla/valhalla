@@ -122,6 +122,25 @@ class PointLL : public Point2 {
    */
   static float HeadingAtEndOfPolyline(const std::vector<PointLL>& pts,
                                       const float dist);
+
+  /**
+   * Test whether this point is to the left of a segment from p1 to p2.
+   * @param  p1  First point of the segment.
+   * @param  p2  End point of the segment.
+   * @return  Returns true if this point is left of the segment.
+   */
+  virtual bool IsLeft(const PointLL& p1, const PointLL& p2) const;
+
+  /**
+   * Tests whether this point is within a convex polygon.
+   * @param  poly  List of vertices that form a convex polygon. Assumes
+   *               the following:
+   *                  Polygon is convex.
+   *                  There are no duplicate vertices.
+   *                  Last vertex is not equal to the first.
+   * @return  Returns true if the point is within the polygon, false if not.
+   */
+  virtual bool WithinConvexPolygon(const std::vector<PointLL>& poly) const;
 };
 
 }

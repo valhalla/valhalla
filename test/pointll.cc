@@ -190,6 +190,36 @@ void TestClosestPoint() {
   TryClosestPoint(pts, PointLL(15.0f, 4.0f), PointLL(12.0f, 0.0f), 3);
 }
 
+void TryWithinConvexPolygon(const std::vector<PointLL>& pts, const PointLL&p,
+                            const bool res) {
+  if (p.WithinConvexPolygon(pts) != res)
+    throw runtime_error("TryWithinConvexPolygon test failed");
+}
+
+void TestWithinConvexPolygon() {
+  // Construct a convex polygon
+  std::vector<PointLL> pts = {
+      {   2.0f,  2.0f },
+      {   0.0f,  4.0f },
+      { -10.0f,  0.0f },
+      {   0.0f, -4.0f },
+      {   2.0f, -2.0f }
+  };
+
+  // Inside
+  TryWithinConvexPolygon(pts, PointLL(0.0f, 0.0f), true);
+
+  // Check a vertex - should be inside
+  TryWithinConvexPolygon(pts, PointLL( 0.0f, -4.0f), true);
+  TryWithinConvexPolygon(pts, PointLL( 2.0f, -2.0f), true);
+
+  // Outside
+  TryWithinConvexPolygon(pts, PointLL(15.0f, 4.0f), false);
+  TryWithinConvexPolygon(pts, PointLL( 2.5f, 0.0f), false);
+  TryWithinConvexPolygon(pts, PointLL(-3.0f, 3.0f), false);
+  TryWithinConvexPolygon(pts, PointLL( 1.0f,-3.5f), false);
+}
+
 }
 
 int main(void) {
@@ -205,6 +235,9 @@ int main(void) {
   suite.test(TEST_CASE(TestHeadingAtEndOfPolyline));
 
   suite.test(TEST_CASE(TestClosestPoint));
+
+  // Test if within polygon
+  suite.test(TEST_CASE(TestWithinConvexPolygon));
 
   //TODO: many more!
 

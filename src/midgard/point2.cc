@@ -156,5 +156,31 @@ std::tuple<Point2, float, int> Point2::ClosestPoint(const std::vector<Point2>& p
   return std::make_tuple(std::move(closest), std::move(mindist), std::move(idx));
 }
 
+// Test whether this point is to the left of a segment from p1 to p2. Uses a
+// 2-D cross product and tests the sign (> 0 indicates the point is to the
+// left).
+bool Point2::IsLeft(const Point2& p1, const Point2& p2) const {
+  return ((p2.x() - p1.x()) * (   y() - p1.y()) -
+             (x() - p1.x()) * (p2.y() - p1.y()) >= 0.0f);
+}
+
+// Tests whether this point is within a convex polygon. Iterate through the
+// edges - to be inside the point must be to the same side of each edge.
+bool Point2::WithinConvexPolygon(const std::vector<Point2>& poly) const {
+   // Get the side relative to the last edge
+  bool left = IsLeft(poly.back(), poly.front());
+//LOG_INFO("Left = " + std::to_string(left));
+  // Iterate through edges
+  auto p1 = poly.begin();
+  auto p2 = p1 + 1;
+  for ( ; p2 < poly.end(); p1++, p2++) {
+//LOG_INFO("  Left = " + std::to_string(IsLeft(*p1, *p2)));
+    if (IsLeft(*p1, *p2) != left) {
+      return false;
+    }
+  }
+  return true;
+}
+
 }
 }
