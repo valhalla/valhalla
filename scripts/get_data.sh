@@ -2,26 +2,6 @@
 
 set -e
 
-function dice() {
-	#reference the originals
-	rm -f tile.*.tif *.vrt
-	gdalbuildvrt $1 *.tif
-	#for each sq degree
-	for x0 in $(seq -180 10 170); do
-		for y0 in $(seq -90 10 80); do
-			set +e
-			let x1=x0+10
-			let y1=y0+10
-			set -e
-			#cut out a tile
-			gdal_translate -projwin $x0 $y1 $x1 $y0 $1 "tile.$x0.$y0.tif"
-		done
-	done
-	#reference using smaller tiles
-	rm -f $1
-	gdalbuildvrt $1 tile.*.tif
-}
-
 #### SRTM ####
 function srtm() {
 	#a place to put the data
@@ -30,6 +10,7 @@ function srtm() {
 
 	#grab the list of the files
 	if [ ! -e srtmgl1.003.html ]; then
+		echo "$(date): fetching srtm file list"
 		curl "http://e4ftl01.cr.usgs.gov/SRTM/SRTMGL1.003/2000.02.11/" -s -o srtmgl1.003.html
 	fi
 
@@ -39,18 +20,26 @@ function srtm() {
 	#filter out files that are already on the disk (so we don't re-download them)
 	echo -n > srtmgl1.003.urls
 	for f in $(cat srtmgl1.003.list); do
+		#no zip file
 		if [ ! -e $f ]; then
-			echo "http://e4ftl01.cr.usgs.gov/SRTM/SRTMGL1.003/2000.02.11/${f}" >> srtmgl1.003.urls
+			#no hgt file
+			hgt=$(echo $f | sed -e 's/\..*/.hgt/g')
+			if [ ! -e $hgt ]; then
+				echo "http://e4ftl01.cr.usgs.gov/SRTM/SRTMGL1.003/2000.02.11/${f}" >> srtmgl1.003.urls
+			fi
 		fi
 	done
 
 	#get them onto disk
 	if [ $(wc -l srtmgl1.003.urls | awk '{print $1}') -gt 0 ]; then
+		#download the zip files
+		echo "$(date): downloading srtm files"
 		cat srtmgl1.003.urls | xargs -n1 -P$(nproc)  curl -s -O
-	fi
 
-	#unzip them
-	ls *.zip | xargs -n1 -P$(nproc) unzip -n
+		#unzip them
+		echo "$(date): decompressing srtm files"
+		ls *.zip | xargs -n1 -P$(nproc) unzip -n
+	fi
 
 	#reference them
 	gdalbuildvrt srtm.vrt *.hgt
@@ -83,11 +72,14 @@ function gmted() {
 
 	#get them onto disk
 	if [ $(wc -l gmted.urls | awk '{print $1}') -gt 0 ]; then
+		echo "$(date): downloading gmted files"
 		cat gmted.urls | xargs -n1 -P$(nproc)  curl -s -O
 	fi
 
+	#TODO: cut these a little smaller than they are
+
 	#cut them to a smaller size (help querying be faster) and reference them
-	dice gmted.vrt
+	gdalbuildvrt gmted.vrt *.tif
 
 	#and we are done
 	popd
@@ -106,19 +98,39 @@ function gebco() {
 	pushd gebco
 
 	#cut them to a smaller size (help querying be faster) and reference them
-	dice gebco.vrt
+	gdalbuildvrt gebco.vrt *.tif
 
 	#and we are done
 	popd
 }
 
+
+#check for gdal
 set +e
 gv=$(gdal-config  --version)
-if [ $gv != "2.0.0" ]; then
+if [ $? -ne 0 ] || [ $gv != "2.0.0" ]; then
+	echo "$(date): installing gdal"
 	./install_gdal.sh
 fi
 set -e
 
-#srtm
+#get each data set
+srtm
 gmted
 gebco
+
+#prepare directories for all these tiles
+echo "$(date): preparing tile directories"
+for d in $(./args.py | sed -e "s/.* //g" -e 's@/[^/]\+$@@g' | uniq); do
+	mkdir -p $(dirname $d)
+done
+
+#cut tiles that are composites of all 3 for world wide coverage
+echo "$(date): cutting tiles"
+set +e
+which parallel
+if [ $? -ne 0 ]; then
+	sudo apt-get install parallel
+fi
+set -e
+./args.py | parallel --joblog cut_tiles.log -C ' ' -P $(nproc) "./composite.sh {} 2>err.log 1>comp.log"

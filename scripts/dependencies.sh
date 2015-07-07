@@ -7,15 +7,7 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #get newer gdal
-curl -O http://download.osgeo.org/gdal/2.0.0/gdal-2.0.0.tar.gz
-tar pxvf gdal-2.0.0.tar.gz
-rm -f gdal-2.0.0.tar.gz
-pushd gdal-2.0.0
-./autogen.sh
-./configure
-make -j7
-sudo make install
-popd
+$DIR/install_gdal.sh
 
 #clone async
 mkdir -p deps
