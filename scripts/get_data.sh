@@ -1,5 +1,5 @@
 #!/bin/bash
-
+export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib/
 set -e
 
 #### SRTM ####
@@ -122,7 +122,7 @@ gebco
 #prepare directories for all these tiles
 echo "$(date): preparing tile directories"
 for d in $(./args.py | sed -e "s/.* //g" -e 's@/[^/]\+$@@g' | uniq); do
-	mkdir -p $(dirname $d)
+	mkdir -p $d
 done
 
 #cut tiles that are composites of all 3 for world wide coverage
