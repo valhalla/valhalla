@@ -150,6 +150,7 @@ struct Node {
 struct node_bundle : Node {
   size_t node_count;
   size_t link_count;
+  size_t driveforward_count;
 
   //TODO: to enable two directed edges per loop edge turn this into an
   // unordered_multimap or just a list of pairs
@@ -158,7 +159,8 @@ struct node_bundle : Node {
   node_bundle(const Node& other)
       : Node(other),
         node_count(0),
-        link_count(0) {
+        link_count(0),
+        driveforward_count(0) {
   }
 };
 
