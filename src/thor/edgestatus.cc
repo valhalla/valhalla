@@ -25,11 +25,6 @@ void EdgeStatus::Set(const baldr::GraphId& edgeid,
 EdgeStatusInfo EdgeStatus::Get(const baldr::GraphId& edgeid) const {
   auto p = edgestatus_.find(edgeid);
   return (p == edgestatus_.end()) ? EdgeStatusInfo() : p->second;
-/*  if (p == edgestatus_.end()) {
-    return EdgeStatusInfo();
-  } else {
-    return p->second;
-  }*/
 }
 
 }

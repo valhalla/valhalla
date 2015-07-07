@@ -68,25 +68,25 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
     uint32_t predindex = adjacencylist_->Remove(edgelabels_);
     if (predindex == kInvalidLabel) {
       // If we had a destination but we were waiting on other possible ones
-      if(best_destination_.first != kInvalidLabel)
-        return FormPath(best_destination_.first, graphreader, loop_edge_info);
+      if (best_destination_.first != kInvalidLabel) {
+        return FormPath(best_destination_.first, loop_edge_info);
+      } else {
+        // Did not find any destination edges - return empty list of edges
+        LOG_ERROR("Route failed after iterations = " +
+                     std::to_string(edgelabels_.size()));
+        return { };
+      }
+    }
 
-      // We didn't find any destination edge - return empty list of edges
-      LOG_ERROR("Route failed after iterations = " +
-                   std::to_string(edgelabel_index_));
- //     throw std::runtime_error("No path could be found for input");
-      return { };
+    // Check for completion. Form path and return if complete.
+    if (IsComplete(predindex)) {
+      return FormPath(best_destination_.first, loop_edge_info);
     }
 
     // Remove label from adjacency list, mark it as done - copy the EdgeLabel
     // for use in costing
     EdgeLabel pred = edgelabels_[predindex];
     edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
-
-    // Check for completion. Form path and return if complete.
-    if (IsComplete(predindex)) {
-      return FormPath(best_destination_.first, graphreader, loop_edge_info);
-    }
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
@@ -98,11 +98,9 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       return {};
     }
 
-    // Get the end node and travel mode of the prior directed edge
+    // Get the end node. Skip if tile not found (can happen with
+    // regional data sets).
     GraphId node = pred.endnode();
-    mode_ = pred.mode();
-
-    // Skip if tile not found (can happen with regional data sets).
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
@@ -119,6 +117,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
 
     // Get any transfer times and penalties if this is a transit stop (and
     // transit has been taken at some point on the path) and mode is pedestrian
+    mode_ = pred.mode();
     bool has_transit = pred.has_transit();
     uint32_t prior_stop = pred.prior_stopid();
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
@@ -291,13 +290,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
       float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add edge label, add to the adjacency list and set edge status
+      AddToAdjacencyList(edgeid, pred.sortcost());
       edgelabels_.emplace_back(predindex, edgeid, directededge,
                     newcost, sortcost, dist, directededge->restrictions(),
                     directededge->opp_local_idx(), mode_,  walking_distance_,
                     tripid, prior_stop,  blockid, has_transit);
-      adjacencylist_->Add(edgelabel_index_, sortcost);
-      edgestatus_->Set(edgeid, kTemporary, edgelabel_index_);
-      edgelabel_index_++;
     }
   }
   return {};      // Should never get here

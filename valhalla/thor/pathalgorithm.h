@@ -132,7 +132,6 @@ class PathAlgorithm {
   AStarHeuristic astarheuristic_;
 
   // List of edge labels
-  uint64_t edgelabel_index_;
   std::vector<sif::EdgeLabel> edgelabels_;
 
   // Adjacency list
@@ -157,6 +156,15 @@ class PathAlgorithm {
   void Init(const PointLL& origll, const PointLL& destll,
             const std::shared_ptr<sif::DynamicCost>& costing,
             const bool multimodal);
+
+  /**
+   * Convenience method to add an edge to the adjacency list and temporarily
+   * label it. This must be called before adding the edge label (so it uses
+   * the correct index.
+   * @param  edgeid    Edge to add to the adjacency list.
+   * @param  sortcost  Sort cost.
+   */
+  void AddToAdjacencyList(const baldr::GraphId& edgeid, const float sortcost);
 
   /**
    * Check if edge is temporarily labeled and this path has less cost. If
@@ -220,14 +228,12 @@ class PathAlgorithm {
   /**
    * Form the path from the adjacency list.
    * @param   dest  Index in the edge labels of the destination edge.
-   * @param   graphreader  Graph tile reader
    * @param   loop   PathInfo representing the loop edge (invalid if none)
    * @return  Returns the path info, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
   std::vector<PathInfo> FormPath(const uint32_t dest,
-                                 baldr::GraphReader& graphreader,
                                  const PathInfo& loop);
 
   /**
