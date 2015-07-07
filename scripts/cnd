@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# count narrative diffs
+find *.txt -type f ! -size 0 | wc -l
+
