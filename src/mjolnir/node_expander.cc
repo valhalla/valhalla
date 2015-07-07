@@ -31,6 +31,9 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
       if (edge.attributes.link) {
         bundle.link_count++;
       }
+      if (edge.attributes.driveforward) {
+        bundle.driveforward_count++;
+      }
     }
     if(node.is_end()) {
       auto edge_itr = edges[node.end_of];
@@ -48,6 +51,9 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
       }
       if (edge.attributes.link) {
         bundle.link_count++;
+      }
+      if (edge.attributes.driveforward) {
+        bundle.driveforward_count++;
       }
     }
   }
