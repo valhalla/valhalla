@@ -34,7 +34,7 @@ float LineSegment2::DistanceSquared(const Point2& p, Point2& closest) const {
   Vector2 w(a_, p);
 
   // Numerator of the component of w onto v. If <= 0 then a
-  // is the closest point. By separat_ing into the numerator
+  // is the closest point. By separating into the numerator
   // and denominator of the component we avoid a division unless
   // it is necessary.
   float n = w.Dot(v);
@@ -63,7 +63,7 @@ float LineSegment2::Distance(const Point2& p, Point2& closest) const {
 }
 
 // Determines if the current segment intersects the specified segment.
-// If an intersect occurs the intersectPt is determined.  Note: the
+// If an intersect occurs the intersection is computed.  Note: the
 // case where the lines overlap is not considered.
 bool LineSegment2::Intersect(const LineSegment2& segment,
              Point2& intersect) const {
@@ -116,7 +116,7 @@ bool LineSegment2::Intersect(const std::vector<Point2>& poly) const {
 
     // Check for parallel line
     if (std::abs(n_dot_c) < kEpsilon) {
-      // No intersection if segment origin is outside wrt to this edge
+      // No intersection if segment origin is outside this edge
       if (num < 0) {
         return false;
       } else {
@@ -168,7 +168,7 @@ bool LineSegment2::ClipToPolygon(const std::vector<Point2>& poly,
 
     // Check for parallel line
     if (std::abs(n_dot_c) < kEpsilon) {
-      // No intersection if segment origin is outside wrt to this edge
+      // No intersection if segment origin is outside this edge
       if (num < 0) {
         return false;
       } else {

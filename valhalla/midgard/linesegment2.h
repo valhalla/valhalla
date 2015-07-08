@@ -61,7 +61,7 @@ class LineSegment2 {
 
   /**
    * Determines if the current segment intersects the specified segment.
-   * If an intersect occurs the intersectPt is determined.  Note: the
+   * If an intersect occurs the intersection is computed.  Note: the
    * case where the lines overlap is not considered.
    * @param   segment      Segment to determine intersection with.
    * @param   intersect    (OUT) Intersection point.
