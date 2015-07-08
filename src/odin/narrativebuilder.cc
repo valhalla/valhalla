@@ -42,14 +42,24 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       }
       case TripDirections_Maneuver_Type_kSlightRight:
       case TripDirections_Maneuver_Type_kSlightLeft: {
-        FormBearInstruction(maneuver);
+        if (maneuver.HasSimilarNames(prev_maneuver, true)) {
+          // Call stay on instruction
+          FormBearToStayOnInstruction(maneuver);
+        } else {
+          FormBearInstruction(maneuver);
+        }
         break;
       }
       case TripDirections_Maneuver_Type_kRight:
       case TripDirections_Maneuver_Type_kSharpRight:
       case TripDirections_Maneuver_Type_kSharpLeft:
       case TripDirections_Maneuver_Type_kLeft: {
-        FormTurnInstruction(maneuver);
+        if (maneuver.HasSimilarNames(prev_maneuver, true)) {
+          // Call stay on instruction
+          FormTurnToStayOnInstruction(maneuver);
+        } else {
+          FormTurnInstruction(maneuver);
+        }
         break;
       }
       case TripDirections_Maneuver_Type_kUturnRight:
@@ -251,6 +261,21 @@ void NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
   maneuver.set_instruction(std::move(text_instruction));
 }
 
+void NarrativeBuilder::FormTurnToStayOnInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Turn ";
+  text_instruction += FormTurnTypeInstruction(maneuver.type());
+
+  if (maneuver.HasStreetNames()) {
+    text_instruction += " to stay on ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
 void NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
@@ -259,6 +284,21 @@ void NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
 
   if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
+    text_instruction += maneuver.street_names().ToString();
+  }
+
+  text_instruction += ".";
+  maneuver.set_instruction(std::move(text_instruction));
+}
+
+void NarrativeBuilder::FormBearToStayOnInstruction(Maneuver& maneuver) {
+  std::string text_instruction;
+  text_instruction.reserve(kTextInstructionInitialCapacity);
+  text_instruction += "Bear ";
+  text_instruction += FormBearTypeInstruction(maneuver.type());
+
+  if (maneuver.HasStreetNames()) {
+    text_instruction += " to stay on ";
     text_instruction += maneuver.street_names().ToString();
   }
 
