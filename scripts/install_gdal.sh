@@ -16,5 +16,5 @@ tar pxvf gdal-2.0.0.tar.gz
 pushd gdal-2.0.0
 ./autogen.sh
 ./configure
-make -j
+make -j6
 sudo make install
