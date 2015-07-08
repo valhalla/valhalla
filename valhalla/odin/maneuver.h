@@ -192,6 +192,9 @@ class Maneuver {
   void set_begin_intersecting_edge_name_consistency(
       bool begin_intersecting_edge_name_consistency);
 
+  bool intersecting_forward_edge() const;
+  void set_intersecting_forward_edge(bool intersecting_forward_edge);
+
   bool HasSimilarNames(
       const Maneuver* other_maneuver,
       bool allow_begin_intersecting_edge_name_consistency = false) const;
@@ -239,6 +242,7 @@ class Maneuver {
   TransitInfo transit_info_;
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
+  bool intersecting_forward_edge_;
 
   // TODO notes
 
