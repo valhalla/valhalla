@@ -1,7 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <queue>
+#include <tuple>
+#include <cmath>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -20,6 +23,7 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 
@@ -36,7 +40,10 @@ namespace bpo = boost::program_options;
  * Test a single path from origin to destination.
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost) {
+                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
+                  std::tuple<float, float, float,
+                    float, bool, uint32_t, uint32_t,
+                    uint32_t, float, float, int>& csv_data) {
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -45,18 +52,22 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
   t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
+  // TODO - # PASSES
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+  std::get<5>(csv_data) = 1;
   if (pathedges.size() == 0) {
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
       pathalgorithm.Clear();
       cost->RelaxHierarchyLimits(16.0f);
       pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      std::get<5>(csv_data)++;
     }
   }
   if (pathedges.size() == 0) {
     cost->DisableHighwayTransitions();
     pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+    std::get<5>(csv_data)++;
     if (pathedges.size() == 0) {
       throw std::runtime_error("No path could be found for input");
     }
@@ -199,7 +210,10 @@ std::string GetFormattedTime(uint32_t seconds) {
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                               TripPath& trip_path, Location origin,
-                              Location destination) {
+                              Location destination,
+                              std::tuple<float, float, float, float,
+                                bool, uint32_t, uint32_t, uint32_t,
+                                float, float, int>& csv_data) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
@@ -233,8 +247,37 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
       (boost::format("Total length: %.1f %s")
           % trip_directions.summary().length() % units).str(),
       " [NARRATIVE] ");
+  std::get<7>(csv_data) = trip_directions.summary().time();
+  std::get<8>(csv_data) = trip_directions.summary().length();
+  std::get<10>(csv_data) = trip_directions.maneuver_size();
 
   return trip_directions;
+}
+
+void log_csv(std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int>& csv_data) {
+  std::string line = std::to_string(std::get<0>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<1>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<2>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<3>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<4>(csv_data));
+  line += ",";
+  line += (std::get<5>(csv_data)) ? "true" : "false";
+  line += ",";
+  line += std::to_string(std::get<6>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<7>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<8>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<9>(csv_data));
+  line += ",";
+  line += std::to_string(std::get<10>(csv_data));
+
+  valhalla::midgard::logging::Log(line, " [STATISTICS] ");
 }
 
 // Main method for testing a single path
@@ -382,6 +425,18 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  // Something to hold all the values
+  //          0     1       2     3      4     5         6         7         8      9      10
+  //         |--Origin--|  |-- dest --|  Success         runtime             length        # manuevers
+  //          lat   lon     lat   lon          # passes            trip time        arc dist
+  std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int> csv_data;
+  std::get<0>(csv_data) = originloc.latlng_.lat();
+  std::get<1>(csv_data) = originloc.latlng_.lng();
+  std::get<2>(csv_data) = destloc.latlng_.lat();
+  std::get<3>(csv_data) = destloc.latlng_.lng();
+  std::get<9>(csv_data) = sqrt(DistanceApproximator::DistanceSquared(originloc.latlng_, destloc.latlng_)) / 1000;
+
+
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
@@ -393,12 +448,15 @@ int main(int argc, char *argv[]) {
   auto t10 = std::chrono::high_resolution_clock::now();
   if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
     LOG_INFO("No tile connectivity between origin and destination.");
+    std::get<4>(csv_data) = false;
+    log_csv(csv_data);
     return EXIT_SUCCESS;
   }
   auto t20 = std::chrono::high_resolution_clock::now();
   uint32_t msecs1 =
          std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
   LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
+  std::get<6>(csv_data) = msecs1;
 
   // Construct costing
   CostFactory<DynamicCost> factory;
@@ -463,24 +521,29 @@ int main(int argc, char *argv[]) {
     uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
         t2 - t1).count();
     LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
+    std::get<6>(csv_data) += msecs;
 
     // Get the route
     t1 = std::chrono::high_resolution_clock::now();
-    trip_path = PathTest(reader, pathOrigin, pathDest, cost);
+    trip_path = PathTest(reader, pathOrigin, pathDest, cost, csv_data);
     t2 = std::chrono::high_resolution_clock::now();
     msecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
+    std::get<6>(csv_data) += msecs;
   }
 
   // Try the the directions
   auto t1 = std::chrono::high_resolution_clock::now();
   TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                                                  originloc, destloc);
+                                                  originloc, destloc, csv_data);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+  std::get<6>(csv_data) += msecs;
+  std::get<4>(csv_data) = true;
+  log_csv(csv_data);
 
   return EXIT_SUCCESS;
 }
