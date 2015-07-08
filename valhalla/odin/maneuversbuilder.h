@@ -81,6 +81,10 @@ class ManeuversBuilder {
   bool IsRightPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const;
 
+  bool IsIntersectingForwardEdge(int node_index,
+                                 EnhancedTripPath_Edge* prev_edge,
+                                 EnhancedTripPath_Edge* curr_edge) const;
+
   void DetermineRelativeDirection(Maneuver& maneuver);
 
   static Maneuver::RelativeDirection DetermineRelativeDirection(

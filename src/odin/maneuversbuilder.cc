@@ -270,6 +270,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Do not combine
+      // if next maneuver has an intersecting forward link
+      else if (next_man->intersecting_forward_edge()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // Combine current internal maneuver with next maneuver
       else if (curr_man->internal_intersection() && (curr_man != next_man)) {
         curr_man = CombineInternalManeuver(maneuvers, prev_man, curr_man,
@@ -1221,17 +1229,20 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return false;
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Intersecting forward edge
+  if (IsIntersectingForwardEdge(node_index, prev_edge, curr_edge)) {
+    maneuver.set_intersecting_forward_edge(true);
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // TODO: add logic for 'T'
 
   std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
       trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
 
-  // Process same names
-  // TODO - do we need this anymore?
-//  if (maneuver.street_names() == prev_edge_names) {
-//    return true;
-//  }
-
+  /////////////////////////////////////////////////////////////////////////////
   // Process common base names
   std::unique_ptr<StreetNames> common_base_names = prev_edge_names
       ->FindCommonBaseNames(maneuver.street_names());
@@ -1361,6 +1372,43 @@ bool ManeuversBuilder::IsRightPencilPointUturn(
       return true;
     }
   }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsIntersectingForwardEdge(
+    int node_index, EnhancedTripPath_Edge* prev_edge,
+    EnhancedTripPath_Edge* curr_edge) const {
+
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
+                                       curr_edge->begin_heading());
+
+  // if path turn is not straight
+  // and intersecting straight edge exists
+  // then return true
+  if (((turn_degree > 45) && (turn_degree < 315))
+      && node->HasStraightDriveableIntersectingEdge(prev_edge->end_heading())) {
+    return true;
+  }
+//  // If node is fork
+//  // and prev to curr edge is relative straight
+//  if (node->fork() && ((turn_degree > 315) || (turn_degree < 45))) {
+//    // If the above criteria is met then check the following criteria...
+//
+//    IntersectingEdgeCounts xedge_counts;
+//    // TODO: update to pass similar turn threshold
+//    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+//                                                   xedge_counts);
+//
+//    // if there is a similar driveable intersecting edge
+//    //   or there is a driveable intersecting edge and curr edge is link(ramp)
+//    if (((xedge_counts.left_similar_driveable_outbound > 0)
+//        || (xedge_counts.right_similar_driveable_outbound > 0))
+//        || (((xedge_counts.left_driveable_outbound > 0)
+//            || (xedge_counts.right_driveable_outbound > 0)) && curr_edge->ramp())) {
+//      return true;
+//    }
 
   return false;
 }
