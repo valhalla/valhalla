@@ -7,8 +7,8 @@
 #include <valhalla/midgard/point2.h>
 #include <tuple>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * 2-D polyline
@@ -35,22 +35,21 @@ class Polyline2 {
    * Add a point to the polyline. Checks to see if the input point is
    * equal to the current endpoint of the polyline and does not add the
    * point if it is equal.
+   * @param  p  Point to add to the polyline.
    */
   void Add(const Point2& p);
 
   /**
-  * Finds the length of the polyline by accumulating the length of all
-  * segments.
-  * @return    Returns the length of the polyline.
-  */
+   * Finds the length of the polyline by accumulating the length of all
+   * segments.
+   * @return    Returns the length of the polyline.
+   */
   float Length() const;
 
   /**
-   * Compute the length of the polyline represented by a set of
-   * lat,lng points. Avoids having to copy the points into the
-   * polyline.
-   * @param  pts  List of lat,lng points.
-   * @return  Returns the length in meters.
+   * Compute the length of the specified polyline.
+   * @param  pts  Polyline vertices.
+   * @return  Returns the length of the polyline.
    */
   float Length(const std::vector<Point2>& pts) const;
 
@@ -67,27 +66,32 @@ class Polyline2 {
 
   /**
    * Generalize this polyline.
+   * @param  t   Generalization tolerance.
+   * @return  Returns the number of points in the generalized polyline.
    */
-  unsigned int Generalize(const float t);
+  uint32_t Generalize(const float t);
 
   /**
    * Get a generalized polyline from this polyline. This polyline remains
    * unchanged.
-   * @param  t       Generalization tolerance.
-   * @param  genpts  Points within a generalized polyline he generalized polyline.
+   * @param  t   Generalization tolerance.
+   * @return   Returns the generalized polyline.
    */
   Polyline2 GeneralizedPolyline(const float t);
+
   /**
    * Clip this polyline to the specified bounding box.
    * @param box  Bounding box to clip this polyline to.
+   * @return  Returns the number of vertices in hte clipped polygon.
    */
-  unsigned int Clip(const AABB2& box);
+  uint32_t Clip(const AABB2& box);
 
   /**
    * Gets a polyline clipped to the supplied bounding box. This polyline
    * remains unchanged.
+   * @param  box  AABB (rectangle) to which the polyline is clipped.
    */
-   Polyline2 ClippedPolyline(const AABB2& box);
+  Polyline2 ClippedPolyline(const AABB2& box);
 
   // TODO - add Google polyline encoding
 
@@ -95,7 +99,7 @@ protected:
   // Polyline points
   std::vector<Point2> pts_;
 
-  void DouglasPeucker(const unsigned int i, const unsigned int j,
+  void DouglasPeucker(const uint32_t i, const uint32_t j,
                       const float t2, std::vector<Point2>& genpts);
 };
 

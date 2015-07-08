@@ -66,7 +66,7 @@ float PointLL::Distance(const PointLL& ll2) const {
 
 float PointLL::Length(const std::vector<PointLL>& pts) {
   float length = 0.f;
-  for (unsigned int i = 0; i < pts.size() - 1; ++i)
+  for (uint32_t i = 0; i < pts.size() - 1; ++i)
     length += pts[i].Distance(pts[i + 1]);
   return length;
 }
