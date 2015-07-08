@@ -1,7 +1,6 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -13,8 +12,8 @@ namespace valhalla {
      public:
       sample(const std::string& data_source);
       template <class T>
-      double get(const std::pair<T, T> coord/*, filter*/);
-      //T<double> get(const T& list*/, filter*/);
+      double get(const std::pair<T, T>& coord) const;
+      //T<double> get(const T& list);
 
      protected:
       std::shared_ptr<void> source;

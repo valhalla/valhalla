@@ -54,7 +54,6 @@ namespace skadi {
     no_data_value = GDALGetRasterNoDataValue(band, &success);
     if(!success)
       LOG_WARN("No data value is not set for data source, using double::min");
-    LOG_INFO("No data value is " + std::to_string(no_data_value));
 
     //get the inverse transform to go from lat,lon to pixels
     double transform[6];
@@ -65,7 +64,7 @@ namespace skadi {
   }
 
   template <class T>
-  double sample::get(const std::pair<T, T> coord) {
+  double sample::get(const std::pair<T, T>& coord) const {
     //project the coordinates into to image space
     double x = inverse_transform[0] +
                inverse_transform[1] * coord.first +
@@ -81,17 +80,20 @@ namespace skadi {
     double quad[2];
     GDALRasterIOExtraArg args{RASTERIO_EXTRA_ARG_CURRENT_VERSION, GRIORA_Bilinear,
                               nullptr, nullptr, true, x - fx, y - fy, 1, 1};
-    if(GDALRasterIOEx(band, GF_Read, fx, fy, 2, 2, quad,
-                      1, 1, GDT_CFloat64, 0, 0, &args) == CE_None) {
+    auto failure = GDALRasterIOEx(band, GF_Read, fx, fy, 2, 2, quad,
+        1, 1, GDT_CFloat64, 0, 0, &args);
+
+    //got back some data
+    if(failure == CE_None)
       return quad[0];
-    }//need to check corner cases (quad partially outside of image)
+    //need to check corner cases (quad partially outside of image)
     else
       return no_data_value;
   }
 
   //explicit instantiations for templated get
-  template double sample::get<double>(const std::pair<double, double>);
-  template double sample::get<float>(const std::pair<float, float>);
+  template double sample::get<double>(const std::pair<double, double>&) const;
+  template double sample::get<float>(const std::pair<float, float>&) const;
 
 }
 }
