@@ -73,18 +73,16 @@ namespace skadi {
     double y = inverse_transform[3] +
                inverse_transform[4] * coord.first +
                inverse_transform[5] * coord.second;
-
-    //round them
-    int mid_x = static_cast<int>(x + .5);
-    int mid_y = static_cast<int>(y + .5);
+    int fx = floor(x);
+    int fy = floor(y);
 
     //pull out quad of pixels, image origin is top left
     //quad is laid out exactly the same
-    double quad[8];
-    //TODO move to upper left corner of quad
-    if(GDALRasterIO(band, GF_Read, mid_x, mid_y, 1, 1, quad,
-                    1, 1, GDT_CFloat64, 0, 0) == CE_None) {
-      //TODO: bilinear interpolation
+    double quad[2];
+    GDALRasterIOExtraArg args{RASTERIO_EXTRA_ARG_CURRENT_VERSION, GRIORA_Bilinear,
+                              nullptr, nullptr, true, x - fx, y - fy, 1, 1};
+    if(GDALRasterIOEx(band, GF_Read, fx, fy, 2, 2, quad,
+                      1, 1, GDT_CFloat64, 0, 0, &args) == CE_None) {
       return quad[0];
     }//need to check corner cases (quad partially outside of image)
     else

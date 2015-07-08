@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
 
   valhalla::skadi::sample sample(argv[1]);
   std::cout << sample.get(std::make_pair(-76.579355, 40.451491)) << std::endl;
-  std::cout << sample.get(std::make_pair(-76.570544, 40.531507)) << std::endl;
+  std::cout << sample.get(std::make_pair(-76.473434, 40.597690)) << std::endl;
 
   return EXIT_SUCCESS;
 }
