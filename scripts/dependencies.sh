@@ -7,6 +7,7 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #get newer gdal
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_gdal.sh
 
 #clone async
@@ -17,7 +18,6 @@ done
 wait
 
 #install the service deps in the background
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_service_deps.sh &
 
 #build sync
