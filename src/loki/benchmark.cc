@@ -14,6 +14,7 @@
 #include <thread>
 #include <future>
 #include <vector>
+#include <list>
 #include <set>
 #include <tuple>
 #include <algorithm>
@@ -194,11 +195,10 @@ int main(int argc, char** argv) {
   }
 
   //start up the threads
-
-  std::vector<std::thread> pool;
+  std::list<std::thread> pool;
   std::vector<std::promise<results_t> > pool_results(threads);
   for(size_t i = 0; i < threads; ++i) {
-    pool.emplace_back(work, pt, std::ref(pool_results[i]));
+    pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
   }
 
   //let the main thread rip through the file
