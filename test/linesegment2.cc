@@ -71,6 +71,49 @@ void TestIntersect() {
   TryIntersect(s1, s6, true, Point2(0.0f, 0.0f));
 }
 
+void TryPolyIntersect(const LineSegment2& s1, const std::vector<Point2>& poly,
+                      const bool res) {
+  if (s1.Intersect(poly) != res) {
+    throw runtime_error("Polygon Intersect test failed");
+  }
+}
+
+void TestPolyIntersect() {
+
+  // Construct a convex polygon
+  std::vector<Point2> poly = {
+    {   2.0f,  2.0f },
+    {   0.0f,  4.0f },
+    { -10.0f,  0.0f },
+    {   0.0f, -4.0f },
+    {   2.0f, -2.0f }
+  };
+
+  // First point inside
+  LineSegment2 s1(Point2(0.0f, 0.0f), Point2(4.0f, 12.0f));
+  TryPolyIntersect(s1, poly, true);
+
+  // Second point inside
+  LineSegment2 s2(Point2(4.0f, 12.0f), Point2(0.0f, 0.0f));
+  TryPolyIntersect(s2, poly, true);
+
+  // Segment parallel to an edge and outside
+  LineSegment2 s3(Point2(4.0f, -5.0f), Point2(4.0f, 5.0f));
+  TryPolyIntersect(s3, poly, false);
+
+  // Passing through
+  LineSegment2 s4(Point2(-5.0f, -5.0f), Point2(5.0f, 5.0f));
+  TryPolyIntersect(s4, poly, true);
+
+  // No intersect with early out
+  LineSegment2 s5(Point2(-10.0f, 5.0f), Point2(2.0f, 5.0f));
+  TryPolyIntersect(s5, poly, false);
+
+  // Segment ends along an edge
+  LineSegment2 s6(Point2(10.0f, 5.0f), Point2(2.0f, 0.0f));
+  TryPolyIntersect(s6, poly, true);
+}
+
 void TryIsLeft(const Point2& p, const LineSegment2& s, const int res) {
   float d = s.IsLeft(p);
   if (res == 0 && fabs(d) > kEpsilon) {
@@ -102,6 +145,9 @@ int main() {
 
   // Test if 2 line segments intersect
   suite.test(TEST_CASE(TestIntersect));
+
+  // Test if line segment intersects polygon
+  suite.test(TEST_CASE(TestPolyIntersect));
 
   // Test if a point is left, right, or on a line segment
   suite.test(TEST_CASE(TestIsLeft));
