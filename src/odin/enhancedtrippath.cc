@@ -636,6 +636,22 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
+bool EnhancedTripPath_Node::HasStraightDriveableIntersectingEdge(
+    uint32_t from_heading) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    uint32_t intersecting_turn_degree = GetTurnDegree(
+        from_heading, intersecting_edge(i).begin_heading());
+    bool xedge_driveable_outbound =
+        GetIntersectingEdge(i)->IsDriveableOutbound();
+    if (((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46))
+        && xedge_driveable_outbound) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string EnhancedTripPath_Node::ToString() const {
   std::string str;
   str.reserve(256);
