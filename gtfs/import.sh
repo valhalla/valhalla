@@ -167,6 +167,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
   spatialite $db "insert into schedule select * from schedule_tmp;"
 
   spatialite $db "DELETE from shapes_tmp;"
+  spatialite $db "DELETE from shape_tmp;"
   spatialite $db "DELETE from agency_tmp;"
   spatialite $db "DELETE from stops_tmp;"
   spatialite $db "DELETE from routes_tmp;"
