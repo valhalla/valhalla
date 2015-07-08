@@ -7,12 +7,11 @@
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/vector2.h>
 
-namespace valhalla{
-namespace midgard{
+namespace valhalla {
+namespace midgard {
 
 /**
  * Line segment in 2D
- * @author  David W. Nesbitt
  */
 class LineSegment2 {
  public:
@@ -62,7 +61,7 @@ class LineSegment2 {
 
   /**
    * Determines if the current segment intersects the specified segment.
-   * If an intersect occurs the intersectPt is determined.  Note: the
+   * If an intersect occurs the intersection is computed.  Note: the
    * case where the lines overlap is not considered.
    * @param   segment      Segment to determine intersection with.
    * @param   intersect    (OUT) Intersection point.
@@ -71,7 +70,27 @@ class LineSegment2 {
   bool Intersect(const LineSegment2& segment, Point2& intersect) const;
 
   /**
-   * Tests if a point is to left, right, or on the line segment
+   * Determines if the line segment intersects specified convex polygon.
+   * Based on Cyrus-Beck clipping method.
+   * @param  poly   A counter-clockwise oriented polygon.
+   * @return  Returns true if any part of the segment intersects the polygon,
+   *          false if no intersection.
+   */
+  bool Intersect(const std::vector<Point2>& poly) const;
+
+  /**
+   * Clips the line segment to a specified convex polygon.
+   * Based on Cyrus-Beck clipping method.
+   * @param  poly           A counter-clockwise oriented polygon.
+   * @param  clip_segment   Returns the clipped segment.
+   * @return  Returns true if any part of the segment intersects the polygon,
+   *          false if no intersection.
+   */
+  bool ClipToPolygon(const std::vector<Point2>& poly,
+                     LineSegment2& clip_segment) const;
+
+  /**
+   * Tests if a point is to left, right, or on the line segment.
    * @param    p   Point to test
    * @return   Returns >0 for point to the left, < 0 for point to the right,
    *           and 0 for a point on the line
@@ -82,7 +101,6 @@ class LineSegment2 {
   Point2 a_;
   Point2 b_;
 };
-
 
 }
 }
