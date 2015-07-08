@@ -13,11 +13,14 @@ namespace valhalla {
      public:
       sample(const std::string& data_source);
       template <class T>
-      int32_t get(const std::pair<T, T> coord/*, filter*/);
-      //T<int32_t> get(const T& list*/, filter*/);
+      double get(const std::pair<T, T> coord/*, filter*/);
+      //T<double> get(const T& list*/, filter*/);
 
      protected:
       std::shared_ptr<void> source;
+      void* band;
+      double no_data_value;
+      double inverse_transform[6];
     };
 
   }
