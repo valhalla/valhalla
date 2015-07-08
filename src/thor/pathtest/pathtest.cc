@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <queue>
@@ -36,14 +35,13 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
+typedef std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int> CSV_STATS;
 /**
  * Test a single path from origin to destination.
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
-                  std::tuple<float, float, float,
-                    float, bool, uint32_t, uint32_t,
-                    uint32_t, float, float, int>& csv_data) {
+                  CSV_STATS& csv_data) {
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -52,7 +50,6 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
   t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
-  // TODO - # PASSES
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
   std::get<5>(csv_data) = 1;
   if (pathedges.size() == 0) {
@@ -210,10 +207,7 @@ std::string GetFormattedTime(uint32_t seconds) {
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                               TripPath& trip_path, Location origin,
-                              Location destination,
-                              std::tuple<float, float, float, float,
-                                bool, uint32_t, uint32_t, uint32_t,
-                                float, float, int>& csv_data) {
+                              Location destination, CSV_STATS& csv_data) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
@@ -254,7 +248,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   return trip_directions;
 }
 
-void log_csv(std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int>& csv_data) {
+void log_csv(CSV_STATS& csv_data) {
   std::string line = std::to_string(std::get<0>(csv_data));
   line += ",";
   line += std::to_string(std::get<1>(csv_data));
@@ -425,11 +419,10 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  // Something to hold all the values
-  //          0     1       2     3      4     5         6         7         8      9      10
-  //         |--Origin--|  |-- dest --|  Success         runtime             length        # manuevers
-  //          lat   lon     lat   lon          # passes            trip time        arc dist
-  std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int> csv_data;
+  // Something to hold all the stats
+  // INDEX  0       1       2       3       4       5       6       7         8       9           10
+  // STAT   orgLat  orgLng  destLat destLng success #Passes runtime trip time length  arcDistance #Manuevers
+  CSV_STATS csv_data;
   std::get<0>(csv_data) = originloc.latlng_.lat();
   std::get<1>(csv_data) = originloc.latlng_.lng();
   std::get<2>(csv_data) = destloc.latlng_.lat();
