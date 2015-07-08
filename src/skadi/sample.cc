@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <limits>
 
+//TODO: switch to using gdal_priv.h, which looks like proper c++ bindings
 #include <gdal.h>
 
 #include <valhalla/midgard/logging.h>
@@ -77,15 +78,17 @@ namespace skadi {
     int mid_x = static_cast<int>(x + .5);
     int mid_y = static_cast<int>(y + .5);
 
-    //pull out quad of pixels
-    double quad[2];
+    //pull out quad of pixels, image origin is top left
+    //quad is laid out exactly the same
+    double quad[8];
+    //TODO move to upper left corner of quad
     if(GDALRasterIO(band, GF_Read, mid_x, mid_y, 1, 1, quad,
-                    1, 1, GDT_CFloat64, 0, 0) == CE_None)
+                    1, 1, GDT_CFloat64, 0, 0) == CE_None) {
+      //TODO: bilinear interpolation
       return quad[0];
+    }//need to check corner cases (quad partially outside of image)
     else
       return no_data_value;
-
-    //bilinear interpolation
   }
 
   //explicit instantiations for templated get
