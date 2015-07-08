@@ -12,7 +12,7 @@ namespace valhalla {
      public:
       sample(const std::string& data_source);
       template <class T>
-      double get(const std::pair<T, T>& coord) const;
+      double get(const std::pair<T, T>& coord);
       //T<double> get(const T& list);
 
      protected:

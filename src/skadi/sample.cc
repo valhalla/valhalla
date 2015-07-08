@@ -64,7 +64,7 @@ namespace skadi {
   }
 
   template <class T>
-  double sample::get(const std::pair<T, T>& coord) const {
+  double sample::get(const std::pair<T, T>& coord) {
     //project the coordinates into to image space
     double x = inverse_transform[0] +
                inverse_transform[1] * coord.first +
@@ -92,8 +92,8 @@ namespace skadi {
   }
 
   //explicit instantiations for templated get
-  template double sample::get<double>(const std::pair<double, double>&) const;
-  template double sample::get<float>(const std::pair<float, float>&) const;
+  template double sample::get<double>(const std::pair<double, double>&);
+  template double sample::get<float>(const std::pair<float, float>&);
 
 }
 }
