@@ -761,7 +761,10 @@ void AddToGraph(sqlite3* db_handle,
         LOG_ERROR("End stop key not equal");
       }
       directededge.set_endnode(endstop.graphid);
-      directededge.set_length(stop.ll.Distance(endstop.ll));
+
+      // Make sure length is non-zero
+      float length = std::max(1.0f, stop.ll.Distance(endstop.ll));
+      directededge.set_length(length);
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
@@ -845,6 +848,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   uint64_t wayid = stop.way_id;
 
   float mindist = 10000000.0f;
+  uint32_t edgelength = 0;
   GraphId startnode, endnode;
   std::vector<PointLL> closest_shape;
   std::tuple<PointLL,float,int> closest;
@@ -864,6 +868,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
           mindist = std::get<1>(this_closest);
           closest = this_closest;
           closest_shape = this_shape;
+          edgelength = directededge->length();
 
           // Reverse the shape if directed edge is not the forward direction
           // along the shape
@@ -885,16 +890,17 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
 
   // Check if stop is in same tile as the start node
   stop.conn_count = 0;
+  float length = 0.0f;
   if (stop.graphid.Tile_Base() == startnode.Tile_Base()) {
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::vector<PointLL> shape;
-    for (uint32_t i = 0; i < std::get<2>(closest); i++) {
+    for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
     shape.push_back(std::get<0>(closest));
     shape.push_back(stop.ll);
-    float length = PointLL::Length(shape);
+    length = std::max(1.0f, PointLL::Length(shape));
 
     // Add connection to start node
     connection_edges.push_back({startnode, stop.graphid, stop.key, length, shape});
@@ -902,20 +908,30 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   }
 
   // Check if stop is in same tile as end node
+  float length2 = 0.0f;
   if (stop.graphid.Tile_Base() == endnode.Tile_Base()) {
     // Add connection to end node
     if (startnode.tileid() == endnode.tileid()) {
-      // Add shape from the end to
+      // Add shape from the end to closest point on edge
       std::vector<PointLL> shape2;
       for (int32_t i = closest_shape.size()-1; i > std::get<2>(closest); i--) {
         shape2.push_back(closest_shape[i]);
       }
       shape2.push_back(std::get<0>(closest));
       shape2.push_back(stop.ll);
-      float length2= PointLL::Length(shape2);
+      length2 = std::max(1.0f, PointLL::Length(shape2));
+
+      // Add connection to the end node
       connection_edges.push_back({endnode, stop.graphid, stop.key, length2, shape2});
       stop.conn_count++;
     }
+  }
+
+  if (length != 0.0f && length2 != 0.0 &&
+      (length + length2) < edgelength-1) {
+    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
+             std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop "
+             + std::to_string(stop.key));
   }
 
   if (stop.conn_count == 0) {
