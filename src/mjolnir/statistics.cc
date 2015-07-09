@@ -235,13 +235,13 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   sql += "tilearea REAL,";
   sql += "totalroadlen REAL,";
   sql += "motorway REAL,";
-  sql += "trunk REAL,";
   sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "unclassified REAL,";
   sql += "residential REAL,";
-  sql += "serviceother REAL";
+  sql += "secondary REAL,";
+  sql += "serviceother REAL,";
+  sql += "tertiary REAL,";
+  sql += "trunk REAL,";
+  sql += "unclassified REAL";
   sql += ")";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -282,13 +282,13 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   sql = "CREATE TABLE countrydata (";
   sql += "isocode TEXT PRIMARY KEY,";
   sql += "motorway REAL,";
-  sql += "trunk REAL,";
   sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "unclassified REAL,";
   sql += "residential REAL,";
-  sql += "serviceother REAL";
+  sql += "secondary REAL,";
+  sql += "serviceother REAL,";
+  sql += "tertiary REAL,";
+  sql += "trunk REAL,";
+  sql += "unclassified REAL";
   sql += ")";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -324,7 +324,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
-  sql = "INSERT INTO tiledata (tileid, tilearea, totalroadlen, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother, geom) ";
+  sql = "INSERT INTO tiledata (tileid, tilearea, totalroadlen, motorway, pmary, residential, secondary, serviceother, tertiary, trunk, unclassified, geom) ";
   sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326))";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen (sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
@@ -456,7 +456,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
-  sql = "INSERT INTO countrydata (isocode, motorway, trunk, pmary, secondary, tertiary, unclassified, residential, serviceother) ";
+  sql = "INSERT INTO countrydata (isocode, motorway, pmary, residential, secondary, serviceother, tertiary, trunk, unclassified) ";
   sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
