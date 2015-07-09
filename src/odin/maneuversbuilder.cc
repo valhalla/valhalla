@@ -1384,46 +1384,54 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
                                        curr_edge->begin_heading());
 
-  // Process driving mode
-  if ((curr_edge->travel_mode() == TripPath_TravelMode_kDrive)
-      || (curr_edge->travel_mode() == TripPath_TravelMode_kBicycle)) {
-    // if path turn is not straight
-    // and intersecting straight edge exists
-    // then return true
-    if (((turn_degree > 45) && (turn_degree < 315))
-        && node->HasForwardDriveableIntersectingEdge(
-            prev_edge->end_heading())) {
-      return true;
+  if (node->HasIntersectingEdges()) {
+    // Process driving mode
+    if ((curr_edge->travel_mode() == TripPath_TravelMode_kDrive)
+        || (curr_edge->travel_mode() == TripPath_TravelMode_kBicycle)) {
+      // if path edge is not forward
+      // and forward driveable intersecting edge exists
+      // then return true
+      if (!curr_edge->IsForward(prev_edge->end_heading())
+          && node->HasForwardDriveableIntersectingEdge(
+              prev_edge->end_heading())) {
+        return true;
+      }
+      // if path edge is forward
+      // and forward driveable intersecting edge exists
+      // and path edge is not the straightest
+      // then return true
+      else if (curr_edge->IsForward(prev_edge->end_heading())
+          && node->HasForwardDriveableIntersectingEdge(prev_edge->end_heading())
+          && !curr_edge->IsStraightest(
+              prev_edge->end_heading(),
+              node->GetStraightestDriveableIntersectingEdgeTurnDegree(
+                  prev_edge->end_heading()))) {
+        return true;
+      }
+    }
+    // Process non-driving mode
+    else {
+      // if path turn is not forward
+      // and forward intersecting edge exists
+      // then return true
+      if (!curr_edge->IsForward(prev_edge->end_heading())
+          && node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
+        return true;
+      }
+      // if path edge is forward
+      // and forward intersecting edge exists
+      // and path edge is not the straightest
+      // then return true
+      else if (curr_edge->IsForward(prev_edge->end_heading())
+          && node->HasFowardIntersectingEdge(prev_edge->end_heading())
+          && !curr_edge->IsStraightest(
+              prev_edge->end_heading(),
+              node->GetStraightestIntersectingEdgeTurnDegree(
+                  prev_edge->end_heading()))) {
+        return true;
+      }
     }
   }
-  // Process non-driving mode
-  else {
-    // if path turn is not straight
-    // and intersecting straight edge exists
-    // then return true
-    if (((turn_degree > 45) && (turn_degree < 315))
-        && node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
-      return true;
-    }
-  }
-//  // If node is fork
-//  // and prev to curr edge is relative straight
-//  if (node->fork() && ((turn_degree > 315) || (turn_degree < 45))) {
-//    // If the above criteria is met then check the following criteria...
-//
-//    IntersectingEdgeCounts xedge_counts;
-//    // TODO: update to pass similar turn threshold
-//    node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
-//                                                   xedge_counts);
-//
-//    // if there is a similar driveable intersecting edge
-//    //   or there is a driveable intersecting edge and curr edge is link(ramp)
-//    if (((xedge_counts.left_similar_driveable_outbound > 0)
-//        || (xedge_counts.right_similar_driveable_outbound > 0))
-//        || (((xedge_counts.left_driveable_outbound > 0)
-//            || (xedge_counts.right_driveable_outbound > 0)) && curr_edge->ramp())) {
-//      return true;
-//    }
 
   return false;
 }

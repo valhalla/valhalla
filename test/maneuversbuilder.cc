@@ -2011,6 +2011,41 @@ void TestPathLeftXStraightIsIntersectingForwardEdge() {
 
 }
 
+void TestPathSlightRightXSlightLeftIsIntersectingForwardEdge() {
+  DirectionsOptions directions_options;
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Horace Greeley Road" }, 0.102593, 30.000000,
+               TripPath_RoadClass_kResidential, 23, 13, 0, 6,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+
+  // node:1 Intersecting forward link
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Horace Greeley Road" }, 0.205258, 30.000000,
+               TripPath_RoadClass_kResidential, 35, 19, 6, 12,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 355,
+                           TripPath_Driveability_kBoth, 0, 0);
+
+  // node:2
+  node = path.add_node();
+
+  ManeuversBuilderTest mbTest(directions_options,
+                              static_cast<EnhancedTripPath*>(&path));
+
+  TryIsIntersectingForwardEdge(mbTest, 1, true);
+
+}
+
 }
 
 int main() {
@@ -2064,6 +2099,9 @@ int main() {
 
   // PathLeftXStraightIsIntersectingForwardEdge
   suite.test(TEST_CASE(TestPathLeftXStraightIsIntersectingForwardEdge));
+
+  // PathSlightRightXSlightLeftIsIntersectingForwardEdge
+  suite.test(TEST_CASE(TestPathSlightRightXSlightLeftIsIntersectingForwardEdge));
 
   return suite.tear_down();
 }

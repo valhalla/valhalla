@@ -88,6 +88,24 @@ bool EnhancedTripPath_Edge::IsOneway() const {
       || (driveability() == TripPath_Driveability_kBackward));
 }
 
+bool EnhancedTripPath_Edge::IsForward(uint32_t from_heading) const {
+  uint32_t turn_degree = GetTurnDegree(from_heading, begin_heading());
+  return ((turn_degree > 314) || (turn_degree < 46));
+}
+
+//TODO: determine if delta threshold is needed
+bool EnhancedTripPath_Edge::IsStraightest(
+    uint32_t from_heading, uint32_t straightest_xedge_turn_degree) const {
+  uint32_t path_turn_degree = GetTurnDegree(from_heading, begin_heading());
+  uint32_t path_straight_delta =
+      (path_turn_degree > 180) ?
+          (360 - path_turn_degree) : path_turn_degree;
+  uint32_t xedge_straight_delta =
+      (straightest_xedge_turn_degree > 180) ?
+          (360 - straightest_xedge_turn_degree) : straightest_xedge_turn_degree;
+  return (path_straight_delta <= xedge_straight_delta);
+}
+
 std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
   std::vector<std::string> name_list;
   for (const auto& name : this->name()) {
@@ -663,6 +681,49 @@ bool EnhancedTripPath_Node::HasForwardDriveableIntersectingEdge(
     }
   }
   return false;
+}
+
+//TODO: refactor to clean up code
+uint32_t EnhancedTripPath_Node::GetStraightestDriveableIntersectingEdgeTurnDegree(
+    uint32_t from_heading) {
+
+  uint32_t staightest_turn_degree = 180;  // Initialize to reverse turn degree
+  uint32_t staightest_delta = 180;  // Initialize to reverse delta
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    uint32_t intersecting_turn_degree = GetTurnDegree(
+        from_heading, intersecting_edge(i).begin_heading());
+    bool xedge_driveable_outbound =
+        GetIntersectingEdge(i)->IsDriveableOutbound();
+    uint32_t straight_delta =
+        (intersecting_turn_degree > 180) ?
+            (360 - intersecting_turn_degree) : intersecting_turn_degree;
+    if (xedge_driveable_outbound && (straight_delta < staightest_delta)) {
+      staightest_delta = straight_delta;
+      staightest_turn_degree = intersecting_turn_degree;
+    }
+  }
+  return staightest_turn_degree;
+}
+
+uint32_t EnhancedTripPath_Node::GetStraightestIntersectingEdgeTurnDegree(
+    uint32_t from_heading) {
+
+  uint32_t staightest_turn_degree = 180;  // Initialize to reverse turn degree
+  uint32_t staightest_delta = 180;  // Initialize to reverse delta
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    uint32_t intersecting_turn_degree = GetTurnDegree(
+        from_heading, intersecting_edge(i).begin_heading());
+    uint32_t straight_delta =
+        (intersecting_turn_degree > 180) ?
+            (360 - intersecting_turn_degree) : intersecting_turn_degree;
+    if (straight_delta < staightest_delta) {
+      staightest_delta = straight_delta;
+      staightest_turn_degree = intersecting_turn_degree;
+    }
+  }
+  return staightest_turn_degree;
 }
 
 std::string EnhancedTripPath_Node::ToString() const {
