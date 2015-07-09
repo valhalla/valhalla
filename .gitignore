@@ -29,6 +29,7 @@ libtool
 
 # built objects
 skadi_service
+skadi_benchmark
 *.o
 .deps/
 .dirstamp
@@ -41,8 +42,7 @@ test-suite.log
 test-driver
 test/*.log
 test/*.trs
-test/tiles
-test/search
+test/sample
 
 # test coverage stuff
 *.gcno

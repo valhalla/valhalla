@@ -18,11 +18,11 @@ using namespace prime_server;
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/srtmtile.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/midgard/distanceapproximator.h>
 
 #include "skadi/service.h"
+#include "skadi/sample.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -83,33 +83,39 @@ namespace {
       //for each posting
       auto range = ranges.cbegin();
       for (const auto height : heights) {
+        //start out with distance
         auto element = json::map({
           {"range", json::fp_t{*range, 0}}
         });
+        //add height to it
         if(height == no_data_value)
           element->emplace("height", nullptr);
-
-        array->emplace_back(
-
-        );
-        array->back();
+        else
+          element->emplace("height", json::fp_t{height, 0});
+        //keep it in the array
+        array->emplace_back(std::move(element));
       }
       return array;
     }
 
 
-    json::MapPtr serialize_shape(const std::vector<PointLL>& shape) {
-      return json::map({
-        {"elevation", serialize_shape(shape)},
-        {"input_shape", json::fp_t(shape)}
-      });
+    json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
+      auto array = json::array({});
+      for(const auto& p : shape) {
+        array->emplace_back(json::map({
+          {"lon", json::fp_t{p.first, 0}},
+          {"lat", json::fp_t{p.second, 0}}
+        }));
+      }
+      return array;
     }
 
   //TODO: throw this in the header to make it testable?
   class skadi_worker_t {
    public:
-    skadi_worker_t(const boost::property_tree::ptree& config):config(config){
-        }
+    skadi_worker_t(const boost::property_tree::ptree& config):
+      sample(config.get<std::string>("additional_data.elevation", "test/data/appalachian.vrt")) {
+    }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -207,10 +213,10 @@ namespace {
         ranges.emplace_back(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
 
       //get the elevation of each posting
-      std::vector<double> heights(shape.size(), 0);
+      std::vector<double> heights = sample.get_all(shape);
 
-      const double no_data_value;
-      //TODO: call skadi::sample::get<>
+      const double no_data_value = -32768;
+      //TODO: call sample.no_data_value
 
       //serialize
       auto json = json::map({
@@ -242,9 +248,9 @@ namespace {
       encoded_polyline.reset();
     }
    protected:
-    boost::property_tree::ptree config;
     std::vector<PointLL> shape;
     boost::optional<std::string> encoded_polyline;
+    skadi::sample sample;
   };
 }
 

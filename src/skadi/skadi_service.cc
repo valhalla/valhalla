@@ -20,5 +20,6 @@ int main(int argc, char** argv) {
   //run the service worker
   valhalla::skadi::run_service(config);
 
+
   return 0;
 }

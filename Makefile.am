@@ -38,17 +38,22 @@ endif
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_skadi.la
 nobase_include_HEADERS = \
-	valhalla/skadi/service.h
+	valhalla/skadi/service.h \
+	valhalla/skadi/sample.h
 libvalhalla_skadi_la_SOURCES = \
-	src/skadi/service.cc
+	src/skadi/service.cc \
+	src/skadi/sample.cc
 libvalhalla_skadi_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_skadi_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 #distributed executables
-bin_PROGRAMS = skadi_service
+bin_PROGRAMS = skadi_service skadi_benchmark
 skadi_service_SOURCES = src/skadi/skadi_service.cc
 skadi_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 skadi_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
+skadi_benchmark_SOURCES = src/skadi/benchmark.cc
+skadi_benchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+skadi_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
 
 # tests
 check_PROGRAMS = \
