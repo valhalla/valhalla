@@ -15,6 +15,7 @@
 using namespace prime_server;
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/location.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/srtmtile.h>
@@ -24,8 +25,8 @@ using namespace prime_server;
 #include "skadi/service.h"
 
 using namespace valhalla;
-using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 
 namespace {
@@ -75,69 +76,34 @@ namespace {
    return pt;
  }
 
-   //Walk the shape, return the distance height.
-   //Input vector of latlngs or encoded latlngs.
-    json::ArrayPtr serialize_shape(const std::vector<midgard::PointLL &> shape) {
+    //Walk the range height
+    json::ArrayPtr serialize_range_height(const std::vector<float>& ranges, const std::vector<double>& heights, const double no_data_value) {
       auto array = json::array({});
-      std::vector<std::vector<float>> elev;
-      for (std::vector<midgard::PointLL &>::iterator i = shape.begin(); i != shape.end(); ++i) {
-        try {
-            elev getelevation(shape[i], shape[i+1]);
-            array->emplace_back(
-              json::map({
-                {"range", json::fp_t{elev[0], 5}},
-                {"height", json::fp_t{elev[1], 3}}
-              })
-            );
-        }
-        catch(...) {
-          //this really shouldnt ever get hit
-          LOG_WARN("");
-        }
+
+      //for each posting
+      auto range = ranges.cbegin();
+      for (const auto height : heights) {
+        auto element = json::map({
+          {"range", json::fp_t{*range, 0}}
+        });
+        if(height == no_data_value)
+          element->emplace("height", nullptr);
+
+        array->emplace_back(
+
+        );
+        array->back();
       }
       return array;
     }
 
-    json::ArrayPtr serialize_shape(const std::string encoded_polyline) {
-      auto array = json::array({});
-      std::vector<midgard::PointLL &> shape;
-      if(encoded_polyline != nullptr) {
-        shape = midgard::decode<std::vector<PointLL> >(std::string(encoded_polyline));
-      }
-      return serialize_shape(shape);
-    }
 
-    json::MapPtr serialize(const std::vector<PointLL&> shape) {
+    json::MapPtr serialize_shape(const std::vector<PointLL>& shape) {
       return json::map({
         {"elevation", serialize_shape(shape)},
         {"input_shape", json::fp_t(shape)}
       });
     }
-
-    json::MapPtr serialize(const std::vector<PointLL&> shape, const std::string& reason) {
-      return json::map({
-        {"elevation", static_cast<std::nullptr_t>(nullptr)},
-        {"input_shape", json::fp_t(shape)},
-        {"reason", reason}
-      });
-    }
-
-    json::MapPtr serialize(const std::string encoded_polyline) {
-      return json::map({
-        {"elevation", serialize_shape(encoded_polyline)},
-        {"input_shape", json::fp_t(encoded_polyline)}
-      });
-    }
-
-    json::MapPtr serialize(const std::string encoded_polyline, const std::string& reason) {
-      return json::map({
-        {"elevation", static_cast<std::nullptr_t>(nullptr)},
-        {"input_shape", json::fp_t(encoded_polyline)},
-        {"reason", reason}
-      });
-    }
-
-
 
   //TODO: throw this in the header to make it testable?
   class skadi_worker_t {
@@ -149,8 +115,7 @@ namespace {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
-      //  /elevation?shape=&json=&jsonp=
-
+      //  http://host:port/elevation?json={shape:[{lat: ,lon: }]}&apikey= OR http://host:port/elevation?json={encoded_polyline:" xxxx "}&apikey=
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
@@ -165,7 +130,7 @@ namespace {
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
-       init_request(action->second, request_pt);
+        init_request(action->second, request_pt);
         switch (action->second) {
           case ELEVATION:
             return elevation(request_pt, info);
@@ -187,36 +152,32 @@ namespace {
     }
 
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
-         //we require shape or encoded polyline
-         try {
-           if (request.get_child("shape")) {
-             for(const auto& latlng : request.get_child("shape")) {
-            //   shape.push_back(midgard::PointLL &::FromPtree(latlng.second));
-             }
-             if(shape.size() < 1)
-               throw std::runtime_error("Insufficient shape provided");
-
-           } else if (request.get_child("encoded_polyline")) {
-          //   encoded_polyline.push_back(midgard::PointLL &::FromPtree(request.get_child("encoded_polyline")));
-           }
-             if(encoded_polyline != "")
-               throw std::runtime_error("Insufficient shape provided");
-
+       //we require shape or encoded polyline
+       try {
+         //uncompressed shape
+         auto input_shape = request.get_child_optional("shape");
+         if (input_shape) {
+           for(const auto& latlng : *input_shape)
+             shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
+           if(shape.size() < 1)
+             throw std::runtime_error("Insufficient shape provided");
+           return;
          }
-         catch(...) {
-           throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == ELEVATION ? "latlng'" : "shape'"));
+
+         //compressed shape
+         encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+         if (encoded_polyline) {
+           shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+           return;
          }
        }
+       catch(...) {
+         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == ELEVATION ? "latlng'" : "shape'"));
+       }
 
-
-    std::vector<std::vector<float>> getelevation(const midgard::PointLL& latlng, const midgard::PointLL& latlng2) {
-      std::vector<std::vector<float>> elev;
-
-      float height = valhalla::baldr::SRTMTile(latlng, true);
-      float range = midgard::DistanceApproximator::DistanceSquared(latlng, latlng2);
-
-      return elev[range][height];
-    }
+       //you forgot something
+       throw std::runtime_error("Insufficient shape provided");
+     }
 
     //example elevation response:
     /*
@@ -236,59 +197,54 @@ namespace {
           -76.3059,
           .......
           .......
-       ],
-       info: {
-         status: 0,
-         messages: []
+       ]
       }
     }*/
     worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-        std::vector<std::vector<float>> elevation;
-        auto json = json::array({});
+      //get the distances between the postings
+      std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
+      for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point)
+        ranges.emplace_back(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
 
-        if(shape.size() > 1) {
+      //get the elevation of each posting
+      std::vector<double> heights(shape.size(), 0);
 
-          for(const auto& latlng : shape) {
-              try {
-                json->emplace_back(serialize(shape));
-              }
-              catch(const std::exception& e) {
-                json->emplace_back(serialize(shape, e.what()));
-              }
-            }
-         } else if (encoded_polyline != "") {
-           try {
-                 json->emplace_back(serialize(encoded_polyline));
-               }
-               catch(const std::exception& e) {
-                 json->emplace_back(serialize(encoded_polyline, e.what()));
-               }
-         }
+      const double no_data_value;
+      //TODO: call skadi::sample::get<>
 
-          //jsonp callback if need be
-          std::ostringstream stream;
-          auto jsonp = request.get_optional<std::string>("jsonp");
-          if(jsonp)
-            stream << *jsonp << '(';
-          stream << *json;
-          if(jsonp)
-            stream << ')';
+      //serialize
+      auto json = json::map({
+        {"elevation", serialize_range_height(ranges, heights, no_data_value)}
+      });
+      if(encoded_polyline)
+        json->emplace("input_encoded_polyline", *encoded_polyline);
+      else
+        json->emplace("input_shape", serialize_shape(shape));
 
-          worker_t::result_t result{false};
-          http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+      //jsonp callback if need be
+      std::ostringstream stream;
+      auto jsonp = request.get_optional<std::string>("jsonp");
+      if(jsonp)
+        stream << *jsonp << '(';
+      stream << *json;
+      if(jsonp)
+        stream << ')';
+
+      worker_t::result_t result{false};
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+      response.from_info(request_info);
+      result.messages.emplace_back(response.to_string());
+      return result;
     }
 
     void cleanup() {
       shape.clear();
-
+      encoded_polyline.reset();
     }
    protected:
     boost::property_tree::ptree config;
-    std::vector<PointLL &> shape;
-    std::string encoded_polyline;
+    std::vector<PointLL> shape;
+    boost::optional<std::string> encoded_polyline;
   };
 }
 
