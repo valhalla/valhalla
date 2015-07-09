@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <limits>
+#include <list>
 
 //TODO: switch to using gdal_priv.h, which looks like proper c++ bindings
 #include <gdal.h>
@@ -16,6 +17,9 @@ namespace {
   struct driver_t {
     driver_t() {
       GDALAllRegister();
+      //TODO: make configurable..
+      //TODO: wtf. cant set this or we segfault and default is only 40mb
+      //GDALSetCacheMax64(static_cast<GIntBig>(1073741824));
     }
     ~driver_t() {
       GDALDestroyDriverManager();
@@ -63,8 +67,8 @@ namespace skadi {
       throw std::runtime_error("Could not invert the coordinate transform");
   }
 
-  template <class T>
-  double sample::get(const std::pair<T, T>& coord) {
+  template <class coord_t>
+  double sample::get(const coord_t& coord) {
     //project the coordinates into to image space
     double x = inverse_transform[0] +
                inverse_transform[1] * coord.first +
@@ -91,9 +95,22 @@ namespace skadi {
       return no_data_value;
   }
 
+  template <class coords_t>
+  std::vector<double> sample::get_all(const coords_t& coords) {
+    std::vector<double> values;
+    values.reserve(coords.size());
+    for(const auto& coord : coords)
+      values.emplace_back(get(coord));
+    return values;
+  }
+
   //explicit instantiations for templated get
-  template double sample::get<double>(const std::pair<double, double>&);
-  template double sample::get<float>(const std::pair<float, float>&);
+  template double sample::get<std::pair<double, double> >(const std::pair<double, double>&);
+  template double sample::get<std::pair<float, float> >(const std::pair<float, float>&);
+  template std::vector<double> sample::get_all<std::list<std::pair<double, double> > >(const std::list<std::pair<double, double> >&);
+  template std::vector<double> sample::get_all<std::vector<std::pair<double, double> > >(const std::vector<std::pair<double, double> >&);
+  template std::vector<double> sample::get_all<std::list<std::pair<float, float> > >(const std::list<std::pair<float, float> >&);
+  template std::vector<double> sample::get_all<std::vector<std::pair<float, float> > >(const std::vector<std::pair<float, float> >&);
 
 }
 }

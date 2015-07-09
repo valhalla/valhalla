@@ -1,5 +1,6 @@
 #include <fstream>
 #include <list>
+#include <cstdlib>
 #include <vector>
 #include <utility>
 #include <thread>
@@ -12,8 +13,7 @@
 void get_samples(const std::string& source, const std::list<std::pair<double, double> >& postings, size_t id) {
   valhalla::skadi::sample sample(source);
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) + " postings");
-  for(const auto& p : postings)
-    sample.get(p);
+  sample.get_all(postings);
   LOG_INFO("Thread" + std::to_string(id) + " finished");
 }
 
