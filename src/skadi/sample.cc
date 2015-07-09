@@ -10,6 +10,7 @@
 #include <gdal.h>
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
 
 namespace {
 
@@ -104,13 +105,23 @@ namespace skadi {
     return values;
   }
 
+  double sample::get_no_data_value() const {
+    return no_data_value;
+  }
+
   //explicit instantiations for templated get
   template double sample::get<std::pair<double, double> >(const std::pair<double, double>&);
   template double sample::get<std::pair<float, float> >(const std::pair<float, float>&);
+  template double sample::get<midgard::PointLL>(const midgard::PointLL&);
+  template double sample::get<midgard::Point2>(const midgard::Point2&);
   template std::vector<double> sample::get_all<std::list<std::pair<double, double> > >(const std::list<std::pair<double, double> >&);
   template std::vector<double> sample::get_all<std::vector<std::pair<double, double> > >(const std::vector<std::pair<double, double> >&);
   template std::vector<double> sample::get_all<std::list<std::pair<float, float> > >(const std::list<std::pair<float, float> >&);
   template std::vector<double> sample::get_all<std::vector<std::pair<float, float> > >(const std::vector<std::pair<float, float> >&);
+  template std::vector<double> sample::get_all<std::list<midgard::PointLL> >(const std::list<midgard::PointLL>&);
+  template std::vector<double> sample::get_all<std::vector<midgard::PointLL> >(const std::vector<midgard::PointLL>&);
+  template std::vector<double> sample::get_all<std::list<midgard::Point2> >(const std::list<midgard::Point2>&);
+  template std::vector<double> sample::get_all<std::vector<midgard::Point2> >(const std::vector<midgard::Point2>&);
 
 }
 }
