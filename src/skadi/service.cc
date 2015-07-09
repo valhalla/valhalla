@@ -5,6 +5,7 @@
 #include <array>
 #include <unordered_map>
 #include <cstdint>
+#include <cmath>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -93,7 +94,8 @@ namespace {
         else
           element->emplace("height", json::fp_t{height, 0});
         //keep it in the array
-        array->emplace_back(std::move(element));
+        array->emplace_back(element);
+        ++range;
       }
       return array;
     }
@@ -103,8 +105,8 @@ namespace {
       auto array = json::array({});
       for(const auto& p : shape) {
         array->emplace_back(json::map({
-          {"lon", json::fp_t{p.first, 0}},
-          {"lat", json::fp_t{p.second, 0}}
+          {"lon", json::fp_t{p.first, 6}},
+          {"lat", json::fp_t{p.second, 6}}
         }));
       }
       return array;
@@ -210,7 +212,7 @@ namespace {
       //get the distances between the postings
       std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
       for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point)
-        ranges.emplace_back(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
+        ranges.emplace_back(std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1))));
 
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);

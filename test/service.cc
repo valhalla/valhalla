@@ -9,7 +9,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::skadi;
 
 namespace {
-
+/*
 void TryGetElevationFromLatLng(const std::vector<PointLL>& shape, uint32_t expected_arraysize) {
   auto array = serialize_shape(shape);
   if (array != expected_arraysize) {
@@ -50,10 +50,7 @@ void TestGetElevationFromLatLng() {
     {"lat":40.716204, "lon":-74.007712},
     {"lat":40.716364, "lon":-74.007849}]",29);
 }
-/*
-void TestGetElevationFromEncodedPolyline() {
-  TryGetElevationFromEncodedPolyline("gysalAlg|zpC~Clt@tDtx@hHfaBdKl{BrKbnApGro@tJrz@jBbQj@zVt@lTjFnnCrBz}BmFnoB]pHwCvm@eJxtATvXTnfAk@|^z@rGxGre@nTpnBhBbQvXduCrUr`Edd@naEja@~gAhk@nzBxf@byAfm@tuCvDtOvNzi@|jCvkKngAl`HlI|}@`N`{Adx@pjE??xB|J", 41);
-}*/
+
 
 int main(void) {
   test::suite suite("elevation");
@@ -62,5 +59,6 @@ int main(void) {
 
   return suite.tear_down();
 }
+*/
 }
 
