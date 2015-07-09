@@ -357,28 +357,28 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   if (this->has_travel_mode()) {
     str += "TripPath_TravelMode_";
     str += TripPath_TravelMode_descriptor()->FindValueByNumber(travel_mode())
-          ->name();
+        ->name();
   }
 
   str += delim;
   if (this->has_vehicle_type()) {
     str += "TripPath_VehicleType_";
     str += TripPath_VehicleType_descriptor()->FindValueByNumber(vehicle_type())
-          ->name();
+        ->name();
   }
 
   str += delim;
   if (this->has_pedestrian_type()) {
     str += "TripPath_PedestrianType_";
-    str += TripPath_PedestrianType_descriptor()->FindValueByNumber(pedestrian_type())
-          ->name();
+    str += TripPath_PedestrianType_descriptor()->FindValueByNumber(
+        pedestrian_type())->name();
   }
 
   str += delim;
   if (this->has_bicycle_type()) {
     str += "TripPath_BicycleType_";
     str += TripPath_BicycleType_descriptor()->FindValueByNumber(bicycle_type())
-          ->name();
+        ->name();
   }
 
   str += delim;
@@ -634,6 +634,19 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
       }
     }
   }
+}
+
+bool EnhancedTripPath_Node::HasStraightIntersectingEdge(
+    uint32_t from_heading) {
+
+  for (int i = 0; i < intersecting_edge_size(); ++i) {
+    uint32_t intersecting_turn_degree = GetTurnDegree(
+        from_heading, intersecting_edge(i).begin_heading());
+    if ((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool EnhancedTripPath_Node::HasStraightDriveableIntersectingEdge(
