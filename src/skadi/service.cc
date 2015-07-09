@@ -215,12 +215,9 @@ namespace {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
 
-      const double no_data_value = -32768;
-      //TODO: call sample.no_data_value
-
       //serialize
       auto json = json::map({
-        {"elevation", serialize_range_height(ranges, heights, no_data_value)}
+        {"elevation", serialize_range_height(ranges, heights, sample.get_no_data_value())}
       });
       if(encoded_polyline)
         json->emplace("input_encoded_polyline", *encoded_polyline);
