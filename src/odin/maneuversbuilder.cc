@@ -1384,12 +1384,27 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
   uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
                                        curr_edge->begin_heading());
 
-  // if path turn is not straight
-  // and intersecting straight edge exists
-  // then return true
-  if (((turn_degree > 45) && (turn_degree < 315))
-      && node->HasStraightDriveableIntersectingEdge(prev_edge->end_heading())) {
-    return true;
+  // Process driving mode
+  if ((curr_edge->travel_mode() == TripPath_TravelMode_kDrive)
+      || (curr_edge->travel_mode() == TripPath_TravelMode_kBicycle)) {
+    // if path turn is not straight
+    // and intersecting straight edge exists
+    // then return true
+    if (((turn_degree > 45) && (turn_degree < 315))
+        && node->HasStraightDriveableIntersectingEdge(
+            prev_edge->end_heading())) {
+      return true;
+    }
+  }
+  // Process non-driving mode
+  else {
+    // if path turn is not straight
+    // and intersecting straight edge exists
+    // then return true
+    if (((turn_degree > 45) && (turn_degree < 315))
+        && node->HasStraightIntersectingEdge(prev_edge->end_heading())) {
+      return true;
+    }
   }
 //  // If node is fork
 //  // and prev to curr edge is relative straight
