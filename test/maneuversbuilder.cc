@@ -51,6 +51,17 @@ class ManeuversBuilderTest : public ManeuversBuilder {
     return ManeuversBuilder::DetermineRelativeDirection(turn_degree);
   }
 
+  bool IsIntersectingForwardEdge(int node_index,
+                                 EnhancedTripPath_Edge* prev_edge,
+                                 EnhancedTripPath_Edge* curr_edge) {
+    return ManeuversBuilder::IsIntersectingForwardEdge(node_index, prev_edge,
+                                                       curr_edge);
+  }
+
+  EnhancedTripPath* trip_path() {
+    return trip_path_;
+  }
+
 };
 
 void TrySetSimpleDirectionalManeuverType(
@@ -412,7 +423,8 @@ void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
                   std::vector<std::string> exit_numbers,
                   std::vector<std::string> exit_branches,
                   std::vector<std::string> exit_towards,
-                  std::vector<std::string> exit_names) {
+                  std::vector<std::string> exit_names,
+                  TripPath_TravelMode travel_mode = TripPath_TravelMode_kDrive) {
   for (auto& name : names) {
     edge->add_name(name);
   }
@@ -448,6 +460,19 @@ void PopulateEdge(TripPath_Edge* edge, std::vector<std::string> names,
   for (auto& exit_name : exit_names) {
     sign->add_exit_name(exit_name);
   }
+  edge->set_travel_mode(travel_mode);
+}
+
+void PopulateIntersectingEdge(TripPath_IntersectingEdge* xedge,
+                              ::google::protobuf::uint32 begin_heading,
+                              TripPath_Driveability driveability =
+                                  TripPath_Driveability_kBoth,
+                              bool prev_name_consistency = false,
+                              bool curr_name_consistency = false) {
+  xedge->set_begin_heading(begin_heading);
+  xedge->set_driveability(driveability);
+  xedge->set_prev_name_consistency(prev_name_consistency);
+  xedge->set_curr_name_consistency(curr_name_consistency);
 }
 
 void PopulateManeuver(
@@ -1900,6 +1925,92 @@ void TestCountAndSortExitSigns() {
 
 }
 
+void TryIsIntersectingForwardEdge(ManeuversBuilderTest& mbTest, int node_index,
+                                  bool expected) {
+  auto* prev_edge = mbTest.trip_path()->GetPrevEdge(node_index);
+  auto* curr_edge = mbTest.trip_path()->GetCurrEdge(node_index);
+
+  bool intersecting_forward_link = mbTest.IsIntersectingForwardEdge(node_index,
+                                                                    prev_edge,
+                                                                    curr_edge);
+
+  if (intersecting_forward_link != expected) {
+    throw std::runtime_error(
+        "Incorrect intersecting forward link value - expected: "
+            + std::to_string(expected));
+  }
+}
+
+void TestPathRightXStraightIsIntersectingForwardEdge() {
+  DirectionsOptions directions_options;
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Raleigh Road" }, 0.027827, 30.000000,
+               TripPath_RoadClass_kResidential, 250, 291, 0, 1,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+
+  // node:1 Intersecting forward link
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Raleigh Road" }, 0.054344, 30.000000,
+               TripPath_RoadClass_kResidential, 20, 337, 1, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 289,
+                           TripPath_Driveability_kBoth, 1, 1);
+
+  // node:2
+  node = path.add_node();
+
+  ManeuversBuilderTest mbTest(directions_options,
+                              static_cast<EnhancedTripPath*>(&path));
+
+  TryIsIntersectingForwardEdge(mbTest, 1, true);
+
+}
+
+void TestPathLeftXStraightIsIntersectingForwardEdge() {
+  DirectionsOptions directions_options;
+  TripPath path;
+  TripPath_Node* node;
+  TripPath_Edge* edge;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // node:0
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Raleigh Road" }, 0.047007, 30.000000,
+               TripPath_RoadClass_kResidential, 108, 108, 0, 1,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+
+  // node:1 Intersecting forward link
+  node = path.add_node();
+  edge = node->mutable_edge();
+  PopulateEdge(edge, { "Raleigh Road" }, 0.046636, 30.000000,
+               TripPath_RoadClass_kResidential, 20, 337, 1, 3,
+               TripPath_Driveability_kBoth, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+               { }, { }, { }, { }, TripPath_TravelMode_kDrive);
+  PopulateIntersectingEdge(node->add_intersecting_edge(), 111,
+                           TripPath_Driveability_kBoth, 1, 1);
+
+  // node:2
+  node = path.add_node();
+
+  ManeuversBuilderTest mbTest(directions_options,
+                              static_cast<EnhancedTripPath*>(&path));
+
+  TryIsIntersectingForwardEdge(mbTest, 1, true);
+
+}
+
 }
 
 int main() {
@@ -1947,6 +2058,12 @@ int main() {
 
   // CountAndSortExitSigns
   suite.test(TEST_CASE(TestCountAndSortExitSigns));
+
+  // PathRightXStraightIsIntersectingForwardEdge
+  suite.test(TEST_CASE(TestPathRightXStraightIsIntersectingForwardEdge));
+
+  // PathLeftXStraightIsIntersectingForwardEdge
+  suite.test(TEST_CASE(TestPathLeftXStraightIsIntersectingForwardEdge));
 
   return suite.tear_down();
 }
