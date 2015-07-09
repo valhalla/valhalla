@@ -1391,7 +1391,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
     // and intersecting straight edge exists
     // then return true
     if (((turn_degree > 45) && (turn_degree < 315))
-        && node->HasStraightDriveableIntersectingEdge(
+        && node->HasForwardDriveableIntersectingEdge(
             prev_edge->end_heading())) {
       return true;
     }
@@ -1402,7 +1402,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
     // and intersecting straight edge exists
     // then return true
     if (((turn_degree > 45) && (turn_degree < 315))
-        && node->HasStraightIntersectingEdge(prev_edge->end_heading())) {
+        && node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
       return true;
     }
   }

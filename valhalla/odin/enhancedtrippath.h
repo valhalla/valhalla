@@ -129,9 +129,9 @@ class EnhancedTripPath_Node : public TripPath_Node {
   void CalculateRightLeftIntersectingEdgeCounts(
       uint32_t from_heading, IntersectingEdgeCounts& xedge_counts);
 
-  bool HasStraightIntersectingEdge(uint32_t from_heading);
+  bool HasFowardIntersectingEdge(uint32_t from_heading);
 
-  bool HasStraightDriveableIntersectingEdge(uint32_t from_heading);
+  bool HasForwardDriveableIntersectingEdge(uint32_t from_heading);
 
   std::string ToString() const;
 

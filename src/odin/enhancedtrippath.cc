@@ -636,7 +636,7 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
-bool EnhancedTripPath_Node::HasStraightIntersectingEdge(
+bool EnhancedTripPath_Node::HasFowardIntersectingEdge(
     uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
@@ -649,7 +649,7 @@ bool EnhancedTripPath_Node::HasStraightIntersectingEdge(
   return false;
 }
 
-bool EnhancedTripPath_Node::HasStraightDriveableIntersectingEdge(
+bool EnhancedTripPath_Node::HasForwardDriveableIntersectingEdge(
     uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
