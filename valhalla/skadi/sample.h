@@ -11,6 +11,10 @@ namespace valhalla {
 
     class sample{
      public:
+      //non-copyable
+      sample(const sample&) = delete;
+      sample& operator=(const sample&) = delete;
+
       /**
        * Constructor
        * @param data_source  file name of the datasource from which to sample
@@ -32,6 +36,11 @@ namespace valhalla {
        */
       template <class coords_t>
       std::vector<double> get_all(const coords_t& coords);
+
+      /**
+       * @return the no data value for this data source
+       */
+      double get_no_data_value() const;
 
      protected:
       std::shared_ptr<void> source;
