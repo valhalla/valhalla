@@ -4,10 +4,11 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
-namespace skadi {
+  namespace skadi {
 
-  void run_service(const boost::property_tree::ptree& config);
-}
+    void run_service(const boost::property_tree::ptree& config);
+
+  }
 }
 
 #endif //__VALHALLA_SKADI_SERVICE_H__

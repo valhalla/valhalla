@@ -56,3 +56,7 @@ coverage/
 .project
 .settings
 
+
+#gdal
+scripts/gdal-2.0.0/
+scripts/gdal-2.0.0.tar.gz

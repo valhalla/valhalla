@@ -2,7 +2,6 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
-#include <array>
 #include <unordered_map>
 #include <cstdint>
 #include <cmath>
@@ -39,82 +38,79 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
-      boost::property_tree::ptree pt;
-
-  //throw the json into the ptree
-      auto json = request.query.find("json");
-      if(json != request.query.end() && json->second.size()) {
-        std::istringstream is(json->second.front());
-        boost::property_tree::read_json(is, pt);
-      }//no json parameter, check the body
-      else if(!request.body.empty()) {
-        std::istringstream is(request.body);
-        boost::property_tree::read_json(is, pt);
-      }
-
-      //throw the query params into the ptree
-      for(const auto& kv : request.query) {
-        //skip json or empty entries
-        if(kv.first == "json" || kv.first.size() == 0 || kv.second.size() == 0)
-          continue;
-
-        //turn single value entries into single key value
-        if(kv.second.size() == 1) {
-          pt.add(kv.first, kv.second.front());
-          continue;
-        }
-
-        //make an array of values for this key
-        boost::property_tree::ptree array;
-        for(const auto& value : kv.second) {
-          boost::property_tree::ptree element;
-          element.put("", value);
-          array.push_back(std::make_pair("", element));
-        }
-        pt.add_child(kv.first, array);
-      }
-
-   return pt;
- }
-
-    //Walk the range height
-    json::ArrayPtr serialize_range_height(const std::vector<float>& ranges, const std::vector<double>& heights, const double no_data_value) {
-      auto array = json::array({});
-
-      //for each posting
-      auto range = ranges.cbegin();
-      for (const auto height : heights) {
-        //start out with distance
-        auto element = json::map({
-          {"range", json::fp_t{*range, 0}}
-        });
-        //add height to it
-        if(height == no_data_value)
-          element->emplace("height", nullptr);
-        else
-          element->emplace("height", json::fp_t{height, 0});
-        //keep it in the array
-        array->emplace_back(element);
-        ++range;
-      }
-      return array;
+    boost::property_tree::ptree pt;
+    //throw the json into the ptree
+    auto json = request.query.find("json");
+    if(json != request.query.end() && json->second.size()) {
+      std::istringstream is(json->second.front());
+      boost::property_tree::read_json(is, pt);
+    }//no json parameter, check the body
+    else if(!request.body.empty()) {
+      std::istringstream is(request.body);
+      boost::property_tree::read_json(is, pt);
     }
 
+    //throw the query params into the ptree
+    for(const auto& kv : request.query) {
+      //skip json or empty entries
+      if(kv.first == "json" || kv.first.size() == 0 || kv.second.size() == 0)
+        continue;
 
-    json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
-      auto array = json::array({});
-      for(const auto& p : shape) {
-        array->emplace_back(json::map({
-          {"lon", json::fp_t{p.first, 6}},
-          {"lat", json::fp_t{p.second, 6}}
-        }));
+      //turn single value entries into single key value
+      if(kv.second.size() == 1) {
+        pt.add(kv.first, kv.second.front());
+        continue;
       }
-      return array;
+
+      //make an array of values for this key
+      boost::property_tree::ptree array;
+      for(const auto& value : kv.second) {
+        boost::property_tree::ptree element;
+        element.put("", value);
+        array.push_back(std::make_pair("", element));
+      }
+      pt.add_child(kv.first, array);
     }
+
+    return pt;
+  }
+
+  //Walk the range height
+  json::ArrayPtr serialize_range_height(const std::vector<float>& ranges, const std::vector<double>& heights, const double no_data_value) {
+    auto array = json::array({});
+    //for each posting
+    auto range = ranges.cbegin();
+    for (const auto height : heights) {
+      //start out with distance
+      auto element = json::map({
+        {"range", json::fp_t{*range, 0}}
+      });
+      //add height to it
+      if(height == no_data_value)
+        element->emplace("height", nullptr);
+      else
+        element->emplace("height", json::fp_t{height, 0});
+      //keep it in the array
+      array->emplace_back(element);
+      ++range;
+    }
+    return array;
+  }
+
+  json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
+    auto array = json::array({});
+    for(const auto& p : shape) {
+      array->emplace_back(json::map({
+        {"lon", json::fp_t{p.first, 6}},
+        {"lat", json::fp_t{p.second, 6}}
+      }));
+    }
+    return array;
+  }
 
   //TODO: throw this in the header to make it testable?
   class skadi_worker_t {
-   public:
+    public:
     skadi_worker_t(const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/appalachian.vrt")) {
     }
@@ -135,7 +131,6 @@ namespace {
           result.messages.emplace_back(response.to_string());
           return result;
         }
-
         //parse the query's json
         auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
@@ -143,7 +138,6 @@ namespace {
           case ELEVATION:
             return elevation(request_pt, info);
         }
-
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
@@ -160,54 +154,52 @@ namespace {
     }
 
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
-       //we require shape or encoded polyline
-       try {
-         //uncompressed shape
-         auto input_shape = request.get_child_optional("shape");
-         if (input_shape) {
-           for(const auto& latlng : *input_shape)
-             shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
-           if(shape.size() < 1)
-             throw std::runtime_error("Insufficient shape provided");
-           return;
-         }
+      //we require shape or encoded polyline
+      try {
+       //uncompressed shape
+       auto input_shape = request.get_child_optional("shape");
+       if (input_shape) {
+         for(const auto& latlng : *input_shape)
+           shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
 
-         //compressed shape
-         encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-         if (encoded_polyline) {
-           shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
-           return;
-         }
+         if(shape.size() < 1)
+           throw std::runtime_error("Insufficient shape provided");
+         return;
        }
-       catch(...) {
-         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == ELEVATION ? "latlng'" : "shape'"));
+       //compressed shape
+       encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+       if (encoded_polyline) {
+         shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+         return;
        }
-
-       //you forgot something
-       throw std::runtime_error("Insufficient shape provided");
      }
+     catch(...) {
+       throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == ELEVATION ? "latlng'" : "shape'"));
+     }
+     //you forgot something
+     throw std::runtime_error("Insufficient shape provided");
+   }
 
-    //example elevation response:
-    /*
-    {elevation: [
-       {
-         range: 0
-         height: 388.72873
-       },
-       {
-          range: 4.37751
-          height: 397.56055
-       }
-       ...
-       ],
-       input_shape: [
-           40.0380,
-          -76.3059,
-          .......
-          .......
-       ]
-      }
-    }*/
+  //example elevation response:
+  /*
+  {elevation: [
+    {
+      range: 0
+      height: 388.72873
+    },
+    {
+      range: 4.37751
+      height: 397.56055
+    }
+    ...
+    ],
+    input_shape: [
+      40.0380,
+      -76.3059,
+      .......
+      .......
+    ]}
+  }*/
     worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //get the distances between the postings
       std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
@@ -246,10 +238,10 @@ namespace {
       shape.clear();
       encoded_polyline.reset();
     }
-   protected:
-    std::vector<PointLL> shape;
-    boost::optional<std::string> encoded_polyline;
-    skadi::sample sample;
+    protected:
+      std::vector<PointLL> shape;
+      boost::optional<std::string> encoded_polyline;
+      skadi::sample sample;
   };
 }
 
@@ -271,7 +263,5 @@ namespace valhalla {
 
       //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
     }
-
-
   }
 }
