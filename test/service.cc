@@ -1,64 +1,61 @@
 #include "test.h"
 
-#include <string>
-#include <vector>
-#include "valhalla/skadi/service.h"
+#include <prime_server/prime_server.hpp>
+#include <prime_server/http_protocol.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <thread>
 
-using namespace std;
-using namespace valhalla::midgard;
-using namespace valhalla::skadi;
+#include "skadi/service.h"
+
+
+using namespace valhalla;
+using namespace prime_server;
 
 namespace {
-/*
-void TryGetElevationFromLatLng(const std::vector<PointLL>& shape, uint32_t expected_arraysize) {
-  auto array = serialize_shape(shape);
-  if (array != expected_arraysize) {
-    throw std::runtime_error(
-        std::string("No Elevation Data available."));
+
+  void start_service(zmq::context_t& context) {
+    //server
+    std::thread server(std::bind(&http_server_t::serve,
+      http_server_t(context, "ipc://test_skadi_server", "ipc://test_skadi_proxy_upstream", "ipc://test_skadi_results")));
+    server.detach();
+
+    //load balancer
+    std::thread proxy(std::bind(&proxy_t::forward,
+      proxy_t(context, "ipc://test_skadi_proxy_upstream", "ipc://test_skadi_proxy_downstream")));
+    proxy.detach();
+
+    //service worker
+    boost::property_tree::ptree config;
+    //TODO: fill out the config
+    std::thread worker(valhalla::skadi::run_service, config);
+    worker.detach();
+  }
+
+  void test_requests() {
+    //start up the service
+    zmq::context_t context;
+    start_service(context);
+
+    //client makes requests and gets back responses in a batch fashion
+    http_client_t client(context, "ipc://test_http_server",
+      []() {
+        //TODO: send the request
+        return std::make_pair<const void*, size_t>(nullptr, 0);
+      },
+      [](const void* data, size_t size) {
+        //TODO: check the response
+        return false;
+      }, 1
+    );
+    //request and receive
+    client.batch();
   }
 }
 
-
-void TestGetElevationFromLatLng() {
-  TryGetElevationFromLatLon("shape":[{"lat":40.712431, "lon":-74.004916},
-    {"lat":40.712275, "lon":-74.005259},
-    {"lat":40.712122, "lon":-74.005694},
-    {"lat":40.712027, "lon":-74.006091},
-    {"lat":40.711989, "lon":-74.006251},
-    {"lat":40.711802, "lon":-74.006961},
-    {"lat":40.711779, "lon":-74.007052},
-    {"lat":40.711707, "lon":-74.006961},
-    {"lat":40.711726, "lon":-74.006884},
-    {"lat":40.711901, "lon":-74.006213},
-    {"lat":40.711939, "lon":-74.006068},
-    {"lat":40.711916, "lon":-74.005877},
-    {"lat":40.711974, "lon":-74.005595},
-    {"lat":40.711989, "lon":-74.005419},
-    {"lat":40.712000, "lon":-74.005305},
-    {"lat":40.711985, "lon":-74.005320},
-    {"lat":40.712069, "lon":-74.005354},
-    {"lat":40.712153, "lon":-74.005392},
-    {"lat":40.712214, "lon":-74.005549},
-    {"lat":40.712458, "lon":-74.006342},
-    {"lat":40.713633, "lon":-74.006518},
-    {"lat":40.713923, "lon":-74.007250},
-    {"lat":40.714800, "lon":-74.007830},
-    {"lat":40.715609, "lon":-74.007677},
-    {"lat":40.715716, "lon":-74.007651},
-    {"lat":40.715929, "lon":-74.007651},
-    {"lat":40.716044, "lon":-74.007677},
-    {"lat":40.716204, "lon":-74.007712},
-    {"lat":40.716364, "lon":-74.007849}]",29);
-}
-
-
 int main(void) {
-  test::suite suite("elevation");
+  test::suite suite("elevation service");
 
-  suite.test(TEST_CASE(TestGetElevationFromLatLng));
+  suite.test(TEST_CASE(test_requests));
 
   return suite.tear_down();
 }
-*/
-}
-
