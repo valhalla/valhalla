@@ -13,13 +13,20 @@
 #include <valhalla/midgard/pointll.h>
 
 namespace {
+  //quiet error handler
+  void quiet(CPLErr eErrClass, int err_no, const char *msg){
+    //bask in the silence
+  }
 
   //this is a once per process thing
   struct driver_t {
     driver_t() {
+      //register all datasource drivers
       GDALAllRegister();
+      //silence textual errors
+      CPLSetErrorHandler(quiet);
       //TODO: make configurable..
-      //TODO: wtf. cant set this or we segfault and default is only 40mb
+      //TODO: wtf. cant set this or we segfault in threaded applications and default is only 40mb
       //GDALSetCacheMax64(static_cast<GIntBig>(1073741824));
     }
     ~driver_t() {
