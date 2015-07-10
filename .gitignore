@@ -44,6 +44,7 @@ test-driver
 test/*.log
 test/*.trs
 test/sample
+test/service
 
 # test coverage stuff
 *.gcno
