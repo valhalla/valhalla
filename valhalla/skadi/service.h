@@ -11,5 +11,4 @@ namespace valhalla {
   }
 }
 
-
 #endif //__VALHALLA_SKADI_SERVICE_H__
