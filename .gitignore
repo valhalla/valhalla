@@ -29,6 +29,7 @@ libtool
 
 # built objects
 skadi_service
+skadi_simple_service
 skadi_benchmark
 *.o
 .deps/
@@ -55,3 +56,7 @@ coverage/
 .project
 .settings
 
+
+#gdal
+scripts/gdal-2.0.0/
+scripts/gdal-2.0.0.tar.gz
