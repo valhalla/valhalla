@@ -134,3 +134,7 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 ./args.py | parallel --joblog cut_tiles.log -C ' ' -P $(nproc) "./composite.sh {} 2>err.log 1>comp.log"
+
+#make a world vrt
+find tiles/ | grep -F tif > tifs
+gdalbuildvrt world.vrt -input_file_list tifs
