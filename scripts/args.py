@@ -6,9 +6,9 @@ while x0 < 180:
 	y0 = -90
 	while y0 < 90:
 		if x0 < 0:
-			d = 'tiles/s' + str(abs(x0))
+			d = 'tiles/w' + str(abs(x0))
 		else:
-			d = 'tiles/n' + str(abs(x0))
+			d = 'tiles/e' + str(abs(x0))
 		if y0 < 0:
 			f = d + '/s' + str(abs(y0)) + '.tif'
 		else:
