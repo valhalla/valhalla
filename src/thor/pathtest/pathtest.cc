@@ -35,8 +35,6 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
-typedef std::tuple<float, float, float, float, bool, uint32_t, uint32_t, uint32_t, float, float, int> CSV_STATS;
-
 namespace {
   class PathStatistics {
     std::pair<float, float> origin;
@@ -431,7 +429,6 @@ int main(int argc, char *argv[]) {
   }
 
   //Something to hold the statistics
-  CSV_STATS csv_data;
   PathStatistics data({originloc.latlng_.lat(), originloc.latlng_.lng()},
                       {destloc.latlng_.lat(), destloc.latlng_.lng()});
   data.setArcDist(sqrt(DistanceApproximator::DistanceSquared(originloc.latlng_, destloc.latlng_)) / 1000);
