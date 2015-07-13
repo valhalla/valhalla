@@ -51,13 +51,33 @@ struct Cost {
   }
 
   /**
-   * Add to this cost .
+   * Subtract cost from another.
+   * @param  other  Cost to subtract from this cost.
+   * @return  Returns the cost after subtraction.
+   */
+  Cost operator - (const Cost& other) const {
+    return Cost(cost - other.cost, secs - other.secs);
+  }
+
+  /**
+   * Add to this cost.
    * @param   other  Cost to add to the current cost.
    * @return  Returns address of this cost.
    */
   Cost& operator += (const Cost& other) {
     cost += other.cost;
     secs += other.secs;
+    return *this;
+  }
+
+  /**
+   * Subtract from this cost.
+   * @param   other  Cost to subtract from the current cost.
+   * @return  Returns address of this cost.
+   */
+  Cost& operator -= (const Cost& other) {
+    cost -= other.cost;
+    secs -= other.secs;
     return *this;
   }
 
