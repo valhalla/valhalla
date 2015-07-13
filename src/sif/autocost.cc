@@ -21,6 +21,16 @@ constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+
+// Default turn costs
+constexpr float kTCStraight         = 0.5f;
+constexpr float kTCSlight           = 0.75f;
+constexpr float kTCFavorable        = 1.0f;
+constexpr float kTCFavorableSharp   = 1.5f;
+constexpr float kTCCrossing         = 2.0f;
+constexpr float kTCUnfavorable      = 2.5f;
+constexpr float kTCUnfavorableSharp = 3.5f;
+constexpr float kTCReverse          = 5.0f;
 }
 
 
@@ -272,31 +282,31 @@ float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
                          const bool crossing,
                          const bool drive_on_right) const {
   if (crossing) {
-    return 2.0f;
+    return kTCCrossing;
   }
 
   switch (turn_type) {
   case Turn::Type::kStraight:
-    return 0.5f;
+    return kTCStraight;
 
   case Turn::Type::kSlightLeft:
   case Turn::Type::kSlightRight:
-    return 0.75f;
+    return kTCSlight;
 
   case Turn::Type::kRight:
-    return (drive_on_right) ? 1.0f : 2.5f;
+    return (drive_on_right) ? kTCFavorable : kTCUnfavorable;
 
   case Turn::Type::kLeft:
-    return (drive_on_right) ? 2.5f : 1.0f;
+    return (drive_on_right) ? kTCUnfavorable : kTCFavorable;
 
   case Turn::Type::kSharpRight:
-    return (drive_on_right) ? 1.25f : 3.5f;
+    return (drive_on_right) ? kTCFavorableSharp : kTCUnfavorableSharp;
 
   case Turn::Type::kSharpLeft:
-    return (drive_on_right) ? 3.5f : 1.25f;
+    return (drive_on_right) ? kTCUnfavorableSharp : kTCFavorableSharp;
 
   case Turn::Type::kReverse:
-    return 5.0f;
+    return kTCReverse;
   }
 }
 
