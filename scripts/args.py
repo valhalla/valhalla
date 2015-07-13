@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, socket, errno
+import sys, errno
 
 x0 = -180.0
 while x0 < 180:
