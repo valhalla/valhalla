@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <tuple>
+#include <cmath>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -20,6 +22,7 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include "thor/pathalgorithm.h"
 #include "thor/trippathbuilder.h"
 
@@ -32,11 +35,48 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
+namespace {
+  class PathStatistics {
+    std::pair<float, float> origin;
+    std::pair<float, float> destination;
+    bool success;
+    uint32_t passes;
+    uint32_t runtime;
+    uint32_t trip_time;
+    float trip_dist;
+    float arc_dist;
+    uint32_t manuevers;
+
+  public:
+    PathStatistics (std::pair<float, float> p1, std::pair<float, float> p2)
+      : origin(p1), destination(p2), success(false),
+        passes(0), runtime(), trip_time(),
+        trip_dist(), arc_dist(), manuevers() { }
+
+    void setSuccess(bool b) { success = b; }
+    void incPasses(void) { ++passes; }
+    void addRuntime(uint32_t msec) { runtime += msec; }
+    void setTripTime(uint32_t t) { trip_time = t; }
+    void setTripDist(float d) { trip_dist = d; }
+    void setArcDist(float d) { arc_dist = d; }
+    void setManuevers(uint32_t n) { manuevers = n; }
+    void log() {
+      std::string successStr = (success) ? "true" : "false";
+      valhalla::midgard::logging::Log(
+        (boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d")
+          % origin.first % origin.second % destination.first % destination.second
+          % successStr % passes % runtime % trip_time % trip_dist % arc_dist % manuevers).str(),
+        " [STATISTICS] ");
+    }
+  };
+}
+
 /**
  * Test a single path from origin to destination.
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost) {
+                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
+                  PathStatistics& data) {
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -46,17 +86,20 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
   pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+  data.incPasses();
   if (pathedges.size() == 0) {
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
       pathalgorithm.Clear();
       cost->RelaxHierarchyLimits(16.0f);
       pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      data.incPasses();
     }
   }
   if (pathedges.size() == 0) {
     cost->DisableHighwayTransitions();
     pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+    data.incPasses();
     if (pathedges.size() == 0) {
       throw std::runtime_error("No path could be found for input");
     }
@@ -199,7 +242,7 @@ std::string GetFormattedTime(uint32_t seconds) {
 
 TripDirections DirectionsTest(const DirectionsOptions& directions_options,
                               TripPath& trip_path, Location origin,
-                              Location destination) {
+                              Location destination, PathStatistics& data) {
   DirectionsBuilder directions;
   TripDirections trip_directions = directions.Build(directions_options,
                                                     trip_path);
@@ -233,6 +276,9 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
       (boost::format("Total length: %.1f %s")
           % trip_directions.summary().length() % units).str(),
       " [NARRATIVE] ");
+  data.setTripTime(trip_directions.summary().time());
+  data.setTripDist(trip_directions.summary().length());
+  data.setManuevers(trip_directions.maneuver_size());
 
   return trip_directions;
 }
@@ -382,6 +428,11 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
+  //Something to hold the statistics
+  PathStatistics data({originloc.latlng_.lat(), originloc.latlng_.lng()},
+                      {destloc.latlng_.lat(), destloc.latlng_.lng()});
+  data.setArcDist(sqrt(DistanceApproximator::DistanceSquared(originloc.latlng_, destloc.latlng_)) / 1000);
+
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
@@ -393,12 +444,15 @@ int main(int argc, char *argv[]) {
   auto t10 = std::chrono::high_resolution_clock::now();
   if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
     LOG_INFO("No tile connectivity between origin and destination.");
+    data.setSuccess(false);
+    data.log();
     return EXIT_SUCCESS;
   }
   auto t20 = std::chrono::high_resolution_clock::now();
   uint32_t msecs1 =
          std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
   LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
+  data.addRuntime(msecs1);
 
   // Construct costing
   CostFactory<DynamicCost> factory;
@@ -463,24 +517,29 @@ int main(int argc, char *argv[]) {
     uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
         t2 - t1).count();
     LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
+    data.addRuntime(msecs);
 
     // Get the route
     t1 = std::chrono::high_resolution_clock::now();
-    trip_path = PathTest(reader, pathOrigin, pathDest, cost);
+    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data);
     t2 = std::chrono::high_resolution_clock::now();
     msecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
+    data.addRuntime(msecs);
   }
 
   // Try the the directions
   auto t1 = std::chrono::high_resolution_clock::now();
   TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                                                  originloc, destloc);
+                                                  originloc, destloc, data);
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+  data.addRuntime(msecs);
+  data.setSuccess(true);
+  data.log();
 
   return EXIT_SUCCESS;
 }
