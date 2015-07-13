@@ -57,15 +57,10 @@ sed -i -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
 #from the log messages otherwise every line will be a diff
 #TODO: add leading zeros to output files so they sort nicely
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
-cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} > ${OUTDIR}/{#}.txt"
+cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2>&1 | tee -a ${OUTDIR}/statistics.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
 rm -f "${TMP}"
-
-for FN in $(ls ${OUTDIR}); do
-  cat ${OUTDIR}/${FN} | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' > ${OUTDIR}/narr_${FN}
-  cat ${OUTDIR}/${FN} | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' > ${OUTDIR}/stat_${FN}
-  cat ${OUTDIR}/${FN} | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' >> ${OUTDIR}/STATISTICS.csv
-  rm ${OUTDIR}/${FN}
-done
+cat ${OUTDIR}/statistics.tmp | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' &> ${OUTDIR}/statistics.csv
+rm ${OUTDIR}/statistics.tmp
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
