@@ -139,7 +139,6 @@ CREATE TABLE "transfers"
 DROP TABLE IF EXISTS "schedule";
 CREATE TABLE "schedule"
 (
-  schedule_key integer primary key,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
@@ -306,7 +305,6 @@ CREATE TABLE "transfers_tmp"
 DROP TABLE IF EXISTS "schedule_tmp";
 CREATE TABLE "schedule_tmp"
 (
-  schedule_key integer primary key autoincrement,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
@@ -331,6 +329,10 @@ CREATE INDEX s_trip_id_index ON stop_times_tmp (trip_id);
 CREATE INDEX c_service_id_index ON calendar_tmp (service_id);
 CREATE INDEX t_service_id_index ON trips_tmp (service_id);
 CREATE INDEX cd_service_id_index ON calendar_dates_tmp (service_id);
+CREATE INDEX stops_os_id ON stops(onestop_id);
+CREATE INDEX stops_tmp_os_id ON stops_tmp(onestop_id);
+CREATE INDEX stops_tmp_s_id ON stops_tmp(stop_id);
+CREATE INDEX stop_times_tmp_s_id ON stop_times_tmp(stop_id);
 
 SELECT AddGeometryColumn('shapes', 'geom', 4326, 'POINT', 2);
 SELECT AddGeometryColumn('stops', 'geom', 4326, 'POINT', 2);

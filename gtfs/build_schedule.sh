@@ -1,4 +1,5 @@
 db=$1
+calendar_type=$3
 
 if [ -f schedule.txt ]; then
   rm schedule.txt
@@ -7,66 +8,65 @@ if [ -f schedule.tmp ]; then
   rm schedule.tmp
 fi
 
+for f in schedule.*.tmp;
+do
+  if [ -f $f ]; then
+    rm $f
+  fi 
+  if [ -f $f.txt ]; then
+    rm $f.txt
+  fi 
+done 
+
 if [[ "$2" ==  "pg" ]]; then
-  dbuser=$3
-  psql -U $dbuser -c "copy (select stop_key,trip_key,trip_id,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed from s_tmp order by trip_id, stop_sequence) to STDOUT csv" $db > ./schedule.tmp
-elif [[ "$2" ==  "sqlite" ]]; then 
-  sqlite3 $db -csv "select stop_key,trip_key,trip_id,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,sunday,monday,tuesday,wednesday,thursday,friday,saturday,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed from s_tmp order by trip_id, stop_sequence;" > ./schedule.tmp
+  dbuser=$4
 fi
 
-tr -d '"' < ./schedule.tmp > ./schedule.tmp.new
-mv ./schedule.tmp.new ./schedule.tmp
+./split.sh $calendar_type $db $2 $dbuser
 
-NONE=0
-SUNDAY=1
-MONDAY=2
-TUESDAY=4
-WEDNESDAY=8
-THURSDAY=16
-FRIDAY=32
-SATURDAY=64
-
-dow_mask=$NONE
-dest=false
-origin=""
-departure=""
-trip=""
-startdate=""
+for f in schedule.*.tmp;
+do
+   ./build.sh $calendar_type $f $f.txt &
+done
+wait
 
 echo "origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed" >> schedule.txt
 
-#Creating the stop pairs and calendar bitmask.
-while IFS=, read stop_key trip_key trip_id route_key service_key shape_key departure_time arrival_time start_date end_date sun mon tue wed thu fri sat has_subtractions block_id headsign wheelchair_accessible bikes_allowed; do
+for f in schedule.*.tmp;
+do
 
-    if [[ "$trip_id" ==  "$trip" && "$start_date" == "$startdate" ]]; then
-       echo "$origin,$stop_key,$trip_key,$route_key,$service_key,$shape_key,$departure,$arrival_time,$start_date,$end_date,$dow_mask,$has_subtractions,$block_id,$headsign,$wheelchair_accessible,$bikes_allowed" >> schedule.txt
-    fi
+  if [ -f $f.txt ]; then
+    cat $f.txt >> schedule.txt
+    rm $f.txt
+  fi
 
-    startdate=$start_date
-    trip=$trip_id
-    origin=$stop_key
-    departure=$departure_time
+  if [ -f $f ]; then
+    rm $f
+  fi
 
-    dow_mask=$NONE
-
-    if [[ $sun -eq 1 ]]; then dow_mask=$(($dow_mask|$SUNDAY));fi
-    if [[ $mon -eq 1 ]]; then dow_mask=$(($dow_mask|$MONDAY));fi
-    if [[ $tue -eq 1 ]]; then dow_mask=$(($dow_mask|$TUESDAY));fi
-    if [[ $wed -eq 1 ]]; then dow_mask=$(($dow_mask|$WEDNESDAY));fi
-    if [[ $thu -eq 1 ]]; then dow_mask=$(($dow_mask|$THURSDAY));fi
-    if [[ $fri -eq 1 ]]; then dow_mask=$(($dow_mask|$FRIDAY));fi
-    if [[ $sat -eq 1 ]]; then dow_mask=$(($dow_mask|$SATURDAY));fi
-
-done < ./schedule.tmp
+done
 
 if [[ "$2" ==  "pg" ]]; then
   psql -U $dbuser $db -c "copy schedule_tmp(origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed) from '$PWD/schedule.txt' with delimiter ',' csv header;"
+
+  if [[ "$calendar_type" ==  "exceptions" ]]; then
+    psql -U $dbuser $db -c "delete from calendar_dates_tmp where exception_type = 1;"
+    psql -U $dbuser $db -c "update schedule_tmp set has_subtractions = 1 where schedule_tmp.service_key = (select distinct(calendar_dates_tmp.service_key) from calendar_dates_tmp where schedule_tmp.service_key = calendar_dates_tmp.service_key);"
+  fi
+
   psql -U $dbuser $db -c "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
   psql -U $dbuser $db -c "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   psql -U $dbuser $db -c "VACUUM ANALYZE;"
 elif [[ "$2" ==  "sqlite" ]]; then
 
-  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed' -1 -d ',' -t schedule_tmp -o $db
+  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed' -1 -d ',' -t schedule_tmp -o $db &> /dev/null
+  #echo -e '.separator ","\n.import '$PWD'/schedule.txt schedule_tmp' | sqlite3 $db
+
+  if [[ "$calendar_type" ==  "exceptions" ]]; then
+    spatialite $db "delete from calendar_dates_tmp where exception_type = 1;"
+    spatialite $db "update schedule_tmp set has_subtractions = 1 where schedule_tmp.service_key = (select distinct(calendar_dates_tmp.service_key) from calendar_dates_tmp where schedule_tmp.service_key = calendar_dates_tmp.service_key);"
+  fi  
+
   spatialite $db "update trips_tmp set block_id = '0' where block_id = '' or block_id is null;"
   spatialite $db "update schedule_tmp set block_id = '0' where block_id = '' or block_id is null;"
   spatialite $db "VACUUM ANALYZE;"

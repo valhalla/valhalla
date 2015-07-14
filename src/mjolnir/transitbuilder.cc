@@ -39,7 +39,6 @@ struct Stop {
   std::string name;
   std::string desc;
   std::string zoneid;
-  std::string url;
 };
 
 struct Departure {
@@ -147,10 +146,11 @@ struct builder_stats {
 
 // Get stops within a tile's bounding box
 std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
-  // Form query
+  // Form query -- for now ignore egress points
+
   std::string sql = "SELECT stop_key, stop_id, onestop_id, osm_way_id,";
-  sql += "stop_code, stop_name,stop_desc, zone_id, stop_url, location_type, ";
-  sql += "parent_station_key,stop_lat, stop_lon from stops where ";
+  sql += "stop_code, stop_name,stop_desc, zone_id, location_type, ";
+  sql += "parent_station_key,stop_lat, stop_lon from stops where location_type <> 2 and ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) ";
@@ -178,12 +178,10 @@ std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
                     std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
       stop.zoneid = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
                     std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 7)))) : "";
-      stop.url    = (sqlite3_column_type(stmt, 8) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 8)))) : "";
-      stop.type   = sqlite3_column_int(stmt, 9);
-      stop.parent = sqlite3_column_int(stmt, 10);
-      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 12)),
-                  static_cast<float>(sqlite3_column_double(stmt, 11)));
+      stop.type   = sqlite3_column_int(stmt, 8);
+      stop.parent = sqlite3_column_int(stmt, 9);
+      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 11)),
+                  static_cast<float>(sqlite3_column_double(stmt, 10)));
 
       stops.emplace_back(std::move(stop));
 
@@ -307,6 +305,10 @@ std::vector<Departure> GetDepartures(sqlite3* db_handle,
   sql += "start_date, end_date, dow_mask, has_subtractions, headsign from schedule where ";
   sql += "origin_stop_key = " + std::to_string(stop_key);
 
+  // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the departures
+  // TODO:  so that costing can be applied for bike and wheelchair accessibility.
+  // TODO:  This will require updates to data structure TransitDeparture.
+
   std::vector<Departure> departures;
   sqlite3_stmt* stmt = 0;
   uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
@@ -418,6 +420,10 @@ std::unordered_map<uint32_t, uint32_t> AddTrips(sqlite3* db_handle,
     std::string sql = "SELECT trip_key, route_key, trip_headsign,";
     sql += "trip_short_name, shape_key from trips where ";
     sql += "trip_key = " + std::to_string(key);
+
+    // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the trips
+    // TODO:  so that costing can be applied for bike and wheelchair accessibility.
+    // TODO:  This will require updates to data structure TransitTrip.
 
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
