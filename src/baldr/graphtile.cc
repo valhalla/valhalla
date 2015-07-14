@@ -251,7 +251,7 @@ const NodeInfo* GraphTile::node(const GraphId& node) const {
   if (node.id() < header_->nodecount())
     return &nodes_[node.id()];
   throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                             std::to_string(node.id()) + "," +
+                             std::to_string(node.tileid()) + "," +
                              std::to_string(node.level()) + "," +
                              std::to_string(node.id()) + " nodecount= " +
                              std::to_string(header_->nodecount()));
@@ -261,7 +261,7 @@ const NodeInfo* GraphTile::node(const size_t idx) const {
   if (idx < header_->nodecount())
     return &nodes_[idx];
   throw std::runtime_error("GraphTile NodeInfo index out of bounds: " +
-                           std::to_string(header_->graphid().id()) + "," +
+                           std::to_string(header_->graphid().tileid()) + "," +
                            std::to_string(header_->graphid().level()) + "," +
                            std::to_string(idx)  + " nodecount= " +
                            std::to_string(header_->nodecount()));
