@@ -221,6 +221,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
               vStats.add_tile_speed_info(tileid, rclass, tempLength);
               vStats.add_country_speed_info(begin_node_iso, rclass, tempLength);
             }
+            // Check if edge has any names
             if (tilebuilder.edgeinfo(directededge.edgeinfo_offset())->name_count() > 0) {
               vStats.add_tile_named(tileid, rclass, tempLength);
               vStats.add_country_named(begin_node_iso, rclass, tempLength);

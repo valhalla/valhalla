@@ -404,10 +404,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Look for potential duplicates
         //CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
 
-        // it is a fork if all the edges are links
-        // OR the node is a motorway_junction and none of the edges are links
-        bool fork = ((bundle.link_count == bundle.node_edges.size())
-            || ((node.type() == NodeType::kMotorWayJunction) && (bundle.link_count == 0)));
+        // it is a fork if more than two edges and more than one driveforward edge and
+        //   if all the edges are links
+        //   OR the node is a motorway_junction and none of the edges are links
+        bool fork = (((bundle.node_edges.size() > 2) && (bundle.driveforward_count > 1))
+            && ((bundle.link_count == bundle.node_edges.size())
+                || ((node.type() == NodeType::kMotorWayJunction)
+                    && (bundle.link_count == 0))));
 
         //////////////////////////////////////////////////////////////////////
         // Iterate over edges at node
@@ -485,10 +488,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add edge info to the tile and set the offset in the directed edge
           uint32_t edge_info_offset = graphtile.AddEdgeInfo(
-            edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id,
-            w.way_id(), shape, w.GetNames(ref, osmdata.ref_offset_map,
-                                         osmdata.name_offset_map),
-            added);
+              edge_pair.second, (*nodes[source]).graph_id,
+              (*nodes[target]).graph_id, w.way_id(), shape,
+              w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
+              added);
           directededge.set_edgeinfo_offset(edge_info_offset);
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
@@ -498,9 +501,12 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add signs if signs exist
           // and directed edge if forward access and auto use
-          // and directed edge is a link or node is a fork
+          // and directed edge is a link and not (link count=2 and driveforward count=1)
+          //    OR node is a fork
           if (!exits.empty() && (directededge.forwardaccess() & kAutoAccess)
-               && (directededge.link() || fork)) {
+              && ((directededge.link()
+                  && (!((bundle.link_count == 2)
+                      && (bundle.driveforward_count == 1)))) || fork)) {
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
