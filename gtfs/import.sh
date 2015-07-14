@@ -69,7 +69,7 @@ do
       echo "copy ${f%%.*}_tmp(${cols}) from '$PWD/$f' with delimiter '|' csv header;" >> data.sql
       chmod 755 ./data.sql
     elif [[ "$1" ==  "sqlite" ]]; then
-      echo "termsql -a -i $PWD/$f -c '${cols}' -1 -d '|' -t ${f%%.*}_tmp -o ${db}" >> data.sql
+      echo "termsql -a -i $PWD/$f -c '${cols}' -1 -d '|' -t ${f%%.*}_tmp -o ${db} &> /dev/null &" >> data.sql
       chmod 755 ./data.sql
     fi
   fi
@@ -89,8 +89,10 @@ if [[ "$1" ==  "pg" ]]; then
   psql -U $dbuser $db -c "delete from calendar_tmp where CAST(end_date as integer) < CAST('${PivoteDate}' as integer);"
   psql -U $dbuser $db -c "delete from calendar_dates_tmp where CAST(date as integer) < CAST('${PivoteDate}' as integer);"
 
-  ./build_schedule.sh $db $1 $dbuser
-  ./build_schedule_cal_dates.sh $db $1 $dbuser
+  calendar_type="normal"
+  ./build_schedule.sh $db $1 $calendar_type $dbuser
+  calendar_type="exceptions"
+  ./build_schedule.sh $db $1 $calendar_type $dbuser
 
   psql -U $dbuser $db -c "insert into shapes select * from shapes_tmp;"
   psql -U $dbuser $db -c "insert into shape select * from shape_tmp;"
@@ -127,7 +129,9 @@ if [[ "$1" ==  "pg" ]]; then
   fi
 
 elif [[ "$1" ==  "sqlite" ]]; then
- 
+
+  echo "wait" >> data.sql
+     
   #wipe db as needed.
   if [[ "$2" == "clean" ]]; then
     rm $db
@@ -136,7 +140,7 @@ elif [[ "$1" ==  "sqlite" ]]; then
     cat ./geom.sql | spatialite $db || exit $?
   else
     cat ./shapes.sql | spatialite $db || exit $?
-    ./data.sql $db || exit $?
+    ./data.sql $db || exit $? 
     cat ./geom.sql | spatialite $db || exit $?
   fi
 
@@ -145,8 +149,10 @@ elif [[ "$1" ==  "sqlite" ]]; then
 
   cat ./mid_updates_sqlite.sql | spatialite $db || exit $?
 
-  ./build_schedule.sh $db $1
-  ./build_schedule_cal_dates.sh $db $1
+  calendar_type="normal"
+  ./build_schedule.sh $db $1 $calendar_type 
+  calendar_type="exceptions"
+  ./build_schedule.sh $db $1 $calendar_type
 
   spatialite $db "insert into shapes select * from shapes_tmp;"
   spatialite $db "insert into shape select * from shape_tmp;"
@@ -192,7 +198,6 @@ elif [[ "$1" ==  "sqlite" ]]; then
 fi
 
 rm *.txt
-rm schedule.tmp
 
 exit 0
 
