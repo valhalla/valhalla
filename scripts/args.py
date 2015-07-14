@@ -3,7 +3,7 @@ import sys, errno
 
 x0 = -180.0
 while x0 < 180:
-	y0 = -90
+	y0 = -90.0
 	while y0 < 90:
 		if x0 < 0:
 			d = 'tiles/w' + str(abs(x0))
