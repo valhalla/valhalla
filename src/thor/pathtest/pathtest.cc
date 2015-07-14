@@ -312,10 +312,11 @@ int main(int argc, char *argv[]) {
       "json,j",
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file")
       ("connectivity", "Generate a connectivity map before testing the route.")
-      ("multi-run", "Generate the route 10 times before exiting.");
+      ("multi-run", "Generate the route 10 times before exiting.")
+      // positional arguments
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
+
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
