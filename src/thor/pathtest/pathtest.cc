@@ -76,7 +76,7 @@ namespace {
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
-                  PathStatistics& data, bool multi_run) {
+                  PathStatistics& data, bool multi_run, uint32_t iterations) {
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -128,14 +128,14 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   // Run again to see benefits of caching
   if (multi_run) {
     uint32_t totalms = 0;
-    for (uint32_t i = 0; i < 10; i++) {
+    for (uint32_t i = 0; i < iterations; i++) {
       t1 = std::chrono::high_resolution_clock::now();
       pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
       t2 = std::chrono::high_resolution_clock::now();
       totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
       pathalgorithm.Clear();
     }
-    msecs = totalms / 10;
+    msecs = totalms / iterations;
     LOG_INFO("PathAlgorithm GetBestPathaverage: " + std::to_string(msecs) + " ms");
     data.addRuntime(totalms);
   }
@@ -298,6 +298,7 @@ int main(int argc, char *argv[]) {
   std::string origin, destination, routetype, json, config;
   bool connectivity, multi_run;
   connectivity = multi_run = false;
+  uint32_t iterations;
 
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
@@ -313,7 +314,7 @@ int main(int argc, char *argv[]) {
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
       ("connectivity", "Generate a connectivity map before testing the route.")
-      ("multi-run", "Generate the route 10 times before exiting.")
+      ("multi-run", bpo::value<uint32_t>(&iterations), "Generate the route N additional times before exiting.")
       // positional arguments
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
@@ -536,7 +537,7 @@ int main(int argc, char *argv[]) {
 
     // Get the route
     t1 = std::chrono::high_resolution_clock::now();
-    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data, multi_run);
+    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data, multi_run, iterations);
     t2 = std::chrono::high_resolution_clock::now();
     msecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
