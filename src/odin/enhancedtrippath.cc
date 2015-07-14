@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/midgard/util.h>
@@ -88,22 +89,33 @@ bool EnhancedTripPath_Edge::IsOneway() const {
       || (driveability() == TripPath_Driveability_kBackward));
 }
 
-bool EnhancedTripPath_Edge::IsForward(uint32_t from_heading) const {
-  uint32_t turn_degree = GetTurnDegree(from_heading, begin_heading());
-  return ((turn_degree > 314) || (turn_degree < 46));
+bool EnhancedTripPath_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
+  return ((prev2curr_turn_degree > 314) || (prev2curr_turn_degree < 46));
 }
 
-//TODO: determine if delta threshold is needed
 bool EnhancedTripPath_Edge::IsStraightest(
-    uint32_t from_heading, uint32_t straightest_xedge_turn_degree) const {
-  uint32_t path_turn_degree = GetTurnDegree(from_heading, begin_heading());
-  uint32_t path_straight_delta =
-      (path_turn_degree > 180) ?
-          (360 - path_turn_degree) : path_turn_degree;
-  uint32_t xedge_straight_delta =
-      (straightest_xedge_turn_degree > 180) ?
-          (360 - straightest_xedge_turn_degree) : straightest_xedge_turn_degree;
-  return (path_straight_delta <= xedge_straight_delta);
+    uint32_t prev2curr_turn_degree,
+    uint32_t straightest_xedge_turn_degree) const {
+  if (IsForward(prev2curr_turn_degree)) {
+    int path_xedge_turn_degree_delta = std::abs(
+        static_cast<int>(prev2curr_turn_degree)
+            - static_cast<int>(straightest_xedge_turn_degree));
+    if (path_xedge_turn_degree_delta > 180) {
+      path_xedge_turn_degree_delta = (360 - path_xedge_turn_degree_delta);
+    }
+    uint32_t path_straight_delta =
+        (prev2curr_turn_degree > 180) ?
+            (360 - prev2curr_turn_degree) : prev2curr_turn_degree;
+    uint32_t xedge_straight_delta =
+        (straightest_xedge_turn_degree > 180) ?
+            (360 - straightest_xedge_turn_degree) :
+            straightest_xedge_turn_degree;
+    return (
+        (path_xedge_turn_degree_delta > 10) ?
+            (path_straight_delta <= xedge_straight_delta) : true);
+  } else {
+    return false;
+  }
 }
 
 std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {

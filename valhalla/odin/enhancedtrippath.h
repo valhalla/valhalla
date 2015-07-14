@@ -48,9 +48,9 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsOneway() const;
 
-  bool IsForward(uint32_t from_heading) const;
+  bool IsForward(uint32_t prev2curr_turn_degree) const;
 
-  bool IsStraightest(uint32_t from_heading,
+  bool IsStraightest(uint32_t prev2curr_turn_degree,
                      uint32_t straightest_xedge_turn_degree) const;
 
   std::vector<std::string> GetNameList() const;
