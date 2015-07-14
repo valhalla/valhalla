@@ -510,6 +510,14 @@ void Maneuver::set_begin_intersecting_edge_name_consistency(
       begin_intersecting_edge_name_consistency;
 }
 
+bool Maneuver::intersecting_forward_edge() const {
+  return intersecting_forward_edge_;
+}
+
+void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
+  intersecting_forward_edge_ = intersecting_forward_edge;
+}
+
 bool Maneuver::HasSimilarNames(
     const Maneuver* other_maneuver,
     bool allow_begin_intersecting_edge_name_consistency) const {
@@ -634,6 +642,15 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(bus_);
 
   // TODO: transit_info
+
+  man_str += " | fork=";
+  man_str += std::to_string(fork_);
+
+  man_str += " | begin_intersecting_edge_name_consistency=";
+  man_str += std::to_string(begin_intersecting_edge_name_consistency_);
+
+  man_str += " | intersecting_forward_edge=";
+  man_str += std::to_string(intersecting_forward_edge_);
 
   return man_str;
 }

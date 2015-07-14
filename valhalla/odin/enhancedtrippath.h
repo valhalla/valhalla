@@ -48,6 +48,11 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsOneway() const;
 
+  bool IsForward(uint32_t prev2curr_turn_degree) const;
+
+  bool IsStraightest(uint32_t prev2curr_turn_degree,
+                     uint32_t straightest_xedge_turn_degree) const;
+
   std::vector<std::string> GetNameList() const;
 
   float GetLength(const DirectionsOptions::Units& units);
@@ -128,6 +133,14 @@ class EnhancedTripPath_Node : public TripPath_Node {
 
   void CalculateRightLeftIntersectingEdgeCounts(
       uint32_t from_heading, IntersectingEdgeCounts& xedge_counts);
+
+  bool HasFowardIntersectingEdge(uint32_t from_heading);
+
+  bool HasForwardDriveableIntersectingEdge(uint32_t from_heading);
+
+  uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
+
+  uint32_t GetStraightestDriveableIntersectingEdgeTurnDegree(uint32_t from_heading);
 
   std::string ToString() const;
 

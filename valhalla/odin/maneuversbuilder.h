@@ -65,7 +65,7 @@ class ManeuversBuilder {
   void SetManeuverType(Maneuver& maneuver);
 
   void SetSimpleDirectionalManeuverType(Maneuver& maneuver,
-                                        bool prev_edge_has_names = false);
+                                        EnhancedTripPath_Edge* prev_edge = nullptr);
 
   TripDirections_Maneuver_CardinalDirection DetermineCardinalDirection(
       uint32_t heading);
@@ -80,6 +80,10 @@ class ManeuversBuilder {
 
   bool IsRightPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
                               EnhancedTripPath_Edge* curr_edge) const;
+
+  bool IsIntersectingForwardEdge(int node_index,
+                                 EnhancedTripPath_Edge* prev_edge,
+                                 EnhancedTripPath_Edge* curr_edge) const;
 
   void DetermineRelativeDirection(Maneuver& maneuver);
 

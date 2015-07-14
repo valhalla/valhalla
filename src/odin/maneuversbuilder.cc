@@ -286,6 +286,14 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         maneuvers_have_been_combined = true;
         ++next_man;
       }
+      // Do not combine
+      // if next maneuver has an intersecting forward link
+      else if (next_man->intersecting_forward_edge()) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // NOTE: Logic may have to be adjusted depending on testing
       // Maybe not intersecting forward link
       // Maybe first edge in next is internal
@@ -957,14 +965,14 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   }
   // Process simple direction
   else {
-    SetSimpleDirectionalManeuverType(maneuver, (prev_edge ? !prev_edge->IsUnnamed() : false));
+    SetSimpleDirectionalManeuverType(maneuver, prev_edge);
     LOG_TRACE("ManeuverType=SIMPLE");
   }
 
 }
 
 void ManeuversBuilder::SetSimpleDirectionalManeuverType(
-    Maneuver& maneuver, bool prev_edge_has_names) {
+    Maneuver& maneuver, EnhancedTripPath_Edge* prev_edge) {
   switch (Turn::GetType(maneuver.turn_degree())) {
     case Turn::Type::kStraight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
@@ -972,6 +980,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
         auto* man_begin_edge = trip_path_->GetCurrEdge(
             maneuver.begin_node_index());
         auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
+        bool prev_edge_has_names = (prev_edge ? !prev_edge->IsUnnamed() : false);
 
         ////////////////////////////////////////////////////////////////////
         // If the maneuver begin edge is a turn channel
@@ -997,13 +1006,25 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
         // and node is not a motorway_junction
         // and maneuver is not a highway with intersecting edges
         // then it is a "becomes" maneuver
-        else if (maneuver.HasStreetNames() && prev_edge_has_names && node
-            && !node->HasIntersectingEdgeNameConsistency()
-            && !node->motorway_junction()
-            && !(man_begin_edge && man_begin_edge->IsHighway()
-                && node->HasIntersectingEdges())) {
-          maneuver.set_type(TripDirections_Maneuver_Type_kBecomes);
-        }
+//        else if (maneuver.HasStreetNames() && prev_edge_has_names && node
+//            && !node->HasIntersectingEdgeNameConsistency()
+//            && !node->motorway_junction()
+//            && !(man_begin_edge && man_begin_edge->IsHighway()
+//                && node->HasIntersectingEdges())) {
+//          // Verify that there are no common names with previous edge and
+//          // current maneuver
+//          std::unique_ptr<StreetNames> prev_edge_names =
+//              StreetNamesFactory::Create(
+//                  trip_path_->GetCountryCode(maneuver.begin_node_index()),
+//                  prev_edge->GetNameList());
+//          std::unique_ptr<StreetNames> common_base_names = prev_edge_names
+//              ->FindCommonBaseNames(maneuver.street_names());
+//          LOG_INFO("prev_edge_names->size()=" + std::to_string(prev_edge_names->size()));
+//          LOG_INFO("common_base_names->size()=" + std::to_string(common_base_names->size()));
+//          if (common_base_names->empty()) {
+//            maneuver.set_type(TripDirections_Maneuver_Type_kBecomes);
+//          }
+//        }
       }
       break;
     }
@@ -1221,17 +1242,20 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return false;
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Intersecting forward edge
+  if (IsIntersectingForwardEdge(node_index, prev_edge, curr_edge)) {
+    maneuver.set_intersecting_forward_edge(true);
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // TODO: add logic for 'T'
 
   std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
       trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
 
-  // Process same names
-  // TODO - do we need this anymore?
-//  if (maneuver.street_names() == prev_edge_names) {
-//    return true;
-//  }
-
+  /////////////////////////////////////////////////////////////////////////////
   // Process common base names
   std::unique_ptr<StreetNames> common_base_names = prev_edge_names
       ->FindCommonBaseNames(maneuver.street_names());
@@ -1359,6 +1383,67 @@ bool ManeuversBuilder::IsRightPencilPointUturn(
     if ((xedge_counts.right_driveable_outbound == 0)
         && !common_base_names->empty()) {
       return true;
+    }
+  }
+
+  return false;
+}
+
+bool ManeuversBuilder::IsIntersectingForwardEdge(
+    int node_index, EnhancedTripPath_Edge* prev_edge,
+    EnhancedTripPath_Edge* curr_edge) const {
+
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  uint32_t turn_degree = GetTurnDegree(prev_edge->end_heading(),
+                                       curr_edge->begin_heading());
+
+  if (node->HasIntersectingEdges() && !node->motorway_junction()
+      && !node->fork() && !curr_edge->IsHighway()) {
+    // Process driving mode
+    if ((curr_edge->travel_mode() == TripPath_TravelMode_kDrive)
+        || (curr_edge->travel_mode() == TripPath_TravelMode_kBicycle)) {
+      // if path edge is not forward
+      // and forward driveable intersecting edge exists
+      // then return true
+      if (!curr_edge->IsForward(turn_degree)
+          && node->HasForwardDriveableIntersectingEdge(
+              prev_edge->end_heading())) {
+        return true;
+      }
+      // if path edge is forward
+      // and forward driveable intersecting edge exists
+      // and path edge is not the straightest
+      // then return true
+      else if (curr_edge->IsForward(turn_degree)
+          && node->HasForwardDriveableIntersectingEdge(prev_edge->end_heading())
+          && !curr_edge->IsStraightest(
+              turn_degree,
+              node->GetStraightestDriveableIntersectingEdgeTurnDegree(
+                  prev_edge->end_heading()))) {
+        return true;
+      }
+    }
+    // Process non-driving mode
+    else {
+      // if path turn is not forward
+      // and forward intersecting edge exists
+      // then return true
+      if (!curr_edge->IsForward(turn_degree)
+          && node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
+        return true;
+      }
+      // if path edge is forward
+      // and forward intersecting edge exists
+      // and path edge is not the straightest
+      // then return true
+      else if (curr_edge->IsForward(turn_degree)
+          && node->HasFowardIntersectingEdge(prev_edge->end_heading())
+          && !curr_edge->IsStraightest(
+              turn_degree,
+              node->GetStraightestIntersectingEdgeTurnDegree(
+                  prev_edge->end_heading()))) {
+        return true;
+      }
     }
   }
 
