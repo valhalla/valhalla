@@ -81,7 +81,7 @@ int main(void) {
   //make this whole thing bail if it doesnt finish fast
   alarm(30);
 
-  test::suite suite("service");
+  test::suite suite("Elevation Service");
 
   suite.test(TEST_CASE(test_requests));
 
