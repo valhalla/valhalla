@@ -139,7 +139,6 @@ CREATE TABLE "transfers"
 DROP TABLE IF EXISTS "schedule" CASCADE;
 CREATE TABLE "schedule"
 (
-  schedule_key integer primary key,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
@@ -306,7 +305,6 @@ CREATE TABLE "transfers_tmp"
 DROP TABLE IF EXISTS "schedule_tmp" CASCADE;
 CREATE TABLE "schedule_tmp"
 (
-  schedule_key serial primary key,
   origin_stop_key integer,
   dest_stop_key integer,
   trip_key integer,
