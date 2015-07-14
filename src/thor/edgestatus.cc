@@ -20,6 +20,11 @@ void EdgeStatus::Set(const baldr::GraphId& edgeid,
   edgestatus_[edgeid] = { set, index };
 }
 
+// Update the edge status of a GraphId
+void EdgeStatus::Update(const baldr::GraphId& edgeid, const EdgeSet set) {
+  edgestatus_[edgeid].status.set = set;
+}
+
 // Get the edge status of a GraphId. If not found in the map the
 // edge is considered unreached.
 EdgeStatusInfo EdgeStatus::Get(const baldr::GraphId& edgeid) const {
