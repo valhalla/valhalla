@@ -22,8 +22,6 @@ if [[ "$2" ==  "pg" ]]; then
   dbuser=$4
 fi
 
-calendar_type="exceptions"
-
 ./split.sh $calendar_type $db $2 $dbuser
 
 for f in schedule.*.tmp;
@@ -61,7 +59,7 @@ if [[ "$2" ==  "pg" ]]; then
   psql -U $dbuser $db -c "VACUUM ANALYZE;"
 elif [[ "$2" ==  "sqlite" ]]; then
 
-  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed' -1 -d ',' -t schedule_tmp -o $db &> /dev/null &
+  termsql -a -i $PWD/schedule.txt -c 'origin_stop_key,dest_stop_key,trip_key,route_key,service_key,shape_key,departure_time,arrival_time,start_date,end_date,dow_mask,has_subtractions,block_id,headsign,wheelchair_accessible,bikes_allowed' -1 -d ',' -t schedule_tmp -o $db &> /dev/null
   #echo -e '.separator ","\n.import '$PWD'/schedule.txt schedule_tmp' | sqlite3 $db
 
   if [[ "$calendar_type" ==  "exceptions" ]]; then
