@@ -10,12 +10,13 @@ if [[ "$3" ==  "pg" ]]; then
   dbuser=$4
   
   if [[ "$calendar_type" !=  "exceptions" ]]; then
-    start_trip_key=`psql -U $dbuser $db --c "select min(trip_key) from s_tmp;"`
-    max=`psql -U $dbuser $db --c "select max(trip_key) from s_tmp;"`
+    start_trip_key=`psql -Atc -U $dbuser -d $db --c "select min(trip_key) from s_tmp;"`
+    max=`psql -Atc -U $dbuser -d $db --c "select max(trip_key) from s_tmp;"`
   else
-    start_trip_key=`psql -U $dbuser $db --c "select min(trip_key) from s_dates_tmp;"`
-    max=`psql -U $dbuser $db --c "select max(trip_key) from s_dates_tmp;"`
+    start_trip_key=`psql -Atc -U $dbuser -d $db --c "select min(trip_key) from s_dates_tmp;"`
+    max=`psql -Atc -U $dbuser -d $db --c "select max(trip_key) from s_dates_tmp;"`
   fi 
+
   total_recs=$((max-start_trip_key))
   rows=$((($total_recs/$procs) + ($total_recs % $procs > 0)))
   end_trip_key=$((start_trip_key+rows))
