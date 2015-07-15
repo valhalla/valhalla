@@ -2,10 +2,10 @@
 UPDATE calendar_dates_tmp d set service_key = (select c.service_key from calendar_tmp c where d.service_id = c.service_id);
 
 insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates;
-select setval('cal_dates_tmp_service_key_seq', currval('calendar_tmp_service_key_seq'));
+select setval('cal_dates_tmp_service_key_seq', (SELECT last_value FROM calendar_tmp_service_key_seq));
 insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates_tmp;
 update calendar_dates_tmp c set service_key = (select service_key from cal_dates_tmp x where c.service_id = x.service_id) where c.service_key is NULL;
-select setval('calendar_tmp_service_key_seq', currval('cal_dates_tmp_service_key_seq'));
+select setval('calendar_tmp_service_key_seq', (SELECT last_value FROM calendar_tmp_service_key_seq));
 
 UPDATE routes_tmp r set agency_key = (select a.agency_key from agency_tmp a where r.agency_id = a.agency_id);
 
@@ -17,14 +17,14 @@ update shape_tmp set geom = (select ST_SetSRID(ST_MakeLine(geom),4326) FROM shap
 
 update shapes_tmp a set shape_key = (select shape_key from shape_tmp b where a.shape_id = b.shape_id);
 update trips_tmp a set shape_key = (select shape_key from shape_tmp b where a.shape_id = b.shape_id);
-update trips_tmp set shape_key = 0 where shape_key = '' or shape_key is null;
+update trips_tmp set shape_key = 0 where shape_key is null;
 
 update stop_times_tmp a set stop_key = (select stop_key from stops_tmp b where b.stop_id = a.stop_id);
 update stops_tmp a set parent_station_key = (select stop_key from stops_tmp b where b.location_type=1 and b.stop_id = a.parent_station);
 
-update stops_tmp set wheelchair_boarding = 0 where wheelchair_boarding = '' or wheelchair_boarding is null;
-update trips_tmp set wheelchair_accessible = 0 where wheelchair_accessible = '' or wheelchair_accessible is null;
-update trips_tmp set bikes_allowed = 0 where bikes_allowed = '' or bikes_allowed is null;
+update stops_tmp set wheelchair_boarding = 0 where wheelchair_boarding is null;
+update trips_tmp set wheelchair_accessible = 0 where wheelchair_accessible is null;
+update trips_tmp set bikes_allowed = 0 where bikes_allowed is null;
 
 update trips_tmp a set route_key = (select route_key from routes_tmp b where a.route_id = b.route_id);
 
