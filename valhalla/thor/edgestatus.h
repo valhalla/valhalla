@@ -61,6 +61,13 @@ class EdgeStatus {
            const uint32_t index);
 
   /**
+   * Update the status of a directed edge given its GraphId.
+   * @param  edgeid   GraphId of the directed edge to set.
+   * @param  set      Label set for this directed edge.
+   */
+  void Update(const baldr::GraphId& edgeid, const EdgeSet set);
+
+  /**
    * Get the status info of a directed edge given its GraphId.
    * @param   edgeid  GraphId of the directed edge.
    * @return  Returns edge status info.

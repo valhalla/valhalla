@@ -242,7 +242,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
+    edgestatus_->Update(pred.edgeid(), kPermanent);
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
@@ -448,9 +448,12 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
   uint32_t density = 0;
   float seconds = 0.0f;
   for (const auto& edge : dest.edges()) {
-    // Keep the id and the cost to traverse the partial distance
+    // Keep the id and the cost to traverse the partial distance for the
+    // remainder of the edge. This cost is subtracted from the total cost
+    // up to the end of the destination edge.
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = (costing->EdgeCost(tile->directededge(edge.id), 0.0f) * edge.dist);
+    destinations_[edge.id] = (costing->EdgeCost(tile->directededge(edge.id), 0.0f) *
+                (1.0f - edge.dist));
 
     // Get the tile relative density
     density = tile->header()->density();
@@ -463,17 +466,23 @@ bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
   //grab the label
   const EdgeLabel& edge_label = edgelabels_[edge_label_index];
 
-  //if we've already found a destination and the search's current edge is more costly to get to, we are done
-  if(best_destination_.first != kInvalidLabel && edge_label.cost() > best_destination_.second)
+  // if we've already found a destination and the search's current edge is
+  // more costly to get to, we are done
+  if (best_destination_.first != kInvalidLabel &&
+      edge_label.cost() > best_destination_.second) {
     return true;
+  }
 
   //check if its a destination
   auto p = destinations_.find(edge_label.edgeid());
   //it is indeed one of the possible destination edges
   if(p != destinations_.end()) {
-    //if we didnt have another destination yet or this one is better
-    auto cost = edge_label.cost() + p->second;
-    if(best_destination_.first == kInvalidLabel || cost < best_destination_.second){
+    // if we didnt have another destination yet or this one is better
+    // The cost at this point is to the end of the destination edge.
+    // Subtract the partial cost from the end of the destination back to
+    // the location to get the partial cost along the edge.
+    auto cost = edge_label.cost() - p->second;
+    if (best_destination_.first == kInvalidLabel || cost < best_destination_.second) {
       best_destination_.first = edge_label_index;
       best_destination_.second = cost;
     }
