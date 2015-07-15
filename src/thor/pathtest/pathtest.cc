@@ -76,7 +76,7 @@ namespace {
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
-                  PathStatistics& data) {
+                  PathStatistics& data, bool multi_run, uint32_t iterations) {
   auto t1 = std::chrono::high_resolution_clock::now();
   PathAlgorithm pathalgorithm;
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -105,8 +105,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
     }
   }
   t2 = std::chrono::high_resolution_clock::now();
-  msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
   // Form output information based on pathedges
@@ -116,29 +115,30 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
   // TODO - perhaps walk the edges to find total length?
   //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " mi");
   t2 = std::chrono::high_resolution_clock::now();
-  msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  data.addRuntime(msecs);
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
   t1 = std::chrono::high_resolution_clock::now();
   pathalgorithm.Clear();
   t2 = std::chrono::high_resolution_clock::now();
-  msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
 
   // Run again to see benefits of caching
-  uint32_t totalms = 0;
-  for (uint32_t i = 0; i < 10; i++) {
-    t1 = std::chrono::high_resolution_clock::now();
-    pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
-    t2 = std::chrono::high_resolution_clock::now();
-    totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-
-    pathalgorithm.Clear();
+  if (multi_run) {
+    uint32_t totalms = 0;
+    for (uint32_t i = 0; i < iterations; i++) {
+      t1 = std::chrono::high_resolution_clock::now();
+      pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      t2 = std::chrono::high_resolution_clock::now();
+      totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+      pathalgorithm.Clear();
+    }
+    msecs = totalms / iterations;
+    LOG_INFO("PathAlgorithm GetBestPathaverage: " + std::to_string(msecs) + " ms");
+    data.addRuntime(totalms);
   }
-  msecs = totalms / 10;
-  LOG_INFO("PathAlgorithm GetBestPath average: " + std::to_string(msecs) + " ms");
   return trip_path;
 }
 
@@ -296,6 +296,9 @@ int main(int argc, char *argv[]) {
   "\n");
 
   std::string origin, destination, routetype, json, config;
+  bool connectivity, multi_run;
+  connectivity = multi_run = false;
+  uint32_t iterations;
 
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
@@ -310,8 +313,11 @@ int main(int argc, char *argv[]) {
       "json,j",
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
-  // positional arguments
-  ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
+      ("connectivity", "Generate a connectivity map before testing the route.")
+      ("multi-run", bpo::value<uint32_t>(&iterations), "Generate the route N additional times before exiting.")
+      // positional arguments
+      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
+
 
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
@@ -340,6 +346,14 @@ int main(int argc, char *argv[]) {
   if (vm.count("version")) {
     std::cout << "pathtest " << VERSION << "\n";
     return EXIT_SUCCESS;
+  }
+
+  if (vm.count("connectivity")) {
+    connectivity = true;
+  }
+
+  if (vm.count("multi-run")) {
+    multi_run = true;
   }
 
   // Directions options
@@ -441,18 +455,20 @@ int main(int argc, char *argv[]) {
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   uint32_t origin_tile = tiles.TileId(originloc.latlng_);
   uint32_t dest_tile = tiles.TileId(destloc.latlng_);
-  auto t10 = std::chrono::high_resolution_clock::now();
-  if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
-    LOG_INFO("No tile connectivity between origin and destination.");
-    data.setSuccess(false);
-    data.log();
-    return EXIT_SUCCESS;
+  if (connectivity) {
+    auto t10 = std::chrono::high_resolution_clock::now();
+    if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
+      LOG_INFO("No tile connectivity between origin and destination.");
+      data.setSuccess(false);
+      data.log();
+      return EXIT_SUCCESS;
+    }
+    auto t20 = std::chrono::high_resolution_clock::now();
+    uint32_t msecs1 =
+           std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
+    LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
+    data.addRuntime(msecs1);
   }
-  auto t20 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs1 =
-         std::chrono::duration_cast<std::chrono::milliseconds>(t20 - t10).count();
-  LOG_INFO("Tile CoverageMap took " + std::to_string(msecs1) + " ms");
-  data.addRuntime(msecs1);
 
   // Construct costing
   CostFactory<DynamicCost> factory;
@@ -521,7 +537,7 @@ int main(int argc, char *argv[]) {
 
     // Get the route
     t1 = std::chrono::high_resolution_clock::now();
-    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data);
+    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data, multi_run, iterations);
     t2 = std::chrono::high_resolution_clock::now();
     msecs =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

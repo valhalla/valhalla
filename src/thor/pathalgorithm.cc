@@ -242,7 +242,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Set(pred.edgeid(), kPermanent, pred.edgeid());
+    edgestatus_->Update(pred.edgeid(), kPermanent);
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
