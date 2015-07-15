@@ -1,11 +1,9 @@
 
 UPDATE calendar_dates_tmp set service_key = (select service_key from calendar_tmp where calendar_dates_tmp.service_id = calendar_tmp.service_id);
 
-insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates;
 update sqlite_sequence set seq = (select seq from sqlite_sequence where name = 'calendar_tmp') where name = 'cal_dates_tmp';
-insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates_tmp;
-update calendar_dates_tmp set service_key = (select service_key from cal_dates_tmp where calendar_dates_tmp.service_id = cal_dates_tmp.service_id) where calendar_dates_tmp.service_key is NULL;
-update sqlite_sequence set seq = (select seq from sqlite_sequence where name = 'cal_dates_tmp') where name = 'calendar_tmp';
+insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates_tmp where service_key is NULL;
+update calendar_dates_tmp d set service_key = (select c.service_key from cal_dates_tmp c where d.service_id = c.service_id) where exists (select c.service_key from cal_dates_tmp c where d.service_id = c.service_id);
 
 UPDATE routes_tmp set agency_key = (select agency_key from agency_tmp a where routes_tmp.agency_id = a.agency_id);
 

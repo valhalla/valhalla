@@ -1,11 +1,8 @@
-
 UPDATE calendar_dates_tmp d set service_key = (select c.service_key from calendar_tmp c where d.service_id = c.service_id);
 
-insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates;
 select setval('cal_dates_tmp_service_key_seq', (SELECT last_value FROM calendar_tmp_service_key_seq));
-insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates_tmp;
-update calendar_dates_tmp c set service_key = (select service_key from cal_dates_tmp x where c.service_id = x.service_id) where c.service_key is NULL;
-select setval('calendar_tmp_service_key_seq', (SELECT last_value FROM calendar_tmp_service_key_seq));
+insert into cal_dates_tmp(service_id) select distinct service_id from calendar_dates_tmp where service_key is NULL;
+update calendar_dates_tmp d set service_key = (select c.service_key from cal_dates_tmp c where d.service_id = c.service_id) where exists (select c.service_key from cal_dates_tmp c where d.service_id = c.service_id);
 
 UPDATE routes_tmp r set agency_key = (select a.agency_key from agency_tmp a where r.agency_id = a.agency_id);
 
