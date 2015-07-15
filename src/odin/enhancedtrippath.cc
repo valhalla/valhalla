@@ -98,7 +98,7 @@ std::vector<std::string> EnhancedTripPath_Edge::GetNameList() const {
 
 float EnhancedTripPath_Edge::GetLength(const DirectionsOptions::Units& units) {
   if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
-    return (length() * kKmPerMile);
+    return (length() * kMilePerKm);
   }
   return length();
 }
