@@ -64,7 +64,10 @@ Maneuver::Maneuver()
       transit_connection_(false),
       transit_connection_stop_("", "", ""),
       rail_(false),
-      bus_(false) {
+      bus_(false),
+      fork_(false),
+      begin_intersecting_edge_name_consistency_(false),
+      intersecting_forward_edge_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -697,6 +700,15 @@ std::string Maneuver::ToString() const {
   man_str += " | intersecting_forward_edge=";
   man_str += std::to_string(intersecting_forward_edge_);
 
+  man_str += " | verbal_transition_alert_instruction=";
+  man_str += verbal_transition_alert_instruction_;
+
+  man_str += " | verbal_pre_transition_instruction=";
+  man_str += verbal_pre_transition_instruction_;
+
+  man_str += " | verbal_post_transition_instruction=";
+  man_str += verbal_post_transition_instruction_;
+
   return man_str;
 }
 
@@ -803,7 +815,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += TripPath_TravelMode_descriptor()
       ->FindValueByNumber(travel_mode_)->name();
 
-  // TODO: transit_info
+  // TODO: transit_info, et al
 
   return man_str;
 }
