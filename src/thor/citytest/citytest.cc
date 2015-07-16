@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <queue>
@@ -22,6 +23,7 @@
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
 #include "thor/pathalgorithm.h"
+#include "thor/bidirectional_astar.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla::midgard;
@@ -114,44 +116,59 @@ std::vector<City> GetCities(const std::string& ctry,
   return cities;
 }
 
+// Get the JSON request string for an auto route
+std::string GetJSONRequest(const Location& originloc, const Location& destloc) {
+  // Add origin location
+  std::string str = "-j '{\"locations\":[{\"lat\":";
+  str += std::to_string(originloc.latlng_.lat());
+  str += ",\"lon\":";
+  str += std::to_string(originloc.latlng_.lng());
+  str += ",\"city\":\"";
+  str += originloc.city_;
+  str += "\"},";
+
+  // Add destination location
+  str += "{\"lat\":";
+  str += std::to_string(destloc.latlng_.lat());
+  str += ",\"lon\":";
+  str += std::to_string(destloc.latlng_.lng());
+  str += ",\"city\":\"";
+  str += destloc.city_;
+  str += "\"}],";
+
+  // Add costing and return string
+  str += "\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}' --config ../conf/valhalla.json\n";
+  return str;
+}
+
 // Main method for testing city to city routing
 int main(int argc, char *argv[]) {
-  bpo::options_description options("pathtest " VERSION "\n"
+  bpo::options_description options("citytest " VERSION "\n"
   "\n"
   " Usage: citytest [options]\n"
   "\n"
   "citytest is a simple command line test tool for shortest path routing between cities within a single country. "
   "\n"
-  "Use the -f option to specify the cityfile and -c option to specify a country. "
+  "Use the -c option to specify a country. "
   "\n"
   "\n");
 
-  std::string ctry = "Algeria";
   std::string config = "conf/planet.json";
   std::string filename = "World_Cities_Location_table.csv";
 
-  // TODO - update command line processing
-
-/*  options.add_options()("help,h", "Print this help message.")(
-      "version,v", "Print the version of this software.")(
-       "file,f", boost::program_options::value<std::string>(&filename),
-      "World_Cities_Location_table.csv")(
-      )
-  // positional arguments
-  ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
+  std::string ctry;
+  options.add_options()
+      ("help,h", "Print this help message.")
+      ("country,c", boost::program_options::value<std::string>(&ctry), "Country");
 
   bpo::variables_map vm;
-
   try {
-    bpo::store(
-        bpo::command_line_parser(argc, argv).options(options).positional(
-            pos_options).run(),
-        vm);
-    bpo::notify(vm);
-
+    bpo::store(bpo::parse_command_line(argc, argv, options), vm);
+    if (vm.count("country")) {
+      ctry = vm["country"].as<std::string>();
+    } else {
+      LOG_ERROR("Country was not set");
+    }
   } catch (std::exception &e) {
     std::cerr << "Unable to parse command line options because: " << e.what()
               << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
@@ -159,74 +176,13 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "citytest " << VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-/*
-
-  // argument checking and verification
-  if (vm.count("json") == 0) {
-    for (auto arg : std::vector<std::string> { "origin", "destination", "type",
-        "config" }) {
-      if (vm.count(arg) == 0) {
-        std::cerr
-            << "The <"
-            << arg
-            << "> argument was not provided, but is mandatory when json is not provided\n\n";
-        std::cerr << options << "\n";
-        return EXIT_FAILURE;
-      }
-    }
-    originloc = Location::FromCsv(origin);
-    destloc = Location::FromCsv(destination);
-  } else {
-    std::stringstream stream;
-    stream << json;
-    boost::property_tree::ptree json_ptree;
-    boost::property_tree::read_json(stream, json_ptree);
-    std::vector<Location> locations;
-    try {
-      for (const auto& location : json_ptree.get_child("locations"))
-        locations.emplace_back(std::move(Location::FromPtree(location.second)));
-      if (locations.size() < 2)
-        throw;
-    } catch (...) {
-      throw std::runtime_error(
-          "insufficiently specified required parameter 'locations'");
-    }
-
-    // Parse out the type of route - this provides the costing method to use
-    std::string costing;
-    try {
-      routetype = json_ptree.get<std::string>("costing");
-    } catch (...) {
-      throw std::runtime_error("No edge/node costing provided");
-    }
-
-    // Grab the directions options, if they exist
-    auto directions_options_ptree_ptr = json_ptree.get_child_optional(
-        "directions_options");
-    if (directions_options_ptree_ptr) {
-      directions_options = valhalla::odin::GetDirectionsOptions(
-          *directions_options_ptree_ptr);
-    }
-
-  }
-*/
-  // parse the config
+  // Parse the config
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config.c_str(), pt);
 
-  //configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree = pt
-      .get_child_optional("thor.logging");
+  // Configure logging
+  boost::optional<boost::property_tree::ptree&> logging_subtree =
+            pt.get_child_optional("thor.logging");
   if (logging_subtree) {
     auto logging_config = valhalla::midgard::ToMap<
         const boost::property_tree::ptree&,
@@ -234,15 +190,42 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  // Construct costing
-//  boost::property_tree::ptree costing = pt.get_child("costing");
-//  for (const auto cm : costing) {
-//    std::cout << "Costing method: " << cm.first << std::endl;
-//  }
+  // Parse the input city file
+  std::vector<City> all_cities = ParseCityFile(filename);
+  std::cout << "City file has: " << all_cities.size() << " cities" << std::endl;
 
-  std::string routetype = "auto";
+  // Get vector for just the specified country - output test route file
+  std::sort(all_cities.begin(), all_cities.end());
+  std::vector<City> cities = GetCities(ctry, all_cities);
+  std::cout << ctry << " has: " << cities.size() << " cities" << std::endl;
+  if (cities.size()> 0) {
+    // Create test file
+    std::string testfilename = ctry + "_routes.txt";
+    std::ofstream testfile(testfilename, std::ios::out | std::ios::trunc );
+    if (testfile.is_open()) {
+      std::cout << "Open " << testfilename << std::endl;
+      for (uint32_t l0 = 0; l0 < cities.size() - 1; l0++) {
+        for (uint32_t l1 = l0 + 1; l1 < cities.size(); l1++) {
+          Location originloc(cities[l0].latlng);
+          originloc.city_ = cities[l0].city;
+          Location destloc(cities[l1].latlng);
+          destloc.city_ = cities[l1].city;
+          testfile << GetJSONRequest(originloc, destloc);
+        }
+      }
+      testfile.close();
+    } else {
+      LOG_ERROR("Failed to open output test file");
+      return EXIT_FAILURE;
+    }
+  } else {
+    LOG_ERROR("No cities in " + ctry + " - no test file created");
+    return EXIT_FAILURE;
+  }
 
-  // Any good way to ties these into the config?
+  // Exit here or continue and run routes?
+//  return EXIT_SUCCESS;
+
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
   factory.Register("auto_shorter", CreateAutoShorterCost);
@@ -251,6 +234,7 @@ int main(int argc, char *argv[]) {
   factory.Register("pedestrian", CreatePedestrianCost);
 
   // Figure out the route type
+  std::string routetype = "auto";
   for (auto & c : routetype)
     c = std::tolower(c);
 
@@ -258,17 +242,6 @@ int main(int argc, char *argv[]) {
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-
-  // Parse the input city file
-  std::vector<City> all_cities = ParseCityFile(filename);
-
-  std::cout << "City file has: " << all_cities.size() << " cities" << std::endl;
-
-  // Get vector for just the country(s) specified
-  std::sort(all_cities.begin(), all_cities.end());
-  std::vector<City> cities = GetCities(ctry, all_cities);
-
-  std::cout << ctry << " has: " << cities.size() << " cities" << std::endl;
 
   // Run routes
   uint32_t error_count = 0;
@@ -280,32 +253,42 @@ int main(int argc, char *argv[]) {
       // Get the costing method. We do this each time since prior route may
       // have changed hierarchy_limits. Also, this simulates how the service
       // works
-      std::shared_ptr<DynamicCost> cost = factory.Create(
-           routetype, pt.get_child("costing_options." + routetype));
+      TravelMode mode;
+      cost_ptr_t mode_costing[4];
+      if (routetype == "auto" || routetype == "bus") {
+        mode = valhalla::sif::TravelMode::kDrive;
+      } else if (routetype == "bicycle") {
+        mode = valhalla::sif::TravelMode::kBicycle;
+      } else {
+        mode = valhalla::sif::TravelMode::kPedestrian;
+      }
+      mode_costing[static_cast<uint32_t>(mode)] = factory.Create(
+              routetype, pt.get_child("costing_options." + routetype));
+      cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
       Location originloc(cities[l0].latlng);
       Location destloc(cities[l1].latlng);
-//LOG_INFO("Origin LL= " + std::to_string(cities[l0].latlng.lat()) + "," + std::to_string(cities[l0].latlng.lng()));
+
       // Use Loki to get location information
       PathLocation origin = Search(originloc, reader, cost->GetFilter());
-//LOG_INFO("Dest LL= " + std::to_string(cities[l1].latlng.lat()) + "," + std::to_string(cities[l1].latlng.lng()));
       PathLocation dest   = Search(destloc, reader, cost->GetFilter());
 
+      // TODO - maybe later use different path algorithms
       uint32_t np = 0;
       PathAlgorithm pathalgorithm;
-      std::vector<PathInfo> pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      std::vector<PathInfo> pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
       if (pathedges.size() == 0) {
         // 2nd pass - increase hierarchy limits, 3rd pass disable highway
         // transitions
         if (cost->AllowMultiPass()) {
           pathalgorithm.Clear();
           cost->RelaxHierarchyLimits(16.0f);
-          pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+          pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
           np++;
           if (pathedges.size() == 0) {
             pathalgorithm.Clear();
             cost->DisableHighwayTransitions();
-            pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+            pathedges = pathalgorithm.GetBestPath(origin, dest, reader, mode_costing, mode);
             np++;
           }
         }

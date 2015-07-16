@@ -10,18 +10,60 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-// Calculate best path using multiple modes (e.g. transit). This method uses
-// an array of costing methods, one for each mode.
-std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
-             const std::shared_ptr<DynamicCost>* mode_costing) {
-  // TODO - some means of setting an initial mode and probably a dest/end mode
-  mode_ = TravelMode::kPedestrian;
-  const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
-  const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
+// Default constructor
+MultiModalPathAlgorithm::MultiModalPathAlgorithm()
+    : PathAlgorithm() {
+}
 
+// Destructor
+MultiModalPathAlgorithm::~MultiModalPathAlgorithm() {
+  Clear();
+}
+
+// Initialize prior to finding best path
+void MultiModalPathAlgorithm::Init(const PointLL& origll,
+                       const PointLL& destll,
+                       const std::shared_ptr<DynamicCost>& costing) {
+  // Disable A* for multimodal
+  astarheuristic_.Init(destll, 0.0f);
+
+  // Construct adjacency list, edge status, and done set
+  // Set bucket size and cost range based on DynamicCost.
+  uint32_t bucketsize = costing->UnitSize();
+  float range = kBucketCount * bucketsize;
+  adjacencylist_.reset(new AdjacencyList(0.0f, range, bucketsize));
+  edgestatus_.reset(new EdgeStatus());
+
+  // Get hierarchy limits from the costing. Get a copy since we increment
+  // transition counts (i.e., this is not a const reference).
+  allow_transitions_ = costing->AllowTransitions();
+  hierarchy_limits_  = costing->GetHierarchyLimits();
+}
+
+// Calculate best path using multiple modes (e.g. transit).
+std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
+            const PathLocation& origin, const PathLocation& destination,
+            GraphReader& graphreader,
+            const std::shared_ptr<DynamicCost>* mode_costing,
+            const TravelMode mode) {
   // For pedestrian costing - set flag allowing use of transit connections
-  costing->SetAllowTransitConnections(true);
+  // Set pedestrian costing to use max distance. TODO - need for other modes
+  const auto& pc = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
+  pc->SetAllowTransitConnections(true);
+  pc->UseMaxModeDistance();
+
+  // Check if there no possible path to destination based on mode to the
+  // destination - for now assume pedestrian
+  // TODO - some means of setting destination mode
+  if (!CanReachDestination(destination, graphreader, TravelMode::kPedestrian, pc)) {
+    LOG_INFO("Cannot reach destination - too far from a transit stop");
+    return { };
+  }
+
+  // Set the mode from the origin
+  mode_ = mode;
+  const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+  const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
 
   // Alter the destination edges if at a node - loki always gives edges
   // leaving a node, but when a destination we want edges entering the node
@@ -50,7 +92,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
   PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), dest.vertex(), costing, true);
+  Init(origin.vertex(), dest.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
 
   // Initialize the origin and destination locations
@@ -304,14 +346,12 @@ std::vector<PathInfo> PathAlgorithm::GetBestPathMM(const PathLocation& origin,
 // if there are any transit stops within maximum walking distance.
 // TODO - once auto/bicycle are allowed modes we need to check if parking
 // or bikeshare locations are within walking distance.
-bool PathAlgorithm::CanReachDestination(const PathLocation& destination,
+bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destination,
                           GraphReader& graphreader,
                           const TravelMode dest_mode,
-                          const std::shared_ptr<DynamicCost>* mode_costing) {
+                          const std::shared_ptr<DynamicCost>& costing) {
   // Assume pedestrian mode for now
   mode_ = dest_mode;
-  const auto& costing = mode_costing[static_cast<uint32_t>(dest_mode)];
-  costing->SetAllowTransitConnections(true);
 
   // Use a simple Dijkstra method - no need to recover the path just need to
   // make sure we can get to a transit stop within the specified max. walking
@@ -349,7 +389,8 @@ bool PathAlgorithm::CanReachDestination(const PathLocation& destination,
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjlist.Remove(edgelabels);
     if (predindex == kInvalidLabel) {
-      LOG_INFO("Cannot reach destination - exceeding max_mode_distance walking");
+      // Throw an exception so the message is returned in the service
+      throw std::runtime_error("Cannot reach destination - too far from a transit stop");
       return false;
     }
 
