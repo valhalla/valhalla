@@ -44,6 +44,10 @@ class Maneuver {
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
 
+  bool HasSimilarNames(
+      const Maneuver* other_maneuver,
+      bool allow_begin_intersecting_edge_name_consistency = false) const;
+
   const StreetNames& begin_street_names() const;
   void set_begin_street_names(const std::vector<std::string>& names);
   void set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names);
@@ -195,9 +199,23 @@ class Maneuver {
   bool intersecting_forward_edge() const;
   void set_intersecting_forward_edge(bool intersecting_forward_edge);
 
-  bool HasSimilarNames(
-      const Maneuver* other_maneuver,
-      bool allow_begin_intersecting_edge_name_consistency = false) const;
+  const std::string& verbal_transition_alert_instruction() const;
+  void set_verbal_transition_alert_instruction(
+      const std::string& verbal_transition_alert_instruction);
+  void set_verbal_transition_alert_instruction(
+      std::string&& verbal_transition_alert_instruction);
+
+  const std::string& verbal_pre_transition_instruction() const;
+  void set_verbal_pre_transition_instruction(
+      const std::string& verbal_pre_transition_instruction);
+  void set_verbal_pre_transition_instruction(
+      std::string&& verbal_pre_transition_instruction);
+
+  const std::string& verbal_post_transition_instruction() const;
+  void set_verbal_post_transition_instruction(
+      const std::string& verbal_post_transition_instruction);
+  void set_verbal_post_transition_instruction(
+      std::string&& verbal_post_transition_instruction);
 
   std::string ToString() const;
 
@@ -243,6 +261,9 @@ class Maneuver {
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
   bool intersecting_forward_edge_;
+  std::string verbal_transition_alert_instruction_;
+  std::string verbal_pre_transition_instruction_;
+  std::string verbal_post_transition_instruction_;
 
   // TODO notes
 

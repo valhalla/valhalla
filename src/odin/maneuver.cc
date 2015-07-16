@@ -64,7 +64,10 @@ Maneuver::Maneuver()
       transit_connection_(false),
       transit_connection_stop_("", "", ""),
       rail_(false),
-      bus_(false) {
+      bus_(false),
+      fork_(false),
+      begin_intersecting_edge_name_consistency_(false),
+      intersecting_forward_edge_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -92,6 +95,26 @@ void Maneuver::set_street_names(std::unique_ptr<StreetNames>&& street_names) {
 
 bool Maneuver::HasStreetNames() const {
   return (!street_names_->empty());
+}
+
+bool Maneuver::HasSimilarNames(
+    const Maneuver* other_maneuver,
+    bool allow_begin_intersecting_edge_name_consistency) const {
+
+  // Allow similar intersecting edge names
+  // OR verify that there are no similar intersecting edge names
+  if (allow_begin_intersecting_edge_name_consistency
+      || !begin_intersecting_edge_name_consistency()) {
+    // If this maneuver has street names
+    // and other maneuver exists
+    // and other and this maneuvers have similar names
+    if (HasStreetNames() && other_maneuver
+        && !(other_maneuver->street_names().FindCommonBaseNames(street_names())
+            ->empty())) {
+      return true;
+    }
+  }
+  return false;
 }
 
 const StreetNames& Maneuver::begin_street_names() const {
@@ -518,24 +541,49 @@ void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
   intersecting_forward_edge_ = intersecting_forward_edge;
 }
 
-bool Maneuver::HasSimilarNames(
-    const Maneuver* other_maneuver,
-    bool allow_begin_intersecting_edge_name_consistency) const {
+const std::string& Maneuver::verbal_transition_alert_instruction() const {
+  return verbal_transition_alert_instruction_;
+}
 
-  // Allow similar intersecting edge names
-  // OR verify that there are no similar intersecting edge names
-  if (allow_begin_intersecting_edge_name_consistency
-      || !begin_intersecting_edge_name_consistency()) {
-    // If this maneuver has street names
-    // and other maneuver exists
-    // and other and this maneuvers have similar names
-    if (HasStreetNames() && other_maneuver
-        && !(other_maneuver->street_names().FindCommonBaseNames(street_names())
-            ->empty())) {
-      return true;
-    }
-  }
-  return false;
+void Maneuver::set_verbal_transition_alert_instruction(
+    const std::string& verbal_transition_alert_instruction) {
+  verbal_transition_alert_instruction_ = verbal_transition_alert_instruction;
+}
+
+void Maneuver::set_verbal_transition_alert_instruction(
+    std::string&& verbal_transition_alert_instruction) {
+  verbal_transition_alert_instruction_ = std::move(
+      verbal_transition_alert_instruction);
+}
+
+const std::string& Maneuver::verbal_pre_transition_instruction() const {
+  return verbal_pre_transition_instruction_;
+}
+
+void Maneuver::set_verbal_pre_transition_instruction(
+    const std::string& verbal_pre_transition_instruction) {
+  verbal_pre_transition_instruction_ = verbal_pre_transition_instruction;
+}
+
+void Maneuver::set_verbal_pre_transition_instruction(
+    std::string&& verbal_pre_transition_instruction) {
+  verbal_pre_transition_instruction_ = std::move(
+      verbal_pre_transition_instruction);
+}
+
+const std::string& Maneuver::verbal_post_transition_instruction() const {
+  return verbal_post_transition_instruction_;
+}
+
+void Maneuver::set_verbal_post_transition_instruction(
+    const std::string& verbal_post_transition_instruction) {
+  verbal_post_transition_instruction_ = verbal_post_transition_instruction;
+}
+
+void Maneuver::set_verbal_post_transition_instruction(
+    std::string&& verbal_post_transition_instruction) {
+  verbal_post_transition_instruction_ = std::move(
+      verbal_post_transition_instruction);
 }
 
 std::string Maneuver::ToString() const {
@@ -652,6 +700,15 @@ std::string Maneuver::ToString() const {
   man_str += " | intersecting_forward_edge=";
   man_str += std::to_string(intersecting_forward_edge_);
 
+  man_str += " | verbal_transition_alert_instruction=";
+  man_str += verbal_transition_alert_instruction_;
+
+  man_str += " | verbal_pre_transition_instruction=";
+  man_str += verbal_pre_transition_instruction_;
+
+  man_str += " | verbal_post_transition_instruction=";
+  man_str += verbal_post_transition_instruction_;
+
   return man_str;
 }
 
@@ -758,7 +815,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += TripPath_TravelMode_descriptor()
       ->FindValueByNumber(travel_mode_)->name();
 
-  // TODO: transit_info
+  // TODO: transit_info, et al
 
   return man_str;
 }
