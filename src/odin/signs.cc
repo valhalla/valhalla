@@ -53,9 +53,11 @@ std::vector<Sign>* Signs::mutable_exit_name_list() {
   return &exit_name_list_;
 }
 
-const std::string Signs::GetExitNameString(
-    uint32_t max_count, bool limit_by_consecutive_count) const {
-  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count);
+const std::string Signs::GetExitNameString(uint32_t max_count,
+                                           bool limit_by_consecutive_count,
+                                           std::string delim) const {
+  return ListToString(exit_name_list_, max_count, limit_by_consecutive_count,
+                      delim);
 }
 
 bool Signs::HasExit() const {
@@ -117,7 +119,8 @@ std::string Signs::ToParameterString() const {
 
 const std::string Signs::ListToString(const std::vector<Sign>& signs,
                                       uint32_t max_count,
-                                      bool limit_by_consecutive_count) const {
+                                      bool limit_by_consecutive_count,
+                                      std::string delim) const {
   std::string sign_string;
   uint32_t count = 0;
   uint32_t consecutive_count = -1;
@@ -145,7 +148,7 @@ const std::string Signs::ListToString(const std::vector<Sign>& signs,
 
     // Add delimiter
     if (!sign_string.empty()) {
-      sign_string += "/";
+      sign_string += delim;
     }
 
     // Concatenate exit text and update count

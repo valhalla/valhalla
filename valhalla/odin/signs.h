@@ -35,8 +35,9 @@ class Signs {
   const std::vector<Sign>& exit_name_list() const;
   std::vector<Sign>* mutable_exit_name_list();
 
-  const std::string GetExitNameString(
-      uint32_t max_count = 0, bool limit_by_consecutive_count = false) const;
+  const std::string GetExitNameString(uint32_t max_count = 0,
+                                      bool limit_by_consecutive_count = false,
+                                      std::string delim = "/") const;
 
   bool HasExit() const;
   bool HasExitNumber() const;
@@ -53,7 +54,8 @@ class Signs {
  protected:
   const std::string ListToString(const std::vector<Sign>& signs,
                                  uint32_t max_count = 0,
-                                 bool limit_by_consecutive_count = false) const;
+                                 bool limit_by_consecutive_count = false,
+                                 std::string delim = "/") const;
 
   const std::string ListToParameterString(const std::vector<Sign>& signs) const;
 
