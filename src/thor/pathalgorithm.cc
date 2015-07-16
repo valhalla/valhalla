@@ -250,6 +250,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       mindist = dist2dest;
       nc = 0;
     } else if (nc++ > 500000) {
+      LOG_ERROR("No convergence to destination after = " +
+                           std::to_string(edgelabels_.size()));
       return {};
     }
 
