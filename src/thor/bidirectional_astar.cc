@@ -76,12 +76,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
   uint32_t n = 0;
   EdgeLabel pred;
   const GraphTile* tile;
+  bool forward_exhausted = false;
+  bool reverse_exhausted = false;
   while (true) {
-    // Expand in forward direction
+    // Expand in forward direction if we have not exhausted this path
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->Remove(edgelabels_);
+    uint32_t predindex = forward_exhausted ? kInvalidLabel :
+            adjacencylist_->Remove(edgelabels_);
     if (predindex != kInvalidLabel) {
       // Remove label from adjacency list, mark it as done - copy the EdgeLabel
       // for use in costing
@@ -155,13 +158,16 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_);
       }
+    } else {
+      forward_exhausted = true;
     }
 
-    // Expand: reverse direction
+    // Expand in reverse direction if we have not exhausted this path
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex2 = adjacencylist_reverse_->Remove(edgelabels_reverse_);
+    uint32_t predindex2 = reverse_exhausted ? kInvalidLabel:
+            adjacencylist_reverse_->Remove(edgelabels_reverse_);
     if (predindex2 != kInvalidLabel) {
       // Remove label from adjacency list, mark it as done - copy the EdgeLabel
       // for use in costing
@@ -235,6 +241,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                      newcost, sortcost, dist, directededge->restrictions(),
                      directededge->opp_local_idx(), mode_);
       }
+    } else {
+      reverse_exhausted = true;
     }
 
     // Break out of loop if neither search can be expanded
