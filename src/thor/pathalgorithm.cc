@@ -122,21 +122,15 @@ void PathAlgorithm::Clear() {
 
 // Initialize prior to finding best path
 void PathAlgorithm::Init(const PointLL& origll, const PointLL& destll,
-    const std::shared_ptr<DynamicCost>& costing, const bool multimodal) {
+                         const std::shared_ptr<DynamicCost>& costing) {
   LOG_TRACE("Orig LL = " + std::to_string(origll.lat()) + "," + std::to_string(origll.lng()));
   LOG_TRACE("Dest LL = " + std::to_string(destll.lat()) + "," + std::to_string(destll.lng()));
 
-  float mincost = 0.0f;
-  if (multimodal) {
-    // Disable A* for multimodal
-    astarheuristic_.Init(destll, 0.0f);
-  } else {
-    // Set the destination and cost factor in the A* heuristic
-    astarheuristic_.Init(destll, costing->AStarCostFactor());
+  // Set the destination and cost factor in the A* heuristic
+  astarheuristic_.Init(destll, costing->AStarCostFactor());
 
-    // Get the initial cost based on A* heuristic from origin
-    mincost = astarheuristic_.Get(origll);
-  }
+  // Get the initial cost based on A* heuristic from origin
+  float mincost = astarheuristic_.Get(origll);
 
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
@@ -183,7 +177,12 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 // Calculate best path. This method is single mode, not time-dependent.
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
-             const std::shared_ptr<DynamicCost>& costing) {
+             const std::shared_ptr<DynamicCost>* mode_costing,
+             const sif::TravelMode mode) {
+  // Set the mode and costing
+  mode_ = mode;
+  const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
+
   // Alter the destination edges if at a node - loki always gives edges
   // leaving a node, but when a destination we want edges entering the node
   PathLocation dest = update_destinations(graphreader, destination,
@@ -202,7 +201,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
   PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), dest.vertex(), costing, false);
+  Init(origin.vertex(), dest.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
 
   // Initialize the origin and destination locations

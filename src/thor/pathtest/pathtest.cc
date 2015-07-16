@@ -24,6 +24,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include "thor/pathalgorithm.h"
+#include "thor/bidirectional_astar.h"
 #include "thor/trippathbuilder.h"
 
 using namespace valhalla::midgard;
@@ -75,52 +76,48 @@ namespace {
  * Test a single path from origin to destination.
  */
 TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, std::shared_ptr<DynamicCost> cost,
-                  PathStatistics& data, bool multi_run, uint32_t iterations) {
+                  const PathLocation& dest, PathAlgorithm* pathalgorithm,
+                  const std::shared_ptr<DynamicCost>* mode_costing,
+                  const TravelMode mode, PathStatistics& data,
+                  bool multi_run, uint32_t iterations) {
   auto t1 = std::chrono::high_resolution_clock::now();
-  PathAlgorithm pathalgorithm;
-  auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
-      t2 - t1).count();
-  LOG_INFO("PathAlgorithm Construction took " + std::to_string(msecs) + " ms");
-  t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
-  pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+  pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
+  cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   data.incPasses();
   if (pathedges.size() == 0) {
     if (cost->AllowMultiPass()) {
       LOG_INFO("Try again with relaxed hierarchy limits");
-      pathalgorithm.Clear();
+      pathalgorithm->Clear();
       cost->RelaxHierarchyLimits(16.0f);
-      pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       data.incPasses();
     }
   }
   if (pathedges.size() == 0) {
     cost->DisableHighwayTransitions();
-    pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+    pathalgorithm->Clear();
+    pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
     data.incPasses();
     if (pathedges.size() == 0) {
-      throw std::runtime_error("No path could be found for input");
+      // Return an empty trip path
+      return TripPath();
     }
   }
-  t2 = std::chrono::high_resolution_clock::now();
-  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm GetBestPath took " + std::to_string(msecs) + " ms");
 
-  // Form output information based on pathedges
+  // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
   TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin, dest);
-
-  // TODO - perhaps walk the edges to find total length?
-  //LOG_INFO("Trip length is: " + std::to_string(trip_path.length) + " mi");
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  data.addRuntime(msecs);
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
 
+  // Time how long it takes to clear the path
   t1 = std::chrono::high_resolution_clock::now();
-  pathalgorithm.Clear();
+  pathalgorithm->Clear();
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("PathAlgorithm Clear took " + std::to_string(msecs) + " ms");
@@ -130,14 +127,13 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
     uint32_t totalms = 0;
     for (uint32_t i = 0; i < iterations; i++) {
       t1 = std::chrono::high_resolution_clock::now();
-      pathedges = pathalgorithm.GetBestPath(origin, dest, reader, cost);
+      pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
       t2 = std::chrono::high_resolution_clock::now();
       totalms += std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-      pathalgorithm.Clear();
+      pathalgorithm->Clear();
     }
     msecs = totalms / iterations;
-    LOG_INFO("PathAlgorithm GetBestPathaverage: " + std::to_string(msecs) + " ms");
-    data.addRuntime(totalms);
+    LOG_INFO("PathAlgorithm GetBestPath average: " + std::to_string(msecs) + " ms");
   }
   return trip_path;
 }
@@ -445,7 +441,9 @@ int main(int argc, char *argv[]) {
   //Something to hold the statistics
   PathStatistics data({originloc.latlng_.lat(), originloc.latlng_.lng()},
                       {destloc.latlng_.lat(), destloc.latlng_.lng()});
-  data.setArcDist(sqrt(DistanceApproximator::DistanceSquared(originloc.latlng_, destloc.latlng_)) / 1000);
+
+  // Distance in km
+  float d1 = originloc.latlng_.Distance(destloc.latlng_) * kKmPerMeter;
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
@@ -470,6 +468,8 @@ int main(int argc, char *argv[]) {
     data.addRuntime(msecs1);
   }
 
+  auto t0 = std::chrono::high_resolution_clock::now();
+
   // Construct costing
   CostFactory<DynamicCost> factory;
   factory.Register("auto", CreateAutoCost);
@@ -482,79 +482,86 @@ int main(int argc, char *argv[]) {
   // Figure out the route type
   for (auto & c : routetype)
     c = std::tolower(c);
+  LOG_INFO("routetype: " + routetype);
+
+  // Construct costing methods
+  PathAlgorithm astar;
+  BidirectionalAStar bd;
+  MultiModalPathAlgorithm mm;
 
   // Get the costing method - pass the JSON configuration
   TripPath trip_path;
+  TravelMode mode;
+  std::shared_ptr<DynamicCost> mode_costing[4];
+  PathAlgorithm* pathalgorithm;
   if (routetype == "multimodal") {
-    auto t1 = std::chrono::high_resolution_clock::now();
-    // Create array of costing methods per mode
-    std::shared_ptr<DynamicCost> mode_costing[4];
+    // Create array of costing methods per mode and set initial mode to
+    // pedestrian
     mode_costing[0] = factory.Create("auto",
-                         pt.get_child("costing_options.auto"));
+                        pt.get_child("costing_options.auto"));
     mode_costing[1] = factory.Create("pedestrian",
-                         pt.get_child("costing_options.pedestrian"));
+                        pt.get_child("costing_options.pedestrian"));
     mode_costing[2] = factory.Create("bicycle",
-                         pt.get_child("costing_options.bicycle"));
+                        pt.get_child("costing_options.bicycle"));
     mode_costing[3] = factory.Create("transit",
-                         pt.get_child("costing_options.transit"));
-
-    // For now assume pedestrian mode at origin and destination
-    PathLocation pathOrigin = Search(originloc, reader, mode_costing[1]->GetFilter());
-    PathLocation pathDest = Search(destloc, reader, mode_costing[1]->GetFilter());
-    PathAlgorithm pathalgorithm;
-
-    // Have costing models use the per mode max distances
-    for (auto& cost : mode_costing) {
-      cost->UseMaxModeDistance();
-    }
-
-    // Check if there no possible path to destination based on mode
-    // to the destination - for now assume pedestrian
-    if (!pathalgorithm.CanReachDestination(pathDest, reader,
-                         TravelMode::kPedestrian, mode_costing)) {
-      LOG_INFO("Cannot reach destination - too far from a transit stop");
-      return EXIT_SUCCESS;
-    }
-
-    std::vector<PathInfo> pathedges = pathalgorithm.GetBestPathMM(pathOrigin,
-                   pathDest, reader, mode_costing);
-    trip_path = TripPathBuilder::Build(reader, pathedges, pathOrigin, pathDest);
-
+                        pt.get_child("costing_options.transit"));
+    mode = TravelMode::kPedestrian;
+    pathalgorithm = &mm;
   } else {
-    LOG_INFO("routetype: " + routetype);
-    std::shared_ptr<DynamicCost> cost = factory.Create(
-      routetype, pt.get_child("costing_options." + routetype));
+    if (routetype == "auto" || routetype == "bus") {
+      mode = valhalla::sif::TravelMode::kDrive;
+      pathalgorithm = &astar;
+    } else if (routetype == "bicycle") {
+      mode = valhalla::sif::TravelMode::kBicycle;
+      pathalgorithm = &astar;
+    } else {
+      mode = valhalla::sif::TravelMode::kPedestrian;
 
-    // Use Loki to get location information
-    auto t1 = std::chrono::high_resolution_clock::now();
-    PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
-    PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        t2 - t1).count();
-    LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
-    data.addRuntime(msecs);
-
-    // Get the route
-    t1 = std::chrono::high_resolution_clock::now();
-    trip_path = PathTest(reader, pathOrigin, pathDest, cost, data, multi_run, iterations);
-    t2 = std::chrono::high_resolution_clock::now();
-    msecs =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    LOG_INFO("PathTest took " + std::to_string(msecs) + " ms");
-    data.addRuntime(msecs);
+      // Use bidirectional A* if > 10km between locations
+      pathalgorithm = (d1 > 10.0f) ? &bd : &astar;
+    }
+    mode_costing[static_cast<uint32_t>(mode)] = factory.Create(
+          routetype, pt.get_child("costing_options." + routetype));
   }
 
-  // Try the the directions
+  // For now assume pedestrian mode at origin and destination
   auto t1 = std::chrono::high_resolution_clock::now();
-  TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                                                  originloc, destloc, data);
+  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
+  PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  t2 - t1).count();
+  LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
+
+  // Get the route
+  trip_path = PathTest(reader, pathOrigin, pathDest, pathalgorithm,
+                       mode_costing, mode, data, multi_run, iterations);
+
+  if (trip_path.node().size() > 0) {
+    // Try the the directions
+    t1 = std::chrono::high_resolution_clock::now();
+    TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
+                                                    originloc, destloc, data);
+    t2 = std::chrono::high_resolution_clock::now();
+    msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+    data.setSuccess(true);
+  } else {
+    // Route was unsuccessful
+    data.setSuccess(false);
+  }
+
+  // Set the arc distance. Convert to miles if needed
+   if (directions_options.units() == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+     d1 *= kMilePerKm;
+   }
+   data.setArcDist(d1);
+
+  // Time all stages for the stats file: location processing,
+  // path computation, trip path building, and directions
+  msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count();
   data.addRuntime(msecs);
-  data.setSuccess(true);
   data.log();
 
   return EXIT_SUCCESS;

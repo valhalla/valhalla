@@ -25,12 +25,12 @@ using namespace prime_server;
 #include "thor/service.h"
 #include "thor/trippathbuilder.h"
 #include "thor/pathalgorithm.h"
+#include "thor/bidirectional_astar.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-
 
 namespace {
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -57,9 +57,10 @@ namespace {
         boost::property_tree::ptree request;
         boost::property_tree::read_info(stream, request);
 
-        // Initialize request - check if multimodal
-        bool multimodal = init_request(request);
+        // Initialize request - get the PathALgorithm to use
+        std::string costing = init_request(request);
         worker_t::result_t result{true};
+
         // Forward the original request
         result.messages.emplace_back(std::move(request_str));
 
@@ -67,53 +68,54 @@ namespace {
         for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
           auto origin = *std::prev(path_location);
           auto destination = *path_location;
-          // Find the path. Multimodal is a separate case.
-          std::vector<thor::PathInfo> path_edges;
-          if (multimodal) {
-            // Have costing models use the per mode max distances
-            for (auto& cost : mode_costing) {
-              cost->UseMaxModeDistance();
-            }
 
-            // Check if there no possible path to destination based on mode
-            // to the destination - for now assume pedestrian
-            if (!path_algorithm.CanReachDestination(destination, reader,
-                                    TravelMode::kPedestrian, mode_costing)) {
-              throw std::runtime_error("Cannot reach destination - too far from a transit stop");
-            }
+          // Get the algorithm type
+          thor::PathAlgorithm* path_algorithm;
+          if (costing == "multimodal") {
+            path_algorithm = &multi_modal_astar;
+          } else if (costing == "pedestrian") {
+            // Use bidirectional A* if over 10km
+            float dist = origin.latlng_.Distance(destination.latlng_);
+            path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
+          } else {
+            path_algorithm = &astar;
+          }
 
-            // Get the multi-modal path
-            path_edges = path_algorithm.GetBestPathMM(origin, destination, reader, mode_costing);
-            if (path_edges.size() == 0)
-              throw std::runtime_error("No path could be found for input");
-          } // Find a path in a single mode
-          else {
-            path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-            if (path_edges.size() == 0) {
-              if (cost->AllowMultiPass()) {
-                LOG_INFO("Try again with relaxed hierarchy limits");
-                path_algorithm.Clear();
-                cost->RelaxHierarchyLimits(16.0f);
-                path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
-              }
-            }
-            if (path_edges.size() == 0) {
-              path_algorithm.Clear();
-              cost->DisableHighwayTransitions();
-              path_edges = path_algorithm.GetBestPath(origin, destination, reader, cost);
+          // Find the path.
+          std::vector<thor::PathInfo> path_edges = path_algorithm->GetBestPath(
+                  origin, destination, reader, mode_costing, mode);
+
+          // If path is not found try again with relaxed limits (if allowed)
+          if (path_edges.size() == 0) {
+            valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+            if (cost->AllowMultiPass()) {
+              // 2nd pass
+              LOG_INFO("Try again with relaxed hierarchy limits");
+              path_algorithm->Clear();
+              cost->RelaxHierarchyLimits(16.0f);
+              path_edges = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+
+              // 3rd pass
               if (path_edges.size() == 0) {
-                throw std::runtime_error("No path could be found for input");
+                path_algorithm->Clear();
+                cost->DisableHighwayTransitions();
+                path_edges = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
               }
             }
+          }
+
+          if (path_edges.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
           }
 
           // Form output information based on path edges
           auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
           // The protobuf path
           result.messages.emplace_back(trip_path.SerializeAsString());
+
           //if we have another one coming we need to clear
           if(--correlated.cend() != path_location)
-            path_algorithm.Clear();
+            path_algorithm->Clear();
         }
 
         return result;
@@ -146,7 +148,7 @@ namespace {
       return factory.Create(costing, config_costing);
     }
 
-    bool init_request(const boost::property_tree::ptree& request) {
+    std::string init_request(const boost::property_tree::ptree& request) {
       //we require locations
       try {
         for(const auto& location : request.get_child("locations"))
@@ -182,34 +184,51 @@ namespace {
         throw std::runtime_error("No edge/node costing provided");
       }
 
-      // Construct costing. For multi-modal we construct costing for all modes
+      // Set travel mode and construct costing
       if (costing == "multimodal") {
+        // For multi-modal we construct costing for all modes and set the
+        // initial mode to pedestrian. (TODO - allow other initial modes)
         mode_costing[0] = get_costing(request, "auto");
         mode_costing[1] = get_costing(request, "pedestrian");
         mode_costing[2] = get_costing(request, "bicycle");
         mode_costing[3] = get_costing(request, "transit");
-        return true;
+        mode = valhalla::sif::TravelMode::kPedestrian;
       } else {
-        cost = get_costing(request, costing);
-        return false;
+        // Construct just the requested costing model
+        if (costing == "auto" || costing == "bus") {
+          mode = valhalla::sif::TravelMode::kDrive;
+        } else if (costing == "bicycle") {
+          mode = valhalla::sif::TravelMode::kBicycle;
+        } else {
+          mode = valhalla::sif::TravelMode::kPedestrian;
+        }
+        mode_costing[static_cast<uint32_t>(mode)] = get_costing(request, costing);
       }
+      return costing;
     }
+
     void cleanup() {
-      path_algorithm.Clear();
+      astar.Clear();
+      bidir_astar.Clear();
+      multi_modal_astar.Clear();
       locations.clear();
       correlated.clear();
       if(reader.OverCommitted())
         reader.Clear();
     }
    protected:
+    valhalla::sif::TravelMode mode;
     boost::property_tree::ptree config;
     std::vector<Location> locations;
     std::vector<PathLocation> correlated;
     sif::CostFactory<sif::DynamicCost> factory;
-    valhalla::sif::cost_ptr_t cost;
     valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
     valhalla::baldr::GraphReader reader;
-    valhalla::thor::PathAlgorithm path_algorithm;
+
+    // Path algorithms (TODO - perhaps use a map?))
+    thor::PathAlgorithm astar;
+    thor::BidirectionalAStar bidir_astar;
+    thor::MultiModalPathAlgorithm multi_modal_astar;
   };
 }
 
