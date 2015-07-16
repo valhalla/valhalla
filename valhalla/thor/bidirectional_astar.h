@@ -52,10 +52,10 @@ class BidirectionalAStar : public PathAlgorithm {
 
  protected:
   // A*, edge labels, adjacency list, and edge status for the reverse path
-  AStarHeuristic astarheuristic2_;
-  std::vector<sif::EdgeLabel> edgelabels2_;
-  std::shared_ptr<AdjacencyList> adjacencylist2_;
-  std::shared_ptr<EdgeStatus> edgestatus2_;
+  AStarHeuristic astarheuristic_reverse_;
+  std::vector<sif::EdgeLabel> edgelabels_reverse_;
+  std::shared_ptr<AdjacencyList> adjacencylist_reverse_;
+  std::shared_ptr<EdgeStatus> edgestatus_reverse_;
 
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
@@ -94,7 +94,8 @@ class BidirectionalAStar : public PathAlgorithm {
    * @param  edgeid    Edge to add to the adjacency list.
    * @param  sortcost  Sort cost.
    */
-  void AddToAdjacencyList2(const baldr::GraphId& edgeid, const float sortcost);
+  void AddToAdjacencyListReverse(const baldr::GraphId& edgeid,
+                                 const float sortcost);
 
   /**
     * Check if edge is temporarily labeled and this path has less cost. If
@@ -105,7 +106,7 @@ class BidirectionalAStar : public PathAlgorithm {
     * @param  predindex  Index of the predecessor edge.
     * @param  newcost    Cost of the new path.
     */
-   void CheckIfLowerCostPath2(const uint32_t idx,
+   void CheckIfLowerCostPathReverse(const uint32_t idx,
                              const uint32_t predindex,
                              const sif::Cost& newcost);
 

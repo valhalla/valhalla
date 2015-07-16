@@ -23,11 +23,11 @@ BidirectionalAStar::~BidirectionalAStar() {
 // Clear the temporary information generated during path construction.
 void BidirectionalAStar::Clear() {
   edgelabels_.clear();
-  edgelabels2_.clear();
+  edgelabels_reverse_.clear();
   adjacencylist_.reset();
-  adjacencylist2_.reset();
+  adjacencylist_reverse_.reset();
   edgestatus_.reset();
-  edgestatus2_.reset();
+  edgestatus_reverse_.reset();
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -36,7 +36,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
                               const std::shared_ptr<DynamicCost>& costing) {
   // Initialize the A* heuristics
   astarheuristic_.Init(destll, costing->AStarCostFactor());
-  astarheuristic2_.Init(origll, costing->AStarCostFactor());
+  astarheuristic_reverse_.Init(origll, costing->AStarCostFactor());
 
   // Construct adjacency list, edge status, and done set
   // Set bucket size and cost range based on DynamicCost.
@@ -46,9 +46,9 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
   adjacencylist_.reset(new AdjacencyList(mincost, range, bucketsize));
   edgestatus_.reset(new EdgeStatus());
 
-  mincost = astarheuristic2_.Get(destll);
-  adjacencylist2_.reset(new AdjacencyList(mincost, range, bucketsize));
-  edgestatus2_.reset(new EdgeStatus());
+  mincost = astarheuristic_reverse_.Get(destll);
+  adjacencylist_reverse_.reset(new AdjacencyList(mincost, range, bucketsize));
+  edgestatus_reverse_.reset(new EdgeStatus());
 
   // Make sure hierarchy transitions are not allowed (though code below also
   // disables it).
@@ -91,7 +91,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       // Get the opposing edge - if permanently labeled in reverse search set
       // we have the shortest path
       GraphId oppedge = graphreader.GetOpposingEdgeId(pred.edgeid());
-      EdgeStatusInfo oppedgestatus = edgestatus2_->Get(oppedge);
+      EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
       if (oppedgestatus.status.set == kPermanent) {
         return FormPath(predindex,oppedgestatus.status.index, graphreader);
       }
@@ -161,12 +161,12 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex2 = adjacencylist2_->Remove(edgelabels2_);
+    uint32_t predindex2 = adjacencylist_reverse_->Remove(edgelabels_reverse_);
     if (predindex2 != kInvalidLabel) {
       // Remove label from adjacency list, mark it as done - copy the EdgeLabel
       // for use in costing
-      pred = edgelabels2_[predindex2];
-      edgestatus2_->Update(pred.edgeid(), kPermanent);
+      pred = edgelabels_reverse_[predindex2];
+      edgestatus_reverse_->Update(pred.edgeid(), kPermanent);
 
       // Get the opposing edge - if permanently labeled in forward search set
       // we have the shortest path
@@ -202,7 +202,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
 
         // Get the current set. Skip this edge if permanently labeled (best
         // path already found to this directed edge).
-        EdgeStatusInfo edgestatus = edgestatus2_->Get(edgeid);
+        EdgeStatusInfo edgestatus = edgestatus_reverse_->Get(edgeid);
         if (edgestatus.status.set == kPermanent) {
           continue;
         }
@@ -216,7 +216,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
        // less cost the predecessor is updated and the sort cost is decremented
        // by the difference in real cost (A* heuristic doesn't change)
        if (edgestatus.status.set == kTemporary) {
-         CheckIfLowerCostPath2(edgestatus.status.index, predindex2, newcost);
+         CheckIfLowerCostPathReverse(edgestatus.status.index, predindex2, newcost);
          continue;
        }
 
@@ -225,13 +225,13 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
        if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
          continue;
        }
-       float dist = astarheuristic2_.GetDistance(tile->node(
+       float dist = astarheuristic_reverse_.GetDistance(tile->node(
                  directededge->endnode())->latlng());
-       float sortcost = newcost.cost + astarheuristic2_.Get(dist);
+       float sortcost = newcost.cost + astarheuristic_reverse_.Get(dist);
 
        // Add edge label, add to the adjacency list and set edge status
-       AddToAdjacencyList2(edgeid, sortcost);
-       edgelabels2_.emplace_back(predindex2, edgeid, directededge,
+       AddToAdjacencyListReverse(edgeid, sortcost);
+       edgelabels_reverse_.emplace_back(predindex2, edgeid, directededge,
                      newcost, sortcost, dist, directededge->restrictions(),
                      directededge->opp_local_idx(), mode_);
       }
@@ -249,26 +249,26 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
 
 // Convenience method to add an edge to the reverse adjacency list and
 // temporarily label it.
-void BidirectionalAStar::AddToAdjacencyList2(const GraphId& edgeid,
+void BidirectionalAStar::AddToAdjacencyListReverse(const GraphId& edgeid,
                                         const float sortcost) {
-  uint32_t idx = edgelabels2_.size();
-  adjacencylist2_->Add(idx, sortcost);
-  edgestatus2_->Set(edgeid, kTemporary, idx);
+  uint32_t idx = edgelabels_reverse_.size();
+  adjacencylist_reverse_->Add(idx, sortcost);
+  edgestatus_reverse_->Set(edgeid, kTemporary, idx);
 }
 
 // Check if edge is temporarily labeled and this path has less cost. If
 // less cost the predecessor is updated and the sort cost is decremented
 // by the difference in real cost (A* heuristic doesn't change). This is
 // done for the reverse search.
-void BidirectionalAStar::CheckIfLowerCostPath2(const uint32_t idx,
+void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
                                          const uint32_t predindex,
                                          const Cost& newcost) {
-  float dc = edgelabels2_[idx].cost().cost - newcost.cost;
+  float dc = edgelabels_reverse_[idx].cost().cost - newcost.cost;
   if (dc > 0) {
-    float oldsortcost = edgelabels2_[idx].sortcost();
+    float oldsortcost = edgelabels_reverse_[idx].sortcost();
     float newsortcost = oldsortcost - dc;
-    edgelabels2_[idx].Update(predindex, newcost, newsortcost);
-    adjacencylist2_->DecreaseCost(idx, newsortcost, oldsortcost);
+    edgelabels_reverse_[idx].Update(predindex, newcost, newsortcost);
+    adjacencylist_reverse_->DecreaseCost(idx, newsortcost, oldsortcost);
   }
 }
 
@@ -305,8 +305,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const PathLocation& dest,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic2_.GetDistance(dest.vertex());
-  float heuristic = astarheuristic2_.Get(dist);
+  float dist = astarheuristic_reverse_.GetDistance(dest.vertex());
+  float heuristic = astarheuristic_reverse_.Get(dist);
 
   // Iterate through edges and add to adjacency list
   for (const auto& edge : dest.edges()) {
@@ -324,8 +324,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    AddToAdjacencyList2(edgeid, sortcost);
-    edgelabels2_.emplace_back(kInvalidLabel, edgeid,
+    AddToAdjacencyListReverse(edgeid, sortcost);
+    edgelabels_reverse_.emplace_back(kInvalidLabel, edgeid,
             directededge, cost, sortcost, dist, 0,
             directededge->opp_local_idx(), mode_);
   }
@@ -337,7 +337,7 @@ std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
   // Metrics (TODO)
 //LOG_INFO("FormPath2: path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
 LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
-		"," + std::to_string(edgelabels2_.size()));
+		"," + std::to_string(edgelabels_reverse_.size()));
 
   // Work backwards on the forward path
   uint32_t cost;
@@ -356,8 +356,8 @@ LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
   // Append the reverse path from the destination - use opposing edges
   uint32_t priorcost = 0;
   for (auto edgelabel_index = idx2; edgelabel_index != kInvalidLabel;
-      edgelabel_index = edgelabels2_[edgelabel_index].predecessor()) {
-    const EdgeLabel& edgelabel = edgelabels2_[edgelabel_index];
+      edgelabel_index = edgelabels_reverse_[edgelabel_index].predecessor()) {
+    const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
 
     if (edgelabel_index != idx2) {
     	// Add opposing edge to the path, increment cost by delta along
