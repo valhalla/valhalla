@@ -20,15 +20,21 @@ StreetNames::StreetNames(const std::vector<std::string>& names) {
 StreetNames::~StreetNames() {
 }
 
-std::string StreetNames::ToString() const {
+std::string StreetNames::ToString(uint32_t max_count, std::string delim) const {
   std::string name_string;
+  uint32_t count = 0;
   if (this->empty())
     name_string = "unnamed";
   for (auto& street_name : *this) {
+    // If supplied, limit by max count
+    if ((max_count > 0) && (count == max_count)) {
+      break;
+    }
     if (!name_string.empty()) {
-      name_string += "/";
+      name_string += delim;
     }
     name_string += street_name->value();
+    ++count;
   }
   return name_string;
 }
