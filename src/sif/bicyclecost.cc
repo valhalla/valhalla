@@ -8,6 +8,25 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace sif {
 
+// Default options/values
+namespace {
+constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
+constexpr float kDefaultDestinationOnlyPenalty  = 60.0f;  // Seconds
+constexpr float kDefaultAlleyPenalty            = 60.0f;   // Seconds
+constexpr float kDefaultGateCost                = 30.0f;  // Seconds
+constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
+constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+
+// Default turn costs
+constexpr float kTCStraight         = 0.5f;
+constexpr float kTCSlight           = 0.75f;
+constexpr float kTCFavorable        = 1.0f;
+constexpr float kTCFavorableSharp   = 1.5f;
+constexpr float kTCCrossing         = 2.0f;
+constexpr float kTCUnfavorable      = 2.5f;
+constexpr float kTCUnfavorableSharp = 3.5f;
+constexpr float kTCReverse          = 5.0f;
+
 // Cost of traversing an edge with steps. Make this high but not impassible.
 // Equal to about 0.5km.
 const Cost kBicycleStepsCost = { 500.0f, 30.0f };
@@ -15,8 +34,6 @@ const Cost kBicycleStepsCost = { 500.0f, 30.0f };
 // How much to favor bicycle networks. TODO - make a config option
 constexpr float kBicycleNetworkFactor = 0.8f;
 
-// Default options/values
-namespace {
 constexpr float kDefaultCyclingSpeed   = 25.0f;  // ~15.5 MPH
 constexpr float kDefaultUseRoadsFactor = 0.5f;   // Default factor for roads
 constexpr float kDefaultSmoothFactor   = 0.9f;   // Prefer smooth surfaces
@@ -76,10 +93,9 @@ class BicycleCost : public DynamicCost {
    * @param  pred  Predecessor edge information.
    * @return  Returns the cost and time (seconds)
    */
-// TODO - add logic for transition costs!
-//  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-//                               const baldr::NodeInfo* node,
-//                               const EdgeLabel& pred) const;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -98,6 +114,17 @@ class BicycleCost : public DynamicCost {
     kHybrid   = 2,
     kMountain = 3
   };
+
+  float density_factor_[16];        // Density factor
+  float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
+  float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
+  float gate_cost_;                 // Cost (seconds) to go through gate
+  float alley_penalty_;             // Penalty (seconds) to use a alley
+  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+
+  // Density factor used in edge transition costing
+  std::vector<float> trans_density_factor_;
 
   // Bicycling speed (default to 25 kph)
   float speed_;
@@ -129,6 +156,16 @@ class BicycleCost : public DynamicCost {
   // while beginners may use a value of 0.1 to stay away from roads unless
   // absolutely necessary.
   float useroads_;
+
+  /**
+   * Compute a turn cost based on the turn type, crossing flag,
+   * and whether right or left side of road driving.
+   * @param  turn_type  Turn type (see baldr/turn.h)
+   * @param  crossing   Crossing another road if true.
+   * @param  drive_on_right  Right hand side of road driving if true.
+   */
+  float TurnCost(const baldr::Turn::Type turn_type, const bool crossing,
+                 const bool drive_on_right) const;
 
  public:
   /**
@@ -164,7 +201,24 @@ class BicycleCost : public DynamicCost {
 
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
-    : DynamicCost(pt, TravelMode::kBicycle) {
+    : DynamicCost(pt, TravelMode::kBicycle),
+      trans_density_factor_{ 1.0f, 1.0f, 1.0f, 1.0f,
+                             1.0f, 1.1f, 1.2f, 1.3f,
+                             1.4f, 1.6f, 1.9f, 2.2f,
+                             2.5f, 2.8f, 3.1f, 3.5f } {
+
+  maneuver_penalty_ = pt.get<float>("maneuver_penalty",
+                                    kDefaultManeuverPenalty);
+  destination_only_penalty_ = pt.get<float>("destination_only_penalty",
+                                            kDefaultDestinationOnlyPenalty);
+  gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
+  alley_penalty_ = pt.get<float>("alley_penalty",
+                                 kDefaultAlleyPenalty);
+  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
+                                           kDefaultCountryCrossingCost);
+  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
+                                           kDefaultCountryCrossingPenalty);
+
   smooth_surface_factor_  = pt.get<float>("smoothness_factor", kDefaultSmoothFactor);
   bicycle_surface_factor_ = pt.get<float>("surface_factor", kDefaultSurfaceFactor);
   useroads_    = pt.get<float>("useroads_", kDefaultUseRoadsFactor);
@@ -266,6 +320,39 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
    return Cost(edge->length() * factor, edge->length() * speedfactor_);
 }
 
+// Returns the time (in seconds) to make the transition from the predecessor
+Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
+                               const baldr::NodeInfo* node,
+                               const EdgeLabel& pred) const {
+  // Special cases: gate, toll booth, false intersections
+  if (edge->ctry_crossing()) {
+    return { country_crossing_cost_ + country_crossing_penalty_,
+             country_crossing_cost_ };
+  } else if (node->type() == NodeType::kGate) {
+    return { gate_cost_, gate_cost_ };
+  } else if (node->intersection() == IntersectionType::kFalse) {
+      return { 0.0f, 0.0f };
+  } else {
+
+    float penalty = 0.0f;
+    if (!pred.destonly() && edge->destonly())
+      penalty += destination_only_penalty_;
+
+    if (pred.use() != Use::kAlley && edge->use() == Use::kAlley)
+      penalty += alley_penalty_;
+
+    // Transition cost = density * stopimpact * turncost + maneuverpenalty
+    uint32_t idx = pred.opp_local_idx();
+    float seconds = trans_density_factor_[node->density()] *
+                    edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
+                         edge->edge_to_right(idx) && edge->edge_to_left(idx),
+                         edge->drive_on_right());
+    return (node->name_consistency(idx, edge->localedgeidx())) ?
+              Cost(seconds + penalty, seconds) :
+              Cost(seconds + maneuver_penalty_ + penalty, seconds);
+  }
+}
+
 /**
  * Get the cost factor for A* heuristics. This factor is multiplied
  * with the distance to the destination to produce an estimate of the
@@ -277,6 +364,40 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 float BicycleCost::AStarCostFactor() const {
   // TODO - compute the most favorable weighting possible
   return 0.0f;
+}
+
+// Compute a turn cost based on the turn type, crossing flag,
+// and whether right or left side of road bicycling.
+float BicycleCost::TurnCost(const baldr::Turn::Type turn_type,
+                         const bool crossing,
+                         const bool drive_on_right) const {
+  if (crossing) {
+    return kTCCrossing;
+  }
+
+  switch (turn_type) {
+  case Turn::Type::kStraight:
+    return kTCStraight;
+
+  case Turn::Type::kSlightLeft:
+  case Turn::Type::kSlightRight:
+    return kTCSlight;
+
+  case Turn::Type::kRight:
+    return (drive_on_right) ? kTCFavorable : kTCUnfavorable;
+
+  case Turn::Type::kLeft:
+    return (drive_on_right) ? kTCUnfavorable : kTCFavorable;
+
+  case Turn::Type::kSharpRight:
+    return (drive_on_right) ? kTCFavorableSharp : kTCUnfavorableSharp;
+
+  case Turn::Type::kSharpLeft:
+    return (drive_on_right) ? kTCUnfavorableSharp : kTCFavorableSharp;
+
+  case Turn::Type::kReverse:
+    return kTCReverse;
+  }
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
