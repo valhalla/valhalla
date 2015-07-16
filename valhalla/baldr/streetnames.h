@@ -18,7 +18,7 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
 
   virtual ~StreetNames();
 
-  std::string ToString() const;
+  std::string ToString(uint32_t max_count = 0, std::string delim = "/") const;
 
   std::string ToParameterString() const;
 
