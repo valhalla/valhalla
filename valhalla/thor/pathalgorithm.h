@@ -252,10 +252,6 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 
-  std::string Type() {
-    return "Multimodal A*";
-  }
-
  protected:
 
   /**
