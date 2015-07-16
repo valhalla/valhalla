@@ -40,7 +40,7 @@ lib_LTLIBRARIES = libvalhalla_thor.la
 nobase_include_HEADERS = \
 	valhalla/thor/adjacencylist.h \
 	valhalla/thor/astarheuristic.h \
-	valhalla/thor//bidirectional_astar.h \
+	valhalla/thor/bidirectional_astar.h \
 	valhalla/thor/edgestatus.h \
 	valhalla/thor/pathalgorithm.h \
 	valhalla/thor/pathinfo.h \
