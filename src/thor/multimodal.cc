@@ -389,6 +389,8 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjlist.Remove(edgelabels);
     if (predindex == kInvalidLabel) {
+      // Throw an exception so the message is returned in the service
+      throw std::runtime_error("Cannot reach destination - too far from a transit stop");
       return false;
     }
 
