@@ -5,7 +5,7 @@
     <NoDataValue>-3.27680000000000E+04</NoDataValue>
     <ColorInterp>Gray</ColorInterp>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">s76.75_n40.5.tif</SourceFilename>
+      <SourceFilename relativeToVRT="1">w76.75_n40.5.tif</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="900" RasterYSize="900" DataType="Int16" BlockXSize="900" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="900" ySize="900" />
@@ -13,7 +13,7 @@
       <NODATA>-32768</NODATA>
     </ComplexSource>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">s76.75_n40.75.tif</SourceFilename>
+      <SourceFilename relativeToVRT="1">w76.75_n40.75.tif</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="900" RasterYSize="900" DataType="Int16" BlockXSize="900" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="900" ySize="900" />
@@ -21,7 +21,7 @@
       <NODATA>-32768</NODATA>
     </ComplexSource>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">s77.0_n40.5.tif</SourceFilename>
+      <SourceFilename relativeToVRT="1">w77.0_n40.5.tif</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="900" RasterYSize="900" DataType="Int16" BlockXSize="900" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="900" ySize="900" />
@@ -29,7 +29,7 @@
       <NODATA>-32768</NODATA>
     </ComplexSource>
     <ComplexSource>
-      <SourceFilename relativeToVRT="1">s77.0_n40.75.tif</SourceFilename>
+      <SourceFilename relativeToVRT="1">w77.0_n40.75.tif</SourceFilename>
       <SourceBand>1</SourceBand>
       <SourceProperties RasterXSize="900" RasterYSize="900" DataType="Int16" BlockXSize="900" BlockYSize="4" />
       <SrcRect xOff="0" yOff="0" xSize="900" ySize="900" />
