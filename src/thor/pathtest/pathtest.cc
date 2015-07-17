@@ -508,20 +508,18 @@ int main(int argc, char *argv[]) {
     mode = TravelMode::kPedestrian;
     pathalgorithm = &mm;
   } else {
-    if (routetype == "auto" || routetype == "bus") {
-      mode = valhalla::sif::TravelMode::kDrive;
-      pathalgorithm = &astar;
-    } else if (routetype == "bicycle") {
-      mode = valhalla::sif::TravelMode::kBicycle;
-      pathalgorithm = &astar;
-    } else {
-      mode = valhalla::sif::TravelMode::kPedestrian;
+    // Assign costing method
+    std::shared_ptr<DynamicCost> cost = factory.Create(
+        routetype, pt.get_child("costing_options." + routetype));
+    mode = cost->travelmode();
+    mode_costing[static_cast<uint32_t>(mode)] = cost;
 
-      // Use bidirectional A* if > 10km between locations
+    // Choose path algorithm. Use bi-directional A* for pedestrian > 10km
+    if (routetype == "pedestrian" && d1 > 10.0f) {
       pathalgorithm = (d1 > 10.0f) ? &bd : &astar;
+    } else {
+      pathalgorithm = &astar;
     }
-    mode_costing[static_cast<uint32_t>(mode)] = factory.Create(
-          routetype, pt.get_child("costing_options." + routetype));
   }
 
   // For now assume pedestrian mode at origin and destination
@@ -550,6 +548,13 @@ int main(int argc, char *argv[]) {
   } else {
     // Route was unsuccessful
     data.setSuccess(false);
+
+    // Check if destinations are unreachable
+    for (auto& edge : pathDest.edges()) {
+      const GraphTile* tile = reader.GetGraphTile(edge.id);
+      const DirectedEdge* directededge = tile->directededge(edge.id);
+      LOG_INFO("Destination edge - unreachable = " + std::to_string(directededge->unreachable()));
+    }
   }
 
   // Set the arc distance. Convert to miles if needed
@@ -560,6 +565,7 @@ int main(int argc, char *argv[]) {
 
   // Time all stages for the stats file: location processing,
   // path computation, trip path building, and directions
+  t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count();
   data.addRuntime(msecs);
   data.log();
