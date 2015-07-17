@@ -3,3 +3,4 @@
 -j '{"locations":[{"lat":38.927910,"lon":-77.226059,"street":"Sunstone Drive"},{"lat":38.928280,"lon":-77.225830,"street":"Sunstone Drive"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":38.928249,"lon":-77.225822,"street":"Sunstone Drive"},{"lat":38.927879,"lon":-77.226212,"street":"Sunstone Drive"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":42.911652,"lon":-71.596184,"street":"Horace Greeley Road"},{"lat":42.914120,"lon":-71.594612,"street":"Horace Greeley Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.016850,"lon":-77.467087,"street":"VA 625"},{"lat":39.016918,"lon":-77.469002,"street":"Waxpool Road"}],"costing":"auto","directions_options":{"units":"kilometers"}}' --config ../conf/valhalla.json
