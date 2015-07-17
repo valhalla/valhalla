@@ -134,3 +134,11 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 ./args.py | parallel --joblog cut_tiles.log -C ' ' -P $(nproc) "./composite.sh {} 2>err.log 1>comp.log"
+
+#make nest vrts for faster access
+./nest.py | grep -vE "_[0-9].vrt\$" | parallel -C ' ' -P $(nproc) "gdalbuildvrt {} 2>>err.log 1>nest.log"
+./nest.py | grep -E "_4.vrt\$" | parallel -C ' ' -P $(nproc) "gdalbuildvrt {} 2>>err.log 1>>nest.log"
+./nest.py | grep -E "_3.vrt\$" | parallel -C ' ' -P $(nproc) "gdalbuildvrt {} 2>>err.log 1>>nest.log"
+./nest.py | grep -E "_2.vrt\$" | parallel -C ' ' -P $(nproc) "gdalbuildvrt {} 2>>err.log 1>>nest.log"
+./nest.py | grep -E "_1.vrt\$" | parallel -C ' ' -P $(nproc) "gdalbuildvrt {} 2>>err.log 1>>nest.log"
+gdalbuildvrt world.vrt tiles/0/0_0.vrt tiles/1/0_0.vrt 2>>err.log 1>>nest.log
