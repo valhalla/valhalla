@@ -194,15 +194,9 @@ namespace {
         mode_costing[3] = get_costing(request, "transit");
         mode = valhalla::sif::TravelMode::kPedestrian;
       } else {
-        // Construct just the requested costing model
-        if (costing == "auto" || costing == "bus") {
-          mode = valhalla::sif::TravelMode::kDrive;
-        } else if (costing == "bicycle") {
-          mode = valhalla::sif::TravelMode::kBicycle;
-        } else {
-          mode = valhalla::sif::TravelMode::kPedestrian;
-        }
-        mode_costing[static_cast<uint32_t>(mode)] = get_costing(request, costing);
+        valhalla::sif::cost_ptr_t cost = get_costing(request, costing);
+        mode = cost->travelmode();
+        mode_costing[static_cast<uint32_t>(mode)] = cost;
       }
       return costing;
     }

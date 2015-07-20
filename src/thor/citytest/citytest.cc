@@ -253,18 +253,12 @@ int main(int argc, char *argv[]) {
       // Get the costing method. We do this each time since prior route may
       // have changed hierarchy_limits. Also, this simulates how the service
       // works
-      TravelMode mode;
       cost_ptr_t mode_costing[4];
-      if (routetype == "auto" || routetype == "bus") {
-        mode = valhalla::sif::TravelMode::kDrive;
-      } else if (routetype == "bicycle") {
-        mode = valhalla::sif::TravelMode::kBicycle;
-      } else {
-        mode = valhalla::sif::TravelMode::kPedestrian;
-      }
-      mode_costing[static_cast<uint32_t>(mode)] = factory.Create(
-              routetype, pt.get_child("costing_options." + routetype));
-      cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+      cost_ptr_t cost = factory.Create(
+          routetype, pt.get_child("costing_options." + routetype));
+      TravelMode mode = cost->travelmode();
+      mode_costing[static_cast<uint32_t>(mode)] = cost;
+
 
       Location originloc(cities[l0].latlng);
       Location destloc(cities[l1].latlng);
