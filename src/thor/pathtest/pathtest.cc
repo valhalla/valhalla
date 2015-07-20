@@ -40,7 +40,7 @@ namespace {
   class PathStatistics {
     std::pair<float, float> origin;
     std::pair<float, float> destination;
-    bool success;
+    std::string success;
     uint32_t passes;
     uint32_t runtime;
     uint32_t trip_time;
@@ -50,11 +50,11 @@ namespace {
 
   public:
     PathStatistics (std::pair<float, float> p1, std::pair<float, float> p2)
-      : origin(p1), destination(p2), success(false),
+      : origin(p1), destination(p2), success("false"),
         passes(0), runtime(), trip_time(),
         trip_dist(), arc_dist(), manuevers() { }
 
-    void setSuccess(bool b) { success = b; }
+    void setSuccess(std::string s) { success = s; }
     void incPasses(void) { ++passes; }
     void addRuntime(uint32_t msec) { runtime += msec; }
     void setTripTime(uint32_t t) { trip_time = t; }
@@ -62,11 +62,10 @@ namespace {
     void setArcDist(float d) { arc_dist = d; }
     void setManuevers(uint32_t n) { manuevers = n; }
     void log() {
-      std::string successStr = (success) ? "true" : "false";
       valhalla::midgard::logging::Log(
         (boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d")
           % origin.first % origin.second % destination.first % destination.second
-          % successStr % passes % runtime % trip_time % trip_dist % arc_dist % manuevers).str(),
+          % success % passes % runtime % trip_time % trip_dist % arc_dist % manuevers).str(),
         " [STATISTICS] ");
     }
   };
@@ -457,7 +456,7 @@ int main(int argc, char *argv[]) {
     auto t10 = std::chrono::high_resolution_clock::now();
     if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
       LOG_INFO("No tile connectivity between origin and destination.");
-      data.setSuccess(false);
+      data.setSuccess("no_connectivity");
       data.log();
       return EXIT_SUCCESS;
     }
@@ -544,7 +543,7 @@ int main(int argc, char *argv[]) {
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
-    data.setSuccess(true);
+    data.setSuccess("true");
   } else {
     // Route was unsuccessful
     data.setSuccess(false);
