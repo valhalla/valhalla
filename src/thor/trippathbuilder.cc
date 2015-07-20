@@ -259,10 +259,17 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     trip_edge->set_end_shape_index(shape.size());
     auto* node = trip_path.add_node();
     node->set_elapsed_time(path.front().elapsed_time);
-    node->set_admin_index(
-        GetAdminIndex(
-            tile->admininfo(tile->node(edge->endnode())->admin_index()),
-            admin_info_map, admin_info_list));
+
+    const GraphTile* end_tile = graphreader.GetGraphTile(edge->endnode());
+    if (end_tile == nullptr)
+      node->set_admin_index(0);
+    else {
+      node->set_admin_index(
+          GetAdminIndex(
+              end_tile->admininfo(end_tile->node(edge->endnode())->admin_index()),
+                admin_info_map, admin_info_list));
+    }
+
     trip_path.set_shape(encode<std::vector<PointLL> >(shape));
     // Assign the trip path admins
     AssignAdmins(trip_path, admin_info_list);
