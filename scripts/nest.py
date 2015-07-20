@@ -15,23 +15,23 @@ width = 2
 height = 1
 level = 1
 
-def t(x, y, l):
+def t(x, y, l, d):
 	if l == 5:
-		return 'tiles/' + str(x) + '/' + str(y) + '.tif'
+		return ('./' if x == d else '../' + str(x) + '/') + str(y) + '.tif'
 	else:
-		return 'tiles/' + str(x) + '/' + str(y) + '_' + str(l) + '.vrt'
+		return ('./' if x == d else '../' + str(x) + '/') + str(y) + '_' + str(l) + '.vrt'
 
 for dim in dims:
 	for x in range(0, width):
 		for y in range(0, height):
-			files = []
+			cmd = []
 			for i in range(0, dim):
 				for j in range(0, dim):
-					files.append(t(x * dim + i, y * dim + j, level))
-			#TODO: prepend metatile name
-			files.insert(0, t(x, y, level - 1))
+					cmd.append(t(x * dim + i, y * dim + j, level, x))
+			cmd.insert(0, 'gdalbuildvrt ./' + str(y) + '_' + str(level - 1) + '.vrt')
+			cmd.insert(0, 'cd tiles/%s;' % x)
 			try:
-				print ' '.join(files)
+				print ' '.join(cmd)
 			except IOError as e:
 				sys.exit(0)
 	level += 1
