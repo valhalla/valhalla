@@ -310,8 +310,17 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
           && !next_man->internal_intersection() && !curr_man->ramp()
           && !next_man->ramp() && !curr_man->roundabout()
           && !next_man->roundabout() && !common_base_names->empty()) {
+
+        // If needed, set the begin street names
+        if (!curr_man->HasBeginStreetNames() && !curr_man->portions_highway()
+            && (curr_man->street_names().size() > common_base_names->size())) {
+          curr_man->set_begin_street_names(
+              std::move(curr_man->street_names().clone()));
+        }
+
         // Update current maneuver street names
         curr_man->set_street_names(std::move(common_base_names));
+
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
                                                    next_man);
       } else {
@@ -814,11 +823,20 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   maneuver.set_begin_intersecting_edge_name_consistency(
       node->HasIntersectingEdgeNameConsistency());
 
+  // Set begin street names
+  if (!curr_edge->IsHighway() && !curr_edge->internal_intersection()
+      && (curr_edge->GetNameList().size() > 1)) {
+    std::unique_ptr<StreetNames> curr_edge_names = StreetNamesFactory::Create(
+        trip_path_->GetCountryCode(node_index), curr_edge->GetNameList());
+    std::unique_ptr<StreetNames> common_base_names = curr_edge_names
+        ->FindCommonBaseNames(maneuver.street_names());
+    if (curr_edge_names->size() > common_base_names->size()) {
+      maneuver.set_begin_street_names(std::move(curr_edge_names));
+    }
+  }
+
   // Set the maneuver type
   SetManeuverType(maneuver);
-
-  // Begin street names
-  // TODO
 
 }
 

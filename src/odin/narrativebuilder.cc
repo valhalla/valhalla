@@ -182,10 +182,17 @@ void NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   text_instruction += "Go ";
   text_instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
-  if (maneuver.HasStreetNames()) {
+
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " on ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();
   }
+
   // TODO - side of street
 
   text_instruction += ".";
@@ -252,7 +259,12 @@ void NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
   text_instruction += "Turn ";
   text_instruction += FormTurnTypeInstruction(maneuver.type());
 
-  if (maneuver.HasStreetNames()) {
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " onto ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
     text_instruction += maneuver.street_names().ToString();
   }
@@ -282,7 +294,12 @@ void NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
   text_instruction += "Bear ";
   text_instruction += FormBearTypeInstruction(maneuver.type());
 
-  if (maneuver.HasStreetNames()) {
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " onto ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
     text_instruction += maneuver.street_names().ToString();
   }
@@ -1405,7 +1422,13 @@ void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
   text_instruction += "Exit the roundabout";
-  if (maneuver.HasStreetNames()) {
+
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " onto ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " onto ";
     text_instruction += maneuver.street_names().ToString();
   }
@@ -1438,7 +1461,13 @@ void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   text_instruction += "Go ";
   text_instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
-  if (maneuver.HasStreetNames()) {
+
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " on ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();
   }
@@ -1590,7 +1619,13 @@ void NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   text_instruction += "Go ";
   text_instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
-  if (maneuver.HasStreetNames()) {
+
+  if (maneuver.HasBeginStreetNames()) {
+    text_instruction += " on ";
+    text_instruction += maneuver.begin_street_names().ToString();
+    text_instruction += ". Continue on ";
+    text_instruction += maneuver.street_names().ToString();
+  } else if (maneuver.HasStreetNames()) {
     text_instruction += " on ";
     text_instruction += maneuver.street_names().ToString();
   }
