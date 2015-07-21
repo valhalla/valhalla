@@ -13,6 +13,7 @@ $DIR/install_gdal.sh
 #clone async
 mkdir -p deps
 for dep in midgard baldr; do
+	rm -rf $dep
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
