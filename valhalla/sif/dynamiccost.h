@@ -83,6 +83,20 @@ class DynamicCost {
                        const EdgeLabel& pred) const = 0;
 
   /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge  Pointer to a directed edge.
+   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::DirectedEdge* opp_pred_edge) const = 0;
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards are present.
    * @param   node  Pointer to node information.
@@ -125,6 +139,21 @@ class DynamicCost {
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                              const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
    * Returns the transfer cost between 2 transit stops.

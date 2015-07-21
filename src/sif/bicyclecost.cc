@@ -67,6 +67,20 @@ class BicycleCost : public DynamicCost {
                        const EdgeLabel& pred) const;
 
   /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge  Pointer to a directed edge.
+   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::DirectedEdge* opp_pred_edge) const;
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present. (TODO - others?)
    * @param  edge  Pointer to node information.
@@ -258,6 +272,34 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
     return edge->surface() <= Surface::kDirt;
   else if (bicycletype_ == BicycleType::kMountain)
     return edge->surface() <= Surface::kPath;   // Allow all but impassable
+
+  return true;
+}
+
+// Checks if access is allowed for an edge on the reverse path (from
+// destination towards origin). Both opposing edges are provided.
+bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
+               const baldr::DirectedEdge* opp_edge,
+               const baldr::DirectedEdge* opp_pred_edge) const {
+  // Check access, U-turn, and simple turn restriction.
+  // Check if edge is not-thru (no need to check distance from destination
+  // since the search is heading out of any not_thru regions)
+  if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
+       (opp_pred_edge->localedgeidx() == edge->localedgeidx()) ||
+       (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
+        edge->not_thru() || opp_edge->surface() == Surface::kImpassable) {
+    return false;
+  }
+
+  // Prohibit certain roads based on surface type and bicycle type
+  if (bicycletype_ == BicycleType::kRoad)
+    return opp_edge->surface() <= Surface::kPavedRough;
+  else if (bicycletype_ == BicycleType::kHybrid)
+      return opp_edge->surface() <= Surface::kCompacted;
+  else if (bicycletype_ == BicycleType::kCross)
+    return opp_edge->surface() <= Surface::kDirt;
+  else if (bicycletype_ == BicycleType::kMountain)
+    return opp_edge->surface() <= Surface::kPath;   // Allow all but impassable
 
   return true;
 }
