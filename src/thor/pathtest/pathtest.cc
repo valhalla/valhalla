@@ -546,7 +546,7 @@ int main(int argc, char *argv[]) {
     data.setSuccess("true");
   } else {
     // Route was unsuccessful
-    data.setSuccess(false);
+    data.setSuccess("false");
 
     // Check if destinations are unreachable
     for (auto& edge : pathDest.edges()) {

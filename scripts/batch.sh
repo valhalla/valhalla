@@ -61,6 +61,7 @@ cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2
 rm -f "${TMP}"
 cat ${OUTDIR}/statistics.tmp | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' &> ${OUTDIR}/statistics.csv
 rm ${OUTDIR}/statistics.tmp
+echo ${OUTDIR} > outdir.txt
 
 #if we need to run a diff
 if [ -d "${DIFF}" ]; then
