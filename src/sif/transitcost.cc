@@ -53,6 +53,20 @@ class TransitCost : public DynamicCost {
                        const EdgeLabel& pred) const;
 
   /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge  Pointer to a directed edge.
+   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::DirectedEdge* opp_pred_edge) const;
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
    * @param  edge  Pointer to node information.
@@ -169,6 +183,16 @@ bool TransitCost::Allowed(const baldr::DirectedEdge* edge,
     return allow_rail_;
   }
   return true;
+}
+
+// Checks if access is allowed for an edge on the reverse path (from
+// destination towards origin). Both opposing edges are provided.
+bool TransitCost::AllowedReverse(const baldr::DirectedEdge* edge,
+               const baldr::DirectedEdge* opp_edge,
+               const baldr::DirectedEdge* opp_pred_edge) const {
+  // This method should not be called since time based routes do not use
+  // bidirectional A*
+  return false;
 }
 
 // Check if access is allowed at the specified node.

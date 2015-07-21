@@ -61,6 +61,20 @@ class PedestrianCost : public DynamicCost {
                        const EdgeLabel& pred) const;
 
   /**
+   * Checks if access is allowed for an edge on the reverse path
+   * (from destination towards origin). Both opposing edges are
+   * provided.
+   * @param  edge  Pointer to a directed edge.
+   * @param  opp_edge  Pointer to the opposing directed edge.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns true if access is allowed, false if not.
+   */
+  virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const baldr::DirectedEdge* opp_edge,
+                 const baldr::DirectedEdge* opp_pred_edge) const;
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards or gates are present.
    * @param  edge  Pointer to node information.
@@ -90,6 +104,21 @@ class PedestrianCost : public DynamicCost {
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred) const;
+
+  /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                              const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
    * Get the cost factor for A* heuristics. This factor is multiplied
@@ -202,6 +231,25 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
   return true;
 }
 
+// Checks if access is allowed for an edge on the reverse path (from
+// destination towards origin). Both opposing edges are provided.
+bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
+               const baldr::DirectedEdge* opp_edge,
+               const baldr::DirectedEdge* opp_pred_edge) const {
+  // Disallow if no pedestrian access, surface marked as impassible, Uturn,
+  // or edge is not-thru (no need to check distance from destination since
+  // the search is heading out of any not_thru regions). Do not check max
+  // walking distance and assume we are not allowing transit connections.
+  // Assume this method is never used in multimodal routes).
+  if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
+       (opp_pred_edge->localedgeidx() == edge->localedgeidx()) ||
+        opp_edge->surface() == Surface::kImpassable ||
+        edge->not_thru() || opp_edge->use() == Use::kTransitConnection) {
+    return false;
+  }
+  return true;
+}
+
 // Check if access is allowed at the specified node.
 bool PedestrianCost::Allowed(const baldr::NodeInfo* node) const {
   return (node->access() & kPedestrianAccess);
@@ -243,6 +291,28 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
   uint32_t idx = pred.opp_local_idx();
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float sec = edge->stopimpact(idx);
+    return { sec, sec };
+  } else {
+    return { 0.0f, 0.0f };
+  }
+}
+
+// Returns the cost to make the transition from the predecessor edge
+// when using a reverse search (from destination towards the origin).
+// Defaults to 0. Costing models that wish to include edge transition
+// costs (i.e., intersection/turn costs) must override this method.
+Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
+                     const baldr::NodeInfo* node,
+                     const baldr::DirectedEdge* opp_pred_edge) const {
+  // Special cases: fixed penalty for steps/stairs
+  if (opp_pred_edge->use() == Use::kSteps) {
+    return { step_penalty_, 0.0f };
+  }
+
+  // Costs for crossing an intersection.
+  // TODO - do we want any maneuver penalty?
+  if (opp_pred_edge->edge_to_right(idx) && opp_pred_edge->edge_to_left(idx)) {
+    float sec = opp_pred_edge->stopimpact(idx);
     return { sec, sec };
   } else {
     return { 0.0f, 0.0f };
