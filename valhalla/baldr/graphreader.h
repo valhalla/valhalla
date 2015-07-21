@@ -85,9 +85,21 @@ class GraphReader {
   /**
    * Convenience method to get an opposing directed edge.
    * @param  edgeid  Graph Id of the directed edge.
-   * @return  Returns the graph Id of the opposing directed edge.
+   * @return  Returns the graph Id of the opposing directed edge. An
+   *          invalid graph Id is returned if the opposing edge does not
+   *          exist (can occur with a regional extract where adjacent tile
+   *          is missing).
    */
   GraphId GetOpposingEdgeId(const GraphId& edgeid);
+
+  /**
+   * Convenience method to get an opposing directed edge.
+   * @param  edgeid  Graph Id of the directed edge.
+   * @return  Returns the opposing directed edge or nullptr if the
+   *          opposing edge does not exist (can occur with a regional extract
+   *          where the adjacent tile is missing)
+   */
+  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid);
 
  protected:
   // Information about where the tiles are kept
