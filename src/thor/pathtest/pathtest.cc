@@ -258,6 +258,28 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
         (boost::format("%d: %s | %.1f %s") % m++ % maneuver.text_instruction()
             % maneuver.length() % units).str(),
         " [NARRATIVE] ");
+
+    if (maneuver.has_verbal_transition_alert_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_ALERT: %s")
+              % maneuver.verbal_transition_alert_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    if (maneuver.has_verbal_pre_transition_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_PRE: %s")
+              % maneuver.verbal_pre_transition_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    if (maneuver.has_verbal_post_transition_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_POST: %s")
+              % maneuver.verbal_post_transition_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
     if (i < trip_directions.maneuver_size() - 1)
       valhalla::midgard::logging::Log(
           "----------------------------------------------", " [NARRATIVE] ");
