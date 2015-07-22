@@ -195,14 +195,20 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         continue;
       }
 
+      // Get the opposing predecessor directed edge
+      const DirectedEdge* opp_pred_edge = tile->directededge(nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, opp_pred_edge++) {
+        if (opp_pred_edge->localedgeidx() == pred.opp_local_idx())
+          break;
+      }
+
       // Expand from end node in forward direction.
       GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
       const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-      for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
-                 i++, directededge++, edgeid++) {
-        // Skip transition edges and edges where no access is allowed
-        if (directededge->trans_up() ||
-            !costing->Allowed(directededge, pred)) {
+      for (uint32_t i = 0; i < nodeinfo->edge_count();
+              i++, directededge++, edgeid++) {
+        // Skip transition edges
+        if (directededge->trans_up()) {
           continue;
         }
 
@@ -213,10 +219,19 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
           continue;
         }
 
+        // Get opposing edge and check if allowed.
+        const DirectedEdge* opp_edge = graphreader.GetOpposingEdge(edgeid);
+        if (opp_edge == nullptr ||
+     //       !costing->Allowed(directededge, pred)) {
+            !costing->AllowedReverse(directededge, opp_edge, opp_pred_edge)) {
+          continue;
+        }
+
        // Get cost. TODO - use opposing edges for transition costing.
        Cost newcost = pred.cost() +
-                      costing->EdgeCost(directededge, nodeinfo->density()) +
-                      costing->TransitionCost(directededge, nodeinfo, pred);
+              costing->EdgeCost(directededge, nodeinfo->density()) +
+              costing->TransitionCostReverse(directededge->localedgeidx(),
+                                             nodeinfo, opp_edge);
 
        // Check if edge is temporarily labeled and this path has less cost. If
        // less cost the predecessor is updated and the sort cost is decremented
@@ -320,14 +335,18 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
   for (const auto& edge : dest.edges()) {
     // Get the directed edge
     GraphId edgeid = edge.id;
-    GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
 
-    // Get the opposing directed edge for costing...
-    const GraphTile* tile = graphreader.GetGraphTile(oppedge);
-    const DirectedEdge* directededge = tile->directededge(oppedge);
+    // Get the opposing directed edge for costing...if null use the original
+    // directed edge
+    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+    if (opp_dir_edge == nullptr) {
+      opp_dir_edge = directededge;
+    }
 
     // Get cost and sort cost
-    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist));
+    Cost cost = (costing->EdgeCost(opp_dir_edge, 0) * (1.0f - edge.dist));
     float sortcost = cost.cost + heuristic;
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -348,34 +367,33 @@ LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
 		"," + std::to_string(edgelabels_reverse_.size()));
 
   // Work backwards on the forward path
-  uint32_t cost;
   std::vector<PathInfo> path;
   for (auto edgelabel_index = idx1; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
-    cost = edgelabel.cost().secs;
-    path.emplace_back(edgelabel.mode(), cost, edgelabel.edgeid(),
-    		edgelabel.tripid());
+    path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
+                      edgelabel.edgeid(), edgelabel.tripid());
   }
 
   // Reverse the list
   std:reverse(path.begin(), path.end());
 
   // Append the reverse path from the destination - use opposing edges
-  uint32_t priorcost = 0;
+  // Get the elapsed time at the end of the forward path
+  uint32_t elapsed_time = path.back().elapsed_time;
+  uint32_t prior_time = 0;
   for (auto edgelabel_index = idx2; edgelabel_index != kInvalidLabel;
       edgelabel_index = edgelabels_reverse_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-
     if (edgelabel_index != idx2) {
     	// Add opposing edge to the path, increment cost by delta along
     	// the reverse path
     	GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
-    	cost += (priorcost - edgelabel.cost().secs);
-    	path.emplace_back(edgelabel.mode(), cost, oppedge,
-    			edgelabel.tripid());
+    	elapsed_time += (prior_time - edgelabel.cost().secs);
+    	path.emplace_back(edgelabel.mode(), elapsed_time, oppedge,
+    	                  edgelabel.tripid());
     }
-    priorcost = edgelabel.cost().secs;
+    prior_time = edgelabel.cost().secs;
   }
   return path;
 }
