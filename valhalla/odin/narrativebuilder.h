@@ -29,7 +29,12 @@ class NarrativeBuilder {
 
   static void FormContinueInstruction(Maneuver& maneuver);
 
-  static void FormTurnInstruction(Maneuver& maneuver);
+  static std::string FormTurnInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTurnInstruction(
+      Maneuver& maneuver,
+      uint32_t street_name_max_count = 2,
+      std::string delim = ",");
 
   static void FormTurnToStayOnInstruction(Maneuver& maneuver);
 
@@ -84,6 +89,19 @@ class NarrativeBuilder {
   static void FormTransitTransferInstruction(Maneuver& maneuver);
 
   static void FormPostTransitConnectionDestinationInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalPostTransitionInstruction(
+      Maneuver& maneuver, DirectionsOptions_Units units,
+      bool include_street_names = false, uint32_t street_name_max_count = 2,
+      std::string delim = ",");
+
+  static std::string FormVerbalPostTransitionKilometersInstruction(
+      Maneuver& maneuver, bool include_street_names = false,
+      uint32_t street_name_max_count = 2, std::string delim = ",");
+
+  static std::string FormVerbalPostTransitionMilesInstruction(
+      Maneuver& maneuver, bool include_street_names = false,
+      uint32_t street_name_max_count = 2, std::string delim = ",");
 
   static std::string FormCardinalDirection(
       TripDirections_Maneuver_CardinalDirection cardinal_direction);

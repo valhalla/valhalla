@@ -148,8 +148,26 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     trip_maneuver->set_begin_heading(maneuver.begin_heading());
     trip_maneuver->set_begin_shape_index(maneuver.begin_shape_index());
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
-    trip_maneuver->set_portions_toll(maneuver.portions_toll());
-    trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
+    if (maneuver.portions_toll())
+      trip_maneuver->set_portions_toll(maneuver.portions_toll());
+    if (maneuver.portions_unpaved())
+      trip_maneuver->set_portions_unpaved(maneuver.portions_unpaved());
+
+    if (maneuver.HasVerbalTransitionAlertInstruction()) {
+      trip_maneuver->set_verbal_transition_alert_instruction(
+          maneuver.verbal_transition_alert_instruction());
+    }
+
+    if (maneuver.HasVerbalPreTransitionInstruction()) {
+      trip_maneuver->set_verbal_pre_transition_instruction(
+          maneuver.verbal_pre_transition_instruction());
+    }
+
+    if (maneuver.HasVerbalPostTransitionInstruction()) {
+      trip_maneuver->set_verbal_post_transition_instruction(
+          maneuver.verbal_post_transition_instruction());
+    }
+
   }
 
   // Populate summary

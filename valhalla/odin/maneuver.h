@@ -204,18 +204,21 @@ class Maneuver {
       const std::string& verbal_transition_alert_instruction);
   void set_verbal_transition_alert_instruction(
       std::string&& verbal_transition_alert_instruction);
+  bool HasVerbalTransitionAlertInstruction() const;
 
   const std::string& verbal_pre_transition_instruction() const;
   void set_verbal_pre_transition_instruction(
       const std::string& verbal_pre_transition_instruction);
   void set_verbal_pre_transition_instruction(
       std::string&& verbal_pre_transition_instruction);
+  bool HasVerbalPreTransitionInstruction() const;
 
   const std::string& verbal_post_transition_instruction() const;
   void set_verbal_post_transition_instruction(
       const std::string& verbal_post_transition_instruction);
   void set_verbal_post_transition_instruction(
       std::string&& verbal_post_transition_instruction);
+  bool HasVerbalPostTransitionInstruction() const;
 
   std::string ToString() const;
 

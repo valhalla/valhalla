@@ -556,6 +556,10 @@ void Maneuver::set_verbal_transition_alert_instruction(
       verbal_transition_alert_instruction);
 }
 
+bool Maneuver::HasVerbalTransitionAlertInstruction() const {
+  return (!verbal_transition_alert_instruction_.empty());
+}
+
 const std::string& Maneuver::verbal_pre_transition_instruction() const {
   return verbal_pre_transition_instruction_;
 }
@@ -571,6 +575,10 @@ void Maneuver::set_verbal_pre_transition_instruction(
       verbal_pre_transition_instruction);
 }
 
+bool Maneuver::HasVerbalPreTransitionInstruction() const {
+  return (!verbal_pre_transition_instruction_.empty());
+}
+
 const std::string& Maneuver::verbal_post_transition_instruction() const {
   return verbal_post_transition_instruction_;
 }
@@ -584,6 +592,10 @@ void Maneuver::set_verbal_post_transition_instruction(
     std::string&& verbal_post_transition_instruction) {
   verbal_post_transition_instruction_ = std::move(
       verbal_post_transition_instruction);
+}
+
+bool Maneuver::HasVerbalPostTransitionInstruction() const {
+  return (!verbal_post_transition_instruction_.empty());
 }
 
 std::string Maneuver::ToString() const {
