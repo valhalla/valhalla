@@ -6,9 +6,11 @@ sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
-#get newer gdal
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-$DIR/install_gdal.sh
+if [ -n "$1" ] && [ -d "$1" ]; then
+        pushd "$1"
+else
+        pushd .
+fi
 
 #clone async
 mkdir -p deps
@@ -17,6 +19,10 @@ for dep in midgard baldr; do
 	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
 done
 wait
+
+#get newer gdal
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+$DIR/install_gdal.sh "$1" &
 
 #install the service deps in the background
 $DIR/install_service_deps.sh &
@@ -31,3 +37,5 @@ for dep in midgard baldr; do
 	popd
 done
 wait
+
+popd
