@@ -15,6 +15,7 @@ if [ ! -e /usr/lib/libproj.so ]; then
 fi
 
 #get the src
+rm -rf gdal-2.0.0.tar.gz gdal-2.0.0
 curl -O http://download.osgeo.org/gdal/2.0.0/gdal-2.0.0.tar.gz
 
 #install it
