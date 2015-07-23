@@ -570,11 +570,26 @@ int main(int argc, char *argv[]) {
     // Route was unsuccessful
     data.setSuccess("false");
 
+    // Check if origins are unreachable
+     for (auto& edge : pathOrigin.edges()) {
+       const GraphTile* tile = reader.GetGraphTile(edge.id);
+       const DirectedEdge* directededge = tile->directededge(edge.id);
+       if (directededge->unreachable()) {
+         std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
+             directededge->edgeinfo_offset());
+         LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+       }
+     }
+
     // Check if destinations are unreachable
     for (auto& edge : pathDest.edges()) {
       const GraphTile* tile = reader.GetGraphTile(edge.id);
       const DirectedEdge* directededge = tile->directededge(edge.id);
-      LOG_INFO("Destination edge - unreachable = " + std::to_string(directededge->unreachable()));
+      if (directededge->unreachable()) {
+        std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
+            directededge->edgeinfo_offset());
+        LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+      }
     }
   }
 
