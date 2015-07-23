@@ -59,7 +59,8 @@ sed -i -e "s/\([^\\]\)'|/\1|/g" -e "s/|'/|/g" "${TMP}"
 echo -e "\x1b[32;1mWriting routes from ${INPUT} with a concurrency of ${CONCURRENCY} into ${OUTDIR}\x1b[0m"
 cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "pathtest {} 2>&1 | tee -a ${OUTDIR}/statistics.tmp | grep -F NARRATIVE | sed -e 's/^[^\[]*\[NARRATIVE\] //' &> ${OUTDIR}/{#}.txt"
 rm -f "${TMP}"
-cat ${OUTDIR}/statistics.tmp | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' &> ${OUTDIR}/statistics.csv
+echo "orgLat, orgLng, destLat, destLng, result, #Passes, runtime, trip time, length, arcDistance, #Manuevers" > ${OUTDIR}/statistics.csv
+cat ${OUTDIR}/statistics.tmp | grep -F STATISTICS | sed -e 's/^[^\[]*\[STATISTICS\] //' &>> ${OUTDIR}/statistics.csv
 rm ${OUTDIR}/statistics.tmp
 echo ${OUTDIR} > outdir.txt
 

@@ -9,4 +9,5 @@ do
   rm outdir.txt
 done
 
+rm OUTDIRS.txt
 exit
