@@ -2,6 +2,12 @@
 
 set -e
 
+if [ -n "$1" ] && [ -d "$1" ]; then
+        pushd "$1"
+else
+        pushd .
+fi
+
 #prereqs
 sudo apt-get install geotiff-bin libgeotiff-dev libgeotiff2
 if [ ! -e /usr/lib/libproj.so ]; then
@@ -18,3 +24,5 @@ pushd gdal-2.0.0
 ./configure
 make -j6
 sudo make install
+
+popd
