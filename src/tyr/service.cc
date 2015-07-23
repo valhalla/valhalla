@@ -392,9 +392,18 @@ namespace {
 
           man->emplace("type", static_cast<uint64_t>(maneuver.type()));
           man->emplace("instruction", maneuver.text_instruction());
-          //“verbalTransitionAlertInstruction” : “<verbalTransitionAlertInstruction>”,
-          //“verbalPreTransitionInstruction” : “<verbalPreTransitionInstruction>”,
-          //“verbalPostTransitionInstruction” : “<verbalPostTransitionInstruction>”,
+          if (maneuver.has_verbal_transition_alert_instruction()) {
+            man->emplace("verbal_transition_alert_instruction",
+                         maneuver.verbal_transition_alert_instruction());
+          }
+          if (maneuver.has_verbal_pre_transition_instruction()) {
+            man->emplace("verbal_pre_transition_instruction",
+                         maneuver.verbal_pre_transition_instruction());
+          }
+          if (maneuver.has_verbal_post_transition_instruction()) {
+            man->emplace("verbal_post_transition_instruction",
+                         maneuver.verbal_post_transition_instruction());
+          }
           auto street_names = json::array({});
 
           for (int i = 0; i < maneuver.street_name_size(); i++)
