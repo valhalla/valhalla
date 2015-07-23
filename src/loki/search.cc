@@ -84,19 +84,6 @@ const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edg
   return tile->directededge(tile->node(node_id)->edge_index() + opposing_index);
 }
 
-const NodeInfo* GetBeginNode(GraphReader& reader, const DirectedEdge* edge) {
-  auto opposing_edge = GetOpposingEdge(reader, edge);
-  auto tile = reader.GetGraphTile(opposing_edge->endnode());
-  return tile->node(opposing_edge->endnode());
-}
-
-const NodeInfo* GetEndNode(GraphReader& reader, const DirectedEdge* edge) {
-  //the node could be in another tile so we grab that
-  const auto tile = reader.GetGraphTile(edge->endnode());
-  //grab the nth edge leaving the node
-  return tile->node(edge->endnode());
-}
-
 bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter filter) {
   //for each edge leaving this node
   const auto start_edge = tile->directededge(node->edge_index());
@@ -234,37 +221,41 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
   //a place to keep track of the edges we should look at by their match quality (just distance for now)
   std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
   std::list<const DirectedEdge*> close, far;
-
-  //for each edge
   DistanceApproximator approximator(location.latlng_);
-  const auto start_edge = tile->directededge(0);
-  const auto end_edge = start_edge + tile->header()->directededgecount();
-  for(auto edge = start_edge; edge < end_edge; ++edge) {
 
-    //we haven't looked at this edge yet and its not junk
-    if(!filter(edge) && visited.insert(edge->edgeinfo_offset()).second) {
-      //get the start and end node positions
-      auto end_node = GetEndNode(reader, edge);
-      auto start_node = GetBeginNode(reader, edge);
+  //for each node
+  const auto first_node = tile->node(0);
+  const auto last_node  = first_node + tile->header()->nodecount();
+  for (auto start_node = first_node; start_node < last_node; start_node++) {
 
-      //is it basically right on the start of the edge
-      float sqdist;
-      if((sqdist = approximator.DistanceSquared(start_node->latlng())) < sq_node_snap) {
-        return CorrelateNode(start_node, location, tile, filter, sqdist);
-      }//is it basically right on the end of the edge
-      else if((sqdist = approximator.DistanceSquared(end_node->latlng())) < sq_node_snap) {
-        return CorrelateNode(end_node, location, reader.GetGraphTile(edge->endnode()), filter, sqdist);
+    //for each edge at this node
+    const auto first_edge = tile->directededge(start_node->edge_index());
+    const auto last_edge  = first_edge + start_node->edge_count();
+    for (auto edge = first_edge; edge < last_edge; edge++) {
+
+      //we haven't looked at this edge yet and its not junk
+      if(!filter(edge) && visited.insert(edge->edgeinfo_offset()).second) {
+        auto end_node = tile->node(edge->endnode());
+
+        //is it basically right on the start of the edge
+        float sqdist;
+        if((sqdist = approximator.DistanceSquared(start_node->latlng())) < sq_node_snap) {
+          return CorrelateNode(start_node, location, tile, filter, sqdist);
+        }//is it basically right on the end of the edge
+        else if((sqdist = approximator.DistanceSquared(end_node->latlng())) < sq_node_snap) {
+          return CorrelateNode(end_node, location, reader.GetGraphTile(edge->endnode()), filter, sqdist);
+        }
+
+        //we take the mid point of the edges end points and make a radius of half the length of the edge around it
+        //this circle is guaranteed to enclose all of the shape. we then store how far away from this circle the
+        //the input location is
+        auto sq_radius = static_cast<float>(edge->length()) * .5f;
+        sq_radius *= sq_radius;
+        if(approximator.DistanceSquared(start_node->latlng().MidPoint(end_node->latlng())) - sq_radius < sq_search_radius)
+          close.push_back(edge);
+        else
+          far.push_back(edge);
       }
-
-      //we take the mid point of the edges end points and make a radius of half the length of the edge around it
-      //this circle is guaranteed to enclose all of the shape. we then store how far away from this circle the
-      //the input location is
-      auto sq_radius = static_cast<float>(edge->length()) * .5f;
-      sq_radius *= sq_radius;
-      if(approximator.DistanceSquared(start_node->latlng().MidPoint(end_node->latlng())) - sq_radius < sq_search_radius)
-        close.push_back(edge);
-      else
-        far.push_back(edge);
     }
   }
 
@@ -287,7 +278,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     //does this look better than the current edge
     if(std::get<1>(candidate) < std::get<1>(closest_point)) {
       closest_edge = edge;
-      closest_edge_id.fields.id = edge - start_edge;
+      closest_edge_id.fields.id = edge - tile->directededge(0);
       closest_edge_info.swap(edge_info);
       closest_point = std::move(candidate);
     }
