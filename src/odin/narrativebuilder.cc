@@ -23,9 +23,12 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStartRight:
       case TripDirections_Maneuver_Type_kStart:
       case TripDirections_Maneuver_Type_kStartLeft: {
+        // Set instruction
         maneuver.set_instruction(std::move(FormStartInstruction(maneuver)));
+        // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalStartInstruction(maneuver)));
+        // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             std::move(
                 FormVerbalPostTransitionInstruction(
@@ -36,7 +39,14 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kDestinationRight:
       case TripDirections_Maneuver_Type_kDestination:
       case TripDirections_Maneuver_Type_kDestinationLeft: {
-        FormDestinationInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormDestinationInstruction(maneuver)));
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertDestinationInstruction(maneuver)));
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalDestinationInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kBecomes: {
@@ -65,11 +75,15 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
           // Call stay on instruction
           FormTurnToStayOnInstruction(maneuver);
         } else {
+          // Set instruction
           maneuver.set_instruction(std::move(FormTurnInstruction(maneuver)));
+          // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(
               std::move(FormVerbalAlertTurnInstruction(maneuver)));
+          // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(
               std::move(FormVerbalTurnInstruction(maneuver)));
+          // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               std::move(
                   FormVerbalPostTransitionInstruction(
@@ -280,16 +294,49 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
-  // TODO - phrase will vary depending on location
-  // for now just keep it simple
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "You have arrived at your destination.";
+std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
+  // 0 "You have arrived at your destination."
 
-  // TODO - side of street
+  // TODO
+  //  "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  //  "Your destination is on the <SOS>."
+  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction = "You have arrived at your destination.";
 
-  maneuver.set_instruction(std::move(text_instruction));
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
+    Maneuver& maneuver) {
+  // 0 "You will arrive at your destination."
+
+  // TODO
+  //  "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  //  "Your destination will be on the <SOS>."
+  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>"
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction = "You will arrive at your destination.";
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalDestinationInstruction(
+    Maneuver& maneuver) {
+  // 0 "You have arrived at your destination."
+
+  // TODO
+  //  "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  //  "Your destination is on the <SOS>."
+  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction = "You have arrived at your destination.";
+
+  return instruction;
 }
 
 void NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
