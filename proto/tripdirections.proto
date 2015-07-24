@@ -97,6 +97,7 @@ message TripDirections {
     optional string verbal_transition_alert_instruction = 12;// verbal transition alert instruction
     optional string verbal_pre_transition_instruction = 13;  // verbal pre-transition instruction
     optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
+    repeated string begin_street_name = 15;                  // begin street names
   }
   
   optional uint64 trip_id = 1;

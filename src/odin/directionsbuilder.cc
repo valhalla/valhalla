@@ -137,9 +137,17 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     auto* trip_maneuver = trip_directions.add_maneuver();
     trip_maneuver->set_type(maneuver.type());
     trip_maneuver->set_text_instruction(maneuver.instruction());
+
+    // Set street names
     for (const auto& street_name : maneuver.street_names()) {
       trip_maneuver->add_street_name(street_name->value());
     }
+
+    // Set begin street names
+    for (const auto& begin_street_name : maneuver.begin_street_names()) {
+      trip_maneuver->add_begin_street_name(begin_street_name->value());
+    }
+
     trip_maneuver->set_length(maneuver.distance());
     leg_length += maneuver.distance();
     trip_maneuver->set_time(maneuver.time());
