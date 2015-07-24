@@ -11,6 +11,11 @@
 namespace valhalla {
 namespace odin {
 
+constexpr uint32_t kVerbalAlertNameMaxCount = 1;
+constexpr uint32_t kVerbalPreNameMaxCount = 2;
+constexpr uint32_t kVerbalPostNameMaxCount = 2;
+const std::string kVerbalDelim = ", ";
+
 class NarrativeBuilder {
  public:
 
@@ -31,10 +36,15 @@ class NarrativeBuilder {
 
   static std::string FormTurnInstruction(Maneuver& maneuver);
 
+  static std::string FormVerbalAlertTurnInstruction(
+      Maneuver& maneuver,
+      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      std::string delim = kVerbalDelim);
+
   static std::string FormVerbalTurnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = 2,
-      std::string delim = ",");
+      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static void FormTurnToStayOnInstruction(Maneuver& maneuver);
 
@@ -92,16 +102,19 @@ class NarrativeBuilder {
 
   static std::string FormVerbalPostTransitionInstruction(
       Maneuver& maneuver, DirectionsOptions_Units units,
-      bool include_street_names = false, uint32_t street_name_max_count = 2,
-      std::string delim = ",");
+      bool include_street_names = false,
+      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static std::string FormVerbalPostTransitionKilometersInstruction(
       Maneuver& maneuver, bool include_street_names = false,
-      uint32_t street_name_max_count = 2, std::string delim = ",");
+      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static std::string FormVerbalPostTransitionMilesInstruction(
       Maneuver& maneuver, bool include_street_names = false,
-      uint32_t street_name_max_count = 2, std::string delim = ",");
+      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static std::string FormCardinalDirection(
       TripDirections_Maneuver_CardinalDirection cardinal_direction);
