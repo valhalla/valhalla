@@ -410,7 +410,7 @@ namespace {
             auto street_names = json::array({});
             for (int i = 0; i < maneuver.street_name_size(); i++)
               street_names->emplace_back(maneuver.street_name(i));
-            man->emplace("street_names", street_names);
+            man->emplace("street_names", std::move(street_names));
           }
 
           // Set begin street names
@@ -418,7 +418,7 @@ namespace {
             auto begin_street_names = json::array({});
             for (int i = 0; i < maneuver.begin_street_name_size(); i++)
               begin_street_names->emplace_back(maneuver.begin_street_name(i));
-            man->emplace("begin_street_names", begin_street_names);
+            man->emplace("begin_street_names", std::move(begin_street_names));
           }
 
           man->emplace("time", static_cast<uint64_t>(maneuver.time()));
