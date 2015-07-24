@@ -65,7 +65,19 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kContinue: {
-        FormContinueInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormContinueInstruction(maneuver)));
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertContinueInstruction(maneuver)));
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalContinueInstruction(maneuver)));
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
@@ -414,18 +426,47 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Continue";
+std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
+  // "Continue"
+  // "Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Continue";
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  //  "Continue"
+  //  "Continue on <STREET_NAMES(1)>."
+  return FormVerbalContinueInstruction(maneuver, street_name_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalContinueInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  //  "Continue"
+  //  "Continue on <STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Continue";
+
+  if (maneuver.HasStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString(street_name_max_count,
+                                                    delim);
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
