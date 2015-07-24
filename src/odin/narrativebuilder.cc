@@ -23,7 +23,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStartRight:
       case TripDirections_Maneuver_Type_kStart:
       case TripDirections_Maneuver_Type_kStartLeft: {
-        FormStartInstruction(maneuver);
+        maneuver.set_instruction(std::move(FormStartInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kDestinationRight:
@@ -185,27 +185,51 @@ NarrativeBuilder::NarrativeBuilder() {
 // TODO - we will have to optimize when we actually use the language specific
 // dictionary
 
-void NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Go ";
-  text_instruction += FormCardinalDirection(
-      maneuver.begin_cardinal_direction());
+std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
+  // 0 "Go <FormCardinalDirection>."
+  // 1 "Go <FormCardinalDirection> on <STREET_NAMES>."
+  // 2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  std::string cardinal_direction = FormCardinalDirection(
+      maneuver.begin_cardinal_direction());
+  std::string street_names;
+  std::string begin_street_names;
+  uint8_t phrase_id = 0;
+
+  if (maneuver.HasStreetNames()) {
+    phrase_id += 1;
+    street_names = maneuver.street_names().ToString();
+  }
   if (maneuver.HasBeginStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.begin_street_names().ToString();
-    text_instruction += ". Continue on ";
-    text_instruction += maneuver.street_names().ToString();
-  } else if (maneuver.HasStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.street_names().ToString();
+    phrase_id += 1;
+    begin_street_names = maneuver.begin_street_names().ToString();
   }
 
+  switch (phrase_id) {
+    // 1 "Go <FormCardinalDirection> on <STREET_NAMES>."
+    case 1: {
+      instruction = (boost::format("Go %1% on %2%.")
+          % cardinal_direction % street_names).str();
+      break;
+    }
+    // 2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    case 2: {
+      instruction = (boost::format("Go %1% on %2%. Continue on %3%.")
+          % cardinal_direction % begin_street_names % street_names).str();
+      break;
+    }
+    // 0 "Go <FormCardinalDirection>."
+    default: {
+      instruction = (boost::format("Go %1%.") % cardinal_direction).str();
+      break;
+    }
+  }
   // TODO - side of street
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  return instruction;
 }
 
 void NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {

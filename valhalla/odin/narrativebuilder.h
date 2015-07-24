@@ -25,7 +25,7 @@ class NarrativeBuilder {
  protected:
   NarrativeBuilder();
 
-  static void FormStartInstruction(Maneuver& maneuver);
+  static std::string FormStartInstruction(Maneuver& maneuver);
 
   static void FormDestinationInstruction(Maneuver& maneuver);
 
