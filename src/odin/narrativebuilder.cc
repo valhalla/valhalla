@@ -60,9 +60,9 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         } else {
           maneuver.set_instruction(std::move(FormTurnInstruction(maneuver)));
           maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalTurnInstruction(maneuver, 1)));
+              std::move(FormVerbalAlertTurnInstruction(maneuver)));
           maneuver.set_verbal_pre_transition_instruction(
-              std::move(FormVerbalTurnInstruction(maneuver, 2)));
+              std::move(FormVerbalTurnInstruction(maneuver)));
           maneuver.set_verbal_post_transition_instruction(
               std::move(
                   FormVerbalPostTransitionInstruction(
@@ -280,6 +280,11 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 
   instruction += ".";
   return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  return FormVerbalTurnInstruction(maneuver, street_name_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalTurnInstruction(
