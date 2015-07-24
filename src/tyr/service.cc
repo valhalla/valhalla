@@ -404,13 +404,23 @@ namespace {
             man->emplace("verbal_post_transition_instruction",
                          maneuver.verbal_post_transition_instruction());
           }
-          auto street_names = json::array({});
 
-          for (int i = 0; i < maneuver.street_name_size(); i++)
-            street_names->emplace_back(maneuver.street_name(i));
+          // Set street names
+          if (maneuver.street_name_size() > 0) {
+            auto street_names = json::array({});
+            for (int i = 0; i < maneuver.street_name_size(); i++)
+              street_names->emplace_back(maneuver.street_name(i));
+            man->emplace("street_names", std::move(street_names));
+          }
 
-          if (street_names->size())
-            man->emplace("street_names", street_names);
+          // Set begin street names
+          if (maneuver.begin_street_name_size() > 0) {
+            auto begin_street_names = json::array({});
+            for (int i = 0; i < maneuver.begin_street_name_size(); i++)
+              begin_street_names->emplace_back(maneuver.begin_street_name(i));
+            man->emplace("begin_street_names", std::move(begin_street_names));
+          }
+
           man->emplace("time", static_cast<uint64_t>(maneuver.time()));
           man->emplace("length", json::fp_t{maneuver.length(), 3});
           man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
