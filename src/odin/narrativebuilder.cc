@@ -25,9 +25,11 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStartLeft: {
         // Set instruction
         maneuver.set_instruction(std::move(FormStartInstruction(maneuver)));
+
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalStartInstruction(maneuver)));
+
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             std::move(
@@ -41,9 +43,11 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kDestinationLeft: {
         // Set instruction
         maneuver.set_instruction(std::move(FormDestinationInstruction(maneuver)));
+
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
             std::move(FormVerbalAlertDestinationInstruction(maneuver)));
+
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalDestinationInstruction(maneuver)));
@@ -53,9 +57,11 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         // Set instruction
         maneuver.set_instruction(
             std::move(FormBecomesInstruction(maneuver, prev_maneuver)));
+
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalBecomesInstruction(maneuver, prev_maneuver)));
+
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             std::move(
@@ -67,12 +73,15 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kContinue: {
         // Set instruction
         maneuver.set_instruction(std::move(FormContinueInstruction(maneuver)));
+
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
             std::move(FormVerbalAlertContinueInstruction(maneuver)));
+
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalContinueInstruction(maneuver)));
+
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
             std::move(
@@ -100,12 +109,15 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         } else {
           // Set instruction
           maneuver.set_instruction(std::move(FormTurnInstruction(maneuver)));
+
           // Set verbal transition alert instruction
           maneuver.set_verbal_transition_alert_instruction(
               std::move(FormVerbalAlertTurnInstruction(maneuver)));
+
           // Set verbal pre transition instruction
           maneuver.set_verbal_pre_transition_instruction(
               std::move(FormVerbalTurnInstruction(maneuver)));
+
           // Set verbal post transition instruction
           maneuver.set_verbal_post_transition_instruction(
               std::move(
