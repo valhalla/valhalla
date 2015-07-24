@@ -50,7 +50,18 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kBecomes: {
-        FormBecomesInstruction(maneuver, prev_maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormBecomesInstruction(maneuver, prev_maneuver)));
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalBecomesInstruction(maneuver, prev_maneuver)));
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kContinue: {
@@ -339,32 +350,68 @@ std::string NarrativeBuilder::FormVerbalDestinationInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
+std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
                                               Maneuver* prev_maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
+  // "<PREV_STREET_NAMES> becomes <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
 
   // If previous maneuver has names
   // and current maneuver has names
   // then form "becomes" narrative
   if (prev_maneuver && prev_maneuver->HasStreetNames()
       && maneuver.HasStreetNames()) {
-    text_instruction += prev_maneuver->street_names().ToString();
-    text_instruction += " becomes ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += prev_maneuver->street_names().ToString();
+    instruction += " becomes ";
+    instruction += maneuver.street_names().ToString();
   }
   // Items are missing - fallback to just "Continue" narrative
   else {
-    text_instruction += "Continue";
+    instruction += "Continue";
 
     if (maneuver.HasStreetNames()) {
-      text_instruction += " on ";
-      text_instruction += maneuver.street_names().ToString();
+      instruction += " on ";
+      instruction += maneuver.street_names().ToString();
     }
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalBecomesInstruction(
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t street_name_max_count,
+    std::string delim) {
+  // "<PREV_STREET_NAMES(2)> becomes <STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  // If previous maneuver has names
+  // and current maneuver has names
+  // then form "becomes" narrative
+  if (prev_maneuver && prev_maneuver->HasStreetNames()
+      && maneuver.HasStreetNames()) {
+    instruction += prev_maneuver->street_names().ToString(street_name_max_count,
+                                                          delim);
+    instruction += " becomes ";
+    instruction += maneuver.street_names().ToString(street_name_max_count,
+                                                    delim);
+  }
+  // Items are missing - fallback to just "Continue" narrative
+  else {
+    instruction += "Continue";
+
+    if (maneuver.HasStreetNames()) {
+      instruction += " on ";
+      instruction += maneuver.street_names().ToString(street_name_max_count,
+                                                      delim);
+    }
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {

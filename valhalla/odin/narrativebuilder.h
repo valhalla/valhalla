@@ -38,8 +38,13 @@ class NarrativeBuilder {
 
   static std::string FormVerbalDestinationInstruction(Maneuver& maneuver);
 
-  static void FormBecomesInstruction(Maneuver& maneuver,
-                                     Maneuver* prev_maneuver);
+  static std::string FormBecomesInstruction(Maneuver& maneuver,
+                                            Maneuver* prev_maneuver);
+
+  static std::string FormVerbalBecomesInstruction(
+      Maneuver& maneuver, Maneuver* prev_maneuver,
+      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static void FormContinueInstruction(Maneuver& maneuver);
 
