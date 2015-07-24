@@ -24,6 +24,13 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kStart:
       case TripDirections_Maneuver_Type_kStartLeft: {
         maneuver.set_instruction(std::move(FormStartInstruction(maneuver)));
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalStartInstruction(maneuver)));
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kDestinationRight:
@@ -219,6 +226,47 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
     case 2: {
       instruction = (boost::format("Go %1% on %2%. Continue on %3%.")
           % cardinal_direction % begin_street_names % street_names).str();
+      break;
+    }
+    // 0 "Go <FormCardinalDirection>."
+    default: {
+      instruction = (boost::format("Go %1%.") % cardinal_direction).str();
+      break;
+    }
+  }
+  // TODO - side of street
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalStartInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  // 0 "Go <FormCardinalDirection>."
+  // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  std::string cardinal_direction = FormCardinalDirection(
+      maneuver.begin_cardinal_direction());
+  std::string street_names;
+  uint8_t phrase_id = 0;
+
+  if (maneuver.HasBeginStreetNames()) {
+    phrase_id = 1;
+    street_names = maneuver.begin_street_names().ToString(street_name_max_count,
+                                                          delim);
+  } else if (maneuver.HasStreetNames()) {
+    phrase_id = 1;
+    street_names = maneuver.street_names().ToString(street_name_max_count,
+                                                    delim);
+  }
+
+  switch (phrase_id) {
+    // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+    case 1: {
+      instruction = (boost::format("Go %1% on %2%.")
+          % cardinal_direction % street_names).str();
       break;
     }
     // 0 "Go <FormCardinalDirection>."
