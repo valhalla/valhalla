@@ -84,6 +84,13 @@ const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edg
   return tile->directededge(tile->node(node_id)->edge_index() + opposing_index);
 }
 
+const NodeInfo* GetEndNode(GraphReader& reader, const DirectedEdge* edge) {
+  //the node could be in another tile so we grab that
+  const auto tile = reader.GetGraphTile(edge->endnode());
+  //grab the nth edge leaving the node
+  return tile->node(edge->endnode());
+}
+
 bool FilterNode(const GraphTile* tile, const NodeInfo* node, const EdgeFilter filter) {
   //for each edge leaving this node
   const auto start_edge = tile->directededge(node->edge_index());
@@ -235,7 +242,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
 
       //we haven't looked at this edge yet and its not junk
       if(!filter(edge) && visited.insert(edge->edgeinfo_offset()).second) {
-        auto end_node = tile->node(edge->endnode());
+        auto end_node = GetEndNode(reader, edge);
 
         //is it basically right on the start of the edge
         float sqdist;
