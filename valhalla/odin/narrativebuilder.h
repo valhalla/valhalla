@@ -70,7 +70,17 @@ class NarrativeBuilder {
       uint32_t street_name_max_count = kVerbalPreNameMaxCount,
       std::string delim = kVerbalDelim);
 
-  static void FormTurnToStayOnInstruction(Maneuver& maneuver);
+  static std::string FormTurnToStayOnInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalAlertTurnToStayOnInstruction(
+      Maneuver& maneuver,
+      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalTurnToStayOnInstruction(
+      Maneuver& maneuver,
+      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      std::string delim = kVerbalDelim);
 
   static std::string FormBearInstruction(Maneuver& maneuver);
 
