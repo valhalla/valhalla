@@ -1,7 +1,7 @@
 #include "valhalla/midgard/util.h"
 #include "valhalla/midgard/constants.h"
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/point2.h>
+#include "valhalla/midgard/point2.h"
+#include "valhalla/midgard/distanceapproximator.h"
 
 #include <cstdint>
 #include <cmath>
@@ -180,6 +180,60 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s){
   for(const auto& metric : s.metrics)
     stream << metric.first << ": " << metric.second.first << metric.second.second << std::endl;
   return stream;
+}
+
+
+//TODO: this assumes that there is a linear relationship between distance on the sphere and
+//spherical coordinates, which is not the case for the x coordinate. this wont matter for small
+//distances...
+std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL> polyline, float resolution) {
+  //start out with the first point
+  std::vector<PointLL> resampled;
+  if(polyline.size() == 0)
+    return resampled;
+  resampled.reserve(polyline.size());
+  resampled.push_back(polyline.front());
+
+  //for each point
+  float remaining_dist = 0;
+  auto last = resampled.back();
+  for(auto p = polyline.cbegin() + 1; p != polyline.cend(); ++p) {
+    //get the appx distance of this segment
+    auto dist = DistanceApproximator::DistanceSquared(*p, *(p - 1));
+    dist = 1.f / FastInvSqrt(dist);
+    auto ratio = resolution / dist;
+    auto x_off = ratio * (p->first - (p - 1)->first);
+    auto y_off = ratio * (p->second - (p - 1)->second);
+
+    //if there was some left from the previous segment
+    if(remaining_dist > 0) {
+      //we can fit a point on this segment
+      if(remaining_dist < dist) {
+        auto remaining_ratio = remaining_dist / resolution;
+        resampled.emplace_back(last.first + x_off * remaining_ratio, last.second + y_off * remaining_ratio);
+        last = resampled.back();
+        dist -= remaining_dist;
+      }//we are swallowing this segment as well
+      else {
+        last = *p;
+        remaining_dist -= dist;
+        continue;
+      }
+    }
+
+    //while we can place a point on this segment
+    while(dist > resolution) {
+      //from the last point we got up to p is whats left so move next_distance along it
+      resampled.emplace_back(last.first + x_off, last.second + y_off);
+      last = resampled.back();
+      dist -= resolution;
+    }
+    //we are up to p on the polyline now
+    last = *p;
+    remaining_dist = resolution - dist;
+  }
+
+  return resampled;
 }
 
 }
