@@ -183,7 +183,7 @@ namespace {
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
-        //block all but get
+        //block all but get and post
         if(request.method != method_t::POST || request.method != method_t::GET) {
           worker_t::result_t result{false};
           http_response_t response(405, "Method Not Allowed", "", headers_t{CORS});
