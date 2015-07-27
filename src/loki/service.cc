@@ -184,7 +184,7 @@ namespace {
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
         //block all but get
-        if(request.method != method_t::GET) {
+        if(request.method != method_t::POST || request.method != method_t::GET) {
           worker_t::result_t result{false};
           http_response_t response(405, "Method Not Allowed", "", headers_t{CORS});
           response.from_info(info);
