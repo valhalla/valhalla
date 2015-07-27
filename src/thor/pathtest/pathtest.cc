@@ -478,7 +478,7 @@ int main(int argc, char *argv[]) {
     auto t10 = std::chrono::high_resolution_clock::now();
     if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
       LOG_INFO("No tile connectivity between origin and destination.");
-      data.setSuccess("no_connectivity");
+      data.setSuccess("fail_no_connectivity");
       data.log();
       return EXIT_SUCCESS;
     }
@@ -546,8 +546,17 @@ int main(int argc, char *argv[]) {
   // For now assume pedestrian mode at origin and destination
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
-  PathLocation pathOrigin = Search(originloc, reader, cost->GetFilter());
-  PathLocation pathDest = Search(destloc, reader, cost->GetFilter());
+  auto getPathLoc = [&reader, &cost, &data] (Location& loc, std::string status) {
+    try {
+      return Search(loc, reader, cost->GetFilter());
+    } catch (...) {
+      data.setSuccess(status);
+      data.log();
+      exit(EXIT_FAILURE);
+    }
+  };
+  PathLocation pathOrigin = getPathLoc(originloc, "fail_invalid_origin");
+  PathLocation pathDest = getPathLoc(destloc, "fail_invalid_dest");
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
@@ -565,10 +574,10 @@ int main(int argc, char *argv[]) {
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
-    data.setSuccess("true");
+    data.setSuccess("success");
   } else {
     // Route was unsuccessful
-    data.setSuccess("false");
+    data.setSuccess("fail_no_route");
 
     // Check if origins are unreachable
      for (auto& edge : pathOrigin.edges()) {
