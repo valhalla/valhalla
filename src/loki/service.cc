@@ -34,12 +34,11 @@ using namespace valhalla::sif;
 
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, NEAREST, VERSION};
+  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/route", ROUTE},
     {"/viaroute", VIAROUTE},
-    {"/locate", LOCATE},
-    {"/nearest", NEAREST}
+    {"/locate", LOCATE}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -47,15 +46,21 @@ namespace {
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
 
-    //throw the json into the ptree
-    auto json = request.query.find("json");
-    if(json != request.query.end() && json->second.size()) {
-      std::istringstream is(json->second.front());
-      boost::property_tree::read_json(is, pt);
-    }//no json parameter, check the body
-    else if(!request.body.empty()) {
-      std::istringstream is(request.body);
-      boost::property_tree::read_json(is, pt);
+    //parse the input
+    try {
+      //throw the json into the ptree
+      auto json = request.query.find("json");
+      if(json != request.query.end() && json->second.size()) {
+        std::istringstream is(json->second.front());
+        boost::property_tree::read_json(is, pt);
+      }//no json parameter, check the body
+      else if(!request.body.empty()) {
+        std::istringstream is(request.body);
+        boost::property_tree::read_json(is, pt);
+      }
+    }
+    catch(...) {
+      throw std::runtime_error("Failed to parse json request");
     }
 
     //throw the query params into the ptree
@@ -177,6 +182,17 @@ namespace {
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+
+        //block all but get
+        if(request.method != method_t::GET) {
+          worker_t::result_t result{false};
+          http_response_t response(405, "Method Not Allowed", "", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
+        //what do they want to do
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
@@ -197,6 +213,7 @@ namespace {
             return locate(request_pt, info);
         }
 
+        //apparently you wanted something that we figured we'd support but havent written yet
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
@@ -204,6 +221,7 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
+        LOG_INFO(e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
@@ -266,24 +284,13 @@ namespace {
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
-        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
-          worker_t::result_t result{false};
-          http_response_t response(404, "Not Found",
-            "Locations are in unconnected regions. Go check/edit the map at osm.org", headers_t{CORS});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
+          throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
         //check if distance between latlngs exceed max distance limit for each mode of travel
         auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
-        if (path_distance > max_distance) {
-          worker_t::result_t result { false };
-          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.", headers_t{CORS});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if (path_distance > max_distance)
+          throw std::runtime_error("Path distance exceeds the max distance limit.");
 
         LOG_INFO("location_distance::" + std::to_string(path_distance));
       }
