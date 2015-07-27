@@ -176,7 +176,23 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       }
       case TripDirections_Maneuver_Type_kUturnRight:
       case TripDirections_Maneuver_Type_kUturnLeft: {
-        FormUturnInstruction(maneuver);
+        // Set stay on instruction
+        maneuver.set_instruction(
+            std::move(FormUturnInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertUturnInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalUturnInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kRampStraight:
@@ -728,25 +744,85 @@ std::string NarrativeBuilder::FormVerbalBearToStayOnInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Make a ";
-  text_instruction += FormTurnTypeInstruction(maneuver.type());
-  text_instruction += " U-turn";
+std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
+  //  "Make a <FormTurnTypeInstruction> U-turn."
+  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
+  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Make a ";
+  instruction += FormTurnTypeInstruction(maneuver.type());
+  instruction += " U-turn";
 
   if (maneuver.HasCrossStreetNames()) {
-    text_instruction += " at ";
-    text_instruction += maneuver.cross_street_names().ToString();
+    instruction += " at ";
+    instruction += maneuver.cross_street_names().ToString();
   }
 
   if (maneuver.HasStreetNames()) {
-    text_instruction += " onto ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " onto ";
+    instruction += maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  //  "Make a <FormTurnTypeInstruction> U-turn."
+  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
+  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Make a ";
+  instruction += FormTurnTypeInstruction(maneuver.type());
+  instruction += " U-turn";
+
+  if (maneuver.HasCrossStreetNames()) {
+    instruction += " at ";
+    instruction += maneuver.cross_street_names().ToString(street_name_max_count,
+                                                          delim);
+  } else if (maneuver.HasStreetNames()) {
+    instruction += " onto ";
+    instruction += maneuver.street_names().ToString(street_name_max_count,
+                                                    delim);
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalUturnInstruction(
+    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+  //  "Make a <FormTurnTypeInstruction> U-turn."
+  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
+  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
+  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Make a ";
+  instruction += FormTurnTypeInstruction(maneuver.type());
+  instruction += " U-turn";
+
+  if (maneuver.HasCrossStreetNames()) {
+    instruction += " at ";
+    instruction += maneuver.cross_street_names().ToString(street_name_max_count,
+                                                          delim);
+  }
+
+  if (maneuver.HasStreetNames()) {
+    instruction += " onto ";
+    instruction += maneuver.street_names().ToString(street_name_max_count,
+                                                    delim);
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
