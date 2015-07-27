@@ -129,6 +129,7 @@ class BicycleCost : public DynamicCost {
     kMountain = 3
   };
 
+  float speedfactor_[100];          // Cost factors based on speed in kph
   float density_factor_[16];        // Density factor
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
@@ -142,9 +143,6 @@ class BicycleCost : public DynamicCost {
 
   // Bicycling speed (default to 25 kph)
   float speed_;
-
-  // Speed factor for costing. Based on cycling speed.
-  float speedfactor_;
 
   // Bicycle type
   BicycleType bicycletype_;
@@ -241,8 +239,11 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // TODO - bicycle type - enter as string and convert to enum
   bicycletype_ = BicycleType::kRoad;
 
-  // Set the speed factor (to avoid division in costing)
-  speedfactor_ = (kSecPerHour * 0.001f) / speed_;
+  // Create speed cost table (to avoid division in costing)
+  speedfactor_[0] = kSecPerHour;
+  for (uint32_t s = 1; s < 100; s++) {
+    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
+  }
 }
 
 // Destructor
@@ -258,8 +259,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (!(edge->forwardaccess() & kBicycleAccess) ||
       (pred.opp_local_idx() == edge->localedgeidx()) ||
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
-      (edge->not_thru() && pred.distance() > not_thru_distance_) ||
-       edge->surface() == Surface::kImpassable) {
+      (edge->not_thru() && pred.distance() > not_thru_distance_)) {
     return false;
   }
 
@@ -270,10 +270,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       return edge->surface() <= Surface::kCompacted;
   else if (bicycletype_ == BicycleType::kCross)
     return edge->surface() <= Surface::kDirt;
-  else if (bicycletype_ == BicycleType::kMountain)
+  else // if (bicycletype_ == BicycleType::kMountain)
     return edge->surface() <= Surface::kPath;   // Allow all but impassable
-
-  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -287,7 +285,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
        (opp_pred_edge->localedgeidx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
-        edge->not_thru() || opp_edge->surface() == Surface::kImpassable) {
+        edge->not_thru()) {
     return false;
   }
 
@@ -298,10 +296,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       return opp_edge->surface() <= Surface::kCompacted;
   else if (bicycletype_ == BicycleType::kCross)
     return opp_edge->surface() <= Surface::kDirt;
-  else if (bicycletype_ == BicycleType::kMountain)
-    return opp_edge->surface() <= Surface::kPath;   // Allow all but impassable
-
-  return true;
+  else // if (bicycletype_ == BicycleType::kMountain)
+    return opp_edge->surface() <= Surface::kPath; // Allow all but impassable
 }
 
 // Check if access is allowed at the specified node.
@@ -318,13 +314,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
      return kBicycleStepsCost;
    }
 
-   // Alter cost based on desirability of cycling on this edge.
-   // Based on several factors: type of bike, rider propensity
-   // to ride on roads, surface, use, and presence of bike lane
-   // or part of bike network
+   // Alter speed and apply a weighting factor to the cost based on
+   // desirability of cycling on this edge. Based on several factors:
+   // type of bike, rider propensity to ride on roads, surface, use type
+   // of road, presence of bike lanes, belonging to a bike network, and
+   // the hilliness/elevation change.
    float factor = 1.0f;
+   float speed  = speed_;
 
-   // Surface factor
+   // Surface factor - TODO - alter speed
    float surface_factor = smooth_surface_factor_ + (bicycle_surface_factor_ *
            static_cast<uint32_t>(edge->surface()));
    factor *= surface_factor;
@@ -359,7 +357,10 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
    if (edge->bikenetwork() > 0) {
      factor *= kBicycleNetworkFactor;
    }
-   return Cost(edge->length() * factor, edge->length() * speedfactor_);
+
+   // Compute elapsed time and cost (with weight factors)
+   float sec = (edge->length() * speedfactor_[static_cast<uint32_t>(speed + 0.5f)]);
+   return Cost(sec * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -404,8 +405,8 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
  * estimate is less than the least possible time along roads.
  */
 float BicycleCost::AStarCostFactor() const {
-  // TODO - compute the most favorable weighting possible
-  return 0.0f;
+  // Assume max speed of 80 kph (50 MPH)
+  return speedfactor_[80];
 }
 
 // Compute a turn cost based on the turn type, crossing flag,
