@@ -552,7 +552,7 @@ int main(int argc, char *argv[]) {
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
-    data.setSuccess("pass");
+    data.setSuccess("success");
   } else {
     // Route was unsuccessful
     data.setSuccess("fail_no_route");
