@@ -258,6 +258,28 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
         (boost::format("%d: %s | %.1f %s") % m++ % maneuver.text_instruction()
             % maneuver.length() % units).str(),
         " [NARRATIVE] ");
+
+    if (maneuver.has_verbal_transition_alert_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_ALERT: %s")
+              % maneuver.verbal_transition_alert_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    if (maneuver.has_verbal_pre_transition_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_PRE: %s")
+              % maneuver.verbal_pre_transition_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    if (maneuver.has_verbal_post_transition_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_POST: %s")
+              % maneuver.verbal_post_transition_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
     if (i < trip_directions.maneuver_size() - 1)
       valhalla::midgard::logging::Log(
           "----------------------------------------------", " [NARRATIVE] ");
@@ -556,11 +578,27 @@ int main(int argc, char *argv[]) {
   } else {
     // Route was unsuccessful
     data.setSuccess("fail_no_route");
+
+    // Check if origins are unreachable
+     for (auto& edge : pathOrigin.edges()) {
+       const GraphTile* tile = reader.GetGraphTile(edge.id);
+       const DirectedEdge* directededge = tile->directededge(edge.id);
+       if (directededge->unreachable()) {
+         std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
+             directededge->edgeinfo_offset());
+         LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+       }
+     }
+
     // Check if destinations are unreachable
     for (auto& edge : pathDest.edges()) {
       const GraphTile* tile = reader.GetGraphTile(edge.id);
       const DirectedEdge* directededge = tile->directededge(edge.id);
-      LOG_INFO("Destination edge - unreachable = " + std::to_string(directededge->unreachable()));
+      if (directededge->unreachable()) {
+        std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
+            directededge->edgeinfo_offset());
+        LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+      }
     }
   }
 

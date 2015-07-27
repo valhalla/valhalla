@@ -407,10 +407,11 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
   Cost loop_edge_cost {0.0f, 0.0f};
   if (loop_edge_id.Is_Valid()) {
     //grab some info about the edge and whats connected to the end of it
-    const auto node_id = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id)->endnode();
+    const auto directededge = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id);
+    const auto node_id = directededge->endnode();
     const auto tile = graphreader.GetGraphTile(node_id);
     const auto node_info = tile->node(node_id);
-    loop_edge_cost = costing->EdgeCost(tile->directededge(loop_edge_id), node_info->density()) *
+    loop_edge_cost = costing->EdgeCost(directededge, node_info->density()) *
                         (1.f - origin.edges().front().dist);
     //keep information about all the edges leaving the end of this edge
     for(uint32_t edge_index = node_info->edge_index(); edge_index < node_info->edge_index() + node_info->edge_count(); ++edge_index) {
