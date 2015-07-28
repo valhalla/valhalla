@@ -275,20 +275,24 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   } else if (node->intersection() == IntersectionType::kFalse) {
       return { 0.0f, 0.0f };
   } else {
-
     float penalty = 0.0f;
-    if (!pred.destonly() && edge->destonly())
+    if (!pred.destonly() && edge->destonly()) {
       penalty += destination_only_penalty_;
-
-    if (pred.use() != Use::kAlley && edge->use() == Use::kAlley)
+    }
+    if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
       penalty += alley_penalty_;
+    }
 
     // Transition cost = density * stopimpact * turncost + maneuverpenalty
+    float seconds = 0.0f;
     uint32_t idx = pred.opp_local_idx();
-    float seconds = trans_density_factor_[node->density()] *
-                    edge->stopimpact(idx) * TurnCost(edge->turntype(idx),
+    uint32_t stopimpact = edge->stopimpact(idx);
+    if (stopimpact > 0) {
+      seconds = trans_density_factor_[node->density()] * stopimpact *
+                TurnCost(edge->turntype(idx),
                          edge->edge_to_right(idx) && edge->edge_to_left(idx),
                          edge->drive_on_right());
+    }
     return (node->name_consistency(idx, edge->localedgeidx())) ?
               Cost(seconds + penalty, seconds) :
               Cost(seconds + maneuver_penalty_ + penalty, seconds);
