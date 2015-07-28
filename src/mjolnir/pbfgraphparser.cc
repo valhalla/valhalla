@@ -228,6 +228,10 @@ struct graph_callback : public OSMPBF::Callback {
     // Process tags
     OSMWay w{osmid};
     w.set_node_count(nodes.size());
+
+    const auto& surface_exists = results.find("surface");
+    bool has_surface_tag = (surface_exists != results.end());
+
     for (const auto& tag : results) {
 
       if (tag.first == "road_class") {
@@ -404,6 +408,24 @@ struct graph_callback : public OSMPBF::Callback {
         else has_surface = false;
       }
 
+      //surface tag should win over tracktype.
+      else if (tag.first == "tracktype" && !has_surface_tag) {
+
+        has_surface = true;
+
+        if (tag.second == "grade1") {
+          w.set_surface(Surface::kPaved);
+        } else if (tag.second == "grade2") {
+          w.set_surface(Surface::kPavedRough);
+        } else if (tag.second == "grade3") {
+          w.set_surface(Surface::kCompacted);
+        } else if (tag.second == "grade4") {
+          w.set_surface(Surface::kDirt);
+        } else if (tag.second == "grade5") {
+          w.set_surface(Surface::kPath);
+        } else has_surface = false;
+      }
+
       else if (tag.first == "cycle_lane") {
         CycleLane cyclelane = (CycleLane) std::stoi(tag.second);
         switch (cyclelane) {
@@ -570,8 +592,10 @@ struct graph_callback : public OSMPBF::Callback {
     bool hasRestriction = false;
     bool isRoad = false;
     bool isRoute = false;
+    bool isBicycle = false;
+    uint32_t bike_network_mask = 0;
 
-    std::string network, ref;
+    std::string network, ref, name;
 
     for (const auto& tag : results) {
 
@@ -584,12 +608,17 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "route") {
         if (tag.second == "road")
           isRoad = true;
+        else if (tag.second == "bicycle" || tag.second == "mtb")
+          isBicycle = true;
       }
       else if (tag.first == "network") {
         network = tag.second;//US:US
       }
       else if (tag.first == "ref") {
         ref = tag.second;
+      }
+      else if (tag.first == "name") {
+        name = tag.second;
       }
       else if (tag.first == "restriction" && !tag.second.empty()) {
         RestrictionType type = (RestrictionType) std::stoi(tag.second);
@@ -651,9 +680,30 @@ struct graph_callback : public OSMPBF::Callback {
       else if  (tag.first == "day_off") {
         restriction.set_day_off((DOW) std::stoi(tag.second));
       }
+      else if (tag.first == "bike_network_mask")
+        bike_network_mask = std::stoi(tag.second);
     }
 
-    if (isRoad && isRoute && !ref.empty() && !network.empty()) {
+    if (isBicycle && isRoute && !network.empty())
+    {
+      OSMBike bike;
+      const uint32_t name_index = osmdata_.name_offset_map.index(name);
+      const uint32_t ref_index = osmdata_.ref_offset_map.index(ref);
+
+      //if the network is not of type lcn, rcn, ncn, or mtb don't save.
+      if (!bike_network_mask)
+        return;
+
+      bike.bike_network = bike_network_mask;
+      bike.name_index = name_index;
+      bike.ref_index = ref_index;
+
+      for (const auto& member : members) {
+        osmdata_.bike_relations.insert(BikeMap::value_type(member.member_id, bike));
+      }
+
+    }
+    else if (isRoad && isRoute && !ref.empty() && !network.empty()) {
 
       std::vector<std::string> net = GetTagTokens(network,':');
 
