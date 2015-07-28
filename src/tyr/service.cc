@@ -492,7 +492,17 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         boost::property_tree::ptree request;
-        boost::property_tree::read_info(stream, request);
+        try{
+          boost::property_tree::read_info(stream, request);
+        }
+        catch(...) {
+          worker_t::result_t result{false};
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
 
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
@@ -504,10 +514,17 @@ namespace {
         std::list<odin::TripDirections> legs;
         for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
           legs.emplace_back();
-          legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
-          if(legs.back().maneuver_size() < 1) {
-            LOG_WARN("Removing empty leg");
-            legs.pop_back();
+          try {
+            legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+            if(legs.back().maneuver_size() < 1)
+              throw std::runtime_error("Maneuver-less leg");
+          }
+          catch(...) {
+            worker_t::result_t result{false};
+            http_response_t response(500, "Internal Server Error", "Failed to parse TripDirections", headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
           }
         }
 
