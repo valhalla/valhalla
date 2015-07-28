@@ -470,9 +470,49 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             ((forward && edge.attributes.forward_signal) || (!forward && edge.attributes.backward_signal) ||
             (w.oneway() && !edge.attributes.forward_signal && !edge.attributes.backward_signal)));
 
+          auto bike = osmdata.bike_relations.equal_range(w.way_id());
+          uint32_t bike_network = 0;
+
+          //TODO:  Do we want to call out the bike network refs and names for bicycle routing?
+          //uint32_t national_ref_index = 0, regional_ref_index = 0, local_ref_index = 0;
+          //uint32_t mtb_national_ref_index = 0, mtb_regional_ref_index = 0, mtb_local_ref_index = 0;
+
+          for (auto b = bike.first; b != bike.second; ++b) {
+            uint32_t network = b->second.bike_network;
+
+            // a mountain bike network has sub networks (lcn, ncn, or rcn)
+            if (network & kMcn) {
+
+              //TODO:  Do we want to call out the bike network refs and names for bicycle routing?
+              /*if (network & kNcn) //ncn
+                mtb_national_ref_index = b->second.ref_index;
+              else if (network & kRcn) //rcn
+                mtb_regional_ref_index = b->second.ref_index;
+              else if (network & kLcn) //lcn
+                mtb_local_ref_index = b->second.ref_index;
+              */
+
+              bike_network |= kMcn;
+
+            } else {
+
+              //TODO:  Do we want to call out the bike network refs and names for bicycle routing?
+              /*if (network & kNcn) //ncn
+                national_ref_index = b->second.ref_index;
+              else if (network & kRcn) //rcn
+                regional_ref_index = b->second.ref_index;
+              else if (network & kLcn) //lcn
+                local_ref_index = b->second.ref_index;
+              */
+
+              bike_network |= network;
+            }
+
+          }
+
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
-                        speed, use, rc, n, has_signal, restrictions);
+                        speed, use, rc, n, has_signal, restrictions, bike_network);
           DirectedEdgeBuilder& directededge = directededges.back();
 
           // Update the node's best class
