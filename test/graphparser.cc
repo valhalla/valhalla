@@ -8,7 +8,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <valhalla/baldr/graphconstants.h>
-
+#include <valhalla/baldr/directededge.h>
 
 using namespace std;
 using namespace valhalla::mjolnir;
@@ -131,6 +131,43 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   if (!node.intersection() ||
       node.type() != NodeType::kBollard || node.access_mask() != 2)
     throw std::runtime_error("Bollard=block not marked as intersection.");
+
+  auto bike = osmdata.bike_relations.equal_range(25452580);
+  way = GetWay(25452580, ways);
+  uint32_t bike_network = 0;
+
+  for (auto b = bike.first; b != bike.second; ++b)
+    bike_network |= b->second.bike_network;
+
+  if (bike_network != kRcn || way.bike_network() != 0)
+    throw std::runtime_error("rcn not marked on way 25452580.");
+
+  way = GetWay(74584853, ways);
+  bike_network = 0;
+  bike = osmdata.bike_relations.equal_range(74584853);
+
+  for (auto b = bike.first; b != bike.second; ++b)
+    //mountain bike networks have local, regional, and national networks set too.
+    if (b->second.bike_network & kMcn )
+      bike_network |= kMcn;
+    else bike_network |= b->second.bike_network;
+
+  if ((!(bike_network & kMcn) || !(bike_network & kLcn)) || way.bike_network() != 0)
+    throw std::runtime_error("lcn and mtb not marked on way 74584853.");
+
+  way = GetWay(75786176, ways);
+  bike_network = 0;
+  bike = osmdata.bike_relations.equal_range(75786176);
+
+  for (auto b = bike.first; b != bike.second; ++b) {
+     //mountain bike networks have local, regional, and national networks set too.
+     if (b->second.bike_network & kMcn )
+       bike_network |= kMcn;
+     else bike_network |= b->second.bike_network;
+  }
+
+  if ((!(bike_network & kMcn) || !(bike_network & kRcn)) || way.bike_network() != 0)
+    throw std::runtime_error("rcn and mtb not marked on way 75786176.");
 }
 
 void RemovableBollards(const std::string& config_file) {
