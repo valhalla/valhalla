@@ -17,7 +17,15 @@
 namespace valhalla {
 namespace mjolnir {
 
+struct OSMBike {
+  uint8_t bike_network;
+  size_t name_index;
+  size_t ref_index;
+};
+
 using RestrictionsMap = std::unordered_multimap<uint64_t, OSMRestriction>;
+using BikeMap = std::unordered_multimap<uint64_t, OSMBike>;
+
 using OSMStringMap = std::unordered_map<uint64_t, std::string>;
 
 using OSMShapeMap = std::unordered_map<uint64_t, PointLL>;
@@ -49,6 +57,9 @@ struct OSMData {
 
   // Stores simple restrictions. Indexed by the from way Id.
   RestrictionsMap restrictions;
+
+  // Stores bike information from the relations.  Indexed by the way Id.
+  BikeMap bike_relations;
 
   // Map that stores all the ref info on a node
   OSMStringMap node_ref;
