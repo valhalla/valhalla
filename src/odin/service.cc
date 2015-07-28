@@ -41,7 +41,16 @@ namespace {
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         boost::property_tree::ptree request;
-        boost::property_tree::read_info(stream, request);
+        try{
+          boost::property_tree::read_info(stream, request);
+        }
+        catch(...) {
+          worker_t::result_t result{false};
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
 
         //see if we can get some options
         valhalla::odin::DirectionsOptions directions_options;
@@ -57,11 +66,30 @@ namespace {
         for(auto leg = ++job.cbegin(); leg != job.cend(); ++leg) {
           //crack open the path
           odin::TripPath trip_path;
-          trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+          try {
+            trip_path.ParseFromArray(leg->data(), static_cast<int>(leg->size()));
+          }
+          catch(...) {
+            worker_t::result_t result{false};
+            http_response_t response(500, "Internal Server Error", "Failed to parse TripPath", headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
+          }
 
           //get some annotated directions
           odin::DirectionsBuilder directions;
-          odin::TripDirections trip_directions = directions.Build(directions_options, trip_path);
+          odin::TripDirections trip_directions;
+          try{
+            trip_directions = directions.Build(directions_options, trip_path);
+          }
+          catch(...) {
+            worker_t::result_t result{false};
+            http_response_t response(500, "Internal Server Error", "Could not build directions for TripPath", headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
+          }
 
           LOG_INFO("maneuver_count::" + std::to_string(trip_directions.maneuver_size()));
 
