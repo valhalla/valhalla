@@ -33,12 +33,14 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  localidx  Index of the edge (from the node) on the local level
    * @param  restrictions Mask of simple turn restrictions at the end node
    *                      of this directed edge.
+   * @param  bike_network Mask of bike_networks from relations.
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
                       const uint32_t speed, const baldr::Use use,
                       const baldr::RoadClass rc, const uint32_t localidx,
-                      const bool signal, const uint32_t restrictions);
+                      const bool signal, const uint32_t restrictions,
+                      const uint32_t bike_network);
 
   /**
    * Set the end node of this directed edge.
