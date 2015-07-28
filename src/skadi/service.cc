@@ -30,9 +30,10 @@ using namespace valhalla::midgard;
 
 
 namespace {
-  enum ACTION_TYPE {ELEVATION, VERSION};
+  enum ACTION_TYPE {ELEVATION, PLOT, VERSION};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
-    {"/elevation", ELEVATION}
+    {"/elevation", ELEVATION},
+    {"/plot", PLOT}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -77,24 +78,36 @@ namespace {
 
   //Walk the range height
   json::ArrayPtr serialize_range_height(const std::vector<float>& ranges, const std::vector<double>& heights, const double no_data_value) {
+    auto xarray = json::array({});
+    auto yarray = json::array({});
     auto array = json::array({});
-    //for each posting
-    auto range = ranges.cbegin();
-    for (const auto height : heights) {
-      //start out with distance
-      auto element = json::map({
-        {"range", json::fp_t{*range, 0}}
-      });
-      //add height to it
-      if(height == no_data_value)
-        element->emplace("height", nullptr);
-      else
-        element->emplace("height", json::fp_t{height, 0});
-      //keep it in the array
-      array->emplace_back(element);
-      ++range;
+
+    for(auto range = ranges.cbegin(); range != ranges.cend(); ++range){
+      //add all x's to an array
+      xarray->push_back({json::fp_t{*range,0}});
     }
+    for (const auto height : heights) {
+      //add all y's to an array
+      if(height == no_data_value)
+        yarray->push_back(nullptr);
+      else yarray->push_back({json::fp_t{height, 0}});
+    }
+    array->push_back(xarray);
+    array->push_back(yarray);
     return array;
+  }
+
+  json::ArrayPtr serialize_height(const std::vector<double>& heights, const double no_data_value) {
+    auto yarray = json::array({});
+
+    for (const auto height : heights) {
+      //add all y's to an array
+      if(height == no_data_value)
+        yarray->push_back(nullptr);
+      else yarray->push_back({json::fp_t{height, 0}});
+    }
+
+    return yarray;
   }
 
   json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
@@ -119,14 +132,14 @@ namespace {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
-      //  http://host:port/elevation?json={shape:[{lat: ,lon: }]}&apikey= OR http://host:port/elevation?json={encoded_polyline:" xxxx "}&apikey=
+      //  http://host:port/plot?json={shape:[{lat: ,lon: }]}&apikey= OR http://host:port/plot?json={encoded_polyline:" xxxx "}&apikey=
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try: '/elevation'", headers_t{CORS});
+          http_response_t response(404, "Not Found", "Try any of: '/plot' '/elevation'", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -135,6 +148,8 @@ namespace {
         auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
         switch (action->second) {
+          case PLOT:
+            return plot(request_pt, info);
           case ELEVATION:
             return elevation(request_pt, info);
         }
@@ -145,6 +160,7 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
+        LOG_INFO(std::string("Bad Request: ") + e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
@@ -174,44 +190,58 @@ namespace {
        }
      }
      catch(...) {
-       throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == ELEVATION ? "latlng'" : "shape'"));
+       throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == PLOT ? "latlng'" : "shape'"));
      }
      //you forgot something
      throw std::runtime_error("Insufficient shape provided");
    }
 
-  //example elevation response:
+  //example plot response:
   /*
-  {elevation: [
+  {
+    "input_shape":
+  [
     {
-      range: 0
-      height: 388.72873
+        "lat": 40.712433,
+        "lon": -76.504913
     },
     {
-      range: 4.37751
-      height: 397.56055
+        "lat": 40.712276,
+        "lon": -76.605263
+    },
+    {
+        "lat": 40.712124,
+        "lon": -76.805695
     }
-    ...
+  ],
+  "plot":
+  [
+    [
+        0,
+        8410,
+        25208
     ],
-    input_shape: [
-      40.0380,
-      -76.3059,
-      .......
-      .......
-    ]}
+    [
+        303,
+        275,
+        198
+    ]
+  ]
   }*/
-    worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+
+    worker_t::result_t plot(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //get the distances between the postings
       std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
-      for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point)
-        ranges.emplace_back(std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1))));
-
+      for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
+        auto distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
+        ranges.emplace_back(ranges.back() + distance);
+      }
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
 
       //serialize
       auto json = json::map({
-        {"elevation", serialize_range_height(ranges, heights, sample.get_no_data_value())}
+        {"plot", serialize_range_height(ranges, heights, sample.get_no_data_value())}
       });
       if(encoded_polyline)
         json->emplace("input_encoded_polyline", *encoded_polyline);
@@ -233,6 +263,41 @@ namespace {
       result.messages.emplace_back(response.to_string());
       return result;
     }
+
+    worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+          //get the distances between the postings
+          std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
+          for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
+            auto distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
+            ranges.emplace_back(ranges.back() + distance);
+          }
+          //get the elevation of each posting
+          std::vector<double> heights = sample.get_all(shape);
+
+          //serialize
+          auto json = json::map({
+            {"elevation", serialize_height(heights, sample.get_no_data_value())}
+          });
+          if(encoded_polyline)
+            json->emplace("input_encoded_polyline", *encoded_polyline);
+          else
+            json->emplace("input_shape", serialize_shape(shape));
+
+          //jsonp callback if need be
+          std::ostringstream stream;
+          auto jsonp = request.get_optional<std::string>("jsonp");
+          if(jsonp)
+            stream << *jsonp << '(';
+          stream << *json;
+          if(jsonp)
+            stream << ')';
+
+          worker_t::result_t result{false};
+          http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+          response.from_info(request_info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
 
     void cleanup() {
       shape.clear();
