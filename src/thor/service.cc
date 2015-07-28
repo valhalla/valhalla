@@ -52,10 +52,19 @@ namespace {
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
       try{
         //get some info about what we need to do
+        boost::property_tree::ptree request;
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
-        boost::property_tree::ptree request;
-        boost::property_tree::read_info(stream, request);
+        try {
+          boost::property_tree::read_info(stream, request);
+        }
+        catch(...) {
+          worker_t::result_t result{false};
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
 
         // Initialize request - get the PathALgorithm to use
         std::string costing = init_request(request);
@@ -135,57 +144,58 @@ namespace {
     valhalla::sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request,
                                           const std::string& costing) {
       std::string method_options = "costing_options." + costing;
-      boost::property_tree::ptree config_costing = config.get_child(method_options);
-      const auto& request_costing = request.get_child_optional(method_options);
-      if (request_costing) {
+      auto config_costing = config.get_child_optional(method_options);
+      if(!config_costing)
+        throw std::runtime_error("No costing method found for '" + costing + "'");
+      auto request_costing = request.get_child_optional(method_options);
+      if(request_costing) {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
         for (const auto& r : *request_costing) {
-          config_costing.put_child(r.first, r.second);
+          config_costing->put_child(r.first, r.second);
         }
       }
-      return factory.Create(costing, config_costing);
+      return factory.Create(costing, *config_costing);
     }
 
     std::string init_request(const boost::property_tree::ptree& request) {
       //we require locations
-      try {
-        for(const auto& location : request.get_child("locations"))
-          locations.push_back(baldr::Location::FromPtree(location.second));
+        auto request_locations = request.get_child_optional("locations");
+        if(!request_locations)
+          throw std::runtime_error("Insufficiently specified required parameter 'locations'");
+        for(const auto& location : *request_locations) {
+          try{
+            locations.push_back(baldr::Location::FromPtree(location.second));
+          }
+          catch (...) {
+            throw std::runtime_error("Failed to parse location");
+          }
+        }
         if(locations.size() < 2)
-          throw;
-        //TODO: bail if this is too many
-      }
-      catch(...) {
-        throw std::runtime_error("insufficiently specified required parameter 'locations'");
-      }
+          throw std::runtime_error("Insufficient number of locations provided");
 
       //we require correlated locations
-      try {
-        size_t i = 0;
-        do {
-          auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
-          if(!path_location)
-            break;
+      size_t i = 0;
+      do {
+        auto path_location = request.get_child_optional("correlated_" + std::to_string(i));
+        if(!path_location)
+          break;
+        try {
           correlated.emplace_back(PathLocation::FromPtree(locations, *path_location));
-        }while(++i);
-      }
-      catch(...) {
-        throw std::runtime_error("path computation requires graph correlated locations");
-      }
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse correlated location");
+        }
+      }while(++i);
 
       // Parse out the type of route - this provides the costing method to use
-      std::string costing;
-      try {
-        costing = request.get<std::string>("costing");
-      }
-      catch(...) {
+      auto costing = request.get_optional<std::string>("costing");
+      if(!costing)
         throw std::runtime_error("No edge/node costing provided");
-      }
 
       // Set travel mode and construct costing
-      if (costing == "multimodal") {
+      if (*costing == "multimodal") {
         // For multi-modal we construct costing for all modes and set the
         // initial mode to pedestrian. (TODO - allow other initial modes)
         mode_costing[0] = get_costing(request, "auto");
@@ -194,11 +204,11 @@ namespace {
         mode_costing[3] = get_costing(request, "transit");
         mode = valhalla::sif::TravelMode::kPedestrian;
       } else {
-        valhalla::sif::cost_ptr_t cost = get_costing(request, costing);
+        valhalla::sif::cost_ptr_t cost = get_costing(request, *costing);
         mode = cost->travelmode();
         mode_costing[static_cast<uint32_t>(mode)] = cost;
       }
-      return costing;
+      return *costing;
     }
 
     void cleanup() {
