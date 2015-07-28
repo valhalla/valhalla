@@ -52,10 +52,19 @@ namespace {
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
       try{
         //get some info about what we need to do
+        boost::property_tree::ptree request;
         std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
-        boost::property_tree::ptree request;
-        boost::property_tree::read_info(stream, request);
+        try {
+          boost::property_tree::read_info(stream, request);
+        }
+        catch(...) {
+          worker_t::result_t result{false};
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate work", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
 
         // Initialize request - get the PathALgorithm to use
         std::string costing = init_request(request);
