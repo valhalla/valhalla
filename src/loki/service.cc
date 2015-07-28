@@ -233,8 +233,13 @@ namespace {
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
-      for(const auto& location : request_locations.get()) {
-        locations.push_back(baldr::Location::FromPtree(location.second));
+      for(const auto& location : *request_locations) {
+        try{
+          locations.push_back(baldr::Location::FromPtree(location.second));
+        }
+        catch (...) {
+          throw std::runtime_error("Failed to parse location");
+        }
         if(action != LOCATE && locations.size() > max_route_locations)
           throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
       }
