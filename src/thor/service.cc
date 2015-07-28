@@ -60,7 +60,7 @@ namespace {
         }
         catch(...) {
           worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate work", headers_t{CORS});
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
