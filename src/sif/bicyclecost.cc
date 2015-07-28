@@ -11,7 +11,7 @@ namespace sif {
 
 // Default options/values
 namespace {
-constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
+constexpr float kDefaultManeuverPenalty         = 10.0f;  // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 60.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
@@ -19,13 +19,13 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
 // Default turn costs
-constexpr float kTCStraight         = 0.5f;
-constexpr float kTCSlight           = 0.75f;
-constexpr float kTCFavorable        = 1.0f;
-constexpr float kTCFavorableSharp   = 1.5f;
-constexpr float kTCCrossing         = 2.0f;
-constexpr float kTCUnfavorable      = 2.5f;
-constexpr float kTCUnfavorableSharp = 3.5f;
+constexpr float kTCStraight         = 0.25f;
+constexpr float kTCSlight           = 0.5f;
+constexpr float kTCFavorable        = 0.75f;
+constexpr float kTCFavorableSharp   = 1.0f;
+constexpr float kTCCrossing         = 1.5f;
+constexpr float kTCUnfavorable      = 2.0f;
+constexpr float kTCUnfavorableSharp = 2.5f;
 constexpr float kTCReverse          = 5.0f;
 
 // Cost of traversing an edge with steps. Make this high but not impassible.
@@ -40,26 +40,36 @@ constexpr float kDefaultCyclingSpeed[] = {
     16.0f     // Mountain bicycle: ~10 MPH
 };
 
-// Weighting based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the useroads factor - further
-// avoiding higher class roads for those with low propensity for using roads.
-constexpr float kDefaultRoadClassWeight[] = {
-    2.5f,     // Motorway
-    2.0f,     // Trunk
-    1.5f,     // Primary
-    1.3f,     // Secondary
-    1.2f,     // Tertiary
-    1.1f,     // Unclassified
-    1.0f,     // Residential
-    1.5f      // Service, other
-};
+// Minimum and maximum average bicycling speed (to validate input).
+// Maximum is just above the fastest average speed in Tour de France time trial
+constexpr float kMinCyclingSpeed = 5.0f;
+constexpr float kMaxCyclingSpeed = 60.0f;
 
 // User propensity to use roads. Range of values from 0 (avoid roads - try to
 // stay on cycleways and paths) to 1 (totally comfortable riding on roads).
 constexpr float kDefaultUseRoadsFactor = 0.5f;
 
-// How much to favor bicycle networks. TODO - make a config option?
-constexpr float kBicycleNetworkFactor = 0.8f;
+// Weighting based on road class. These apply penalties to higher class
+// roads. These penalties are modulated by the useroads factor - further
+// avoiding higher class roads for those with low propensity for using roads.
+constexpr float kRoadClassWeight[] = {
+    2.5f,     // Motorway
+    2.0f,     // Trunk
+    1.4f,     // Primary
+    1.2f,     // Secondary
+    1.1f,     // Tertiary
+    1.0f,     // Unclassified
+    1.0f,     // Residential
+    1.5f      // Service, other
+};
+
+// Edge speed above which extra penalties apply (to avoid roads with higher
+// speed traffic). This threshold is adjusted upwards with higher useroads
+// factors.
+constexpr uint32_t kSpeedPenaltyThreshold = 40;      // 40 KPH ~ 25 MPH
+
+// How much to favor bicycle networks.
+constexpr float kBicycleNetworkFactor = 0.75f;
 }
 
 /**
@@ -153,7 +163,6 @@ class BicycleCost : public DynamicCost {
 
   float speedfactor_[100];          // Cost factors based on speed in kph
   float density_factor_[16];        // Density factor
-  float roadclass_weight[8];        // Road class weights
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
   float gate_cost_;                 // Cost (seconds) to go through gate
@@ -164,7 +173,7 @@ class BicycleCost : public DynamicCost {
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
 
-  // Average speed on smooth, flat roads.
+  // Average speed (kph) on smooth, flat roads.
   float speed_;
 
   // Bicycle type
@@ -173,10 +182,17 @@ class BicycleCost : public DynamicCost {
   // A measure of willingness to ride with traffic. Ranges from 0-1 with
   // 0 being not willing at all and 1 being totally comfortable. This factor
   // determines how much cycle lanes and paths are preferred over roads (if
-  // at all). Experienced road riders and messengers may use a value = 1
-  // while beginners may use a value of 0.1 to stay away from roads unless
+  // at all). When useroads factor is low there is more penalty to higher
+  // class and higher speed roads.
+  // Experienced road riders and messengers may use a value = 1 while
+  // beginners may use a value of 0.1 to stay away from roads unless
   // absolutely necessary.
   float useroads_;
+
+  // Threshold above which speed based penalties apply(based on the useroads
+  // factor).
+  uint32_t speed_penalty_threshold_;
+  float speed_factor_;
 
   /**
    * Compute a turn cost based on the turn type, crossing flag,
@@ -209,11 +225,11 @@ class BicycleCost : public DynamicCost {
       if(!edge->trans_up() && !edge->trans_down() &&
         (edge->forwardaccess() & kBicycleAccess)) {
         if (b == BicycleType::kRoad)
-          return edge->surface() > Surface::kPavedRough;
-        else if (b == BicycleType::kHybrid)
           return edge->surface() > Surface::kCompacted;
-        else if (b == BicycleType::kCross)
+        else if (b == BicycleType::kHybrid)
           return edge->surface() > Surface::kDirt;
+        else if (b == BicycleType::kCross)
+          return edge->surface() > Surface::kGravel;
         else if (b == BicycleType::kMountain)
           return edge->surface() >= Surface::kPath;
       }
@@ -247,10 +263,10 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
                                            kDefaultCountryCrossingPenalty);
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = pt.get("bicycle_type", "Road");
+  std::string bicycle_type = pt.get("type", "Road");
   if (bicycle_type == "Cross") {
     bicycletype_ = BicycleType::kCross;
-  } else if (bicycle_type == "Hybrid") {
+  } else if (bicycle_type == "Hybrid" || bicycle_type == "City") {
     bicycletype_ = BicycleType::kHybrid;
   } else if (bicycle_type == "Mountain") {
     bicycletype_ = BicycleType::kMountain;
@@ -259,17 +275,27 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Get default speed from the config. This is the average speed on smooth,
-  // flat roads. If not present use a default speed based on the bicycle type.
+  // flat roads. If not present or outside the valid range use a default speed
+  // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(bicycletype_);
-  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
-
-  // Willingness to use roads
-  useroads_ = pt.get<float>("useroads_", kDefaultUseRoadsFactor);
-
-  // Road class weights - do we need to allow these in the config?
-  for (uint32_t rc = 0; rc < 8; rc++) {
-    roadclass_weight[rc] = kDefaultRoadClassWeight[rc];
+  speed_ = pt.get<float>("speed", kDefaultCyclingSpeed[t]);
+  if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
+    LOG_ERROR("Outside valid cycling speed range " + std::to_string(speed_) +
+                ": using default");
+    speed_ = kDefaultCyclingSpeed[t];
   }
+
+  // Willingness to use roads. Make sure this is within range [0, 1].
+  useroads_ = pt.get<float>("useroads_", kDefaultUseRoadsFactor);
+  if (useroads_ < 0.0f || useroads_ > 1.0f) {
+    LOG_ERROR("Outside valid useroads factor range " +
+              std::to_string(useroads_) + ": using default");
+  }
+
+  // Set the speed penalty threshold and factor
+  speed_penalty_threshold_ = kSpeedPenaltyThreshold +
+      static_cast<uint32_t>(useroads_ * 30.0f);
+  speed_factor_ = 1.0f / static_cast<float>(speed_penalty_threshold_);
 
   // Create speed cost table (to avoid division in costing)
   speedfactor_[0] = kSecPerHour;
@@ -354,8 +380,9 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Apply a weighting factor to the cost based on desirability of cycling
   // on this edge. Based on several factors: rider propensity to ride on roads,
-  // use type of road, presence of bike lanes, belonging to a bike network,
-  // and the hilliness/elevation change (based on an avoid hills factor).
+  // road classification and use type of road, presence of bike lanes,
+  // does the road belong to a bike network, and the hilliness/elevation change
+  // (based on an avoid hills factor).
   float factor = 1.0f;
 
   // Special use cases: cycleway and footway
@@ -365,32 +392,39 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kFootway) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor *= 0.75f + (useroads_ * 0.5f);
+    factor = 0.75f + (useroads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike) {
     factor = 0.5f;
+  } else if (edge->use() == Use::kDriveway) {
+    // Heavily penalize driveways
+    factor = 5.0f;
   } else if (edge->cyclelane() == CycleLane::kSeparated) {
-    // On a road with a separated cycle lane
-    factor = 0.5f; // TODO: favor more for useroads = 1 than for 0
+    // On a road with a separated cycle lane. Favor more for higher useroads
+    factor = 0.5f + (1.0f - useroads_) * 0.25f;
   } else {
-    // On a road - set a penalty based on useroads factor
-    factor = 2.0f - useroads_;
+    // On a road - set a cost factor based on useroads factor and road
+    // classification
+    factor = (2.0f - useroads_) *
+            kRoadClassWeight[static_cast<uint32_t>(edge->classification())];
 
-    // Add a penalty based on road classification
-    factor *= roadclass_weight[static_cast<uint32_t>(edge->classification())];
+    // Add a penalty for higher speed roads (> 35 MPH)
+    if (edge->speed() > speed_penalty_threshold_) {
+      factor *= edge->speed() * speed_factor_;
+    }
 
     // Favor roads where a cycle lane exists (separate lane is handled above)
     if (edge->cyclelane() == CycleLane::kShared) {
-        factor *= 0.85f;
+      factor *= 0.85f;
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
-        factor *= 0.75f;
+      factor *= 0.75f;
     }
   }
 
-  // Slightly favor bicycle networks.
+  // Favor bicycle networks.
   // TODO - do we need to differentiate between types of network?
   // Handle mountain bike
   if (edge->bikenetwork() > 0) {
-   factor *= kBicycleNetworkFactor;
+    factor *= kBicycleNetworkFactor;
   }
 
   // TODO - update factor based on hilliness and avoid hills option
