@@ -225,11 +225,11 @@ class BicycleCost : public DynamicCost {
       if(!edge->trans_up() && !edge->trans_down() &&
         (edge->forwardaccess() & kBicycleAccess)) {
         if (b == BicycleType::kRoad)
-          return edge->surface() > Surface::kPavedRough;
-        else if (b == BicycleType::kHybrid)
           return edge->surface() > Surface::kCompacted;
-        else if (b == BicycleType::kCross)
+        else if (b == BicycleType::kHybrid)
           return edge->surface() > Surface::kDirt;
+        else if (b == BicycleType::kCross)
+          return edge->surface() > Surface::kGravel;
         else if (b == BicycleType::kMountain)
           return edge->surface() >= Surface::kPath;
       }
@@ -263,10 +263,10 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
                                            kDefaultCountryCrossingPenalty);
 
   // Get the bicycle type - enter as string and convert to enum
-  std::string bicycle_type = pt.get("bicycle_type", "Road");
+  std::string bicycle_type = pt.get("type", "Road");
   if (bicycle_type == "Cross") {
     bicycletype_ = BicycleType::kCross;
-  } else if (bicycle_type == "Hybrid") {
+  } else if (bicycle_type == "Hybrid" || bicycle_type == "City") {
     bicycletype_ = BicycleType::kHybrid;
   } else if (bicycle_type == "Mountain") {
     bicycletype_ = BicycleType::kMountain;
@@ -278,7 +278,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(bicycletype_);
-  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
+  speed_ = pt.get<float>("speed", kDefaultCyclingSpeed[t]);
   if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
     LOG_ERROR("Outside valid cycling speed range " + std::to_string(speed_) +
                 ": using default");
