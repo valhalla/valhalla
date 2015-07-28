@@ -42,6 +42,7 @@ namespace {
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
@@ -330,7 +331,7 @@ namespace {
         stream << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
       return result;
