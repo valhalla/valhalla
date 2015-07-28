@@ -85,7 +85,6 @@ namespace {
       pt.add_child(kv.first, array);
     }
 
-
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == VIAROUTE) {
       auto& array = pt.put_child("locations", boost::property_tree::ptree());
@@ -160,7 +159,6 @@ namespace {
     });
   }
 
-  //TODO: throw this in the header to make it testable?
   class loki_worker_t {
    public:
     loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
@@ -176,6 +174,7 @@ namespace {
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
+      LOG_INFO(std::string(static_cast<const char*>(job.front().data()), job.front().size()));
       //request should look like:
       //  /[route|viaroute|locate|nearest]?loc=&json=&jsonp=
 
@@ -184,9 +183,9 @@ namespace {
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
 
         //block all but get and post
-        if(request.method != method_t::POST || request.method != method_t::GET) {
+        if(request.method != method_t::POST && request.method != method_t::GET) {
           worker_t::result_t result{false};
-          http_response_t response(405, "Method Not Allowed", "", headers_t{CORS});
+          http_response_t response(405, "Method Not Allowed", "Try a POST or GET request instead", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -221,7 +220,7 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
-        LOG_INFO(e.what());
+        LOG_INFO(std::string("Bad Request: ") + e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
@@ -231,49 +230,43 @@ namespace {
     }
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
-      try {
-        for(const auto& location : request.get_child("locations")) {
-          locations.push_back(baldr::Location::FromPtree(location.second));
-          if(action != LOCATE && locations.size() > max_route_locations)
-            throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
-        }
-        if(locations.size() < 1)
-          throw std::runtime_error("Unsufficient number of locations provided");
-        //TODO: bail if this is too many
-        LOG_INFO("location_count::" + std::to_string(locations.size()));
-      }
-      catch(...) {
+      auto request_locations = request.get_child_optional("locations");
+      if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
+      for(const auto& location : request_locations.get()) {
+        locations.push_back(baldr::Location::FromPtree(location.second));
+        if(action != LOCATE && locations.size() > max_route_locations)
+          throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
       }
+      if(locations.size() < (action == LOCATE ? 1 : 2))
+        throw std::runtime_error("Insufficient number of locations provided");
+      LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
       // Parse out the type of route - this provides the costing method to use
-      std::string costing;
-      try {
-        costing = request.get<std::string>("costing");
-      }
-      catch(...) {
+      auto costing = request.get_optional<std::string>("costing");
+      if(!costing)
         throw std::runtime_error("No edge/node costing provided");
-      }
 
-      if (costing == "multimodal") {
-        // TODO - have a way of specifying mode at the location
-        costing = "pedestrian";
-      }
+      // TODO - have a way of specifying mode at the location
+      if(*costing == "multimodal")
+        *costing = "pedestrian";
 
       // Get the costing options. Get the base options from the config and the
       // options for the specified costing method
-      std::string method_options = "costing_options." + costing;
-      boost::property_tree::ptree config_costing = config.get_child(method_options);
-      const auto& request_costing = request.get_child_optional(method_options);
-      if (request_costing) {
+      std::string method_options = "costing_options." + *costing;
+      auto config_costing = config.get_child_optional(method_options);
+      if(!config_costing)
+        throw std::runtime_error("No costing method found for '" + *costing + "'");
+      auto request_costing = request.get_child_optional(method_options);
+      if(request_costing) {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
-        for (const auto& r : *request_costing) {
-          config_costing.put_child(r.first, r.second);
-        }
+        // TODO: suboptions are probably getting smashed when we do this, preserve them
+        for(const auto& r : *request_costing)
+          config_costing->put_child(r.first, r.second);
       }
-      cost = factory.Create(costing, config_costing);
+      cost = factory.Create(*costing, *config_costing);
     }
     worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //see if any locations pairs are unreachable or too far apart

@@ -44,6 +44,7 @@ test/*.log
 test/*.trs
 test/tiles
 test/search
+test/service
 
 # test coverage stuff
 *.gcno
