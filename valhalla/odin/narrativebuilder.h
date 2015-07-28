@@ -11,9 +11,12 @@
 namespace valhalla {
 namespace odin {
 
-constexpr uint32_t kVerbalAlertNameMaxCount = 1;
-constexpr uint32_t kVerbalPreNameMaxCount = 2;
-constexpr uint32_t kVerbalPostNameMaxCount = 2;
+const bool kLimitByConseuctiveCount = true;
+constexpr uint32_t kElementMaxCount = 4;
+constexpr uint32_t kVerbalAlertElementMaxCount = 1;
+constexpr uint32_t kVerbalPreElementMaxCount = 2;
+constexpr uint32_t kVerbalPostElementMaxCount = 2;
+constexpr float kVerbalPostMinimumRampLength = 2.0f;  // Kilometers
 const std::string kVerbalDelim = ", ";
 
 class NarrativeBuilder {
@@ -29,7 +32,7 @@ class NarrativeBuilder {
 
   static std::string FormVerbalStartInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormDestinationInstruction(Maneuver& maneuver);
@@ -43,72 +46,97 @@ class NarrativeBuilder {
 
   static std::string FormVerbalBecomesInstruction(
       Maneuver& maneuver, Maneuver* prev_maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormContinueInstruction(Maneuver& maneuver);
 
   static std::string FormVerbalAlertContinueInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalContinueInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormTurnInstruction(Maneuver& maneuver);
 
   static std::string FormVerbalAlertTurnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalTurnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormTurnToStayOnInstruction(Maneuver& maneuver);
 
   static std::string FormVerbalAlertTurnToStayOnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalTurnToStayOnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormBearInstruction(Maneuver& maneuver);
 
   static std::string FormVerbalAlertBearInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalBearInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormBearToStayOnInstruction(Maneuver& maneuver);
 
   static std::string FormVerbalAlertBearToStayOnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalAlertNameMaxCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalBearToStayOnInstruction(
       Maneuver& maneuver,
-      uint32_t street_name_max_count = kVerbalPreNameMaxCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
-  static void FormUturnInstruction(Maneuver& maneuver);
+  static std::string FormUturnInstruction(Maneuver& maneuver);
 
-  static void FormRampStraightInstruction(Maneuver& maneuver);
+  static std::string FormVerbalAlertUturnInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalUturnInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormRampStraightInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kElementMaxCount);
+
+  static std::string FormVerbalAlertRampStraightInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalRampStraightInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   static void FormRampRightInstruction(Maneuver& maneuver);
 
@@ -157,17 +185,17 @@ class NarrativeBuilder {
   static std::string FormVerbalPostTransitionInstruction(
       Maneuver& maneuver, DirectionsOptions_Units units,
       bool include_street_names = false,
-      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalPostTransitionKilometersInstruction(
       Maneuver& maneuver, bool include_street_names = false,
-      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalPostTransitionMilesInstruction(
       Maneuver& maneuver, bool include_street_names = false,
-      uint32_t street_name_max_count = kVerbalPostNameMaxCount,
+      uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormCardinalDirection(

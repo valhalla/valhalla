@@ -398,11 +398,11 @@ void TryCombine(ManeuversBuilderTest& mbTest, std::list<Maneuver>& maneuvers,
       man != maneuvers.end(); ++man, ++expected_man) {
     if (man->type() != expected_man->type())
       throw std::runtime_error("Incorrect maneuver type");
-    if (!equal<float>(man->distance(), expected_man->distance())) {
+    if (!equal<float>(man->length(), expected_man->length())) {
       throw std::runtime_error(
-          "Incorrect maneuver distance=" + std::to_string(man->distance())
+          "Incorrect maneuver distance=" + std::to_string(man->length())
               + std::string(" | Expected distance=")
-              + std::to_string(expected_man->distance()));
+              + std::to_string(expected_man->length()));
     }
     if (man->time() != expected_man->time())
       throw std::runtime_error("Incorrect maneuver time");
@@ -508,7 +508,7 @@ void PopulateManeuver(
   maneuver.set_cross_street_names(cross_street_names);
 
   maneuver.set_instruction(instruction);
-  maneuver.set_distance(distance);
+  maneuver.set_length(distance);
   maneuver.set_time(time);
   maneuver.set_turn_degree(turn_degree);
   maneuver.set_begin_relative_direction(begin_relative_direction);

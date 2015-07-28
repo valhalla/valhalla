@@ -13,7 +13,7 @@ namespace {
 class NarrativeBuilderTest : public NarrativeBuilder {
  public:
 
-  static void FormRampStraightInstruction(Maneuver& maneuver) {
+  static std::string FormRampStraightInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormRampStraightInstruction(maneuver);
   }
 
@@ -76,8 +76,8 @@ Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
 
 void TryFormRampStraightInstruction(Maneuver maneuver, std::string expected) {
   NarrativeBuilderTest nbTest;
-  nbTest.FormRampStraightInstruction(maneuver);
-  if (maneuver.instruction() != expected)
+  std::string instruction = nbTest.FormRampStraightInstruction(maneuver);
+  if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampStraightInstruction");
 }
 

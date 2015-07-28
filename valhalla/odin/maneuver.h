@@ -8,6 +8,7 @@
 
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitinfo.h>
@@ -62,8 +63,10 @@ class Maneuver {
   void set_instruction(const std::string& instruction);
   void set_instruction(std::string&& instruction);
 
-  float distance() const;
-  void set_distance(float distance);
+  // Kilomteres
+  float length(const DirectionsOptions::Units& units =
+      DirectionsOptions::Units::DirectionsOptions_Units_kKilometers) const;
+  void set_length(float length);
 
   uint32_t time() const;
   void set_time(uint32_t time);
@@ -230,7 +233,7 @@ class Maneuver {
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float distance_;
+  float length_;
   uint32_t time_;
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
