@@ -214,7 +214,7 @@ namespace {
 
         //apparently you wanted something that we figured we'd support but havent written yet
         worker_t::result_t result{false};
-        http_response_t response(501, "Not Implemented", "", headers_t{CORS});
+        http_response_t response(501, "Not Implemented", "Not Implemented", headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
