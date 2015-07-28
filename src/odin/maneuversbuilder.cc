@@ -363,7 +363,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(
       ManeuversBuilder::DetermineRelativeDirection(next_man->turn_degree()));
 
   // Add distance
-  next_man->set_distance(next_man->distance() + curr_man->distance());
+  next_man->set_length(next_man->length() + curr_man->length());
 
   // Add time
   next_man->set_time(next_man->time() + curr_man->time());
@@ -406,7 +406,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineTurnChannelManeuver(
   next_man->set_begin_relative_direction(curr_man->begin_relative_direction());
 
   // Add distance
-  next_man->set_distance(next_man->distance() + curr_man->distance());
+  next_man->set_length(next_man->length() + curr_man->length());
 
   // Add time
   next_man->set_time(next_man->time() + curr_man->time());
@@ -435,7 +435,7 @@ std::list<Maneuver>::iterator ManeuversBuilder::CombineSameNameStraightManeuver(
     std::list<Maneuver>::iterator next_man) {
 
   // Add distance
-  curr_man->set_distance(curr_man->distance() + next_man->distance());
+  curr_man->set_length(curr_man->length() + next_man->length());
 
   // Add time
   curr_man->set_time(curr_man->time() + next_man->time());
@@ -671,9 +671,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   // Update the internal turn count
   UpdateInternalTurnCount(maneuver, node_index);
 
-  // Distance
-  maneuver.set_distance(
-      maneuver.distance() + prev_edge->GetLength(directions_options_.units()));
+  // Distance in kilometers
+  maneuver.set_length(maneuver.length() + prev_edge->length());
 
   // Portions Toll
   if (prev_edge->toll()) {

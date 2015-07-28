@@ -5,6 +5,7 @@
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
@@ -36,7 +37,7 @@ const std::unordered_map<int, std::string> Maneuver::relative_direction_string_ 
 
 Maneuver::Maneuver()
     : type_(TripDirections_Maneuver_Type_kNone),
-      distance_(0.0f),
+      length_(0.0f),
       time_(0),
       turn_degree_(0),
       begin_relative_direction_(RelativeDirection::kNone),
@@ -163,12 +164,15 @@ void Maneuver::set_instruction(std::string&& instruction) {
   instruction_ = std::move(instruction);
 }
 
-float Maneuver::distance() const {
-  return distance_;
+float Maneuver::length(const DirectionsOptions::Units& units) const {
+  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+    return (length_ * kMilePerKm);
+  }
+  return length_;
 }
 
-void Maneuver::set_distance(float distance) {
-  distance_ = distance;
+void Maneuver::set_length(float length) {
+  length_ = length;
 }
 
 uint32_t Maneuver::time() const {
@@ -618,7 +622,7 @@ std::string Maneuver::ToString() const {
   man_str += instruction_;
 
   man_str += " | distance_=";
-  man_str += std::to_string(distance_);
+  man_str += std::to_string(length_);
 
   man_str += " | time=";
   man_str += std::to_string(time_);
@@ -748,7 +752,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += "\"";
 
   man_str += delim;
-  man_str += std::to_string(distance_);
+  man_str += std::to_string(length_);
 
   man_str += delim;
   man_str += std::to_string(time_);

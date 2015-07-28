@@ -176,7 +176,7 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       }
       case TripDirections_Maneuver_Type_kUturnRight:
       case TripDirections_Maneuver_Type_kUturnLeft: {
-        // Set stay on instruction
+        // Set instruction
         maneuver.set_instruction(
             std::move(FormUturnInstruction(maneuver)));
 
@@ -196,7 +196,26 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kRampStraight:
-        FormRampStraightInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormRampStraightInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertRampStraightInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalRampStraightInstruction(maneuver)));
+
+        // Only set verbal post if > min ramp length
+        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+          // Set verbal post transition instruction
+          maneuver.set_verbal_post_transition_instruction(
+              std::move(
+                  FormVerbalPostTransitionInstruction(
+                      maneuver, directions_options.units())));
+        }
         break;
       case TripDirections_Maneuver_Type_kRampRight:
         FormRampRightInstruction(maneuver);
@@ -352,7 +371,7 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // 0 "Go <FormCardinalDirection>."
   // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
 
@@ -366,11 +385,11 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
 
   if (maneuver.HasBeginStreetNames()) {
     phrase_id = 1;
-    street_names = maneuver.begin_street_names().ToString(street_name_max_count,
+    street_names = maneuver.begin_street_names().ToString(element_max_count,
                                                           delim);
   } else if (maneuver.HasStreetNames()) {
     phrase_id = 1;
-    street_names = maneuver.street_names().ToString(street_name_max_count,
+    street_names = maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -468,7 +487,7 @@ std::string NarrativeBuilder::FormBecomesInstruction(Maneuver& maneuver,
 }
 
 std::string NarrativeBuilder::FormVerbalBecomesInstruction(
-    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t street_name_max_count,
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
   // "<PREV_STREET_NAMES(2)> becomes <STREET_NAMES(2)>."
 
@@ -480,10 +499,10 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
   // then form "becomes" narrative
   if (prev_maneuver && prev_maneuver->HasStreetNames()
       && maneuver.HasStreetNames()) {
-    instruction += prev_maneuver->street_names().ToString(street_name_max_count,
+    instruction += prev_maneuver->street_names().ToString(element_max_count,
                                                           delim);
     instruction += " becomes ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
   // Items are missing - fallback to just "Continue" narrative
@@ -492,7 +511,7 @@ std::string NarrativeBuilder::FormVerbalBecomesInstruction(
 
     if (maneuver.HasStreetNames()) {
       instruction += " on ";
-      instruction += maneuver.street_names().ToString(street_name_max_count,
+      instruction += maneuver.street_names().ToString(element_max_count,
                                                       delim);
     }
   }
@@ -519,14 +538,14 @@ std::string NarrativeBuilder::FormContinueInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Continue"
   //  "Continue on <STREET_NAMES(1)>."
-  return FormVerbalContinueInstruction(maneuver, street_name_max_count, delim);
+  return FormVerbalContinueInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Continue"
   //  "Continue on <STREET_NAMES(2)>."
 
@@ -536,7 +555,7 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
 
   if (maneuver.HasStreetNames()) {
     instruction += " on ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -569,15 +588,15 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
     //    "Turn <FormTurnTypeInstruction>."
     //    "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)|BEGIN_STREET_NAMES(1)>."
 
-  return FormVerbalTurnInstruction(maneuver, street_name_max_count, delim);
+  return FormVerbalTurnInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalTurnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Turn <FormTurnTypeInstruction>."
   //  "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(2)|BEGIN_STREET_NAMES(2)>."
 
@@ -588,11 +607,11 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
 
   if (maneuver.HasBeginStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.begin_street_names().ToString(street_name_max_count,
+    instruction += maneuver.begin_street_names().ToString(element_max_count,
                                                           delim);
   } else if (maneuver.HasStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -618,15 +637,15 @@ std::string NarrativeBuilder::FormTurnToStayOnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertTurnToStayOnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
 
-  return FormVerbalTurnToStayOnInstruction(maneuver, street_name_max_count,
+  return FormVerbalTurnToStayOnInstruction(maneuver, element_max_count,
                                            delim);
 }
 
 std::string NarrativeBuilder::FormVerbalTurnToStayOnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
 
   std::string instruction;
@@ -636,7 +655,7 @@ std::string NarrativeBuilder::FormVerbalTurnToStayOnInstruction(
 
   if (maneuver.HasStreetNames()) {
     instruction += " to stay on ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -669,15 +688,15 @@ std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertBearInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Bear <FormBearTypeInstruction>."
   //  "Bear <FormBearTypeInstruction> onto <STREET_NAMES(1)|BEGIN_STREET_NAMES(1)>."
 
-  return FormVerbalBearInstruction(maneuver, street_name_max_count, delim);
+  return FormVerbalBearInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalBearInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Bear <FormBearTypeInstruction>."
   //  "Bear <FormBearTypeInstruction> onto <STREET_NAMES(2)|BEGIN_STREET_NAMES(2)>."
 
@@ -688,11 +707,11 @@ std::string NarrativeBuilder::FormVerbalBearInstruction(
 
   if (maneuver.HasBeginStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.begin_street_names().ToString(street_name_max_count,
+    instruction += maneuver.begin_street_names().ToString(element_max_count,
                                                           delim);
   } else if (maneuver.HasStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -718,15 +737,15 @@ std::string NarrativeBuilder::FormBearToStayOnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertBearToStayOnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "Bear <FormBearTypeInstruction> to stay on <STREET_NAMES(1)>."
 
-  return FormVerbalBearToStayOnInstruction(maneuver, street_name_max_count,
+  return FormVerbalBearToStayOnInstruction(maneuver, element_max_count,
                                            delim);
 }
 
 std::string NarrativeBuilder::FormVerbalBearToStayOnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   // "Bear <FormBearTypeInstruction> to stay on <STREET_NAMES(2)>."
 
   std::string instruction;
@@ -736,7 +755,7 @@ std::string NarrativeBuilder::FormVerbalBearToStayOnInstruction(
 
   if (maneuver.HasStreetNames()) {
     instruction += " to stay on ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -771,7 +790,7 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Make a <FormTurnTypeInstruction> U-turn."
   //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
   //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
@@ -784,11 +803,11 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
 
   if (maneuver.HasCrossStreetNames()) {
     instruction += " at ";
-    instruction += maneuver.cross_street_names().ToString(street_name_max_count,
+    instruction += maneuver.cross_street_names().ToString(element_max_count,
                                                           delim);
   } else if (maneuver.HasStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -797,7 +816,7 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
 }
 
 std::string NarrativeBuilder::FormVerbalUturnInstruction(
-    Maneuver& maneuver, uint32_t street_name_max_count, std::string delim) {
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Make a <FormTurnTypeInstruction> U-turn."
   //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
   //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
@@ -811,13 +830,13 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
 
   if (maneuver.HasCrossStreetNames()) {
     instruction += " at ";
-    instruction += maneuver.cross_street_names().ToString(street_name_max_count,
+    instruction += maneuver.cross_street_names().ToString(element_max_count,
                                                           delim);
   }
 
   if (maneuver.HasStreetNames()) {
     instruction += " onto ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
@@ -825,77 +844,234 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormRampStraightInstruction(Maneuver& maneuver) {
-  // 0 = Stay straight to take the ramp
-  // 1 = branch
-  // 2 = toward
-  // 4 = name (if no branch and toward)
+std::string NarrativeBuilder::FormRampStraightInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count) {
 
+  // 0 "Stay straight to take the ramp."
+  // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
+  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
+  // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+  // 4 "Stay straight to take the <NAME_SIGN> ramp."
+
+  // Examples
   // 0 Stay straight to take the ramp
   // 1 Stay straight to take the I 95 South ramp
   // 2 Stay straight to take the ramp toward Baltimore
   // 3 Stay straight to take the I 95 South ramp toward Baltimore
   // 4 Stay straight to take the Gettysburg Pike ramp
 
-  // TODO: determine if we want to grab from options
-  uint32_t number_max_count = 0;
-  uint32_t branch_max_count = 4;
-  uint32_t toward_max_count = 4;
-  uint32_t name_max_count = 4;
-  bool number_limit_by_consecutive_count = false;
-  bool branch_limit_by_consecutive_count = true;
-  bool toward_limit_by_consecutive_count = true;
-  bool name_limit_by_consecutive_count = true;
-
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
 
-  if (maneuver.HasExitBranchSign())
+  // 1 = branch
+  // 2 = toward
+  // 4 = name (if no branch and toward)
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitBranchSign()) {
     phrase_id += 1;
-  if (maneuver.HasExitTowardSign())
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  if (maneuver.HasExitTowardSign()) {
     phrase_id += 2;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count);
+  }
   if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
-      && !maneuver.HasExitTowardSign())
+      && !maneuver.HasExitTowardSign()) {
     phrase_id += 4;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count);
+  }
 
   switch (phrase_id) {
-    // 1 Stay straight to take the I 95 South ramp
+    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
     case 1: {
-      text_instruction += (boost::format("Stay straight to take the %1% ramp")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_branch_sign).str();
       break;
     }
-      // 2 Stay straight to take the ramp toward Baltimore
+    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
     case 2: {
-      text_instruction += (boost::format(
-          "Stay straight to take the ramp toward %1%")
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
+          % exit_toward_sign).str();
       break;
     }
-      // 3 Stay straight to take the I 95 South ramp toward Baltimore
+    // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
     case 3: {
-      text_instruction += (boost::format(
-          "Stay straight to take the %1% ramp toward %2%")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format(
+          "Stay straight to take the %1% ramp toward %2%.") % exit_branch_sign
+          % exit_toward_sign).str();
       break;
     }
-      // 4 Stay straight to take the Gettysburg Pike ramp
+    // 4 "Stay straight to take the <NAME_SIGN> ramp."
     case 4: {
-      text_instruction += (boost::format(
-          "Stay straight to take the %1% ramp")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_name_sign).str();
       break;
     }
     default: {
-      text_instruction = "Stay straight to take the ramp";
+      // 0 "Stay straight to take the ramp."
+      instruction = "Stay straight to take the ramp.";
       break;
     }
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertRampStraightInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+
+  // 0 "Stay straight to take the ramp."
+  // 1 "Stay straight to take the <BRANCH_SIGN(1)> ramp."
+  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN(1)>."
+  // 3 "Stay straight to take the <NAME_SIGN(1)> ramp."
+
+  // Examples
+  // 0 Stay straight to take the ramp
+  // 1 Stay straight to take the I 95 South ramp
+  // 2 Stay straight to take the ramp toward Baltimore
+  // 3 Stay straight to take the Gettysburg Pike ramp
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // 1 = branch
+  // 2 = toward
+  // 3 = name (if no branch and toward)
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitBranchSign()) {
+    phrase_id = 1;
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  else if (maneuver.HasExitTowardSign()) {
+    phrase_id = 2;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  else if (maneuver.HasExitNameSign()) {
+    phrase_id = 3;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count);
+  }
+
+  switch (phrase_id) {
+    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
+    case 1: {
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_branch_sign).str();
+      break;
+    }
+    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
+    case 2: {
+      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
+          % exit_toward_sign).str();
+      break;
+    }
+    // 3 "Stay straight to take the <NAME_SIGN> ramp."
+    case 3: {
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_name_sign).str();
+      break;
+    }
+    default: {
+      // 0 "Stay straight to take the ramp."
+      instruction = "Stay straight to take the ramp.";
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+
+  // 0 "Stay straight to take the ramp."
+  // 1 "Stay straight to take the <BRANCH_SIGN(2)> ramp."
+  // 2 "Stay straight to take the ramp toward <TOWARD_SIGN(2)>."
+  // 3 "Stay straight to take the <BRANCH_SIGN(2)> ramp toward <TOWARD_SIGN(2)>."
+  // 4 "Stay straight to take the <NAME_SIGN(2)> ramp."
+
+  // Examples
+  // 0 Stay straight to take the ramp
+  // 1 Stay straight to take the I 95 South ramp
+  // 2 Stay straight to take the ramp toward Baltimore
+  // 3 Stay straight to take the I 95 South ramp toward Baltimore
+  // 4 Stay straight to take the Gettysburg Pike ramp
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  // 1 = branch
+  // 2 = toward
+  // 4 = name (if no branch and toward)
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitBranchSign()) {
+    phrase_id += 1;
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  if (maneuver.HasExitTowardSign()) {
+    phrase_id += 2;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitBranchSign()
+      && !maneuver.HasExitTowardSign()) {
+    phrase_id += 4;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count);
+  }
+
+  switch (phrase_id) {
+    // 1 "Stay straight to take the <BRANCH_SIGN> ramp."
+    case 1: {
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_branch_sign).str();
+      break;
+    }
+    // 2 "Stay straight to take the ramp toward <TOWARD_SIGN>."
+    case 2: {
+      instruction = (boost::format("Stay straight to take the ramp toward %1%.")
+          % exit_toward_sign).str();
+      break;
+    }
+    // 3 "Stay straight to take the <BRANCH_SIGN> ramp toward <TOWARD_SIGN>."
+    case 3: {
+      instruction = (boost::format(
+          "Stay straight to take the %1% ramp toward %2%.") % exit_branch_sign
+          % exit_toward_sign).str();
+      break;
+    }
+    // 4 "Stay straight to take the <NAME_SIGN> ramp."
+    case 4: {
+      instruction = (boost::format("Stay straight to take the %1% ramp.")
+          % exit_name_sign).str();
+      break;
+    }
+    default: {
+      // 0 "Stay straight to take the ramp."
+      instruction = "Stay straight to take the ramp.";
+      break;
+    }
+  }
+
+  return instruction;
 }
 
 void NarrativeBuilder::FormRampRightInstruction(Maneuver& maneuver) {
@@ -2117,23 +2293,23 @@ void NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
 
 std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
     Maneuver& maneuver, DirectionsOptions_Units units,
-    bool include_street_names, uint32_t street_name_max_count,
+    bool include_street_names, uint32_t element_max_count,
     std::string delim) {
   switch (units) {
     case DirectionsOptions_Units_kMiles: {
       return FormVerbalPostTransitionMilesInstruction(
-          maneuver, include_street_names, street_name_max_count, delim);
+          maneuver, include_street_names, element_max_count, delim);
     }
     default: {
       return FormVerbalPostTransitionKilometersInstruction(
-          maneuver, include_street_names, street_name_max_count, delim);
+          maneuver, include_street_names, element_max_count, delim);
     }
   }
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
     Maneuver& maneuver, bool include_street_names,
-    uint32_t street_name_max_count, std::string delim) {
+    uint32_t element_max_count, std::string delim) {
   //  TODO
   //  "Continue for one hundred meters." (.1, .2, .3, .4, .6, .7, .8, .9)
   //  "Continue for a half kilometer."
@@ -2153,19 +2329,19 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
 
   if (include_street_names && maneuver.HasStreetNames()) {
     instruction += " on ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
   instruction += " for ";
-  instruction += (boost::format("%.1f") % maneuver.distance()).str();
+  instruction += (boost::format("%.1f") % maneuver.length()).str();
   instruction += " kilometers.";
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionMilesInstruction(
     Maneuver& maneuver, bool include_street_names,
-    uint32_t street_name_max_count, std::string delim) {
+    uint32_t element_max_count, std::string delim) {
   //  TODO
   //  "Continue for one tenth of a mile."
   //  "Continue for two tenths of a mile." (.2, .3, .4, .6, .7, .8, .9)
@@ -2188,12 +2364,13 @@ std::string NarrativeBuilder::FormVerbalPostTransitionMilesInstruction(
 
   if (include_street_names && maneuver.HasStreetNames()) {
     instruction += " on ";
-    instruction += maneuver.street_names().ToString(street_name_max_count,
+    instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
 
   instruction += " for ";
-  instruction += (boost::format("%.1f") % maneuver.distance()).str();
+  instruction += (boost::format("%.1f")
+      % maneuver.length(DirectionsOptions_Units_kMiles)).str();
   instruction += " miles.";
   return instruction;
 }

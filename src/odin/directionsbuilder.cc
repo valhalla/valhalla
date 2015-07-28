@@ -148,8 +148,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->add_begin_street_name(begin_street_name->value());
     }
 
-    trip_maneuver->set_length(maneuver.distance());
-    leg_length += maneuver.distance();
+    trip_maneuver->set_length(maneuver.length(directions_options.units()));
+    leg_length += maneuver.length(directions_options.units());
     trip_maneuver->set_time(maneuver.time());
     trip_maneuver->set_begin_cardinal_direction(
         maneuver.begin_cardinal_direction());
