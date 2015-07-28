@@ -256,7 +256,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   destination_only_penalty_ = pt.get<float>("destination_only_penalty",
                                             kDefaultDestinationOnlyPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
-  alley_penalty_ = pt.get<float>("al  // ley_penalty",  kDefaultAlleyPenalty);
+  alley_penalty_ = pt.get<float>("alley_penalty",  kDefaultAlleyPenalty);
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
                                            kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
