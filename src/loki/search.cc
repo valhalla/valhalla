@@ -129,7 +129,7 @@ PathLocation CorrelateNode(const NodeInfo* node, const Location& location, const
 
   //if we still found nothing that is no good..
   if(correlated.edges().size() == 0)
-    throw std::runtime_error("Unable to find any paths leaving this location");
+    throw std::runtime_error("No suitable edges near location");
 
   //give it back
   return correlated;
@@ -331,7 +331,7 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
 
   //if we found nothing that is no good..
   if(correlated.edges().size() == 0)
-    throw std::runtime_error("Unable to find any paths leaving this location");
+    throw std::runtime_error("No suitable edges near location");
 
   //give it back
   return correlated;

@@ -34,28 +34,34 @@ using namespace valhalla::sif;
 
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, NEAREST, VERSION};
+  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/route", ROUTE},
     {"/viaroute", VIAROUTE},
-    {"/locate", LOCATE},
-    {"/nearest", NEAREST}
+    {"/locate", LOCATE}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
 
-    //throw the json into the ptree
-    auto json = request.query.find("json");
-    if(json != request.query.end() && json->second.size()) {
-      std::istringstream is(json->second.front());
-      boost::property_tree::read_json(is, pt);
-    }//no json parameter, check the body
-    else if(!request.body.empty()) {
-      std::istringstream is(request.body);
-      boost::property_tree::read_json(is, pt);
+    //parse the input
+    try {
+      //throw the json into the ptree
+      auto json = request.query.find("json");
+      if(json != request.query.end() && json->second.size()) {
+        std::istringstream is(json->second.front());
+        boost::property_tree::read_json(is, pt);
+      }//no json parameter, check the body
+      else if(!request.body.empty()) {
+        std::istringstream is(request.body);
+        boost::property_tree::read_json(is, pt);
+      }
+    }
+    catch(...) {
+      throw std::runtime_error("Failed to parse json request");
     }
 
     //throw the query params into the ptree
@@ -79,7 +85,6 @@ namespace {
       }
       pt.add_child(kv.first, array);
     }
-
 
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == VIAROUTE) {
@@ -155,7 +160,6 @@ namespace {
     });
   }
 
-  //TODO: throw this in the header to make it testable?
   class loki_worker_t {
    public:
     loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
@@ -172,11 +176,22 @@ namespace {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Loki Request " + std::to_string(info.id));
       //request should look like:
-      //  /[route|viaroute|locate|nearest]?loc=&json=&jsonp=
+      //  /[route|viaroute|locate]?loc=&json=&jsonp=
 
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+
+        //block all but get and post
+        if(request.method != method_t::POST && request.method != method_t::GET) {
+          worker_t::result_t result{false};
+          http_response_t response(405, "Method Not Allowed", "Try a POST or GET request instead", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
+        //what do they want to do
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
@@ -197,6 +212,7 @@ namespace {
             return locate(request_pt, info);
         }
 
+        //apparently you wanted something that we figured we'd support but havent written yet
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
         response.from_info(info);
@@ -204,6 +220,7 @@ namespace {
         return result;
       }
       catch(const std::exception& e) {
+        LOG_INFO(std::string("Bad Request: ") + e.what());
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
@@ -213,49 +230,43 @@ namespace {
     }
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
-      try {
-        for(const auto& location : request.get_child("locations")) {
-          locations.push_back(baldr::Location::FromPtree(location.second));
-          if(action != LOCATE && locations.size() > max_route_locations)
-            throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
-        }
-        if(locations.size() < 1)
-          throw std::runtime_error("Unsufficient number of locations provided");
-        //TODO: bail if this is too many
-        LOG_INFO("location_count::" + std::to_string(locations.size()));
-      }
-      catch(...) {
+      auto request_locations = request.get_child_optional("locations");
+      if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
+      for(const auto& location : request_locations.get()) {
+        locations.push_back(baldr::Location::FromPtree(location.second));
+        if(action != LOCATE && locations.size() > max_route_locations)
+          throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
       }
+      if(locations.size() < (action == LOCATE ? 1 : 2))
+        throw std::runtime_error("Insufficient number of locations provided");
+      LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
       // Parse out the type of route - this provides the costing method to use
-      std::string costing;
-      try {
-        costing = request.get<std::string>("costing");
-      }
-      catch(...) {
+      auto costing = request.get_optional<std::string>("costing");
+      if(!costing)
         throw std::runtime_error("No edge/node costing provided");
-      }
 
-      if (costing == "multimodal") {
-        // TODO - have a way of specifying mode at the location
-        costing = "pedestrian";
-      }
+      // TODO - have a way of specifying mode at the location
+      if(*costing == "multimodal")
+        *costing = "pedestrian";
 
       // Get the costing options. Get the base options from the config and the
       // options for the specified costing method
-      std::string method_options = "costing_options." + costing;
-      boost::property_tree::ptree config_costing = config.get_child(method_options);
-      const auto& request_costing = request.get_child_optional(method_options);
-      if (request_costing) {
+      std::string method_options = "costing_options." + *costing;
+      auto config_costing = config.get_child_optional(method_options);
+      if(!config_costing)
+        throw std::runtime_error("No costing method found for '" + *costing + "'");
+      auto request_costing = request.get_child_optional(method_options);
+      if(request_costing) {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
-        for (const auto& r : *request_costing) {
-          config_costing.put_child(r.first, r.second);
-        }
+        // TODO: suboptions are probably getting smashed when we do this, preserve them
+        for(const auto& r : *request_costing)
+          config_costing->put_child(r.first, r.second);
       }
-      cost = factory.Create(costing, config_costing);
+      cost = factory.Create(*costing, *config_costing);
     }
     worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //see if any locations pairs are unreachable or too far apart
@@ -266,24 +277,13 @@ namespace {
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
-        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0})) {
-          worker_t::result_t result{false};
-          http_response_t response(404, "Not Found",
-            "Locations are in unconnected regions. Go check/edit the map at osm.org", headers_t{CORS});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
+          throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
         //check if distance between latlngs exceed max distance limit for each mode of travel
         auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
-        if (path_distance > max_distance) {
-          worker_t::result_t result { false };
-          http_response_t response(412,"Precondition Failed","Path distance exceeds the max distance limit.", headers_t{CORS});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
+        if (path_distance > max_distance)
+          throw std::runtime_error("Path distance exceeds the max distance limit.");
 
         LOG_INFO("location_distance::" + std::to_string(path_distance));
       }
@@ -331,7 +331,7 @@ namespace {
         stream << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
       return result;
