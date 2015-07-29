@@ -172,10 +172,10 @@ class NarrativeBuilder {
       const std::string& exit_name_sign);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormExitRightInstruction(Maneuver& maneuver);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormExitLeftInstruction(Maneuver& maneuver);
+  static std::string FormExitInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kElementMaxCount);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormStayStraightInstruction(Maneuver& maneuver);

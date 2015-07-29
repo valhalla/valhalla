@@ -14,9 +14,11 @@ std::vector<Sign>* Signs::mutable_exit_number_list() {
   return &exit_number_list_;
 }
 
-const std::string Signs::GetExitNumberString(
-    uint32_t max_count, bool limit_by_consecutive_count) const {
-  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count);
+const std::string Signs::GetExitNumberString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim) const {
+  return ListToString(exit_number_list_, max_count, limit_by_consecutive_count,
+                      delim);
 }
 
 const std::vector<Sign>& Signs::exit_branch_list() const {

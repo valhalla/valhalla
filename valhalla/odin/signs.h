@@ -17,8 +17,9 @@ class Signs {
   const std::vector<Sign>& exit_number_list() const;
   std::vector<Sign>* mutable_exit_number_list();
 
-  const std::string GetExitNumberString(
-      uint32_t max_count = 0, bool limit_by_consecutive_count = false) const;
+  const std::string GetExitNumberString(uint32_t max_count = 0,
+                                        bool limit_by_consecutive_count = false,
+                                        std::string delim = "/") const;
 
   const std::vector<Sign>& exit_branch_list() const;
   std::vector<Sign>* mutable_exit_branch_list();
