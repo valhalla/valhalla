@@ -317,8 +317,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     AddToAdjacencyList(edgeid, sortcost);
-    edgelabels_.emplace_back(kInvalidLabel, edgeid,
-            directededge, cost, sortcost, dist, 0,
+    edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
+            sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_);
   }
 }
