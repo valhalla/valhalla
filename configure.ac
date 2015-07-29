@@ -24,6 +24,7 @@ AX_CXX_COMPILE_STDCXX_11([noext],[mandatory])
 # require other valhalla dependencies
 CHECK_VALHALLA_MIDGARD
 CHECK_VALHALLA_BALDR
+CHECK_VALHALLA_SKADI
 
 # check for protocol buffers compiler and libraries
 REQUIRE_PROTOC
