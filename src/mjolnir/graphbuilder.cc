@@ -13,6 +13,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -391,6 +392,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
 
+      // A place to keep information about edges whose steepness we already know about
+      std::unordered_map<uint32_t, uint8_t> hilliness;
+
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
       auto node_itr = nodes[tile_start->second];
@@ -533,6 +537,18 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
               added);
           directededge.set_edgeinfo_offset(edge_info_offset);
+
+          // Hilliness estimation
+          auto hill_factor = hilliness.find(edge_info_offset);
+          if(hill_factor == hilliness.cend()) {
+            auto resampled = valhalla::midgard::resample_spherical_polyline(shape, 60);
+            //TODO: compute the factor
+            directededge.set_elevation(0);
+            hilliness.emplace(edge_info_offset, 0);
+          }//already have an estimation for the reverse direction
+          else {
+            directededge.set_elevation(hill_factor->second);
+          }
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
