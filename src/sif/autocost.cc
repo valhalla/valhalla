@@ -264,39 +264,46 @@ Cost AutoCost::EdgeCost(const DirectedEdge* edge,
 Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred) const {
-  // Special cases: gate, toll booth, false intersections
-  if (edge->ctry_crossing()) {
-    return { country_crossing_cost_ + country_crossing_penalty_,
-             country_crossing_cost_ };
-  } else if (node->type() == NodeType::kGate) {
-    return { gate_cost_, gate_cost_ };
-  } else if (node->type() == NodeType::kTollBooth) {
-    return { tollbooth_cost_ + tollbooth_penalty_, tollbooth_cost_ };
-  } else if (node->intersection() == IntersectionType::kFalse) {
-      return { 0.0f, 0.0f };
-  } else {
-    float penalty = 0.0f;
-    if (!pred.destonly() && edge->destonly()) {
-      penalty += destination_only_penalty_;
-    }
-    if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
-      penalty += alley_penalty_;
-    }
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
 
-    // Transition cost = density * stopimpact * turncost + maneuverpenalty
-    float seconds = 0.0f;
-    uint32_t idx = pred.opp_local_idx();
-    uint32_t stopimpact = edge->stopimpact(idx);
-    if (stopimpact > 0) {
-      seconds = trans_density_factor_[node->density()] * stopimpact *
-                TurnCost(edge->turntype(idx),
-                         edge->edge_to_right(idx) && edge->edge_to_left(idx),
-                         edge->drive_on_right());
-    }
-    return (node->name_consistency(idx, edge->localedgeidx())) ?
-              Cost(seconds + penalty, seconds) :
-              Cost(seconds + maneuver_penalty_ + penalty, seconds);
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (edge->ctry_crossing()) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
   }
+  if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+  }
+  if (node->type() == NodeType::kTollBooth) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  uint32_t idx = pred.opp_local_idx();
+  if (!pred.destonly() && edge->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (node->name_consistency(idx, edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
+  }
+
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0) {
+    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) *
+               TurnCost(edge->turntype(idx),
+                       edge->edge_to_right(idx) && edge->edge_to_left(idx),
+                       edge->drive_on_right());
+  }
+
+  // Return cost (time and penalty)
+  return { seconds + penalty, seconds };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
