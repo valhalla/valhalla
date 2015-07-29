@@ -17,12 +17,12 @@ class NarrativeBuilderTest : public NarrativeBuilder {
     return NarrativeBuilder::FormRampStraightInstruction(maneuver);
   }
 
-  static void FormRampRightInstruction(Maneuver& maneuver) {
-    return NarrativeBuilder::FormRampRightInstruction(maneuver);
+  static std::string FormRampRightInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormRampInstruction(maneuver);
   }
 
-  static void FormRampLeftInstruction(Maneuver& maneuver) {
-    return NarrativeBuilder::FormRampLeftInstruction(maneuver);
+  static std::string FormRampLeftInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormRampInstruction(maneuver);
   }
 
   static void FormExitRightInstruction(Maneuver& maneuver) {
@@ -142,8 +142,8 @@ void TestFormRampStraightInstruction() {
 
 void TryFormRampRightInstruction(Maneuver maneuver, std::string expected) {
   NarrativeBuilderTest nbTest;
-  nbTest.FormRampRightInstruction(maneuver);
-  if (maneuver.instruction() != expected)
+  std::string instruction = nbTest.FormRampRightInstruction(maneuver);
+  if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampRightInstruction");
 }
 
@@ -211,35 +211,35 @@ void TestFormRampRightInstruction() {
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike ramp on the right.");
 
-  // phrase_id = 8
+  // phrase_id = 5
   TryFormRampRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
                          { }),
       "Turn right to take the ramp.");
 
-  // phrase_id = 9
+  // phrase_id = 6
   TryFormRampRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { "I 95 South" }, { }, { }),
       "Turn right to take the I 95 South ramp.");
 
-  // phrase_id = 10
+  // phrase_id = 7
   TryFormRampRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { }, { "Baltimore" }, { }),
       "Turn right to take the ramp toward Baltimore.");
 
-  // phrase_id = 11
+  // phrase_id = 8
   TryFormRampRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Turn right to take the I 95 South ramp toward Baltimore.");
 
-  // phrase_id = 12
+  // phrase_id = 9
   TryFormRampRightInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampRight,
                          Maneuver::RelativeDirection::kRight, { }, { }, { },
@@ -250,8 +250,8 @@ void TestFormRampRightInstruction() {
 
 void TryFormRampLeftInstruction(Maneuver maneuver, std::string expected) {
   NarrativeBuilderTest nbTest;
-  nbTest.FormRampLeftInstruction(maneuver);
-  if (maneuver.instruction() != expected)
+  std::string instruction = nbTest.FormRampLeftInstruction(maneuver);
+  if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampLeftInstruction");
 }
 
@@ -319,35 +319,35 @@ void TestFormRampLeftInstruction() {
                          { "Gettysburg Pike" }),
       "Take the Gettysburg Pike ramp on the left.");
 
-  // phrase_id = 8
+  // phrase_id = 5
   TryFormRampLeftInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { },
                          { }),
       "Turn left to take the ramp.");
 
-  // phrase_id = 9
+  // phrase_id = 6
   TryFormRampLeftInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { }, { }),
       "Turn left to take the I 95 South ramp.");
 
-  // phrase_id = 10
+  // phrase_id = 7
   TryFormRampLeftInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { }, { "Baltimore" }, { }),
       "Turn left to take the ramp toward Baltimore.");
 
-  // phrase_id = 11
+  // phrase_id = 8
   TryFormRampLeftInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { },
                          { "I 95 South" }, { "Baltimore" }, { }),
       "Turn left to take the I 95 South ramp toward Baltimore.");
 
-  // phrase_id = 12
+  // phrase_id = 9
   TryFormRampLeftInstruction(
       CreateSignManeuver(TripDirections_Maneuver_Type_kRampLeft,
                          Maneuver::RelativeDirection::kLeft, { }, { }, { },

@@ -27,9 +27,11 @@ std::vector<Sign>* Signs::mutable_exit_branch_list() {
   return &exit_branch_list_;
 }
 
-const std::string Signs::GetExitBranchString(
-    uint32_t max_count, bool limit_by_consecutive_count) const {
-  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count);
+const std::string Signs::GetExitBranchString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim) const {
+  return ListToString(exit_branch_list_, max_count, limit_by_consecutive_count,
+                      delim);
 }
 
 const std::vector<Sign>& Signs::exit_toward_list() const {
@@ -40,9 +42,11 @@ std::vector<Sign>* Signs::mutable_exit_toward_list() {
   return &exit_toward_list_;
 }
 
-const std::string Signs::GetExitTowardString(
-    uint32_t max_count, bool limit_by_consecutive_count) const {
-  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count);
+const std::string Signs::GetExitTowardString(uint32_t max_count,
+                                             bool limit_by_consecutive_count,
+                                             std::string delim) const {
+  return ListToString(exit_toward_list_, max_count, limit_by_consecutive_count,
+                      delim);
 }
 
 const std::vector<Sign>& Signs::exit_name_list() const {
