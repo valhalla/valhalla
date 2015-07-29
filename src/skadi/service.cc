@@ -240,7 +240,7 @@ namespace {
         json = json::map({
           {"profile", serialize_range_height(ranges, heights, sample.get_no_data_value())}
         });
-      } else if (action == ELEVATION) {
+      } else {
         json = json::map({
           {"elevation", serialize_height(heights, sample.get_no_data_value())}
         });
