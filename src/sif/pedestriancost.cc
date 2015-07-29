@@ -21,7 +21,7 @@ constexpr uint32_t kMaxDistance        = 100000; // 100 km
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
-constexpr float kDefaultDrivewayFactor = 2.0f;   // Avoid driveways
+constexpr float kDefaultDrivewayFactor = 5.0f;   // Avoid driveways
 constexpr float kDefaultStepPenalty    = 30.0f;  // 30 seconds
 }
 
@@ -164,7 +164,7 @@ class PedestrianCost : public DynamicCost {
   // Avoid alleys. Default to 2.0. Double the cost to traverse an alley.
   float alley_factor_;
 
-  // Avoid driveways. Default to 2.0. Double the cost to traverse.
+  // Avoid driveways. Default to 5.0. 5x cost to traverse.
   float driveway_factor_;
 
   // Avoid stairs/steps. This is a fixed cost in seconds.
