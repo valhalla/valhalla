@@ -276,8 +276,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
-  }
-  if (node->type() == NodeType::kTollBooth) {
+  } else if (node->type() == NodeType::kTollBooth) {
     seconds += tollbooth_cost_;
     penalty += tollbooth_penalty_;
   }
