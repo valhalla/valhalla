@@ -28,9 +28,9 @@ AC_DEFUN([CHECK_VALHALLA_SKADI],
 
         AC_CACHE_CHECK(whether the valhalla::skadi library is available, ax_cv_valhalla_skadi,
         	[AC_LANG_PUSH([C++])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/skadi/search.h>]],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/skadi/sample.h>]],
 			[[using namespace valhalla::skadi;
-			SearchStrategy s;]])],
+			try{sample("");}catch(...){}]])],
 			ax_cv_valhalla_skadi=yes, ax_cv_valhalla_skadi=no)
 		AC_LANG_POP([C++])
 	])

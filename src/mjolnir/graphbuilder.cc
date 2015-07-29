@@ -22,6 +22,7 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/skadi/sample.h>
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
