@@ -13,7 +13,7 @@ namespace sif {
 namespace {
 constexpr float kDefaultManeuverPenalty         = 10.0f;  // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
-constexpr float kDefaultAlleyPenalty            = 60.0f;  // Seconds
+constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
@@ -286,7 +286,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   }
 
   // Willingness to use roads. Make sure this is within range [0, 1].
-  useroads_ = pt.get<float>("useroads_", kDefaultUseRoadsFactor);
+  useroads_ = pt.get<float>("useroads", kDefaultUseRoadsFactor);
   if (useroads_ < 0.0f || useroads_ > 1.0f) {
     LOG_ERROR("Outside valid useroads factor range " +
               std::to_string(useroads_) + ": using default");
