@@ -146,9 +146,9 @@ namespace {
         init_request(action->second, request_pt);
         switch (action->second) {
           case PROFILE:
-            return elevation(request_pt, action->second, info);
           case ELEVATION:
             return elevation(request_pt, action->second, info);
+            break;
         }
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
@@ -226,29 +226,24 @@ namespace {
     ]
   ]
 }*/
-
     worker_t::result_t elevation(const boost::property_tree::ptree& request, const ACTION_TYPE& action, http_request_t::info_t& request_info) {
 
-      //get the distances between the postings
-      std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
-      for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
-        ranges.emplace_back(ranges.back() +  point->Distance(*(point - 1)));
-      }
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
-
       auto json = json::map({});
-      switch (action) {
-      case PROFILE:
+      if (action == PROFILE) {
+        //get the distances between the postings
+        std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
+        for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
+          ranges.emplace_back(ranges.back() +  point->Distance(*(point - 1)));
+        }
         json = json::map({
           {"profile", serialize_range_height(ranges, heights, sample.get_no_data_value())}
         });
-        break;
-      case ELEVATION:
+      } else if (action == ELEVATION) {
         json = json::map({
           {"elevation", serialize_height(heights, sample.get_no_data_value())}
         });
-        break;
       }
       if(encoded_polyline)
         json->emplace("input_encoded_polyline", *encoded_polyline);
