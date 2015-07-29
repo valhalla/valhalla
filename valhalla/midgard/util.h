@@ -133,6 +133,8 @@ struct memory_status {
 
   std::unordered_map<std::string, std::pair<double, std::string> > metrics;
 
+  static bool supported();
+
   friend std::ostream& operator<<(std::ostream&, const memory_status&);
 };
 std::ostream& operator<<(std::ostream& stream, const memory_status& s);

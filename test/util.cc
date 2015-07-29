@@ -65,17 +65,20 @@ void AppxEqual() {
 }
 
 void MemoryStatus() {
-  memory_status status({"VmSize", "VmSwap", "VmPeak"});
+  //only check this if the os supports it (system must have /proc/self/status)
+  if(memory_status::supported()){
+    memory_status status({"VmSize", "VmSwap", "VmPeak"});
 
-  //should have each of these
-  for(const auto& key : {"VmSize", "VmSwap", "VmPeak"}) {
-    auto value = status.metrics.find(key);
-    if(value == status.metrics.end())
-      throw std::runtime_error("Missing memory statistic for " + std::string(key));
-    if(value->second.first < 0.)
-      throw std::runtime_error("Negative memory usage values are not allowed");
-    if(value->second.second.back() != 'B')
-      throw std::runtime_error("Units should be some magnitude of bytes");
+    //should have each of these
+    for(const auto& key : {"VmSize", "VmSwap", "VmPeak"}) {
+      auto value = status.metrics.find(key);
+      if(value == status.metrics.end())
+        throw std::runtime_error("Missing memory statistic for " + std::string(key));
+      if(value->second.first < 0.)
+        throw std::runtime_error("Negative memory usage values are not allowed");
+      if(value->second.second.back() != 'B')
+        throw std::runtime_error("Units should be some magnitude of bytes");
+    }
   }
 }
 

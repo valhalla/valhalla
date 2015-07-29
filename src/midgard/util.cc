@@ -10,6 +10,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <sys/stat.h>
 
 namespace {
 constexpr double POLYLINE_PRECISION = 1E6;
@@ -174,6 +175,11 @@ memory_status::memory_status(const std::unordered_set<std::string> interest){
     }
     line.clear();
   }
+}
+
+bool memory_status::supported() {
+  struct stat s;
+  return stat("/proc/self/status", &s) == 0;
 }
 
 std::ostream& operator<<(std::ostream& stream, const memory_status& s){
