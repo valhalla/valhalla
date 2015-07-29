@@ -30,13 +30,14 @@ using namespace valhalla::midgard;
 
 
 namespace {
-  enum ACTION_TYPE {ELEVATION, PLOT, VERSION};
+  enum ACTION_TYPE {ELEVATION, PROFILE, VERSION};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/elevation", ELEVATION},
-    {"/plot", PLOT}
+    {"/profile", PROFILE}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
@@ -76,38 +77,35 @@ namespace {
     return pt;
   }
 
-  //Walk the range height
   json::ArrayPtr serialize_range_height(const std::vector<float>& ranges, const std::vector<double>& heights, const double no_data_value) {
-    auto xarray = json::array({});
-    auto yarray = json::array({});
-    auto array = json::array({});
+  auto array = json::array({});
+    //for each posting
+    auto range = ranges.cbegin();
 
-    for(auto range = ranges.cbegin(); range != ranges.cend(); ++range){
-      //add all x's to an array
-      xarray->push_back({json::fp_t{*range,0}});
-    }
     for (const auto height : heights) {
-      //add all y's to an array
+      auto element = json::array({json::fp_t{*range,0}});
       if(height == no_data_value)
-        yarray->push_back(nullptr);
-      else yarray->push_back({json::fp_t{height, 0}});
+        element->push_back(nullptr);
+      else {
+        element->push_back({json::fp_t{height, 0}});
+      }
+      array->push_back(element);
+      ++range;
     }
-    array->push_back(xarray);
-    array->push_back(yarray);
     return array;
-  }
+}
 
   json::ArrayPtr serialize_height(const std::vector<double>& heights, const double no_data_value) {
-    auto yarray = json::array({});
+    auto array = json::array({});
 
     for (const auto height : heights) {
-      //add all y's to an array
+      //add all heights's to an array
       if(height == no_data_value)
-        yarray->push_back(nullptr);
-      else yarray->push_back({json::fp_t{height, 0}});
+        array->push_back(nullptr);
+      else array->push_back({json::fp_t{height, 0}});
     }
 
-    return yarray;
+    return array;
   }
 
   json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
@@ -132,14 +130,14 @@ namespace {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Skadi Request " + std::to_string(info.id));
       //request should look like:
-      //  http://host:port/plot?json={shape:[{lat: ,lon: }]}&apikey= OR http://host:port/plot?json={encoded_polyline:" xxxx "}&apikey=
+      //  http://host:port/profile?json={shape:[{lat: ,lon: }]}&apikey= OR http://host:port/profile?json={encoded_polyline:" xxxx "}&apikey=
       try{
         //request parsing
         auto request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/plot' '/elevation'", headers_t{CORS});
+          http_response_t response(404, "Not Found", "Try any of: '/profile' '/elevation'", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -148,10 +146,10 @@ namespace {
         auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
         switch (action->second) {
-          case PLOT:
-            return plot(request_pt, info);
+          case PROFILE:
+            return elevation(request_pt, action->second, info);
           case ELEVATION:
-            return elevation(request_pt, info);
+            return elevation(request_pt, action->second, info);
         }
         worker_t::result_t result{false};
         http_response_t response(501, "Not Implemented", "", headers_t{CORS});
@@ -190,13 +188,13 @@ namespace {
        }
      }
      catch(...) {
-       throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == PLOT ? "latlng'" : "shape'"));
+       throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == PROFILE ? "latlng'" : "shape'"));
      }
      //you forgot something
      throw std::runtime_error("Insufficient shape provided");
    }
 
-  //example plot response:
+  //example profile response:
   /*
   {
     "input_shape":
@@ -214,35 +212,45 @@ namespace {
         "lon": -76.805695
     }
   ],
-  "plot":
-  [
+  "profile": [
     [
         0,
-        8410,
-        25208
+        303
     ],
     [
-        303,
-        275,
+        8467,
+        275
+    ],
+    [
+        25380,
         198
     ]
   ]
-  }*/
+}*/
 
-    worker_t::result_t plot(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t elevation(const boost::property_tree::ptree& request, const ACTION_TYPE& action, http_request_t::info_t& request_info) {
+
       //get the distances between the postings
       std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
       for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
-        auto distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
-        ranges.emplace_back(ranges.back() + distance);
+        ranges.emplace_back(ranges.back() +  point->Distance(*(point - 1)));
       }
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
 
-      //serialize
-      auto json = json::map({
-        {"plot", serialize_range_height(ranges, heights, sample.get_no_data_value())}
-      });
+      auto json = json::map({});
+      switch (action) {
+      case PROFILE:
+        json = json::map({
+          {"profile", serialize_range_height(ranges, heights, sample.get_no_data_value())}
+        });
+        break;
+      case ELEVATION:
+        json = json::map({
+          {"elevation", serialize_height(heights, sample.get_no_data_value())}
+        });
+        break;
+      }
       if(encoded_polyline)
         json->emplace("input_encoded_polyline", *encoded_polyline);
       else
@@ -258,46 +266,11 @@ namespace {
         stream << ')';
 
       worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
       response.from_info(request_info);
       result.messages.emplace_back(response.to_string());
       return result;
     }
-
-    worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-          //get the distances between the postings
-          std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
-          for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point){
-            auto distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(*point, *(point - 1)));
-            ranges.emplace_back(ranges.back() + distance);
-          }
-          //get the elevation of each posting
-          std::vector<double> heights = sample.get_all(shape);
-
-          //serialize
-          auto json = json::map({
-            {"elevation", serialize_height(heights, sample.get_no_data_value())}
-          });
-          if(encoded_polyline)
-            json->emplace("input_encoded_polyline", *encoded_polyline);
-          else
-            json->emplace("input_shape", serialize_shape(shape));
-
-          //jsonp callback if need be
-          std::ostringstream stream;
-          auto jsonp = request.get_optional<std::string>("jsonp");
-          if(jsonp)
-            stream << *jsonp << '(';
-          stream << *json;
-          if(jsonp)
-            stream << ')';
-
-          worker_t::result_t result{false};
-          http_response_t response(200, "OK", stream.str(), headers_t{CORS, JSON_MIME});
-          response.from_info(request_info);
-          result.messages.emplace_back(response.to_string());
-          return result;
-        }
 
     void cleanup() {
       shape.clear();
