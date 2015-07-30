@@ -258,8 +258,6 @@ class BicycleCost : public DynamicCost {
 
 // Bicycle route costs are distance based with some favor/avoid based on
 // attribution.
-// TODO - add options and config settings.
-// TODO - how to handle time/speed for estimating time on path
 
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
@@ -296,9 +294,11 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(bicycletype_);
-  speed_ = pt.get<float>("speed", kDefaultCyclingSpeed[t]);
+  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
+
+  // Validate speed (make sure it is in the accepted range)
   if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
-    LOG_ERROR("Outside valid cycling speed range " + std::to_string(speed_) +
+    LOG_WARN("Outside valid cycling speed range " + std::to_string(speed_) +
                 ": using default");
     speed_ = kDefaultCyclingSpeed[t];
   }
@@ -306,7 +306,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Willingness to use roads. Make sure this is within range [0, 1].
   useroads_ = pt.get<float>("use_roads", kDefaultUseRoadsFactor);
   if (useroads_ < 0.0f || useroads_ > 1.0f) {
-    LOG_ERROR("Outside valid useroads factor range " +
+    LOG_WARN("Outside valid useroads factor range " +
               std::to_string(useroads_) + ": using default");
   }
 
