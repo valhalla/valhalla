@@ -232,6 +232,9 @@ struct graph_callback : public OSMPBF::Callback {
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
 
+    if (!has_surface_tag)
+      has_surface = false;
+
     for (const auto& tag : results) {
 
       if (tag.first == "road_class") {
@@ -502,6 +505,7 @@ struct graph_callback : public OSMPBF::Callback {
         case RoadClass::kMotorway:
         case RoadClass::kTrunk:
         case RoadClass::kPrimary:
+        case RoadClass::kSecondary:
         case RoadClass::kTertiary:
         case RoadClass::kUnclassified:
         case RoadClass::kResidential:
@@ -526,7 +530,9 @@ struct graph_callback : public OSMPBF::Callback {
             w.set_surface(Surface::kPaved);
             break;
           default:
-            w.set_surface(Surface::kImpassable);  //Not sure about this one.
+            //TODO:  see if we can add more logic when a user does not
+            //specify a surface.
+            w.set_surface(Surface::kPaved);
             break;
           }
           break;
