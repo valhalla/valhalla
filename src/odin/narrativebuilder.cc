@@ -274,6 +274,23 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         } else {
           // Set instruction
           maneuver.set_instruction(std::move(FormKeepInstruction(maneuver)));
+
+          // Set verbal transition alert instruction
+          maneuver.set_verbal_transition_alert_instruction(
+              std::move(FormVerbalAlertKeepInstruction(maneuver)));
+
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(
+              std::move(FormVerbalKeepInstruction(maneuver)));
+
+          // Only set verbal post if > min ramp length
+          if (maneuver.length() > kVerbalPostMinimumRampLength) {
+            // Set verbal post transition instruction
+            maneuver.set_verbal_post_transition_instruction(
+                std::move(
+                    FormVerbalPostTransitionInstruction(
+                        maneuver, directions_options.units())));
+          }
         }
         break;
       }
@@ -1741,6 +1758,145 @@ std::string NarrativeBuilder::FormKeepInstruction(
     exit_toward_sign = maneuver.signs().GetExitTowardString(
         element_max_count, limit_by_consecutive_count);
   }
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  switch (phrase_id) {
+    //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
+    case 1: {
+      instruction = (boost::format("Keep %1% to take exit %2%.") % turn
+          % exit_number_sign).str();
+      break;
+    }
+      //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN>."
+    case 2: {
+      instruction =
+          (boost::format("Keep %1% to take %2%.") % turn % street_name).str();
+      break;
+    }
+      //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN>."
+    case 3: {
+      instruction = (boost::format("Keep %1% to take exit %2% onto %3%.") % turn
+          % exit_number_sign % street_name).str();
+      break;
+    }
+      //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
+    case 4: {
+      instruction = (boost::format("Keep %1% toward %2%.") % turn
+          % exit_toward_sign).str();
+      break;
+    }
+      //  5 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN>."
+    case 5: {
+      instruction = (boost::format("Keep %1% to take exit %2% toward %3%.")
+          % turn % exit_number_sign % exit_toward_sign).str();
+      break;
+    }
+      //  6 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN> toward <TOWARD_SIGN>."
+    case 6: {
+      instruction = (boost::format("Keep %1% to take %2% toward %3%.") % turn
+          % street_name % exit_toward_sign).str();
+      break;
+    }
+      //  7 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN> toward <TOWARD_SIGN>."
+    case 7: {
+      instruction = (boost::format(
+          "Keep %1% to take exit %2% onto %3% toward %4%.") % turn
+          % exit_number_sign % street_name % exit_toward_sign).str();
+      break;
+    }
+      //  0 "Keep <FormTurnTypeInstruction> at the fork."
+    default: {
+      instruction = (boost::format("Keep %1% at the fork.") % turn).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertKeepInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+
+  //  0 "Keep <FormTurnTypeInstruction> at the fork."
+  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
+  //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(1)>."
+  //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN(1)>."
+
+  // Assign maneuver street name or sign branch name
+  std::string street_name;
+  if (maneuver.HasStreetNames()) {
+    street_name = maneuver.street_names().ToString(element_max_count, delim);
+  } else if (maneuver.HasExitBranchSign()) {
+    street_name = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string exit_number_sign;
+  std::string exit_toward_sign;
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign()) {
+    phrase_id += 1;
+    exit_number_sign = maneuver.signs().GetExitNumberString(0, false, delim);
+  } else if (!street_name.empty()) {
+    phrase_id += 2;
+  } else if (maneuver.HasExitTowardSign()) {
+    phrase_id += 4;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+
+  return FormVerbalKeepInstruction(phrase_id, turn, street_name,
+                                   exit_number_sign, exit_toward_sign);
+}
+
+std::string NarrativeBuilder::FormVerbalKeepInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+
+  //  0 "Keep <FormTurnTypeInstruction> at the fork."
+  //  1 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN>."
+  //  2 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(2)>."
+  //  3 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN(2)>."
+  //  4 "Keep <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
+  //  5 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> toward <TOWARD_SIGN(2)>."
+  //  6 "Keep <FormTurnTypeInstruction> to take <STREET_NAMES OR BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+  //  7 "Keep <FormTurnTypeInstruction> to take exit <NUMBER_SIGN> onto <STREET_NAMES OR BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+
+  // Assign maneuver street name or sign branch name
+  std::string street_name;
+  if (maneuver.HasStreetNames()) {
+    street_name = maneuver.street_names().ToString(element_max_count, delim);
+  } else if (maneuver.HasExitBranchSign()) {
+    street_name = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string exit_number_sign;
+  std::string exit_toward_sign;
+  uint8_t phrase_id = 0;
+  if (maneuver.HasExitNumberSign()) {
+    phrase_id += 1;
+    exit_number_sign = maneuver.signs().GetExitNumberString(0, false, delim);
+  }
+  if (!street_name.empty()) {
+    phrase_id += 2;
+  }
+  if (maneuver.HasExitTowardSign()) {
+    phrase_id += 4;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+
+  return FormVerbalKeepInstruction(phrase_id, turn, street_name,
+                                   exit_number_sign, exit_toward_sign);
+}
+
+std::string NarrativeBuilder::FormVerbalKeepInstruction(
+    uint8_t phrase_id, const std::string& turn, const std::string& street_name,
+    const std::string& exit_number_sign, const std::string& exit_toward_sign) {
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
