@@ -194,7 +194,7 @@ class DirectedEdge {
   bool traffic_signal() const;
 
   /**
-   * Is this directed edge stored forward in edgeinof (true) or
+   * Is this directed edge stored forward in edgeinfo (true) or
    * reverse (false).
    * @return  Returns true if stored forward, false if reverse.
    */
