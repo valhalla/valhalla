@@ -82,8 +82,8 @@ namespace {
           thor::PathAlgorithm* path_algorithm;
           if (costing == "multimodal") {
             path_algorithm = &multi_modal_astar;
-          } else if (costing == "pedestrian") {
-            // Use bidirectional A* if over 10km
+          } else if (costing == "pedestrian" || costing == "bicycle") {
+            // Use bidirectional A* for pedestrian and bicycle if over 10km
             float dist = origin.latlng_.Distance(destination.latlng_);
             path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
           } else {
