@@ -56,7 +56,7 @@ Cost DynamicCost::TransitionCost(const DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost:: TransitionCostReverse(const uint32_t idx,
+Cost DynamicCost::TransitionCostReverse(const uint32_t idx,
                             const baldr::NodeInfo* node,
                             const baldr::DirectedEdge* opp_edge,
                             const baldr::DirectedEdge* opp_pred_edge) const {
