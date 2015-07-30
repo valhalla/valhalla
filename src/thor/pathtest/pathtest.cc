@@ -536,7 +536,7 @@ int main(int argc, char *argv[]) {
     mode_costing[static_cast<uint32_t>(mode)] = cost;
 
     // Choose path algorithm. Use bi-directional A* for pedestrian > 10km
-    if (routetype == "pedestrian" && d1 > 10.0f) {
+    if (routetype == "pedestrian" || routetype == "bicycle") {
       pathalgorithm = (d1 > 10.0f) ? &bd : &astar;
     } else {
       pathalgorithm = &astar;
