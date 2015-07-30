@@ -67,8 +67,7 @@ Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
 }
 
 void TryFormRampStraightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampStraightInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampStraightInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampStraightInstruction");
 }
@@ -133,8 +132,7 @@ void TestFormRampStraightInstruction() {
 }
 
 void TryFormRampRightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampRightInstruction");
 }
@@ -241,8 +239,7 @@ void TestFormRampRightInstruction() {
 }
 
 void TryFormRampLeftInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampLeftInstruction");
 }
@@ -349,8 +346,7 @@ void TestFormRampLeftInstruction() {
 }
 
 void TryFormExitRightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormExitInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitRightInstruction");
 }
@@ -457,8 +453,7 @@ void TestFormExitRightInstruction() {
 }
 
 void TryFormExitLeftInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormExitInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitLeftInstruction");
 }
