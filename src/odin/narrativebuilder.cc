@@ -241,12 +241,27 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         }
         break;
       }
-      case TripDirections_Maneuver_Type_kExitRight: {
-        FormExitRightInstruction(maneuver);
-        break;
-      }
+      case TripDirections_Maneuver_Type_kExitRight:
       case TripDirections_Maneuver_Type_kExitLeft: {
-        FormExitLeftInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormExitInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertExitInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalExitInstruction(maneuver)));
+
+        // Only set verbal post if > min ramp length
+        if (maneuver.length() > kVerbalPostMinimumRampLength) {
+          // Set verbal post transition instruction
+          maneuver.set_verbal_post_transition_instruction(
+              std::move(
+                  FormVerbalPostTransitionInstruction(
+                      maneuver, directions_options.units())));
+        }
         break;
       }
       case TripDirections_Maneuver_Type_kStayStraight: {
@@ -332,9 +347,6 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
     // Update previous maneuver
     prev_maneuver = &maneuver;
   }
-}
-
-NarrativeBuilder::NarrativeBuilder() {
 }
 
 // TODO - we will have to optimize when we actually use the language specific
@@ -1091,9 +1103,9 @@ std::string NarrativeBuilder::FormVerbalRampStraightInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormRampInstruction(Maneuver& maneuver,
-                                                bool limit_by_consecutive_count,
-                                                uint32_t element_max_count) {
+std::string NarrativeBuilder::FormRampInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count) {
   // 0 "Take the ramp on the <FormTurnTypeInstruction>."
   // 1 "Take the <BRANCH_SIGN> ramp on the <FormTurnTypeInstruction>."
   // 2 "Take the ramp on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
@@ -1396,264 +1408,314 @@ std::string NarrativeBuilder::FormVerbalRampInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormExitRightInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormExitInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count) {
+  //  0 "Take the exit on the right"
+  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
+  //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
+  //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
+  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
+  //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
+  //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
+  //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
+  //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
+  //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
+  //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
   // 0 Take the exit on the right
   // 1 = exit number
   // 2 = branch
   // 4 = toward
   // 8 = name (when no number)
-
-  // 1 Take exit 67A on the right
-  // 2 Take the I 95 South exit on the right
-  // 3 Take exit 67A on the right onto I 95 South
-  // 4 Take the exit on the right toward Baltimore
-  // 5 Take exit 67A on the right toward Baltimore
-  // 6 Take the I 95 South exit on the right toward Baltimore
-  // 7 Take exit 67A on the right onto I 95 South toward Baltimore
-  // 8 Take the Gettysburg Pike exit on the right
-  // 10 Take the Gettysburg Pike exit on the right onto US 15
-  // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
-  // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
-  // 8 Take the Gettysburg Pike exit on the right
-  // 10 Take the Gettysburg Pike exit on the right onto US 15
-  // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
-  // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
-
-  // TODO: determine if we want to grab from options
-  uint32_t number_max_count = 0;
-  uint32_t branch_max_count = 4;
-  uint32_t toward_max_count = 4;
-  uint32_t name_max_count = 4;
-  bool number_limit_by_consecutive_count = false;
-  bool branch_limit_by_consecutive_count = true;
-  bool toward_limit_by_consecutive_count = true;
-  bool name_limit_by_consecutive_count = true;
-
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  if (maneuver.HasExitNumberSign())
+  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string exit_number_sign;
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
-  if (maneuver.HasExitBranchSign())
+    exit_number_sign = maneuver.signs().GetExitNumberString();
+  }
+  if (maneuver.HasExitBranchSign()) {
     phrase_id += 2;
-  if (maneuver.HasExitTowardSign())
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  if (maneuver.HasExitTowardSign()) {
     phrase_id += 4;
-  // Only use name if there is no number
-  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign())
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count);
+  }
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign()) {
     phrase_id += 8;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count);
+  }
 
   switch (phrase_id) {
-    // 1 Take exit 67A on the right
+    //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
     case 1: {
-      text_instruction += (boost::format("Take exit %1% on the right")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2%.")
+          % exit_number_sign % turn).str();
       break;
     }
-      // 2 Take the I 95 South exit on the right
+      //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
     case 2: {
-      text_instruction += (boost::format("Take the %1% exit on the right")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2%.")
+          % exit_branch_sign % turn).str();
       break;
     }
-      // 3 Take exit 67A on the right onto I 95 South
+      //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
     case 3: {
-      text_instruction += (boost::format("Take exit %1% on the right onto %2%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2% onto %3%.")
+          % exit_number_sign % turn % exit_branch_sign).str();
       break;
     }
-      // 4 Take the exit on the right toward Baltimore
+      //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 4: {
-      text_instruction += (boost::format(
-          "Take the exit on the right toward %1%")
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the exit on the %1% toward %2%.")
+          % turn % exit_toward_sign).str();
       break;
     }
-      // 5 Take exit 67A on the right toward Baltimore
+      //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 5: {
-      text_instruction += (boost::format(
-          "Take exit %1% on the right toward %2%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2% toward %3%.")
+          % exit_number_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 6 Take the I 95 South exit on the right toward Baltimore
+      //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 6: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the right toward %2%")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
+          % exit_branch_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 7 Take exit 67A on the right onto I 95 South toward Baltimore
+      //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
     case 7: {
-      text_instruction += (boost::format(
-          "Take exit %1% on the right onto %2% toward %3%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format(
+          "Take exit %1% on the %2% onto %3% toward %4%.") % exit_number_sign
+          % turn % exit_branch_sign % exit_toward_sign).str();
       break;
     }
-      // 8 Take the Gettysburg Pike exit on the right
+      //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
     case 8: {
-      text_instruction += (boost::format("Take the %1% exit on the right")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2%.")
+          % exit_name_sign % turn).str();
       break;
     }
-      // 10 Take the Gettysburg Pike exit on the right onto US 15
+      //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
     case 10: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the right onto %2%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% onto %3%.")
+          % exit_name_sign % turn % exit_branch_sign).str();
       break;
     }
-      // 12 Take the Gettysburg Pike exit on the right toward Harrisburg/Gettysburg
+      //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 12: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the right toward %2%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
+          % exit_name_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 14 Take the Gettysburg Pike exit on the right onto US 15 toward Harrisburg/Gettysburg
+      //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
     case 14: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the right onto %2% toward %3%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format(
+          "Take the %1% exit on the %2% onto %3% toward %4%.") % exit_name_sign
+          % turn % exit_branch_sign % exit_toward_sign).str();
       break;
     }
     default: {
-      text_instruction += "Take the exit on the right";
+      //  0 "Take the exit on the right"
+      instruction = (boost::format("Take the exit on the %1%.") % turn).str();
       break;
     }
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  return instruction;
 }
 
-void NarrativeBuilder::FormExitLeftInstruction(Maneuver& maneuver) {
-  // 0 Take the exit on the left
+std::string NarrativeBuilder::FormVerbalAlertExitInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+  //  0 "Take the exit on the right"
+  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
+  //  2 "Take the <BRANCH_SIGN(1)> exit on the <FormTurnTypeInstruction>."
+  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(1)>."
+  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
+
+  // 0 Take the exit on the right
   // 1 = exit number
   // 2 = branch
   // 4 = toward
   // 8 = name (when no number)
-
-  // TODO: determine if we want to grab from options
-  uint32_t number_max_count = 0;
-  uint32_t branch_max_count = 4;
-  uint32_t toward_max_count = 4;
-  uint32_t name_max_count = 4;
-  bool number_limit_by_consecutive_count = false;
-  bool branch_limit_by_consecutive_count = true;
-  bool toward_limit_by_consecutive_count = true;
-  bool name_limit_by_consecutive_count = true;
-
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  if (maneuver.HasExitNumberSign())
+  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string exit_number_sign;
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitNumberSign()) {
     phrase_id += 1;
-  if (maneuver.HasExitBranchSign())
+    exit_number_sign = maneuver.signs().GetExitNumberString(0, false, delim);
+  } else if (maneuver.HasExitBranchSign()) {
     phrase_id += 2;
-  if (maneuver.HasExitTowardSign())
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count, delim);
+  } else if (maneuver.HasExitTowardSign()) {
     phrase_id += 4;
-  // Only use name if there is no number
-  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign())
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count, delim);
+  } else if (maneuver.HasExitNameSign()) {
     phrase_id += 8;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+
+  return FormVerbalExitInstruction(phrase_id, turn, exit_number_sign,
+                                   exit_branch_sign, exit_toward_sign,
+                                   exit_name_sign);
+}
+
+std::string NarrativeBuilder::FormVerbalExitInstruction(
+    Maneuver& maneuver, bool limit_by_consecutive_count,
+    uint32_t element_max_count, std::string delim) {
+  //  0 "Take the exit on the right"
+  //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
+  //  2 "Take the <BRANCH_SIGN(2)> exit on the <FormTurnTypeInstruction>."
+  //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)>."
+  //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
+  //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
+  //  6 "Take the <BRANCH_SIGN(2)> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
+  //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+  //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
+  //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)>."
+  //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN(2)>."
+  //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN(2)> toward <TOWARD_SIGN(2)>."
+
+  // 0 Take the exit on the right
+  // 1 = exit number
+  // 2 = branch
+  // 4 = toward
+  // 8 = name (when no number)
+  uint8_t phrase_id = 0;
+  std::string turn = FormTurnTypeInstruction(maneuver.type());
+  std::string exit_number_sign;
+  std::string exit_branch_sign;
+  std::string exit_toward_sign;
+  std::string exit_name_sign;
+  if (maneuver.HasExitNumberSign()) {
+    phrase_id += 1;
+    exit_number_sign = maneuver.signs().GetExitNumberString(0, false, delim);
+  }
+  if (maneuver.HasExitBranchSign()) {
+    phrase_id += 2;
+    exit_branch_sign = maneuver.signs().GetExitBranchString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+  if (maneuver.HasExitTowardSign()) {
+    phrase_id += 4;
+    exit_toward_sign = maneuver.signs().GetExitTowardString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+  if (maneuver.HasExitNameSign() && !maneuver.HasExitNumberSign()) {
+    phrase_id += 8;
+    exit_name_sign = maneuver.signs().GetExitNameString(
+        element_max_count, limit_by_consecutive_count, delim);
+  }
+
+  return FormVerbalExitInstruction(phrase_id, turn, exit_number_sign,
+                                   exit_branch_sign, exit_toward_sign,
+                                   exit_name_sign);
+}
+
+std::string NarrativeBuilder::FormVerbalExitInstruction(
+    uint8_t phrase_id, const std::string& turn,
+    const std::string& exit_number_sign, const std::string& exit_branch_sign,
+    const std::string& exit_toward_sign, const std::string& exit_name_sign) {
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
 
   switch (phrase_id) {
-    // 1 Take exit 67A on the left
+    //  1 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction>."
     case 1: {
-      text_instruction += (boost::format("Take exit %1% on the left")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2%.")
+          % exit_number_sign % turn).str();
       break;
     }
-      // 2 Take the I 95 South exit on the left
+      //  2 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction>."
     case 2: {
-      text_instruction += (boost::format("Take the %1% exit on the left")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2%.")
+          % exit_branch_sign % turn).str();
       break;
     }
-      // 3 Take exit 67A on the left onto I 95 South
+      //  3 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
     case 3: {
-      text_instruction += (boost::format("Take exit %1% on the left onto %2%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2% onto %3%.")
+          % exit_number_sign % turn % exit_branch_sign).str();
       break;
     }
-      // 4 Take the exit on the left toward Baltimore
+      //  4 "Take the exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 4: {
-      text_instruction += (boost::format("Take the exit on the left toward %1%")
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the exit on the %1% toward %2%.")
+          % turn % exit_toward_sign).str();
       break;
     }
-      // 5 Take exit 67A on the left toward Baltimore
+      //  5 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 5: {
-      text_instruction += (boost::format("Take exit %1% on the left toward %2%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take exit %1% on the %2% toward %3%.")
+          % exit_number_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 6 Take the I 95 South exit on the left toward Baltimore
+      //  6 "Take the <BRANCH_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 6: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the left toward %2%")
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
+          % exit_branch_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 7 Take exit 67A on the left onto I 95 South toward Baltimore
+      //  7 "Take exit <NUMBER_SIGN> on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
     case 7: {
-      text_instruction += (boost::format(
-          "Take exit %1% on the left onto %2% toward %3%")
-          % maneuver.signs().GetExitNumberString(number_max_count, number_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format(
+          "Take exit %1% on the %2% onto %3% toward %4%.") % exit_number_sign
+          % turn % exit_branch_sign % exit_toward_sign).str();
       break;
     }
-      // 8 Take the Gettysburg Pike exit on the left
+      //  8 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction>."
     case 8: {
-      text_instruction += (boost::format("Take the %1% exit on the left")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2%.")
+          % exit_name_sign % turn).str();
       break;
     }
-      // 10 Take the Gettysburg Pike exit on the left onto US 15
+      //  10 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN>."
     case 10: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the left onto %2%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% onto %3%.")
+          % exit_name_sign % turn % exit_branch_sign).str();
       break;
     }
-      // 12 Take the Gettysburg Pike exit on the left toward Harrisburg/Gettysburg
+      //  12 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> toward <TOWARD_SIGN>."
     case 12: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the left toward %2%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format("Take the %1% exit on the %2% toward %3%.")
+          % exit_name_sign % turn % exit_toward_sign).str();
       break;
     }
-      // 14 Take the Gettysburg Pike exit on the left onto US 15 toward Harrisburg/Gettysburg
+      //  14 "Take the <NAME_SIGN> exit on the <FormTurnTypeInstruction> onto <BRANCH_SIGN> toward <TOWARD_SIGN>."
     case 14: {
-      text_instruction += (boost::format(
-          "Take the %1% exit on the left onto %2% toward %3%")
-          % maneuver.signs().GetExitNameString(name_max_count, name_limit_by_consecutive_count)
-          % maneuver.signs().GetExitBranchString(branch_max_count, branch_limit_by_consecutive_count)
-          % maneuver.signs().GetExitTowardString(toward_max_count, toward_limit_by_consecutive_count)).str();
+      instruction = (boost::format(
+          "Take the %1% exit on the %2% onto %3% toward %4%.") % exit_name_sign
+          % turn % exit_branch_sign % exit_toward_sign).str();
       break;
     }
     default: {
-      text_instruction += "Take the exit on the left";
+      //  0 "Take the exit on the right"
+      instruction = (boost::format("Take the exit on the %1%.") % turn).str();
       break;
     }
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  return instruction;
 }
 
 void NarrativeBuilder::FormStayStraightInstruction(Maneuver& maneuver) {
@@ -2500,6 +2562,10 @@ std::string NarrativeBuilder::FormCardinalDirection(
     case TripDirections_Maneuver_CardinalDirection_kNorthWest: {
       return "northwest";
     }
+    default: {
+      throw std::runtime_error(
+          "Invalid TripDirections_Maneuver_CardinalDirection in method FormCardinalDirection.");
+    }
   }
 }
 
@@ -2509,7 +2575,8 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
     case TripDirections_Maneuver_Type_kSlightRight:
     case TripDirections_Maneuver_Type_kRight:
     case TripDirections_Maneuver_Type_kUturnRight:
-    case TripDirections_Maneuver_Type_kRampRight: {
+    case TripDirections_Maneuver_Type_kRampRight:
+    case TripDirections_Maneuver_Type_kExitRight: {
       return "right";
     }
     case TripDirections_Maneuver_Type_kSharpRight: {
@@ -2521,8 +2588,13 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
     case TripDirections_Maneuver_Type_kSlightLeft:
     case TripDirections_Maneuver_Type_kLeft:
     case TripDirections_Maneuver_Type_kUturnLeft:
-    case TripDirections_Maneuver_Type_kRampLeft: {
+    case TripDirections_Maneuver_Type_kRampLeft:
+    case TripDirections_Maneuver_Type_kExitLeft: {
       return "left";
+    }
+    default: {
+      throw std::runtime_error(
+          "Invalid TripDirections_Maneuver_Type in method FormTurnTypeInstruction.");
     }
   }
 

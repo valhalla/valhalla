@@ -17,20 +17,12 @@ class NarrativeBuilderTest : public NarrativeBuilder {
     return NarrativeBuilder::FormRampStraightInstruction(maneuver);
   }
 
-  static std::string FormRampRightInstruction(Maneuver& maneuver) {
+  static std::string FormRampInstruction(Maneuver& maneuver) {
     return NarrativeBuilder::FormRampInstruction(maneuver);
   }
 
-  static std::string FormRampLeftInstruction(Maneuver& maneuver) {
-    return NarrativeBuilder::FormRampInstruction(maneuver);
-  }
-
-  static void FormExitRightInstruction(Maneuver& maneuver) {
-    return NarrativeBuilder::FormExitRightInstruction(maneuver);
-  }
-
-  static void FormExitLeftInstruction(Maneuver& maneuver) {
-    return NarrativeBuilder::FormExitLeftInstruction(maneuver);
+  static std::string FormExitInstruction(Maneuver& maneuver) {
+    return NarrativeBuilder::FormExitInstruction(maneuver);
   }
 
 };
@@ -75,8 +67,7 @@ Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
 }
 
 void TryFormRampStraightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampStraightInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampStraightInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampStraightInstruction");
 }
@@ -141,8 +132,7 @@ void TestFormRampStraightInstruction() {
 }
 
 void TryFormRampRightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampRightInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampRightInstruction");
 }
@@ -249,8 +239,7 @@ void TestFormRampRightInstruction() {
 }
 
 void TryFormRampLeftInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  std::string instruction = nbTest.FormRampLeftInstruction(maneuver);
+  std::string instruction = NarrativeBuilderTest::FormRampInstruction(maneuver);
   if (instruction != expected)
     throw std::runtime_error("Incorrect FormRampLeftInstruction");
 }
@@ -357,9 +346,8 @@ void TestFormRampLeftInstruction() {
 }
 
 void TryFormExitRightInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  nbTest.FormExitRightInstruction(maneuver);
-  if (maneuver.instruction() != expected)
+  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
+  if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitRightInstruction");
 }
 
@@ -465,9 +453,8 @@ void TestFormExitRightInstruction() {
 }
 
 void TryFormExitLeftInstruction(Maneuver maneuver, std::string expected) {
-  NarrativeBuilderTest nbTest;
-  nbTest.FormExitLeftInstruction(maneuver);
-  if (maneuver.instruction() != expected)
+  std::string instruction = NarrativeBuilderTest::FormExitInstruction(maneuver);
+  if (instruction != expected)
     throw std::runtime_error("Incorrect FormExitLeftInstruction");
 }
 

@@ -22,11 +22,12 @@ const std::string kVerbalDelim = ", ";
 class NarrativeBuilder {
  public:
 
+  NarrativeBuilder() = delete;
+
   static void Build(const DirectionsOptions& directions_options,
                     std::list<Maneuver>& maneuvers);
 
  protected:
-  NarrativeBuilder();
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormStartInstruction(Maneuver& maneuver);
@@ -172,10 +173,27 @@ class NarrativeBuilder {
       const std::string& exit_name_sign);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormExitRightInstruction(Maneuver& maneuver);
+  static std::string FormExitInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kElementMaxCount);
 
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormExitLeftInstruction(Maneuver& maneuver);
+  static std::string FormVerbalAlertExitInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalExitInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalExitInstruction(
+      uint8_t phrase_id, const std::string& turn,
+      const std::string& exit_number_sign, const std::string& exit_branch_sign,
+      const std::string& exit_toward_sign, const std::string& exit_name_sign);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormStayStraightInstruction(Maneuver& maneuver);
