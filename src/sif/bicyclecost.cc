@@ -298,7 +298,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
 
   // Validate speed (make sure it is in the accepted range)
   if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
-    LOG_ERROR("Outside valid cycling speed range " + std::to_string(speed_) +
+    LOG_WARN("Outside valid cycling speed range " + std::to_string(speed_) +
                 ": using default");
     speed_ = kDefaultCyclingSpeed[t];
   }
@@ -306,7 +306,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Willingness to use roads. Make sure this is within range [0, 1].
   useroads_ = pt.get<float>("use_roads", kDefaultUseRoadsFactor);
   if (useroads_ < 0.0f || useroads_ > 1.0f) {
-    LOG_ERROR("Outside valid useroads factor range " +
+    LOG_WARN("Outside valid useroads factor range " +
               std::to_string(useroads_) + ": using default");
   }
 

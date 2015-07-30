@@ -194,7 +194,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
-    LOG_ERROR("Outside valid walking speed range " +
+    LOG_WARN("Outside valid walking speed range " +
               std::to_string(walking_speed_) + ": using default");
     walking_speed_ = kDefaultWalkingSpeed;
   }
