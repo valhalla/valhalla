@@ -43,7 +43,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
      :  DirectedEdge() {
   set_endnode(endnode);
   set_length(length);
-  set_use(use);
   set_speed(speed);    // KPH
   set_ferry(way.ferry());
   set_railferry(way.rail());
@@ -54,6 +53,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
     set_bikenetwork(way.bike_network() | bike_network);
   else
     set_bikenetwork(way.bike_network());
+
+  if (attributes_.bikenetwork | kMcn)
+    set_use(Use::kMountainBike);
+  else set_use(use);
 
   if (!way.destination_only())
     set_dest_only(way.no_thru_traffic());
