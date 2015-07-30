@@ -400,6 +400,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   bool added = false;
   DataQuality stats;
 
+  // Lots of times in a given tile we may end up accessing the same
+  // shape/attributes twice we avoid doing this by caching it here
+  std::unordered_map<uint32_t, DirectedEdgeBuilder::GeoAttributes> geo_attribute_cache;
+
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
   for(; tile_start != tile_end; ++tile_start) {
@@ -412,19 +416,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
 
-
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
       auto node_itr = nodes[tile_start->second];
-
-      // Lots of times in a given tile we may end up accessing the same
-      // shape twice we avoid doing this by caching it here
-      size_t edges_guess;
-      if(std::next(tile_start) == tile_end)
-        edges_guess = nodes.end() - node_itr;
-      else
-        edges_guess = std::next(tile_start)->second - tile_start->second;
-      std::unordered_map<uint32_t, DirectedEdgeBuilder::GeoAttributes> geo_attribute_cache(edges_guess * 4);
+      // to avoid realloc we guess how many edges there might be in a given tile
+      geo_attribute_cache.clear();
+      geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end ? nodes.end() - node_itr :
+        std::next(tile_start)->second - tile_start->second));
 
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
         //amalgamate all the node duplicates into one and the edges that connect to it
