@@ -8,9 +8,9 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 #skadi has everything
 mkdir -p deps
-pushd skadi
-rm -rf skadi
+rm -rf deps/skadi
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/skadi.git deps/skadi
+pushd deps/skadi
 scripts/dependencies.sh
 scripts/install.sh
 popd
