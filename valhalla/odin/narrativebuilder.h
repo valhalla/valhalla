@@ -196,22 +196,16 @@ class NarrativeBuilder {
       const std::string& exit_toward_sign, const std::string& exit_name_sign);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormStayStraightInstruction(Maneuver& maneuver);
+  static std::string FormKeepInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kElementMaxCount);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormStayRightInstruction(Maneuver& maneuver);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormStayLeftInstruction(Maneuver& maneuver);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormStayStraightToStayOnInstruction(Maneuver& maneuver);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormStayRightToStayOnInstruction(Maneuver& maneuver);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static void FormStayLeftToStayOnInstruction(Maneuver& maneuver);
+  static std::string FormKeepToStayOnInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kElementMaxCount);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormMergeInstruction(Maneuver& maneuver);
