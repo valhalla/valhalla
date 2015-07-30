@@ -1,6 +1,7 @@
 #include "sif/pedestriancost.h"
 
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 
@@ -23,6 +24,10 @@ constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;   // Avoid driveways
 constexpr float kDefaultStepPenalty    = 30.0f;  // 30 seconds
+
+// Minimum and maximum average walking speed (to validate input).
+constexpr float kMinWalkingSpeed = 0.5f;
+constexpr float kMaxWalkingSpeed = 25.0f;
 }
 
 /**
@@ -186,6 +191,13 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   alley_factor_      = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
   driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
   step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
+
+  // Validate speed (make sure it is in the accepted range)
+  if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
+    LOG_ERROR("Outside valid walking speed range " +
+              std::to_string(walking_speed_) + ": using default");
+    walking_speed_ = kDefaultWalkingSpeed;
+  }
 
   // Set the speed factor (to avoid division in costing)
   speedfactor_ = (kSecPerHour * 0.001f) / walking_speed_;
