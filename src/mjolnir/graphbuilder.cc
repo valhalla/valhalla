@@ -303,7 +303,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
 
 // Walk the shape and look for any empty tiles that the shape intersects
 void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
-                const Tiles& tiling, std::vector<PointLL>& shape,
+                const Tiles& tiling, const std::vector<PointLL>& shape,
                 DataQuality& stats) {
   // Walk the shape segments until we are outside
   uint32_t current_tile = tile1.tileid();
@@ -347,9 +347,19 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
   }
 }
 
+//TODO:
+uint32_t EstimateElevation(const std::vector<double>& heights) {
+  return 0;
+}
+
+//TODO:
+uint32_t InvertElevation(uint32_t elevation) {
+  return elevation;
+}
+
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
-    const TileHierarchy& hierarchy, const OSMData& osmdata,
+    const TileHierarchy& hierarchy, const OSMData& osmdata, const boost::optional<std::string>& elevation,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
@@ -364,6 +374,15 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   const auto& tl = hierarchy.levels().rbegin();
   Tiles tiling = tl->second.tiles;
+
+  // Optionally have something to get us elevation data
+  std::unique_ptr<valhalla::skadi::sample> sample;
+  try {
+    if(elevation)
+      sample.reset(new valhalla::skadi::sample(*elevation));
+  }
+  catch(...) {
+  }
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -393,12 +412,20 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
 
-      // A place to keep information about edges whose steepness we already know about
-      std::unordered_map<uint32_t, uint8_t> hilliness;
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
       auto node_itr = nodes[tile_start->second];
+
+      // Lots of times in a given tile we may end up accessing the same
+      // shape twice we avoid doing this by caching it here
+      size_t edges_guess;
+      if(std::next(tile_start) == tile_end)
+        edges_guess = nodes.end() - node_itr;
+      else
+        edges_guess = std::next(tile_start)->second - tile_start->second;
+      std::unordered_map<uint32_t, DirectedEdgeBuilder::GeoAttributes> geo_attribute_cache(edges_guess * 4);
+
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
@@ -428,10 +455,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           // Get the edge and way
           const Edge& edge = edge_pair.first;
           const OSMWay w = *ways[edge.wayindex_];
-
-          // Get the shape for the edge and compute its length
-          auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-          uint32_t length = static_cast<uint32_t>(PointLL::Length(shape) + .5f);
 
           // Determine orientation along the edge (forward or reverse between
           // the 2 nodes). Check for edge error.
@@ -515,14 +538,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           }
 
-          // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
-                        speed, use, rc, n, has_signal, restrictions, bike_network);
-          DirectedEdgeBuilder& directededge = directededges.back();
-
-          // Update the node's best class
-          bestclass = std::min(bestclass, directededge.classification());
-
           // Check for updated ref from relations.
           std::string ref;
           auto iter = osmdata.way_ref.find(w.way_id());
@@ -531,25 +546,65 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               ref = GraphBuilder::GetRef(osmdata.ref_offset_map.name(w.ref_index()),iter->second);
           }
 
-          // Add edge info to the tile and set the offset in the directed edge
-          uint32_t edge_info_offset = graphtile.AddEdgeInfo(
+          // Get the shape for the edge and compute its length
+          uint32_t edge_info_offset;
+          auto found = geo_attribute_cache.cend();
+          if(!graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id, edge_info_offset)) {
+            //add the info
+            auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+            edge_info_offset = graphtile.AddEdgeInfo(
               edge_pair.second, (*nodes[source]).graph_id,
               (*nodes[target]).graph_id, w.way_id(), shape,
               w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
               added);
-          directededge.set_edgeinfo_offset(edge_info_offset);
 
-          // Hilliness estimation
-          auto hill_factor = hilliness.find(edge_info_offset);
-          if(hill_factor == hilliness.cend()) {
-            auto resampled = valhalla::midgard::resample_spherical_polyline(shape, 60);
-            //TODO: compute the factor
-            directededge.set_elevation(0);
-            hilliness.emplace(edge_info_offset, 0);
-          }//already have an estimation for the reverse direction
+            //length
+            auto length = static_cast<uint32_t>(PointLL::Length(shape) + .5f);
+
+            //hilliness estimation
+            uint32_t elevation = 0;
+            if(sample) {
+              //evenly sample the shape
+              //auto resampled = valhalla::midgard::resample_spherical_polyline(shape, 60);
+              //get the heights at each point
+              //auto heights = sample->get_all(resampled);
+              //TODO: compute hilliness
+              //elevation = EstimateElevation(heights);
+            }
+
+            //TODO: curvature
+            uint32_t curvature = 0;
+
+            //add it in
+            auto inserted = geo_attribute_cache.insert({edge_info_offset, DirectedEdgeBuilder::GeoAttributes{length, elevation, curvature}});
+            found = inserted.first;
+
+            // If the end node is in a different tile and the tile is not
+            // a neighboring tile then check for possible shape intersection with
+            // empty tiles
+            GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
+            if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2))
+              CheckForIntersectingTiles(tileid1, tileid2, tiling, shape, stats);
+          }//now we have the edge info offset
           else {
-            directededge.set_elevation(hill_factor->second);
+            found = geo_attribute_cache.find(edge_info_offset);
           }
+          //this cant happen
+          if(found == geo_attribute_cache.cend())
+            throw std::runtime_error("GeoAttributes cached object should be there!");
+
+
+          // Add a directed edge and get a reference to it
+          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, found->second.length,
+                        speed, use, rc, n, has_signal, restrictions, bike_network);
+          DirectedEdgeBuilder& directededge = directededges.back();
+          directededge.set_edgeinfo_offset(found->first);
+          //if this is against the direction of the shape we must invert the elevation
+          //directededge.set_elevation(forward ? found->second.elevation : InvertElevation(found->second.elevation));
+          //directededge.set_curvature(found->second.curvature);
+
+          // Update the node's best class
+          bestclass = std::min(bestclass, directededge.classification());
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
@@ -576,15 +631,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             flipped.set_localedgeidx(n);
             directededges.emplace_back();
           }*/
-
-          // If the end node is in a different tile and the tile is not
-          // a neighboring tile then check for possible shape intersection with
-          // empty tiles
-          GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
-          if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2)) {
-            CheckForIntersectingTiles(tileid1, tileid2, tiling,
-                     shape, stats);
-          }
 
           // Increment the directed edge index within the tile
           idx++;
@@ -635,7 +681,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& ways_file, const std::string& way_nodes_file,
   const std::string& nodes_file, const std::string& edges_file,
-  const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats) {
+  const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
+  const boost::optional<std::string>& elevation) {
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
@@ -663,7 +710,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(elevation), tile_start, tile_end,
                       std::ref(results[i]))
     );
   }
@@ -711,11 +758,12 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
     const std::string& ways_file, const std::string& way_nodes_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
-  TileHierarchy tile_hierarchy(pt.get_child("hierarchy"));
+  TileHierarchy tile_hierarchy(pt.get_child("mjolnir.hierarchy"));
   unsigned int threads = std::max(static_cast<unsigned int>(1),
-                                  pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+                                  pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   const auto& tl = tile_hierarchy.levels().rbegin();
   uint8_t level = tl->second.level;
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
 
   // Make the edges and nodes in the graph
   ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tl->second.tiles.TileSize(),
@@ -744,7 +792,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
-                  edges_file, tiles, tile_hierarchy, stats);
+                  edges_file, tiles, tile_hierarchy, stats, elevation);
 
   stats.LogStatistics();
 }

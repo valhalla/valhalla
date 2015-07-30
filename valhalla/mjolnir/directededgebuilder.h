@@ -460,6 +460,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   void set_trans_down(const bool trans_down);
 
+
+  /**
+   * Publicize this so we can cache it when building tiles
+   */
+  using DirectedEdge::GeoAttributes;
+
 };
 
 }

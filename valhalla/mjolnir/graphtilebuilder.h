@@ -177,6 +177,24 @@ class GraphTileBuilder : public baldr::GraphTile {
                 const std::vector<baldr::SignInfo>& signs);
 
   /**
+   *
+   * @param  edgeindex         The index of the edge - used with nodea and nodeb to
+   *                           form tuple that uniquely identifies the edge info since
+   *                           there are two directed edges per edge info.
+   * @param  nodea             One of two nodes - used with edgeindex and nodeb to
+   *                           form tuple that uniquely identifies the edge info since
+   *                           there are two directed edges per edge info.
+   * @param  nodeb             One of two nodes - used with edgeindex and nodea to
+   *                           form tuple that uniquely identifies the edge info since
+   *                           there are two directed edges per edge info.
+   * @param edge_info_offset   the index of the edge info within the tile
+   *
+   * @return            The edge info offset that will be stored in the directed edge.
+   */
+  bool HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+                       const baldr::GraphId& nodeb, uint32_t& edge_info_offset);
+
+  /**
    * Add the edge info to the tile.
    *
    * @param  edgeindex  The index of the edge - used with nodea and nodeb to
