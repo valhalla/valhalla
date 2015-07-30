@@ -144,6 +144,24 @@ class BicycleCost : public DynamicCost {
                               const EdgeLabel& pred) const;
 
   /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * Defaults to 0. Costing models that wish to include edge transition
+   * costs (i.e., intersection/turn costs) must override this method.
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  opp_edge  Pointer to the opposing directed edge - this is the
+   *                   "from" or predecessor edge in the transition.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor. This is the "to" edge.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                              const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::DirectedEdge* opp_pred_edge) const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the
@@ -470,6 +488,51 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                TurnCost(edge->turntype(idx),
                        edge->edge_to_right(idx) && edge->edge_to_left(idx),
                        edge->drive_on_right());
+  }
+
+  // Return cost (time and penalty)
+  return { seconds + penalty, seconds };
+}
+
+// Returns the cost to make the transition from the predecessor edge
+// when using a reverse search (from destination towards the origin).
+// pred is the opposing current edge in the reverse tree
+// edge is the opposing predecessor in the reverse tree
+Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
+                            const baldr::NodeInfo* node,
+                            const baldr::DirectedEdge* pred,
+                            const baldr::DirectedEdge* edge) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (edge->ctry_crossing()) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  }
+  if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+  }
+
+  // Additional penalties without any time cost
+  if (!pred->destonly() && edge->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (node->name_consistency(idx, edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
+  }
+
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0) {
+    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) *
+               TurnCost(edge->turntype(idx),
+                        edge->edge_to_right(idx) && edge->edge_to_left(idx),
+                        edge->drive_on_right());
   }
 
   // Return cost (time and penalty)
