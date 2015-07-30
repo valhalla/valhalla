@@ -258,8 +258,6 @@ class BicycleCost : public DynamicCost {
 
 // Bicycle route costs are distance based with some favor/avoid based on
 // attribution.
-// TODO - add options and config settings.
-// TODO - how to handle time/speed for estimating time on path
 
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
