@@ -112,12 +112,15 @@ class PedestrianCost : public DynamicCost {
    * costs (i.e., intersection/turn costs) must override this method.
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
+   * @param  opp_edge  Pointer to the opposing directed edge - this is the
+   *                   "from" or predecessor edge in the transition.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor.
+   *                        predecessor. This is the "to" edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                               const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* opp_edge,
                               const baldr::DirectedEdge* opp_pred_edge) const;
 
   /**
@@ -303,6 +306,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 // costs (i.e., intersection/turn costs) must override this method.
 Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                      const baldr::NodeInfo* node,
+                     const baldr::DirectedEdge* opp_edge,
                      const baldr::DirectedEdge* opp_pred_edge) const {
   // Special cases: fixed penalty for steps/stairs
   if (opp_pred_edge->use() == Use::kSteps) {
