@@ -224,6 +224,23 @@ class NarrativeBuilder {
       bool limit_by_consecutive_count = kLimitByConseuctiveCount,
       uint32_t element_max_count = kElementMaxCount);
 
+  static std::string FormVerbalAlertKeepToStayOnInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalKeepToStayOnInstruction(
+      Maneuver& maneuver,
+      bool limit_by_consecutive_count = kLimitByConseuctiveCount,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalKeepToStayOnInstruction(
+      uint8_t phrase_id, const std::string& turn,
+      const std::string& street_name, const std::string& exit_number_sign = "",
+      const std::string& exit_toward_sign = "");
+
   /////////////////////////////////////////////////////////////////////////////
   static void FormMergeInstruction(Maneuver& maneuver);
 
