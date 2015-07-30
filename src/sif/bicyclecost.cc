@@ -296,7 +296,9 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // flat roads. If not present or outside the valid range use a default speed
   // based on the bicycle type.
   uint32_t t = static_cast<uint32_t>(bicycletype_);
-  speed_ = pt.get<float>("speed", kDefaultCyclingSpeed[t]);
+  speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
+
+  // Validate speed (make sure it is in the accepted range)
   if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
     LOG_ERROR("Outside valid cycling speed range " + std::to_string(speed_) +
                 ": using default");
