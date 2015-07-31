@@ -347,14 +347,48 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
   }
 }
 
-//TODO:
-uint32_t EstimateElevation(const std::vector<double>& heights) {
-  return 0;
+constexpr float POSTING_INTERVAL = 60.f;
+constexpr double MAX_ELEVATION_CHANGE = .03;
+
+template <class T>
+T clamp(T val, T low, T high) {
+  return std::min<T>(std::max<T>(val, low), high);
 }
 
-//TODO:
-uint32_t InvertElevation(uint32_t elevation) {
-  return elevation;
+//measure uphill vs downhill weighting uphill as 2x more important
+float ElevationRatio(const std::vector<double>& heights, float length) {
+  //note that if the distance was so short that only 1 height was recorded
+  //we assume its flat (it doesnt count)
+  double ups = 0, downs = 0;
+  for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
+    auto diff = *h - *std::prev(h);
+    if(diff > 0)
+      ups += diff;
+    else
+      downs += diff;
+  }
+
+  /* what we do is measure the discretized amount of height gain and loss over the distance of the edge.
+   * this ratio provides an estimate of the effort required to traverse this edge. it can be used
+   * in edge costing to modulate the speed of walking or biking or perhaps fuel use in vehicles.
+   * the most extreme ratios are anything near +/-.03. we squeeze this into 16bits and end up weighting
+   * uphill climb doubley more as they have more impact in terms of effort required (going mostly
+   * downhill may not require any effort)
+   */
+
+  //disfavor downs, clamp to range extrema and get scale
+  return static_cast<float>(clamp(ups + (downs * .5), -MAX_ELEVATION_CHANGE, MAX_ELEVATION_CHANGE) / MAX_ELEVATION_CHANGE);
+}
+
+uint32_t BinElevation(float scale, bool forward){
+  //shift center to provide more granularity to uphill edges
+  //if scale runs from 0 to -1, this returns 0 to 5
+  //if scale runs from 0 to +1, this returns 5 to 15
+  //the additional .5 is for rounding purposes
+  if(forward)
+    return static_cast<uint32_t>(scale * (scale < 0 ? 5 : 10) + 5.5);
+  else
+    return static_cast<uint32_t>(scale * (scale > 0 ? -5 : -10) + 5.5);
 }
 
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
@@ -402,7 +436,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, DirectedEdgeBuilder::GeoAttributes> geo_attribute_cache;
+  std::unordered_map<uint32_t, std::tuple<float, float, float> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -559,24 +593,24 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               added);
 
             //length
-            auto length = static_cast<uint32_t>(PointLL::Length(shape) + .5f);
+            auto length = PointLL::Length(shape);
 
             //hilliness estimation
-            uint32_t elevation = 0;
+            float elevation = 0;
             if(sample) {
               //evenly sample the shape
-              //auto resampled = valhalla::midgard::resample_spherical_polyline(shape, 60);
+              auto resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
               //get the heights at each point
-              //auto heights = sample->get_all(resampled);
-              //TODO: compute hilliness
-              //elevation = EstimateElevation(heights);
+              auto heights = sample->get_all(resampled);
+              //compute hilliness
+              elevation = ElevationRatio(heights, length);
             }
 
             //TODO: curvature
-            uint32_t curvature = 0;
+            float curvature = 0;
 
             //add it in
-            auto inserted = geo_attribute_cache.insert({edge_info_offset, DirectedEdgeBuilder::GeoAttributes{length, elevation, curvature}});
+            auto inserted = geo_attribute_cache.insert({edge_info_offset, std::make_tuple(length, elevation, curvature)});
             found = inserted.first;
 
             // If the end node is in a different tile and the tile is not
@@ -595,13 +629,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, found->second.length,
+          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, static_cast<uint32_t>(std::get<0>(found->second) + .5f),
                         speed, use, rc, n, has_signal, restrictions, bike_network);
           DirectedEdgeBuilder& directededge = directededges.back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must invert the elevation
-          //directededge.set_elevation(forward ? found->second.elevation : InvertElevation(found->second.elevation));
-          //directededge.set_curvature(found->second.curvature);
+          directededge.set_elevation(BinElevation(std::get<1>(found->second), forward));
+          directededge.set_curvature(static_cast<uint32_t>(std::get<2>(found->second) + .5f));
 
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
