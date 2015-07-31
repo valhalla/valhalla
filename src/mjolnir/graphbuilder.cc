@@ -535,7 +535,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             }
           }
 
-          if ((bike_network | kMcn) || (w.bike_network() | kMcn))
+          if ((bike_network & kMcn) || (w.bike_network() & kMcn))
             use = Use::kMountainBike;
 
           // Check for updated ref from relations.
