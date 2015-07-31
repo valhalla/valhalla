@@ -332,7 +332,16 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormEnterRoundaboutInstruction(maneuver)));
+        maneuver.set_instruction(
+            std::move(FormEnterRoundaboutInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertEnterRoundaboutInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalEnterRoundaboutInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutExit: {
@@ -2170,6 +2179,33 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
 }
 
 std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
+  //  0 "Enter the roundabout."
+  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Enter the roundabout";
+  if ((maneuver.roundabout_exit_count() > 0)
+      && (maneuver.roundabout_exit_count() < 11)) {
+    instruction += " and take the ";
+    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
+    instruction += " exit";
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Enter roundabout."
+  // TODO - determine if we need anything more here
+
+  return "Enter roundabout.";
+}
+
+std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  0 "Enter the roundabout."
   //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
 

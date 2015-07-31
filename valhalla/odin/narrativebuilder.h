@@ -257,6 +257,16 @@ class NarrativeBuilder {
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormEnterRoundaboutInstruction(Maneuver& maneuver);
 
+  static std::string FormVerbalAlertEnterRoundaboutInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalEnterRoundaboutInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
+
   /////////////////////////////////////////////////////////////////////////////
   static void FormExitRoundaboutInstruction(Maneuver& maneuver);
 
