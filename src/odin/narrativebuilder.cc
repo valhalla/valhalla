@@ -331,7 +331,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
-        FormEnterRoundaboutInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormEnterRoundaboutInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutExit: {
@@ -2168,19 +2169,22 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Enter the roundabout";
+std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
+  //  0 "Enter the roundabout."
+  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Enter the roundabout";
   if ((maneuver.roundabout_exit_count() > 0)
       && (maneuver.roundabout_exit_count() < 11)) {
-    text_instruction += " and take the ";
-    text_instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
-    text_instruction += " exit";
+    instruction += " and take the ";
+    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
+    instruction += " exit";
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
