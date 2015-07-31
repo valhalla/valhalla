@@ -365,6 +365,20 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         // Set instruction
         maneuver.set_instruction(
             std::move(FormEnterFerryInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertEnterFerryInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalEnterFerryInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
@@ -2292,6 +2306,38 @@ std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
   instruction += "Take the ";
   if (maneuver.HasStreetNames()) {
     instruction += maneuver.street_names().ToString();
+  }
+
+  // TODO - handle properly with locale narrative builder
+  std::string ferry_label = " Ferry";
+  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    instruction += ferry_label;
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertEnterFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Take the Ferry."
+  //  1 "Take the <STREET_NAMES(1)>."
+  //  2 "Take the <STREET_NAMES(1)> Ferry."
+
+  return FormVerbalEnterFerryInstruction(maneuver, element_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Take the Ferry."
+  //  1 "Take the <STREET_NAMES(2)>."
+  //  2 "Take the <STREET_NAMES(2)> Ferry."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Take the ";
+  if (maneuver.HasStreetNames()) {
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
   }
 
   // TODO - handle properly with locale narrative builder
