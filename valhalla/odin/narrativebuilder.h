@@ -268,7 +268,7 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormExitRoundaboutInstruction(Maneuver& maneuver);
+  static std::string FormExitRoundaboutInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormEnterFerryInstruction(Maneuver& maneuver);
