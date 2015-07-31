@@ -312,7 +312,22 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kMerge: {
-        FormMergeInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormMergeInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertMergeInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalMergeInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
@@ -2110,17 +2125,47 @@ std::string NarrativeBuilder::FormVerbalKeepToStayOnInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  if (maneuver.HasStreetNames()) {
-    text_instruction += "Merge onto ";
-    text_instruction += maneuver.street_names().ToString();
-  } else
-    text_instruction += "Merge";
+std::string NarrativeBuilder::FormMergeInstruction(Maneuver& maneuver) {
+  //  0 "Merge."
+  //  1 "Merge onto <STREET_NAMES>."
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  if (maneuver.HasStreetNames()) {
+    instruction += "Merge onto ";
+    instruction += maneuver.street_names().ToString();
+  } else
+    instruction += "Merge";
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertMergeInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Merge."
+  //  1 "Merge onto <STREET_NAMES(1)>."
+
+  return FormVerbalMergeInstruction(maneuver, element_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalMergeInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Merge."
+  //  1 "Merge onto <STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
+  if (maneuver.HasStreetNames()) {
+    instruction += "Merge onto ";
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
+  } else
+    instruction += "Merge";
+
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
