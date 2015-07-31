@@ -242,7 +242,7 @@ class NarrativeBuilder {
       const std::string& exit_toward_sign = "");
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormMergeInstruction(Maneuver& maneuver);
+  static std::string FormMergeInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormEnterRoundaboutInstruction(Maneuver& maneuver);
