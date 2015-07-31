@@ -382,7 +382,8 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
-        FormExitFerryInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormExitFerryInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
@@ -2350,25 +2351,29 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Go ";
-  text_instruction += FormCardinalDirection(
+std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <STREET_NAMES>."
+  //  2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Go ";
+  instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
 
   if (maneuver.HasBeginStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.begin_street_names().ToString();
-    text_instruction += ". Continue on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " on ";
+    instruction += maneuver.begin_street_names().ToString();
+    instruction += ". Continue on ";
+    instruction += maneuver.street_names().ToString();
   } else if (maneuver.HasStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormTransitConnectionStartInstruction(
