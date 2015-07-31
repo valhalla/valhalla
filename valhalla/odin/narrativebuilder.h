@@ -301,6 +301,8 @@ class NarrativeBuilder {
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
+  // TODO: Add verbal instructions for transit maneuvers after the transit
+  //       maneuvers are refactored
   /////////////////////////////////////////////////////////////////////////////
   static void FormTransitConnectionStartInstruction(Maneuver& maneuver);
 
