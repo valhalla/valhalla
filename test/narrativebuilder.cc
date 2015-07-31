@@ -64,16 +64,19 @@ void TryFormVerbalPostTransitionInstruction(Maneuver maneuver,
 }
 
 void TestFormVerbalPostTransitionInstruction() {
+  // Verify round down
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
       DirectionsOptions_Units_kKilometers, false,
       "Continue for 3.5 kilometers.");
 
+  // Verify round up
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
       DirectionsOptions_Units_kKilometers, false,
       "Continue for 3.9 kilometers.");
 
+  // Verify street name
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
       DirectionsOptions_Units_kKilometers, true,
