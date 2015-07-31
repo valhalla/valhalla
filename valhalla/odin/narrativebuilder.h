@@ -255,16 +255,51 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormEnterRoundaboutInstruction(Maneuver& maneuver);
+  static std::string FormEnterRoundaboutInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalAlertEnterRoundaboutInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalEnterRoundaboutInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormExitRoundaboutInstruction(Maneuver& maneuver);
+  static std::string FormExitRoundaboutInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalExitRoundaboutInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormEnterFerryInstruction(Maneuver& maneuver);
+  static std::string FormEnterFerryInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalAlertEnterFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalEnterFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormExitFerryInstruction(Maneuver& maneuver);
+  static std::string FormExitFerryInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalAlertExitFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalExitFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormTransitConnectionStartInstruction(Maneuver& maneuver);

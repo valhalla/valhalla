@@ -331,19 +331,74 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutEnter: {
-        FormEnterRoundaboutInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormEnterRoundaboutInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertEnterRoundaboutInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalEnterRoundaboutInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kRoundaboutExit: {
-        FormExitRoundaboutInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormExitRoundaboutInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalExitRoundaboutInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryEnter: {
-        FormEnterFerryInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormEnterFerryInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertEnterFerryInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalEnterFerryInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
-        FormExitFerryInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormExitFerryInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertExitFerryInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalExitFerryInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
@@ -2168,77 +2223,203 @@ std::string NarrativeBuilder::FormVerbalMergeInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Enter the roundabout";
+std::string NarrativeBuilder::FormEnterRoundaboutInstruction(Maneuver& maneuver) {
+  //  0 "Enter the roundabout."
+  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Enter the roundabout";
   if ((maneuver.roundabout_exit_count() > 0)
       && (maneuver.roundabout_exit_count() < 11)) {
-    text_instruction += " and take the ";
-    text_instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
-    text_instruction += " exit";
+    instruction += " and take the ";
+    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
+    instruction += " exit";
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
-void NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Exit the roundabout";
+std::string NarrativeBuilder::FormVerbalAlertEnterRoundaboutInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Enter roundabout."
+  // TODO - determine if we need anything more here
+
+  return "Enter roundabout.";
+}
+
+std::string NarrativeBuilder::FormVerbalEnterRoundaboutInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Enter the roundabout."
+  //  1 "Enter the roundabout and take the <FormOrdinalValue> exit."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Enter the roundabout";
+  if ((maneuver.roundabout_exit_count() > 0)
+      && (maneuver.roundabout_exit_count() < 11)) {
+    instruction += " and take the ";
+    instruction += FormOrdinalValue(maneuver.roundabout_exit_count());
+    instruction += " exit";
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormExitRoundaboutInstruction(Maneuver& maneuver) {
+  //  0 "Exit the roundabout."
+  //  1 "Exit the roundabout onto <STREET_NAMES>."
+  //  2 "Exit the roundabout onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Exit the roundabout";
 
   if (maneuver.HasBeginStreetNames()) {
-    text_instruction += " onto ";
-    text_instruction += maneuver.begin_street_names().ToString();
-    text_instruction += ". Continue on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " onto ";
+    instruction += maneuver.begin_street_names().ToString();
+    instruction += ". Continue on ";
+    instruction += maneuver.street_names().ToString();
   } else if (maneuver.HasStreetNames()) {
-    text_instruction += " onto ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " onto ";
+    instruction += maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
-void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the ";
+std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Exit the roundabout."
+  //  1 "Exit the roundabout onto <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Exit the roundabout";
+
+  if (maneuver.HasBeginStreetNames()) {
+    instruction += " onto ";
+    instruction += maneuver.begin_street_names().ToString(element_max_count, delim);
+  } else if (maneuver.HasStreetNames()) {
+    instruction += " onto ";
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
+//  0 "Take the Ferry."
+//  1 "Take the <STREET_NAMES>."
+//  2 "Take the <STREET_NAMES> Ferry."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Take the ";
   if (maneuver.HasStreetNames()) {
-    text_instruction += maneuver.street_names().ToString();
+    instruction += maneuver.street_names().ToString();
   }
 
   // TODO - handle properly with locale narrative builder
   std::string ferry_label = " Ferry";
-  if (!boost::algorithm::ends_with(text_instruction, ferry_label)) {
-    text_instruction += ferry_label;
+  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    instruction += ferry_label;
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
-void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Go ";
-  text_instruction += FormCardinalDirection(
+std::string NarrativeBuilder::FormVerbalAlertEnterFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Take the Ferry."
+  //  1 "Take the <STREET_NAMES(1)>."
+  //  2 "Take the <STREET_NAMES(1)> Ferry."
+
+  return FormVerbalEnterFerryInstruction(maneuver, element_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Take the Ferry."
+  //  1 "Take the <STREET_NAMES(2)>."
+  //  2 "Take the <STREET_NAMES(2)> Ferry."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Take the ";
+  if (maneuver.HasStreetNames()) {
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
+  }
+
+  // TODO - handle properly with locale narrative builder
+  std::string ferry_label = " Ferry";
+  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    instruction += ferry_label;
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <STREET_NAMES>."
+  //  2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Go ";
+  instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
 
   if (maneuver.HasBeginStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.begin_street_names().ToString();
-    text_instruction += ". Continue on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " on ";
+    instruction += maneuver.begin_street_names().ToString();
+    instruction += ". Continue on ";
+    instruction += maneuver.street_names().ToString();
   } else if (maneuver.HasStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.street_names().ToString();
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertExitFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(1)>."
+
+  return FormVerbalExitFerryInstruction(maneuver, element_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Go ";
+  instruction += FormCardinalDirection(maneuver.begin_cardinal_direction());
+
+  if (maneuver.HasBeginStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.begin_street_names().ToString(element_max_count,
+                                                          delim);
+  } else if (maneuver.HasStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormTransitConnectionStartInstruction(
