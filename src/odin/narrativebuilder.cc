@@ -362,7 +362,9 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kFerryEnter: {
-        FormEnterFerryInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormEnterFerryInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kFerryExit: {
@@ -2280,22 +2282,26 @@ std::string NarrativeBuilder::FormVerbalExitRoundaboutInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Take the ";
+std::string NarrativeBuilder::FormEnterFerryInstruction(Maneuver& maneuver) {
+//  0 "Take the Ferry."
+//  1 "Take the <STREET_NAMES>."
+//  2 "Take the <STREET_NAMES> Ferry."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Take the ";
   if (maneuver.HasStreetNames()) {
-    text_instruction += maneuver.street_names().ToString();
+    instruction += maneuver.street_names().ToString();
   }
 
   // TODO - handle properly with locale narrative builder
   std::string ferry_label = " Ferry";
-  if (!boost::algorithm::ends_with(text_instruction, ferry_label)) {
-    text_instruction += ferry_label;
+  if (!boost::algorithm::ends_with(instruction, ferry_label)) {
+    instruction += ferry_label;
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  instruction += ".";
+  return instruction;
 }
 
 void NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
