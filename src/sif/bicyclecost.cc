@@ -49,15 +49,18 @@ constexpr float kMaxCyclingSpeed = 60.0f;
 // stay on cycleways and paths) to 1 (totally comfortable riding on roads).
 constexpr float kDefaultUseRoadsFactor = 0.5f;
 
+// Avoid driveways
+constexpr float kDrivewayFactor = 5.0f;
+
 // Weighting based on road class. These apply penalties to higher class
 // roads. These penalties are modulated by the useroads factor - further
 // avoiding higher class roads for those with low propensity for using roads.
 constexpr float kRoadClassWeight[] = {
     2.5f,     // Motorway
     2.0f,     // Trunk
-    1.4f,     // Primary
-    1.2f,     // Secondary
-    1.1f,     // Tertiary
+    1.2f,     // Primary
+    1.1f,     // Secondary
+    1.05f,    // Tertiary
     1.0f,     // Unclassified
     1.0f,     // Residential
     1.5f      // Service, other
@@ -207,7 +210,7 @@ class BicycleCost : public DynamicCost {
   // absolutely necessary.
   float useroads_;
 
-  // Threshold above which speed based penalties apply(based on the useroads
+  // Threshold above which speed based penalties apply (based on the useroads
   // factor).
   uint32_t speed_penalty_threshold_;
   float speed_factor_;
@@ -411,11 +414,12 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
     factor = 0.75f + (useroads_ * 0.5f);
-  } else if (edge->use() == Use::kMountainBike) {
+  } else if (edge->use() == Use::kMountainBike &&
+             bicycletype_ == BicycleType::kMountain) {
     factor = 0.5f;
   } else if (edge->use() == Use::kDriveway) {
     // Heavily penalize driveways
-    factor = 5.0f;
+    factor = kDrivewayFactor;
   } else if (edge->cyclelane() == CycleLane::kSeparated) {
     // On a road with a separated cycle lane. Favor more for higher useroads
     factor = 0.5f + (1.0f - useroads_) * 0.25f;
@@ -425,22 +429,22 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor = (2.0f - useroads_) *
             kRoadClassWeight[static_cast<uint32_t>(edge->classification())];
 
-    // Add a penalty for higher speed roads (> 35 MPH)
-    if (edge->speed() > speed_penalty_threshold_) {
-      factor *= edge->speed() * speed_factor_;
-    }
-
     // Favor roads where a cycle lane exists (separate lane is handled above)
     if (edge->cyclelane() == CycleLane::kShared) {
       factor *= 0.85f;
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
       factor *= 0.75f;
+    } else {
+      // If no cycle lane exists, add a penalty for higher speed roads
+      // (above a threshold that depends on the useroads factor)
+      if (edge->speed() > speed_penalty_threshold_) {
+        factor *= static_cast<float>(edge->speed()) * speed_factor_;
+      }
     }
   }
 
   // Favor bicycle networks.
   // TODO - do we need to differentiate between types of network?
-  // Handle mountain bike
   if (edge->bikenetwork() > 0) {
     factor *= kBicycleNetworkFactor;
   }
