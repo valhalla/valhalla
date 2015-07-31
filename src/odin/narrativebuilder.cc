@@ -384,6 +384,21 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kFerryExit: {
         // Set instruction
         maneuver.set_instruction(std::move(FormExitFerryInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertExitFerryInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalExitFerryInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
@@ -2370,6 +2385,37 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
   } else if (maneuver.HasStreetNames()) {
     instruction += " on ";
     instruction += maneuver.street_names().ToString();
+  }
+
+  instruction += ".";
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalAlertExitFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(1)>."
+
+  return FormVerbalExitFerryInstruction(maneuver, element_max_count, delim);
+}
+
+std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  //  0 "Go <FormCardinalDirection>."
+  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Go ";
+  instruction += FormCardinalDirection(maneuver.begin_cardinal_direction());
+
+  if (maneuver.HasBeginStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.begin_street_names().ToString(element_max_count,
+                                                          delim);
+  } else if (maneuver.HasStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString(element_max_count, delim);
   }
 
   instruction += ".";

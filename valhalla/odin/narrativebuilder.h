@@ -291,6 +291,16 @@ class NarrativeBuilder {
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormExitFerryInstruction(Maneuver& maneuver);
 
+  static std::string FormVerbalAlertExitFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalAlertElementMaxCount,
+      std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalExitFerryInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
+
   /////////////////////////////////////////////////////////////////////////////
   static void FormTransitConnectionStartInstruction(Maneuver& maneuver);
 
