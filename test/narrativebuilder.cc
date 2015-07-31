@@ -25,7 +25,60 @@ class NarrativeBuilderTest : public NarrativeBuilder {
     return NarrativeBuilder::FormExitInstruction(maneuver);
   }
 
+  static std::string FormVerbalPostTransitionInstruction(
+      Maneuver& maneuver, DirectionsOptions_Units units,
+      bool include_street_names = false,
+      uint32_t element_max_count = kVerbalPostElementMaxCount,
+      std::string delim = kVerbalDelim) {
+    return NarrativeBuilder::FormVerbalPostTransitionInstruction(
+        maneuver, units, include_street_names, element_max_count, delim);
+  }
+
 };
+
+Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
+                                  float length,
+                                  TripDirections_Maneuver_Type type =
+                                      TripDirections_Maneuver_Type_kRight) {
+
+  Maneuver maneuver;
+  maneuver.set_street_names(street_names);
+  maneuver.set_length(length);
+  maneuver.set_type(type);
+
+  return maneuver;
+}
+
+void TryFormVerbalPostTransitionInstruction(Maneuver maneuver,
+                                            DirectionsOptions_Units units,
+                                            bool include_street_names,
+                                            std::string expected) {
+  std::string instruction =
+      NarrativeBuilderTest::FormVerbalPostTransitionInstruction(
+          maneuver, units, include_street_names);
+  if (instruction != expected) {
+    throw std::runtime_error(
+        "Incorrect FormVerbalPostTransitionInstruction - EXPECTED: "
+            + expected + "  |  FORMED: " + instruction);
+  }
+}
+
+void TestFormVerbalPostTransitionInstruction() {
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 3.5 kilometers.");
+
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 3.9 kilometers.");
+
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 3.9 kilometers.");
+}
 
 Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
                             Maneuver::RelativeDirection relative_direction,
@@ -578,6 +631,9 @@ int main() {
 
   // FormExitLeftInstruction
   suite.test(TEST_CASE(TestFormExitLeftInstruction));
+
+  // FormVerbalPostTransitionInstruction
+  suite.test(TEST_CASE(TestFormVerbalPostTransitionInstruction));
 
   return suite.tear_down();
 }
