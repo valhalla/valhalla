@@ -4,7 +4,8 @@ namespace valhalla {
 namespace midgard {
 
 // Default constructor
-OBB2::OBB2()
+template <class coord_t>
+OBB2<coord_t>::OBB2()
     : extent0_(0),
       extent1_(0) {
 }
@@ -12,16 +13,18 @@ OBB2::OBB2()
 // Construct an oriented bounding box given 4 corners. The center is found by
 // the average of the 4 vertex positions and the axes of the OBB are formed
 // by a vector from a0 to a1 and the other by a vector from a1 to a2.
-OBB2::OBB2(const Point2& a0, const Point2& a1,
-           const Point2& a2, const Point2& a3) {
+template <class coord_t>
+OBB2<coord_t>::OBB2(const coord_t& a0, const coord_t& a1,
+                    const coord_t& a2, const coord_t& a3) {
   Set(a0, a1, a2, a3);
 }
 
 // Set an oriented bounding box given 4 corners. The center is found by
 // the average of the 4 vertex positions and the axes of the OBB are formed
 // by a vector from a0 to a1 and the other by a vector from a1 to a2.
-void OBB2::Set(const Point2& a0, const Point2& a1,
-               const Point2& a2, const Point2& a3) {
+template <class coord_t>
+void OBB2<coord_t>::Set(const coord_t& a0, const coord_t& a1,
+                        const coord_t& a2, const coord_t& a3) {
   // Find center positions of each bounding box
   center_.Set((a0.x() + a1.x() + a2.x() + a3.x()) * 0.25f,
               (a0.y() + a1.y() + a2.y() + a3.y()) * 0.25f);
@@ -40,7 +43,8 @@ void OBB2::Set(const Point2& a0, const Point2& a1,
 
 // Check if two oriented bounding boxes overlap. Uses the separating
 // axis theorem.
-bool OBB2::Overlap(const OBB2& b) const {
+template <class coord_t>
+bool OBB2<coord_t>::Overlap(const OBB2<coord_t>& b) const {
   // Translation of B into A's frame
   Vector2 v(center_, b.center_);
   Vector2 t(v.Dot(basis0_), v.Dot(basis1_));
@@ -73,6 +77,10 @@ bool OBB2::Overlap(const OBB2& b) const {
   // No separating axis found, the two boxes overlap
   return true;
 }
+
+// Explicit instantiation
+template class OBB2<Point2>;
+template class OBB2<PointLL>;
 
 }
 }

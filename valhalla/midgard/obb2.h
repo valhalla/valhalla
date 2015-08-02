@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/vector2.h>
 
 namespace valhalla {
@@ -13,8 +14,10 @@ namespace midgard {
 /**
  * Oriented bounding box (2-D). Simple collision detection method
  * where an OBB is set by its 4 corners and an overlap/collision check
- * can be performed against another OBB.
+ * can be performed against another OBB. Template class to work with
+ * Point2 (Euclidean x,y) or PointLL (latitude,longitude).
  */
+template <class coord_t>
 class OBB2 {
  public:
   /**
@@ -31,8 +34,8 @@ class OBB2 {
    * @param  a2  Corner vertex on the bounding box.
    * @param  a3  Corner vertex on the bounding box.
    */
-  OBB2(const Point2& a0, const Point2& a1,
-       const Point2& a2, const Point2& a3);
+  OBB2(const coord_t& a0, const coord_t& a1,
+       const coord_t& a2, const coord_t& a3);
 
   /**
    * Set an oriented bounding box given 4 corners. The center is found by
@@ -43,8 +46,8 @@ class OBB2 {
    * @param  a2  Corner vertex on the bounding box.
    * @param  a3  Corner vertex on the bounding box.
    */
-  void Set(const Point2& a0, const Point2& a1,
-           const Point2& a2, const Point2& a3);
+  void Set(const coord_t& a0, const coord_t& a1,
+           const coord_t& a2, const coord_t& a3);
 
   /**
    * Check if two oriented bounding boxes overlap. Uses the separating
@@ -55,7 +58,7 @@ class OBB2 {
   bool Overlap(const OBB2& b) const;
 
  private:
-   Point2  center_;   // Center of the oriented bounding box
+   coord_t center_;   // Center of the oriented bounding box
    float   extent0_;  // Half length along the basis vector 0
    float   extent1_;  // Half length along the basis vector 1
    Vector2 basis0_;   // Basis vector defined by 1st edge
