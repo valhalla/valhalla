@@ -4,10 +4,6 @@
 
 #include <vector>
 
-//#include "valhalla/midgard/point2.h"
-//#include "valhalla/midgard/pointll.h"
-//#include "valhalla/midgard/vector2.h"
-
 using namespace std;
 using namespace valhalla::midgard;
 
