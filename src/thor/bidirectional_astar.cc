@@ -222,7 +222,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         // Get opposing edge and check if allowed.
         const DirectedEdge* opp_edge = graphreader.GetOpposingEdge(edgeid);
         if (opp_edge == nullptr ||
-     //       !costing->Allowed(directededge, pred)) {
             !costing->AllowedReverse(directededge, opp_edge, opp_pred_edge)) {
           continue;
         }
@@ -231,7 +230,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
        Cost newcost = pred.cost() +
               costing->EdgeCost(directededge, nodeinfo->density()) +
               costing->TransitionCostReverse(directededge->localedgeidx(),
-                                             nodeinfo, opp_edge);
+                                             nodeinfo, opp_edge, opp_pred_edge);
 
        // Check if edge is temporarily labeled and this path has less cost. If
        // less cost the predecessor is updated and the sort cost is decremented
@@ -317,8 +316,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
     AddToAdjacencyList(edgeid, sortcost);
-    edgelabels_.emplace_back(kInvalidLabel, edgeid,
-            directededge, cost, sortcost, dist, 0,
+    edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
+            sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_);
   }
 }
@@ -338,12 +337,12 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
-    // Get the opposing directed edge for costing...if null use the original
-    // directed edge
-    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-    if (opp_dir_edge == nullptr) {
-      opp_dir_edge = directededge;
+    // Get the opposing directed edge, continue if we cannot get it
+    GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+    if (!opp_edge_id.Is_Valid()) {
+      continue;
     }
+    const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
     // Get cost and sort cost
     Cost cost = (costing->EdgeCost(opp_dir_edge, 0) * (1.0f - edge.dist));
@@ -351,10 +350,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    AddToAdjacencyListReverse(edgeid, sortcost);
-    edgelabels_reverse_.emplace_back(kInvalidLabel, edgeid,
-            directededge, cost, sortcost, dist, 0,
-            directededge->opp_local_idx(), mode_);
+    AddToAdjacencyListReverse(opp_edge_id, sortcost);
+    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id,
+                           opp_dir_edge, cost, sortcost, dist, 0,
+                           opp_dir_edge->opp_local_idx(), mode_);
   }
 }
 
