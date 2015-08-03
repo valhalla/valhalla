@@ -6,7 +6,7 @@ do
   then
     cd $d
     echo $d
-    fails=$(cat statistics.csv | grep false | wc -l)
+    fails=$(cat statistics.csv | grep fail | wc -l)
     count=$(cat statistics.csv | wc -l)
     perc=$(python -c "print ($fails/($count * 1.0))*100")
     echo -n "  Percent of failed routes = "
