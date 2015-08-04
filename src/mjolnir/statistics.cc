@@ -82,7 +82,7 @@ void validator_stats::add_tile_area (const uint32_t& tile_id, const float area) 
   tile_areas[tile_id] = area;
 }
 
-void validator_stats::add_tile_geom (const uint32_t& tile_id, const AABB2 geom) {
+void validator_stats::add_tile_geom (const uint32_t& tile_id, const AABB2<PointLL> geom) {
   tile_geometries[tile_id] = geom;
 }
 
@@ -120,7 +120,7 @@ const std::unordered_map<std::string, std::unordered_map<RoadClass, float, valid
 
 const std::unordered_map<uint32_t, float>& validator_stats::get_tile_areas() const { return tile_areas; }
 
-const std::unordered_map<uint32_t, AABB2>& validator_stats::get_tile_geometries() const { return tile_geometries; }
+const std::unordered_map<uint32_t, AABB2<PointLL>>& validator_stats::get_tile_geometries() const { return tile_geometries; }
 
 const std::vector<uint32_t> validator_stats::get_dups(int level) const { return dupcounts[level]; }
 
