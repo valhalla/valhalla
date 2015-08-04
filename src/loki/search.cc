@@ -69,7 +69,7 @@ PathLocation::SideOfStreet GetSide(const DirectedEdge* edge, const std::unique_p
 
   //what side
   auto index = std::get<2>(point);
-  LineSegment2 segment(info->shape()[index], info->shape()[index + 1]);
+  LineSegment2<PointLL> segment(info->shape()[index], info->shape()[index + 1]);
   return (segment.IsLeft(original) > 0) == edge->forward()  ? PathLocation::SideOfStreet::LEFT : PathLocation::SideOfStreet::RIGHT;
 }
 
