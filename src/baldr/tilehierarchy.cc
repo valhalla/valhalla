@@ -16,7 +16,8 @@ TileHierarchy::TileLevel::TileLevel(const boost::property_tree::ptree& pt):
   importance = kv->second;
 }
 
-TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name, const RoadClass importance, const Tiles& tiles)
+TileHierarchy::TileLevel::TileLevel(const unsigned char level, const std::string& name,
+                                    const RoadClass importance, const Tiles<PointLL>& tiles)
   :level(level), importance(importance), name(name), tiles(tiles) {
 }
 

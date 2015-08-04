@@ -35,7 +35,7 @@ namespace {
     return digits;
   }
   const std::locale dir_locale(std::locale("C"), new dir_facet());
-  const AABB2 world_box(PointLL(-180, -90), PointLL(180, 90));
+  const AABB2<PointLL> world_box(PointLL(-180, -90), PointLL(180, 90));
 }
 
 namespace valhalla {
@@ -177,7 +177,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid, const TileHierarchy& h
   const auto level = hierarchy.levels().find(graphid.level());
   if(level == hierarchy.levels().end())
     throw std::runtime_error("Could not compute FileSuffix for non-existent level");
-  const uint32_t max_id = Tiles::MaxTileId(world_box, level->second.tiles.TileSize());
+  const uint32_t max_id = Tiles<PointLL>::MaxTileId(world_box, level->second.tiles.TileSize());
 
   //figure out how many digits
   //TODO: dont convert it to a string to get the length there are faster ways..
@@ -233,6 +233,12 @@ GraphId GraphTile::GetTileId(const std::string& fname, const TileHierarchy& hier
   }
   uint32_t level = std::atoi(tokens.front().c_str());
   return {id, level, 0};
+}
+
+// Get the bounding box of this graph tile.
+AABB2<PointLL> GraphTile::BoundingBox(const TileHierarchy& hierarchy) const {
+  auto tiles = hierarchy.levels().find(header_->graphid().level())->second.tiles;
+  return tiles.TileBounds(header_->graphid().tileid());
 }
 
 size_t GraphTile::size() const {

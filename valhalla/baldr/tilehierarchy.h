@@ -31,12 +31,13 @@ class TileHierarchy {
    */
   struct TileLevel{
     TileLevel(const boost::property_tree::ptree& pt);
-    TileLevel(const uint8_t level, const std::string& name, const RoadClass importance, const midgard::Tiles& tiles);
+    TileLevel(const uint8_t level, const std::string& name,
+              const RoadClass importance, const midgard::Tiles<midgard::PointLL>& tiles);
     bool operator<(const TileLevel& other) const;
     uint8_t level;
     RoadClass importance;
     std::string name;
-    midgard::Tiles tiles;
+    midgard::Tiles<midgard::PointLL> tiles;
   };
 
   /**
