@@ -4,7 +4,8 @@ namespace valhalla {
 namespace midgard {
 
 // Default constructor.
-Ellipse::Ellipse()
+template <class coord_t>
+Ellipse<coord_t>::Ellipse()
     : s(0),
       c(0) {
   center_.Set(0.0f, 0.0f);
@@ -13,7 +14,8 @@ Ellipse::Ellipse()
 }
 
 // Constructor given bounding rectangle and a rotation.
-Ellipse::Ellipse(const Point2& p1, const Point2& p2, float angle) {
+template <class coord_t>
+Ellipse<coord_t>::Ellipse(const coord_t& p1, const coord_t& p2, float angle) {
   // Set the center and get sin and cos of the angle
   center_.Set(p1.x() + p2.x() * 0.5f, p1.y() + p2.y() * 0.5f);
   float angleRad = angle * kRadPerDeg;
@@ -40,8 +42,9 @@ Ellipse::Ellipse(const Point2& p1, const Point2& p2, float angle) {
 
 // Determines if a line segment intersects the ellipse and if so
 // finds the point(s) of intersection.
-uint32_t Ellipse::Intersect(const LineSegment2& seg, Point2& pt0,
-                            Point2& pt1) const {
+template <class coord_t>
+uint32_t Ellipse<coord_t>::Intersect(const LineSegment2<coord_t>& seg,
+                                     coord_t& pt0,  coord_t& pt1) const {
   // Solution is found by parameterizing the line segment and
   // substituting those values into the ellipse equation resulting
   // in a quadratic equation.
@@ -109,30 +112,31 @@ uint32_t Ellipse::Intersect(const LineSegment2& seg, Point2& pt0,
 
 // Does the specified axis-aligned bounding box (rectangle) intersect
 // this ellipse.
-IntersectCase Ellipse::DoesIntersect(const AABB2& r) const {
+template <class coord_t>
+IntersectCase Ellipse<coord_t>::DoesIntersect(const AABB2<coord_t>& r) const {
   // Test if all 4 corners of the rectangle are inside the ellipse
-  Point2 ul(r.minx(), r.maxy());
-  Point2 ur(r.maxx(), r.maxy());
-  Point2 ll(r.minx(), r.miny());
-  Point2 lr(r.maxx(), r.miny());
+  coord_t ul(r.minx(), r.maxy());
+  coord_t ur(r.maxx(), r.maxy());
+  coord_t ll(r.minx(), r.miny());
+  coord_t lr(r.maxx(), r.miny());
   if (Contains(ul) && Contains(ur) && Contains(ll) && Contains(lr))
     return kContains;
 
   // Test if any of the rectangle edges intersect
-  Point2 pt0, pt1;
-  LineSegment2 bottom(ll, lr);
+  coord_t pt0, pt1;
+  LineSegment2<coord_t> bottom(ll, lr);
   if (Intersect(bottom, pt0, pt1) > 0)
     return kIntersects;
 
-  LineSegment2 top(ul, ur);
+  LineSegment2<coord_t> top(ul, ur);
   if (Intersect(top, pt0, pt1) > 0)
     return kIntersects;
 
-  LineSegment2 left(ll, ul);
+  LineSegment2<coord_t> left(ll, ul);
   if (Intersect(left, pt0, pt1) > 0)
     return kIntersects;
 
-  LineSegment2 right(lr, ur);
+  LineSegment2<coord_t> right(lr, ur);
   if (Intersect(right, pt0, pt1) > 0)
     return kIntersects;
 
@@ -144,13 +148,18 @@ IntersectCase Ellipse::DoesIntersect(const AABB2& r) const {
 }
 
 // Tests if a point is inside the ellipse.
-bool Ellipse::Contains(const Point2& pt) const {
+template <class coord_t>
+bool Ellipse<coord_t>::Contains(const coord_t& pt) const {
   // Plug in equation for ellipse, If evaluates to <= 0 then the
   // point is in or on the ellipse.
   float dx = pt.x() - center_.x();
   float dy = pt.y() - center_.y();
   return (((k1_ * sqr(dx)) + (k2_ * dx * dy) + (k3_ * sqr(dy)) - 1) <= 0);
 }
+
+// Explicit instantiation
+template class Ellipse<Point2>;
+template class Ellipse<PointLL>;
 
 }
 }

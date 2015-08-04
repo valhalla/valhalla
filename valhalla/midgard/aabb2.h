@@ -4,14 +4,17 @@
 #include <vector>
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
 
 namespace valhalla {
 namespace midgard {
 
 /**
- * Axis Aligned Bounding Box (2 dimensional)
+ * Axis Aligned Bounding Box (2 dimensional). This is a template class that
+ * works with Point2 (Euclidean x,y) or PointLL (latitude,longitude).
  */
+template <class coord_t>
 class AABB2 {
  public:
   /**
@@ -24,7 +27,7 @@ class AABB2 {
    * @param  minpt  Minimum point (x,y)
    * @param  maxpt  Maximum point (x,y)
    */
-  AABB2(const Point2& minpt, const Point2& maxpt);
+  AABB2(const coord_t& minpt, const coord_t& maxpt);
 
   /**
    * Constructor with specified bounds.
@@ -40,7 +43,7 @@ class AABB2 {
    * Construct an AABB given a list of points.
    * @param  pts  Vertex list.
    */
-  AABB2(std::vector<Point2>& pts);
+  AABB2(const std::vector<coord_t>& pts);
 
   /**
    * Equality operator.
@@ -76,33 +79,35 @@ class AABB2 {
    * Get the point at the minimum x,y.
    * @return  Returns the min. point.
    */
-  Point2 minpt() const;
+  coord_t minpt() const;
 
   /**
    * Get the point at the maximum x,y.
    * @return  Returns the max. point.
    */
-  Point2 maxpt() const;
+  coord_t maxpt() const;
 
   /**
    * Creates an AABB given a list of points.
    * @param  pts  Vertex list.
    */
-  void Create(const std::vector<Point2>& pts);
+  void Create(const std::vector<coord_t>& pts);
 
   /**
    * Gets the center of the bounding box.
    * @return  Returns the center point of the bounding box.
    */
-  Point2 Center() const;
+  coord_t Center() const;
 
   /**
    * Tests if a specified point is within the bounding box.
-   * @param  pt   Point to test.
-   * @return  true if within the bounding box and false if outside the extent.
-   *          If the point lies along the minimum x,yx or y.
+   * @param   pt   Point to test.
+   * @return  Returns true if within the bounding box and false if outside
+   *          the extent. Points that lie along the minimum x or y edge are
+   *          considered to be inside, while points that lie on the maximum
+   *          x or y edge are considered to be outside.
    */
-  bool Contains(const Point2& pt) const;
+  bool Contains(const coord_t& pt) const;
 
   /**
    * Checks to determine if another bounding box is completely inside this
@@ -126,7 +131,7 @@ class AABB2 {
    * @return  Returns true if the segment intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersect(const LineSegment2& seg) const;
+  bool Intersect(const LineSegment2<coord_t>& seg) const;
 
   /**
    * Tests whether the segment intersects the bounding box.
@@ -135,7 +140,7 @@ class AABB2 {
    * @return  Returns true if the segment intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersect(const Point2& a, const Point2& b) const;
+  bool Intersect(const coord_t& a, const coord_t& b) const;
 
   /**
    * Gets the width of the bounding box.
@@ -150,15 +155,9 @@ class AABB2 {
   float Height() const;
 
   /**
-   * Gets the area of the bounding box.
-   * @return  Returns the area of the bounding box.
-   */
-  float Area() const;
-
-  /**
    * Expands (if necessary) the bounding box to include the specified
    * bounding box.
-   * @param  r2  Bounding bounding box to "combine" with this
+   * @param  r2  Bounding bounding box to "combine" with this bounding box.
    */
   void Expand(const AABB2& r2);
 
