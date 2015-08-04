@@ -16,6 +16,7 @@ function srtm() {
 
 	#grab the abbreviated list of hgt files
 	grep -F '.hgt.zip<' srtmgl1.003.html | sed -e 's@.*href="@@g' -e 's/">.*//g' > srtmgl1.003.list
+	exit 
 
 	#filter out files that are already on the disk (so we don't re-download them)
 	echo -n > srtmgl1.003.urls

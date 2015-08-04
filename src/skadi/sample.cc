@@ -5,38 +5,39 @@
 #include <stdexcept>
 #include <limits>
 #include <list>
-
-//TODO: switch to using gdal_priv.h, which looks like proper c++ bindings
-#include <gdal.h>
+#include <fstream>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
 namespace {
-  //quiet error handler
-  void quiet(CPLErr eErrClass, int err_no, const char *msg){
-    //bask in the silence
+  //srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
+  //by .5 seconds. that means that the center of pixel 0 is located at
+  //the tiles lat,lon (which is important for bilinear filtering)
+  constexpr size_t HGT_DIM = 3601;
+  constexpr size_t HGT_PIXELS = HGT_DIM * HGT_DIM;
+  constexpr double NO_DATA_VALUE = -32768;
+
+  std::string hgt_name(int lon, int lat) {
+    std::string name(lat < 0 ? "S" : "N");
+    name.append(std::to_string(std::abs(lat)));
+    name.insert(1, 3 - name.size(), '0');
+    name.push_back(lon < 0 ? 'W' : 'E');
+    name.append(std::to_string(std::abs(lon)));
+    name.append(".hgt");
+    name.insert(4, 11 - name.size(), '0');
+    return name;
   }
 
-  //this is a once per process thing
-  struct driver_t {
-    driver_t() {
-      //register all datasource drivers
-      GDALAllRegister();
-      //silence textual errors
-      CPLSetErrorHandler(quiet);
-      //TODO: make configurable..
-      //TODO: wtf. cant set this or we segfault in threaded applications and default is only 40mb
-      //GDALSetCacheMax64(static_cast<GIntBig>(1073741824));
-    }
-    ~driver_t() {
-      GDALDestroyDriverManager();
-    }
-  };
-
-  //so we put it in a hidden singleton
-  void initialize() {
-    static driver_t driver;
+  std::shared_ptr<int16_t> read_hgt(const std::string& file_name) {
+    std::ifstream f(file_name);
+    if(!f.is_open())
+      return nullptr;
+    //make some memory
+    auto values = std::shared_ptr<int16_t>(new int16_t[HGT_PIXELS], [](int16_t* p){delete [] p;});
+    //copy the data
+    f.read(static_cast<char*>(static_cast<void*>(values.get())), HGT_PIXELS * (sizeof(int16_t)/sizeof(char)));
+    return values;
   }
 
 }
@@ -44,63 +45,30 @@ namespace {
 namespace valhalla {
 namespace skadi {
 
-  sample::sample(const std::string& data_source)
-    :no_data_value(std::numeric_limits<double>::min()) {
-
-    //init the format drivers
-    initialize();
-
-    //open the dataset
-    GDALDatasetH src_ptr = GDALOpenEx(data_source.c_str(), GDAL_OF_RASTER, nullptr, nullptr, nullptr);
-    if(src_ptr == nullptr)
-      throw std::runtime_error("Couldn't open " + data_source);
-    source.reset(src_ptr, GDALClose);
-
-    //get the first band of data
-    band = GDALGetRasterBand(source.get(), 1);
-    if(band == nullptr)
-      throw std::runtime_error("Couldn't get raster band 1");
-
-    //what's the value when there is no value
-    int success;
-    no_data_value = GDALGetRasterNoDataValue(band, &success);
-    if(!success)
-      LOG_WARN("No data value is not set for data source, using double::min");
-
-    //get the inverse transform to go from lat,lon to pixels
-    double transform[6];
-    if(GDALGetGeoTransform(source.get(), transform) != CE_None)
-      throw std::runtime_error("Could not get coordinate transform for data source");
-    if(!GDALInvGeoTransform(transform, inverse_transform))
-      throw std::runtime_error("Could not invert the coordinate transform");
+  sample::sample(const std::string& data_source): data_source(data_source) {
   }
 
   template <class coord_t>
   double sample::get(const coord_t& coord) {
-    //project the coordinates into to image space
-    double x = inverse_transform[0] +
-               inverse_transform[1] * coord.first +
-               inverse_transform[2] * coord.second;
-    double y = inverse_transform[3] +
-               inverse_transform[4] * coord.first +
-               inverse_transform[5] * coord.second;
-    int fx = floor(x);
-    int fy = floor(y);
+    //check the cache and load
+    auto cache_id = (static_cast<int>(std::floor(coord.second) + 90) << 9) | static_cast<int>(std::floor(coord.first) + 180);
+    auto cached_tile = cache.find(cache_id);
+    if(cached_tile == cache.cend()) {
+      //pull out a tile
+      auto data = read_hgt("scripts/srtm/" + hgt_name(static_cast<int>(std::floor(coord.first)),
+                                                      static_cast<int>(std::floor(coord.second))));
+      //cache it
+      cached_tile = cache.insert(std::make_pair(cache_id,
+        srtm_tile_t{static_cast<int>(std::floor(coord.first)), static_cast<int>(std::floor(coord.second)), data})).first;
+    }
 
-    //pull out quad of pixels, image origin is top left
-    //quad is laid out exactly the same
-    double quad[2];
-    GDALRasterIOExtraArg args{RASTERIO_EXTRA_ARG_CURRENT_VERSION, GRIORA_Bilinear,
-                              nullptr, nullptr, true, x - fx, y - fy, 1, 1};
-    auto failure = GDALRasterIOEx(band, GF_Read, fx, fy, 2, 2, quad,
-        1, 1, GDT_CFloat64, 0, 0, &args);
-
-    //got back some data
-    if(failure == CE_None)
-      return quad[0];
-    //need to check corner cases (quad partially outside of image)
-    else
-      return no_data_value;
+    //TODO: bilinear
+    const auto& tile = cached_tile->second;
+    if(!tile.data)
+      return NO_DATA_VALUE;
+    auto c = coord.first - tile.lon;
+    auto r = coord.second - tile.lat;
+    return tile.data.get()[static_cast<size_t>(std::floor(r)) * HGT_DIM + static_cast<size_t>(std::floor(c))];
   }
 
   template <class coords_t>
@@ -113,7 +81,7 @@ namespace skadi {
   }
 
   double sample::get_no_data_value() const {
-    return no_data_value;
+    return NO_DATA_VALUE;
   }
 
   //explicit instantiations for templated get

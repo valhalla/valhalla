@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace valhalla {
   namespace skadi {
@@ -21,14 +22,12 @@ namespace valhalla {
        */
       sample(const std::string& data_source);
 
-
       /**
        * Get a single sample from the datasource
        * @param coord  the single posting at which to sample the datasource
        */
       template <class coord_t>
       double get(const coord_t& coord);
-
 
       /**
        * Get multiple samples from the datasource
@@ -43,10 +42,15 @@ namespace valhalla {
       double get_no_data_value() const;
 
      protected:
-      std::shared_ptr<void> source;
-      void* band;
-      double no_data_value;
-      double inverse_transform[6];
+      //hold a square degree of data
+      struct srtm_tile_t {
+        int lon;
+        int lat;
+        std::shared_ptr<int16_t> data;
+      };
+
+      std::string data_source;
+      std::unordered_map<uint32_t, srtm_tile_t> cache;
     };
 
   }
