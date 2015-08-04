@@ -45,7 +45,8 @@ namespace {
 namespace valhalla {
 namespace skadi {
 
-  sample::sample(const std::string& data_source): data_source(data_source) {
+  sample::sample(const std::string& data_source, const size_t cache_size): data_source(data_source), cache_size(cache_size) {
+    cache.reserve(cache_size);
   }
 
   template <class coord_t>
@@ -60,6 +61,11 @@ namespace skadi {
       //cache it
       cached_tile = cache.insert(std::make_pair(cache_id,
         srtm_tile_t{static_cast<int>(std::floor(coord.first)), static_cast<int>(std::floor(coord.second)), data})).first;
+
+      //TODO: flush cache if too many tiles in there
+      if(cache.size() > cache_size) {
+
+      }
     }
 
     //TODO: bilinear

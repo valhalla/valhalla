@@ -20,7 +20,7 @@ namespace valhalla {
        * Constructor
        * @param data_source  file name of the datasource from which to sample
        */
-      sample(const std::string& data_source);
+      sample(const std::string& data_source, const size_t cache_size = 20);
 
       /**
        * Get a single sample from the datasource
@@ -50,6 +50,7 @@ namespace valhalla {
       };
 
       std::string data_source;
+      size_t cache_size;
       std::unordered_map<uint32_t, srtm_tile_t> cache;
     };
 
