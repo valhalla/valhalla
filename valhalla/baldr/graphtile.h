@@ -62,6 +62,13 @@ class GraphTile {
   static GraphId GetTileId(const std::string& fname, const TileHierarchy& hierarchy);
 
   /**
+   * Get the bounding box of this graph tile.
+   * @param  hierarchy the tile hierarchy this tile is under.
+   * @return Returns the bounding box of the tile.
+   */
+  midgard::AABB2<PointLL> BoundingBox(const TileHierarchy& hierarchy) const;
+
+  /**
    * Gets the size of the tile in bytes. A value of 0 indicates an empty tile. A value
    * of 0 indicates an error reading the tile data.
    * or unsuccessful read.
