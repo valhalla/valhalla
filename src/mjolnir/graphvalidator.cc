@@ -21,6 +21,7 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -115,11 +116,11 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
     GraphReader graph_reader(hierarchy_properties);
     // Get some things we need throughout
     auto tile_hierarchy = graph_reader.GetTileHierarchy();
-    std::vector<Tiles> levels;
+    std::vector<Tiles<PointLL>> levels;
     for (auto level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
     }
-    Tiles *tiles;
+    Tiles<PointLL> *tiles;
 
     // Check for more tiles
     while (true) {
@@ -235,8 +236,11 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
         nodes.emplace_back(std::move(nodeinfo));
       }
 
-      // Add density to return class
-      auto area = tiles->Area(tileid);
+      // Add density to return class. Approximate the tile area square km
+      AABB2<PointLL> bb = tiles->TileBounds(tileid);
+      float area = ((bb.maxy() - bb.miny()) * kMetersPerDegreeLat * kKmPerMeter) *
+                   ((bb.maxx() - bb.minx()) *
+                       DistanceApproximator::MetersPerLngDegree(bb.Center().y()) * kKmPerMeter);
       float density = (roadlength * 0.0005f) / area;
       vStats.add_density(density, level);
       vStats.add_tile_area(tileid, area);

@@ -51,7 +51,7 @@ boost::filesystem::path config_file_path;
 
 std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(
             sqlite3* db_handle, std::unordered_map<uint32_t,
-            bool>& drive_on_right, const AABB2& aabb) {
+            bool>& drive_on_right, const AABB2<PointLL>& aabb) {
   // Polys (return)
   std::unordered_map<uint32_t, multi_polygon_type> polys;
 

@@ -301,7 +301,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
 
 // Walk the shape and look for any empty tiles that the shape intersects
 void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
-                const Tiles& tiling, std::vector<PointLL>& shape,
+                const Tiles<PointLL>& tiling, std::vector<PointLL>& shape,
                 DataQuality& stats) {
   // Walk the shape segments until we are outside
   uint32_t current_tile = tile1.tileid();
@@ -361,7 +361,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   sequence<Node> nodes(nodes_file, false);
 
   const auto& tl = hierarchy.levels().rbegin();
-  Tiles tiling = tl->second.tiles;
+  Tiles<PointLL> tiling = tl->second.tiles;
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
