@@ -5,8 +5,10 @@ namespace midgard {
 
 // Clips the input set of vertices to the specified boundary.  Uses a
 // method where the shape is clipped against each edge in succession.
-uint32_t Clipper2::Clip(const AABB2& bbox, std::vector<Point2>& pts,
-                        const bool closed) {
+template <class coord_t>
+uint32_t Clipper2<coord_t>::Clip(const AABB2<coord_t>& bbox,
+                                 std::vector<coord_t>& pts,
+                                 const bool closed) {
   // Save the boundary
   minx_ = bbox.minx();
   maxx_ = bbox.maxx();
@@ -14,7 +16,7 @@ uint32_t Clipper2::Clip(const AABB2& bbox, std::vector<Point2>& pts,
   maxy_ = bbox.maxy();
 
   // Temporary vertex list
-  std::vector<Point2> tmp_pts;
+  std::vector<coord_t> tmp_pts;
 
   // Clip against each edge in succession. At each step we swap the roles
   // of the 2 vertex lists. If at any time there are no points remaining we
@@ -37,9 +39,11 @@ uint32_t Clipper2::Clip(const AABB2& bbox, std::vector<Point2>& pts,
 }
 
 // Clips the polyline/polygon against a single edge.
-uint32_t Clipper2::ClipAgainstEdge(const ClipEdge bdry, const bool closed,
-                              const std::vector<Point2>& vin,
-                              std::vector<Point2>& vout) {
+template <class coord_t>
+uint32_t Clipper2<coord_t>::ClipAgainstEdge(const ClipEdge bdry,
+                              const bool closed,
+                              const std::vector<coord_t>& vin,
+                              std::vector<coord_t>& vout) {
   // Clear the output vector
   vout.clear();
 
@@ -75,9 +79,11 @@ uint32_t Clipper2::ClipAgainstEdge(const ClipEdge bdry, const bool closed,
 // Finds the intersection of the segment from insidept to outsidept with the
 // specified boundary edge.  Finds the intersection using the parametric
 // line equation.
-Point2 Clipper2::ClipIntersection(const ClipEdge bdry, const Point2& insidept,
-                                  const Point2& outsidept) {
-  float t = 0.0;
+template <class coord_t>
+coord_t Clipper2<coord_t>::ClipIntersection(const ClipEdge bdry,
+                                            const coord_t& insidept,
+                                            const coord_t& outsidept) {
+  float t = 0.0f;
   float inx = insidept.x();
   float iny = insidept.y();
   float dx = outsidept.x() - inx;
@@ -98,12 +104,13 @@ Point2 Clipper2::ClipIntersection(const ClipEdge bdry, const Point2& insidept,
   }
 
   // Return the intersection point.
-  return Point2(inx + t * dx, iny + t * dy);
+  return coord_t(inx + t * dx, iny + t * dy);
 }
 
 // Tests if the vertex is inside the rectangular boundary with respect to
 // the specified edge.
-bool Clipper2::Inside(const ClipEdge edge, const Point2& v) const {
+template <class coord_t>
+bool Clipper2<coord_t>::Inside(const ClipEdge edge, const coord_t& v) const {
   switch (edge) {
     case kLeft:
       return (v.x() > minx_);
@@ -118,11 +125,16 @@ bool Clipper2::Inside(const ClipEdge edge, const Point2& v) const {
 }
 
 // Add vertex to clip output (if not same as prior vertex)
-void Clipper2::Add(const Point2& pt, std::vector<Point2>& vout) {
+template <class coord_t>
+void Clipper2<coord_t>::Add(const coord_t& pt, std::vector<coord_t>& vout) {
   if (vout.size() == 0 || vout.back() != pt) {
     vout.push_back(pt);
   }
 }
+
+// Explicit instantiation
+template class Clipper2<Point2>;
+template class Clipper2<PointLL>;
 
 }
 }

@@ -12,34 +12,34 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void TryIntersectsBb(const AABB2& a, const AABB2& b) {
+void TryIntersectsBb(const AABB2<Point2>& a, const AABB2<Point2>& b) {
   if (!a.Intersects(b))
     throw runtime_error("Intersecting BB test failed");
 }
 
 void TestIntersectsBb() {
-  TryIntersectsBb(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  TryIntersectsBb(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryContainsBb(const AABB2& a, const AABB2& b) {
+void TryContainsBb(const AABB2<Point2>& a, const AABB2<Point2>& b) {
   if (!a.Contains(b))
     throw runtime_error("Contains BB test failed");
 }
 
 void TestContainsBb() {
-  TryContainsBb(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  TryContainsBb(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryIntesectsLn(const AABB2& box, const Point2& a,
+void TryIntesectsLn(const AABB2<Point2>& box, const Point2& a,
                     const Point2& b, bool expected) {
   if (box.Intersect(a, b) != expected)
     throw runtime_error("Intersects line test failed");
 }
 
 void TestIntersectsLn() {
-  AABB2 box(40.0f, -76.0f, 41.0f, -75.0f);
+  AABB2<Point2> box(40.0f, -76.0f, 41.0f, -75.0f);
 
   // Test with one or both points in the box
   TryIntesectsLn(box, Point2(40.5f, -75.5f), Point2(41.5f, -75.5f), true);
@@ -65,48 +65,48 @@ void TestIntersectsLn() {
   TryIntesectsLn(box, Point2(39.2f, -75.5f), Point2(40.5f, -74.5f), false);
 }
 
-void TryContainsPt(const AABB2& a, const AABB2& b) {
+void TryContainsPt(const AABB2<Point2>& a, const AABB2<Point2>& b) {
   if (!a.Contains(b.Center()))
     throw runtime_error("Contains point test failed");
 }
 
 void TestContainsPt() {
-  TryContainsPt(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  TryContainsPt(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryEquality(const AABB2& a, const AABB2& b) {
+void TryEquality(const AABB2<Point2>& a, const AABB2<Point2>& b) {
   if (a == b)
     throw runtime_error("Equality test failed");
 }
 
 void TestEquality() {
-  TryEquality(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
-                AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  TryEquality(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+                AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryExpand(AABB2 a, const AABB2& b) {
+void TryExpand(AABB2<Point2> a, const AABB2<Point2>& b) {
   a.Expand(b);
   if (!(a == b))
     throw runtime_error("Expand test failed");
 }
 
 void TestExpand() {
-  TryExpand(AABB2(40.0f, -76.4f, 40.1f, -76.3f),
-            AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f));
+  TryExpand(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f),
+            AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f));
 }
 
-void TryPtConstructor(const AABB2& a) {
-  AABB2 b = AABB2(a.minpt(), a.maxpt());
+void TryPtConstructor(const AABB2<Point2>& a) {
+  AABB2<Point2> b = AABB2<Point2>(a.minpt(), a.maxpt());
   if (!(a == b))
     throw runtime_error("Point Constructor test failed");
 }
 
 void TestPtConstructor() {
-  TryPtConstructor(AABB2(40.0f, -76.4f, 40.1f, -76.3f));
+  TryPtConstructor(AABB2<Point2>(40.0f, -76.4f, 40.1f, -76.3f));
 }
 
-void TryMinMaxValues(const AABB2& a, float minx_res, float maxx_res,
+void TryMinMaxValues(const AABB2<Point2>& a, float minx_res, float maxx_res,
                      float miny_res, float maxy_res) {
   if (fabs(a.minx() - minx_res) > kEpsilon)
     throw runtime_error("Min x value test failed");
@@ -122,48 +122,39 @@ void TryMinMaxValues(const AABB2& a, float minx_res, float maxx_res,
 }
 
 void TestMinMaxValues() {
-  TryMinMaxValues(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f),
+  TryMinMaxValues(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f),
                   39.8249f, 40.2559f, -76.8013f, -75.8997f);
 }
 
-void TryTestWidth(const AABB2& a, float res) {
+void TryTestWidth(const AABB2<Point2>& a, float res) {
   if (fabs(a.Width() - res) > kEpsilon)
     throw runtime_error("Width test failed");
 }
 
 void TestWidth() {
-  TryTestWidth(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f), 0.431f);
+  TryTestWidth(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f), 0.431f);
 }
 
-void TryTestHeight(const AABB2& a, float res) {
+void TryTestHeight(const AABB2<Point2>& a, float res) {
   if (fabs(a.Height() - res) > kEpsilon)
-    throw runtime_error("Area test failed");
+    throw runtime_error("Height test failed");
 }
 
 void TestHeight() {
-  TryTestHeight(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f), 0.901604f);
+  TryTestHeight(AABB2<Point2>(39.8249f, -76.8013f, 40.2559f, -75.8997f), 0.901604f);
 }
 
-void TryTestArea(const AABB2& a, float res) {
-  if (fabs(a.Area() - res) > kEpsilon)
-    throw runtime_error("Area test failed");
-}
+void TryTestVector(const AABB2<Point2>& a, std::vector<Point2>& pts) {
 
-void TestArea() {
-  TryTestArea(AABB2(39.8249f, -76.8013f, 40.2559f, -75.8997f), 0.388591f);
-}
-
-void TryTestVector(const AABB2& a, std::vector<Point2>& pts) {
-
-  AABB2 b(pts);
+  AABB2<Point2> b(pts);
   if (!(a == b))
     throw runtime_error("Test Vector test failed");
 }
 
 void TestVector() {
   std::vector<Point2> pts;
-  AABB2 a(39.8249f, -76.8013f, 40.2559f, -75.8997f);
-  AABB2 b(40.0f, -76.4f, 40.1f, -76.3f);
+  AABB2<Point2> a(39.8249f, -76.8013f, 40.2559f, -75.8997f);
+  AABB2<Point2> b(40.0f, -76.4f, 40.1f, -76.3f);
 
   pts.push_back(a.Center());
   pts.push_back(a.maxpt());
@@ -210,9 +201,6 @@ int main() {
 
   //Test height.
   suite.test(TEST_CASE(TestHeight));
-
-  //Test area.
-  suite.test(TEST_CASE(TestArea));
 
   //Test vector.
   suite.test(TEST_CASE(TestVector));

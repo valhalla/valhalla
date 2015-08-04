@@ -5,7 +5,8 @@ namespace valhalla {
 namespace midgard {
 
 // Default constructor
-AABB2::AABB2()
+template <class coord_t>
+AABB2<coord_t>::AABB2()
     : minx_(0.0f),
       miny_(0.0f),
       maxx_(0.0f),
@@ -13,7 +14,8 @@ AABB2::AABB2()
 }
 
 // Construct an AABB given a minimum and maximum point.
-AABB2::AABB2(const Point2& minpt, const Point2& maxpt) {
+template <class coord_t>
+AABB2<coord_t>::AABB2(const coord_t& minpt, const coord_t& maxpt) {
   minx_ = minpt.x();
   miny_ = minpt.y();
   maxx_ = maxpt.x();
@@ -21,8 +23,9 @@ AABB2::AABB2(const Point2& minpt, const Point2& maxpt) {
 }
 
 // Constructor with specified bounds.
-AABB2::AABB2(const float minx, const float miny, const float maxx,
-             const float maxy) {
+template <class coord_t>
+AABB2<coord_t>::AABB2(const float minx, const float miny,
+                      const float maxx, const float maxy) {
   minx_ = minx;
   miny_ = miny;
   maxx_ = maxx;
@@ -30,48 +33,57 @@ AABB2::AABB2(const float minx, const float miny, const float maxx,
 }
 
 // Construct an AABB given a list of points.
-AABB2::AABB2(std::vector<Point2>& pts) {
+template <class coord_t>
+AABB2<coord_t>::AABB2(const std::vector<coord_t>& pts) {
   Create(pts);
 }
 
 // Equality operator.
-bool AABB2::operator ==(const AABB2& r2) const {
+template <class coord_t>
+bool AABB2<coord_t>::operator ==(const AABB2<coord_t>& r2) const {
   return (minx_ == r2.minx() && maxx_ == r2.maxx() &&
           miny_ == r2.miny() && maxy_ == r2.maxy());
 }
 
 // Get the minimum x.
-float AABB2::minx() const {
+template <class coord_t>
+float AABB2<coord_t>::minx() const {
   return minx_;
 }
 
 // Get the maximum x.
-float AABB2::maxx() const {
+template <class coord_t>
+float AABB2<coord_t>::maxx() const {
   return maxx_;
 }
 
 // Get the minimum y.
-float AABB2::miny() const {
+template <class coord_t>
+float AABB2<coord_t>::miny() const {
   return miny_;
 }
 
 // Get the maximum y.
-float AABB2::maxy() const {
+template <class coord_t>
+float AABB2<coord_t>::maxy() const {
   return maxy_;
 }
 
 // Get the point at the minimum x,y.
-Point2 AABB2::minpt() const {
-  return Point2(minx_, miny_);
+template <class coord_t>
+coord_t AABB2<coord_t>::minpt() const {
+  return coord_t(minx_, miny_);
 }
 
 // Get the point at the maximum x,y.
-Point2 AABB2::maxpt() const {
-  return Point2(maxx_, maxy_);
+template <class coord_t>
+coord_t AABB2<coord_t>::maxpt() const {
+  return coord_t(maxx_, maxy_);
 }
 
 // Creates an AABB given a list of points.
-void AABB2::Create(const std::vector<Point2>& pts) {
+template <class coord_t>
+void AABB2<coord_t>::Create(const std::vector<coord_t>& pts) {
   auto p = pts.begin();
   minx_ = p->x();
   maxx_ = minx_;
@@ -93,24 +105,28 @@ void AABB2::Create(const std::vector<Point2>& pts) {
 }
 
 // Gets the center of the bounding box.
-Point2 AABB2::Center() const {
-  return Point2((minx_ + maxx_) * 0.5f, (miny_ + maxy_) * 0.5f);
+template <class coord_t>
+coord_t AABB2<coord_t>::Center() const {
+  return coord_t((minx_ + maxx_) * 0.5f, (miny_ + maxy_) * 0.5f);
 }
 
 // Tests if a specified point is within the bounding box.
-bool AABB2::Contains(const Point2& pt) const {
+template <class coord_t>
+bool AABB2<coord_t>::Contains(const coord_t& pt) const {
   return (pt.x() >= minx_ && pt.y() >= miny_ &&
           pt.x() <  maxx_ && pt.y() <  maxy_);
 }
 
 // Checks to determine if another bounding box is completely inside
 // this bounding box.
-bool AABB2::Contains(const AABB2& r2) const {
+template <class coord_t>
+bool AABB2<coord_t>::Contains(const AABB2<coord_t>& r2) const {
   return (Contains(r2.minpt()) && Contains(r2.maxpt()));
 }
 
 // Test if this bounding box intersects another bounding box.
-bool AABB2::Intersects(const AABB2& r2) const {
+template <class coord_t>
+bool AABB2<coord_t>::Intersects(const AABB2<coord_t>& r2) const {
   // The bounding boxes do NOT intersect if the other bounding box (r2) is
   // entirely LEFT, BELOW, RIGHT, or ABOVE this bounding box.
   if ((r2.minx() < minx_ && r2.maxx() < minx_) ||
@@ -123,12 +139,14 @@ bool AABB2::Intersects(const AABB2& r2) const {
 }
 
 // Tests whether the segment intersects the bounding box.
-bool AABB2::Intersect(const LineSegment2& seg) const {
+template <class coord_t>
+bool AABB2<coord_t>::Intersect(const LineSegment2<coord_t>& seg) const {
   return Intersect(seg.a(), seg.b());
 }
 
 // Tests whether the segment intersects the bounding box.
-bool AABB2::Intersect(const Point2& a, const Point2& b) const {
+template <class coord_t>
+bool AABB2<coord_t>::Intersect(const coord_t& a, const coord_t& b) const {
   // Trivial case - either point within the bounding box
   if (Contains(a) || Contains(b))
     return true;
@@ -146,31 +164,29 @@ bool AABB2::Intersect(const Point2& a, const Point2& b) const {
   // segment. Any corner point on the segment half plane will have
   // IsLeft == 0 and we count as an intersection (trivial rejection cases
   // above mean the segment reaches the corner point)
-  LineSegment2 s(a, b);
-  float s1 = s.IsLeft(Point2(minx_, miny_));
-  return ((s1 * s.IsLeft(Point2(minx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(Point2(maxx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(Point2(maxx_, miny_)) <= 0.0f));
+  LineSegment2<coord_t> s(a, b);
+  float s1 = s.IsLeft(coord_t(minx_, miny_));
+  return ((s1 * s.IsLeft(coord_t(minx_, maxy_)) <= 0.0f) ||
+          (s1 * s.IsLeft(coord_t(maxx_, maxy_)) <= 0.0f) ||
+          (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0f));
 }
 
 // Gets the width of the bounding box.
-float AABB2::Width() const {
+template <class coord_t>
+float AABB2<coord_t>::Width() const {
   return maxx_ - minx_;
 }
 
 // Gets the height of the bounding box.
-float AABB2::Height() const {
+template <class coord_t>
+float AABB2<coord_t>::Height() const {
   return maxy_ - miny_;
-}
-
-// Gets the area of the bounding box.
-float AABB2::Area() const {
-  return Width() * Height();
 }
 
 // Expands (if necessary) the bounding box to include the specified
 // bounding box.
-void AABB2::Expand(const AABB2& r2) {
+template <class coord_t>
+void AABB2<coord_t>::Expand(const AABB2<coord_t>& r2) {
   if (r2.minx() < minx_)
     minx_ = r2.minx();
   if (r2.miny() < miny_)
@@ -180,6 +196,10 @@ void AABB2::Expand(const AABB2& r2) {
   if (r2.maxy() > maxy_)
     maxy_ = r2.maxy();
 }
+
+// Explicit instantiation
+template class AABB2<Point2>;
+template class AABB2<PointLL>;
 
 }
 }

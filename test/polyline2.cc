@@ -11,7 +11,7 @@ using namespace valhalla::midgard;
 
 namespace {
 
-void TryGeneralizeAndLength(Polyline2& pl, const float& gen, const float& res) {
+void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float& res) {
   unsigned int size = pl.Generalize(gen);
 
   std::vector<Point2> pts = pl.pts();
@@ -23,7 +23,7 @@ void TryGeneralizeAndLength(Polyline2& pl, const float& gen, const float& res) {
     throw runtime_error("Generalize #2 test failed.");
   }
 
-  Polyline2 pl2;
+  Polyline2<Point2> pl2;
   pl2 = pl.GeneralizedPolyline(gen);
 
   if (pl2.pts().size() != 2)
@@ -41,11 +41,11 @@ void TryGeneralizeAndLength(Polyline2& pl, const float& gen, const float& res) {
 void TestGeneralizeAndLength() {
   std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
       Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
-  Polyline2 pl(pts);
+  Polyline2<Point2> pl(pts);
   TryGeneralizeAndLength(pl, 100.0f, 79.0569f);
 }
 
-void TryClosestPoint(const Polyline2& pl, const Point2& a, const Point2& b) {
+void TryClosestPoint(const Polyline2<Point2>& pl, const Point2& a, const Point2& b) {
 
   auto result = pl.ClosestPoint(a);
 
@@ -60,7 +60,7 @@ void TestClosestPoint() {
   Point2 d(50.0f, 100.0f);
 
   // Test adding points to polyline
-  Polyline2 pl;
+  Polyline2<Point2> pl;
   pl.Add(a);
   pl.Add(b);
   pl.Add(c);
@@ -76,7 +76,7 @@ void TestClosestPoint() {
   TryClosestPoint(pl, end, d);
 }
 
-void TryClip(Polyline2& pl, const AABB2& a, const unsigned int exp) {
+void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const unsigned int exp) {
   // Clip and check vertex count and 1st 2 points
   unsigned int x = pl.Clip(a);
   if (x != exp)
@@ -91,16 +91,16 @@ void TryClip(Polyline2& pl, const AABB2& a, const unsigned int exp) {
 void TestClip() {
   std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
       Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
-  Polyline2 pl(pts);
-  TryClip(pl, AABB2(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
+  Polyline2<Point2> pl(pts);
+  TryClip(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 
   // Test with vertices on edges
-  Polyline2 pl2(pts);
-  TryClip(pl2, AABB2(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
+  Polyline2<Point2> pl2(pts);
+  TryClip(pl2, AABB2<Point2>(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
 }
 
-void TryClippedPolyline(Polyline2& pl, const AABB2& a, const unsigned int exp) {
-  Polyline2 pl2 = pl.ClippedPolyline(a);
+void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const unsigned int exp) {
+  Polyline2<Point2> pl2 = pl.ClippedPolyline(a);
   unsigned int x = pl2.pts().size();
   if (x != 2)
     throw runtime_error("ClippedPolyline test failed: count not correct");
@@ -115,8 +115,8 @@ void TryClippedPolyline(Polyline2& pl, const AABB2& a, const unsigned int exp) {
 void TestClippedPolyline() {
   std::vector<Point2> pts = { Point2(25.0f, 25.0f), Point2(50.0f, 50.0f),
       Point2(25.0f, 75.0f), Point2(50.0f, 100.0f) };
-  Polyline2 pl(pts);
-  TryClippedPolyline(pl, AABB2(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
+  Polyline2<Point2> pl(pts);
+  TryClippedPolyline(pl, AABB2<Point2>(Point2(0.0f, 0.0f), Point2(75.0f, 50.0f)), 2);
 }
 
 }

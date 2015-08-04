@@ -12,34 +12,41 @@ const float INVALID = 0xBADBADBAD;
 namespace valhalla {
 namespace midgard {
 
+// Default constructor.  Sets latitude and longitude to INVALID.
 PointLL::PointLL()
     : Point2(INVALID, INVALID) {
 }
 
+// Get the latitude in degrees.
 float PointLL::lat() const {
   return second;
 }
 
+// Get the longitude in degrees.
 float PointLL::lng() const {
   return first;
 }
 
+// Checks for validity of the coordinates.
 bool PointLL::IsValid() const {
-  //is a range check appropriate?
-  //return first >= -180 && y >= -90 && first < 180 && second < 90;
+  // TODO: is a range check appropriate?
   return first != INVALID && second != INVALID;
 }
 
+// Sets the coordinates to an invalid state
 void PointLL::Invalidate() {
-  first = INVALID;
+  first  = INVALID;
   second = INVALID;
 }
 
-// May want to use DistanceApproximator!
+// Approximates the distance squared between two lat,lng points.
 float PointLL::DistanceSquared(const PointLL& ll2) const {
-  return sqr(Distance(ll2));
+  DistanceApproximator approx(*this);
+  return approx.DistanceSquared(ll2);
 }
 
+// Calculates the distance between two lat/lng's in meters. Uses spherical
+// geometry (law of cosines).
 float PointLL::Distance(const PointLL& ll2) const {
   // If points are the same, return 0
   if (*this == ll2)
@@ -64,6 +71,8 @@ float PointLL::Distance(const PointLL& ll2) const {
     return (float)(acos(cosb) * kRadEarthMeters);
 }
 
+// Compute the length of the polyline represented by a set of lat,lng points.
+// Avoids having to copy the points into a polyline.
 float PointLL::Length(const std::vector<PointLL>& pts) {
   float length = 0.0f;
   for (auto pt1 = pts.begin(), pt2 = pt1 + 1; pt2 < pts.end(); pt1++, pt2++) {
@@ -72,6 +81,8 @@ float PointLL::Length(const std::vector<PointLL>& pts) {
   return length;
 }
 
+// Calculates the curvature using this position and 2 others. Found by
+// computing the radius of the circle that circumscribes the 3 positions.
 float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   // Find the 3 distances between positions
   float a = Distance(ll1);
@@ -82,6 +93,8 @@ float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {
   return ((a * b * c) / (4.0f * k));
 }
 
+// Calculates the heading or azimuth from the current lat,lng to the
+// specified lat,lng. This uses Haversine method (spherical geometry).
 float PointLL::Heading(const PointLL& ll2) const {
   // If points are the same, return 0
   if (*this == ll2)
@@ -97,6 +110,9 @@ float PointLL::Heading(const PointLL& ll2) const {
   return (bearing < 0.0f) ? bearing + 360.0f : bearing;
 }
 
+// Finds the closest point to the supplied polyline as well as the distance
+// squared to that point and the index of the segment where the closest point
+// lies.
 std::tuple<PointLL, float, int> PointLL::ClosestPoint(const std::vector<PointLL>& pts) const {
   PointLL closest;
   int idx;
