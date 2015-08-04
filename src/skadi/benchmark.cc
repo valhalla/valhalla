@@ -13,7 +13,8 @@
 void get_samples(const std::string& source, const std::list<std::pair<double, double> >& postings, size_t id) {
   valhalla::skadi::sample sample(source);
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) + " postings");
-  sample.get_all(postings);
+  auto a = sample.get_all(postings).front();
+  LOG_INFO(std::to_string(a));
   LOG_INFO("Thread" + std::to_string(id) + " finished");
 }
 

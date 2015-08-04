@@ -72,9 +72,12 @@ namespace skadi {
     const auto& tile = cached_tile->second;
     if(!tile.data)
       return NO_DATA_VALUE;
-    auto c = coord.first - tile.lon;
-    auto r = coord.second - tile.lat;
-    return tile.data.get()[static_cast<size_t>(std::floor(r)) * HGT_DIM + static_cast<size_t>(std::floor(c))];
+    auto c = (coord.first - tile.lon) * (HGT_DIM - 1);
+    auto r = (1.0 - (coord.second - tile.lat)) * (HGT_DIM - 1);
+    auto value = tile.data.get()[static_cast<size_t>(std::floor(r)) * HGT_DIM + static_cast<size_t>(std::floor(c))];
+    //flip endianness
+    //TODO: maybe do it in the data source or when loading?
+    return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
   }
 
   template <class coords_t>
