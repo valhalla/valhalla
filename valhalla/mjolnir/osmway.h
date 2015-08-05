@@ -678,6 +678,17 @@ struct OSMWay {
   };
   WayAttributes attributes_;
 
+  union Classification {
+    struct Fields {
+      uint32_t road_class        :3;     // Importance of the road/path
+      uint32_t link              :1;     // *link tag - Ramp or turn channel
+      uint32_t use               :6;     // Use / form
+      uint32_t spare             :22;    // Use / form
+    } fields;
+    uint32_t v;
+  };
+  Classification classification_;
+
   // Access
   union WayAccess {
     struct Fields {
@@ -699,16 +710,6 @@ struct OSMWay {
   WayAccess access_;
 
   uint16_t nodecount_;
-
-  union Classification {
-    struct Fields {
-      uint8_t road_class        :3;     // Importance of the road/path
-      uint8_t link              :1;     // *link tag - Ramp or turn channel
-      uint8_t use               :4;     // Use / form
-    } fields;
-    uint8_t v;
-  };
-  Classification classification_;
 
   // Speed in kilometers per hour
   uint8_t speed_;
