@@ -145,7 +145,7 @@ struct builder_stats {
 };
 
 // Get stops within a tile's bounding box
-std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2& aabb) {
+std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2<PointLL>& aabb) {
   // Form query -- for now ignore egress points
 
   std::string sql = "SELECT stop_key, stop_id, onestop_id, osm_way_id,";

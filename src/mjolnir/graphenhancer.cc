@@ -474,7 +474,7 @@ bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
  *          more dense.
  */
 uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
-                    float& maxdensity, Tiles tiles,uint8_t local_level) {
+                    float& maxdensity, Tiles<PointLL>& tiles, uint8_t local_level) {
   // Radius is in km - turn into meters
   float kr2 = kDensityRadius * kDensityRadius;
   float mr2 = kr2 * 1000000.0f;
@@ -485,7 +485,7 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   float latdeg = (kDensityRadius / kMetersPerDegreeLat) * 0.5f;
   float mpd = DistanceApproximator::MetersPerLngDegree(ll.lat());
   float lngdeg = (kDensityRadius / mpd) * 0.5f;
-  AABB2 bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
+  AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
              Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
@@ -558,7 +558,7 @@ uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys
 }
 
 std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
-                                                             const AABB2& aabb, GraphTileBuilder& tilebuilder) {
+                                                             const AABB2<PointLL>& aabb, GraphTileBuilder& tilebuilder) {
   std::unordered_map<uint32_t,multi_polygon_type> polys;
   if (!db_handle)
     return polys;
@@ -769,11 +769,10 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     return 0;
   }
 
-  // Handle Turn channels
-  if (edges[to].use() == Use::kTurnChannel) {
+  // No stop impact going from a turn channel. Stop impact will
+  // be set entering a turn channel
+  if (edges[from].use() == Use::kTurnChannel) {
     return 0;
-  } else if (edges[from].use() == Use::kTurnChannel) {
-    return 2;
   }
 
   // Handle Pencil point u-turn
@@ -1007,9 +1006,50 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
-    // Iterate through the nodes. Update nodeinfo and directed edges as
-    // needed
-    const GraphTile* endnodetile = nullptr;
+    // First pass - update links (set use to ramp or turn channel) and
+    // set opposing local index.
+    for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
+      GraphId startnode(id, local_level, i);
+      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
+
+      const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
+      for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
+        DirectedEdgeBuilder& directededge =
+            tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
+        // Skip transit lines (don't need opposing local index)
+        if (directededge.IsTransitLine()) {
+          continue;
+        }
+
+        // Get the tile at the end node
+        const GraphTile* endnodetile = nullptr;
+        if (tile->id() == directededge.endnode().Tile_Base()) {
+          endnodetile = tile;
+        } else {
+          lock.lock();
+          endnodetile = reader.GetGraphTile(directededge.endnode());
+          lock.unlock();
+        }
+
+        // If this edge is a link, update its use (potentially change short
+        // links to turn channels)
+        if (directededge.link()) {
+          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
+          if (directededge.use() == Use::kTurnChannel) {
+            stats.turnchannelcount++;
+          } else {
+            stats.rampcount++;
+          }
+        }
+
+        // Set the opposing index on the local level
+        directededge.set_opp_local_idx(
+               GetOpposingEdgeIndex(endnodetile, startnode, directededge));
+      }
+    }
+
+    // Second pass - add admin information and edge transition information.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
       NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
@@ -1072,26 +1112,6 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdgeBuilder& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        // Get the tile at the end node
-        if (tile->id() == directededge.endnode().Tile_Base()) {
-          endnodetile = tile;
-        } else {
-          lock.lock();
-          endnodetile = reader.GetGraphTile(directededge.endnode());
-          lock.unlock();
-        }
-
-        // If this edge is a link, update its use (potentially change short
-        // links to turn channels)
-        if (directededge.link()) {
-          UpdateLinkUse(tile, endnodetile, nodeinfo, directededge);
-          if (directededge.use() == Use::kTurnChannel) {
-            stats.turnchannelcount++;
-          } else {
-            stats.rampcount++;
-          }
-        }
-
         // Update speed.
         UpdateSpeed(directededge, density);
 
@@ -1110,17 +1130,13 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // No need for edge transitions and opposing index on transit edges
+        // No need for edge transitions on transit edges
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
             ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
                                    nodeinfo, stats);
           }
-
-          // Set the opposing index on the local level
-          directededge.set_opp_local_idx(
-                GetOpposingEdgeIndex(endnodetile, startnode, directededge));
         }
 
         // Set unreachable, not_thru, or internal intersection (except

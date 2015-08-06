@@ -65,7 +65,7 @@ class validator_stats {
   std::unordered_set<uint32_t> tile_ids;
   std::unordered_set<std::string> iso_codes;
   std::unordered_map<uint32_t, float> tile_areas;
-  std::unordered_map<uint32_t, AABB2> tile_geometries;
+  std::unordered_map<uint32_t, AABB2<PointLL>> tile_geometries;
   std::vector<std::vector<uint32_t> > dupcounts;
   std::vector<std::vector<float> > densities;
 
@@ -96,7 +96,7 @@ public:
 
   void add_tile_area (const uint32_t& tile_id, const float area);
 
-  void add_tile_geom (const uint32_t& tile_id, const AABB2 geom);
+  void add_tile_geom (const uint32_t& tile_id, const AABB2<PointLL> geom);
 
   void add_density (float density, int level);
 
@@ -128,7 +128,7 @@ public:
 
   const std::unordered_map<uint32_t, float>& get_tile_areas() const;
 
-  const std::unordered_map<uint32_t, AABB2>& get_tile_geometries() const;
+  const std::unordered_map<uint32_t, AABB2<PointLL>>& get_tile_geometries() const;
 
   const std::vector<uint32_t> get_dups(int level) const;
 
