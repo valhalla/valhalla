@@ -393,7 +393,8 @@ uint32_t BinElevation(float scale, bool forward){
 
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
-    const TileHierarchy& hierarchy, const OSMData& osmdata, const boost::optional<std::string>& elevation,
+    const TileHierarchy& hierarchy, const OSMData& osmdata,
+    const std::unique_ptr<const valhalla::skadi::sample>& sample,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
@@ -408,15 +409,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   const auto& tl = hierarchy.levels().rbegin();
   Tiles tiling = tl->second.tiles;
-
-  // Optionally have something to get us elevation data
-  std::unique_ptr<valhalla::skadi::sample> sample;
-  try {
-    if(elevation)
-      sample.reset(new valhalla::skadi::sample(*elevation));
-  }
-  catch(...) {
-  }
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -600,12 +592,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             if(sample) {
               //evenly sample the shape
               auto resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
-              for(const auto& p : resampled)
-                LOG_INFO("SAMPLE " + std::to_string(tile_start->first.fields.tileid) + ": " + std::to_string(p.first) + " " + std::to_string(p.second));
               //get the heights at each point
-              //auto heights = sample->get_all(resampled);
+              auto heights = sample->get_all(resampled);
               //compute hilliness
-              //elevation = ElevationRatio(heights, length);
+              elevation = ElevationRatio(heights, length);
             }
 
             //TODO: curvature
@@ -718,7 +708,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& ways_file, const std::string& way_nodes_file,
   const std::string& nodes_file, const std::string& edges_file,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
-  const boost::optional<std::string>& elevation) {
+  const std::unique_ptr<const valhalla::skadi::sample>& sample) {
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
@@ -746,7 +736,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), std::cref(elevation), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
                       std::ref(results[i]))
     );
   }
@@ -799,7 +789,6 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
                                   pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   const auto& tl = tile_hierarchy.levels().rbegin();
   uint8_t level = tl->second.level;
-  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
 
   // Make the edges and nodes in the graph
   ConstructEdges(osmdata, ways_file, way_nodes_file, nodes_file, edges_file, tl->second.tiles.TileSize(),
@@ -826,9 +815,15 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc), stats);
 
+  // Crack open some elevation data if its there
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
+  std::unique_ptr<const skadi::sample> sample;
+  if(elevation)
+    sample.reset(new skadi::sample(*elevation));
+
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
-                  edges_file, tiles, tile_hierarchy, stats, elevation);
+                  edges_file, tiles, tile_hierarchy, stats, sample);
 
   stats.LogStatistics();
 }
