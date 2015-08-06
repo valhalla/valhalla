@@ -5,14 +5,17 @@
 #include <vector>
 
 #include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/vector2.h>
 
 namespace valhalla {
 namespace midgard {
 
 /**
- * Line segment in 2D
+ * Line segment in 2D. Template class to work with Point2 (Euclidean x,y)
+ * or PointLL (latitude,longitude).
  */
+template <class coord_t>
 class LineSegment2 {
  public:
   /**
@@ -25,21 +28,21 @@ class LineSegment2 {
    * @param   p1    First point of the segment.
    * @param   p2    Second point of the segment.
    */
-  LineSegment2(const Point2& p1, const Point2& p2);
+  LineSegment2(const coord_t& p1, const coord_t& p2);
 
   /**
    * Get the first point of the segment.
    * @return  Returns first point of the segment.
    */
-  Point2 a() const;
+  coord_t a() const;
 
   /**
    * Get the second point of the segment.
    * @return  Returns second point of the segment.
    */
-  Point2 b() const;
+  coord_t b() const;
 
-/**
+  /**
    * Finds the distance squared of a specified point from the line segment
    * and the closest point on the segment to the specified point.
    * @param   p        Test point.
@@ -47,7 +50,7 @@ class LineSegment2 {
    * @return  Returns the distance squared from pt to the closest point on
    *          the segment.
   */
-  float DistanceSquared(const Point2& p, Point2& closest) const;
+  float DistanceSquared(const coord_t& p, coord_t& closest) const;
 
   /**
    * Finds the distance of a specified point from the line segment
@@ -57,7 +60,7 @@ class LineSegment2 {
    * @return  Returns the distance from p to the closest point on
    *          the segment.
   */
-  float Distance(const Point2& p, Point2& closest) const;
+  float Distance(const coord_t& p, coord_t& closest) const;
 
   /**
    * Determines if the current segment intersects the specified segment.
@@ -67,16 +70,17 @@ class LineSegment2 {
    * @param   intersect    (OUT) Intersection point.
    * @return  Returns true if an intersection exists, false if not.
    */
-  bool Intersect(const LineSegment2& segment, Point2& intersect) const;
+  bool Intersect(const LineSegment2<coord_t>& segment,
+                 coord_t& intersect) const;
 
   /**
    * Determines if the line segment intersects specified convex polygon.
    * Based on Cyrus-Beck clipping method.
-   * @param  poly   A counter-clockwise oriented polygon.
+   * @param   poly   A counter-clockwise oriented polygon.
    * @return  Returns true if any part of the segment intersects the polygon,
    *          false if no intersection.
    */
-  bool Intersect(const std::vector<Point2>& poly) const;
+  bool Intersect(const std::vector<coord_t>& poly) const;
 
   /**
    * Clips the line segment to a specified convex polygon.
@@ -86,8 +90,8 @@ class LineSegment2 {
    * @return  Returns true if any part of the segment intersects the polygon,
    *          false if no intersection.
    */
-  bool ClipToPolygon(const std::vector<Point2>& poly,
-                     LineSegment2& clip_segment) const;
+  bool ClipToPolygon(const std::vector<coord_t>& poly,
+                     LineSegment2<coord_t>& clip_segment) const;
 
   /**
    * Tests if a point is to left, right, or on the line segment.
@@ -95,11 +99,11 @@ class LineSegment2 {
    * @return   Returns >0 for point to the left, < 0 for point to the right,
    *           and 0 for a point on the line
    */
-  float IsLeft(const Point2& p) const;
+  float IsLeft(const coord_t& p) const;
 
  private:
-  Point2 a_;
-  Point2 b_;
+  coord_t a_;
+  coord_t b_;
 };
 
 }

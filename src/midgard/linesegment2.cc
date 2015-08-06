@@ -5,30 +5,36 @@ namespace valhalla {
 namespace midgard {
 
 // Default constructor.
-LineSegment2::LineSegment2() {
+template <class coord_t>
+LineSegment2<coord_t>::LineSegment2() {
   a_.Set(0.0f, 0.0f);
   b_.Set(0.0f, 0.0f);
 }
 
 // Constructor given 2 points.
-LineSegment2::LineSegment2(const Point2& p1, const Point2& p2) {
+template <class coord_t>
+LineSegment2<coord_t>::LineSegment2(const coord_t& p1, const coord_t& p2) {
   a_ = p1;
   b_ = p2;
 }
 
 // Get the first point of the segment.
-Point2 LineSegment2::a() const {
+template <class coord_t>
+coord_t LineSegment2<coord_t>::a() const {
   return a_;
 }
 
 // Get the second point of the segment.
-Point2 LineSegment2::b() const {
+template <class coord_t>
+coord_t LineSegment2<coord_t>::b() const {
   return b_;
 }
 
 // Finds the distance squared of a specified point from the line segment
 // and the closest point on the segment to the specified point.
-float LineSegment2::DistanceSquared(const Point2& p, Point2& closest) const {
+template <class coord_t>
+float LineSegment2<coord_t>::DistanceSquared(const coord_t& p,
+                                             coord_t& closest) const {
   // Construct vector v (ab) and w (ap)
   Vector2 v(a_, b_);
   Vector2 w(a_, p);
@@ -58,15 +64,18 @@ float LineSegment2::DistanceSquared(const Point2& p, Point2& closest) const {
 
 // Finds the distance of a specified point from the line segment
 // and the closest point on the segment to the specified point.
-float LineSegment2::Distance(const Point2& p, Point2& closest) const {
+template <class coord_t>
+float LineSegment2<coord_t>::Distance(const coord_t& p,
+                                      coord_t& closest) const {
   return sqrtf(DistanceSquared(p, closest));
 }
 
 // Determines if the current segment intersects the specified segment.
 // If an intersect occurs the intersection is computed.  Note: the
 // case where the lines overlap is not considered.
-bool LineSegment2::Intersect(const LineSegment2& segment,
-             Point2& intersect) const {
+template <class coord_t>
+bool LineSegment2<coord_t>::Intersect(const LineSegment2<coord_t>& segment,
+             coord_t& intersect) const {
   // Construct vectors
   Vector2 b = b_ - a_;
   Vector2 d = segment.b() - segment.a();
@@ -97,7 +106,8 @@ bool LineSegment2::Intersect(const LineSegment2& segment,
 }
 
 // Determines if the line segment intersects specified convex polygon.
-bool LineSegment2::Intersect(const std::vector<Point2>& poly) const {
+template <class coord_t>
+bool LineSegment2<coord_t>::Intersect(const std::vector<coord_t>& poly) const {
   // Initialize the candidate interval
   float t_out = 1.0f;
   float t_in  = 0.0f;
@@ -148,8 +158,9 @@ bool LineSegment2::Intersect(const std::vector<Point2>& poly) const {
 }
 
 // Clips the line segment to a specified convex polygon.
-bool LineSegment2::ClipToPolygon(const std::vector<Point2>& poly,
-                   LineSegment2& clip_segment) const {
+template <class coord_t>
+bool LineSegment2<coord_t>::ClipToPolygon(const std::vector<coord_t>& poly,
+                   LineSegment2<coord_t>& clip_segment) const {
   // Initialize the candidate interval
   float t_out = 1.0f;
   float t_in  = 0.0f;
@@ -203,10 +214,15 @@ bool LineSegment2::ClipToPolygon(const std::vector<Point2>& poly,
 }
 
 // Tests if a point is to left, right, or on the line segment.
-float LineSegment2::IsLeft(const Point2& p) const {
-  return (b_.x() - a_.x()) * (p.y() - a_.y()) -
-         (p.x() - a_.x()) * (b_.y() - a_.y());
+template <class coord_t>
+float LineSegment2<coord_t>::IsLeft(const coord_t& p) const {
+  return (b_.x() - a_.x()) * (p.y()  - a_.y()) -
+         (p.x()  - a_.x()) * (b_.y() - a_.y());
 }
+
+// Explicit instantiation
+template class LineSegment2<Point2>;
+template class LineSegment2<PointLL>;
 
 }
 }

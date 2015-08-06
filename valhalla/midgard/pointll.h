@@ -9,8 +9,8 @@ namespace midgard {
 
 /**
  * Latitude, Longitude point. Derives from Point2 and allows access methods
- * using lat,lng naming. Extends functionality to add heading, distance based
- * on spherical geometry.
+ * using lat,lng naming. Extends functionality to add heading, curvature,
+ * and distance based on spherical geometry.
  */
 class PointLL : public Point2 {
  public:
@@ -37,9 +37,8 @@ class PointLL : public Point2 {
   float lng() const;
 
   /**
-   * Checks for validity of the coordinates
-   * @return  Returns the false if lat or lon coordinates are outside of
-   *          the valid range
+   * Checks for validity of the coordinates.
+   * @return  Returns the false if lat or lon coordinates are set to INVALID.
    */
   bool IsValid() const;
 
@@ -57,10 +56,8 @@ class PointLL : public Point2 {
   float Distance(const PointLL& ll2) const;
 
   /**
-   * Calculates the distance squared between two lat/lng's in meters.
-   * Uses spherical geometry. No benefit when using squared distances
-   * over a spherical earth. May want to use DistanceApproximator for
-   * squared distance approximations.
+   * Approximates the distance squared between two lat,lng points - uses
+   * the DistanceApproximator.
    * @param   ll2   Second lat,lng position to calculate distance to.
    * @return  Returns the distance squared in meters.
    */
@@ -95,12 +92,13 @@ class PointLL : public Point2 {
 
   /**
    * Finds the closest point to the supplied polyline as well as the distance
-   * squared to that point and the index of the segment where the closest point lies.
+   * squared to that point and the index of the segment where the closest
+   * point lies.
    * @param  pts     List of points on the polyline.
-   * @return  tuple of <Closest point along the polyline,
-   *                    Returns the distance squared (meters) of the closest point,
-   *                    Index of the segment of the polyline which contains the closest point
-   *                   >
+   * @return tuple of <Closest point along the polyline,
+   *                   distance squared (meters) of the closest point,
+   *                   Index of the segment of the polyline which contains
+   *                      the closest point >
    */
   std::tuple<PointLL, float, int> ClosestPoint(const std::vector<PointLL>& pts) const;
 

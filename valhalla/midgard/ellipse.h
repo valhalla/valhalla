@@ -3,9 +3,10 @@
 
 #include <math.h>
 
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -14,8 +15,10 @@ namespace midgard {
 /**
  * Ellipse. Methods to construct an ellipse, test if a line segment intersects,
  * an axis-aligned bounding box intersects, and whether a point is within the
- * ellipse.
+ * ellipse. Template class to work with Point2 (Euclidean x,y) or PointLL
+ * (latitude,longitude).
  */
+template <class coord_t>
 class Ellipse {
  public:
   /**
@@ -29,7 +32,7 @@ class Ellipse {
    * @param  p2     Another corner point of the bounding rectangle.
    * @param  angle  Angle of rotation
    */
-  Ellipse(const Point2& p1, const Point2& p2, float angle);
+  Ellipse(const coord_t& p1, const coord_t& p2, float angle);
 
   /**
    * Determines if a line segment intersects the ellipse and if so
@@ -39,12 +42,12 @@ class Ellipse {
    * @param    pt1      OUT - second intersection point (if it exists)
    * @return   Returns the number of intersection points (0, 1, or 2).
    */
-  uint32_t Intersect(const LineSegment2& seg, Point2& pt0,
-                         Point2& pt1) const;
+  uint32_t Intersect(const LineSegment2<coord_t>& seg, coord_t& pt0,
+                     coord_t& pt1) const;
 
   /**
    * Does the specified axis-aligned bounding box (rectangle) intersect
-   * this ellipse.
+   * this ellipse?
    * @param  r  Rectangle to intersect.
    * @return Returns the intersection case.
    *                 kContains   - Ellipse fully contains the AABB
@@ -52,7 +55,7 @@ class Ellipse {
    *                 kWithin     - Ellipse is fully within the AABB
    *                 kOutside    - Ellipse is fully outside the AABB
    */
-  IntersectCase DoesIntersect(const AABB2& r) const;
+  IntersectCase DoesIntersect(const AABB2<coord_t>& r) const;
 
   /**
    * Tests if a point is inside the ellipse.
@@ -60,10 +63,10 @@ class Ellipse {
    * @return  Returns true if the point is on or inside the ellipse,
    *          false if outside the ellipse.
    */
-  bool Contains(const Point2& pt) const;
+  bool Contains(const coord_t& pt) const;
 
  private:
-  Point2 center_;
+  coord_t center_;
   float a;                  // Half length of major axis
   float b;                  // Half length of minor axis
   float k1_;
