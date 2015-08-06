@@ -5,10 +5,12 @@
 #include <vector>
 #include <map>
 
+#include <valhalla/midgard/sequence.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
-#include <valhalla/mjolnir/sequence.h>
+
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {

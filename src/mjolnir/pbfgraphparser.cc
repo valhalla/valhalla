@@ -1,6 +1,5 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
-#include "mjolnir/sequence.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
@@ -12,6 +11,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/sequence.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>

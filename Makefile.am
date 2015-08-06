@@ -71,7 +71,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
-	valhalla/mjolnir/sequence.h \
 	valhalla/mjolnir/signbuilder.h \
 	valhalla/mjolnir/statistics.h \
 	valhalla/mjolnir/transitbuilder.h \

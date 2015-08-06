@@ -600,10 +600,12 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             if(sample) {
               //evenly sample the shape
               auto resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
+              for(const auto& p : resampled)
+                LOG_INFO("SAMPLE " + std::to_string(tile_start->first.fields.tileid) + ": " + std::to_string(p.first) + " " + std::to_string(p.second));
               //get the heights at each point
-              auto heights = sample->get_all(resampled);
+              //auto heights = sample->get_all(resampled);
               //compute hilliness
-              elevation = ElevationRatio(heights, length);
+              //elevation = ElevationRatio(heights, length);
             }
 
             //TODO: curvature
