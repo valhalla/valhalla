@@ -54,6 +54,8 @@ test/aabbll
 test/tilehierarchy
 test/util
 test/logging
+test/sequence
+nodes.nd
 test/*.log
 test/*.trs
 
