@@ -120,10 +120,27 @@ void BollardsGatesAndAccess(const std::string& config_file) {
       node.type() != NodeType::kGate || node.access_mask() != 6)
     throw std::runtime_error("Gate at end of way test failed.");
 
-  //Is a bollard with foot and bike flags set.
+  //block
+  node = GetNode(1819036441, way_nodes);
+  if (!node.intersection() ||
+      node.type() != NodeType::kBollard || node.access_mask() != 2)
+    throw std::runtime_error("Block test failed.");
+
+  //border control
+  node = GetNode(3256854624, way_nodes);
+  if (!node.intersection() ||
+      node.type() != NodeType::kGate || node.access_mask() != 71)
+    throw std::runtime_error("Border control test failed.");
+
+  //has bike tag but all should have access
+  node = GetNode(696222071, way_nodes);
+  if (!node.intersection() || node.access_mask() != 4)
+    throw std::runtime_error("Bike access only failed.");
+
+  //Is a bollard with no flags set.
   node = GetNode(569645326, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 70)
+      node.type() != NodeType::kBollard || node.access_mask() != 6)
     throw std::runtime_error("Bollard(with flags) not marked as intersection.");
 
   //Is a bollard=block with foot flag set.
@@ -183,7 +200,7 @@ void RemovableBollards(const std::string& config_file) {
   //Is a bollard=rising is saved as a gate...with foot flag and bike set.
   auto node = GetNode(2425784125, way_nodes);
   if (!node.intersection() ||
-    node.type() != NodeType::kGate || node.access_mask() != 7)
+    node.type() != NodeType::kGate || node.access_mask() != 6)
     throw std::runtime_error("Rising Bollard not marked as intersection.");
 }
 
