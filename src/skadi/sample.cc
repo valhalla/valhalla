@@ -103,7 +103,7 @@ namespace skadi {
 
     //weighted average of the 4 nearest neighbors
     auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite +
-                 (flip(t[(y - 1) * HGT_DIM + x]) * u_opposite + flip(t[(y - 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
+                 (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
     return value;
   }
 
