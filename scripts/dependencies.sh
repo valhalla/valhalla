@@ -21,9 +21,6 @@ for dep in midgard baldr; do
 done
 wait
 
-#get newer gdal
-$DIR/install_gdal.sh "$1" &
-
 #install the service deps in the background
 $DIR/install_service_deps.sh &
 
