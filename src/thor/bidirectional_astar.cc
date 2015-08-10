@@ -72,23 +72,47 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
   SetOrigin(graphreader, origin, costing);
   SetDestination(graphreader, destination, costing);
 
-  // Find shortest path
+  // Find shortest path. Switch between a forward direction and a reverse
+  // direction search based on the current costs. Alternating like this
+  // prevents one tree from expanding much more quickly (if in a sparser
+  // portion of the graph) rather than strictly alternating.
   uint32_t n = 0;
-  EdgeLabel pred;
+  uint32_t predindex, predindex2;
+  EdgeLabel pred, pred2;
   const GraphTile* tile;
+  bool expand_forward  = true;
+  bool expand_reverse  = true;
   bool forward_exhausted = false;
   bool reverse_exhausted = false;
   while (true) {
-    // Expand in forward direction if we have not exhausted this path
+    // Get the next predecessor and cost (based on which direction was
+    // expanded in prior step)
+    if (expand_forward) {
+      predindex = adjacencylist_->Remove(edgelabels_);
+      if (predindex != kInvalidLabel) {
+        pred = edgelabels_[predindex];
+      } else {
+        forward_exhausted = true;
+      }
+    }
+    if (expand_reverse) {
+      predindex2 = adjacencylist_reverse_->Remove(edgelabels_reverse_);
+      if (predindex2 != kInvalidLabel) {
+        pred2 = edgelabels_reverse_[predindex2];
+      } else {
+        reverse_exhausted = true;
+      }
+    }
 
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = forward_exhausted ? kInvalidLabel :
-            adjacencylist_->Remove(edgelabels_);
-    if (predindex != kInvalidLabel) {
-      // Remove label from adjacency list, mark it as done - copy the EdgeLabel
-      // for use in costing
-      pred = edgelabels_[predindex];
+    // Expand from the search direction with lower cost
+    if (!forward_exhausted &&
+        (reverse_exhausted || pred.cost().cost < pred2.cost().cost)) {
+      // Expand forward - set to get next edge from forward adj. list
+      // on the next pass
+      expand_forward = true;
+      expand_reverse = false;
+
+      // Mark edge as done - copy the EdgeLabel for use in costing
       edgestatus_->Update(pred.edgeid(), kPermanent);
 
       // Get the opposing edge - if permanently labeled in reverse search set
@@ -158,25 +182,18 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_);
       }
-    } else {
-      forward_exhausted = true;
-    }
+    } else if (!reverse_exhausted) {
+      // Expand reverse - set to get next edge from reverse adj. list
+      // on the next pass
+      expand_forward = false;
+      expand_reverse = true;
 
-    // Expand in reverse direction if we have not exhausted this path
-
-    // Get next element from adjacency list. Check that it is valid. An
-    // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex2 = reverse_exhausted ? kInvalidLabel:
-            adjacencylist_reverse_->Remove(edgelabels_reverse_);
-    if (predindex2 != kInvalidLabel) {
-      // Remove label from adjacency list, mark it as done - copy the EdgeLabel
-      // for use in costing
-      pred = edgelabels_reverse_[predindex2];
-      edgestatus_reverse_->Update(pred.edgeid(), kPermanent);
+      // Mark edge as done - copy the EdgeLabel for use in costing
+      edgestatus_reverse_->Update(pred2.edgeid(), kPermanent);
 
       // Get the opposing edge - if permanently labeled in forward search set
       // we have the shortest path
-      GraphId oppedge = graphreader.GetOpposingEdgeId(pred.edgeid());
+      GraphId oppedge = graphreader.GetOpposingEdgeId(pred2.edgeid());
       EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
       if (oppedgestatus.status.set == kPermanent) {
         return FormPath(oppedgestatus.status.index, predindex2, graphreader);
@@ -184,7 +201,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
 
       // Get the end node of the prior directed edge. Skip if tile not found
       // (can happen with regional data sets).
-      GraphId node = pred.endnode();
+      GraphId node = pred2.endnode();
       if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
         continue;
       }
@@ -198,7 +215,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       // Get the opposing predecessor directed edge
       const DirectedEdge* opp_pred_edge = tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, opp_pred_edge++) {
-        if (opp_pred_edge->localedgeidx() == pred.opp_local_idx())
+        if (opp_pred_edge->localedgeidx() == pred2.opp_local_idx())
           break;
       }
 
@@ -226,8 +243,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
           continue;
         }
 
-       // Get cost. TODO - use opposing edges for transition costing.
-       Cost newcost = pred.cost() +
+       // Get cost. TODO - do we need to use opposing edge for EdgeCost?
+       Cost newcost = pred2.cost() +
               costing->EdgeCost(directededge, nodeinfo->density()) +
               costing->TransitionCostReverse(directededge->localedgeidx(),
                                              nodeinfo, opp_edge, opp_pred_edge);
@@ -255,8 +272,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                      newcost, sortcost, dist, directededge->restrictions(),
                      directededge->opp_local_idx(), mode_);
       }
-    } else {
-      reverse_exhausted = true;
     }
 
     // Break out of loop if neither search can be expanded
