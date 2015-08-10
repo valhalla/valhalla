@@ -60,6 +60,7 @@ skadi_benchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OPTIONS
 
 #data for tests
 test/data/N40W077.hgt:
+	-mkdir -p test/data
 	-curl -s -o - http://s3.amazonaws.com/mapzen.valhalla/elevation/N40/N40W077.hgt.gz | gunzip > test/data/N40W077.hgt
 
 # tests

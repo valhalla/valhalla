@@ -7,22 +7,9 @@ using namespace valhalla;
 
 namespace {
 
-void load() {
-  //load non existent datasource
-  try {
-    skadi::sample("blahblah");
-    throw std::logic_error("Should be no datasource exception");
-  }
-  catch(const std::runtime_error& e) {
-  }
-
-  //check the no data value
-  skadi::sample s("test/data/appalachian.vrt");
-}
-
 void no_data() {
   //check the no data value
-  skadi::sample s("test/data/appalachian.vrt");
+  skadi::sample s("test/data/");
   if(s.get_no_data_value() != -32768)
     throw std::logic_error("No data value should be -32768");
 
@@ -32,7 +19,7 @@ void no_data() {
 
 void get() {
   //check a single point
-  skadi::sample s("test/data/appalachian.vrt");
+  skadi::sample s("test/data/");
   if(std::fabs(489 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
     throw std::runtime_error("Wrong value at location");
 
@@ -59,8 +46,6 @@ void get() {
 
 int main() {
   test::suite suite("sample");
-
-  suite.test(TEST_CASE(load));
 
   suite.test(TEST_CASE(no_data));
 
