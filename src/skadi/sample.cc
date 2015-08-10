@@ -20,7 +20,7 @@ namespace {
   //the tiles lat,lon (which is important for bilinear filtering)
   constexpr size_t HGT_DIM = 3601;
   constexpr size_t HGT_PIXELS = HGT_DIM * HGT_DIM;
-  constexpr double NO_DATA_VALUE = -32768;
+  constexpr int16_t NO_DATA_VALUE = -32768;
   constexpr size_t TILE_COUNT = 180 * 360;
 
   std::list<std::string> get_files(const std::string& root_dir) {
@@ -54,6 +54,10 @@ namespace {
     return -1;
   }
 
+  int16_t flip(int16_t value) {
+    return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
+  }
+
 }
 
 namespace valhalla {
@@ -79,14 +83,28 @@ namespace skadi {
     if(!cache[index])
       return NO_DATA_VALUE;
 
-    //TODO: bilinear
-    const int16_t* tile = cache[index].get();
-    auto c = (coord.first - lon) * (HGT_DIM - 1);
-    auto r = (1.0 - (coord.second - lat)) * (HGT_DIM - 1);
-    auto value = tile[static_cast<size_t>(std::floor(r)) * HGT_DIM + static_cast<size_t>(std::floor(c))];
+    //grab the data array and what row and column we need
+    //NOTE: data is arranged from upper left to bottom right, so y is flipped
+    const int16_t* t = cache[index].get();
 
-    //flip endianness
-    return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
+    //fractional pixel
+    double u = (coord.first - lon) * (HGT_DIM - 1);
+    double v = (1.0 - (coord.second - lat)) * (HGT_DIM - 1);
+
+    //integer pixel
+    size_t x = std::floor(u);
+    size_t y = std::floor(v);
+
+    //coefficients
+    double u_ratio = u - x;
+    double v_ratio = v - y;
+    double u_opposite = 1 - u_ratio;
+    double v_opposite = 1 - v_ratio;
+
+    //weighted average of the 4 nearest neighbors
+    auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite +
+                 (flip(t[(y - 1) * HGT_DIM + x]) * u_opposite + flip(t[(y - 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
+    return value;
   }
 
   template <class coords_t>
