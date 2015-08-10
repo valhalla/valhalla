@@ -20,7 +20,7 @@ void no_data() {
 void get() {
   //check a single point
   skadi::sample s("test/data/");
-  if(std::fabs(489 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
+  if(std::fabs(490 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
     throw std::runtime_error("Wrong value at location");
 
   //check a bunch
