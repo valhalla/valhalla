@@ -21,7 +21,7 @@ Building
 
 Tyr uses the [GNU Build System](http://www.gnu.org/software/automake/manual/html_node/GNU-Build-System.html) to configure and build itself. To install on a Debian or Ubuntu system you need to install its dependencies with:
 
-    srcipts/dependencies.sh
+    scripts/dependencies.sh
 
 And then run to install it:
 
