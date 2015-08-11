@@ -23,6 +23,10 @@ void get() {
   if(std::fabs(490 - s.get(std::make_pair(-76.503915, 40.678783))) > 1.0)
     throw std::runtime_error("Wrong value at location");
 
+  //check a point near the edge of a tile
+  if(std::fabs(217 - s.get(std::make_pair(-76.9, 40.0))))
+    throw std::runtime_error("Wrong value at edge of tile");
+
   //check a bunch
   std::list<std::pair<double, double> > postings =  {
     {-76.537011, 40.723872},  // 300m

@@ -16,8 +16,9 @@
 
 namespace {
   //srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
-  //by .5 seconds. that means that the center of pixel 0 is located at
-  //the tiles lat,lon (which is important for bilinear filtering)
+  //by .5 seconds on all sides. that means that the center of pixel 0 is
+  //located at the tiles lat,lon (which is important for bilinear filtering)
+  //it also means that there are 3601 pixels per row and per column
   constexpr size_t HGT_DIM = 3601;
   constexpr size_t HGT_PIXELS = HGT_DIM * HGT_DIM;
   constexpr int16_t NO_DATA_VALUE = -32768;
@@ -100,9 +101,12 @@ namespace skadi {
     double u_opposite = 1 - u_ratio;
     double v_opposite = 1 - v_ratio;
 
-    //weighted average of the 4 nearest neighbors
-    auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite +
-                 (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
+    //first part of the bilinear interpolation
+    auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite;
+    //only need the second part if you aren't right on the row
+    //this also protects from a corner case where you sample past the end of the image
+    if(y == HGT_DIM - 1)
+      return value + (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
     return value;
   }
 
