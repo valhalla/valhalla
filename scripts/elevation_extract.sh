@@ -20,18 +20,14 @@ if [ $min_y -gt $max_y ] || [ $min_y -lt -90 ] || [ $max_y -gt 90 ]; then
 	usage
 fi
 
-#get awscli if we dont have it
-aws --version &> /dev/null
-if [ $? -ne 0 ]; then
-	sudo apt-get install awscli
-fi
-
-#pull down the bounding box of tiles you want
+#get the data
 for x in $(seq $min_x 1 $max_x); do
-	for y in $(seq $min_y 1 $max_y); do
+        for y in $(seq $min_y 1 $max_y); do
 		file=$(python -c "print '%s%02d%s%03d.hgt.gz' % ('S' if $y < 0 else 'N', abs($y), 'W' if $x < 0 else 'E', abs($x))")
-		dir=$(echo $file | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
-		aws --region us-east-1 s3 sync s3://mapzen.valhalla/elevation/${dir}/ ./elevation/${dir}/ --exclude "*" --include ${file}
-		gunzip ./elevation/${dir}/${file}
+                dir=$(echo $file | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
+		echo "-s --create-dirs -o elevation/${dir}/${file} http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}"
 	done
-done
+done | parallel -C ' ' -P $(nproc) "curl {}" 
+
+#inflate it
+find elevation | grep -F .hgt | xargs -P $(nproc) gunzip
