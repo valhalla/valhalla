@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.251919,"lon":-76.707581,"street":""},{"lat":40.262821,"lon":-76.685020,"street":"Life Lion Drive"}],"costing":"bicycle","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
