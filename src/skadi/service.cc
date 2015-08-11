@@ -18,7 +18,7 @@ using namespace prime_server;
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/midgard/util.h>
 
 #include "skadi/service.h"
 #include "skadi/sample.h"
@@ -122,7 +122,7 @@ namespace {
   class skadi_worker_t {
     public:
     skadi_worker_t(const boost::property_tree::ptree& config):
-      sample(config.get<std::string>("additional_data.elevation", "test/data/appalachian.vrt")) {
+      sample(config.get<std::string>("additional_data.elevation", "test/data/")) {
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {

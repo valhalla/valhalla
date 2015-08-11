@@ -56,7 +56,7 @@ function gmted() {
 
 	#grab the data
 	echo -n > gmted.urls
-	for y in 90S 70S 50N 70N; do
+	for y in 90S 70S 50S 30S 10S 10N 30N 50N 70N; do
 		for x in 180W 150W 120W 090W 060W 030W 000E 030E 060E 090E 120E 150E; do
 			dir=$(echo $x | sed -e "s/\([0-9]\+\)\(.*\)/\2\1/g")
 			if [ ${y} == 90S ]; then
@@ -121,7 +121,8 @@ gebco
 
 #prepare directories for all these tiles
 echo "$(date): preparing tile directories"
-for d in $(./args.py | sed -e "s/.* //g" -e 's@/[^/]\+$@@g' | uniq); do
+
+for d in $(./args.py | sed -e "s/.* //g" -e 's@/[^/]\+$@@g' | sort | uniq); do
 	mkdir -p $d
 done
 
@@ -134,11 +135,3 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 ./args.py | parallel --joblog cut_tiles.log -C ' ' -P $(nproc) "./composite.sh {} 2>err.log 1>comp.log"
-
-#make nest vrts for faster access
-./nest.py | grep -vE "_[0-9].vrt\$" | parallel -C ' ' -P $(nproc) 2>>err.log 1>nest.log
-./nest.py | grep -E "_4.vrt\$" | parallel -C ' ' -P $(nproc) 2>>err.log 1>>nest.log
-./nest.py | grep -E "_3.vrt\$" | parallel -C ' ' -P $(nproc) 2>>err.log 1>>nest.log
-./nest.py | grep -E "_2.vrt\$" | parallel -C ' ' -P $(nproc) 2>>err.log 1>>nest.log
-./nest.py | grep -E "_1.vrt\$" | parallel -C ' ' -P $(nproc) 2>>err.log 1>>nest.log
-gdalbuildvrt world.vrt tiles/0/0_0.vrt tiles/1/0_0.vrt 2>>err.log 1>>nest.log

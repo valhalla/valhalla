@@ -10,8 +10,7 @@
 
 #include "skadi/sample.h"
 
-void get_samples(const std::string& source, const std::list<std::pair<double, double> >& postings, size_t id) {
-  valhalla::skadi::sample sample(source);
+void get_samples(const valhalla::skadi::sample& sample, const std::list<std::pair<double, double> >& postings, size_t id) {
   LOG_INFO("Thread" + std::to_string(id) + " sampling " + std::to_string(postings.size()) + " postings");
   sample.get_all(postings);
   LOG_INFO("Thread" + std::to_string(id) + " finished");
@@ -29,6 +28,9 @@ int main(int argc, char** argv) {
     thread_count = std::stoul(argv[3]);
   else
     thread_count = std::max<size_t>(std::thread::hardware_concurrency(), 1);
+
+  LOG_INFO("Loading elevation data");
+  valhalla::skadi::sample sample(argv[1]);
 
   LOG_INFO("Loading coordinate postings");
   std::vector<std::list<std::pair<double, double> > > postings(thread_count);
@@ -50,7 +52,7 @@ int main(int argc, char** argv) {
   std::list<std::thread> threads;
   size_t id = 0;
   for(const auto& p : postings)
-    threads.emplace_back(get_samples, argv[1], std::cref(p), id++);
+    threads.emplace_back(get_samples, std::cref(sample), std::cref(p), id++);
   for(auto& t : threads)
     t.join();
   std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - start;
