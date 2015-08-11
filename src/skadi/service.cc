@@ -18,7 +18,7 @@ using namespace prime_server;
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/midgard/util.h>
 
 #include "skadi/service.h"
 #include "skadi/sample.h"

@@ -24,7 +24,7 @@ void get() {
     throw std::runtime_error("Wrong value at location");
 
   //check a point near the edge of a tile
-  if(std::fabs(217 - s.get(std::make_pair(-76.9, 40.0))))
+  if(std::fabs(134 - s.get(std::make_pair(-76.9, 40.0))) > 1.0)
     throw std::runtime_error("Wrong value at edge of tile");
 
   //check a bunch

@@ -105,7 +105,7 @@ namespace skadi {
     auto value = (flip(t[y * HGT_DIM + x]) * u_opposite + flip(t[y * HGT_DIM + x + 1]) * u_ratio) * v_opposite;
     //only need the second part if you aren't right on the row
     //this also protects from a corner case where you sample past the end of the image
-    if(y == HGT_DIM - 1)
+    if(y < HGT_DIM - 1)
       return value + (flip(t[(y + 1) * HGT_DIM + x]) * u_opposite + flip(t[(y + 1) * HGT_DIM + x + 1]) * u_ratio) * v_ratio;
     return value;
   }
