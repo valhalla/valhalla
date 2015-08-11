@@ -63,7 +63,7 @@ class Maneuver {
   void set_instruction(const std::string& instruction);
   void set_instruction(std::string&& instruction);
 
-  // Kilomteres
+  // Kilometers
   float length(const DirectionsOptions::Units& units =
       DirectionsOptions::Units::DirectionsOptions_Units_kKilometers) const;
   void set_length(float length);
@@ -233,7 +233,7 @@ class Maneuver {
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float length_;
+  float length_;     // Kilometers
   uint32_t time_;
   uint32_t turn_degree_;
   RelativeDirection begin_relative_direction_;
