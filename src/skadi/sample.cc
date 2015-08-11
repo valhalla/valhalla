@@ -44,7 +44,7 @@ namespace {
 
   uint16_t is_hgt(const std::string& name) {
     std::smatch m;
-    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt");
+    std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt$");
     if(std::regex_search(name, m, e)) {
       auto lon = std::stoul(m[4]) * (m[3] == "E" ? 1 : -1) + 180;
       auto lat = std::stoul(m[2]) * (m[1] == "N" ? 1 : -1) + 90;
@@ -68,9 +68,8 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       auto index = is_hgt(f);
-      if(index < cache.size()) {
-        cache[index].map(f, HGT_PIXELS);
-      }
+      if(index < cache.size())
+        cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
     }
   }
 
