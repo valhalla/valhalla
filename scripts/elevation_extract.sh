@@ -30,4 +30,4 @@ for x in $(seq $min_x 1 $max_x); do
 done | parallel -C ' ' -P $(nproc) "curl {}" 
 
 #inflate it
-find elevation | grep -F .hgt | xargs -P $(nproc) gunzip
+find elevation | grep -F .gz | xargs -P $(nproc) gunzip
