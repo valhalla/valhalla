@@ -2,9 +2,9 @@
 set -e
 
 export LD_LIBRARY_PATH=.:`cat /etc/ld.so.conf.d/* | grep -v -E "#" | tr "\\n" ":" | sed -e "s/:$//g"`
-sudo apt-get install -y autoconf automake libtool make gcc-4.8 g++-4.8 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev libboost-thread1.54-dev lcov libcurl4-openssl-dev geotiff-bin libgeotiff-dev libgeotiff2
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+sudo apt-get install -y autoconf automake libtool make gcc-4.9 g++-4.9 libboost1.54-dev libboost-program-options1.54-dev libboost-filesystem1.54-dev libboost-system1.54-dev libboost-thread1.54-dev lcov libcurl4-openssl-dev geotiff-bin libgeotiff-dev libgeotiff2
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 if [ -n "$1" ] && [ -d "$1" ]; then
