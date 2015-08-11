@@ -64,23 +64,187 @@ void TryFormVerbalPostTransitionInstruction(Maneuver maneuver,
 }
 
 void TestFormVerbalPostTransitionInstruction() {
-  // Verify round down
+  // Verify kilometers round down
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.54056f),
       DirectionsOptions_Units_kKilometers, false,
       "Continue for 3.5 kilometers.");
 
-  // Verify round up
+  // Verify kilometers round up
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
       DirectionsOptions_Units_kKilometers, false,
       "Continue for 3.9 kilometers.");
 
-  // Verify street name
+  // Verify kilometers street name
   TryFormVerbalPostTransitionInstruction(
       CreateVerbalPostManeuver( { "Main Street" }, 3.86243f),
       DirectionsOptions_Units_kKilometers, true,
       "Continue on Main Street for 3.9 kilometers.");
+
+  // Verify one kilometer round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 1.04f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for one kilometer.");
+
+  // Verify one kilometer round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.95f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for one kilometer.");
+
+  // Verify one kilometer street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 1.0f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for one kilometer.");
+
+  // Verify a half kilometer round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.54f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for a half kilometer.");
+
+  // Verify a half kilometer round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.45f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for a half kilometer.");
+
+  // Verify a half kilometer street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.5f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for a half kilometer.");
+
+  // Verify 900 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.94f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 900 meters.");
+
+  // Verify 900 meters round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.85f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 900 meters.");
+
+  // Verify 900 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.9f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 900 meters.");
+
+  // Verify 400 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.44f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 400 meters.");
+
+  // Verify 400 meters round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.35f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 400 meters.");
+
+  // Verify 400 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.4f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 400 meters.");
+
+  // Verify 100 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.14f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 100 meters.");
+
+  // Verify 100 meters round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.095f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 100 meters.");
+
+  // Verify 100 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.1f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 100 meters.");
+
+  // Verify 90 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.094f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 90 meters.");
+
+  // Verify 90 meters round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.085f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 90 meters.");
+
+  // Verify 90 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.09f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 90 meters.");
+
+  // Verify 30 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.034f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 30 meters.");
+
+  // Verify 30 meters round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.025f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for 30 meters.");
+
+  // Verify 30 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.03f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for 30 meters.");
+
+  // Verify less than 30 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.024f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for less than 30 meters.");
+
+  // Verify less than 30 meters
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.001f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for less than 30 meters.");
+
+  // Verify less than 30 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.02f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for less than 30 meters.");
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  // Verify miles round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.604931f),
+      DirectionsOptions_Units_kMiles, false,
+      "Continue for 2.2 miles.");
+
+  // Verify miles round up
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
+      DirectionsOptions_Units_kMiles, false,
+      "Continue for 2.3 miles.");
+
+  // Verify miles street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 3.637117f),
+      DirectionsOptions_Units_kMiles, true,
+      "Continue on Main Street for 2.3 miles.");
 }
 
 Maneuver CreateSignManeuver(TripDirections_Maneuver_Type type,
