@@ -5,7 +5,7 @@ checkout:
 
 dependencies:
   override:
-    - scripts/dependencies.sh
+    - scripts/dependencies.sh deps
 
 test:
   override:
