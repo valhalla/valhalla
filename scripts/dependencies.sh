@@ -19,7 +19,7 @@ fi
 mkdir -p deps
 for dep in midgard baldr; do
 	rm -rf $dep
-	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
+	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git $dep &
 done
 wait
 
@@ -28,7 +28,7 @@ $DIR/install_service_deps.sh &
 
 #build sync
 for dep in midgard baldr; do
-	pushd deps/$dep
+	pushd $dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
 	make -j4
