@@ -2600,18 +2600,18 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
 std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
     Maneuver& maneuver, bool include_street_names,
     uint32_t element_max_count, std::string delim) {
-  //  TODO
+
   // 0 "Continue for 1.2 kilometers"
-  // 1 "Continue for one kilometer."
+  // 1 "Continue for 1 kilometer."
   // 2 "Continue for a half kilometer." (500 meters)
   // 3 "Continue for 100 meters." (30-400 and 600-900 meters)
-  // 4 "Continue for less than 30 meters."
+  // 4 "Continue for less than 10 meters."
   //
   // 5 "Continue on <STREET_NAMES(2)> for 1.2 kilometers"
-  // 6 "Continue on <STREET_NAMES(2)> for one kilometer."
+  // 6 "Continue on <STREET_NAMES(2)> for 1 kilometer."
   // 7 "Continue on <STREET_NAMES(2)> for a half kilometer." (500 meters)
   // 8 "Continue on <STREET_NAMES(2)> for 100 meters." (30-400 and 600-900 meters)
-  // 9 "Continue on <STREET_NAMES(2)> for less than 30 meters."
+  // 9 "Continue on <STREET_NAMES(2)> for less than 10 meters."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -2630,20 +2630,22 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
   if (kilometer_tenths > 1.0f) {
     instruction += (boost::format("%.1f kilometers.") % kilometer_tenths).str();
   } else if (kilometer_tenths == 1.0f) {
-    instruction += "one kilometer.";
+    instruction += "1 kilometer.";
   } else if (kilometer_tenths == 0.5f) {
     instruction += "a half kilometer.";
   } else {
     float kilometer_hundredths = std::round(kilometers * 100) / 100;
+    float kilometer_thousandths = std::round(kilometers * 1000) / 1000;
+
     // Process hundred meters
-    if (kilometer_hundredths > 0.094f) {
+    if (kilometer_hundredths > 0.09f) {
       instruction += (boost::format("%d meters.")
           % static_cast<uint32_t>(kilometer_tenths * 1000)).str();
-    } else if (kilometer_hundredths > 0.024f) {
+    } else if (kilometer_thousandths > 0.009f) {
       instruction += (boost::format("%d meters.")
           % static_cast<uint32_t>(kilometer_hundredths * 1000)).str();
     } else {
-      instruction += "less than 30 meters.";
+      instruction += "less than 10 meters.";
     }
 
   }
@@ -2654,18 +2656,22 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
 std::string NarrativeBuilder::FormVerbalPostTransitionMilesInstruction(
     Maneuver& maneuver, bool include_street_names,
     uint32_t element_max_count, std::string delim) {
-  //  TODO
-  //  "Continue for one tenth of a mile."
-  //  "Continue for two tenths of a mile." (.2, .3, .4, .6, .7, .8, .9)
-  //  "Continue for a half mile."
-  //  "Continue for one mile."
-  //  "Continue for 1.2 miles"
+
+  // 0  "Continue for 1.2 miles"
+  // 1  "Continue for 1 mile."
+  // 2  "Continue for a half mile."
+  // 3  "Continue for 2 tenths of a mile." (2-4, 6-9)
+  // 4  "Continue for 1 tenth of a mile."
+  // 5  "Continue for 200 feet." (10-90, 100-500)
+  // 6  "Continue for less than 10 feet."
   //
-  //  "Continue on <STREET_NAMES(2)> for one tenth of a mile."
-  //  "Continue on <STREET_NAMES(2)> for two tenths of a mile." (.2, .3, .4, .6, .7, .8, .9)
-  //  "Continue on <STREET_NAMES(2)> for a half mile."
-  //  "Continue on <STREET_NAMES(2)> for one mile."
-  //  "Continue on <STREET_NAMES(2)> for 1.2 miles"
+  // 7  "Continue on <STREET_NAMES(2)> for 1.2 miles"
+  // 8  "Continue on <STREET_NAMES(2)> for 1 mile."
+  // 9  "Continue on <STREET_NAMES(2)> for a half mile."
+  // 10 "Continue on <STREET_NAMES(2)> for two tenths of a mile." (2-4, 6-9)
+  // 11 "Continue on <STREET_NAMES(2)> for 1 tenth of a mile."
+  // 12 "Continue on <STREET_NAMES(2)> for 200 feet." (10-90, 100-500)
+  // 13 "Continue on <STREET_NAMES(2)> for less than 10 feet."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -2676,11 +2682,35 @@ std::string NarrativeBuilder::FormVerbalPostTransitionMilesInstruction(
     instruction += maneuver.street_names().ToString(element_max_count,
                                                     delim);
   }
-
   instruction += " for ";
-  instruction += (boost::format("%.1f")
-      % maneuver.length(DirectionsOptions_Units_kMiles)).str();
-  instruction += " miles.";
+
+  float miles = maneuver.length(DirectionsOptions_Units_kMiles);
+  float mile_tenths = std::round(miles * 10) / 10;
+
+  if (mile_tenths > 1.0f) {
+    instruction += (boost::format("%.1f miles.") % mile_tenths).str();
+  } else if (mile_tenths == 1.0f) {
+    instruction += "1 mile.";
+  } else if (mile_tenths == 0.5f) {
+    instruction += "a half mile.";
+  } else if (mile_tenths > 0.1f) {
+      instruction += (boost::format("%d tenths of a mile.")
+          % static_cast<uint32_t>(mile_tenths * 10)).str();
+  } else if ((miles > 0.0973f) && (mile_tenths == 0.1f)) {
+    instruction += "1 tenth of a mile.";
+  } else {
+    uint32_t feet = static_cast<uint32_t>(std::round(miles * 5280));
+    if (feet > 94) {
+      instruction += (boost::format("%d feet.")
+          % static_cast<uint32_t>(std::round(feet / 100.0f) * 100)).str();
+    } else if (feet > 9) {
+      instruction += (boost::format("%d feet.")
+          % static_cast<uint32_t>(std::round(feet / 10.0f) * 10)).str();
+    } else {
+      instruction += "less than 10 feet.";
+    }
+
+  }
   return instruction;
 }
 
