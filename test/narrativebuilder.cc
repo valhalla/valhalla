@@ -208,23 +208,41 @@ void TestFormVerbalPostTransitionInstruction() {
       DirectionsOptions_Units_kKilometers, true,
       "Continue on Main Street for 30 meters.");
 
-  // Verify less than 30 meters round down
+  // Verify 10 meters round down
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.024f),
+      CreateVerbalPostManeuver( { "Main Street" }, 0.012f),
       DirectionsOptions_Units_kKilometers, false,
-      "Continue for less than 30 meters.");
+      "Continue for 10 meters.");
 
-  // Verify less than 30 meters
+  // Verify 10 meters round up
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.001f),
+      CreateVerbalPostManeuver( { "Main Street" }, 0.0096f),
       DirectionsOptions_Units_kKilometers, false,
-      "Continue for less than 30 meters.");
+      "Continue for 10 meters.");
 
-  // Verify less than 30 meters street name
+  // Verify 10 meters street name
   TryFormVerbalPostTransitionInstruction(
-      CreateVerbalPostManeuver( { "Main Street" }, 0.02f),
+      CreateVerbalPostManeuver( { "Main Street" }, 0.01f),
       DirectionsOptions_Units_kKilometers, true,
-      "Continue on Main Street for less than 30 meters.");
+      "Continue on Main Street for 10 meters.");
+
+  // Verify less than 10 meters round down
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" },  0.0094f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for less than 10 meters.");
+
+  // Verify less than 10 meters
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.0088f),
+      DirectionsOptions_Units_kKilometers, false,
+      "Continue for less than 10 meters.");
+
+  // Verify less than 10 meters street name
+  TryFormVerbalPostTransitionInstruction(
+      CreateVerbalPostManeuver( { "Main Street" }, 0.005f),
+      DirectionsOptions_Units_kKilometers, true,
+      "Continue on Main Street for less than 10 meters.");
 
   /////////////////////////////////////////////////////////////////////////////
 

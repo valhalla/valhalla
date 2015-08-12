@@ -2605,13 +2605,13 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
   // 1 "Continue for 1 kilometer."
   // 2 "Continue for a half kilometer." (500 meters)
   // 3 "Continue for 100 meters." (30-400 and 600-900 meters)
-  // 4 "Continue for less than 30 meters."
+  // 4 "Continue for less than 10 meters."
   //
   // 5 "Continue on <STREET_NAMES(2)> for 1.2 kilometers"
   // 6 "Continue on <STREET_NAMES(2)> for 1 kilometer."
   // 7 "Continue on <STREET_NAMES(2)> for a half kilometer." (500 meters)
   // 8 "Continue on <STREET_NAMES(2)> for 100 meters." (30-400 and 600-900 meters)
-  // 9 "Continue on <STREET_NAMES(2)> for less than 30 meters."
+  // 9 "Continue on <STREET_NAMES(2)> for less than 10 meters."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -2635,15 +2635,17 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
     instruction += "a half kilometer.";
   } else {
     float kilometer_hundredths = std::round(kilometers * 100) / 100;
+    float kilometer_thousandths = std::round(kilometers * 1000) / 1000;
+
     // Process hundred meters
-    if (kilometer_hundredths > 0.094f) {
+    if (kilometer_hundredths > 0.09f) {
       instruction += (boost::format("%d meters.")
           % static_cast<uint32_t>(kilometer_tenths * 1000)).str();
-    } else if (kilometer_hundredths > 0.024f) {
+    } else if (kilometer_thousandths > 0.009f) {
       instruction += (boost::format("%d meters.")
           % static_cast<uint32_t>(kilometer_hundredths * 1000)).str();
     } else {
-      instruction += "less than 30 meters.";
+      instruction += "less than 10 meters.";
     }
 
   }
