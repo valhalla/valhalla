@@ -10,10 +10,10 @@ function usage() {
 if [ -z "$4" ]; then
 	usage
 fi
-min_x=$(($1))
-max_x=$(($2))
-min_y=$(($3))
-max_y=$(($4))
+min_x=$(python -c "import math; print int(math.floor($1))")
+max_x=$(python -c "import math; print int(math.ceil($2) - 1)")
+min_y=$(python -c "import math; print int(math.floor($3))")
+max_y=$(python -c "import math; print int(math.ceil($4) - 1)")
 if [ $min_x -gt $max_x ] || [ $min_x -lt -180 ] || [ $max_x -gt 180 ]; then
 	usage
 fi
