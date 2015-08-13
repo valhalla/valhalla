@@ -2,7 +2,7 @@
 set -e
 
 function usage() {
-	echo "Usage: $0 min_x max_x min_y max_y [target_dir=elevation]"
+	echo "Usage: $0 min_x max_x min_y max_y [target_dir=elevation] [parallelism=$(nproc)]"
 	exit 1
 }
 
@@ -26,15 +26,23 @@ if [ -z $5 ]; then
 else
 	dest="$5"
 fi
+if [ -z $6 ]; then
+	para=$(nproc)
+else
+	para="$6"
+fi
+
+#get dirs
+for y in $(seq ${min_y} 1 ${max_y}); do
+	dir=$(python -c "print '%s%02d' % ('S' if ${y} < 0 else 'N', abs(${y}))")
+	echo "${dest}/${dir}"
+done | while read d; do mkdir -p $d; done
 
 #get the data
 for x in $(seq ${min_x} 1 ${max_x}); do
         for y in $(seq ${min_y} 1 ${max_y}); do
-		file=$(python -c "print '%s%02d%s%03d.hgt.gz' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
+		file=$(python -c "print '%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
                 dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
-		echo "--retry 3 --retry-delay 0 --max-time 100 -s --create-dirs -o ${dest}/${dir}/${file} http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}"
+		echo "http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}.gz ${dest}/${dir}/${file}"
 	done
-done | parallel -C ' ' -P $(nproc) "curl {}" 
-
-#inflate it
-find "${dest}" | grep -F .gz | xargs -P $(nproc) gunzip
+done | parallel -C ' ' -P ${para} "curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | gunzip > {2}"
