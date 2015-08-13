@@ -377,7 +377,7 @@ float ElevationRatio(const std::vector<double>& heights, float length) {
    */
 
   //disfavor downs, clamp to range extrema and get scale
-  return static_cast<float>(clamp(ups + (downs * .5), -MAX_ELEVATION_CHANGE, MAX_ELEVATION_CHANGE) / MAX_ELEVATION_CHANGE);
+  return static_cast<float>(clamp((ups + (downs * .5)) / length, -MAX_ELEVATION_CHANGE, MAX_ELEVATION_CHANGE) / MAX_ELEVATION_CHANGE);
 }
 
 uint32_t BinElevation(float scale, bool forward){
@@ -596,6 +596,18 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               auto heights = sample->get_all(resampled);
               //compute hilliness
               elevation = ElevationRatio(heights, length);
+
+              auto e = (forward ? elevation : -elevation);
+              if(e < -.029) {
+                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) + (forward ? " DOWNHILL [[" : " DOWNHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+              else if(e > .029) {
+                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) + (forward ? " UPHILL [[" : " UPHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
             }
 
             //TODO: curvature

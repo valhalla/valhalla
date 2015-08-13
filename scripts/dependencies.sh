@@ -8,20 +8,11 @@ sudo apt-get install -y autoconf automake libtool make gcc-4.9 g++-4.9 libboost1
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
 
-#clone async
+#skadi has everything
 mkdir -p deps
-for dep in midgard baldr skadi; do
-	rm -rf $dep
-	git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/$dep.git deps/$dep &
-done
-wait
-
-#build sync
-for dep in midgard baldr skadi; do
-	pushd deps/$dep
-	./autogen.sh
-	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
-	make -j4
-	sudo make install
-	popd
-done
+rm -rf deps/skadi
+git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/valhalla/skadi.git deps/skadi
+pushd deps/skadi
+scripts/dependencies.sh
+scripts/install.sh
+popd
