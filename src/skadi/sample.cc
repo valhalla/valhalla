@@ -7,6 +7,7 @@
 #include <list>
 #include <fstream>
 #include <regex>
+#include <sys/stat.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -59,6 +60,12 @@ namespace {
     return ((value & 0xFF) << 8) | ((value >> 8) & 0xFF);
   }
 
+  uint64_t file_size(const std::string& file_name) {
+    struct stat64 s;
+    int rc = stat64(file_name.c_str(), &s);
+    return rc == 0 ? s.st_size : -1;
+  }
+
 }
 
 namespace valhalla {
@@ -69,8 +76,12 @@ namespace skadi {
     auto files = get_files(data_source);
     for(const auto& f : files) {
       auto index = is_hgt(f);
-      if(index < cache.size())
-        cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
+      if(index < cache.size()) {
+        if(file_size(f) == HGT_PIXELS * sizeof(int16_t))
+          cache[index].map(f, HGT_PIXELS * sizeof(int16_t));
+        else
+          LOG_WARN("Corrupt elevation data: " + f);
+      }
     }
   }
 
