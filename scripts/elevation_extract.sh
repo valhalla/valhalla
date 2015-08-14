@@ -44,26 +44,22 @@ for x in $(seq ${min_x} 1 ${max_x}); do
 		file=$(python -c "print '%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
                 dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
 		#if we dont already have it or its the wrong size
-		if [ ! -e ${dest}/${dir}/${file} ] || [ $(wc -c < ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
+		if [ ! -e ${dest}/${dir}/${file} ] || [ $(stat -c %s ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
 			echo "http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}.gz ${dest}/${dir}/${file}"
 		fi
 	done
 done | parallel -C ' ' -P ${para} "curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | gunzip > {2}"
 
 #check them
-for x in $(seq ${min_x} 1 ${max_x}); do
-        for y in $(seq ${min_y} 1 ${max_y}); do
-                file=$(python -c "print '%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
-                dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
-		#not there
-		if [ ! -e ${dest}/${dir}/${file} ]; then
-			echo "${dest}/${dir}/${file} is missing"
-			exit 1
-		fi
-		#wrong size
-		if [ $(wc -c < ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
-			echo "${dest}/${dir}/${file} is corrupt"
-			exit 1
-		fi
-	done
-done
+total=$(find ${dest} | grep -cF hgt)
+expected=$((($max_x - $min_x + 1)*($max_y - $min_y + 1)))
+if [ ${total} -ne ${expected} ]; then
+	echo "try again, $((${expected} - ${total})) files are missing"
+	exit 1
+fi
+
+corrupted=$(stat -c %s $(find . | grep -F hgt) | grep -vcF $((3601*3601*2)))
+if [ ${corrupted} -ne 0 ]; then
+	echo "try again, ${corrupted} files are corrupt"
+	exit 1
+fi
