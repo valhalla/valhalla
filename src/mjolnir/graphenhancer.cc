@@ -905,6 +905,13 @@ bool ConsistentNames(const std::string& country_code,
       country_code, names1);
   std::unique_ptr<StreetNames> street_names2 = StreetNamesFactory::Create(
       country_code, names2);
+
+  // Flag as consistent names when neither has names!
+  if (street_names1->empty() && street_names2->empty()) {
+    return true;
+  }
+
+  // Return true (consistent) if the common base names are not empty
   return (!(street_names1->FindCommonBaseNames(*street_names2)->empty()));
 }
 
