@@ -39,10 +39,12 @@ endif
 lib_LTLIBRARIES = libvalhalla_skadi.la
 nobase_include_HEADERS = \
 	valhalla/skadi/service.h \
-	valhalla/skadi/sample.h
+	valhalla/skadi/sample.h \
+	valhalla/skadi/util.h
 libvalhalla_skadi_la_SOURCES = \
 	src/skadi/service.cc \
-	src/skadi/sample.cc
+	src/skadi/sample.cc \
+	src/skadi/util.cc
 libvalhalla_skadi_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_skadi_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
@@ -64,7 +66,7 @@ test/data/N40W077.hgt:
 	-curl -s -o - http://s3.amazonaws.com/mapzen.valhalla/elevation/N40/N40W077.hgt.gz | gunzip > test/data/N40W077.hgt
 
 # tests
-check_PROGRAMS = test/sample test/service
+check_PROGRAMS = test/sample test/service test/util
 test_sample_SOURCES = test/sample.cc test/test.cc
 test_sample_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_sample_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
@@ -72,7 +74,10 @@ test_sample_DEPENDENCIES = test/data/N40W077.hgt
 test_service_SOURCES = test/service.cc test/test.cc
 test_service_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_service_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
-test_service_DEPENDENCIES = test/data/N40W077.hgt
+test_util_DEPENDENCIES = test/data/N40W077.hgt
+test_util_SOURCES = test/util.cc test/test.cc
+test_util_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_util_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_skadi.la
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
