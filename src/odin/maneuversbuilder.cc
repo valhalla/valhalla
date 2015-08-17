@@ -1281,6 +1281,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return true;
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Process unnamed edges
+  if (!maneuver.HasStreetNames() && prev_edge->IsUnnamed()) {
+    return true;
+  }
+
   return false;
 
 }
