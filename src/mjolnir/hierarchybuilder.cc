@@ -366,7 +366,7 @@ void AddShortcutEdges(
       } else {
         // Reverse the shape
         std::vector<PointLL> edgeshape = edgeinfo->shape();
-        shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
+        shape.insert(shape.end(), edgeshape.rbegin(), edgeshape.rend());
       }
 
       // Get names - they apply over all edges of the shortcut
