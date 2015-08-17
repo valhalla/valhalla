@@ -17,19 +17,23 @@ namespace valhalla {
       if(heights.size() < 2)
         return deltas;
 
-      double total_distance = 0;
+      //measure amount of downward and upward change over the distance independently
+      double down = 0, up = 0;
       for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
         auto diff = static_cast<float>(*h - *std::prev(h));
-        if(diff > 0)
+        if(diff > 0) {
           deltas.second += diff;
-        else
+          up += interval_distance;
+        }
+        else {
           deltas.first -= diff;
-        total_distance += interval_distance;
+          down += interval_distance;
+        }
       }
 
       //clamp from 0 to max and get ratio of max
-      deltas.first = clamp(deltas.first / total_distance, 0.0, maximum_grade) / maximum_grade;
-      deltas.second = clamp(deltas.second / total_distance, 0.0, maximum_grade) / maximum_grade;
+      deltas.first = clamp(deltas.first / down, 0.0, maximum_grade) / maximum_grade;
+      deltas.second = clamp(deltas.second / up, 0.0, maximum_grade) / maximum_grade;
       return deltas;
     }
   }

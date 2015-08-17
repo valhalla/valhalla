@@ -1,5 +1,5 @@
-#ifndef __VALHALLA_SAMPLE_H__
-#define __VALHALLA_SAMPLE_H__
+#ifndef __VALHALLA_UTIL_H__
+#define __VALHALLA_UTIL_H__
 
 #include <utility>
 #include <vector>
@@ -23,4 +23,4 @@ namespace valhalla {
 }
 
 
-#endif //__VALHALLA_SAMPLE_H__
+#endif //__VALHALLA_UTIL_H__
