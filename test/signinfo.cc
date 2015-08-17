@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace valhalla::mjolnir;
+using namespace valhalla::baldr;
 using valhalla::mjolnir::GraphBuilder;
 
 namespace {
