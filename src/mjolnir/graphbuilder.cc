@@ -23,6 +23,7 @@
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/skadi/sample.h>
+#include <valhalla/skadi/util.h>
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
@@ -347,48 +348,20 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
   }
 }
 
-constexpr float POSTING_INTERVAL = 60.f;
-constexpr double MAX_ELEVATION_CHANGE = .03;
+constexpr double POSTING_INTERVAL = 60.0;
+constexpr double MAX_ELEVATION_CHANGE = .10; //this is a 10% grade
 
-template <class T>
-T clamp(T val, T low, T high) {
-  return std::min<T>(std::max<T>(val, low), high);
-}
-
-//measure uphill vs downhill weighting uphill as 2x more important
-float ElevationRatio(const std::vector<double>& heights, float length) {
-  //note that if the distance was so short that only 1 height was recorded
-  //we assume its flat (it doesnt count)
-  double ups = 0, downs = 0;
-  for(auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
-    auto diff = *h - *std::prev(h);
-    if(diff > 0)
-      ups += diff;
-    else
-      downs += diff;
-  }
-
-  /* what we do is measure the discretized amount of height gain and loss over the distance of the edge.
+uint32_t BinElevation(float down_scale, float up_scale, bool forward){
+  /* what we do is measure the discretized amount of height loss and gain over the distance of the edge.
    * this ratio provides an estimate of the effort required to traverse this edge. it can be used
    * in edge costing to modulate the speed of walking or biking or perhaps fuel use in vehicles.
-   * the most extreme ratios are anything near +/-.03. we squeeze this into 16bits and end up weighting
-   * uphill climb doubley more as they have more impact in terms of effort required (going mostly
-   * downhill may not require any effort)
+   * the most extreme ratios are anything near +/-MAX_ELEVATION_CHANGE. we squeeze this into 16bits
+   * and end up weighting uphill climb doubly more as it has more impact in terms of effort required
+   *
+   * TODO: think about costing implications of weighting uphill doubly more than downhill
    */
-
-  //disfavor downs, clamp to range extrema and get scale
-  return static_cast<float>(clamp((ups + (downs * .5)) / length, -MAX_ELEVATION_CHANGE, MAX_ELEVATION_CHANGE) / MAX_ELEVATION_CHANGE);
-}
-
-uint32_t BinElevation(float scale, bool forward){
-  //shift center to provide more granularity to uphill edges
-  //if scale runs from 0 to -1, this returns 0 to 5
-  //if scale runs from 0 to +1, this returns 5 to 15
-  //the additional .5 is for rounding purposes
-  if(forward)
-    return static_cast<uint32_t>(scale * (scale < 0 ? 5 : 10) + 5.5);
-  else
-    return static_cast<uint32_t>(scale * (scale > 0 ? -5 : -10) + 5.5);
+  auto avg = (1.f - .5f * down_scale) *.5f + (up_scale * .5f);
+  return static_cast<uint32_t>(avg * 15.f + .5f);
 }
 
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
@@ -428,7 +401,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::tuple<float, float, float> > geo_attribute_cache;
+  std::unordered_map<uint32_t, std::tuple<float, float, float, float> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -441,6 +414,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
+      uint32_t steep_count = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
@@ -588,33 +562,47 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             auto length = PointLL::Length(shape);
 
             //hilliness estimation
-            float elevation = 0;
-            if(sample) {
+            std::pair<double, double> elevation{0,0};
+            if(sample && !w.tunnel()) {
               //evenly sample the shape
-              auto resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
+              std::vector<PointLL> resampled;
+              //if it was really short just do both ends
+              auto interval = POSTING_INTERVAL;
+              if(length <= POSTING_INTERVAL || w.bridge()) {
+                resampled = {shape.front(), shape.back()};
+                interval = length;
+              }
+              else
+                resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
               //get the heights at each point
               auto heights = sample->get_all(resampled);
               //compute hilliness
-              elevation = ElevationRatio(heights, length);
-
-              auto e = (forward ? elevation : -elevation);
-              if(e < -.029) {
-                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) + (forward ? " DOWNHILL [[" : " DOWNHILL [[") +
+              elevation = valhalla::skadi::discretized_deltas(heights, interval, MAX_ELEVATION_CHANGE);
+              /*
+              auto e = (forward ? elevation : std::make_pair(elevation.second, elevation.first));
+              if(e.first > .99 || e.second > .99)
+                ++steep_count;
+              if(e.first > .99 && length > POSTING_INTERVAL * 3) {
+                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (forward ? " DOWNHILL [[" : " UPHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
               }
-              else if(e > .029) {
-                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) + (forward ? " UPHILL [[" : " UPHILL [[") +
+              else if(e.second > .99 && length > POSTING_INTERVAL * 3) {
+                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (forward ? " UPHILL [[" : " DOWNHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
               }
+              */
             }
 
             //TODO: curvature
             float curvature = 0;
 
             //add it in
-            auto inserted = geo_attribute_cache.insert({edge_info_offset, std::make_tuple(length, elevation, curvature)});
+            auto inserted = geo_attribute_cache.insert({edge_info_offset,
+              std::make_tuple(length, elevation.first, elevation.second, curvature)});
             found = inserted.first;
 
             // If the end node is in a different tile and the tile is not
@@ -638,8 +626,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           DirectedEdgeBuilder& directededge = directededges.back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must invert the elevation
-          directededge.set_elevation(BinElevation(std::get<1>(found->second), forward));
-          directededge.set_curvature(static_cast<uint32_t>(std::get<2>(found->second) + .5f));
+          directededge.set_elevation(BinElevation(std::get<1>(found->second), std::get<2>(found->second), forward));
+          directededge.set_curvature(static_cast<uint32_t>(std::get<3>(found->second) + .5f));
 
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
@@ -697,6 +685,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Next node in the tile
         node_itr += bundle.node_count;
       }
+
+      LOG_INFO("Percentage steep roads: " + std::to_string(double(steep_count)/double(directededgecount)));
 
       // Write the actual tile to disk
       graphtile.StoreTileData(hierarchy, tile_start->first);
