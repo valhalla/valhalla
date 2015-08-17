@@ -178,7 +178,7 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
-             const sif::TravelMode mode) {
+             const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
@@ -448,7 +448,6 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
   uint32_t density = 0;
-  float seconds = 0.0f;
   for (const auto& edge : dest.edges()) {
     // Keep the id and the cost to traverse the partial distance for the
     // remainder of the edge. This cost is subtracted from the total cost
