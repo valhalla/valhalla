@@ -182,6 +182,8 @@ void validator_stats::add (const validator_stats& stats) {
 
 }
 
+
+//TODO: split this into separate methods!
 void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Get the location of the db file to write
   std::string dir = pt.get<std::string>("mjolnir.statistics.statistics_dir");
@@ -219,6 +221,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     return;
   }
   LOG_INFO("SpatiaLite loaded as an extension");
+  LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys
   sql = "PRAGMA foreign_keys = ON";
@@ -338,7 +341,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   for (auto tileid : tile_ids) {
     uint8_t index = 1;
     sqlite3_reset(stmt);
-    sqlite3_clear_bindings;
+    sqlite3_clear_bindings(stmt);
     // Tile ID
     sqlite3_bind_int(stmt, index, tileid);
     ++index;
@@ -413,7 +416,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     for (auto rclass : rclasses) {
       uint8_t index = 1;
       sqlite3_reset(stmt);
-      sqlite3_clear_bindings;
+      sqlite3_clear_bindings(stmt);
       // Tile ID (parent tile)
       sqlite3_bind_int(stmt, index, tileid);
       ++index;
@@ -470,7 +473,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   for (auto country : iso_codes) {
     uint8_t index = 1;
     sqlite3_reset(stmt);
-    sqlite3_clear_bindings;
+    sqlite3_clear_bindings(stmt);
     // Country ISO
     sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
     ++index;
@@ -519,7 +522,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     for (auto rclass : rclasses) {
       uint8_t index = 1;
       sqlite3_reset(stmt);
-      sqlite3_clear_bindings;
+      sqlite3_clear_bindings(stmt);
       // ISO (parent ID)
       sqlite3_bind_text(stmt, index, country.c_str(), country.length(), SQLITE_STATIC);
       ++index;
@@ -563,7 +566,6 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close (db_handle);
     return;
   }
-  LOG_INFO("Created spatial index");
 
   sql = "VACUUM ANALYZE";
   ret = sqlite3_exec (db_handle, sql.c_str(), NULL, NULL, &err_msg);
@@ -574,7 +576,7 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     return;
   }
   sqlite3_close(db_handle);
-  LOG_INFO("Done writing statistics DB.");
+  LOG_INFO("Finished");
 }
 }
 }

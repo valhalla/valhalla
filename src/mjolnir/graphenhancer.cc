@@ -944,10 +944,9 @@ void enhance(const boost::property_tree::ptree& pt,
       return;
     }
     LOG_INFO("SpatiaLite loaded as an extension");
-
   }
   else
-    LOG_INFO("Admin db " + database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db " + database + " not found.  Not saving admin information.");
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1230,8 +1229,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   }
   std::random_shuffle(tempqueue.begin(), tempqueue.end());
   std::queue<GraphId> tilequeue(tempqueue);
-  LOG_INFO("Done creating queue of tiles: count = " +
-           std::to_string(tilequeue.size()));
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -1264,14 +1261,14 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
     }
   }
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density) + " and unreachable " + std::to_string(stats.unreachable));
-  LOG_INFO("not_thru = " + std::to_string(stats.not_thru));
-  LOG_INFO("no country found = " + std::to_string(stats.no_country_found));
-  LOG_INFO("internal intersection = " + std::to_string(stats.internalcount));
-  LOG_INFO("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
-  LOG_INFO("Ramp Count = " + std::to_string(stats.rampcount));
-  LOG_INFO("Pencil Point Uturn count = " + std::to_string(stats.pencilucount));
+  LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
+  LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
+  LOG_DEBUG("internal intersection = " + std::to_string(stats.internalcount));
+  LOG_DEBUG("Turn Channel Count = " + std::to_string(stats.turnchannelcount));
+  LOG_DEBUG("Ramp Count = " + std::to_string(stats.rampcount));
+  LOG_DEBUG("Pencil Point Uturn count = " + std::to_string(stats.pencilucount));
   for (auto density : stats.density_counts) {
-    LOG_INFO("Density: " + std::to_string(density));
+    LOG_DEBUG("Density: " + std::to_string(density));
   }
 }
 

@@ -590,7 +590,7 @@ void FormTilesInNewLevel(
     // Store the new tile
     GraphId tile(tileid, level, 0);
     tilebuilder.StoreTileData(info.graphreader_.GetTileHierarchy(), tile);
-    LOG_INFO((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
+    LOG_DEBUG((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
          tile % tilebuilder.size()).str());
 
     // Increment tileid
@@ -713,7 +713,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   // Write the new file
   tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs);
 
-  LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
+  LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());
 }
 
@@ -835,17 +835,18 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
     // Get the nodes that exist in the new level
     GetNodesInNewLevel(base_level->second, new_level->second, info);
-    LOG_INFO((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
+    LOG_DEBUG((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
 
     // Form all tiles in new level
     FormTilesInNewLevel(base_level->second, new_level->second, info);
-    LOG_INFO((boost::format("Created %1% shortcuts") % info.shortcutcount_).str());
+    LOG_DEBUG((boost::format("Created %1% shortcuts") % info.shortcutcount_).str());
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
     // connections to base tiles. That way all access to old tiles is
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
+    LOG_INFO("Finished");
   }
 }
 

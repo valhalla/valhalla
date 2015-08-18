@@ -414,7 +414,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
       uint32_t directededgecount = 0;
-      uint32_t steep_count = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
@@ -578,18 +577,17 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               auto heights = sample->get_all(resampled);
               //compute hilliness
               elevation = valhalla::skadi::discretized_deltas(heights, interval, MAX_ELEVATION_CHANGE);
+
               /*
               auto e = (forward ? elevation : std::make_pair(elevation.second, elevation.first));
-              if(e.first > .99 || e.second > .99)
-                ++steep_count;
               if(e.first > .99 && length > POSTING_INTERVAL * 3) {
-                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
                     " " + std::to_string(length) + (forward ? " DOWNHILL [[" : " UPHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
               }
               else if(e.second > .99 && length > POSTING_INTERVAL * 3) {
-                LOG_INFO(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
                     " " + std::to_string(length) + (forward ? " UPHILL [[" : " DOWNHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
@@ -686,13 +684,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         node_itr += bundle.node_count;
       }
 
-      LOG_INFO("Percentage steep roads: " + std::to_string(double(steep_count)/double(directededgecount)));
-
       // Write the actual tile to disk
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
+      LOG_DEBUG((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
@@ -726,7 +722,6 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   std::map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
 
   // Atomically pass around stats info
-  LOG_INFO(std::to_string(tiles.size()) + " tiles");
   for (size_t i = 0; i < threads.size(); ++i) {
     // Figure out how many this thread will work on (either ceiling or floor)
     size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
@@ -768,11 +763,11 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   for (auto& empty_tile : stats.intersected_tiles) {
     if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
       GraphTileBuilder graphtile;
-      LOG_INFO("Add empty tile for: " + std::to_string(empty_tile.tileid()));
+      LOG_DEBUG("Add empty tile for: " + std::to_string(empty_tile.tileid()));
       graphtile.StoreTileData(tile_hierarchy, empty_tile);
     }
   }
-  LOG_INFO("Added " + std::to_string(stats.intersected_tiles.size()) +
+  LOG_DEBUG("Added " + std::to_string(stats.intersected_tiles.size()) +
            " empty, intersected tiles");
 }
 
