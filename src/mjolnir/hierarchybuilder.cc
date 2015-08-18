@@ -351,8 +351,9 @@ void AddShortcutEdges(
         && IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
 
       // Form a shortcut edge.
-      DirectedEdge oldedge = *directededge;
-      DirectedEdgeBuilder newedge = static_cast<DirectedEdgeBuilder&>(oldedge);
+      //TODO: this seems really dangerous, we need a virtual destructor in directededge
+      //then we need to do dynamic_cast<const DirectedEdgeBuilder&>(*directededge);
+      DirectedEdgeBuilder newedge = static_cast<DirectedEdgeBuilder&>(*directededge);
       uint32_t length = newedge.length();
 
       // Get the shape for this edge. If this initial directed edge is not
