@@ -1282,13 +1282,32 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Process unnamed edges
-  if (!maneuver.HasStreetNames() && prev_edge->IsUnnamed()) {
+  // Process unnamed edge
+  if (!maneuver.HasStreetNames() && prev_edge->IsUnnamed()
+      && IncludeUnnamedPrevEdge(node_index, prev_edge, curr_edge)) {
     return true;
   }
 
   return false;
 
+}
+
+bool ManeuversBuilder::IncludeUnnamedPrevEdge(
+    int node_index, EnhancedTripPath_Edge* prev_edge,
+    EnhancedTripPath_Edge* curr_edge) const {
+
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+
+  if (!node->HasIntersectingEdges()) {
+    return true;
+  } else if (curr_edge->IsStraightest(
+      GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()),
+      node->GetStraightestIntersectingEdgeTurnDegree(
+          prev_edge->end_heading()))) {
+    return true;
+  }
+
+  return false;
 }
 
 bool ManeuversBuilder::IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
