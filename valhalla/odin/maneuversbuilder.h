@@ -72,6 +72,9 @@ class ManeuversBuilder {
 
   bool CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_index);
 
+  bool IncludeUnnamedPrevEdge(int node_index, EnhancedTripPath_Edge* prev_edge,
+                              EnhancedTripPath_Edge* curr_edge) const;
+
   bool IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
               EnhancedTripPath_Edge* curr_edge) const;
 
@@ -79,7 +82,7 @@ class ManeuversBuilder {
                               EnhancedTripPath_Edge* curr_edge) const;
 
   bool IsRightPencilPointUturn(int node_index, EnhancedTripPath_Edge* prev_edge,
-                              EnhancedTripPath_Edge* curr_edge) const;
+                               EnhancedTripPath_Edge* curr_edge) const;
 
   bool IsIntersectingForwardEdge(int node_index,
                                  EnhancedTripPath_Edge* prev_edge,
