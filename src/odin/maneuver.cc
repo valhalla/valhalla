@@ -68,7 +68,8 @@ Maneuver::Maneuver()
       bus_(false),
       fork_(false),
       begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false) {
+      intersecting_forward_edge_(false),
+      tee_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -602,6 +603,14 @@ bool Maneuver::HasVerbalPostTransitionInstruction() const {
   return (!verbal_post_transition_instruction_.empty());
 }
 
+bool Maneuver::tee() const {
+  return tee_;
+}
+
+void Maneuver::set_tee(bool tee) {
+  tee_ = tee;
+}
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
@@ -724,6 +733,9 @@ std::string Maneuver::ToString() const {
 
   man_str += " | verbal_post_transition_instruction=";
   man_str += verbal_post_transition_instruction_;
+
+  man_str += " | tee=";
+  man_str += std::to_string(tee_);
 
   return man_str;
 }
