@@ -223,6 +223,9 @@ class Maneuver {
       std::string&& verbal_post_transition_instruction);
   bool HasVerbalPostTransitionInstruction() const;
 
+  bool tee() const;
+  void set_tee(bool tee);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -270,6 +273,7 @@ class Maneuver {
   std::string verbal_transition_alert_instruction_;
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
+  bool tee_;
 
   // TODO notes
 

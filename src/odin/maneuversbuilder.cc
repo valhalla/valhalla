@@ -255,8 +255,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         ++next_man;
       }
       // Do not combine
-      // if next maneuver is a fork
-      else if (next_man->fork()) {
+      // if next maneuver is a fork or a tee
+      else if (next_man->fork() || next_man->tee()) {
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -1267,7 +1267,11 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // TODO: add logic for 'T'
+  // Process 'T' intersection
+  if (IsTee(node_index, prev_edge, curr_edge)) {
+    maneuver.set_tee(true);
+    return false;
+  }
 
   std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
       trip_path_->GetCountryCode(node_index), prev_edge->GetNameList());
@@ -1338,6 +1342,32 @@ bool ManeuversBuilder::IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
 
   }
 
+  return false;
+}
+
+bool ManeuversBuilder::IsTee(int node_index, EnhancedTripPath_Edge* prev_edge,
+                             EnhancedTripPath_Edge* curr_edge) const {
+
+  auto* node = trip_path_->GetEnhancedNode(node_index);
+  // Verify only one intersecting edge
+  if (node->intersecting_edge_size() == 1) {
+    // Assign turn type
+    Turn::Type turn_type = Turn::GetType(
+        GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()));
+    // Assign intersecting turn type
+    Turn::Type xturn_type = Turn::GetType(
+        GetTurnDegree(prev_edge->end_heading(),
+                      node->intersecting_edge(0).begin_heading()));
+
+    // Determine if 'T' intersection
+    if ((turn_type == Turn::Type::kRight)
+        && (xturn_type == Turn::Type::kLeft)) {
+      return true;
+    } else if ((turn_type == Turn::Type::kLeft)
+        && (xturn_type == Turn::Type::kRight)) {
+      return true;
+    }
+  }
   return false;
 }
 
