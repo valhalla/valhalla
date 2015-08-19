@@ -50,7 +50,7 @@ constexpr float kMaxCyclingSpeed = 60.0f;
 constexpr float kDefaultUseRoadsFactor = 0.5f;
 
 // Avoid driveways
-constexpr float kDrivewayFactor = 5.0f;
+constexpr float kDrivewayFactor = 10.0f;
 
 // Weighting based on road class. These apply penalties to higher class
 // roads. These penalties are modulated by the useroads factor - further
@@ -58,10 +58,10 @@ constexpr float kDrivewayFactor = 5.0f;
 constexpr float kRoadClassWeight[] = {
     2.5f,     // Motorway
     2.0f,     // Trunk
-    1.2f,     // Primary
-    1.1f,     // Secondary
-    1.05f,    // Tertiary
-    1.0f,     // Unclassified
+    1.5f,     // Primary
+    1.25f,    // Secondary
+    1.1f,     // Tertiary
+    1.05f,    // Unclassified
     1.0f,     // Residential
     1.5f      // Service, other
 };
@@ -72,7 +72,7 @@ constexpr float kRoadClassWeight[] = {
 constexpr uint32_t kSpeedPenaltyThreshold = 40;      // 40 KPH ~ 25 MPH
 
 // How much to favor bicycle networks.
-constexpr float kBicycleNetworkFactor = 0.75f;
+constexpr float kBicycleNetworkFactor = 0.85f;
 }
 
 /**
@@ -266,9 +266,9 @@ class BicycleCost : public DynamicCost {
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kBicycle),
       trans_density_factor_{ 1.0f, 1.0f, 1.0f, 1.0f,
-                             1.0f, 1.1f, 1.2f, 1.3f,
-                             1.4f, 1.6f, 1.9f, 2.2f,
-                             2.5f, 2.8f, 3.1f, 3.5f } {
+                             1.0f, 1.0f, 1.1f, 1.1f,
+                             1.2f, 1.3f, 1.4f, 1.5f,
+                             1.6f, 1.7f, 1.8f, 2.0f } {
   // Transition penalties (similar to auto)
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
@@ -316,7 +316,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Set the speed penalty threshold and factor
   speed_penalty_threshold_ = kSpeedPenaltyThreshold +
       static_cast<uint32_t>(useroads_ * 30.0f);
-  speed_factor_ = 1.0f / static_cast<float>(speed_penalty_threshold_);
+  speed_factor_ = 1.1f / static_cast<float>(speed_penalty_threshold_);
 
   // Create speed cost table (to avoid division in costing)
   speedfactor_[0] = kSecPerHour;
@@ -409,37 +409,36 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special use cases: cycleway and footway
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + useroads_ * 0.5f);
+    factor = (0.5f + useroads_ * 0.25f);
   } else if (edge->use() == Use::kFootway) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor = 0.75f + (useroads_ * 0.5f);
+    factor = 0.65f + (useroads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike &&
              bicycletype_ == BicycleType::kMountain) {
     factor = 0.5f;
   } else if (edge->use() == Use::kDriveway) {
     // Heavily penalize driveways
     factor = kDrivewayFactor;
-  } else if (edge->cyclelane() == CycleLane::kSeparated) {
-    // On a road with a separated cycle lane. Favor more for higher useroads
-    factor = 0.5f + (1.0f - useroads_) * 0.25f;
   } else {
     // On a road - set a cost factor based on useroads factor and road
     // classification
     factor = (2.0f - useroads_) *
             kRoadClassWeight[static_cast<uint32_t>(edge->classification())];
 
-    // Favor roads where a cycle lane exists (separate lane is handled above)
+    // Add a penalty for higher speed roads
+    // (above a threshold that depends on the useroads factor)
+    if (edge->speed() > speed_penalty_threshold_) {
+      factor *= static_cast<float>(edge->speed()) * speed_factor_;
+    }
+
+    // Favor roads where a cycle lane exists
     if (edge->cyclelane() == CycleLane::kShared) {
-      factor *= 0.85f;
+      factor *= 0.9f;
     } else if (edge->cyclelane() == CycleLane::kDedicated) {
-      factor *= 0.75f;
-    } else {
-      // If no cycle lane exists, add a penalty for higher speed roads
-      // (above a threshold that depends on the useroads factor)
-      if (edge->speed() > speed_penalty_threshold_) {
-        factor *= static_cast<float>(edge->speed()) * speed_factor_;
-      }
+      factor *= 0.8f;
+    } else if (edge->cyclelane() == CycleLane::kSeparated) {
+      factor *= 0.7f;
     }
   }
 
