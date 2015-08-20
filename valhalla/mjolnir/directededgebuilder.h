@@ -99,10 +99,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_length(const uint32_t length);
 
   /**
-   * Sets the elevation factor (0-16) for the edge. TODO.
-   * @param  factor  Elevation factor.
+   * Sets the weighted grade factor (0-15) for the edge.
+   * @param  factor  Weighted grade factor.
    */
-  void set_elevation(const uint32_t factor);
+  void set_weighted_grade(const uint32_t factor);
 
   /**
    * Sets the curvature factor (0-16) for the edge. TODO.

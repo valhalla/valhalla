@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
 
   // Builds additional hierarchies based on the config file. Connections
   // (directed edges) are formed between nodes at adjacent levels.
-  HierarchyBuilder::Build(pt.get_child("mjolnir.hierarchy"));
+  HierarchyBuilder::Build(pt);
 
   // Validate the graph and add information that cannot be added until
   // full graph is formed.

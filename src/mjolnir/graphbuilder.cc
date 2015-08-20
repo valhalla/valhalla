@@ -34,6 +34,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+//how many meters to resample shape to when checking elevations
+constexpr double POSTING_INTERVAL = 60.0;
+
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the egdes that pointed to them
@@ -348,22 +351,6 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
   }
 }
 
-constexpr double POSTING_INTERVAL = 60.0;
-constexpr double MAX_ELEVATION_CHANGE = .10; //this is a 10% grade
-
-uint32_t BinElevation(float down_scale, float up_scale, bool forward){
-  /* what we do is measure the discretized amount of height loss and gain over the distance of the edge.
-   * this ratio provides an estimate of the effort required to traverse this edge. it can be used
-   * in edge costing to modulate the speed of walking or biking or perhaps fuel use in vehicles.
-   * the most extreme ratios are anything near +/-MAX_ELEVATION_CHANGE. we squeeze this into 16bits
-   * and end up weighting uphill climb doubly more as it has more impact in terms of effort required
-   *
-   * TODO: think about costing implications of weighting uphill doubly more than downhill
-   */
-  auto avg = (1.f - .5f * down_scale) *.5f + (up_scale * .5f);
-  return static_cast<uint32_t>(avg * 15.f + .5f);
-}
-
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
@@ -401,7 +388,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
   // Lots of times in a given tile we may end up accessing the same
   // shape/attributes twice we avoid doing this by caching it here
-  std::unordered_map<uint32_t, std::tuple<float, float, float, float> > geo_attribute_cache;
+  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> > geo_attribute_cache;
 
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
@@ -560,12 +547,12 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             //length
             auto length = PointLL::Length(shape);
 
-            //hilliness estimation
-            std::pair<double, double> elevation{0,0};
+            //grade estimation
+            uint32_t forward_grade = 6, reverse_grade = 6;
             if(sample && !w.tunnel()) {
               //evenly sample the shape
               std::vector<PointLL> resampled;
-              //if it was really short just do both ends
+              //if it is really short or a bridge just do both ends
               auto interval = POSTING_INTERVAL;
               if(length <= POSTING_INTERVAL || w.bridge()) {
                 resampled = {shape.front(), shape.back()};
@@ -575,32 +562,45 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
                 resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
               //get the heights at each point
               auto heights = sample->get_all(resampled);
-              //compute hilliness
-              elevation = valhalla::skadi::discretized_deltas(heights, interval, MAX_ELEVATION_CHANGE);
-
-              /*
-              auto e = (forward ? elevation : std::make_pair(elevation.second, elevation.first));
-              if(e.first > .99 && length > POSTING_INTERVAL * 3) {
+              //compute grades in both directions, valid range is between -10 and +15
+              forward_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+              std::reverse(heights.begin(), heights.end());
+              reverse_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+/*
+              if(forward_grade < 2) {
                 LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
                     " " + std::to_string(length) + (forward ? " DOWNHILL [[" : " UPHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
               }
-              else if(e.second > .99 && length > POSTING_INTERVAL * 3) {
+              else if(forward_grade > 13) {
                 LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
                     " " + std::to_string(length) + (forward ? " UPHILL [[" : " DOWNHILL [[") +
                           std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
                   "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
               }
-              */
+
+              if(reverse_grade < 2) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (!forward ? " DOWNHILL [[" : " UPHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+              else if(reverse_grade > 13) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (!forward ? " UPHILL [[" : " DOWNHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+*/
             }
 
             //TODO: curvature
-            float curvature = 0;
+            uint32_t curvature = 0;
 
             //add it in
             auto inserted = geo_attribute_cache.insert({edge_info_offset,
-              std::make_tuple(length, elevation.first, elevation.second, curvature)});
+              std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade, curvature)});
             found = inserted.first;
 
             // If the end node is in a different tile and the tile is not
@@ -619,13 +619,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, static_cast<uint32_t>(std::get<0>(found->second) + .5f),
-                        speed, use, rc, n, has_signal, restrictions, bike_network);
+          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                                     speed, use, rc, n, has_signal, restrictions, bike_network);
           DirectedEdgeBuilder& directededge = directededges.back();
           directededge.set_edgeinfo_offset(found->first);
-          //if this is against the direction of the shape we must invert the elevation
-          directededge.set_elevation(BinElevation(std::get<1>(found->second), std::get<2>(found->second), forward));
-          directededge.set_curvature(static_cast<uint32_t>(std::get<3>(found->second) + .5f));
+          //if this is against the direction of the shape we must use the second one
+          directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
+          directededge.set_curvature(std::get<3>(found->second));
 
           // Update the node's best class
           bestclass = std::min(bestclass, directededge.classification());
