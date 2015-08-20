@@ -2,7 +2,6 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 #include "mjolnir/osmpbfparser.h"
-#include "mjolnir/sequence.h"
 #include "mjolnir/osmadmin.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"

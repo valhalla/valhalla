@@ -239,7 +239,7 @@ void assign_graphids(const boost::property_tree::ptree& pt,
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else {
-    LOG_INFO("Transit db " + database + " not found.  Transit will not be added.");
+    LOG_WARN("Transit db " + database + " not found.  Transit will not be added.");
     stop_res.set_value(stats);
     return;
   }
@@ -989,7 +989,7 @@ void build(const boost::property_tree::ptree& pt,
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else {
-    LOG_INFO("Transit db " + database + " not found.  Transit will not be added.");
+    LOG_DEBUG("Transit db " + database + " not found.  Transit will not be added.");
     return;
   }
 
@@ -1044,7 +1044,7 @@ void build(const boost::property_tree::ptree& pt,
         }
       }
     }
-    LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
+    LOG_DEBUG("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
 
     // Get all scheduled departures from the stops within this tile. Record
@@ -1076,7 +1076,7 @@ void build(const boost::property_tree::ptree& pt,
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
         std::vector<Departure> departures = GetDepartures(db_handle, stop.key);
 
-        LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
+        LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures for "
           + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
 
         for (auto& dep : departures) {
@@ -1105,7 +1105,7 @@ void build(const boost::property_tree::ptree& pt,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
 
-          LOG_INFO("Add departure: " + std::to_string(td.lineid()) +
+          LOG_DEBUG("Add departure: " + std::to_string(td.lineid()) +
                        " trip key = " + std::to_string(td.tripid()) +
                        " dep time = " + std::to_string(td.departure_time()) +
                        " start_date = " + std::to_string(td.start_date()) +
@@ -1190,8 +1190,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
   std::random_shuffle(tempqueue.begin(), tempqueue.end());
   std::queue<GraphId> tilequeue(tempqueue);
-  LOG_INFO("Done creating queue of tiles: count = " +
-           std::to_string(tilequeue.size()));
 
   // First pass - find all tiles with stops. Create graphids for each stop
   // Start the threads
@@ -1225,9 +1223,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Done first pass. Total Stops = " +
-             std::to_string(all_stops.stops.size()) +
-             " tiles: " + std::to_string(all_stops.tiles.size()));
+  LOG_INFO("Finished with " + std::to_string(all_stops.stops.size()) +
+             " stops in " + std::to_string(all_stops.tiles.size()) + " tiles");
 
   if (all_stops.tiles.size() == 0) {
     return;
@@ -1276,6 +1273,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
+  LOG_INFO("Finished");
 }
 
 }

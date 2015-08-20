@@ -55,8 +55,8 @@ size_t UniqueNames::Size() const {
  * Log information about the number of unique names, size of the vector, etc.
  */
 void UniqueNames::Log() const {
-  LOG_INFO("Number of names: " + std::to_string(Size()));
-  LOG_INFO("Number of indexes: " + std::to_string(indexes_.size()));
+  LOG_DEBUG("Number of names: " + std::to_string(Size()));
+  LOG_DEBUG("Number of indexes: " + std::to_string(indexes_.size()));
 }
 
 }

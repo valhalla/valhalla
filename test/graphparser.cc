@@ -1,7 +1,7 @@
 #include "test.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/sequence.h"
+#include <valhalla/midgard/sequence.h>
 
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>

@@ -1,6 +1,5 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
-#include "mjolnir/sequence.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/idtable.h"
@@ -12,6 +11,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/sequence.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
@@ -174,7 +174,7 @@ struct graph_callback : public OSMPBF::Callback {
       }
 
       if (++osmdata_.osm_node_count % 5000000 == 0) {
-        LOG_INFO("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
+        LOG_DEBUG("Processed " + std::to_string(osmdata_.osm_node_count) + " nodes on ways");
       }
     }//if we hit the end of the nodes and didnt find it that is a problem
     else {
@@ -893,13 +893,13 @@ OSMData PBFGraphParser::Parse(const boost::property_tree::ptree& pt, const std::
   LOG_INFO("Finished");
 
   // Log some information about extra node information and names
-  LOG_INFO("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
-  LOG_INFO("Number of node exit_to = " + std::to_string(osmdata.node_exit_to.size()));
-  LOG_INFO("Number of node names = " + std::to_string(osmdata.node_name.size()));
-  LOG_INFO("Number of way refs = " + std::to_string(osmdata.node_ref.size()));
-  LOG_INFO("Ref Names:");
+  LOG_DEBUG("Number of node refs (exits) = " + std::to_string(osmdata.node_ref.size()));
+  LOG_DEBUG("Number of node exit_to = " + std::to_string(osmdata.node_exit_to.size()));
+  LOG_DEBUG("Number of node names = " + std::to_string(osmdata.node_name.size()));
+  LOG_DEBUG("Number of way refs = " + std::to_string(osmdata.node_ref.size()));
+  LOG_DEBUG("Ref Names:");
   osmdata.ref_offset_map.Log();
-  LOG_INFO("Names");
+  LOG_DEBUG("Names");
   osmdata.name_offset_map.Log();
 
   // Return OSM data

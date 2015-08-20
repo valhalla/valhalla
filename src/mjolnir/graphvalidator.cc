@@ -302,13 +302,11 @@ namespace mjolnir {
     }
     std::random_shuffle(tempqueue.begin(), tempqueue.end());
     std::queue<GraphId> tilequeue(tempqueue);
-    LOG_INFO("Done creating queue of tiles: count = " +
-             std::to_string(tilequeue.size()));
 
     // An mutex we can use to do the synchronization
     std::mutex lock;
 
-    LOG_INFO("GraphValidator - Validating signs and connectivity");
+    LOG_INFO("Validating signs and connectivity");
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();
@@ -327,7 +325,7 @@ namespace mjolnir {
       stats.add(data);
     }
     // Add up total dupcount_ and find densities
-    LOG_INFO("Validation of signs and connectivity is done");
+    LOG_INFO("Finished");
     for (uint8_t level = 0; level <= 2; level++) {
       // Print duplicates info for level
       std::vector<uint32_t> dups = stats.get_dups(level);
@@ -344,7 +342,7 @@ namespace mjolnir {
         sum += density;
       }
       float average_density = sum / stats.get_densities(level).size();
-      LOG_INFO("Average density = " + std::to_string(average_density) +
+      LOG_DEBUG("Average density = " + std::to_string(average_density) +
                " max = " + std::to_string(max_density));
     }
     stats.build_db(pt);

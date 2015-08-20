@@ -10,12 +10,15 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/logging.h>
+#include <valhalla/skadi/sample.h>
+#include <valhalla/skadi/util.h>
+
 
 #include <boost/format.hpp>
 
@@ -24,9 +27,13 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::skadi;
 using namespace valhalla::mjolnir;
 
 namespace {
+
+//how many meters to resample shape to when checking elevations
+constexpr double POSTING_INTERVAL = 60.0;
 
 // Simple structure to describe a connection between 2 levels
 struct NodeConnection {
@@ -270,7 +277,7 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-uint32_t ConnectEdges(const GraphId& basenode,
+void ConnectEdges(const GraphId& basenode,
                                      const GraphId& edgeid,
                                      std::vector<PointLL>& shape,
                                      GraphId& nodeb,
@@ -291,7 +298,6 @@ uint32_t ConnectEdges(const GraphId& basenode,
 
   // Update the end node and return the length
   nodeb = info.nodemap_[directededge->endnode().value];
-  return directededge->length();
 }
 
 
@@ -307,6 +313,25 @@ bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
   }
 }
 
+uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, const std::vector<PointLL>& shape, const float length, const bool forward) {
+  //evenly sample the shape
+  std::vector<PointLL> resampled;
+  //if it was really short just do both ends
+  auto interval = POSTING_INTERVAL;
+  if(length <= POSTING_INTERVAL) {
+    resampled = {shape.front(), shape.back()};
+    interval = length;
+  }
+  else
+    resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
+  //get the heights at each point
+  auto heights = sample->get_all(resampled);
+  if(!forward)
+    std::reverse(heights.begin(), heights.end());
+  //compute the grade valid range is between -10 and +15
+  return static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+}
+
 // Add shortcut edges (if they should exist) from the specified node
 // Should never combine 2 directed edges with different exit information so
 // no need to worry about it here.
@@ -314,7 +339,8 @@ void AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
     std::vector<DirectedEdgeBuilder>& directededges,
-    std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info) {
+    std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
+    const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Get the edge pairs for this node (if contracted)
   auto edgepairs = newnode.contract ?
       info.contractions_.find(nodea.value) : info.contractions_.end();
@@ -351,9 +377,9 @@ void AddShortcutEdges(
         && IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
 
       // Form a shortcut edge.
-      DirectedEdge oldedge = *directededge;
-      DirectedEdgeBuilder newedge = static_cast<DirectedEdgeBuilder&>(oldedge);
-      uint32_t length = newedge.length();
+      //TODO: this seems really dangerous, we need a virtual destructor in directededge
+      //then we need to do dynamic_cast<const DirectedEdgeBuilder&>(*directededge);
+      DirectedEdgeBuilder newedge = static_cast<const DirectedEdgeBuilder&>(*directededge);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -403,30 +429,32 @@ void AddShortcutEdges(
 
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level).
-        length += ConnectEdges(basenode, next_edge_id, shape,
-                               nodeb, opp_local_idx, info);
+        ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
       }
 
       // Add the edge info. Use length to match edge in case multiple edges
       // exist between the 2 nodes. Test whether this shape is forward or
       // reverse (in case an existing edge exists).
       // TODO - what should the wayId be?
-      bool added = true;
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb,
-                                                          0, shape, names, added);
+      bool forward = true;
+      float length = PointLL::Length(shape);
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(static_cast<uint32_t>(length + .5f),
+                                                          nodea, nodeb, -1, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
       // the direction is forward otherwise the prior edge was the one stored
       // in the forward direction
-      newedge.set_forward(added);
+      newedge.set_forward(forward);
 
       // Shortcut edge has the opp_local_idx of the last directed edge in
       // the shortcut chain
       newedge.set_opp_local_idx(opp_local_idx);
 
-      // Update the length and end node
+      // Update the length, elevation, curvature and end node
       newedge.set_length(length);
+      newedge.set_weighted_grade(sample ? GetGrade(sample, shape, length, forward) : 6); //6 is flat
+      newedge.set_curvature(0); //TODO:
       newedge.set_endnode(nodeb);
 
       if (newedge.exitsign()) {
@@ -459,7 +487,8 @@ if (nodea.level() == 0) {
 // Form tiles in the new level.
 void FormTilesInNewLevel(
     const TileHierarchy::TileLevel& base_level,
-    const TileHierarchy::TileLevel& new_level, hierarchy_info& info) {
+    const TileHierarchy::TileLevel& new_level, hierarchy_info& info,
+    const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Iterate through tiled nodes in the new level
   bool added = false;
   uint32_t tileid = 0;
@@ -510,7 +539,7 @@ void FormTilesInNewLevel(
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       std::vector<DirectedEdgeBuilder> directededges;
       AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                         directededges, shortcuts, info);
+                         directededges, shortcuts, info, sample);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -590,7 +619,7 @@ void FormTilesInNewLevel(
     // Store the new tile
     GraphId tile(tileid, level, 0);
     tilebuilder.StoreTileData(info.graphreader_.GetTileHierarchy(), tile);
-    LOG_INFO((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
+    LOG_DEBUG((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
          tile % tilebuilder.size()).str());
 
     // Increment tileid
@@ -713,7 +742,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   // Write the new file
   tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs);
 
-  LOG_INFO((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
+  LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());
 }
 
@@ -809,12 +838,20 @@ namespace mjolnir {
 // edges are on lower hierarchy level.
 void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
-  GraphReader graphreader(pt);
-  const auto& tile_hierarchy = graphreader.GetTileHierarchy();
-  if (graphreader.GetTileHierarchy().levels().size() < 2)
+  //TODO: thread this. would need to make sure we dont make shortcuts
+  //across tile boundaries so that we are only messing with one tile
+  //in one thread at a time
+  hierarchy_info info{0,0,{pt.get_child("mjolnir.hierarchy")}};
+  const auto& tile_hierarchy = info.graphreader_.GetTileHierarchy();
+  if (info.graphreader_.GetTileHierarchy().levels().size() < 2)
     throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
-  hierarchy_info info{0,0,{pt}};
+  // Crack open some elevation data if its there
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
+  std::unique_ptr<const skadi::sample> sample;
+  if(elevation)
+    sample.reset(new skadi::sample(*elevation));
+
   auto base_level = tile_hierarchy.levels().rbegin();
   auto new_level = base_level;
   new_level++;
@@ -835,17 +872,18 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
     // Get the nodes that exist in the new level
     GetNodesInNewLevel(base_level->second, new_level->second, info);
-    LOG_INFO((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
+    LOG_DEBUG((boost::format("Can contract %1% nodes out of %2% nodes") % info.contractcount_ % info.nodemap_.size()).str());
 
     // Form all tiles in new level
-    FormTilesInNewLevel(base_level->second, new_level->second, info);
-    LOG_INFO((boost::format("Created %1% shortcuts") % info.shortcutcount_).str());
+    FormTilesInNewLevel(base_level->second, new_level->second, info, sample);
+    LOG_DEBUG((boost::format("Created %1% shortcuts") % info.shortcutcount_).str());
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
     // connections to base tiles. That way all access to old tiles is
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
+    LOG_INFO("Finished");
   }
 }
 
