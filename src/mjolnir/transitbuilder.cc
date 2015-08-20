@@ -11,6 +11,7 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 #include <boost/filesystem/operations.hpp>
+#include <boost/foreach.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphtile.h>
@@ -33,12 +34,13 @@ struct Stop {
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
   PointLL  ll;
+  bool wheelchair_boarding;
   std::string onestop_id;
   std::string id;
-  std::string code;
   std::string name;
   std::string desc;
   std::string zoneid;
+  std::string timezone;
 };
 
 struct Departure {
@@ -145,102 +147,72 @@ struct builder_stats {
 };
 
 // Get stops within a tile's bounding box
-std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2<PointLL>& aabb) {
-  // Form query -- for now ignore egress points
-
-  std::string sql = "SELECT stop_key, stop_id, onestop_id, osm_way_id,";
-  sql += "stop_code, stop_name,stop_desc, zone_id, location_type, ";
-  sql += "parent_station_key,stop_lat, stop_lon from stops where location_type <> 2 and ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) ";
-  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'stops' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
+std::vector<Stop> GetStops(const boost::property_tree::ptree& pt, const AABB2<PointLL>& aabb) {
 
   std::vector<Stop> stops;
-  sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-  if (ret == SQLITE_OK) {
-    uint32_t result = sqlite3_step(stmt);
-    while (result == SQLITE_ROW) {
-      Stop stop;
-      stop.key    = sqlite3_column_int(stmt, 0);
-      stop.id     = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 1))));
-      stop.onestop_id = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 2))));
-      stop.way_id = sqlite3_column_int64(stmt, 3);
-      stop.code   = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 4))) : "";
-      stop.name   = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 5)))) : "";
-      stop.desc   = (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
-      stop.zoneid = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 7)))) : "";
-      stop.type   = sqlite3_column_int(stmt, 8);
-      stop.parent = sqlite3_column_int(stmt, 9);
-      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 11)),
-                  static_cast<float>(sqlite3_column_double(stmt, 10)));
 
-      stops.emplace_back(std::move(stop));
+  for (const auto& s : pt.get_child("stops"))
+  {
 
-      // TODO - perhaps keep a map of parent/child relations
-
-      result = sqlite3_step(stmt);
+    float lon, lat;
+    uint32_t index = 0;
+    for(auto& coords : s.second.get_child("geometry.coordinates")) {
+      if (index) lat = coords.second.get_value<float>();
+      else lon = coords.second.get_value<float>();
+      index++;
     }
+
+    if (!aabb.Contains(PointLL(lon,lat)))
+      continue;
+
+    Stop stop;
+    stop.name = s.second.get<std::string>("name", "");
+    stop.ll.Set(lon,lat);
+
+    std::cout << stop.name << std::endl;
+
+    stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
+
+    stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
+    stop.onestop_id = s.second.get<std::string>("tags.osm_way_id", "");
+    stop.desc = s.second.get<std::string>("tags.stop_desc", "");
+    stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
+    stop.timezone = s.second.get<std::string>("timezone", "");
+
+    //TODO: get these from transitland
+    stop.type = 0; //not a parent.
+    stop.parent = 0;
+
+    stops.emplace_back(std::move(stop));
   }
 
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
-  }
+
   return stops;
+
 }
 
 // Lock on queue access since we are using it in different threads. No need
 // to lock graphreader since no threads are writing tiles yet.
-void assign_graphids(const boost::property_tree::ptree& pt,
+void assign_graphids(const boost::property_tree::ptree& config_pt,
            boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<stop_results>& stop_res) {
   // Construct the transit database
   stop_results stats{};
-  std::string dir = pt.get<std::string>("transit_dir");
-  std::string db_name = pt.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
+
+  std::string dir = config_pt.get<std::string>("transit_dir");
+  std::string transit_json = config_pt.get<std::string>("transit_json");
+  std::string transit_file = dir + "/" +  transit_json;
+
+  boost::property_tree::ptree pt;
 
   // Make sure it exists
-  sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret;
-    char* err_msg = nullptr;
-    std::string sql;
-    ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                          SQLITE_OPEN_READONLY, NULL);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
-      return;
-    }
-    LOG_INFO("SpatiaLite loaded as an extension");
+  if (boost::filesystem::exists(transit_file)) {
+    boost::property_tree::read_json(transit_file, pt);
+    LOG_INFO("Opened json file " + transit_file + " for transit.");
   }
   else {
-    LOG_INFO("Transit db " + database + " not found.  Transit will not be added.");
-    stop_res.set_value(stats);
+    LOG_INFO("Transit json file " + transit_file + " not found.  Transit will not be added.");
     return;
   }
 
@@ -265,7 +237,8 @@ void assign_graphids(const boost::property_tree::ptree& pt,
 
     // Get stops within the tile. If any exist, assign GraphIds and add to
     // the map/list
-    std::vector<Stop> stops = GetStops(db_handle, tiles.TileBounds(id));
+    std::vector<Stop> stops = GetStops(pt, tiles.TileBounds(id));
+
     if (stops.size() > 0) {
       LOG_DEBUG("Tile has " + std::to_string(stops.size()) + " stops");
 
@@ -287,9 +260,6 @@ void assign_graphids(const boost::property_tree::ptree& pt,
       stats.tiles.push_back(tile_id);
     }
   }
-
-  if (db_handle)
-    sqlite3_close(db_handle);
 
   // Send back the statistics
   stop_res.set_value(stats);
@@ -951,45 +921,24 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const boost::property_tree::ptree& pt,
+void build(const boost::property_tree::ptree& config_pt,
            boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::vector<Stop>& stops,
            std::mutex& lock, std::promise<builder_stats>& results) {
-  // Construct the transit database
-  std::string dir = pt.get<std::string>("transit_dir");
-  std::string db_name = pt.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
+
+  std::string dir = config_pt.get<std::string>("transit_dir");
+  std::string transit_json = config_pt.get<std::string>("transit_json");
+  std::string transit_file = dir + "/" +  transit_json;
+
+  boost::property_tree::ptree pt;
 
   // Make sure it exists
-  sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret;
-    char* err_msg = nullptr;
-    std::string sql;
-    ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                          SQLITE_OPEN_READONLY, NULL);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
-      return;
-    }
-    LOG_INFO("SpatiaLite loaded as an extension");
+  if (boost::filesystem::exists(transit_file)) {
+    boost::property_tree::read_json(transit_file, pt);
+    LOG_INFO("Opened json file " + transit_file + " for transit.");
   }
   else {
-    LOG_INFO("Transit db " + database + " not found.  Transit will not be added.");
+    LOG_INFO("Transit json file " + transit_file + " not found.  Transit will not be added.");
     return;
   }
 
@@ -1074,7 +1023,7 @@ void build(const boost::property_tree::ptree& pt,
         }
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-        std::vector<Departure> departures = GetDepartures(db_handle, stop.key);
+        std::vector<Departure> departures;// = GetDepartures(db_handle, stop.key);
 
         LOG_INFO("Got " + std::to_string(departures.size()) + " departures for "
           + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
@@ -1115,7 +1064,7 @@ void build(const boost::property_tree::ptree& pt,
         }
 
         // Get any transfers from this stop
-        AddTransfers(db_handle, stop.key, tilebuilder);
+ //       AddTransfers(db_handle, stop.key, tilebuilder);
 
         // Store stop information in TransitStops
         // TODO - tl_stop_id
@@ -1133,28 +1082,25 @@ void build(const boost::property_tree::ptree& pt,
     }
 
     // Add routes to the tile. Get map of route types.
-    std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(db_handle,
-                              route_keys, tilebuilder);
+//    std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(db_handle,
+ //                             route_keys, tilebuilder);
 
     // Add trips to the tile. Get map of shape keys.
-    std::unordered_map<uint32_t, uint32_t> shape_keys = AddTrips(db_handle,
-                              trip_keys, tilebuilder);
+ //   std::unordered_map<uint32_t, uint32_t> shape_keys = AddTrips(db_handle,
+ //                             trip_keys, tilebuilder);
 
     // Add calendar exceptions (using service Id)
-    AddCalendar(db_handle, service_keys, tilebuilder);
+//    AddCalendar(db_handle, service_keys, tilebuilder);
 
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(db_handle, tilebuilder, stop_edge_map, stops, connection_edges,
-               stop_indexes, route_types);
+  //  AddToGraph(db_handle, tilebuilder, stop_edge_map, stops, connection_edges,
+  //             stop_indexes, route_types);
 
     // Write the new file
     lock.lock();
     tilebuilder.StoreTileData(tile_hierarchy, tile_id);
     lock.unlock();
   }
-
-  if (db_handle)
-    sqlite3_close(db_handle);
 
   // Send back the statistics
   results.set_value(stats);
