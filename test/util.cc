@@ -1,29 +1,37 @@
 #include "test.h"
 #include "skadi/util.h"
+
+#include <valhalla/midgard/util.h>
 using namespace valhalla;
 
 namespace {
 
-  void deltas() {
+  void grade() {
+    //we'll do a series of hundred percent grades up and down
+    auto down_grade = -100.0;
+    auto down_weight = skadi::energy_weighting(down_grade);
+    auto up_grade = 100.0;
+    auto up_weight = skadi::energy_weighting(up_grade);
+    auto answer = (down_grade * down_weight + up_grade * up_weight) / (down_weight + up_weight);
 
-    auto d = skadi::discretized_deltas({0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, 1.0, 6);
-    if(d.first != (5.0/5.0)/6.0)
-      throw std::runtime_error("Descent wasn't right");
-    if(d.second != (5.0/5.0)/6.0)
-      throw std::runtime_error("Ascent wasn't right");
-    d = skadi::discretized_deltas({0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, 1.0, 0.9);
-    if(d.first != 1.0)
-      throw std::runtime_error("Descent should have been clipped");
-    if(d.second != 1.0)
-      throw std::runtime_error("Ascent should have been clipped");
+    //check it
+    auto grade = skadi::weighted_grade({0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, 1.0);
+    if(!midgard::equal(grade, answer))
+      throw std::runtime_error("Weighted grade was not right");
+
+    //check another
+    answer = (down_grade * down_weight * 3 + up_grade * up_weight) / (down_weight * 3 + up_weight);
+    grade = skadi::weighted_grade({0, 1, 0, -1, -2}, 1.0);
+    if(!midgard::equal(grade, answer))
+      throw std::runtime_error("Weighted grade was not right");
   }
 
 }
 
 int main() {
-  test::suite suite("sample");
+  test::suite suite("util");
 
-  suite.test(TEST_CASE(deltas));
+  suite.test(TEST_CASE(grade));
 
   return suite.tear_down();
 }

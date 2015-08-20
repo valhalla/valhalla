@@ -1,23 +1,32 @@
 #ifndef __VALHALLA_UTIL_H__
 #define __VALHALLA_UTIL_H__
 
-#include <utility>
 #include <vector>
+#include <functional>
 
 namespace valhalla {
   namespace skadi {
 
-    /*
-     * Returns the positive descent and positive ascent as a ratio of the max grade
-     *
-     * @param    heights  the height reading at each sampled location
-     * @param    interval_distance  the distance between each sampled location
-     * @param    maximum_grade  the maximum grade. if a computed grade is larger than
-     *           this value its ratio will be returned as 1
-     * @return   .first  = the descent over distance clamped to max grade and given as a ratio of same
-     *           .second = the ascent over distance clamped to max grade and given as a ratio of same
+    /* Clamps the grade to between -10 and +15. Grades greater than 0 are weighted
+     * using 1 + g / 7. This gives (grade,weight) of (0,1), (6,1.9), (15,3.2).
+     * Grades less than 0 are weighted using 1 + g / 17, which gives (grade,weight)
+     * of (0,1), (-6,.6), (-10,.4).
      */
-    std::pair<double, double> discretized_deltas(const std::vector<double>& heights, const double interval_distance, const double maximum_grade);
+    double energy_weighting(double& grade);
+
+    /*
+     * Returns the normalized grade using the weighting method provided. Each sections
+     * grade is computed. The provided weighting function is applied to each grade. The
+     * weightings are then normalized. The result is approximate most important grade
+     * for the given stretch of heights.
+     *
+     * @param    heights            the height reading at each sampled location
+     * @param    interval_distance  the distance between each sampled location
+     * @param    grade_weighting    the function which provides the weight that should be applied to a specific grade
+     *                              the grade is pass by reference so you may clamp it to a range if you like
+     * @return   the approximate grade on a scale from -100 to +100
+     */
+    double weighted_grade(const std::vector<double>& heights, const double interval_distance, const std::function<double (double&)>& grade_weighting = energy_weighting);
 
   }
 }
