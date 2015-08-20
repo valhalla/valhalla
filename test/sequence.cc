@@ -50,12 +50,33 @@ void test_read_write() {
   read_nodes(file_name, count);
 }
 
+void test_iterator() {
+  sequence<osm_node> sequence("nodes.nd", false, 512);
+  auto i = sequence.begin();
+  auto j = i + 1;
+  if(j.position() != 1)
+    throw std::runtime_error("Plus operator wasn't right");
+
+  ++i;
+  if(i.position() != 1)
+    throw std::runtime_error("Pre-increment operator wasn't right");
+
+  auto k = i - 1;
+  if(k.position() != 0)
+    throw std::runtime_error("Minus operator wasn't right");
+
+  --i;
+  if(i.position() != 0)
+    throw std::runtime_error("Pre-decrement operator wasn't right");
+}
+
 
 int main() {
-  test::suite suite("logging");
+  test::suite suite("sequence");
 
-  //check file logging
   suite.test(TEST_CASE(test_read_write));
+
+  suite.test(TEST_CASE(test_iterator));
 
   return suite.tear_down();
 }
