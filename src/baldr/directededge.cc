@@ -7,7 +7,7 @@ namespace baldr {
 // Default constructor
 DirectedEdge::DirectedEdge()
     : dataoffsets_{},
-      geoattributes_{},
+      geoattributes_{0,6}, //grade of 6 means flat
       forwardaccess_{},
       reverseaccess_{},
       speed_(0),
@@ -66,9 +66,9 @@ uint32_t DirectedEdge::length() const {
   return geoattributes_.length;
 }
 
-// Gets the elevation factor (0-15).
-uint32_t DirectedEdge::elevation() const {
-  return geoattributes_.elevation;
+// Gets the weighted grade factor (0-15).
+uint32_t DirectedEdge::weighted_grade() const {
+  return geoattributes_.weighted_grade;
 }
 
 // Get the road curvature factor. (0-15).
@@ -342,8 +342,8 @@ const uint64_t DirectedEdge::internal_version() {
   // GeoAttributes
   de.geoattributes_.length = ~de.geoattributes_.length;
   boost::hash_combine(seed,ffs(de.geoattributes_.length+1)-1);
-  de.geoattributes_.elevation = ~de.geoattributes_.elevation;
-  boost::hash_combine(seed,ffs(de.geoattributes_.elevation+1)-1);
+  de.geoattributes_.weighted_grade = ~de.geoattributes_.weighted_grade;
+  boost::hash_combine(seed,ffs(de.geoattributes_.weighted_grade+1)-1);
   de.geoattributes_.curvature = ~de.geoattributes_.curvature;
   boost::hash_combine(seed,ffs(de.geoattributes_.curvature+1)-1);
 

@@ -40,8 +40,8 @@ constexpr uint32_t kMaxShortcutsFromNode = 7;
 // Maximum stop impact
 constexpr uint32_t kMaxStopImpact = 7;
 
-// Maximum elevation and curvature factors.
-constexpr uint32_t kMaxElevationFactor = 15;
+// Maximum grade and curvature factors.
+constexpr uint32_t kMaxGradeFactor = 15;
 constexpr uint32_t kMaxCurvatureFactor = 15;
 
 /**
@@ -111,10 +111,11 @@ class DirectedEdge {
   uint32_t length() const;
 
   /**
-   * Get the elevation factor.  TODO
-   * @return  Returns the elevation factor (0-15).
+   * Get the weighted grade factor
+   * @return  Returns the weighted grade factor (0-15).
+   *          where 0 is a 10% grade and 15 is 15%
    */
-  uint32_t elevation() const;
+  uint32_t weighted_grade() const;
 
   /**
    * Get the road curvature factor. TODO
@@ -441,11 +442,11 @@ class DirectedEdge {
   };
   DataOffsets dataoffsets_;
 
-  // Geometric attributes: length, elevation factor, curvature factor.
+  // Geometric attributes: length, weighted grade, curvature factor.
   struct GeoAttributes {
-    uint32_t length        : 24;  // Length in meters
-    uint32_t elevation     :  4;  // Elevation factor
-    uint32_t curvature     :  4;  // Curvature factor
+    uint32_t length             : 24;  // Length in meters
+    uint32_t weighted_grade     :  4;  // Weighted estimate of grade
+    uint32_t curvature          :  4;  // Curvature factor
   };
   GeoAttributes geoattributes_;
 
