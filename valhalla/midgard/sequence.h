@@ -269,7 +269,7 @@ class sequence {
       parent->flush();
       auto other = *this;
       other.index += offset;
-      return *this;
+      return other;
     }
     iterator& operator--() {
       parent->flush();
@@ -291,7 +291,7 @@ class sequence {
       parent->flush();
       auto other = *this;
       other.index -= offset;
-      return *this;
+      return other;
     }
     bool operator==(const iterator& other) const {
       return parent == other.parent && index == other.index;
