@@ -116,13 +116,13 @@ enum class Use : uint8_t {
   kCuldesac = 9,          // Cul-de-sac (edge that forms a loop and is only
                           // connected at one node to another edge.
 
-  // Pedestrian specific uses
-  kFootway = 25,
-  kSteps   = 26,           // Stairs
-
   // Bicycle specific uses
   kCycleway = 20,          // Dedicated bicycle path
   kMountainBike = 21,      // Mountain bike trail
+
+  // Pedestrian specific uses
+  kFootway = 25,
+  kSteps   = 26,           // Stairs
 
   // Other...
   kOther = 40,
