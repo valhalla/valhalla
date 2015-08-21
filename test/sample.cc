@@ -9,7 +9,7 @@ namespace {
 
 void no_data() {
   //check the no data value
-  skadi::sample s("test/data/");
+  skadi::sample s("test/data/this_is_not_a_directory");
   if(s.get_no_data_value() != -32768)
     throw std::logic_error("No data value should be -32768");
 

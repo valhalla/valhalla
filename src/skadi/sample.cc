@@ -27,9 +27,15 @@ namespace {
 
   std::list<std::string> get_files(const std::string& root_dir) {
     std::list<std::string> files;
-    for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i)
-      if (!is_directory(i->path()))
-        files.push_back(i->path().string());
+    try {
+      for (boost::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i)
+        if (!is_directory(i->path()))
+          files.push_back(i->path().string());
+    }//couldn't get data
+    catch(...) {
+      LOG_WARN(root_dir + " has no elevation tiles");
+      files.clear();
+    }
     return files;
   }
 
