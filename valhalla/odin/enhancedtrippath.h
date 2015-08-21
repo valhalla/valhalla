@@ -36,6 +36,8 @@ class EnhancedTripPath : public TripPath {
 
   std::string GetCountryCode(int node_index);
 
+  std::string GetStateCode(int node_index);
+
 };
 
 class EnhancedTripPath_Edge : public TripPath_Edge {

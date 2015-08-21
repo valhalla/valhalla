@@ -4,7 +4,10 @@
 #include <valhalla/baldr/turn.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
-#include "valhalla/baldr/streetnames_factory.h"
+#include <valhalla/baldr/streetnames_factory.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/baldr/verbal_text_formatter_us.h>
+#include <valhalla/baldr/verbal_text_formatter_factory.h>
 #include <proto/tripdirections.pb.h>
 #include <proto/directions_options.pb.h>
 #include <valhalla/odin/maneuversbuilder.h>
@@ -833,6 +836,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       maneuver.set_begin_street_names(std::move(curr_edge_names));
     }
   }
+
+  // Set the verbal text formatter
+  maneuver.set_verbal_formatter(
+      VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
+                                         trip_path_->GetStateCode(node_index)));
 
   // Set the maneuver type
   SetManeuverType(maneuver);
