@@ -76,6 +76,7 @@ void TestGetDaysFromPivotDate() {
   TryGetDaysFromPivotDate("20140102", 1);
   TryGetDaysFromPivotDate("19990101", 0);
   TryGetDaysFromPivotDate("20150506", 490);
+  TryGetDaysFromPivotDate("2015-05-06", 490);
 
   TryGetDaysFromPivotDate("20140101T07:01", 0);
   TryGetDaysFromPivotDate("20140102T15:00", 1);
@@ -89,6 +90,7 @@ void TestDOW() {
   TryGetDOW("20140102", kThursday);
   TryGetDOW("19990101", kDOWNone);
   TryGetDOW("20150508", kFriday);
+  TryGetDOW("2015-05-08", kFriday);
 
   TryGetDOW("20140101T07:01", kWednesday);
   TryGetDOW("20140102T15:00", kThursday);
@@ -101,6 +103,7 @@ void TestDuration() {
 
   TryGetDuration("20140101",30,"2014-01-01T00:00");
   TryGetDuration("20140102",60,"2014-01-02T00:01");
+  TryGetDuration("2014-01-02",60,"2014-01-02T00:01");
   TryGetDuration("19990101",89, "");
   TryGetDuration("20140101T07:01",61,"2014-01-01T07:02");
   TryGetDuration("20140102T15:00",61,"2014-01-02T15:01");
