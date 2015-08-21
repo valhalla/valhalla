@@ -132,6 +132,30 @@ void TestFormLeadingOhTtsString() {
   TryFormLeadingOhTtsString("State Highway 0", "State Highway 0");
 }
 
+void TryFormat(string source, string expected) {
+  VerbalTextFormatterTest formatter_test("US", "PA");
+  string tts = formatter_test.Format(source);
+  if (tts != expected) {
+    throw std::runtime_error(
+        "Incorrect Format - EXPECTED: " + expected + "  |  FORMED: " + tts);
+  }
+}
+
+void TestFormat() {
+  TryFormat("PA 23", "PA 23");
+  TryFormat("PA 283", "PA 2 83");
+  TryFormat("PA 100", "PA 1 hundred");
+  TryFormat("US 202", "US 2 o2");
+  TryFormat("PA 1080", "PA 10 80");
+  TryFormat("PA 40001", "PA 4 00 o1");
+  TryFormat("PA 4007", "PA 40 o7");
+  TryFormat("SR 1021", "SR 10 21");
+  TryFormat("SR-1021", "SR-10 21");
+  TryFormat("Sr 1021", "Sr 10 21");
+  TryFormat("T609", "T6 o9");
+  TryFormat("US 422 Business Alternate", "US 4 22 Business Alternate");
+}
+
 }
 
 int main() {
@@ -148,6 +172,9 @@ int main() {
 
   // FormLeadingOhTtsString
   suite.test(TEST_CASE(TestFormLeadingOhTtsString));
+
+  // Format
+  suite.test(TEST_CASE(TestFormat));
 
   return suite.tear_down();
 }
