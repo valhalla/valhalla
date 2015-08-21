@@ -21,7 +21,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 $DIR/install_service_deps.sh &
 
 #build sync
-for dep in midgard baldr skadi sif mjolnir; do
+for dep in midgard baldr sif; do
 	pushd deps/$dep
 	./autogen.sh
 	./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
@@ -30,3 +30,14 @@ for dep in midgard baldr skadi sif mjolnir; do
 	popd
 done
 wait
+
+#build sync
+for dep in skadi mjolnir; do
+        pushd deps/$dep
+        ./autogen.sh
+        ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
+        make -j4
+        sudo make install
+        popd
+done
+
