@@ -68,7 +68,10 @@ nobase_include_HEADERS = \
 	valhalla/baldr/transitroute.h \
 	valhalla/baldr/transitstop.h \
 	valhalla/baldr/transittransfer.h \
-	valhalla/baldr/transittrip.h
+	valhalla/baldr/transittrip.h \
+	valhalla/baldr/verbal_text_formatter.h \
+	valhalla/baldr/verbal_text_formatter_us.h \
+	valhalla/baldr/verbal_text_formatter_factory.h
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
@@ -98,7 +101,10 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/transitroute.cc \
 	src/baldr/transitstop.cc \
 	src/baldr/transittransfer.cc \
-	src/baldr/transittrip.cc 
+	src/baldr/transittrip.cc \
+	src/baldr/verbal_text_formatter.cc \
+	src/baldr/verbal_text_formatter_us.cc \
+	src/baldr/verbal_text_formatter_factory.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
 
@@ -125,7 +131,8 @@ check_PROGRAMS = \
 	test/streetnames \
 	test/streetnames_us \
 	test/streetnames_factory \
-	test/json
+	test/json \
+	test/verbal_text_formatter
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -171,6 +178,9 @@ test_streetnames_factory_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_ba
 test_json_SOURCES = test/json.cc test/test.cc
 test_json_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
+test_verbal_text_formatter_SOURCES = test/verbal_text_formatter.cc test/test.cc
+test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)

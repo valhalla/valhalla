@@ -6,6 +6,8 @@
 #include <memory>
 
 #include <valhalla/baldr/streetname.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/baldr/verbal_text_formatter_us.h>
 
 namespace valhalla {
 namespace baldr {
@@ -18,7 +20,9 @@ class StreetNames : public std::list<std::unique_ptr<StreetName>> {
 
   virtual ~StreetNames();
 
-  std::string ToString(uint32_t max_count = 0, std::string delim = "/") const;
+  std::string ToString(
+      uint32_t max_count = 0, std::string delim = "/",
+      const VerbalTextFormatter* verbal_formatter = nullptr) const;
 
   std::string ToParameterString() const;
 

@@ -2,6 +2,8 @@
 #include <vector>
 
 #include "baldr/streetnames.h"
+#include "baldr/verbal_text_formatter.h"
+#include "baldr/verbal_text_formatter_us.h"
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
@@ -20,7 +22,9 @@ StreetNames::StreetNames(const std::vector<std::string>& names) {
 StreetNames::~StreetNames() {
 }
 
-std::string StreetNames::ToString(uint32_t max_count, std::string delim) const {
+std::string StreetNames::ToString(
+    uint32_t max_count, std::string delim,
+    const VerbalTextFormatter* verbal_formatter) const {
   std::string name_string;
   uint32_t count = 0;
   if (this->empty())
@@ -33,7 +37,10 @@ std::string StreetNames::ToString(uint32_t max_count, std::string delim) const {
     if (!name_string.empty()) {
       name_string += delim;
     }
-    name_string += street_name->value();
+    name_string +=
+        (verbal_formatter) ?
+            verbal_formatter->Format(street_name->value()) :
+            street_name->value();
     ++count;
   }
   return name_string;
