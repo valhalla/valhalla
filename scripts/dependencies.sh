@@ -38,7 +38,7 @@ done
 wait
 
 #build sync
-for dep in skadi mjolinr loki odin thor; do
+for dep in skadi mjolnir loki odin thor; do
         pushd $dep
         ./autogen.sh
         ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE
