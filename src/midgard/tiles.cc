@@ -134,9 +134,9 @@ AABB2<coord_t> Tiles<coord_t>::TileBounds(const int32_t tileid) const {
 template <class coord_t>
 AABB2<coord_t> Tiles<coord_t>::TileBounds(const int32_t col,
                                           const int32_t row) const {
-  float basey = ((float) row * tilesize_) + tilebounds_.miny();
-  float basex = ((float) col * tilesize_) + tilebounds_.minx();
-  return AABB2<coord_t>(basey, basex, basey + tilesize_, basex + tilesize_);
+  float basex = tilebounds_.minx() + ((float) col * tilesize_);
+  float basey = tilebounds_.miny() + ((float) row * tilesize_);
+  return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
 }
 
 // Get the center of the specified tile.
