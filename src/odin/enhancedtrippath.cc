@@ -93,10 +93,14 @@ bool EnhancedTripPath_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
   return ((prev2curr_turn_degree > 314) || (prev2curr_turn_degree < 46));
 }
 
+bool EnhancedTripPath_Edge::IsWiderForward(uint32_t prev2curr_turn_degree) const {
+  return ((prev2curr_turn_degree > 304) || (prev2curr_turn_degree < 56));
+}
+
 bool EnhancedTripPath_Edge::IsStraightest(
     uint32_t prev2curr_turn_degree,
     uint32_t straightest_xedge_turn_degree) const {
-  if (IsForward(prev2curr_turn_degree)) {
+  if (IsWiderForward(prev2curr_turn_degree)) {
     int path_xedge_turn_degree_delta = std::abs(
         static_cast<int>(prev2curr_turn_degree)
             - static_cast<int>(straightest_xedge_turn_degree));

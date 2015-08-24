@@ -50,6 +50,8 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsForward(uint32_t prev2curr_turn_degree) const;
 
+  bool IsWiderForward(uint32_t prev2curr_turn_degree) const;
+
   bool IsStraightest(uint32_t prev2curr_turn_degree,
                      uint32_t straightest_xedge_turn_degree) const;
 
