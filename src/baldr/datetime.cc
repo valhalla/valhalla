@@ -27,8 +27,11 @@ uint32_t days_from_pivot_date(const std::string& date_time) {
     std::string dt = date_time;
     dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
     e_date = boost::gregorian::date_from_iso_string(dt);
-  }
-  else
+  } else if (date_time.find("-") != std::string::npos) {
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    e_date = boost::gregorian::from_undelimited_string(dt);
+  } else
     e_date = boost::gregorian::from_undelimited_string(date_time);
 
   if (e_date <= pivot_date_)
@@ -214,7 +217,11 @@ uint32_t day_of_week_mask(const std::string& date_time) {
     dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
     date = boost::gregorian::date_from_iso_string(dt);
   }
-  else
+  else if (date_time.find("-") != std::string::npos) {
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    date = boost::gregorian::from_undelimited_string(dt);
+  } else
     date = boost::gregorian::from_undelimited_string(date_time);
 
   if (date < pivot_date_)
@@ -277,7 +284,12 @@ std::string get_duration(const std::string& date_time, const uint32_t seconds) {
       start = boost::posix_time::from_iso_string(dt);
       date = boost::gregorian::date_from_iso_string(dt);
     }
-    else {
+    else if (date_time.find("-") != std::string::npos) {
+      std::string dt = date_time;
+      dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+      start = boost::posix_time::from_iso_string(dt + "T0000");
+      date = boost::gregorian::from_undelimited_string(dt);
+    } else {
       //No time on date.  Make it midnight.
       start = boost::posix_time::from_iso_string(date_time + "T0000");
       date = boost::gregorian::from_undelimited_string(date_time);
