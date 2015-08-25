@@ -302,6 +302,10 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
         partial_length += closest_edge_info->shape()[i].Distance(closest_edge_info->shape()[i + 1]);
     partial_length += closest_edge_info->shape()[std::get<2>(closest_point)].Distance(std::get<0>(closest_point));
     float length_ratio = static_cast<float>(partial_length / static_cast<double>(closest_edge->length()));
+    // The length ratio at this point could be slightly greater than 1.0
+    // because of floating point imprecisions during the partial_length
+    // computation, so we clip it to 1.0.
+    length_ratio = std::min(1.0f, length_ratio);
     if(!closest_edge->forward())
       length_ratio = 1.f - length_ratio;
     //side of street
