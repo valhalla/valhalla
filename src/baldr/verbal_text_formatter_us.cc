@@ -19,10 +19,10 @@ VerbalTextFormatterUs::~VerbalTextFormatterUs() {
 std::string VerbalTextFormatterUs::Format(const std::string& text) const {
   std::string verbal_text;
 
-  verbal_text = VerbalTextFormatter::Format(text);
-
   // TODO: US specific cases
-  verbal_text = FormInterstateTts(verbal_text);
+  verbal_text = FormInterstateTts(text);
+
+  verbal_text = VerbalTextFormatter::Format(verbal_text);
 
   return verbal_text;
 }
