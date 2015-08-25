@@ -10,7 +10,8 @@ namespace valhalla {
 namespace baldr {
 
 const std::string kInterstatePattern = "(\\bI)([ -])(H)?(\\d{1,3})";
-const std::regex kInterstateRegex(kInterstatePattern);
+const std::regex kInterstateRegex(kInterstatePattern,
+                                  std::regex_constants::icase);
 const std::string kInterstateOutPattern = "Interstate $3$4";
 
 const std::string kUsHighwayPattern = "(\\bUS)([ -])(\\d{1,3})";

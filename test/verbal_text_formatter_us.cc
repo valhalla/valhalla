@@ -47,6 +47,7 @@ void TestFormInterstateTtsString() {
   TryFormInterstateTtsString("I 495 West", "Interstate 495 West");
   TryFormInterstateTtsString("I-695 West", "Interstate 695 West");
   TryFormInterstateTtsString("I-895", "Interstate 895");
+  TryFormInterstateTtsString("i-205 East", "Interstate 205 East");
   TryFormInterstateTtsString("WI 129", "WI 129");
 }
 
@@ -88,6 +89,7 @@ void TestFormat() {
   TryFormat("I 495 West", "Interstate 4 95 West");
   TryFormat("I-695 West", "Interstate 6 95 West");
   TryFormat("I-895", "Interstate 8 95");
+  TryFormat("i-205 East", "Interstate 2 o5 East");
 
   TryFormat("US 1", "U.S. 1");
   TryFormat("US 22", "U.S. 22");
