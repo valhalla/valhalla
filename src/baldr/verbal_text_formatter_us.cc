@@ -21,6 +21,7 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
 
   // TODO: US specific cases
   verbal_text = FormInterstateTts(text);
+  verbal_text = FormUsHighwayTts(verbal_text);
 
   verbal_text = VerbalTextFormatter::Format(verbal_text);
 
@@ -32,6 +33,14 @@ std::string VerbalTextFormatterUs::FormInterstateTts(
 
   std::string tts;
   tts = std::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
+  return tts.empty() ? source : tts;
+}
+
+std::string VerbalTextFormatterUs::FormUsHighwayTts(
+    const std::string& source) const {
+
+  std::string tts;
+  tts = std::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
   return tts.empty() ? source : tts;
 }
 

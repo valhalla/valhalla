@@ -21,6 +21,10 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::FormInterstateTts(source);
   }
 
+  std::string FormUsHighwayTts(const std::string& source) const{
+    return VerbalTextFormatterUs::FormUsHighwayTts(source);
+  }
+
 };
 
 void TryFormInterstateTtsString(string source, string expected) {
@@ -28,7 +32,7 @@ void TryFormInterstateTtsString(string source, string expected) {
   string tts = formatter_test.FormInterstateTts(source);
   if (tts != expected) {
     throw std::runtime_error(
-        "Incorrect FormLeadingOhTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+        "Incorrect FormInterstateTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -44,6 +48,24 @@ void TestFormInterstateTtsString() {
   TryFormInterstateTtsString("I-695 West", "Interstate 695 West");
   TryFormInterstateTtsString("I-895", "Interstate 895");
   TryFormInterstateTtsString("WI 129", "WI 129");
+}
+
+void TryFormUsHighwayTtsString(string source, string expected) {
+  VerbalTextFormatterUsTest formatter_test("US", "PA");
+  string tts = formatter_test.FormUsHighwayTts(source);
+  if (tts != expected) {
+    throw std::runtime_error(
+        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+  }
+}
+
+void TestFormUsHighwayTtsString() {
+  TryFormUsHighwayTtsString("US 1", "U.S. 1");
+  TryFormUsHighwayTtsString("US 22", "U.S. 22");
+  TryFormUsHighwayTtsString("US 220 North", "U.S. 220 North");
+  TryFormUsHighwayTtsString("US-220 South", "U.S. 220 South");
+  TryFormUsHighwayTtsString("Us 422 Business Alternate", "U.S. 422 Business Alternate");
+  TryFormUsHighwayTtsString("Us-522", "U.S. 522");
 }
 
 void TryFormat(string source, string expected) {
@@ -67,10 +89,17 @@ void TestFormat() {
   TryFormat("I-695 West", "Interstate 6 95 West");
   TryFormat("I-895", "Interstate 8 95");
 
+  TryFormat("US 1", "U.S. 1");
+  TryFormat("US 22", "U.S. 22");
+  TryFormat("US 220 North", "U.S. 2 20 North");
+  TryFormat("US-220 South", "U.S. 2 20 South");
+  TryFormat("US 202", "U.S. 2 o2");
+  TryFormat("Us 422 Business Alternate", "U.S. 4 22 Business Alternate");
+  TryFormat("Us-522", "U.S. 5 22");
+
   TryFormat("PA 23", "PA 23");
   TryFormat("PA 283", "PA 2 83");
   TryFormat("PA 100", "PA 1 hundred");
-  TryFormat("US 202", "US 2 o2");
   TryFormat("PA 1080", "PA 10 80");
   TryFormat("PA 40001", "PA 4 00 o1");
   TryFormat("PA 4007", "PA 40 o7");
@@ -78,7 +107,6 @@ void TestFormat() {
   TryFormat("SR-1021", "SR-10 21");
   TryFormat("Sr 1021", "Sr 10 21");
   TryFormat("T609", "T6 o9");
-  TryFormat("US 422 Business Alternate", "US 4 22 Business Alternate");
 }
 
 }
@@ -88,6 +116,9 @@ int main() {
 
   // FormInterstateTts
   suite.test(TEST_CASE(TestFormInterstateTtsString));
+
+  // FormUsHighwayTtsString
+  suite.test(TEST_CASE(TestFormUsHighwayTtsString));
 
   // Format
   suite.test(TEST_CASE(TestFormat));

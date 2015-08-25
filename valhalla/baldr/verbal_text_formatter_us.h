@@ -3,12 +3,20 @@
 
 #include <valhalla/baldr/verbal_text_formatter.h>
 
+#include <regex>
+#include <string>
+
 namespace valhalla {
 namespace baldr {
 
 const std::string kInterstatePattern = "(\\bI)([ -])(H)?(\\d{1,3})";
 const std::regex kInterstateRegex(kInterstatePattern);
 const std::string kInterstateOutPattern = "Interstate $3$4";
+
+const std::string kUsHighwayPattern = "(\\bUS)([ -])(\\d{1,3})";
+const std::regex kUsHighwayRegex(kUsHighwayPattern,
+                                 std::regex_constants::icase);
+const std::string kUsHighwayOutPattern = "U.S. $3";
 
 class VerbalTextFormatterUs : public VerbalTextFormatter {
  public:
@@ -22,6 +30,8 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
  protected:
 
   std::string FormInterstateTts(const std::string& source) const;
+
+  std::string FormUsHighwayTts(const std::string& source) const;
 
 };
 
