@@ -39,6 +39,8 @@ for y in $(seq ${min_y} 1 ${max_y}); do
 done | while read d; do mkdir -p $d; done
 
 #get the data
+expected=$((($max_x - $min_x + 1)*($max_y - $min_y + 1)))
+echo "extracting $expected elevation tiles"
 for x in $(seq ${min_x} 1 ${max_x}); do
         for y in $(seq ${min_y} 1 ${max_y}); do
 		file=$(python -c "print '%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x}))")
@@ -48,18 +50,20 @@ for x in $(seq ${min_x} 1 ${max_x}); do
 			echo "http://s3.amazonaws.com/mapzen.valhalla/elevation/${dir}/${file}.gz ${dest}/${dir}/${file}"
 		fi
 	done
-done | parallel -C ' ' -P ${para} "curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | gunzip > {2}"
+done | parallel --progress -C ' ' -P ${para} "curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | gunzip > {2}"
 
-#check them
+#check they are all there
+echo "checking all files exist"
 total=$(find ${dest} | grep -cF hgt)
-expected=$((($max_x - $min_x + 1)*($max_y - $min_y + 1)))
 if [ ${total} -ne ${expected} ]; then
 	echo "try again, $((${expected} - ${total})) files are missing"
 	exit 1
 fi
 
-corrupted=$(stat -c %s $(find . | grep -F hgt) | grep -vcF $((3601*3601*2)))
-if [ ${corrupted} -ne 0 ]; then
-	echo "try again, ${corrupted} files are corrupt"
+#check their sizes
+echo "checking file sizes"
+found=$(find ${dest} -type f -size $((3601*3601*2))c | wc -l)
+if [ ${found} -ne ${expected} ]; then
+	echo "try again, $((${expected} - ${found})) files are corrupt"
 	exit 1
 fi
