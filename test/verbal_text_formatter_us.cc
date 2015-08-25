@@ -41,6 +41,7 @@ void TestFormInterstateTtsString() {
   TryFormInterstateTtsString("I 95 South", "Interstate 95 South");
   TryFormInterstateTtsString("I 270 Spur", "Interstate 270 Spur");
   TryFormInterstateTtsString("I 495 West", "Interstate 495 West");
+  TryFormInterstateTtsString("WI 129", "WI 129");
 }
 
 void TryFormat(string source, string expected) {
