@@ -12,7 +12,9 @@ DynamicCost::DynamicCost(const boost::property_tree::ptree& pt,
       not_thru_distance_(5000.0f) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
-  for (uint32_t level = 0; level < 8; level++) {
+  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) /
+      sizeof(kDefaultMaxUpTransitions[0]);
+  for (uint32_t level = 0; level < n_levels; level++) {
     hierarchy_limits_.emplace_back(HierarchyLimits(pt, level));
   }
 }
