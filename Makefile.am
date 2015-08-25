@@ -132,7 +132,8 @@ check_PROGRAMS = \
 	test/streetnames_us \
 	test/streetnames_factory \
 	test/json \
-	test/verbal_text_formatter
+	test/verbal_text_formatter \
+	test/verbal_text_formatter_us
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -181,6 +182,9 @@ test_json_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_b
 test_verbal_text_formatter_SOURCES = test/verbal_text_formatter.cc test/test.cc
 test_verbal_text_formatter_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_SOURCES = test/verbal_text_formatter_us.cc test/test.cc
+test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)
