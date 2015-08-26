@@ -7,8 +7,7 @@
 namespace valhalla {
 namespace baldr {
 
-const std::string kNumberSplitPattern = "(\\D*)(\\d+)(\\D*)";
-const std::regex kNumberSplitRegex(kNumberSplitPattern);
+const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
 
 class VerbalTextFormatter {
  public:

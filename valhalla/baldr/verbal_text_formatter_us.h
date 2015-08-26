@@ -9,29 +9,23 @@
 namespace valhalla {
 namespace baldr {
 
-const std::string kInterstatePattern = "(\\bI)([ -])(H)?(\\d{1,3})";
-const std::regex kInterstateRegex(kInterstatePattern,
+const std::regex kInterstateRegex("(\\bI)([ -])(H)?(\\d{1,3})",
                                   std::regex_constants::icase);
 const std::string kInterstateOutPattern = "Interstate $3$4";
 
-const std::string kUsHighwayPattern = "(\\bUS)([ -])(\\d{1,3})";
-const std::regex kUsHighwayRegex(kUsHighwayPattern,
+const std::regex kUsHighwayRegex("(\\bUS)([ -])(\\d{1,3})",
                                  std::regex_constants::icase);
 const std::string kUsHighwayOutPattern = "U.S. $3";
 
-const std::string kThousandPattern = "(^| )([1-9]{1,2})(000)($| )";
-const std::regex kThousandRegex(kThousandPattern);
+const std::regex kThousandRegex("(^| )([1-9]{1,2})(000)($| )");
 const std::string kThousandOutPattern = "$1$2 thousand$4";
 
-const std::string kHundredPattern = "(^| )([1-9]{1,2})(00)($| )";
-const std::regex kHundredRegex(kHundredPattern);
+const std::regex kHundredRegex("(^| )([1-9]{1,2})(00)($| )");
 const std::string kHundredOutPattern = "$1$2 hundred$4";
 
-const std::string kUsNumberSplitPattern = "(\\D*)(\\d+)(st|nd|rd|th)?(\\D*)";
-const std::regex kUsNumberSplitRegex(kUsNumberSplitPattern);
+const std::regex kUsNumberSplitRegex("(\\D*)(\\d+)(st|nd|rd|th)?(\\D*)");
 
-const std::string kLeadingOhPattern = "( )(0)([1-9])";
-const std::regex kLeadingOhRegex(kLeadingOhPattern);
+const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
 class VerbalTextFormatterUs : public VerbalTextFormatter {
