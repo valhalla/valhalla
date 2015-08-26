@@ -45,10 +45,8 @@ struct Stop {
 };
 
 struct Departure {
-  uint32_t key;
   uint32_t orig_stop;
   uint32_t dest_stop;
-  uint32_t trip;
   uint32_t route;
   uint32_t blockid;
   uint32_t service;
@@ -156,10 +154,8 @@ std::vector<Stop> GetStops(const std::string& file) {
   std::vector<Stop> stops;
 
   // Make sure it exists
-  if (boost::filesystem::exists(file)) {
+  if (boost::filesystem::exists(file))
     boost::property_tree::read_json(file, pt);
-    LOG_INFO("Opened json file " + file + " for transit.");
-  }
   else
     return stops;
 
@@ -168,8 +164,13 @@ std::vector<Stop> GetStops(const std::string& file) {
     Stop stop;
     stop.key = s.second.get<uint32_t>("key", 0);
     stop.name = s.second.get<std::string>("name", "");
-    stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
 
+    if (stop.key == 0) {
+      LOG_ERROR("Key missing for stop (" + stop.name + ") in " + file);
+      continue;
+    }
+
+    stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
     float lon, lat;
     uint32_t index = 0;
     for(auto& coords : s.second.get_child("geometry.coordinates")) {
@@ -180,7 +181,7 @@ std::vector<Stop> GetStops(const std::string& file) {
     stop.ll.Set(lon,lat);
 
     stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
-    stop.onestop_id = s.second.get<std::string>("tags.osm_way_id", "");
+    stop.onestop_id = s.second.get<std::string>("tags.onestop_id", "");
     stop.desc = s.second.get<std::string>("tags.stop_desc", "");
     stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
     stop.timezone = s.second.get<std::string>("timezone", "");
@@ -277,10 +278,8 @@ std::vector<Departure> GetDepartures(const std::string& file,
   std::vector<Departure> departures;
 
   // Make sure it exists
-  if (boost::filesystem::exists(file)) {
+  if (boost::filesystem::exists(file))
     boost::property_tree::read_json(file, pt);
-    LOG_INFO("Opened json file " + file + " for transit.");
-  }
   else
     return departures;
 
@@ -294,13 +293,19 @@ std::vector<Departure> GetDepartures(const std::string& file,
         continue;
 
       Departure dep;
-
       dep.orig_stop = origin_key;
       dep.dest_stop = stop_pairs.second.get<uint32_t>("destination_key", 0);
       dep.route = stop_pairs.second.get<uint32_t>("route_key", 0);
 
       //TODO
       dep.shapeid = 0;
+      dep.blockid = 0;
+      dep.dow = 0;
+      dep.service = 0;
+      dep.has_subtractions = false;
+      dep.short_name = "";
+      //wheelchair_accessible
+      //short_name
 
       dep.dep_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("origin_departure_time", ""));
       dep.arr_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("destination_arrival_time", ""));
@@ -336,25 +341,23 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
   boost::property_tree::ptree pt;
 
   // Make sure it exists
-  if (boost::filesystem::exists(file)) {
+  if (boost::filesystem::exists(file))
     boost::property_tree::read_json(file, pt);
-    LOG_INFO("Opened json file " + file + " for transit.");
-  }
   else
     return route_types;
+
+  uint32_t n = 0;
   try {
     // Iterate through all route keys
-    uint32_t n = 0;
     for (const auto& key : keys) {
       // Skip (do not need): route_id, route_color, route_text_color, and
       // route_url
       for (const auto& routes : pt.get_child("routes")) {
 
-        const uint32_t route_key = routes.second.get<uint32_t>("key", 0);
-        if (key != route_key)
+        uint32_t routeid = routes.second.get<uint32_t>("key", 0);
+        if (key != routeid)
           continue;
 
-        uint32_t routeid  = route_key;
         std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
         std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
         std::string desc = routes.second.get<std::string>("tags.route_desc", "");
@@ -394,15 +397,13 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         n++;
 
         // Route type - need this to store in edge?
-        route_types[route_key] = type;
+        route_types[routeid] = type;
 
       }
     }
   }
-  catch (std::exception &e)
-  {
+  catch (std::exception &e) {
     LOG_INFO("Exception in json file " + file + " for transit.");
-
   }
 
   LOG_DEBUG("Added " + std::to_string(n) + " routes");
@@ -1013,7 +1014,7 @@ void build(const boost::property_tree::ptree& config_pt,
 
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
-          trip_keys.insert(dep.trip);
+          //trip_keys.insert(dep.trip);
           service_keys.insert(dep.service);
 
           // Identify unique route and arrival stop pairs - associate to a
@@ -1033,12 +1034,11 @@ void build(const boost::property_tree::ptree& config_pt,
           // Form transit departures
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          TransitDeparture td(lineid, dep.trip, dep.route,
+          TransitDeparture td(lineid, dep.route,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
 
           LOG_DEBUG("Add departure: " + std::to_string(td.lineid()) +
-                       " trip key = " + std::to_string(td.tripid()) +
                        " dep time = " + std::to_string(td.departure_time()) +
                        " start_date = " + std::to_string(td.start_date()) +
                        " end date = " + std::to_string(td.end_date()));
