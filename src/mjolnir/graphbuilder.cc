@@ -13,6 +13,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
@@ -21,6 +22,8 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/skadi/sample.h>
+#include <valhalla/skadi/util.h>
 
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/edgeinfobuilder.h"
@@ -30,6 +33,9 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+
+//how many meters to resample shape to when checking elevations
+constexpr double POSTING_INTERVAL = 60.0;
 
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
@@ -348,6 +354,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
 void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_file,
     const std::string& nodes_file, const std::string& edges_file,
     const TileHierarchy& hierarchy, const OSMData& osmdata,
+    const std::unique_ptr<const valhalla::skadi::sample>& sample,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
@@ -379,6 +386,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   bool added = false;
   DataQuality stats;
 
+  // Lots of times in a given tile we may end up accessing the same
+  // shape/attributes twice we avoid doing this by caching it here
+  std::unordered_map<uint32_t, std::tuple<uint32_t, uint32_t, uint32_t, uint32_t> > geo_attribute_cache;
+
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
   for(; tile_start != tile_end; ++tile_start) {
@@ -394,6 +405,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
       auto node_itr = nodes[tile_start->second];
+      // to avoid realloc we guess how many edges there might be in a given tile
+      geo_attribute_cache.clear();
+      geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end ? nodes.end() - node_itr :
+        std::next(tile_start)->second - tile_start->second));
+
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
@@ -423,10 +439,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           // Get the edge and way
           const Edge& edge = edge_pair.first;
           const OSMWay w = *ways[edge.wayindex_];
-
-          // Get the shape for the edge and compute its length
-          auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-          uint32_t length = static_cast<uint32_t>(PointLL::Length(shape) + .5f);
 
           // Determine orientation along the edge (forward or reverse between
           // the 2 nodes). Check for edge error.
@@ -512,14 +524,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           if ((bike_network & kMcn) || (w.bike_network() & kMcn))
             use = Use::kMountainBike;
 
-          // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, length,
-                        speed, use, rc, n, has_signal, restrictions, bike_network);
-          DirectedEdgeBuilder& directededge = directededges.back();
-
-          // Update the node's best class
-          bestclass = std::min(bestclass, directededge.classification());
-
           // Check for updated ref from relations.
           std::string ref;
           auto iter = osmdata.way_ref.find(w.way_id());
@@ -528,13 +532,103 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               ref = GraphBuilder::GetRef(osmdata.ref_offset_map.name(w.ref_index()),iter->second);
           }
 
-          // Add edge info to the tile and set the offset in the directed edge
-          uint32_t edge_info_offset = graphtile.AddEdgeInfo(
+          // Get the shape for the edge and compute its length
+          uint32_t edge_info_offset;
+          auto found = geo_attribute_cache.cend();
+          if(!graphtile.HasEdgeInfo(edge_pair.second, (*nodes[source]).graph_id, (*nodes[target]).graph_id, edge_info_offset)) {
+            //add the info
+            auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+            edge_info_offset = graphtile.AddEdgeInfo(
               edge_pair.second, (*nodes[source]).graph_id,
               (*nodes[target]).graph_id, w.way_id(), shape,
               w.GetNames(ref, osmdata.ref_offset_map, osmdata.name_offset_map),
               added);
-          directededge.set_edgeinfo_offset(edge_info_offset);
+
+            //length
+            auto length = PointLL::Length(shape);
+
+            //grade estimation
+            uint32_t forward_grade = 6, reverse_grade = 6;
+            if(sample && !w.tunnel()) {
+              //evenly sample the shape
+              std::vector<PointLL> resampled;
+              //if it is really short or a bridge just do both ends
+              auto interval = POSTING_INTERVAL;
+              if(length <= POSTING_INTERVAL || w.bridge()) {
+                resampled = {shape.front(), shape.back()};
+                interval = length;
+              }
+              else
+                resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
+              //get the heights at each point
+              auto heights = sample->get_all(resampled);
+              //compute grades in both directions, valid range is between -10 and +15
+              forward_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+              std::reverse(heights.begin(), heights.end());
+              reverse_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+/*
+              if(forward_grade < 2) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (forward ? " DOWNHILL [[" : " UPHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+              else if(forward_grade > 13) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (forward ? " UPHILL [[" : " DOWNHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+
+              if(reverse_grade < 2) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (!forward ? " DOWNHILL [[" : " UPHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+              else if(reverse_grade > 13) {
+                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
+                    " " + std::to_string(length) + (!forward ? " UPHILL [[" : " DOWNHILL [[") +
+                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
+                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
+              }
+*/
+            }
+
+            //TODO: curvature
+            uint32_t curvature = 0;
+
+            //add it in
+            auto inserted = geo_attribute_cache.insert({edge_info_offset,
+              std::make_tuple(static_cast<uint32_t>(length + .5), forward_grade, reverse_grade, curvature)});
+            found = inserted.first;
+
+            // If the end node is in a different tile and the tile is not
+            // a neighboring tile then check for possible shape intersection with
+            // empty tiles
+            GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
+            if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2))
+              CheckForIntersectingTiles(tileid1, tileid2, tiling, shape, stats);
+          }//now we have the edge info offset
+          else {
+            found = geo_attribute_cache.find(edge_info_offset);
+          }
+          //this cant happen
+          if(found == geo_attribute_cache.cend())
+            throw std::runtime_error("GeoAttributes cached object should be there!");
+
+
+          // Add a directed edge and get a reference to it
+          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                                     speed, use, rc, n, has_signal, restrictions, bike_network);
+          DirectedEdgeBuilder& directededge = directededges.back();
+          directededge.set_edgeinfo_offset(found->first);
+          //if this is against the direction of the shape we must use the second one
+          directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
+          directededge.set_curvature(std::get<3>(found->second));
+
+          // Update the node's best class
+          bestclass = std::min(bestclass, directededge.classification());
 
           // TODO - update logic so we limit the CreateExitSignInfoList calls
           // Any exits for this directed edge? is auto and oneway?
@@ -561,15 +655,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             flipped.set_localedgeidx(n);
             directededges.emplace_back();
           }*/
-
-          // If the end node is in a different tile and the tile is not
-          // a neighboring tile then check for possible shape intersection with
-          // empty tiles
-          GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
-          if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2)) {
-            CheckForIntersectingTiles(tileid1, tileid2, tiling,
-                     shape, stats);
-          }
 
           // Increment the directed edge index within the tile
           idx++;
@@ -603,7 +688,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      LOG_INFO((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
+      LOG_DEBUG((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
@@ -620,7 +705,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& ways_file, const std::string& way_nodes_file,
   const std::string& nodes_file, const std::string& edges_file,
-  const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats) {
+  const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
+  const std::unique_ptr<const valhalla::skadi::sample>& sample) {
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
@@ -636,7 +722,6 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   std::map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
 
   // Atomically pass around stats info
-  LOG_INFO(std::to_string(tiles.size()) + " tiles");
   for (size_t i = 0; i < threads.size(); ++i) {
     // Figure out how many this thread will work on (either ceiling or floor)
     size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
@@ -648,7 +733,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
                       std::ref(results[i]))
     );
   }
@@ -678,11 +763,11 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   for (auto& empty_tile : stats.intersected_tiles) {
     if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
       GraphTileBuilder graphtile;
-      LOG_INFO("Add empty tile for: " + std::to_string(empty_tile.tileid()));
+      LOG_DEBUG("Add empty tile for: " + std::to_string(empty_tile.tileid()));
       graphtile.StoreTileData(tile_hierarchy, empty_tile);
     }
   }
-  LOG_INFO("Added " + std::to_string(stats.intersected_tiles.size()) +
+  LOG_DEBUG("Added " + std::to_string(stats.intersected_tiles.size()) +
            " empty, intersected tiles");
 }
 
@@ -696,9 +781,9 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
     const std::string& ways_file, const std::string& way_nodes_file) {
   std::string nodes_file = "nodes.bin";
   std::string edges_file = "edges.bin";
-  TileHierarchy tile_hierarchy(pt.get_child("hierarchy"));
+  TileHierarchy tile_hierarchy(pt.get_child("mjolnir.hierarchy"));
   unsigned int threads = std::max(static_cast<unsigned int>(1),
-                                  pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+                                  pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   const auto& tl = tile_hierarchy.levels().rbegin();
   uint8_t level = tl->second.level;
 
@@ -727,9 +812,15 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt, const OSMData& o
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc), stats);
 
+  // Crack open some elevation data if its there
+  boost::optional<std::string> elevation = pt.get_optional<std::string>("additional_data.elevation");
+  std::unique_ptr<const skadi::sample> sample;
+  if(elevation)
+    sample.reset(new skadi::sample(*elevation));
+
   // Build tiles at the local level. Form connected graph from nodes and edges.
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file,
-                  edges_file, tiles, tile_hierarchy, stats);
+                  edges_file, tiles, tile_hierarchy, stats, sample);
 
   stats.LogStatistics();
 }

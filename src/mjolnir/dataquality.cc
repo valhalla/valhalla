@@ -61,15 +61,15 @@ void DataQuality::AddIntersectedTile(const baldr::GraphId& tileid) {
 
 // Logs statistics and issues
 void DataQuality::LogStatistics() const {
-  LOG_INFO("Node Count = " + std::to_string(nodecount));
-  LOG_INFO("Directed Edge Count = " + std::to_string(directededge_count));
-  LOG_INFO("Simple Restriction Count = " + std::to_string(simplerestrictions));
-  LOG_INFO("Timed  Restriction Count = " + std::to_string(timedrestrictions));
-  LOG_INFO("Cul-de-Sac Count = " + std::to_string(culdesaccount));
-  LOG_INFO("Node edge count histogram:");
+  LOG_DEBUG("Node Count = " + std::to_string(nodecount));
+  LOG_DEBUG("Directed Edge Count = " + std::to_string(directededge_count));
+  LOG_DEBUG("Simple Restriction Count = " + std::to_string(simplerestrictions));
+  LOG_DEBUG("Timed  Restriction Count = " + std::to_string(timedrestrictions));
+  LOG_DEBUG("Cul-de-Sac Count = " + std::to_string(culdesaccount));
+  LOG_DEBUG("Node edge count histogram:");
   for (uint32_t i = 0; i < 128; i++) {
     if (node_counts[i] > 0) {
-      LOG_INFO(std::to_string(i) + ": " + std::to_string(node_counts[i]));
+      LOG_DEBUG(std::to_string(i) + ": " + std::to_string(node_counts[i]));
     }
   }
 }

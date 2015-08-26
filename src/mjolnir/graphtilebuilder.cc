@@ -485,6 +485,17 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
   }
 }
 
+bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
+                     const baldr::GraphId& nodeb, uint32_t& edge_info_offset) {
+  auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+  auto existing_edge_offset_item = edge_offset_map_.find(edge_tuple_item);
+  if (existing_edge_offset_item != edge_offset_map_.cend()) {
+    edge_info_offset = existing_edge_offset_item->second;
+    return true;
+  }
+  return false;
+}
+
 // Add edge info
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,

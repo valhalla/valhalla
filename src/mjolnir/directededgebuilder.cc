@@ -143,17 +143,17 @@ void DirectedEdgeBuilder::set_length(const uint32_t length) {
   }
 }
 
-// Sets the elevation factor (0-16) for the edge. TODO.
-void DirectedEdgeBuilder::set_elevation(const uint32_t factor) {
-  if (factor > kMaxElevationFactor) {
-    LOG_WARN("Exceeding max. elevation factor: " + std::to_string(factor));
-    geoattributes_.elevation = 0;
+// Sets the weighted_grade factor (0-15) for the edge.
+void DirectedEdgeBuilder::set_weighted_grade(const uint32_t factor) {
+  if (factor > kMaxGradeFactor) {
+    LOG_WARN("Exceeding max. weighted grade factor: " + std::to_string(factor));
+    geoattributes_.weighted_grade = 6;
   } else {
-    geoattributes_.elevation = factor;
+    geoattributes_.weighted_grade = factor;
   }
 }
 
-// Sets the curvature factor (0-16) for the edge. TODO.
+// Sets the curvature factor (0-15) for the edge.
 void DirectedEdgeBuilder::set_curvature(const uint32_t factor) {
   if (factor > kMaxCurvatureFactor) {
     LOG_WARN("Exceeding max. curvature factor: " + std::to_string(factor));
