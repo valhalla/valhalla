@@ -39,6 +39,10 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
  protected:
 
+  std::string ProcessNumberSplitMatch(const std::smatch& m) const override;
+
+  std::string FormNumberSplitTts(const std::string& source) const override;
+
   std::string FormInterstateTts(const std::string& source) const;
 
   std::string FormUsHighwayTts(const std::string& source) const;
@@ -46,10 +50,6 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
   std::string FormThousandTts(const std::string& source) const;
 
   std::string FormHundredTts(const std::string& source) const;
-
-  std::string ProcessNumberSplitMatch(const std::smatch& m) const override;
-
-  std::string FormNumberSplitTts(const std::string& source) const override;
 
   std::string FormLeadingOhTts(const std::string& source) const;
 };

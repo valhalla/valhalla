@@ -30,37 +30,6 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
   return verbal_text;
 }
 
-std::string VerbalTextFormatterUs::FormInterstateTts(
-    const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
-  return tts.empty() ? source : tts;
-}
-
-std::string VerbalTextFormatterUs::FormUsHighwayTts(
-    const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
-  return tts.empty() ? source : tts;
-}
-
-std::string VerbalTextFormatterUs::FormThousandTts(
-    const std::string& source) const {
-  std::string tts;
-  tts = std::regex_replace(source, kThousandRegex, kThousandOutPattern);
-  return tts.empty() ? source : tts;
-}
-
-std::string VerbalTextFormatterUs::FormHundredTts(
-    const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kHundredRegex, kHundredOutPattern);
-  return tts.empty() ? source : tts;
-}
-
 std::string VerbalTextFormatterUs::ProcessNumberSplitMatch(
     const std::smatch& m) const {
   std::string tts;
@@ -97,6 +66,37 @@ std::string VerbalTextFormatterUs::FormNumberSplitTts(
       end_it; it != end_it; ++it) {
     tts += ProcessNumberSplitMatch(*it);
   }
+  return tts.empty() ? source : tts;
+}
+
+std::string VerbalTextFormatterUs::FormInterstateTts(
+    const std::string& source) const {
+
+  std::string tts;
+  tts = std::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
+  return tts.empty() ? source : tts;
+}
+
+std::string VerbalTextFormatterUs::FormUsHighwayTts(
+    const std::string& source) const {
+
+  std::string tts;
+  tts = std::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
+  return tts.empty() ? source : tts;
+}
+
+std::string VerbalTextFormatterUs::FormThousandTts(
+    const std::string& source) const {
+  std::string tts;
+  tts = std::regex_replace(source, kThousandRegex, kThousandOutPattern);
+  return tts.empty() ? source : tts;
+}
+
+std::string VerbalTextFormatterUs::FormHundredTts(
+    const std::string& source) const {
+
+  std::string tts;
+  tts = std::regex_replace(source, kHundredRegex, kHundredOutPattern);
   return tts.empty() ? source : tts;
 }
 
