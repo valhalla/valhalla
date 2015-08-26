@@ -359,9 +359,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     std::map<GraphId, size_t>::const_iterator tile_end,
     std::promise<DataQuality>& result) {
 
-  std::string thread_id = static_cast<const std::ostringstream&>(std::ostringstream() << std::this_thread::get_id()).str();
-  LOG_INFO("Thread " + thread_id + " started");
-
   sequence<OSMWay> ways(ways_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   sequence<Edge> edges(edges_file, false);
@@ -688,12 +685,12 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       graphtile.StoreTileData(hierarchy, tile_start->first);
 
       // Made a tile
-      LOG_DEBUG((boost::format("Thread %1% wrote tile %2%: %3% bytes") % thread_id % tile_start->first % graphtile.size()).str());
+      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.size()).str());
     }// Whatever happens in Vegas..
     catch(std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      LOG_ERROR((boost::format("Thread %1% failed tile %2%: %3%") % thread_id % tile_start->first % e.what()).str());
+      LOG_ERROR((boost::format("Failed tile %1%: %2%") % tile_start->first % e.what()).str());
       return;
     }
   }
