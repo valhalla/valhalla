@@ -277,7 +277,7 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-void ConnectEdges(const GraphId& basenode,
+uint32_t ConnectEdges(const GraphId& basenode,
                                      const GraphId& edgeid,
                                      std::vector<PointLL>& shape,
                                      GraphId& nodeb,
@@ -298,6 +298,7 @@ void ConnectEdges(const GraphId& basenode,
 
   // Update the end node and return the length
   nodeb = info.nodemap_[directededge->endnode().value];
+  return directededge->length();
 }
 
 
@@ -342,13 +343,11 @@ void AddShortcutEdges(
     std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Get the edge pairs for this node (if contracted)
-  auto edgepairs = newnode.contract ?
-      info.contractions_.find(nodea.value) : info.contractions_.end();
+  auto edgepairs = newnode.contract ? info.contractions_.find(nodea.value) : info.contractions_.end();
 
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
-  GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(),
-                       baseni->edge_index());
+  GraphId base_edge_id(newnode.basenode.tileid(), newnode.basenode.level(), baseni->edge_index());
   for (uint32_t i = 0, n = baseni->edge_count(); i < n; i++, base_edge_id++) {
     // Skip if > road class cutoff or a transition edge or shortcut in
     // the base level. Note that only downward transitions exist at this
@@ -380,6 +379,7 @@ void AddShortcutEdges(
       //TODO: this seems really dangerous, we need a virtual destructor in directededge
       //then we need to do dynamic_cast<const DirectedEdgeBuilder&>(*directededge);
       DirectedEdgeBuilder newedge = static_cast<const DirectedEdgeBuilder&>(*directededge);
+      uint32_t length = newedge.length();
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -429,7 +429,7 @@ void AddShortcutEdges(
 
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level).
-        ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
+        length += ConnectEdges(basenode, next_edge_id, shape, nodeb, opp_local_idx, info);
       }
 
       // Add the edge info. Use length to match edge in case multiple edges
@@ -437,9 +437,7 @@ void AddShortcutEdges(
       // reverse (in case an existing edge exists).
       // TODO - what should the wayId be?
       bool forward = true;
-      float length = PointLL::Length(shape);
-      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(static_cast<uint32_t>(length + .5f),
-                                                          nodea, nodeb, -1, shape, names, forward);
+      uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(length, nodea, nodeb, -1, shape, names, forward);
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
