@@ -111,6 +111,10 @@ void TestFormNumberSplitTtsString() {
   TryFormNumberSplitTtsString("123456, 123456, 123456", "12 34 56, 12 34 56, 12 34 56");
   TryFormNumberSplitTtsString("County Road 00-122", "County Road 00-1 22");
   TryFormNumberSplitTtsString("Road 0110", "Road 01 10");
+  TryFormNumberSplitTtsString("101st Street", "101st Street");
+  TryFormNumberSplitTtsString("102nd Street", "102nd Street");
+  TryFormNumberSplitTtsString("103rd Street", "103rd Street");
+  TryFormNumberSplitTtsString("104th Street", "104th Street");
 }
 
 void TryFormLeadingOhTtsString(string source, string expected) {

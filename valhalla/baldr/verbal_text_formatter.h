@@ -15,7 +15,7 @@ const std::string kHundredPattern = "(^| )([1-9]{1,2})(00)($| )";
 const std::regex kHundredRegex(kHundredPattern);
 const std::string kHundredOutPattern = "$1$2 hundred$4";
 
-const std::string kNumberSplitPattern = "(\\D*)(\\d+)(\\D*)";
+const std::string kNumberSplitPattern = "(\\D*)(\\d+)(st|nd|rd|th)?(\\D*)";
 const std::regex kNumberSplitRegex(kNumberSplitPattern);
 
 const std::string kLeadingOhPattern = "( )(0)([1-9])";

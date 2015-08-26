@@ -50,17 +50,22 @@ std::string VerbalTextFormatter::ProcessNumberSplitMatch(
     tts += m[1].str();
   }
 
-  std::string num = m[2].str();
-  const size_t step = 2;
-  const char space = ' ';
-  for (size_t i = (num.size() % 2 == 0) ? step : (step - 1); i < num.size();
-      i += step + 1) {
-    num.insert(num.begin() + i, space);
-  }
-  tts += num;
-
   if (m[3].matched) {
+    tts += m[2].str();
     tts += m[3].str();
+  } else {
+    std::string num = m[2].str();
+    const size_t step = 2;
+    const char space = ' ';
+    for (size_t i = (num.size() % 2 == 0) ? step : (step - 1); i < num.size();
+        i += step + 1) {
+      num.insert(num.begin() + i, space);
+    }
+    tts += num;
+  }
+
+  if (m[4].matched) {
+    tts += m[4].str();
   }
 
   return tts;
