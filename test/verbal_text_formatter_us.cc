@@ -165,6 +165,8 @@ void TestFormNumberSplitTtsString() {
   TryFormNumberSplitTtsString("102nd Street", "102nd Street");
   TryFormNumberSplitTtsString("103rd Street", "103rd Street");
   TryFormNumberSplitTtsString("104th Street", "104th Street");
+  TryFormNumberSplitTtsString("101St Street", "101St Street");
+  TryFormNumberSplitTtsString("102ND Street", "102ND Street");
 }
 
 void TryFormLeadingOhTtsString(string source, string expected) {
