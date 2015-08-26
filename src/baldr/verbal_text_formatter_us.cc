@@ -37,6 +37,8 @@ std::string VerbalTextFormatterUs::ProcessNumberSplitMatch(
     tts += m[1].str();
   }
 
+  // if source number has st,nd,rd,th appended to it
+  // then do not split the number just return source value
   if (m[3].matched) {
     tts += m[2].str();
     tts += m[3].str();
