@@ -17,63 +17,11 @@ class VerbalTextFormatterTest : public VerbalTextFormatter {
       : VerbalTextFormatter(country_code, state_code) {
   }
 
-  std::string FormThousandTts(const std::string& source) const {
-    return VerbalTextFormatter::FormThousandTts(source);
-  }
-
-  std::string FormHundredTts(const std::string& source) const {
-    return VerbalTextFormatter::FormHundredTts(source);
-  }
-
   std::string FormNumberSplitTts(const std::string& source) const {
     return VerbalTextFormatter::FormNumberSplitTts(source);
   }
 
-  std::string FormLeadingOhTts(const std::string& source) const{
-    return VerbalTextFormatter::FormLeadingOhTts(source);
-  }
-
 };
-
-void TryFormThousandTtsString(string source, string expected) {
-  VerbalTextFormatterTest formatter_test("US", "PA");
-  string tts = formatter_test.FormThousandTts(source);
-  if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormThousandTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
-}
-
-void TestFormThousandTtsString() {
-  TryFormThousandTtsString("1", "1");
-  TryFormThousandTtsString("10", "10");
-  TryFormThousandTtsString("1000", "1 thousand");
-  TryFormThousandTtsString("MD 1000", "MD 1 thousand");
-  TryFormThousandTtsString("MD 1000 West", "MD 1 thousand West");
-  TryFormThousandTtsString("24000", "24 thousand");
-  TryFormThousandTtsString("MD 24000", "MD 24 thousand");
-  TryFormThousandTtsString("MD 24000 West", "MD 24 thousand West");
-}
-
-void TryFormHundredTtsString(string source, string expected) {
-  VerbalTextFormatterTest formatter_test("US", "MD");
-  string tts = formatter_test.FormHundredTts(source);
-  if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormHundredTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
-}
-
-void TestFormHundredTtsString() {
-  TryFormHundredTtsString("1", "1");
-  TryFormHundredTtsString("10", "10");
-  TryFormHundredTtsString("100", "1 hundred");
-  TryFormHundredTtsString("MD 100", "MD 1 hundred");
-  TryFormHundredTtsString("MD 100 West", "MD 1 hundred West");
-  TryFormHundredTtsString("2400", "24 hundred");
-  TryFormHundredTtsString("MD 2400", "MD 24 hundred");
-  TryFormHundredTtsString("MD 2400 West", "MD 24 hundred West");
-}
 
 void TryFormNumberSplitTtsString(string source, string expected) {
   VerbalTextFormatterTest formatter_test("US", "PA");
@@ -111,29 +59,6 @@ void TestFormNumberSplitTtsString() {
   TryFormNumberSplitTtsString("123456, 123456, 123456", "12 34 56, 12 34 56, 12 34 56");
   TryFormNumberSplitTtsString("County Road 00-122", "County Road 00-1 22");
   TryFormNumberSplitTtsString("Road 0110", "Road 01 10");
-  TryFormNumberSplitTtsString("101st Street", "101st Street");
-  TryFormNumberSplitTtsString("102nd Street", "102nd Street");
-  TryFormNumberSplitTtsString("103rd Street", "103rd Street");
-  TryFormNumberSplitTtsString("104th Street", "104th Street");
-}
-
-void TryFormLeadingOhTtsString(string source, string expected) {
-  VerbalTextFormatterTest formatter_test("US", "PA");
-  string tts = formatter_test.FormLeadingOhTts(source);
-  if (tts != expected) {
-    throw std::runtime_error(
-        "Incorrect FormLeadingOhTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
-  }
-}
-
-void TestFormLeadingOhTtsString() {
-  TryFormLeadingOhTtsString("1", "1");
-  TryFormLeadingOhTtsString("1 05", "1 o5");
-  TryFormLeadingOhTtsString("West 1 05 1st Avenue", "West 1 o5 1st Avenue");
-  TryFormLeadingOhTtsString("10 05 03", "10 o5 o3");
-  TryFormLeadingOhTtsString("County Road 00-1 22", "County Road 00-1 22");
-  TryFormLeadingOhTtsString("County Road 0-30", "County Road 0-30");
-  TryFormLeadingOhTtsString("State Highway 0", "State Highway 0");
 }
 
 void TryFormat(string source, string expected) {
@@ -148,15 +73,14 @@ void TryFormat(string source, string expected) {
 void TestFormat() {
   TryFormat("PA 23", "PA 23");
   TryFormat("PA 283", "PA 2 83");
-  TryFormat("PA 100", "PA 1 hundred");
-  TryFormat("US 202", "US 2 o2");
+  TryFormat("US 202", "US 2 02");
   TryFormat("PA 1080", "PA 10 80");
-  TryFormat("PA 40001", "PA 4 00 o1");
-  TryFormat("PA 4007", "PA 40 o7");
+  TryFormat("PA 40001", "PA 4 00 01");
+  TryFormat("PA 4007", "PA 40 07");
   TryFormat("SR 1021", "SR 10 21");
   TryFormat("SR-1021", "SR-10 21");
   TryFormat("Sr 1021", "Sr 10 21");
-  TryFormat("T609", "T6 o9");
+  TryFormat("T609", "T6 09");
   TryFormat("US 422 Business Alternate", "US 4 22 Business Alternate");
 }
 
@@ -165,17 +89,8 @@ void TestFormat() {
 int main() {
   test::suite suite("verbal_text_formatter");
 
-  // FormThousandTtsString
-  suite.test(TEST_CASE(TestFormThousandTtsString));
-
-  // FormHundredTtsString
-  suite.test(TEST_CASE(TestFormHundredTtsString));
-
   // FormNumberSplitTtsString
   suite.test(TEST_CASE(TestFormNumberSplitTtsString));
-
-  // FormLeadingOhTtsString
-  suite.test(TEST_CASE(TestFormLeadingOhTtsString));
 
   // Format
   suite.test(TEST_CASE(TestFormat));
