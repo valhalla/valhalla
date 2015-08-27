@@ -103,6 +103,8 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("AL-261", "Alabama 261");
   TryProcessStatesTts("Al 261", "Alabama 261");
   TryProcessStatesTts("AK 1", "Alaska 1");
+  TryProcessStatesTts("AR 107", "Arkansas 107");
+  TryProcessStatesTts("PA 39", "Pennsylvania 39");
 }
 
 void TryFormThousandTtsString(string source, string expected) {
@@ -239,15 +241,16 @@ void TestFormat() {
   TryFormat("Us-522", "U.S. 5 22");
 
   TryFormat("AL 233", "Alabama 2 33");
+  TryFormat("AR 107", "Arkansas 1 o7");
   TryFormat("PA 23", "Pennsylvania 23");
   TryFormat("PA 283", "Pennsylvania 2 83");
   TryFormat("PA 100", "Pennsylvania 1 hundred");
   TryFormat("PA 1080", "Pennsylvania 10 80");
   TryFormat("PA 4007", "Pennsylvania 40 o7");
-  TryFormat("SR 1021", "SR 10 21");
-  TryFormat("SR-1021", "SR-10 21");
-  TryFormat("Sr 1021", "Sr 10 21");
-  TryFormat("SR3032", "SR30 32");
+  TryFormat("SR 1021", "State Route 10 21");
+  TryFormat("SR-1021", "State Route 10 21");
+  TryFormat("Sr 1021", "State Route 10 21");
+  TryFormat("SR3032", "State Route 30 32");
 
   TryFormat("T609", "T6 o9");
 }

@@ -32,10 +32,13 @@ const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
 const std::array<std::pair<std::regex, std::string>, 51> kStates = {{
-    { std::regex("(\\bAL)([ -])(\\d{1,4})", std::regex_constants::icase), "Alabama $3" },
+    { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
+    { std::regex("(\\bAL)([ -])(\\d{1,3})", std::regex_constants::icase), "Alabama $3" },
     { std::regex("(\\bAK)([ -])(\\d{1,3})", std::regex_constants::icase), "Alaska $3" },
     { std::regex("(\\bAZ)([ -])(\\d{1,3})", std::regex_constants::icase), "Arizona $3" },
-    { std::regex("(\\bPA)([ -])(\\d{1,4})", std::regex_constants::icase), "Pennsylvania $3" },
+    { std::regex("(\\bAR)([ -])(\\d{1,3})", std::regex_constants::icase), "Arkansas $3" },
+
+    { std::regex("(\\bPA)([ -])(\\d{1,3})", std::regex_constants::icase), "Pennsylvania $3" },
 }};
 
 class VerbalTextFormatterUs : public VerbalTextFormatter {
