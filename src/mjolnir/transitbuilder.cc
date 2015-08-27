@@ -34,8 +34,8 @@ struct Stop {
   uint32_t type;
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
+  uint32_t wheelchair_boarding;
   PointLL  ll;
-  bool wheelchair_boarding;
   std::string onestop_id;
   std::string id;
   std::string name;
@@ -57,7 +57,7 @@ struct Departure {
   uint32_t end_date;
   uint32_t dow;
   uint32_t has_subtractions;
-  bool wheelchair_accessible;
+  uint32_t wheelchair_accessible;
   std::string headsign;
   std::string short_name;
 };
@@ -187,7 +187,7 @@ std::vector<Stop> GetStops(const std::string& file) {
     stop.timezone = s.second.get<std::string>("timezone", "");
 
     //TODO: get these from transitland
-    stop.type = 0; //not a parent.
+    stop.type = 0;
     stop.parent = 0;
 
     stops.emplace_back(std::move(stop));
@@ -236,6 +236,21 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
     lock.unlock();
 
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), tile_hierarchy);
+
+    if (file_name == "2/000/733/191.gph" || file_name == "2/000/733/192.gph") {
+
+      const AABB2<PointLL> x = tiles.TileBounds(id);
+
+      if (file_name == "2/000/733/191.gph")
+        std::cout << "191" << std::endl;
+      else         std::cout << "192" << std::endl;
+
+
+      std::cout << x.minx() << ", " << x.miny() << ", " <<  x.maxx() << ", " << x.maxy() << std::endl;
+
+    }
+
+
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".json";
     std::string file = transit_dir + file_name;
@@ -300,7 +315,6 @@ std::vector<Departure> GetDepartures(const std::string& file,
       //TODO
       dep.shapeid = 0;
       dep.blockid = 0;
-      dep.dow = 0;
       dep.service = 0;
       dep.has_subtractions = false;
       dep.short_name = "";
@@ -311,6 +325,42 @@ std::vector<Departure> GetDepartures(const std::string& file,
       dep.arr_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("destination_arrival_time", ""));
       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
+
+      uint32_t index = 1;
+      uint32_t dow_mask = kDOWNone;
+
+      for(auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
+        bool dow = service_days.second.get_value<bool>();
+
+        if (dow) {
+          switch (index) {
+            case 1:
+              dow_mask = dow_mask | kMonday;
+              break;
+            case 2:
+              dow_mask = dow_mask | kTuesday;
+              break;
+            case 3:
+              dow_mask = dow_mask | kWednesday;
+              break;
+            case 4:
+              dow_mask = dow_mask | kThursday;
+              break;
+            case 5:
+              dow_mask = dow_mask | kFriday;
+              break;
+            case 6:
+              dow_mask = dow_mask | kSaturday;
+              break;
+            case 7:
+              dow_mask = dow_mask | kSunday;
+              break;
+          }
+        }
+        index++;
+      }
+
+      dep.dow = dow_mask;
 
       //dep.dow        = sqlite3_column_int(stmt, 11);
       //dep.has_subtractions = sqlite3_column_int(stmt, 12);
@@ -390,7 +440,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         }
 
         // Add names and create the transit route
-        TransitRoute route(routeid, tl_routeid.c_str(),
+        TransitRoute route(routeid, 0, "",tilebuilder.AddName(""),
                            tilebuilder.AddName(longname),
                            tilebuilder.AddName(desc));
         tilebuilder.AddTransitRoute(route);
@@ -463,7 +513,7 @@ void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
       uint32_t mintime  = sqlite3_column_int(stmt, 3);
       TransitTransfer transfer(fromstop, tostop,
                  static_cast<TransferType>(type), mintime);
-      tilebuilder.AddTransitTransfer(transfer);
+      //tilebuilder.AddTransitTransfer(transfer);
 
       result = sqlite3_step(stmt);
     }
@@ -807,6 +857,13 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   PointLL ll = stop.ll;
   uint64_t wayid = stop.way_id;
 
+  bool found = false;
+
+  if (wayid == 35110127)
+    found = true;
+
+  float dist = 0.0f;
+
   float mindist = 10000000.0f;
   uint32_t edgelength = 0;
   GraphId startnode, endnode;
@@ -817,10 +874,24 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+
+     // if (found)
+       // std::cout << edgeinfo->wayid() << std::endl;
+
       if (edgeinfo->wayid() == wayid) {
+
         // Get shape and find closest point
         auto this_shape = edgeinfo->shape();
         auto this_closest = ll.ClosestPoint(this_shape);
+
+        dist = std::get<1>(this_closest);
+
+         if (found && tile->header()->graphid().tileid() == 733191) {
+           std::cout << std::to_string(dist) << std::endl;
+           std::cout << "id: " << tile->header()->graphid().tileid() << std::endl;
+           std::cout << "header " << tile->header()->graphid().level() << std::endl;
+         }
+
         if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),
                         tile->header()->graphid().level(), i);
@@ -843,8 +914,13 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
     stop.conn_count = 0;
-    LOG_ERROR("No closest edge found for this stop: way Id = " +
+    LOG_ERROR("No closest edge found for this stop: " + stop.name + " way Id = " +
               std::to_string(wayid));
+
+    //if (found)
+     // LOG_ERROR("Dist: " +
+      //          std::to_string(dist));
+
     return;
   }
 
@@ -977,7 +1053,7 @@ void build(const boost::property_tree::ptree& config_pt,
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
     std::unordered_set<uint32_t> route_keys;
-    std::unordered_set<uint32_t> trip_keys;
+    //std::unordered_set<uint32_t> trip_keys;
     std::unordered_set<uint32_t> service_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
@@ -1034,7 +1110,7 @@ void build(const boost::property_tree::ptree& config_pt,
           // Form transit departures
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          TransitDeparture td(lineid, dep.route,
+          TransitDeparture td(lineid, dep.route,0,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
 
