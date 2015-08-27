@@ -25,6 +25,10 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::FormUsHighwayTts(source);
   }
 
+  std::string ProcessStatesTts(const std::string& source) const{
+    return VerbalTextFormatterUs::ProcessStatesTts(source);
+  }
+
   std::string FormThousandTts(const std::string& source) const {
     return VerbalTextFormatterUs::FormThousandTts(source);
   }
@@ -83,6 +87,22 @@ void TestFormUsHighwayTtsString() {
   TryFormUsHighwayTtsString("US-220 South", "U.S. 220 South");
   TryFormUsHighwayTtsString("Us 422 Business Alternate", "U.S. 422 Business Alternate");
   TryFormUsHighwayTtsString("Us-522", "U.S. 522");
+}
+
+void TryProcessStatesTts(string source, string expected) {
+  VerbalTextFormatterUsTest formatter_test("US", "");
+  string tts = formatter_test.ProcessStatesTts(source);
+  if (tts != expected) {
+    throw std::runtime_error(
+        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+  }
+}
+
+void TestProcessStatesTts() {
+  TryProcessStatesTts("AL 261", "Alabama 261");
+  TryProcessStatesTts("AL-261", "Alabama 261");
+  TryProcessStatesTts("Al 261", "Alabama 261");
+  TryProcessStatesTts("AK 1", "Alaska 1");
 }
 
 void TryFormThousandTtsString(string source, string expected) {
@@ -218,15 +238,17 @@ void TestFormat() {
   TryFormat("Us 422 Business Alternate", "U.S. 4 22 Business Alternate");
   TryFormat("Us-522", "U.S. 5 22");
 
-  TryFormat("PA 23", "PA 23");
-  TryFormat("PA 283", "PA 2 83");
-  TryFormat("PA 100", "PA 1 hundred");
-  TryFormat("PA 1080", "PA 10 80");
-  TryFormat("PA 40001", "PA 4 00 o1");
-  TryFormat("PA 4007", "PA 40 o7");
+  TryFormat("AL 233", "Alabama 2 33");
+  TryFormat("PA 23", "Pennsylvania 23");
+  TryFormat("PA 283", "Pennsylvania 2 83");
+  TryFormat("PA 100", "Pennsylvania 1 hundred");
+  TryFormat("PA 1080", "Pennsylvania 10 80");
+  TryFormat("PA 4007", "Pennsylvania 40 o7");
   TryFormat("SR 1021", "SR 10 21");
   TryFormat("SR-1021", "SR-10 21");
   TryFormat("Sr 1021", "Sr 10 21");
+  TryFormat("SR3032", "SR30 32");
+
   TryFormat("T609", "T6 o9");
 }
 
@@ -240,6 +262,9 @@ int main() {
 
   // FormUsHighwayTtsString
   suite.test(TEST_CASE(TestFormUsHighwayTtsString));
+
+  // ProcessStatesTts
+  suite.test(TEST_CASE(TestProcessStatesTts));
 
   // FormThousandTtsString
   suite.test(TEST_CASE(TestFormThousandTtsString));

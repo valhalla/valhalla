@@ -21,6 +21,10 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
 
   verbal_text = FormInterstateTts(verbal_text);
   verbal_text = FormUsHighwayTts(verbal_text);
+  verbal_text = ProcessStatesTts(verbal_text);
+  // TODO county CR >> County Road or Route?
+  // TODO township T >> Township or not
+  // TODO FM farm to market, others? TR?
 
   verbal_text = FormThousandTts(verbal_text);
   verbal_text = FormHundredTts(verbal_text);
@@ -73,41 +77,51 @@ std::string VerbalTextFormatterUs::FormNumberSplitTts(
 
 std::string VerbalTextFormatterUs::FormInterstateTts(
     const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
-  return tts.empty() ? source : tts;
+  return std::regex_replace(source, kInterstateRegex, kInterstateOutPattern);
 }
 
 std::string VerbalTextFormatterUs::FormUsHighwayTts(
     const std::string& source) const {
+  return std::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
+}
+
+std::string VerbalTextFormatterUs::ProcessStatesTts(
+    const std::string& source) const {
 
   std::string tts;
-  tts = std::regex_replace(source, kUsHighwayRegex, kUsHighwayOutPattern);
-  return tts.empty() ? source : tts;
+  for (auto& state_find_replace : kStates) {
+    if (FormStateTts(source, state_find_replace.first, state_find_replace.second, tts)) {
+      // State has been found and transformed - so return
+      return tts;
+    }
+  }
+  // Nothing transformed so return source
+  return source;
+}
+
+bool VerbalTextFormatterUs::FormStateTts(
+    const std::string& source, const std::regex& state_regex,
+    const std::string& state_output_pattern, std::string& tts) const {
+
+  tts = std::regex_replace(source, state_regex, state_output_pattern);
+
+  // Return true if transformed
+  return (tts != source);
 }
 
 std::string VerbalTextFormatterUs::FormThousandTts(
     const std::string& source) const {
-  std::string tts;
-  tts = std::regex_replace(source, kThousandRegex, kThousandOutPattern);
-  return tts.empty() ? source : tts;
+  return std::regex_replace(source, kThousandRegex, kThousandOutPattern);
 }
 
 std::string VerbalTextFormatterUs::FormHundredTts(
     const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kHundredRegex, kHundredOutPattern);
-  return tts.empty() ? source : tts;
+  return std::regex_replace(source, kHundredRegex, kHundredOutPattern);
 }
 
 std::string VerbalTextFormatterUs::FormLeadingOhTts(
     const std::string& source) const {
-
-  std::string tts;
-  tts = std::regex_replace(source, kLeadingOhRegex, kLeadingOhOutPattern);
-  return tts.empty() ? source : tts;
+  return std::regex_replace(source, kLeadingOhRegex, kLeadingOhOutPattern);
 }
 
 }

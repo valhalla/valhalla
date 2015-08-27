@@ -5,6 +5,8 @@
 
 #include <regex>
 #include <string>
+#include <array>
+#include <utility>
 
 namespace valhalla {
 namespace baldr {
@@ -29,6 +31,13 @@ const std::string kHundredOutPattern = "$1$2 hundred$4";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
+const std::array<std::pair<std::regex, std::string>, 51> kStates = {{
+    { std::regex("(\\bAL)([ -])(\\d{1,4})", std::regex_constants::icase), "Alabama $3" },
+    { std::regex("(\\bAK)([ -])(\\d{1,3})", std::regex_constants::icase), "Alaska $3" },
+    { std::regex("(\\bAZ)([ -])(\\d{1,3})", std::regex_constants::icase), "Arizona $3" },
+    { std::regex("(\\bPA)([ -])(\\d{1,4})", std::regex_constants::icase), "Pennsylvania $3" },
+}};
+
 class VerbalTextFormatterUs : public VerbalTextFormatter {
  public:
   VerbalTextFormatterUs(const std::string& country_code,
@@ -47,6 +56,12 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
   std::string FormInterstateTts(const std::string& source) const;
 
   std::string FormUsHighwayTts(const std::string& source) const;
+
+  std::string ProcessStatesTts(const std::string& source) const;
+
+  bool FormStateTts(const std::string& source, const std::regex& state_regex,
+                    const std::string& state_output_pattern,
+                    std::string& tts) const;
 
   std::string FormThousandTts(const std::string& source) const;
 
