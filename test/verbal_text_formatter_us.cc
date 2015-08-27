@@ -104,6 +104,21 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("Al 261", "Alabama 261");
   TryProcessStatesTts("AK 1", "Alaska 1");
   TryProcessStatesTts("AR 107", "Arkansas 107");
+  TryProcessStatesTts("CA 480", "California 480");
+  TryProcessStatesTts("CO 265", "Colorado 265");
+  TryProcessStatesTts("CT 14A", "Connecticut 14A");
+  TryProcessStatesTts("CT 15", "Connecticut 15");
+  TryProcessStatesTts("DE 10", "Delaware 10");
+  TryProcessStatesTts("DC 295", "D C 295");
+  TryProcessStatesTts("FL 535", "Florida 535");
+  TryProcessStatesTts("FL A1A", "Florida A1A");
+  TryProcessStatesTts("GA 400", "Georgia 400");
+  TryProcessStatesTts("HI 92", "Hawaii 92");
+  TryProcessStatesTts("ID 21", "Idaho 21");
+  TryProcessStatesTts("IL 97", "Illinois 97");
+  TryProcessStatesTts("IN 135", "Indiana 135");
+  TryProcessStatesTts("IA 5", "Iowa 5");
+
   TryProcessStatesTts("PA 39", "Pennsylvania 39");
 }
 
@@ -251,6 +266,7 @@ void TestFormat() {
   TryFormat("SR-1021", "State Route 10 21");
   TryFormat("Sr 1021", "State Route 10 21");
   TryFormat("SR3032", "State Route 30 32");
+  TryFormat("CT 14A", "Connecticut 14A");
 
   TryFormat("T609", "T6 o9");
 }

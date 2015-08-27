@@ -37,6 +37,18 @@ const std::array<std::pair<std::regex, std::string>, 51> kStates = {{
     { std::regex("(\\bAK)([ -])(\\d{1,3})", std::regex_constants::icase), "Alaska $3" },
     { std::regex("(\\bAZ)([ -])(\\d{1,3})", std::regex_constants::icase), "Arizona $3" },
     { std::regex("(\\bAR)([ -])(\\d{1,3})", std::regex_constants::icase), "Arkansas $3" },
+    { std::regex("(\\bCA)([ -])(\\d{1,3})", std::regex_constants::icase), "California $3" },
+    { std::regex("(\\bCO)([ -])(\\d{1,3})", std::regex_constants::icase), "Colorado $3" },
+    { std::regex("(\\bCT)([ -])(\\d{1,3})", std::regex_constants::icase), "Connecticut $3" },
+    { std::regex("(\\bDE)([ -])(\\d{1,3})", std::regex_constants::icase), "Delaware $3" },
+    { std::regex("(\\bDC)([ -])(\\d{1,3})", std::regex_constants::icase), "D C $3" },
+    { std::regex("(\\bFL)([ -])(A)?(\\d{1,3})", std::regex_constants::icase), "Florida $3$4" },
+    { std::regex("(\\bGA)([ -])(\\d{1,3})", std::regex_constants::icase), "Georgia $3" },
+    { std::regex("(\\bHI)([ -])(\\d{1,4})", std::regex_constants::icase), "Hawaii $3" },
+    { std::regex("(\\bID)([ -])(\\d{1,3})", std::regex_constants::icase), "Idaho $3" },
+    { std::regex("(\\bIL)([ -])(\\d{1,3})", std::regex_constants::icase), "Illinois $3" },
+    { std::regex("(\\bIN)([ -])(\\d{1,3})", std::regex_constants::icase), "Indiana $3" },
+    { std::regex("(\\bIA)([ -])(\\d{1,3})", std::regex_constants::icase), "Iowa $3" },
 
     { std::regex("(\\bPA)([ -])(\\d{1,3})", std::regex_constants::icase), "Pennsylvania $3" },
 }};
