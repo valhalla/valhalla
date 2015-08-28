@@ -29,6 +29,10 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::ProcessStatesTts(source);
   }
 
+  std::string ProcessCountysTts(const std::string& source) const{
+    return VerbalTextFormatterUs::ProcessCountysTts(source);
+  }
+
   std::string FormThousandTts(const std::string& source) const {
     return VerbalTextFormatterUs::FormThousandTts(source);
   }
@@ -155,6 +159,23 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("WV 7", "West Virginia 7");
   TryProcessStatesTts("WI 30", "Wisconsin 30");
   TryProcessStatesTts("WY 212", "Wyoming 212");
+
+}
+
+void TryProcessCountysTts(string source, string expected) {
+  VerbalTextFormatterUsTest formatter_test("US", "");
+  string tts = formatter_test.ProcessCountysTts(source);
+  if (tts != expected) {
+    throw std::runtime_error(
+        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+  }
+}
+
+void TestProcessCountysTts() {
+  TryProcessCountysTts("CR 539", "County Route 539");
+  TryProcessCountysTts("C R 404", "County Route 404");
+  TryProcessCountysTts("CR-4003", "County Route 4003");
+  TryProcessCountysTts("CR116", "County Route 116");
 
 }
 
@@ -304,6 +325,9 @@ void TestFormat() {
   TryFormat("SR3032", "State Route 30 32");
   TryFormat("CT 14A", "Connecticut 14A");
 
+  TryFormat("CR 539", "County Route 5 39");
+  TryFormat("CR-4003", "County Route 40 o3");
+
   TryFormat("T609", "T6 o9");
 }
 
@@ -320,6 +344,9 @@ int main() {
 
   // ProcessStatesTts
   suite.test(TEST_CASE(TestProcessStatesTts));
+
+  // ProcessCountysTts
+  suite.test(TEST_CASE(TestProcessCountysTts));
 
   // FormThousandTtsString
   suite.test(TEST_CASE(TestFormThousandTtsString));

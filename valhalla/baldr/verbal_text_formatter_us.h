@@ -86,6 +86,12 @@ const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bWY)([ -])(\\d{1,3})", std::regex_constants::icase), "Wyoming $3" }
 }};
 
+// TODO - other special cases
+const std::array<std::pair<std::regex, std::string>, 2> kCountyRoutes = {{
+    { std::regex("(\\bCR)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
+    { std::regex("(\\bC R)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
+}};
+
 class VerbalTextFormatterUs : public VerbalTextFormatter {
  public:
   VerbalTextFormatterUs(const std::string& country_code,
@@ -109,6 +115,12 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
   bool FormStateTts(const std::string& source, const std::regex& state_regex,
                     const std::string& state_output_pattern,
+                    std::string& tts) const;
+
+  std::string ProcessCountysTts(const std::string& source) const;
+
+  bool FormCountyTts(const std::string& source, const std::regex& county_regex,
+                    const std::string& county_output_pattern,
                     std::string& tts) const;
 
   std::string FormThousandTts(const std::string& source) const;

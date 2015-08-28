@@ -22,7 +22,7 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
   verbal_text = FormInterstateTts(verbal_text);
   verbal_text = FormUsHighwayTts(verbal_text);
   verbal_text = ProcessStatesTts(verbal_text);
-  // TODO county CR >> County Road or Route?
+  verbal_text = ProcessCountysTts(verbal_text);
   // TODO township T >> Township or not
   // TODO FM farm to market, others? TR?
 
@@ -104,6 +104,31 @@ bool VerbalTextFormatterUs::FormStateTts(
     const std::string& state_output_pattern, std::string& tts) const {
 
   tts = std::regex_replace(source, state_regex, state_output_pattern);
+
+  // Return true if transformed
+  return (tts != source);
+}
+
+std::string VerbalTextFormatterUs::ProcessCountysTts(
+    const std::string& source) const {
+
+  std::string tts;
+  for (auto& county_find_replace : kCountyRoutes) {
+    if (FormCountyTts(source, county_find_replace.first,
+                      county_find_replace.second, tts)) {
+      // County has been found and transformed - so return
+      return tts;
+    }
+  }
+  // Nothing transformed so return source
+  return source;
+}
+
+bool VerbalTextFormatterUs::FormCountyTts(
+    const std::string& source, const std::regex& county_regex,
+    const std::string& county_output_pattern, std::string& tts) const {
+
+  tts = std::regex_replace(source, county_regex, county_output_pattern);
 
   // Return true if transformed
   return (tts != source);
