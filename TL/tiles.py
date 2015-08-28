@@ -175,7 +175,10 @@ if __name__ == "__main__":
 #used to generate unique keys for onestop IDs
    onestop_key = 1
    onestops = dict()
- 
+
+   trip_key = 1
+   trips = dict()
+
    for row in xrange(0, nrows_):
       for col in xrange(0, ncolumns_):
          
@@ -205,8 +208,8 @@ if __name__ == "__main__":
                   if onestop_id not in onestops:
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
-                  
                   tl_s['key'] = onestops[onestop_id]
+                  
                   dictionary['stops'].append(tl_s)
 
                if not dictionary:
@@ -242,22 +245,25 @@ if __name__ == "__main__":
                   if onestop_id not in onestops:
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
-
                   tl_s_p['origin_key'] = onestops[onestop_id]
                 
                   onestop_id = tl_s_p['destination_onestop_id']
                   if onestop_id not in onestops:
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
-
                   tl_s_p['destination_key'] = onestops[onestop_id] 
                   
                   onestop_id = tl_s_p['route_onestop_id']
                   if onestop_id not in onestops:
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
-
                   tl_s_p['route_key'] = onestops[onestop_id]
+
+                  trip = tl_s_p['trip']
+                  if trip not in trips:
+                     trips[trip] = trip_key
+                     trip_key = trip_key + 1
+                  tl_s_p['trip_key'] = trips[trip]
 
                   stop_pairs['schedule_stop_pairs'].append(tl_s_p)
 
@@ -280,6 +286,10 @@ if __name__ == "__main__":
             url = 'http://dev.transit.land/api/v1/routes?per_page=4000&bbox='
             url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
 
+#hack due to BB issue
+            if (min_x == -121.75 and min_y == 37.0 and max_x == -121.5 and max_y == 37.25):
+               url = 'http://dev.transit.land/api/v1/routes?per_page=4000'
+
             while url:
                print(url)
 
@@ -294,7 +304,6 @@ if __name__ == "__main__":
                   if onestop_id not in onestops:
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
-
                   tl_r['key'] = onestops[onestop_id]
 
                   routes['routes'].append(tl_r)
