@@ -47,6 +47,7 @@ struct Stop {
 struct Departure {
   uint32_t orig_stop;
   uint32_t dest_stop;
+  uint32_t trip;
   uint32_t route;
   uint32_t blockid;
   uint32_t service;
@@ -148,7 +149,7 @@ struct builder_stats {
 };
 
 // Get stops within a tile
-std::vector<Stop> GetStops(const std::string& file) {
+std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb) {
 
   boost::property_tree::ptree pt;
   std::vector<Stop> stops;
@@ -162,15 +163,7 @@ std::vector<Stop> GetStops(const std::string& file) {
   for (const auto& s : pt.get_child("stops")){
 
     Stop stop;
-    stop.key = s.second.get<uint32_t>("key", 0);
-    stop.name = s.second.get<std::string>("name", "");
 
-    if (stop.key == 0) {
-      LOG_ERROR("Key missing for stop (" + stop.name + ") in " + file);
-      continue;
-    }
-
-    stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
     float lon, lat;
     uint32_t index = 0;
     for(auto& coords : s.second.get_child("geometry.coordinates")) {
@@ -178,19 +171,32 @@ std::vector<Stop> GetStops(const std::string& file) {
       else lon = coords.second.get_value<float>();
       index++;
     }
-    stop.ll.Set(lon,lat);
 
-    stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
-    stop.onestop_id = s.second.get<std::string>("tags.onestop_id", "");
-    stop.desc = s.second.get<std::string>("tags.stop_desc", "");
-    stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
-    stop.timezone = s.second.get<std::string>("timezone", "");
+    if (aabb.Contains(PointLL(lon,lat))) {
 
-    //TODO: get these from transitland
-    stop.type = 0;
-    stop.parent = 0;
+      stop.ll.Set(lon,lat);
 
-    stops.emplace_back(std::move(stop));
+      stop.key = s.second.get<uint32_t>("key", 0);
+      stop.name = s.second.get<std::string>("name", "");
+
+      if (stop.key == 0) {
+        LOG_ERROR("Key missing for stop (" + stop.name + ") in " + file);
+        continue;
+      }
+
+      stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
+      stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
+      stop.onestop_id = s.second.get<std::string>("tags.onestop_id", "");
+      stop.desc = s.second.get<std::string>("tags.stop_desc", "");
+      stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
+      stop.timezone = s.second.get<std::string>("timezone", "");
+
+      //TODO: get these from transitland
+      stop.type = 0;
+      stop.parent = 0;
+
+      stops.emplace_back(std::move(stop));
+    }
   }
 
   return stops;
@@ -237,27 +243,13 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), tile_hierarchy);
 
-    if (file_name == "2/000/733/191.gph" || file_name == "2/000/733/192.gph") {
-
-      const AABB2<PointLL> x = tiles.TileBounds(id);
-
-      if (file_name == "2/000/733/191.gph")
-        std::cout << "191" << std::endl;
-      else         std::cout << "192" << std::endl;
-
-
-      std::cout << x.minx() << ", " << x.miny() << ", " <<  x.maxx() << ", " << x.maxy() << std::endl;
-
-    }
-
-
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".json";
     std::string file = transit_dir + file_name;
 
     // Get stops within the tile. If any exist, assign GraphIds and add to
     // the map/list
-    std::vector<Stop> stops = GetStops(file);
+    std::vector<Stop> stops = GetStops(file, tiles.TileBounds(id));
 
     if (stops.size() > 0) {
       LOG_DEBUG("Tile has " + std::to_string(stops.size()) + " stops");
@@ -311,13 +303,19 @@ std::vector<Departure> GetDepartures(const std::string& file,
       dep.orig_stop = origin_key;
       dep.dest_stop = stop_pairs.second.get<uint32_t>("destination_key", 0);
       dep.route = stop_pairs.second.get<uint32_t>("route_key", 0);
+      dep.trip = stop_pairs.second.get<uint32_t>("trip_key", 0);
+
+      if (dep.trip == 0) {
+        LOG_ERROR("Trip does not exist for route: " +  std::to_string(dep.route) +
+                  " file: " + file);
+        continue;
+      }
 
       //TODO
       dep.shapeid = 0;
       dep.blockid = 0;
       dep.service = 0;
       dep.has_subtractions = false;
-      dep.short_name = "";
       //wheelchair_accessible
       //short_name
 
@@ -366,7 +364,6 @@ std::vector<Departure> GetDepartures(const std::string& file,
       //dep.has_subtractions = sqlite3_column_int(stmt, 12);
       //dep.blockid    = sqlite3_column_int(stmt, 13);
       dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
-      dep.short_name   = stop_pairs.second.get<std::string>("trip_short_name", "");
 
       // TODO - configure to reject any where calendar end date is in the past!
       if (dep.start_date > 500) {
@@ -374,10 +371,8 @@ std::vector<Departure> GetDepartures(const std::string& file,
       }
     }
   }
-  catch (std::exception &e)
-  {
-    LOG_INFO("Exception in json file " + file + " for transit.");
-
+  catch (std::exception &e) {
+    LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
   }
   return departures;
 }
@@ -414,11 +409,9 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
         uint32_t type = 0;
 
-        if (vehicle_type == "tram" || vehicle_type == "streetcar" ||
-            vehicle_type == "light rail" || vehicle_type == "lightrail" ||
-            vehicle_type == "light")
+        if (vehicle_type == "tram")
           type = 0;
-        else if (vehicle_type == "subway" || vehicle_type == "metro")
+        else if (vehicle_type == "metro")
           type = 1;
         else if (vehicle_type == "rail")
           type = 2;
@@ -426,11 +419,9 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
           type = 3;
         else if (vehicle_type == "ferry")
           type = 4;
-        else if (vehicle_type == "cable car" || vehicle_type == "cablecar" ||
-            vehicle_type == "cable")
+        else if (vehicle_type == "cablecar")
           type = 5;
-        else if (vehicle_type == "gondola" || vehicle_type == "suspended cable car" ||
-            vehicle_type == "suspended cable" || vehicle_type == " suspended car")
+        else if (vehicle_type == "gondola")
           type = 6;
         else if (vehicle_type == "funicular")
           type = 7;
@@ -453,11 +444,65 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
     }
   }
   catch (std::exception &e) {
-    LOG_INFO("Exception in json file " + file + " for transit.");
+    LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
   }
 
   LOG_DEBUG("Added " + std::to_string(n) + " routes");
   return route_types;
+}
+
+
+// Get trips
+void AddTrips(const std::string& file,
+              const std::unordered_set<uint32_t>& keys,
+              GraphTileBuilder& tilebuilder) {
+
+  boost::property_tree::ptree pt;
+
+  // Make sure it exists
+  if (boost::filesystem::exists(file))
+    boost::property_tree::read_json(file, pt);
+  else
+    return;
+
+  uint32_t n = 0;
+  try {
+    // Iterate through all route keys
+    for (const auto& key : keys) {
+      // Skip (do not need): route_id, route_color, route_text_color, and
+      // route_url
+      for (const auto& routes : pt.get_child("routes")) {
+
+        uint32_t tripid = routes.second.get<uint32_t>("trip_key", 0);
+        if (key != tripid)
+          continue;
+
+        uint32_t routeid = routes.second.get<uint32_t>("key", 0);
+        if (key != routeid)
+          continue;
+
+    // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the trips
+    // TODO:  so that costing can be applied for bike and wheelchair accessibility.
+    // TODO:  This will require updates to data structure TransitTrip.
+        std::string tl_tripid = routes.second.get<std::string>("trip", "");
+        std::string headsign = routes.second.get<std::string>("trip_headsign", "");
+        std::string shortname = routes.second.get<std::string>("trip_short_name", "");
+
+        // Add names and create transit trip
+        TransitTrip trip(tripid, routeid, "",
+                         tilebuilder.AddName(shortname),
+                         tilebuilder.AddName(headsign));
+        tilebuilder.AddTransitTrip(trip);
+        n++;
+      }
+    }
+  }
+
+catch (std::exception &e) {
+  LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
+}
+
+  LOG_DEBUG("Added " + std::to_string(n) + " trips");
 }
 
 // Add calendar exceptions
@@ -857,13 +902,6 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   PointLL ll = stop.ll;
   uint64_t wayid = stop.way_id;
 
-  bool found = false;
-
-  if (wayid == 35110127)
-    found = true;
-
-  float dist = 0.0f;
-
   float mindist = 10000000.0f;
   uint32_t edgelength = 0;
   GraphId startnode, endnode;
@@ -875,22 +913,11 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
 
-     // if (found)
-       // std::cout << edgeinfo->wayid() << std::endl;
-
       if (edgeinfo->wayid() == wayid) {
 
         // Get shape and find closest point
         auto this_shape = edgeinfo->shape();
         auto this_closest = ll.ClosestPoint(this_shape);
-
-        dist = std::get<1>(this_closest);
-
-         if (found && tile->header()->graphid().tileid() == 733191) {
-           std::cout << std::to_string(dist) << std::endl;
-           std::cout << "id: " << tile->header()->graphid().tileid() << std::endl;
-           std::cout << "header " << tile->header()->graphid().level() << std::endl;
-         }
 
         if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),
@@ -916,11 +943,6 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
     stop.conn_count = 0;
     LOG_ERROR("No closest edge found for this stop: " + stop.name + " way Id = " +
               std::to_string(wayid));
-
-    //if (found)
-     // LOG_ERROR("Dist: " +
-      //          std::to_string(dist));
-
     return;
   }
 
@@ -1047,13 +1069,13 @@ void build(const boost::property_tree::ptree& config_pt,
         }
       }
     }
-    LOG_DEBUG("Connection Edges: size= " + std::to_string(connection_edges.size()));
+    LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
 
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
     std::unordered_set<uint32_t> route_keys;
-    //std::unordered_set<uint32_t> trip_keys;
+    std::unordered_set<uint32_t> trip_keys;
     std::unordered_set<uint32_t> service_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
@@ -1090,7 +1112,7 @@ void build(const boost::property_tree::ptree& config_pt,
 
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
-          //trip_keys.insert(dep.trip);
+          trip_keys.insert(dep.trip);
           service_keys.insert(dep.service);
 
           // Identify unique route and arrival stop pairs - associate to a
@@ -1114,8 +1136,10 @@ void build(const boost::property_tree::ptree& config_pt,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
 
-          LOG_DEBUG("Add departure: " + std::to_string(td.lineid()) +
+
+          LOG_INFO("Add departure: " + std::to_string(dep.trip) +
                        " dep time = " + std::to_string(td.departure_time()) +
+                       " arr time = " + std::to_string(dep.arr_time) +
                        " start_date = " + std::to_string(td.start_date()) +
                        " end date = " + std::to_string(td.end_date()));
 
@@ -1145,9 +1169,8 @@ void build(const boost::property_tree::ptree& config_pt,
     std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
                               route_keys, tilebuilder);
 
-    // Add trips to the tile. Get map of shape keys.
- //   std::unordered_map<uint32_t, uint32_t> shape_keys = AddTrips(db_handle,
- //                             trip_keys, tilebuilder);
+    // Add trips to the tile.
+    AddTrips(file,trip_keys, tilebuilder);
 
     // Add calendar exceptions (using service Id)
 //    AddCalendar(db_handle, service_keys, tilebuilder);
