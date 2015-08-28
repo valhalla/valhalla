@@ -92,6 +92,10 @@ const std::array<std::pair<std::regex, std::string>, 2> kCountyRoutes = {{
     { std::regex("(\\bC R)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
 }};
 
+/**
+ * The US specific verbal text formatter class that prepares strings for use
+ * with a text-to-speech engine.
+ */
 class VerbalTextFormatterUs : public VerbalTextFormatter {
  public:
   VerbalTextFormatterUs(const std::string& country_code,
@@ -99,6 +103,12 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
   ~VerbalTextFormatterUs();
 
+  /**
+   * Returns a US text-to-speech formatted string based on the specified text.
+   *
+   * @param  text  the source string to transform.
+   * @return a US text-to-speech formatted string based on the specified text.
+   */
   std::string Format(const std::string& text) const override;
 
  protected:
