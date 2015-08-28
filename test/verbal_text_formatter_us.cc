@@ -118,8 +118,44 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("IL 97", "Illinois 97");
   TryProcessStatesTts("IN 135", "Indiana 135");
   TryProcessStatesTts("IA 5", "Iowa 5");
-
+  TryProcessStatesTts("KS 4", "Kansas 4");
+  TryProcessStatesTts("KY 676", "Kentucky 676");
+  TryProcessStatesTts("LA 73", "Louisiana 73");
+  TryProcessStatesTts("ME 27", "Maine 27");
+  TryProcessStatesTts("MD 450", "Maryland 450");
+  TryProcessStatesTts("MA 2", "Massachusetts 2");
+  TryProcessStatesTts("M 43", "Michigan 43");
+  TryProcessStatesTts("MN 55", "Minnesota 55");
+  TryProcessStatesTts("MS 468", "Mississippi 468");
+  TryProcessStatesTts("MO 180", "Missouri 180");
+  TryProcessStatesTts("MT 282", "Montana 282");
+  TryProcessStatesTts("NE 2", "Nebraska 2");
+  TryProcessStatesTts("NE 55W Link", "Nebraska 55W Link");
+  TryProcessStatesTts("NV 592", "Nevada 592");
+  TryProcessStatesTts("NH 13", "New Hampshire 13");
+  TryProcessStatesTts("NJ 33", "New Jersey 33");
+  TryProcessStatesTts("NM 599", "New Mexico 599");
+  TryProcessStatesTts("NY 5", "New York 5");
+  TryProcessStatesTts("NC 50", "North Carolina 50");
+  TryProcessStatesTts("ND 810", "North Dakota 810");
+  TryProcessStatesTts("OH 73", "Ohio 73");
+  TryProcessStatesTts("OK 3", "Oklahoma 3");
+  TryProcessStatesTts("OR 99E Business", "Oregon 99E Business");
   TryProcessStatesTts("PA 39", "Pennsylvania 39");
+  TryProcessStatesTts("RI 146", "Rhode Island 146");
+  TryProcessStatesTts("SC 12", "South Carolina 12");
+  TryProcessStatesTts("SD 34", "South Dakota 34");
+  TryProcessStatesTts("SD 1806", "South Dakota 1806");
+  TryProcessStatesTts("TN 155", "Tennessee 155");
+  TryProcessStatesTts("TX 165", "Texas 165");
+  TryProcessStatesTts("UT 186", "Utah 186");
+  TryProcessStatesTts("VT 12", "Vermont 12");
+  TryProcessStatesTts("VA 195", "Virginia 195");
+  TryProcessStatesTts("WA 8", "Washington 8");
+  TryProcessStatesTts("WV 7", "West Virginia 7");
+  TryProcessStatesTts("WI 30", "Wisconsin 30");
+  TryProcessStatesTts("WY 212", "Wyoming 212");
+
 }
 
 void TryFormThousandTtsString(string source, string expected) {
