@@ -89,7 +89,7 @@ std::string VerbalTextFormatterUs::ProcessStatesTts(
     const std::string& source) const {
 
   std::string tts;
-  for (auto& state_find_replace : kStates) {
+  for (auto& state_find_replace : kStateRoutes) {
     if (FormStateTts(source, state_find_replace.first, state_find_replace.second, tts)) {
       // State has been found and transformed - so return
       return tts;

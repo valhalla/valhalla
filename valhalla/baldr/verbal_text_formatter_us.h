@@ -31,7 +31,7 @@ const std::string kHundredOutPattern = "$1$2 hundred$4";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::array<std::pair<std::regex, std::string>, 52> kStates = {{
+const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
     { std::regex("(\\bAL)([ -])(\\d{1,3})", std::regex_constants::icase), "Alabama $3" },
     { std::regex("(\\bAK)([ -])(\\d{1,3})", std::regex_constants::icase), "Alaska $3" },
