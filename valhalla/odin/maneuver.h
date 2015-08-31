@@ -10,6 +10,7 @@
 #include <valhalla/proto/tripdirections.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitinfo.h>
 #include <valhalla/odin/transitstop.h>
@@ -226,6 +227,10 @@ class Maneuver {
   bool tee() const;
   void set_tee(bool tee);
 
+  const VerbalTextFormatter* verbal_formatter() const;
+  void set_verbal_formatter(
+      std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
+
   std::string ToString() const;
 
   std::string ToParameterString() const;
@@ -274,6 +279,8 @@ class Maneuver {
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
   bool tee_;
+
+  std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 
   // TODO notes
 

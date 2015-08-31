@@ -73,6 +73,10 @@ std::string EnhancedTripPath::GetCountryCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->country_code();
 }
 
+std::string EnhancedTripPath::GetStateCode(int node_index) {
+  return GetAdmin(node(node_index).admin_index())->state_code();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
 

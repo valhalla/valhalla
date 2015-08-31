@@ -611,6 +611,16 @@ void Maneuver::set_tee(bool tee) {
   tee_ = tee;
 }
 
+const VerbalTextFormatter* Maneuver::verbal_formatter() const {
+  return verbal_formatter_.get();
+}
+
+void Maneuver::set_verbal_formatter(
+    std::unique_ptr<VerbalTextFormatter>&& verbal_formatter) {
+  verbal_formatter_ = std::move(verbal_formatter);
+}
+
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);
