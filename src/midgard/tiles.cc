@@ -113,37 +113,37 @@ uint32_t Tiles<coord_t>::MaxTileId(const AABB2<coord_t>& bbox,
   return (cols * rows) - 1;
 }
 
-// Get the base x,y (or lat,lng) of a specified tile.
+// Get the base x,y (or lng,lat) of a specified tile.
 template <class coord_t>
 coord_t Tiles<coord_t>::Base(const int32_t tileid) const {
   int32_t row = tileid / ncolumns_;
   int32_t col = tileid - (row * ncolumns_);
-  return coord_t(tilebounds_.miny() + (row * tilesize_),
-                 tilebounds_.minx() + (col * tilesize_));
+  return coord_t(tilebounds_.minx() + (col * tilesize_),
+                 tilebounds_.miny() + (row * tilesize_));
 }
 
 // Get the bounding box of the specified tile.
 template <class coord_t>
 AABB2<coord_t> Tiles<coord_t>::TileBounds(const int32_t tileid) const {
   Point2 base = Base(tileid);
-  return AABB2<coord_t>(base.y(), base.x(),
-                        base.y() + tilesize_, base.x() + tilesize_);
+  return AABB2<coord_t>(base.x(), base.y(),
+                        base.x() + tilesize_, base.y() + tilesize_);
 }
 
 // Get the bounding box of the tile with specified row, column.
 template <class coord_t>
 AABB2<coord_t> Tiles<coord_t>::TileBounds(const int32_t col,
                                           const int32_t row) const {
-  float basey = ((float) row * tilesize_) + tilebounds_.miny();
-  float basex = ((float) col * tilesize_) + tilebounds_.minx();
-  return AABB2<coord_t>(basey, basex, basey + tilesize_, basex + tilesize_);
+  float basex = tilebounds_.minx() + ((float) col * tilesize_);
+  float basey = tilebounds_.miny() + ((float) row * tilesize_);
+  return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
 }
 
 // Get the center of the specified tile.
 template <class coord_t>
 coord_t Tiles<coord_t>::Center(const int32_t tileid) const {
   Point2 base = Base(tileid);
-  return coord_t(base.y() + tilesize_ * 0.5, base.x() + tilesize_ * 0.5);
+  return coord_t(base.x() + tilesize_ * 0.5, base.y() + tilesize_ * 0.5);
 }
 
 // Get the tile Id given a previous tile and a row, column offset.

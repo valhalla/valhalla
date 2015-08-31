@@ -20,6 +20,34 @@ void TestMaxId() {
     throw std::runtime_error("Unexpected maxid result");
 }
 
+void TestBase() {
+  Tiles<PointLL> tiles(AABB2<PointLL>(Point2(-180, -90), PointLL(180, 90)), 1);
+  PointLL ll;
+  // left bottom
+  ll = tiles.Base(0);
+  if (!(ll.lng() == -180 && ll.lat() == -90)) {
+    throw std::runtime_error("Unexpected base result");
+  }
+  ll = tiles.Base(1);
+  if (!(ll.lng() == -179 && ll.lat() == -90)) {
+    throw std::runtime_error("Unexpected base result");
+  }
+  // right bottm
+  ll = tiles.Base(179);
+  if (!(ll.lng() == 180 && ll.lat() == -90)) {
+    throw std::runtime_error("Unexpected base result");
+  }
+  ll = tiles.Base(180);
+  if (!(ll.lng() == -180 && ll.lat() == -89)) {
+    throw std::runtime_error("Unexpected base result");
+  }
+  // right top
+  ll = tiles.Base(180 * 180 - 1);
+  if (!(ll.lng() == 180 && ll.lat() == 90)) {
+    throw std::runtime_error("Unexpected base result");
+  }
+}
+
 void TestRowCol() {
   Tiles<PointLL> tiles(AABB2<PointLL>(PointLL(-180, -90), PointLL(180, 90)), 1);
 
