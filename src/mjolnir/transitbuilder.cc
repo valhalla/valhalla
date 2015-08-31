@@ -365,9 +365,28 @@ std::vector<Departure> GetDepartures(const std::string& file,
       //dep.blockid    = sqlite3_column_int(stmt, 13);
       dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
 
+      auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
+
       // TODO - configure to reject any where calendar end date is in the past!
       if (dep.start_date > 500) {
-        departures.emplace_back(std::move(dep));
+
+        if (added_dates && added_dates->empty())
+          departures.emplace_back(std::move(dep));
+        else //do not move, must create additions for the departure. {
+          departures.emplace_back(dep);
+      }
+
+      //Add the addtions.
+      if (added_dates && !added_dates->empty()) {
+        for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
+
+          std::string date = service_added_dates.second.get_value<std::string>();
+
+          dep.start_date =  DateTime::days_from_pivot_date(date);
+          dep.end_date =  DateTime::days_from_pivot_date(date);
+
+          departures.emplace_back(dep);
+        }
       }
     }
   }
@@ -471,22 +490,20 @@ void AddTrips(const std::string& file,
     for (const auto& key : keys) {
       // Skip (do not need): route_id, route_color, route_text_color, and
       // route_url
-      for (const auto& routes : pt.get_child("routes")) {
+      for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
 
-        uint32_t tripid = routes.second.get<uint32_t>("trip_key", 0);
+        uint32_t tripid = stop_pairs.second.get<uint32_t>("trip_key", 0);
         if (key != tripid)
           continue;
 
-        uint32_t routeid = routes.second.get<uint32_t>("key", 0);
-        if (key != routeid)
-          continue;
+        uint32_t routeid = stop_pairs.second.get<uint32_t>("route_key", 0);
 
     // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the trips
     // TODO:  so that costing can be applied for bike and wheelchair accessibility.
     // TODO:  This will require updates to data structure TransitTrip.
-        std::string tl_tripid = routes.second.get<std::string>("trip", "");
-        std::string headsign = routes.second.get<std::string>("trip_headsign", "");
-        std::string shortname = routes.second.get<std::string>("trip_short_name", "");
+        std::string tl_tripid = stop_pairs.second.get<std::string>("trip", "");
+        std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
+        std::string shortname = stop_pairs.second.get<std::string>("trip_short_name", "");
 
         // Add names and create transit trip
         TransitTrip trip(tripid, routeid, "",
@@ -514,6 +531,13 @@ void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
     // Skip service_id
     std::string sql = "SELECT service_key, date, exception_type from ";
     sql += "calendar_dates where service_key = " + std::to_string(key);
+
+   /* for(auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
+
+       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
+       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
+
+     }*/
 
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
