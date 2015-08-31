@@ -54,6 +54,8 @@ test/streetnames_factory
 test/graphreader
 test/turn
 test/json
+test/verbal_text_formatter
+test/verbal_text_formatter_us
 test/*.log
 test/*.trs
 
