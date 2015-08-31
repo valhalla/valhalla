@@ -1125,14 +1125,16 @@ void enhance(const boost::property_tree::ptree& pt,
         if (admin_index != 0)
           directededge.set_drive_on_right(drive_on_right[admin_index]);
 
-        // Name continuity - set in NodeInfo
-        for (uint32_t k = (j + 1); k < ntrans; k++) {
-          if (ConsistentNames(country_code,
-              tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
-              tilebuilder.edgeinfo(
-                  tilebuilder.directededge(nodeinfo.edge_index() + k)
-                      .edgeinfo_offset())->GetNames())) {
-            nodeinfo.set_name_consistency(j, k, true);
+        // Name continuity - set in NodeInfo. Do not set this for transit
+        // nodes since the stop Id is stored in that field (union).
+        if (!nodeinfo.is_transit()) {
+          for (uint32_t k = (j + 1); k < ntrans; k++) {
+            if (ConsistentNames(country_code,
+                  tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
+                  tilebuilder.edgeinfo(tilebuilder.directededge(
+                		  nodeinfo.edge_index() + k).edgeinfo_offset())->GetNames())) {
+              nodeinfo.set_name_consistency(j, k, true);
+            }
           }
         }
 
