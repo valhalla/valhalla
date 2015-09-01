@@ -118,9 +118,9 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // edge (if so complete the route and form the path). Mark the edge as
     // permanently labeled.
     EdgeLabel pred = edgelabels_[predindex];
-	if (destinations_.find(pred.edgeid()) != destinations_.end()) {
-	  return FormPath(predindex, loop_edge_info);
-	}
+    if (destinations_.find(pred.edgeid()) != destinations_.end()) {
+      return FormPath(predindex, loop_edge_info);
+    }
     edgestatus_->Update(pred.edgeid(), kPermanent);
 
     // Check that distance is converging towards the destination. Return route
