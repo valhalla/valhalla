@@ -121,9 +121,6 @@ class PathAlgorithm {
   // Destinations, id and cost
   std::unordered_map<baldr::GraphId, sif::Cost> destinations_;
 
-  // Destination that was last found with its true cost + partial cost
-  std::pair<uint32_t, sif::Cost> best_destination_;
-
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
    * @param  origll  Lat,lng of the origin.
@@ -199,13 +196,6 @@ class PathAlgorithm {
   uint32_t SetDestination(baldr::GraphReader& graphreader,
                           const baldr::PathLocation& dest,
                           const std::shared_ptr<sif::DynamicCost>& costing);
-
-  /**
-   * Return a valid edge id if we've found the destination edge.
-   * @param edge_label_index  Edge label to be tested for destination
-   * @return  Returns true if we've found the destination.
-   */
-  bool IsComplete(const uint32_t edge_label_index);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

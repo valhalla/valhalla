@@ -304,6 +304,16 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       continue;
     }
 
+std::vector<std::string> names = graphtile->edgeinfo(directededge->edgeinfo_offset())->GetNames();
+uint64_t wayid = graphtile->edgeinfo(directededge->edgeinfo_offset())->wayid();
+if (names.size() == 0) {
+LOG_INFO("(Unnamed) Length: " + std::to_string(directededge->length()) + " weighted_grade: " +
+    		std::to_string(directededge->weighted_grade()) + " WayID: " + std::to_string(wayid));
+} else {
+	LOG_INFO("(" + names[0] + ")  Length: " + std::to_string(directededge->length()) + " weighted_grade: " +
+	    		std::to_string(directededge->weighted_grade()) + " WayID: " + std::to_string(wayid));
+}
+
     // Add a node to the trip path and set its attributes.
     TripPath_Node* trip_node = trip_path.add_node();
 
@@ -345,7 +355,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
           graphtile->node(startnode)->stop_id());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
-      transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+      if (!stop) {
+    	  transit_stop_info->set_name("");
+      } else {
+        transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+      }
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure)
