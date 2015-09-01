@@ -559,10 +559,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
                 resampled = valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
               //get the heights at each point
               auto heights = sample->get_all(resampled);
-              //compute grades in both directions, valid range is between -10 and +15
-              forward_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+              //compute grades in both directions, valid range is between -10 and +15, which we then
+              //map to a value between 0 and 15 (to use for indices into a factor array)
+              forward_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
               std::reverse(heights.begin(), heights.end());
-              reverse_grade = static_cast<uint32_t>((valhalla::skadi::weighted_grade(heights, interval) + 10.0) / 25.0 + .5);
+              reverse_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
 /*
               if(forward_grade < 2) {
                 LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
@@ -613,7 +614,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
           //this cant happen
           if(found == geo_attribute_cache.cend())
             throw std::runtime_error("GeoAttributes cached object should be there!");
-
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
