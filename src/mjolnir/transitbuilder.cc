@@ -311,6 +311,12 @@ std::vector<Departure> GetDepartures(const std::string& file,
         continue;
       }
 
+      if (dep.route == 0) {
+        LOG_ERROR("Route does not exist for trip: " +  std::to_string(dep.trip) +
+                  " file: " + file);
+        continue;
+      }
+
       //TODO
       dep.shapeid = 0;
       dep.blockid = 0;
@@ -323,6 +329,10 @@ std::vector<Departure> GetDepartures(const std::string& file,
       dep.arr_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("destination_arrival_time", ""));
       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
+
+      //std::cout << stop_pairs.second.get<std::string>("service_start_date", "") << " " << std::to_string(dep.start_date) << std::endl;
+      //std::cout << stop_pairs.second.get<std::string>("service_end_date", "") << " " << std::to_string(dep.end_date) << std::endl;
+
 
       uint32_t index = 1;
       uint32_t dow_mask = kDOWNone;
@@ -359,33 +369,33 @@ std::vector<Departure> GetDepartures(const std::string& file,
       }
 
       dep.dow = dow_mask;
-
-      //dep.dow        = sqlite3_column_int(stmt, 11);
-      //dep.has_subtractions = sqlite3_column_int(stmt, 12);
-      //dep.blockid    = sqlite3_column_int(stmt, 13);
       dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
 
       auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
 
       // TODO - configure to reject any where calendar end date is in the past!
-      if (dep.start_date > 500) {
+  //    if (dep.start_date > 500) {
 
         if (added_dates && added_dates->empty())
           departures.emplace_back(std::move(dep));
         else //do not move, must create additions for the departure. {
           departures.emplace_back(dep);
-      }
 
-      //Add the addtions.
-      if (added_dates && !added_dates->empty()) {
-        for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
+        //Add the additions.
+        if (added_dates && !added_dates->empty()) {
+          for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
 
-          std::string date = service_added_dates.second.get_value<std::string>();
+            std::string date = service_added_dates.second.get_value<std::string>();
 
-          dep.start_date =  DateTime::days_from_pivot_date(date);
-          dep.end_date =  DateTime::days_from_pivot_date(date);
+            uint32_t days = DateTime::days_from_pivot_date(date);
 
-          departures.emplace_back(dep);
+//            if (days > 500) {
+
+              dep.start_date =  days;
+              dep.end_date =  days;
+              departures.emplace_back(dep);
+//            }
+//          }
         }
       }
     }
@@ -393,6 +403,11 @@ std::vector<Departure> GetDepartures(const std::string& file,
   catch (std::exception &e) {
     LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
   }
+
+
+  if (departures.size() == 0)
+    LOG_INFO("dep empty " + file);
+
   return departures;
 }
 
@@ -458,6 +473,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
 
         // Route type - need this to store in edge?
         route_types[routeid] = type;
+        break;
 
       }
     }
@@ -466,7 +482,11 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
     LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
   }
 
-  LOG_DEBUG("Added " + std::to_string(n) + " routes");
+  LOG_INFO("Added " + std::to_string(n) + " routes");
+
+  if (n == 0)
+    LOG_INFO("routes empty " + file);
+
   return route_types;
 }
 
@@ -511,6 +531,7 @@ void AddTrips(const std::string& file,
                          tilebuilder.AddName(headsign));
         tilebuilder.AddTransitTrip(trip);
         n++;
+        break;
       }
     }
   }
@@ -519,7 +540,11 @@ catch (std::exception &e) {
   LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
 }
 
-  LOG_DEBUG("Added " + std::to_string(n) + " trips");
+  LOG_INFO("Added " + std::to_string(n) + " trips");
+
+  if (n == 0)
+    LOG_INFO("trips empty " + file);
+
 }
 
 // Add calendar exceptions
@@ -1156,10 +1181,9 @@ void build(const boost::property_tree::ptree& config_pt,
           // Form transit departures
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          TransitDeparture td(lineid, dep.route,0,
+          TransitDeparture td(lineid, dep.trip,dep.route,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
-
 
           LOG_INFO("Add departure: " + std::to_string(dep.trip) +
                        " dep time = " + std::to_string(td.departure_time()) +
