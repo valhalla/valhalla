@@ -172,6 +172,7 @@ std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb) 
       index++;
     }
 
+    //Hack for now.  transit land has a BoundBox bug.
     if (aabb.Contains(PointLL(lon,lat))) {
 
       stop.ll.Set(lon,lat);
@@ -191,7 +192,7 @@ std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb) 
       stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
       stop.timezone = s.second.get<std::string>("timezone", "");
 
-      //TODO: get these from transitland
+      //TODO: get these from transitland????
       stop.type = 0;
       stop.parent = 0;
 
@@ -278,8 +279,10 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 }
 
 // Get scheduled departures for a stop
-std::vector<Departure> GetDepartures(const std::string& file,
-                                     const uint32_t stop_key) {
+std::vector<Departure> ProcessStopPairs(const std::string& file,
+                                        std::unordered_map<uint32_t, uint32_t>& trip_routes,
+                                        const uint32_t stop_key,
+                                        GraphTileBuilder& tilebuilder) {
 
   boost::property_tree::ptree pt;
   std::vector<Departure> departures;
@@ -330,10 +333,6 @@ std::vector<Departure> GetDepartures(const std::string& file,
       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
 
-      //std::cout << stop_pairs.second.get<std::string>("service_start_date", "") << " " << std::to_string(dep.start_date) << std::endl;
-      //std::cout << stop_pairs.second.get<std::string>("service_end_date", "") << " " << std::to_string(dep.end_date) << std::endl;
-
-
       uint32_t index = 1;
       uint32_t dow_mask = kDOWNone;
 
@@ -371,42 +370,55 @@ std::vector<Departure> GetDepartures(const std::string& file,
       dep.dow = dow_mask;
       dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
 
+      if (dep.headsign == "null")
+        dep.headsign = "";
+
       auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
 
-      // TODO - configure to reject any where calendar end date is in the past!
-  //    if (dep.start_date > 500) {
+      if (added_dates && added_dates->empty())
+        departures.emplace_back(std::move(dep));
+      else //do not move, must create additions for the departure. {
+        departures.emplace_back(dep);
 
-        if (added_dates && added_dates->empty())
-          departures.emplace_back(std::move(dep));
-        else //do not move, must create additions for the departure. {
+      //Add the additions.
+      if (added_dates && !added_dates->empty()) {
+        for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
+
+          std::string date = service_added_dates.second.get_value<std::string>();
+
+          uint32_t days = DateTime::days_from_pivot_date(date);
+
+          dep.start_date =  days;
+          dep.end_date =  days;
           departures.emplace_back(dep);
-
-        //Add the additions.
-        if (added_dates && !added_dates->empty()) {
-          for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
-
-            std::string date = service_added_dates.second.get_value<std::string>();
-
-            uint32_t days = DateTime::days_from_pivot_date(date);
-
-//            if (days > 500) {
-
-              dep.start_date =  days;
-              dep.end_date =  days;
-              departures.emplace_back(dep);
-//            }
-//          }
         }
       }
+
+      const auto& trip = trip_routes.find(dep.trip);
+
+      //Add the trips.
+      if (trip == trip_routes.end()) {
+
+        std::string tl_tripid = stop_pairs.second.get<std::string>("trip", "");
+        std::string shortname = stop_pairs.second.get<std::string>("trip_short_name", "");
+
+        if (shortname == "null")
+          shortname = "";
+
+        // Add names and create transit trip
+        TransitTrip trip(dep.trip, dep.route, tl_tripid.c_str(),
+                         tilebuilder.AddName(shortname),
+                         tilebuilder.AddName(dep.headsign));
+        tilebuilder.AddTransitTrip(trip);
+
+        trip_routes[dep.trip] = dep.route;
+      }
+
     }
   }
   catch (std::exception &e) {
     LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
   }
-
-
-  if (departures.size() == 0)
-    LOG_INFO("dep empty " + file);
 
   return departures;
 }
@@ -443,6 +455,12 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
         uint32_t type = 0;
 
+        if (longname == "null")
+          longname = "";
+
+        if (desc == "null")
+          desc = "";
+
         if (vehicle_type == "tram")
           type = 0;
         else if (vehicle_type == "metro")
@@ -465,7 +483,8 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         }
 
         // Add names and create the transit route
-        TransitRoute route(routeid, 0, "",tilebuilder.AddName(""),
+        // Long name = name in transit.land
+        TransitRoute route(routeid, 0, tl_routeid.c_str(),tilebuilder.AddName(""),
                            tilebuilder.AddName(longname),
                            tilebuilder.AddName(desc));
         tilebuilder.AddTransitRoute(route);
@@ -474,7 +493,6 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         // Route type - need this to store in edge?
         route_types[routeid] = type;
         break;
-
       }
     }
   }
@@ -484,67 +502,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
 
   LOG_INFO("Added " + std::to_string(n) + " routes");
 
-  if (n == 0)
-    LOG_INFO("routes empty " + file);
-
   return route_types;
-}
-
-
-// Get trips
-void AddTrips(const std::string& file,
-              const std::unordered_set<uint32_t>& keys,
-              GraphTileBuilder& tilebuilder) {
-
-  boost::property_tree::ptree pt;
-
-  // Make sure it exists
-  if (boost::filesystem::exists(file))
-    boost::property_tree::read_json(file, pt);
-  else
-    return;
-
-  uint32_t n = 0;
-  try {
-    // Iterate through all route keys
-    for (const auto& key : keys) {
-      // Skip (do not need): route_id, route_color, route_text_color, and
-      // route_url
-      for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
-
-        uint32_t tripid = stop_pairs.second.get<uint32_t>("trip_key", 0);
-        if (key != tripid)
-          continue;
-
-        uint32_t routeid = stop_pairs.second.get<uint32_t>("route_key", 0);
-
-    // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the trips
-    // TODO:  so that costing can be applied for bike and wheelchair accessibility.
-    // TODO:  This will require updates to data structure TransitTrip.
-        std::string tl_tripid = stop_pairs.second.get<std::string>("trip", "");
-        std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
-        std::string shortname = stop_pairs.second.get<std::string>("trip_short_name", "");
-
-        // Add names and create transit trip
-        TransitTrip trip(tripid, routeid, "",
-                         tilebuilder.AddName(shortname),
-                         tilebuilder.AddName(headsign));
-        tilebuilder.AddTransitTrip(trip);
-        n++;
-        break;
-      }
-    }
-  }
-
-catch (std::exception &e) {
-  LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
-}
-
-  LOG_INFO("Added " + std::to_string(n) + " trips");
-
-  if (n == 0)
-    LOG_INFO("trips empty " + file);
-
 }
 
 // Add calendar exceptions
@@ -556,13 +514,6 @@ void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
     // Skip service_id
     std::string sql = "SELECT service_key, date, exception_type from ";
     sql += "calendar_dates where service_key = " + std::to_string(key);
-
-   /* for(auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
-
-       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
-       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
-
-     }*/
 
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
@@ -1084,7 +1035,7 @@ void build(const boost::property_tree::ptree& config_pt,
     stop_indexes[stop.key] = n;
     n++;
   }
-
+  std::unordered_map<uint32_t, uint32_t> trip_routes;
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
     // Get the next tile Id from the queue and get a tile builder
@@ -1154,7 +1105,8 @@ void build(const boost::property_tree::ptree& config_pt,
         }
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-        std::vector<Departure> departures = GetDepartures(file, stop.key);
+        std::vector<Departure> departures = ProcessStopPairs(file, trip_routes,
+                                                             stop.key, tilebuilder);
 
         LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures for "
           + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
@@ -1185,7 +1137,7 @@ void build(const boost::property_tree::ptree& config_pt,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
                       dep.start_date, dep.end_date, dep.dow, dep.service);
 
-          LOG_INFO("Add departure: " + std::to_string(dep.trip) +
+          LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                        " dep time = " + std::to_string(td.departure_time()) +
                        " arr time = " + std::to_string(dep.arr_time) +
                        " start_date = " + std::to_string(td.start_date()) +
@@ -1195,15 +1147,15 @@ void build(const boost::property_tree::ptree& config_pt,
 
         }
 
+        // TODO no Transfers exist in transit.land
         // Get any transfers from this stop
- //       AddTransfers(db_handle, stop.key, tilebuilder);
+        // AddTransfers(db_handle, stop.key, tilebuilder);
 
         // Store stop information in TransitStops
-        // TODO - tl_stop_id
         uint32_t name_offset = tilebuilder.AddName(stop.name);
         uint32_t desc_offset = tilebuilder.AddName(stop.desc);
         uint32_t farezone = 0;
-        TransitStop ts(stop.key, "", name_offset, desc_offset,
+        TransitStop ts(stop.key, stop.onestop_id.c_str(), name_offset, desc_offset,
                        stop.parent, farezone);
         tilebuilder.AddTransitStop(ts);
 
@@ -1213,15 +1165,15 @@ void build(const boost::property_tree::ptree& config_pt,
       }
     }
 
+    LOG_INFO("Added " + std::to_string(trip_routes.size()) + " trips");
+
     // Add routes to the tile. Get map of route types.
     std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
                               route_keys, tilebuilder);
 
-    // Add trips to the tile.
-    AddTrips(file,trip_keys, tilebuilder);
-
+    // TODO no service keys exist in transit.land
     // Add calendar exceptions (using service Id)
-//    AddCalendar(db_handle, service_keys, tilebuilder);
+    // AddCalendar(db_handle, service_keys, tilebuilder);
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder, stop_edge_map, stops, connection_edges,
