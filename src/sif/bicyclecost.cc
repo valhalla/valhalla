@@ -66,6 +66,28 @@ constexpr float kRoadClassWeight[] = {
     1.5f      // Service, other
 };
 
+// Speed adjustment factors based on weighted grade. An example of
+// speed changes based on "grade" is provided using a base speed of
+// 18 MPH on flat roads
+constexpr float kGradeBasedSpeedFactor[] = {
+  2.5f,      // -10%  - 45
+  2.25f,     // -8%   - 40.5
+  2.0f,      // -6.5% - 36
+  1.7f,      // -5%   - 30.6
+  1.4f,      // -3%   - 25
+  1.2f,      // -1.5% - 21.6
+  1.0f,      // 0%    - 18
+  0.95f,     // 1.5%  - 17
+  0.85f,     // 3%    - 15
+  0.75f,     // 5%    - 13.5
+  0.65f,     // 6.5%  - 12
+  0.55f,     // 8%    - 10
+  0.5f,      // 10%   - 9
+  0.45f,     // 11.5% - 8
+  0.4f,      // 13%   - 7
+  0.3f       // 15%   - 5.5
+};
+
 // Edge speed above which extra penalties apply (to avoid roads with higher
 // speed traffic). This threshold is adjusted upwards with higher useroads
 // factors.
@@ -210,6 +232,10 @@ class BicycleCost : public DynamicCost {
   // absolutely necessary.
   float useroads_;
 
+  // Elevation/grade factors (weighting applied based on the edge's weighted
+  // grade (relative value from 0-15)
+  float grade_weight[16];
+
   // Threshold above which speed based penalties apply (based on the useroads
   // factor).
   uint32_t speed_penalty_threshold_;
@@ -323,6 +349,11 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   for (uint32_t s = 1; s < 100; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
+
+  // TODO: Populate the grade weights (based on hilliness factor)
+  for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
+    grade_weight[i] = 1.0f;
+  }
 }
 
 // Destructor
@@ -394,10 +425,10 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // Update speed based on surface factor. Lower speed for rougher surfaces
-  // depending on the bicycle type.
-  float speed = UpdateSpeed(edge->surface());
-
-  // TODO - update speed based on hilliness
+  // depending on the bicycle type. Modulate speed based on weighted grade
+  // (relative measure of elevation change along the edge)
+  float speed = UpdateSpeed(edge->surface()) *
+		        kGradeBasedSpeedFactor[edge->weighted_grade()];
 
   // Apply a weighting factor to the cost based on desirability of cycling
   // on this edge. Based on several factors: rider propensity to ride on roads,
@@ -448,7 +479,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= kBicycleNetworkFactor;
   }
 
-  // TODO - update factor based on hilliness and avoid hills option
+  // Update factor based on weights applied for weighted_grade / hilliness
+  factor *= grade_weight[edge->weighted_grade()];
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   float sec = (edge->length() * speedfactor_[static_cast<uint32_t>(speed + 0.5f)]);
