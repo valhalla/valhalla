@@ -370,9 +370,6 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       dep.dow = dow_mask;
       dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
 
-      if (dep.headsign == "null")
-        dep.headsign = "";
-
       auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
 
       if (added_dates && added_dates->empty())
@@ -402,13 +399,10 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
         std::string tl_tripid = stop_pairs.second.get<std::string>("trip", "");
         std::string shortname = stop_pairs.second.get<std::string>("trip_short_name", "");
 
-        if (shortname == "null")
-          shortname = "";
-
         // Add names and create transit trip
         TransitTrip trip(dep.trip, dep.route, tl_tripid.c_str(),
-                         tilebuilder.AddName(shortname),
-                         tilebuilder.AddName(dep.headsign));
+                         tilebuilder.AddName(shortname == "null" ? "" : shortname),
+                         tilebuilder.AddName(dep.headsign == "null" ? "" : dep.headsign));
         tilebuilder.AddTransitTrip(trip);
 
         trip_routes[dep.trip] = dep.route;
@@ -450,16 +444,11 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
           continue;
 
         std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
+        std::string shortname = routes.second.get<std::string>("name", "");
         std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
         std::string desc = routes.second.get<std::string>("tags.route_desc", "");
         std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
         uint32_t type = 0;
-
-        if (longname == "null")
-          longname = "";
-
-        if (desc == "null")
-          desc = "";
 
         if (vehicle_type == "tram")
           type = 0;
@@ -483,10 +472,11 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         }
 
         // Add names and create the transit route
-        // Long name = name in transit.land
-        TransitRoute route(routeid, 0, tl_routeid.c_str(),tilebuilder.AddName(""),
-                           tilebuilder.AddName(longname),
-                           tilebuilder.AddName(desc));
+        // TODO:  Fix short name.
+        TransitRoute route(routeid, 0, tl_routeid.c_str(),
+                           tilebuilder.AddName(shortname == "null" ? "" : longname),
+                           tilebuilder.AddName(longname == "null" ? "" : longname),
+                           tilebuilder.AddName(desc == "null" ? "" : desc));
         tilebuilder.AddTransitRoute(route);
         n++;
 
