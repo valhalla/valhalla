@@ -1,5 +1,6 @@
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+#include "baldr/verbal_text_formatter_us_co.h"
 #include "baldr/verbal_text_formatter_factory.h"
 #include <valhalla/midgard/util.h>
 
@@ -9,6 +10,10 @@ namespace baldr {
 std::unique_ptr<VerbalTextFormatter> VerbalTextFormatterFactory::Create(
     const std::string& country_code, const std::string& state_code) {
   if (country_code == "US") {
+    if (state_code == "CO") {
+      return midgard::make_unique<VerbalTextFormatterUsCo>(country_code,
+                                                           state_code);
+    }
     return midgard::make_unique<VerbalTextFormatterUs>(country_code, state_code);
   }
 

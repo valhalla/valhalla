@@ -31,7 +31,7 @@ const std::string kHundredOutPattern = "$1$2 hundred$4";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
+const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
     { std::regex("(\\bCA)([ -])(\\d{1,3})", std::regex_constants::icase), "California $3" },
     { std::regex("(\\bTX)([ -])(\\d{1,3})", std::regex_constants::icase), "Texas $3" },
@@ -55,7 +55,6 @@ const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
     { std::regex("(\\bMD)([ -])(\\d{1,3})", std::regex_constants::icase), "Maryland $3" },
     { std::regex("(\\bWI)([ -])(\\d{1,3})", std::regex_constants::icase), "Wisconsin $3" },
     { std::regex("(\\bMN)([ -])(\\d{1,3})", std::regex_constants::icase), "Minnesota $3" },
-    { std::regex("(\\bCO)([ -])(\\d{1,3})", std::regex_constants::icase), "Colorado $3" },
     { std::regex("(\\bAL)([ -])(\\d{1,3})", std::regex_constants::icase), "Alabama $3" },
     { std::regex("(\\bSC)([ -])(\\d{1,3})", std::regex_constants::icase), "South Carolina $3" },
     { std::regex("(\\bLA)([ -])(\\d{1,4})", std::regex_constants::icase), "Louisiana $3" },
@@ -122,7 +121,7 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
   std::string FormUsHighwayTts(const std::string& source) const;
 
-  std::string ProcessStatesTts(const std::string& source) const;
+  virtual std::string ProcessStatesTts(const std::string& source) const;
 
   bool FormStateTts(const std::string& source, const std::regex& state_regex,
                     const std::string& state_output_pattern,

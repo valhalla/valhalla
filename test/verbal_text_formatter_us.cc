@@ -98,7 +98,7 @@ void TryProcessStatesTts(string source, string expected) {
   string tts = formatter_test.ProcessStatesTts(source);
   if (tts != expected) {
     throw std::runtime_error(
-        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+        "Incorrect ProcessStatesTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 
@@ -109,7 +109,7 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("AK 1", "Alaska 1");
   TryProcessStatesTts("AR 107", "Arkansas 107");
   TryProcessStatesTts("CA 480", "California 480");
-  TryProcessStatesTts("CO 265", "Colorado 265");
+  TryProcessStatesTts("CO 265", "CO 265");
   TryProcessStatesTts("CT 14A", "Connecticut 14A");
   TryProcessStatesTts("CT 15", "Connecticut 15");
   TryProcessStatesTts("DE 10", "Delaware 10");
@@ -171,7 +171,7 @@ void TryProcessCountysTts(string source, string expected) {
   string tts = formatter_test.ProcessCountysTts(source);
   if (tts != expected) {
     throw std::runtime_error(
-        "Incorrect FormUsHighwayTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
+        "Incorrect ProcessCountysTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
   }
 }
 

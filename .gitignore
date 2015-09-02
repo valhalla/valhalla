@@ -56,6 +56,7 @@ test/turn
 test/json
 test/verbal_text_formatter
 test/verbal_text_formatter_us
+test/verbal_text_formatter_us_co
 test/*.log
 test/*.trs
 
