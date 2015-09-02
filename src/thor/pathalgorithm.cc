@@ -308,11 +308,11 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
       // Compute the cost to the end of this edge
       Cost newcost = pred.cost() +
-			     costing->EdgeCost(directededge, nodeinfo->density());
-				 costing->TransitionCost(directededge, nodeinfo, pred);
+			     costing->EdgeCost(directededge, nodeinfo->density()) +
+			     costing->TransitionCost(directededge, nodeinfo, pred);
 
       // If this edge is a destination, subtract the partial/remainder cost
-      // (cost from the dest. location to the end of the edge)
+      // (cost from the dest. location to the end of the edge).
       auto p = destinations_.find(edgeid);
       if (p != destinations_.end()) {
         newcost -= p->second;
