@@ -345,7 +345,11 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
           graphtile->node(startnode)->stop_id());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
-      transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+      if (!stop) {
+    	  transit_stop_info->set_name("");
+      } else {
+        transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+      }
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure)
