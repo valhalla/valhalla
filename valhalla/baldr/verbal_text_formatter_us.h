@@ -51,7 +51,7 @@ const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
     { std::regex("(\\bIN)([ -])(\\d{1,3})", std::regex_constants::icase), "Indiana $3" },
     { std::regex("(\\bTN)([ -])(\\d{1,3})", std::regex_constants::icase), "Tennessee $3" },
     { std::regex("(\\bMO)([ -])(\\d{1,3})", std::regex_constants::icase), "Missouri $3" },
-    { std::regex("(\\bMO)([ -])([[:alpha:]]{1,2})", std::regex_constants::icase), "Missouri $3" },
+    { std::regex("(\\bMO)([ -])([[:alpha:]]{1,2}\\b)", std::regex_constants::icase), "Missouri $3" },
     { std::regex("(\\bMD)([ -])(\\d{1,3})", std::regex_constants::icase), "Maryland $3" },
     { std::regex("(\\bWI)([ -])(\\d{1,3})", std::regex_constants::icase), "Wisconsin $3" },
     { std::regex("(\\bMN)([ -])(\\d{1,3})", std::regex_constants::icase), "Minnesota $3" },
