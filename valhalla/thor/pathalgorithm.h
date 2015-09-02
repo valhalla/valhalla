@@ -119,7 +119,7 @@ class PathAlgorithm {
   std::shared_ptr<EdgeStatus> edgestatus_;
 
   // Destinations, id and cost
-  std::unordered_map<baldr::GraphId, sif::Cost> destinations_;
+  std::map<uint64_t, sif::Cost> destinations_;
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
