@@ -132,6 +132,8 @@ void TestProcessStatesTts() {
   TryProcessStatesTts("MN 55", "Minnesota 55");
   TryProcessStatesTts("MS 468", "Mississippi 468");
   TryProcessStatesTts("MO 180", "Missouri 180");
+  TryProcessStatesTts("MO A", "Missouri A");
+  TryProcessStatesTts("MO JJ", "Missouri JJ");
   TryProcessStatesTts("MT 282", "Montana 282");
   TryProcessStatesTts("NE 2", "Nebraska 2");
   TryProcessStatesTts("NE 55W Link", "Nebraska 55W Link");

@@ -31,7 +31,7 @@ const std::string kHundredOutPattern = "$1$2 hundred$4";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
+const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
     { std::regex("(\\bCA)([ -])(\\d{1,3})", std::regex_constants::icase), "California $3" },
     { std::regex("(\\bTX)([ -])(\\d{1,3})", std::regex_constants::icase), "Texas $3" },
@@ -51,6 +51,7 @@ const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bIN)([ -])(\\d{1,3})", std::regex_constants::icase), "Indiana $3" },
     { std::regex("(\\bTN)([ -])(\\d{1,3})", std::regex_constants::icase), "Tennessee $3" },
     { std::regex("(\\bMO)([ -])(\\d{1,3})", std::regex_constants::icase), "Missouri $3" },
+    { std::regex("(\\bMO)([ -])([[:alpha:]]{1,2})", std::regex_constants::icase), "Missouri $3" },
     { std::regex("(\\bMD)([ -])(\\d{1,3})", std::regex_constants::icase), "Maryland $3" },
     { std::regex("(\\bWI)([ -])(\\d{1,3})", std::regex_constants::icase), "Wisconsin $3" },
     { std::regex("(\\bMN)([ -])(\\d{1,3})", std::regex_constants::icase), "Minnesota $3" },
