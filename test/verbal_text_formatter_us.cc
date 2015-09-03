@@ -37,8 +37,8 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::FormThousandTts(source);
   }
 
-  std::string FormHundredTts(const std::string& source) const {
-    return VerbalTextFormatterUs::FormHundredTts(source);
+  std::string ProcessHundredTts(const std::string& source) const {
+    return VerbalTextFormatterUs::ProcessHundredTts(source);
   }
 
   std::string FormNumberSplitTts(const std::string& source) const {
@@ -176,10 +176,32 @@ void TryProcessCountysTts(string source, string expected) {
 }
 
 void TestProcessCountysTts() {
+  TryProcessCountysTts("CR 0", "County Route 0");
+  TryProcessCountysTts("CR 1.00", "County Route 1.00");
+  TryProcessCountysTts("CR 100", "County Route 100");
+  TryProcessCountysTts("CR 100 S", "County Route 100 S");
   TryProcessCountysTts("CR 539", "County Route 539");
+  TryProcessCountysTts("CR-852", "County Route 852");
+  TryProcessCountysTts("C R A13", "County Route A13");
+  TryProcessCountysTts("C R 13B", "County Route 13B");
   TryProcessCountysTts("C R 404", "County Route 404");
   TryProcessCountysTts("CR-4003", "County Route 4003");
   TryProcessCountysTts("CR116", "County Route 116");
+  TryProcessCountysTts("CR A", "County Route A");
+  TryProcessCountysTts("CR JJ", "County Route JJ");
+  TryProcessCountysTts("CR J29", "County Route J29");
+  TryProcessCountysTts("CR 18VV", "County Route 18VV");
+  TryProcessCountysTts("Cr 8542 Marmot Trail", "County Route 8542 Marmot Trail");
+  TryProcessCountysTts("ACR 123", "ACR 123");
+  TryProcessCountysTts("A CR 123", "A County Route 123");
+  TryProcessCountysTts("CR Ettinger", "CR Ettinger");
+  TryProcessCountysTts("Crap", "Crap");
+  TryProcessCountysTts("Co 7", "County Road 7");
+  TryProcessCountysTts("Co-17", "County Road 17");
+  TryProcessCountysTts("Co39", "County Road 39");
+  TryProcessCountysTts("Co 200", "County Road 200");
+  TryProcessCountysTts("Co 200A", "County Road 200A");
+  TryProcessCountysTts("Co 200BAD", "Co 200BAD");
 
 }
 
@@ -205,7 +227,7 @@ void TestFormThousandTtsString() {
 
 void TryFormHundredTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "MD");
-  string tts = formatter_test.FormHundredTts(source);
+  string tts = formatter_test.ProcessHundredTts(source);
   if (tts != expected) {
     throw std::runtime_error(
         "Incorrect FormHundredTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
@@ -216,6 +238,14 @@ void TestFormHundredTtsString() {
   TryFormHundredTtsString("1", "1");
   TryFormHundredTtsString("10", "10");
   TryFormHundredTtsString("100", "1 hundred");
+  TryFormHundredTtsString("100B", "1 hundred B");
+  TryFormHundredTtsString("B100", "B1 hundred");
+  TryFormHundredTtsString("B100B", "B1 hundred B");
+  TryFormHundredTtsString("300-400", "3 hundred 4 hundred");
+  TryFormHundredTtsString("Co 200", "Co 2 hundred");
+  TryFormHundredTtsString("Co 200A", "Co 2 hundred A");
+  TryFormHundredTtsString("Co A200", "Co A2 hundred");
+  TryFormHundredTtsString("Co A200A", "Co A2 hundred A");
   TryFormHundredTtsString("MD 100", "MD 1 hundred");
   TryFormHundredTtsString("MD 100 West", "MD 1 hundred West");
   TryFormHundredTtsString("2400", "24 hundred");
@@ -329,8 +359,30 @@ void TestFormat() {
   TryFormat("SR3032", "State Route 30 32");
   TryFormat("CT 14A", "Connecticut 14A");
 
+  TryFormat("CR 0", "County Route 0");
+  TryFormat("CR 1.00", "County Route 1.00");
+  TryFormat("CR 100", "County Route 1 hundred");
+  TryFormat("CR 100 S", "County Route 1 hundred S");
   TryFormat("CR 539", "County Route 5 39");
+  TryFormat("CR-852", "County Route 8 52");
+  TryFormat("C R A13", "County Route A13");
+  TryFormat("C R 13B", "County Route 13B");
+  TryFormat("C R 404", "County Route 4 o4");
   TryFormat("CR-4003", "County Route 40 o3");
+  TryFormat("CR116", "County Route 1 16");
+  TryFormat("CR A", "County Route A");
+  TryFormat("CR JJ", "County Route JJ");
+  TryFormat("CR J29", "County Route J29");
+  TryFormat("CR 18VV", "County Route 18VV");
+  TryFormat("Cr 8542 Marmot Trail", "County Route 85 42 Marmot Trail");
+  TryFormat("CR Ettinger", "CR Ettinger");
+  TryFormat("Crap", "Crap");
+  TryFormat("Co 7", "County Road 7");
+  TryFormat("Co-17", "County Road 17");
+  TryFormat("Co39", "County Road 39");
+  TryFormat("Co 200", "County Road 2 hundred");
+  TryFormat("Co 200A", "County Road 2 hundred A");
+  TryFormat("Co 200BAD", "Co 2 hundred BAD");
 
   TryFormat("T609", "T6 o9");
 }

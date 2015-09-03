@@ -139,6 +139,8 @@ void TestFormat() {
   TryFormat("Sr 1021", "State Route 10 21");
   TryFormat("SR3032", "State Route 30 32");
   TryFormat("CT 14A", "Connecticut 14A");
+  TryFormat("Co 7", "Colorado 7");
+  TryFormat("Co 200", "Colorado 2 hundred");
 
   TryFormat("CR 539", "County Route 5 39");
   TryFormat("CR-4003", "County Route 40 o3");

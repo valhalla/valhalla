@@ -27,7 +27,7 @@ std::string VerbalTextFormatterUs::Format(const std::string& text) const {
   // TODO FM farm to market, others? TR?
 
   verbal_text = FormThousandTts(verbal_text);
-  verbal_text = FormHundredTts(verbal_text);
+  verbal_text = ProcessHundredTts(verbal_text);
   verbal_text = FormNumberSplitTts(verbal_text);
   verbal_text = FormLeadingOhTts(verbal_text);
 
@@ -139,9 +139,21 @@ std::string VerbalTextFormatterUs::FormThousandTts(
   return std::regex_replace(source, kThousandRegex, kThousandOutPattern);
 }
 
-std::string VerbalTextFormatterUs::FormHundredTts(
+std::string VerbalTextFormatterUs::ProcessHundredTts(
     const std::string& source) const {
-  return std::regex_replace(source, kHundredRegex, kHundredOutPattern);
+
+  std::string tts = source;
+  for (auto& hundred_find_replace : kHundredFindReplace) {
+    tts = FormHundredTts(tts, hundred_find_replace.first,
+                         hundred_find_replace.second);
+  }
+  return tts;
+}
+
+std::string VerbalTextFormatterUs::FormHundredTts(
+    const std::string& source, const std::regex& hundred_regex,
+    const std::string& hundred_output_pattern) const {
+  return std::regex_replace(source, hundred_regex, hundred_output_pattern);
 }
 
 std::string VerbalTextFormatterUs::FormLeadingOhTts(
@@ -151,3 +163,4 @@ std::string VerbalTextFormatterUs::FormLeadingOhTts(
 
 }
 }
+

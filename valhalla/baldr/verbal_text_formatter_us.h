@@ -22,14 +22,17 @@ const std::regex kUsHighwayRegex("(\\bUS)([ -])(\\d{1,3})",
                                  std::regex_constants::icase);
 const std::string kUsHighwayOutPattern = "U.S. $3";
 
+const std::regex kLeadingOhRegex("( )(0)([1-9])");
+const std::string kLeadingOhOutPattern = "$1o$3";
+
 const std::regex kThousandRegex("(^| )([1-9]{1,2})(000)($| )");
 const std::string kThousandOutPattern = "$1$2 thousand$4";
 
-const std::regex kHundredRegex("(^| )([1-9]{1,2})(00)($| )");
-const std::string kHundredOutPattern = "$1$2 hundred$4";
-
-const std::regex kLeadingOhRegex("( )(0)([1-9])");
-const std::string kLeadingOhOutPattern = "$1o$3";
+const std::array<std::pair<std::regex, std::string>, 3> kHundredFindReplace = {{
+    { std::regex("(^|\\D)([1-9]{1,2})(00$)"), "$1$2 hundred" },
+    { std::regex("(^|\\D)([1-9]{1,2})(00)( |-)"), "$1$2 hundred " },
+    { std::regex("(^|\\D)([1-9]{1,2})(00)(\\D)"), "$1$2 hundred $4" }
+}};
 
 const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
@@ -86,10 +89,14 @@ const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bWY)([ -])(\\d{1,3})", std::regex_constants::icase), "Wyoming $3" }
 }};
 
-// TODO - other special cases
-const std::array<std::pair<std::regex, std::string>, 2> kCountyRoutes = {{
-    { std::regex("(\\bCR)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
-    { std::regex("(\\bC R)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
+const std::array<std::pair<std::regex, std::string>, 7> kCountyRoutes = {{
+    { std::regex("(\\bCR)(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $2$3" },
+    { std::regex("(\\bCR)([ -])([[:alpha:]]{1,2})?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $3$4$5" },
+    { std::regex("(\\bCR)([ -])([[:alpha:]]{1,2})\\b", std::regex_constants::icase), "County Route $3" },
+    { std::regex("(\\bC R)(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $2$3" },
+    { std::regex("(\\bC R)([ -])([[:alpha:]]{1,2})?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $3$4$5" },
+    { std::regex("(\\bC R)([ -])([[:alpha:]]{1,2})\\b", std::regex_constants::icase), "County Route $3" },
+    { std::regex("(\\bCO)([ -])?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Road $3$4" }
 }};
 
 /**
@@ -135,7 +142,11 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
   std::string FormThousandTts(const std::string& source) const;
 
-  std::string FormHundredTts(const std::string& source) const;
+  std::string ProcessHundredTts(const std::string& source) const;
+
+  std::string FormHundredTts(const std::string& source,
+                             const std::regex& hundred_regex,
+                             const std::string& hundred_output_pattern) const;
 
   std::string FormLeadingOhTts(const std::string& source) const;
 };
