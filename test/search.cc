@@ -132,7 +132,7 @@ void search(const valhalla::baldr::Location& location, const valhalla::midgard::
   const std::vector<PathLocation::PathEdge>& expected_edges, const valhalla::loki::SearchStrategy& strategy){
 
   valhalla::baldr::GraphReader reader(conf);
-  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PathThroughFilter, strategy);
+  valhalla::baldr::PathLocation p = valhalla::loki::Search(location, reader, valhalla::loki::PassThroughFilter, strategy);
 
   if(!p.IsCorrelated())
     throw std::runtime_error("Didn't find any node/edges");
@@ -214,6 +214,8 @@ void TestEdgeSearch() {
   ortho = (d.second - b.second).GetPerpendicular(false).Normalize() * .01;
   test.Set(answer.first + ortho.x(), answer.second + ortho.y());
   search({test}, answer, { PE{{t, l, 0}, ratio, S::LEFT}, PE{{t, l, 7}, 1.f - ratio, S::RIGHT} }, valhalla::loki::SearchStrategy::EDGE);
+
+  //TODO: add test that has to snap a point not actually on the geometry
 }
 
 }
