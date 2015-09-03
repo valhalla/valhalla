@@ -151,7 +151,7 @@ void TestFormat() {
 }
 
 int main() {
-  test::suite suite("verbal_text_formatter_us");
+  test::suite suite("verbal_text_formatter_us_co");
 
   // ProcessStatesTts
   suite.test(TEST_CASE(TestProcessStatesTts));
