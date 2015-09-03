@@ -395,11 +395,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing,
                  const PathInfo& loop_edge_info) {
-  // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_.GetDistance(origin.vertex());
-  float heuristic = astarheuristic_.Get(dist);
-
-  //we need to do some additional bookkeeping if this path needs to be a loop
+  // Do some additional bookkeeping if this path needs to be a loop
   GraphId loop_edge_id = loop_edge_info.edgeid;
   std::vector<baldr::PathLocation::PathEdge> loop_edges;
   Cost loop_edge_cost {0.0f, 0.0f};
@@ -427,9 +423,19 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
     // Get cost and sort cost
-    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist)) + loop_edge_cost;
-    float sortcost = cost.cost + heuristic;
+    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist)) +
+                 loop_edge_cost;
+    float dist = astarheuristic_.GetDistance(endtile->node(
+              directededge->endnode())->latlng());
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
