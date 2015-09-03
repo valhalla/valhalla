@@ -25,8 +25,11 @@ const std::string kUsHighwayOutPattern = "U.S. $3";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::regex kThousandRegex("(^| )([1-9]{1,2})(000)($| )");
-const std::string kThousandOutPattern = "$1$2 thousand$4";
+const std::array<std::pair<std::regex, std::string>, 3> kThousandFindReplace = {{
+    { std::regex("(^|\\D)([1-9]{1,2})(000$)"), "$1$2 thousand" },
+    { std::regex("(^|\\D)([1-9]{1,2})(000)( |-)"), "$1$2 thousand " },
+    { std::regex("(^|\\D)([1-9]{1,2})(000)(\\D)"), "$1$2 thousand $4" }
+}};
 
 const std::array<std::pair<std::regex, std::string>, 3> kHundredFindReplace = {{
     { std::regex("(^|\\D)([1-9]{1,2})(00$)"), "$1$2 hundred" },
@@ -140,7 +143,11 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
                     const std::string& county_output_pattern,
                     std::string& tts) const;
 
-  std::string FormThousandTts(const std::string& source) const;
+  std::string ProcessThousandTts(const std::string& source) const;
+
+  std::string FormThousandTts(const std::string& source,
+                              const std::regex& thousand_regex,
+                              const std::string& thousand_output_pattern) const;
 
   std::string ProcessHundredTts(const std::string& source) const;
 

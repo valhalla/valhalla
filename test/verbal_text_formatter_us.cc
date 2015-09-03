@@ -33,8 +33,8 @@ class VerbalTextFormatterUsTest : public VerbalTextFormatterUs {
     return VerbalTextFormatterUs::ProcessCountysTts(source);
   }
 
-  std::string FormThousandTts(const std::string& source) const {
-    return VerbalTextFormatterUs::FormThousandTts(source);
+  std::string ProcessThousandTts(const std::string& source) const {
+    return VerbalTextFormatterUs::ProcessThousandTts(source);
   }
 
   std::string ProcessHundredTts(const std::string& source) const {
@@ -207,7 +207,7 @@ void TestProcessCountysTts() {
 
 void TryFormThousandTtsString(string source, string expected) {
   VerbalTextFormatterUsTest formatter_test("US", "PA");
-  string tts = formatter_test.FormThousandTts(source);
+  string tts = formatter_test.ProcessThousandTts(source);
   if (tts != expected) {
     throw std::runtime_error(
         "Incorrect FormThousandTts - EXPECTED: " + expected + "  |  FORMED: " + tts);
@@ -218,6 +218,15 @@ void TestFormThousandTtsString() {
   TryFormThousandTtsString("1", "1");
   TryFormThousandTtsString("10", "10");
   TryFormThousandTtsString("1000", "1 thousand");
+  TryFormThousandTtsString("1000D", "1 thousand D");
+  TryFormThousandTtsString("D1000", "D1 thousand");
+  TryFormThousandTtsString("D1000D", "D1 thousand D");
+  TryFormThousandTtsString("3000-4000", "3 thousand 4 thousand");
+  TryFormThousandTtsString("53000-54000", "53 thousand 54 thousand");
+  TryFormThousandTtsString("Co 2000", "Co 2 thousand");
+  TryFormThousandTtsString("Co 2000A", "Co 2 thousand A");
+  TryFormThousandTtsString("Co A2000", "Co A2 thousand");
+  TryFormThousandTtsString("Co A2000A", "Co A2 thousand A");
   TryFormThousandTtsString("MD 1000", "MD 1 thousand");
   TryFormThousandTtsString("MD 1000 West", "MD 1 thousand West");
   TryFormThousandTtsString("24000", "24 thousand");
@@ -242,6 +251,7 @@ void TestFormHundredTtsString() {
   TryFormHundredTtsString("B100", "B1 hundred");
   TryFormHundredTtsString("B100B", "B1 hundred B");
   TryFormHundredTtsString("300-400", "3 hundred 4 hundred");
+  TryFormHundredTtsString("5300-5400", "53 hundred 54 hundred");
   TryFormHundredTtsString("Co 200", "Co 2 hundred");
   TryFormHundredTtsString("Co 200A", "Co 2 hundred A");
   TryFormHundredTtsString("Co A200", "Co A2 hundred");
@@ -383,6 +393,9 @@ void TestFormat() {
   TryFormat("Co 200", "County Road 2 hundred");
   TryFormat("Co 200A", "County Road 2 hundred A");
   TryFormat("Co 200BAD", "Co 2 hundred BAD");
+  TryFormat("Co 2000", "County Road 2 thousand");
+  TryFormat("Co 2000A", "County Road 2 thousand A");
+  TryFormat("Co 2000BAD", "Co 2 thousand BAD");
 
   TryFormat("T609", "T6 o9");
 }
