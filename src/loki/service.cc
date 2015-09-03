@@ -129,8 +129,8 @@ namespace {
           array->emplace_back(
             json::map({
               {"way_id", edge_info->wayid()},
-              {"correlated_lat", json::fp_t{location.latlng_.lat(), 6}},
-              {"correlated_lon", json::fp_t{location.latlng_.lng(), 6}}
+              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
+              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
             })
           );
         }
@@ -247,10 +247,17 @@ namespace {
         throw std::runtime_error("Insufficient number of locations provided");
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
-      // Parse out the type of route - this provides the costing method to use
+      //using the costing we can determine what type of edge filtering to use
       auto costing = request.get_optional<std::string>("costing");
-      if(!costing)
-        throw std::runtime_error("No edge/node costing provided");
+      if(!costing) {
+        //locate doesnt require a filter
+        if(action == LOCATE) {
+          costing_filter = loki::PassThroughFilter;
+          return;
+        }//but everything else does
+        else
+          throw std::runtime_error("No edge/node costing provided");
+      }
 
       // TODO - have a way of specifying mode at the location
       if(*costing == "multimodal")
@@ -271,7 +278,7 @@ namespace {
         for(const auto& r : *request_costing)
           config_costing->put_child(r.first, r.second);
       }
-      cost = factory.Create(*costing, *config_costing);
+      costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
     }
     worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //see if any locations pairs are unreachable or too far apart
@@ -295,7 +302,7 @@ namespace {
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
-        auto correlated = loki::Search(locations[i], reader, cost->GetFilter());
+        auto correlated = loki::Search(locations[i], reader, costing_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
@@ -318,7 +325,7 @@ namespace {
       auto json = json::array({});
       for(const auto& location : locations) {
         try {
-          auto correlated = loki::Search(location, reader, cost->GetFilter());
+          auto correlated = loki::Search(location, reader, costing_filter);
           json->emplace_back(serialize(correlated, reader));
         }
         catch(const std::exception& e) {
@@ -350,7 +357,7 @@ namespace {
     boost::property_tree::ptree config;
     std::vector<Location> locations;
     sif::CostFactory<sif::DynamicCost> factory;
-    valhalla::sif::cost_ptr_t cost;
+    sif::EdgeFilter costing_filter;
     valhalla::baldr::GraphReader reader;
     size_t max_route_locations;
   };
