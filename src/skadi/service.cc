@@ -40,14 +40,19 @@ namespace {
   boost::property_tree::ptree from_request(const ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
     //throw the json into the ptree
-    auto json = request.query.find("json");
-    if(json != request.query.end() && json->second.size()) {
-      std::istringstream is(json->second.front());
-      boost::property_tree::read_json(is, pt);
-    }//no json parameter, check the body
-    else if(!request.body.empty()) {
-      std::istringstream is(request.body);
-      boost::property_tree::read_json(is, pt);
+    try {
+      auto json = request.query.find("json");
+      if(json != request.query.end() && json->second.size()) {
+        std::istringstream is(json->second.front());
+        boost::property_tree::read_json(is, pt);
+      }//no json parameter, check the body
+      else if(!request.body.empty()) {
+        std::istringstream is(request.body);
+        boost::property_tree::read_json(is, pt);
+      }
+    }
+    catch(...) {
+      throw std::runtime_error("Failed to parse json request");
     }
 
     //throw the query params into the ptree
