@@ -397,6 +397,12 @@ void TestFormat() {
   TryFormat("Co 2000A", "County Road 2 thousand A");
   TryFormat("Co 2000BAD", "Co 2 thousand BAD");
 
+  TryFormat("North 2800th", "North 28 hundredth");
+  TryFormat("North 2800th Avenue", "North 28 hundredth Avenue");
+
+  TryFormat("North 28000th", "North 28 thousandth");
+  TryFormat("North 28000th Avenue", "North 28 thousandth Avenue");
+
   TryFormat("T609", "T6 o9");
 }
 

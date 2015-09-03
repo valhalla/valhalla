@@ -25,14 +25,16 @@ const std::string kUsHighwayOutPattern = "U.S. $3";
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::array<std::pair<std::regex, std::string>, 3> kThousandFindReplace = {{
+const std::array<std::pair<std::regex, std::string>, 4> kThousandFindReplace = {{
     { std::regex("(^|\\D)([1-9]{1,2})(000$)"), "$1$2 thousand" },
+    { std::regex("(^|\\D)([1-9]{1,2})(000th)"), "$1$2 thousandth" },
     { std::regex("(^|\\D)([1-9]{1,2})(000)( |-)"), "$1$2 thousand " },
     { std::regex("(^|\\D)([1-9]{1,2})(000)(\\D)"), "$1$2 thousand $4" }
 }};
 
-const std::array<std::pair<std::regex, std::string>, 3> kHundredFindReplace = {{
+const std::array<std::pair<std::regex, std::string>, 4> kHundredFindReplace = {{
     { std::regex("(^|\\D)([1-9]{1,2})(00$)"), "$1$2 hundred" },
+    { std::regex("(^|\\D)([1-9]{1,2})(00th)"), "$1$2 hundredth" },
     { std::regex("(^|\\D)([1-9]{1,2})(00)( |-)"), "$1$2 hundred " },
     { std::regex("(^|\\D)([1-9]{1,2})(00)(\\D)"), "$1$2 hundred $4" }
 }};
