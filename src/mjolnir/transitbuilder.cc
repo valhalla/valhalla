@@ -281,6 +281,7 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 // Get scheduled departures for a stop
 std::vector<Departure> ProcessStopPairs(const std::string& file,
                                         std::unordered_map<uint32_t, uint32_t>& trip_routes,
+                                        std::unordered_set<uint32_t>& calendar_exceptions,
                                         const uint32_t stop_key,
                                         GraphTileBuilder& tilebuilder) {
 
@@ -323,7 +324,7 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       //TODO
       dep.shapeid = 0;
       dep.blockid = 0;
-      dep.service = 0;
+      dep.service = dep.trip; //trip key will work for service key.
       dep.has_subtractions = false;
       //wheelchair_accessible
       //short_name
@@ -368,7 +369,8 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       }
 
       dep.dow = dow_mask;
-      dep.headsign   = stop_pairs.second.get<std::string>("trip_headsign", "");
+      std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
+      dep.headsign = (headsign == "null" ? "" : headsign);
 
       auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
 
@@ -392,7 +394,6 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       }
 
       const auto& trip = trip_routes.find(dep.trip);
-
       //Add the trips.
       if (trip == trip_routes.end()) {
 
@@ -402,12 +403,26 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
         // Add names and create transit trip
         TransitTrip trip(dep.trip, dep.route, tl_tripid.c_str(),
                          tilebuilder.AddName(shortname == "null" ? "" : shortname),
-                         tilebuilder.AddName(dep.headsign == "null" ? "" : dep.headsign));
+                         tilebuilder.AddName(headsign));
         tilebuilder.AddTransitTrip(trip);
 
         trip_routes[dep.trip] = dep.route;
       }
 
+      const auto& calendar = calendar_exceptions.find(dep.trip);
+      if (calendar == calendar_exceptions.end()) {
+
+        for(auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
+
+          std::string date = service_except_dates.second.get_value<std::string>();
+          uint32_t days = DateTime::days_from_pivot_date(date);
+
+          TransitCalendar calendar(dep.trip, days, CalendarExceptionType::kRemoved);
+          tilebuilder.AddTransitCalendar(calendar);
+
+          calendar_exceptions.insert(dep.trip);
+        }
+      }
     }
   }
   catch (std::exception &e) {
@@ -493,39 +508,6 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
   LOG_INFO("Added " + std::to_string(n) + " routes");
 
   return route_types;
-}
-
-// Add calendar exceptions
-void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
-                 GraphTileBuilder& tilebuilder) {
-
-  // Query each unique service Id and add any calendar exceptions
-  for (const auto& key : keys) {
-    // Skip service_id
-    std::string sql = "SELECT service_key, date, exception_type from ";
-    sql += "calendar_dates where service_key = " + std::to_string(key);
-
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-    if (ret == SQLITE_OK) {
-      uint32_t result = sqlite3_step(stmt);
-      while (result == SQLITE_ROW) {
-        uint32_t serviceid = sqlite3_column_int(stmt, 0);
-        uint32_t date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 1))));
-        uint32_t t = sqlite3_column_int(stmt, 2);
-
-        TransitCalendar calendar(serviceid, date,
-                                 static_cast<CalendarExceptionType>(t));
-        tilebuilder.AddTransitCalendar(calendar);
-
-        result = sqlite3_step(stmt);
-      }
-    }
-    if (stmt) {
-      sqlite3_finalize(stmt);
-      stmt = 0;
-    }
-  }
 }
 
 // Add transfers from a stop
@@ -1026,6 +1008,8 @@ void build(const boost::property_tree::ptree& config_pt,
     n++;
   }
   std::unordered_map<uint32_t, uint32_t> trip_routes;
+  std::unordered_set<uint32_t> calendar_exceptions;
+
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
     // Get the next tile Id from the queue and get a tile builder
@@ -1066,7 +1050,6 @@ void build(const boost::property_tree::ptree& config_pt,
     // unique trips, routes, TODO
     std::unordered_set<uint32_t> route_keys;
     std::unordered_set<uint32_t> trip_keys;
-    std::unordered_set<uint32_t> service_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
@@ -1096,6 +1079,7 @@ void build(const boost::property_tree::ptree& config_pt,
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
         std::vector<Departure> departures = ProcessStopPairs(file, trip_routes,
+                                                             calendar_exceptions,
                                                              stop.key, tilebuilder);
 
         LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures for "
@@ -1104,7 +1088,6 @@ void build(const boost::property_tree::ptree& config_pt,
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
           trip_keys.insert(dep.trip);
-          service_keys.insert(dep.service);
 
           // Identify unique route and arrival stop pairs - associate to a
           // unique line Id stored in the directed edge.
@@ -1159,11 +1142,8 @@ void build(const boost::property_tree::ptree& config_pt,
 
     // Add routes to the tile. Get map of route types.
     std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
-                              route_keys, tilebuilder);
-
-    // TODO no service keys exist in transit.land
-    // Add calendar exceptions (using service Id)
-    // AddCalendar(db_handle, service_keys, tilebuilder);
+                                                                   route_keys,
+                                                                   tilebuilder);
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder, stop_edge_map, stops, connection_edges,
