@@ -355,6 +355,7 @@ void TestFormat() {
   TryFormat("US 202", "U.S. 2 o2");
   TryFormat("Us 422 Business Alternate", "U.S. 4 22 Business Alternate");
   TryFormat("Us-522", "U.S. 5 22");
+  TryFormat("US Highway 222", "U.S. Highway 2 22");
 
   TryFormat("AL 233", "Alabama 2 33");
   TryFormat("AR 107", "Arkansas 1 o7");
@@ -403,9 +404,11 @@ void TestFormat() {
 
   TryFormat("North 2800th", "North 28 hundredth");
   TryFormat("North 2800th Avenue", "North 28 hundredth Avenue");
+  TryFormat("North 2800Th Avenue", "North 28 hundredth Avenue");
 
   TryFormat("North 28000th", "North 28 thousandth");
   TryFormat("North 28000th Avenue", "North 28 thousandth Avenue");
+  TryFormat("North 28000TH Avenue", "North 28 thousandth Avenue");
 
   TryFormat("T609", "T6 o9");
 }
