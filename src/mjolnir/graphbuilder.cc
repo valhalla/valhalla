@@ -452,15 +452,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             speed = kMaxSpeedKph;
           }
 
-          // Infer cul-de-sac if a road edge is a loop and is low
-          // classification. TODO - do we need length limit?
-          Use use = w.use();
-          RoadClass rc = static_cast<RoadClass>(edge.attributes.importance);
-          if (use == Use::kRoad && source == target &&
-              rc > RoadClass::kTertiary) {
-            use = Use::kCuldesac;
+          // Cul du sac
+          auto use = w.use();
+          if(use == Use::kCuldesac)
             stats.culdesaccount++;
-          }
 
           // Handle simple turn restrictions that originate from this
           // directed edge
@@ -564,33 +559,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               forward_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
               std::reverse(heights.begin(), heights.end());
               reverse_grade = static_cast<uint32_t>(valhalla::skadi::weighted_grade(heights, interval) * .6 + 6.5);
-/*
-              if(forward_grade < 2) {
-                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
-                    " " + std::to_string(length) + (forward ? " DOWNHILL [[" : " UPHILL [[") +
-                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
-                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
-              }
-              else if(forward_grade > 13) {
-                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
-                    " " + std::to_string(length) + (forward ? " UPHILL [[" : " DOWNHILL [[") +
-                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
-                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
-              }
-
-              if(reverse_grade < 2) {
-                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
-                    " " + std::to_string(length) + (!forward ? " DOWNHILL [[" : " UPHILL [[") +
-                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
-                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
-              }
-              else if(reverse_grade > 13) {
-                LOG_TRACE(std::to_string(heights.front()) + "->" + std::to_string(heights.back()) +
-                    " " + std::to_string(length) + (!forward ? " UPHILL [[" : " DOWNHILL [[") +
-                          std::to_string(shape.front().first) + "," + std::to_string(shape.front().second) +
-                  "],[" + std::to_string(shape.back().first) + "," + std::to_string(shape.back().second) + "]]");
-              }
-*/
             }
 
             //TODO: curvature
@@ -617,7 +585,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add a directed edge and get a reference to it
           directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
-                                     speed, use, rc, n, has_signal, restrictions, bike_network);
+                                     speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                     n, has_signal, restrictions, bike_network);
           DirectedEdgeBuilder& directededge = directededges.back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
@@ -643,15 +612,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
-
-          //TODO: If this was a loop edge we need its twin because this node wont be encountered again
-          /*if(source == target) {
-            idx++;
-            n++;
-            auto flipped = directededge.flipped();
-            flipped.set_localedgeidx(n);
-            directededges.emplace_back();
-          }*/
 
           // Increment the directed edge index within the tile
           idx++;
