@@ -18,21 +18,30 @@ const std::regex kInterstateRegex("(\\bI)([ -])(H)?(\\d{1,3})",
                                   std::regex_constants::icase);
 const std::string kInterstateOutPattern = "Interstate $3$4";
 
-const std::regex kUsHighwayRegex("(\\bUS)([ -])(\\d{1,3})",
+const std::regex kUsHighwayRegex("(\\bUS)([ -])(Highway )?(\\d{1,3})",
                                  std::regex_constants::icase);
-const std::string kUsHighwayOutPattern = "U.S. $3";
-
-const std::regex kThousandRegex("(^| )([1-9]{1,2})(000)($| )");
-const std::string kThousandOutPattern = "$1$2 thousand$4";
-
-const std::regex kHundredRegex("(^| )([1-9]{1,2})(00)($| )");
-const std::string kHundredOutPattern = "$1$2 hundred$4";
+const std::string kUsHighwayOutPattern = "U.S. $3$4";
 
 const std::regex kLeadingOhRegex("( )(0)([1-9])");
 const std::string kLeadingOhOutPattern = "$1o$3";
 
-const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
+const std::array<std::pair<std::regex, std::string>, 4> kThousandFindReplace = {{
+    { std::regex("(^|\\D)([1-9]{1,2})(000$)"), "$1$2 thousand" },
+    { std::regex("(^|\\D)([1-9]{1,2})(000th)", std::regex_constants::icase), "$1$2 thousandth" },
+    { std::regex("(^|\\D)([1-9]{1,2})(000)( |-)"), "$1$2 thousand " },
+    { std::regex("(^|\\D)([1-9]{1,2})(000)(\\D)"), "$1$2 thousand $4" }
+}};
+
+const std::array<std::pair<std::regex, std::string>, 4> kHundredFindReplace = {{
+    { std::regex("(^|\\D)([1-9]{1,2})(00$)"), "$1$2 hundred" },
+    { std::regex("(^|\\D)([1-9]{1,2})(00th)", std::regex_constants::icase), "$1$2 hundredth" },
+    { std::regex("(^|\\D)([1-9]{1,2})(00)( |-)"), "$1$2 hundred " },
+    { std::regex("(^|\\D)([1-9]{1,2})(00)(\\D)"), "$1$2 hundred $4" }
+}};
+
+const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
+    { std::regex("(\\bSH)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Highway $3" },
     { std::regex("(\\bCA)([ -])(\\d{1,3})", std::regex_constants::icase), "California $3" },
     { std::regex("(\\bTX)([ -])(\\d{1,3})", std::regex_constants::icase), "Texas $3" },
     { std::regex("(\\bFL)([ -])(A)?(\\d{1,3})", std::regex_constants::icase), "Florida $3$4" },
@@ -51,10 +60,10 @@ const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bIN)([ -])(\\d{1,3})", std::regex_constants::icase), "Indiana $3" },
     { std::regex("(\\bTN)([ -])(\\d{1,3})", std::regex_constants::icase), "Tennessee $3" },
     { std::regex("(\\bMO)([ -])(\\d{1,3})", std::regex_constants::icase), "Missouri $3" },
+    { std::regex("(\\bMO)([ -])([[:alpha:]]{1,2}\\b)", std::regex_constants::icase), "Missouri $3" },
     { std::regex("(\\bMD)([ -])(\\d{1,3})", std::regex_constants::icase), "Maryland $3" },
     { std::regex("(\\bWI)([ -])(\\d{1,3})", std::regex_constants::icase), "Wisconsin $3" },
     { std::regex("(\\bMN)([ -])(\\d{1,3})", std::regex_constants::icase), "Minnesota $3" },
-    { std::regex("(\\bCO)([ -])(\\d{1,3})", std::regex_constants::icase), "Colorado $3" },
     { std::regex("(\\bAL)([ -])(\\d{1,3})", std::regex_constants::icase), "Alabama $3" },
     { std::regex("(\\bSC)([ -])(\\d{1,3})", std::regex_constants::icase), "South Carolina $3" },
     { std::regex("(\\bLA)([ -])(\\d{1,4})", std::regex_constants::icase), "Louisiana $3" },
@@ -86,10 +95,14 @@ const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
     { std::regex("(\\bWY)([ -])(\\d{1,3})", std::regex_constants::icase), "Wyoming $3" }
 }};
 
-// TODO - other special cases
-const std::array<std::pair<std::regex, std::string>, 2> kCountyRoutes = {{
-    { std::regex("(\\bCR)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
-    { std::regex("(\\bC R)([ -])?(\\d{1,4})", std::regex_constants::icase), "County Route $3" },
+const std::array<std::pair<std::regex, std::string>, 7> kCountyRoutes = {{
+    { std::regex("(\\bCR)(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $2$3" },
+    { std::regex("(\\bCR)([ -])([[:alpha:]]{1,2})?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $3$4$5" },
+    { std::regex("(\\bCR)([ -])([[:alpha:]]{1,2})\\b", std::regex_constants::icase), "County Route $3" },
+    { std::regex("(\\bC R)(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $2$3" },
+    { std::regex("(\\bC R)([ -])([[:alpha:]]{1,2})?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Route $3$4$5" },
+    { std::regex("(\\bC R)([ -])([[:alpha:]]{1,2})\\b", std::regex_constants::icase), "County Route $3" },
+    { std::regex("(\\bCO)([ -])?(\\d{1,4})([[:alpha:]]{1,2})?\\b", std::regex_constants::icase), "County Road $3$4" }
 }};
 
 /**
@@ -121,7 +134,7 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
 
   std::string FormUsHighwayTts(const std::string& source) const;
 
-  std::string ProcessStatesTts(const std::string& source) const;
+  virtual std::string ProcessStatesTts(const std::string& source) const;
 
   bool FormStateTts(const std::string& source, const std::regex& state_regex,
                     const std::string& state_output_pattern,
@@ -133,9 +146,17 @@ class VerbalTextFormatterUs : public VerbalTextFormatter {
                     const std::string& county_output_pattern,
                     std::string& tts) const;
 
-  std::string FormThousandTts(const std::string& source) const;
+  std::string ProcessThousandTts(const std::string& source) const;
 
-  std::string FormHundredTts(const std::string& source) const;
+  std::string FormThousandTts(const std::string& source,
+                              const std::regex& thousand_regex,
+                              const std::string& thousand_output_pattern) const;
+
+  std::string ProcessHundredTts(const std::string& source) const;
+
+  std::string FormHundredTts(const std::string& source,
+                             const std::regex& hundred_regex,
+                             const std::string& hundred_output_pattern) const;
 
   std::string FormLeadingOhTts(const std::string& source) const;
 };

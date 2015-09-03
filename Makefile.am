@@ -71,6 +71,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/transittrip.h \
 	valhalla/baldr/verbal_text_formatter.h \
 	valhalla/baldr/verbal_text_formatter_us.h \
+	valhalla/baldr/verbal_text_formatter_us_co.h \
+	valhalla/baldr/verbal_text_formatter_us_tx.h \
 	valhalla/baldr/verbal_text_formatter_factory.h
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/admin.cc \
@@ -104,6 +106,8 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/transittrip.cc \
 	src/baldr/verbal_text_formatter.cc \
 	src/baldr/verbal_text_formatter_us.cc \
+	src/baldr/verbal_text_formatter_us_co.cc \
+	src/baldr/verbal_text_formatter_us_tx.cc \
 	src/baldr/verbal_text_formatter_factory.cc
 libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
@@ -133,7 +137,9 @@ check_PROGRAMS = \
 	test/streetnames_factory \
 	test/json \
 	test/verbal_text_formatter \
-	test/verbal_text_formatter_us
+	test/verbal_text_formatter_us \
+	test/verbal_text_formatter_us_co \
+	test/verbal_text_formatter_us_tx
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
@@ -185,6 +191,12 @@ test_verbal_text_formatter_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_
 test_verbal_text_formatter_us_SOURCES = test/verbal_text_formatter_us.cc test/test.cc
 test_verbal_text_formatter_us_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_verbal_text_formatter_us_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_co_SOURCES = test/verbal_text_formatter_us_co.cc test/test.cc
+test_verbal_text_formatter_us_co_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_verbal_text_formatter_us_co_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_verbal_text_formatter_us_tx_SOURCES = test/verbal_text_formatter_us_tx.cc test/test.cc
+test_verbal_text_formatter_us_tx_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
+test_verbal_text_formatter_us_tx_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
 
 
 TESTS = $(check_PROGRAMS)
