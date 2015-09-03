@@ -21,3 +21,4 @@
 -j '{"locations":[{"lat":37.736359,"lon":-92.305344,"street":"17"},{"lat":37.767960,"lon":-92.384460,"street":"Star Lane"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":40.253929,"lon":-91.092247,"street":"E County Road 400"},{"lat":40.167919,"lon":-91.230598,"street":"North 2800th Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":39.196251,"lon":-107.947800,"street":"M East Road"},{"lat":39.076160,"lon":-107.878601,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":39.317490,"lon":-104.883904,"street":"I 25 South"},{"lat":39.734161,"lon":-105.368301,"street":"Clear Creek Canyon Road"}],"costing":"auto","directions_options":{"units":"miles"}}' --config ../conf/valhalla.json
