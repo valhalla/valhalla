@@ -333,9 +333,6 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
 
-      if (dep.end_date > 500)
-        continue;
-
       uint32_t index = 1;
       uint32_t dow_mask = kDOWNone;
 
@@ -477,7 +474,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         // Add names and create the transit route
         // TODO:  Fix short name.
         TransitRoute route(routeid, 0, tl_routeid.c_str(),
-                           tilebuilder.AddName(shortname == "null" ? "" : longname),
+                           tilebuilder.AddName(shortname == "null" ? "" : shortname),
                            tilebuilder.AddName(longname == "null" ? "" : longname),
                            tilebuilder.AddName(desc == "null" ? "" : desc));
         tilebuilder.AddTransitRoute(route);
