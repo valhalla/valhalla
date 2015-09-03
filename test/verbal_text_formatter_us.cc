@@ -367,6 +367,10 @@ void TestFormat() {
   TryFormat("SR-1021", "State Route 10 21");
   TryFormat("Sr 1021", "State Route 10 21");
   TryFormat("SR3032", "State Route 30 32");
+  TryFormat("SH 1021", "State Highway 10 21");
+  TryFormat("SH-1021", "State Highway 10 21");
+  TryFormat("Sh 1021", "State Highway 10 21");
+  TryFormat("SH3032", "State Highway 30 32");
   TryFormat("CT 14A", "Connecticut 14A");
 
   TryFormat("CR 0", "County Route 0");

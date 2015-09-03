@@ -39,8 +39,9 @@ const std::array<std::pair<std::regex, std::string>, 4> kHundredFindReplace = {{
     { std::regex("(^|\\D)([1-9]{1,2})(00)(\\D)"), "$1$2 hundred $4" }
 }};
 
-const std::array<std::pair<std::regex, std::string>, 52> kStateRoutes = {{
+const std::array<std::pair<std::regex, std::string>, 53> kStateRoutes = {{
     { std::regex("(\\bSR)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Route $3" },
+    { std::regex("(\\bSH)([ -])?(\\d{1,4})", std::regex_constants::icase), "State Highway $3" },
     { std::regex("(\\bCA)([ -])(\\d{1,3})", std::regex_constants::icase), "California $3" },
     { std::regex("(\\bTX)([ -])(\\d{1,3})", std::regex_constants::icase), "Texas $3" },
     { std::regex("(\\bFL)([ -])(A)?(\\d{1,3})", std::regex_constants::icase), "Florida $3$4" },
