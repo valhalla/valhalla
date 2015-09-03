@@ -55,7 +55,6 @@ namespace {
       throw std::runtime_error("Failed to parse json request");
     }
 
-
     //throw the query params into the ptree
     for(const auto& kv : request.query) {
       //skip json or empty entries
