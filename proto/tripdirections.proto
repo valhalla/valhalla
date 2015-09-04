@@ -83,6 +83,19 @@ message TripDirections {
       kPostTransitConnectionDestination = 36;
     }
   
+    message Sign {
+
+      message Element {
+        optional string text = 1;              // The acutal sign element text
+        optional uint32 consecutive_count = 2; // The frequency of this sign within a set a consecutive signs
+      }
+
+      repeated Element exit_number_elements = 1;  // The list of exit numbers, example: 67B
+      repeated Element exit_branch_elements = 2;  // The list of exit branch street names, example: I 95 North
+      repeated Element exit_toward_elements = 3;  // The list of exit toward locations, example: New York
+      repeated Element exit_name_elements   = 4;  // The list of exit names - not used much in US, example: Gettysburg Pike
+    }
+
     optional Type type = 1;                                  // Maneuver type
     optional string text_instruction = 2;                    // text instruction
     repeated string street_name = 3;                         // street names
@@ -98,6 +111,7 @@ message TripDirections {
     optional string verbal_pre_transition_instruction = 13;  // verbal pre-transition instruction
     optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
     repeated string begin_street_name = 15;                  // begin street names
+    optional Sign sign = 16;                                 // associated sign information, for example: exit number
   }
   
   optional uint64 trip_id = 1;
