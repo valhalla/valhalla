@@ -34,6 +34,7 @@ namespace {
     std::string("{\"encoded_polyline\":\"s{cplAfiz{pCa]xBxBx`AhC|gApBrz@{[hBsZhB_c@rFodDbRaG\\\\ypAfDec@l@mrBnHg|@?}TzAia@dFw^xKqWhNe^hWegBfvAcGpG{dAdy@_`CpoBqGfC_SnI{KrFgx@?ofA_Tus@c[qfAgw@s_Agc@}^}JcF{@_Dz@eFfEsArEs@pHm@pg@wDpkEx\\\\vjT}Djj@eUppAeKzj@eZpuE_IxaIcF~|@cBngJiMjj@_I`HwXlJuO^kKj@gJkAeaBy`AgNoHwDkAeELwD|@uDfC_i@bq@mOjUaCvDqBrEcAbGWbG|@jVd@rPkAbGsAfDqBvCaIrFsP~RoNjWajBlnD{OtZoNfXyBtE{B~HyAtEsFhL_DvDsGrF_I`HwDpGoH|T_IzLaMzKuOrFqfAbPwCl@_h@fN}OnI\",\"height\":[258,258,259,257,255,253,246,245,233,233,221,216,223,227,227,228,230,232,236,251,251,251,251,251,254,258,267,283,289,298,308,316,318,320,322,323,324,328,359,445,452,463,463,448,405,393,336,329,326,316,311,309,308,289,291,292,292,291,289,278,279,279,280,281,281,280,281,281,282,282,282,280,276,251,248,247,246,244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}")
   };
 
+  //TODO: add tests that do resampling as well
 
   void start_service(zmq::context_t& context) {
     //server

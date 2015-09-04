@@ -190,6 +190,17 @@ namespace {
           shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
           return;
         }
+        //resample the shape
+        auto resample_distance = request.get_optional<float>("resample_distance");
+        if(resample_distance) {
+          if(*resample_distance > 10) {
+            shape = midgard::resample_spherical_polyline(shape, *resample_distance);
+            if(encoded_polyline)
+              *encoded_polyline = midgard::encode(shape);
+          }
+          else
+            throw std::runtime_error("resample_distance must be >= 10.0 meters");
+        }
       }
       catch (...) {
         throw std::runtime_error("Insufficiently specified required parameter 'shape' or 'encoded_polyline'");
