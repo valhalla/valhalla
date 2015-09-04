@@ -176,7 +176,7 @@ T circular_range_clamp(T value, T lower, T upper) {
 /**
  * Resample a polyline in spherical coordinates
  */
-std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL> polyline, float resolution);
+std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL>& polyline, float resolution);
 
 }
 }
