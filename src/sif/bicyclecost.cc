@@ -66,9 +66,9 @@ constexpr float kRoadClassWeight[] = {
     1.5f      // Service, other
 };
 
-// Speed adjustment factors based on weighted grade. An example of
-// speed changes based on "grade" is provided using a base speed of
-// 18 MPH on flat roads
+// Speed adjustment factors based on weighted grade. Comments here show an
+// example of speed changes based on "grade", using a base speed of 18 MPH
+// on flat roads
 constexpr float kGradeBasedSpeedFactor[] = {
   2.5f,      // -10%  - 45
   2.25f,     // -8%   - 40.5
@@ -86,6 +86,34 @@ constexpr float kGradeBasedSpeedFactor[] = {
   0.45f,     // 11.5% - 8
   0.4f,      // 13%   - 7
   0.3f       // 15%   - 5.5
+};
+
+// User propensity to use "hilly" roads. Ranges from a value of 0 (avoid
+// hills) to 1 (take hills when they offer a more direct, less time, path).
+constexpr float kDefaultUseHillsFactor = 0.5f;
+
+// Avoid hills "strength". How much do we want to avoid a hill. Combines
+// with the usehills factor (1.0 - usehills = avoidhills factor) to create
+// a weighting penalty per weighted grade factor. This indicates how strongly
+// edges with the specified grade are weighted. Note that speed also is
+// influenced by grade, so these weights help furhte ravoid hills.
+constexpr float kAvoidHillsStrength[] = {
+  3.0f,      // -10%  - Treacherous descent possible
+  1.5f,      // -8%   - Steep downhill
+  0.75f,     // -6.5% - Good downhill - where is the bottom?
+  0.5f,      // -5%   - Picking up speed!
+  0.25f,     // -3%   - Modest downhill
+  0.1f,      // -1.5% - Smooth slight downhill, ride this all day!
+  0.0f,      // 0%    - Flat, no avoidance
+  0.1f,      // 1.5%  - These are called "false flat"
+  0.25f,     // 3%    - Slight rise
+  0.5f,      // 5%    - Small hill
+  0.75f,     // 6.5%  - Starting to feel this...
+  1.5f,      // 8%    - Moderately steep
+  3.0f,      // 10%   - Getting tough
+  6.0f,      // 11.5% - Tiring!
+  15.0f,     // 13%   - Ooof - this hurts
+  30.0f      // 15%   - Only for the strongest!
 };
 
 // Edge speed above which extra penalties apply (to avoid roads with higher
@@ -350,9 +378,15 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
 
-  // TODO: Populate the grade weights (based on hilliness factor)
+  // Populate the grade weights (based on use_hill factor).
+  // Where this a downhill there usually is an uphill coming up so we
+  // don't really favor downhills (just avoid them less). Since speed
+  // is modified by weighted_grade, downhill sections get favored anyway!
+  // TODO - consider renaming this to usehills in the input.
+  float usehills = pt.get<float>("hilliness_factor", kDefaultUseHillsFactor);
+  float avoidhills = (1.0f - usehills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
-    grade_weight[i] = 1.0f;
+    grade_weight[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
   }
 }
 
