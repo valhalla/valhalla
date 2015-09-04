@@ -172,30 +172,41 @@ namespace {
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require shape or encoded polyline
       try {
-        //with range or not
+        //get some parameters
         range = request.get<bool>("range", false);
-        //uncompressed shape
         auto input_shape = request.get_child_optional("shape");
+        encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+        auto resample_distance = request.get_optional<float>("resample_distance");
+
+        //uncompressed shape
         if (input_shape) {
           for (const auto& latlng : *input_shape)
             shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
-
-          if (shape.size() < 1)
-            throw std::runtime_error("Insufficient shape provided");
-          return;
-        }
-        //compressed shape
-        encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-        if (encoded_polyline) {
+        }//compressed shape
+        else if (encoded_polyline) {
           shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
-          return;
+        }//no shape
+        else
+          throw std::runtime_error("No shape provided");
+
+        //not enough shape
+        if (shape.size() < 1)
+          throw std::runtime_error("Insufficient shape provided");
+
+        //resample the shape
+        if(resample_distance) {
+          if(*resample_distance > 10) {
+            shape = midgard::resample_spherical_polyline(shape, *resample_distance);
+            if(encoded_polyline)
+              *encoded_polyline = midgard::encode(shape);
+          }
+          else
+            throw std::runtime_error("resample_distance must be >= 10.0 meters");
         }
       }
       catch (...) {
         throw std::runtime_error("Insufficiently specified required parameter 'shape' or 'encoded_polyline'");
       }
-      //you forgot something
-      throw std::runtime_error("Insufficient shape provided");
     }
 
   //example profile response:
