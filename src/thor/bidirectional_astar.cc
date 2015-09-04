@@ -313,10 +313,6 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
 void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
-  // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_.GetDistance(origin.vertex());
-  float heuristic = astarheuristic_.Get(dist);
-
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.edges()) {
     // Get the directed edge
@@ -324,9 +320,19 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
-    // Get cost and sort cost
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
+    // Get cost and sort cost (based on distance from endnode of this edge
+    // to the destination
     Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist));
-    float sortcost = cost.cost + heuristic;
+    float dist = astarheuristic_.GetDistance(endtile->node(
+                    directededge->endnode())->latlng());
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
@@ -341,10 +347,6 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const PathLocation& dest,
                      const std::shared_ptr<DynamicCost>& costing) {
-  // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_reverse_.GetDistance(dest.vertex());
-  float heuristic = astarheuristic_reverse_.Get(dist);
-
   // Iterate through edges and add to adjacency list
   for (const auto& edge : dest.edges()) {
     // Get the directed edge
@@ -359,9 +361,19 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     }
     const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
 
-    // Get cost and sort cost
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
+    // Get cost and sort cost (based on distance from endnode of this edge
+    // to the origin
     Cost cost = (costing->EdgeCost(opp_dir_edge, 0) * (1.0f - edge.dist));
-    float sortcost = cost.cost + heuristic;
+    float dist = astarheuristic_.GetDistance(endtile->node(
+                      directededge->endnode())->latlng());
+    float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.

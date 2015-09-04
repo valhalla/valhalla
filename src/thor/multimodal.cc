@@ -327,9 +327,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         continue;
       }
 
-      // Distance and sort cost
-      float dist = astarheuristic_.GetDistance(endnode->latlng());
-      float sortcost = newcost.cost + astarheuristic_.Get(dist);
+      // If this is a destination edge the A* heuristic is 0. Otherwise the
+      // sort cost (with A* heuristic) is found using the lat,lng at the
+      // end node of the directed edge.
+      float dist = 0.0f;
+      float sortcost = newcost.cost;
+      if (p == destinations_.end()) {
+        dist = astarheuristic_.GetDistance(endnode->latlng());
+        sortcost += astarheuristic_.Get(dist);
+      }
 
       // Add edge label, add to the adjacency list and set edge status
       AddToAdjacencyList(edgeid, pred.sortcost());

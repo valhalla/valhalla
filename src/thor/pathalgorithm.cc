@@ -326,14 +326,20 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
-      // Find the sort cost (with A* heuristic) using the lat,lng at the
-      // end node of the directed edge. Skip if tile not found.
-      if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
-        continue;
+      // If this is a destination edge the A* heuristic is 0. Otherwise the
+      // sort cost (with A* heuristic) is found using the lat,lng at the
+      // end node of the directed edge.
+      float dist = 0.0f;
+      float sortcost = newcost.cost;
+      if (p == destinations_.end()) {
+        // Skip if tile not found.
+        if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+          continue;
+        }
+        dist = astarheuristic_.GetDistance(tile->node(
+                  directededge->endnode())->latlng());
+        sortcost += astarheuristic_.Get(dist);
       }
-      float dist = astarheuristic_.GetDistance(tile->node(
-                directededge->endnode())->latlng());
-      float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add to the adjacency list and edge labels.
       AddToAdjacencyList(edgeid, sortcost);
