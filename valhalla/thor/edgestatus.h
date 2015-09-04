@@ -77,7 +77,7 @@ class EdgeStatus {
  private:
   // Map to store the status and index of GraphIds that have been encountered.
   // Any unreached edges are not added to the map.
-  std::unordered_map<baldr::GraphId, EdgeStatusInfo> edgestatus_;
+  std::unordered_map<uint64_t, EdgeStatusInfo> edgestatus_;
 };
 
 }

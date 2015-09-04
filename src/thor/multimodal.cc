@@ -109,25 +109,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->Remove(edgelabels_);
     if (predindex == kInvalidLabel) {
-      // If we had a destination but we were waiting on other possible ones
-      if (best_destination_.first != kInvalidLabel) {
-        return FormPath(best_destination_.first, loop_edge_info);
-      } else {
-        // Did not find any destination edges - return empty list of edges
-        LOG_ERROR("Route failed after iterations = " +
+      LOG_ERROR("Route failed after iterations = " +
                      std::to_string(edgelabels_.size()));
-        return { };
-      }
+      return { };
     }
 
-    // Check for completion. Form path and return if complete.
-    if (IsComplete(predindex)) {
-      return FormPath(best_destination_.first, loop_edge_info);
-    }
-
-    // Remove label from adjacency list, mark it as done - copy the EdgeLabel
-    // for use in costing
+    // Copy the EdgeLabel for use in costing. Check if this is a destination
+    // edge (if so complete the route and form the path). Mark the edge as
+    // permanently labeled.
     EdgeLabel pred = edgelabels_[predindex];
+    if (destinations_.find(pred.edgeid()) != destinations_.end()) {
+      return FormPath(predindex, loop_edge_info);
+    }
     edgestatus_->Update(pred.edgeid(), kPermanent);
 
     // Check that distance is converging towards the destination. Return route
@@ -295,6 +288,13 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
                directededge, nodeinfo, pred);
       }
 
+      // If this edge is a destination, subtract the partial/remainder cost
+      // (cost from the dest. location to the end of the edge)
+      auto p = destinations_.find(edgeid);
+      if (p != destinations_.end()) {
+        newcost -= p->second;
+      }
+
       // Skip if the end node tile is not found
       const GraphTile* endtile;
       if ((endtile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
@@ -327,9 +327,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         continue;
       }
 
-      // Distance and sort cost
-      float dist = astarheuristic_.GetDistance(endnode->latlng());
-      float sortcost = newcost.cost + astarheuristic_.Get(dist);
+      // If this is a destination edge the A* heuristic is 0. Otherwise the
+      // sort cost (with A* heuristic) is found using the lat,lng at the
+      // end node of the directed edge.
+      float dist = 0.0f;
+      float sortcost = newcost.cost;
+      if (p == destinations_.end()) {
+        dist = astarheuristic_.GetDistance(endnode->latlng());
+        sortcost += astarheuristic_.Get(dist);
+      }
 
       // Add edge label, add to the adjacency list and set edge status
       AddToAdjacencyList(edgeid, pred.sortcost());

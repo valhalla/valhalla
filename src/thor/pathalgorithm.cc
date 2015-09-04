@@ -92,11 +92,11 @@ GraphId loop(const PathLocation& origin, const PathLocation& destination) {
 
 // Default constructor
 PathAlgorithm::PathAlgorithm()
-    : allow_transitions_(false),
+    : mode_(TravelMode::kDrive),
+      allow_transitions_(false),
       adjacencylist_(nullptr),
       edgestatus_(nullptr),
-      walking_distance_(0),
-      best_destination_{kInvalidLabel, Cost(std::numeric_limits<float>::max(), 0.0f)} {
+      walking_distance_(0) {
   edgelabels_.reserve(kInitialEdgeLabelCount);
 }
 
@@ -107,10 +107,8 @@ PathAlgorithm::~PathAlgorithm() {
 
 // Clear the temporary information generated during path construction.
 void PathAlgorithm::Clear() {
-  // Clear the edge labels
+  // Clear the edge labels and destination list
   edgelabels_.clear();
-  best_destination_ = std::make_pair(kInvalidLabel,
-                         Cost(std::numeric_limits<float>::max(), 0.0f));
   destinations_.clear();
 
   // Clear elements from the adjacency list
@@ -178,7 +176,7 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
              const PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
-             const sif::TravelMode mode) {
+             const TravelMode mode) {
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
@@ -222,25 +220,18 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // invalid label indicates there are no edges that can be expanded.
     uint32_t predindex = adjacencylist_->Remove(edgelabels_);
     if (predindex == kInvalidLabel) {
-      // If we had a destination but we were waiting on other possible ones
-      if (best_destination_.first != kInvalidLabel) {
-        return FormPath(best_destination_.first, loop_edge_info);
-      } else {
-        // Did not find any destination edges - return empty list of edges
-        LOG_ERROR("Route failed after iterations = " +
+      LOG_ERROR("Route failed after iterations = " +
                      std::to_string(edgelabels_.size()));
-        return { };
-      }
+      return { };
     }
 
-    // Check for completion. Form path and return if complete.
-    if (IsComplete(predindex)) {
-      return FormPath(best_destination_.first, loop_edge_info);
-    }
-
-    // Remove label from adjacency list, mark it as permanently labeled.
-    // Copy the EdgeLabel for use in costing
+    // Copy the EdgeLabel for use in costing. Check if this is a destination
+    // edge (if so complete the route and form the path). Mark the edge as
+    // permanently labeled.
     EdgeLabel pred = edgelabels_[predindex];
+    if (destinations_.find(pred.edgeid()) != destinations_.end()) {
+      return FormPath(predindex, loop_edge_info);
+    }
     edgestatus_->Update(pred.edgeid(), kPermanent);
 
     // Check that distance is converging towards the destination. Return route
@@ -315,10 +306,17 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Update the_shortcuts mask
       shortcuts |= directededge->shortcut();
 
-      // Get cost
+      // Compute the cost to the end of this edge
       Cost newcost = pred.cost() +
-                     costing->EdgeCost(directededge, nodeinfo->density()) +
-                     costing->TransitionCost(directededge, nodeinfo, pred);
+			     costing->EdgeCost(directededge, nodeinfo->density()) +
+			     costing->TransitionCost(directededge, nodeinfo, pred);
+
+      // If this edge is a destination, subtract the partial/remainder cost
+      // (cost from the dest. location to the end of the edge).
+      auto p = destinations_.find(edgeid);
+      if (p != destinations_.end()) {
+        newcost -= p->second;
+      }
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
@@ -328,14 +326,20 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
-      // Find the sort cost (with A* heuristic) using the lat,lng at the
-      // end node of the directed edge. Skip if tile not found.
-      if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
-        continue;
+      // If this is a destination edge the A* heuristic is 0. Otherwise the
+      // sort cost (with A* heuristic) is found using the lat,lng at the
+      // end node of the directed edge.
+      float dist = 0.0f;
+      float sortcost = newcost.cost;
+      if (p == destinations_.end()) {
+        // Skip if tile not found.
+        if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+          continue;
+        }
+        dist = astarheuristic_.GetDistance(tile->node(
+                  directededge->endnode())->latlng());
+        sortcost += astarheuristic_.Get(dist);
       }
-      float dist = astarheuristic_.GetDistance(tile->node(
-                directededge->endnode())->latlng());
-      float sortcost = newcost.cost + astarheuristic_.Get(dist);
 
       // Add to the adjacency list and edge labels.
       AddToAdjacencyList(edgeid, sortcost);
@@ -397,11 +401,7 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing,
                  const PathInfo& loop_edge_info) {
-  // Get sort heuristic based on distance from origin to destination
-  float dist = astarheuristic_.GetDistance(origin.vertex());
-  float heuristic = astarheuristic_.Get(dist);
-
-  //we need to do some additional bookkeeping if this path needs to be a loop
+  // Do some additional bookkeeping if this path needs to be a loop
   GraphId loop_edge_id = loop_edge_info.edgeid;
   std::vector<baldr::PathLocation::PathEdge> loop_edges;
   Cost loop_edge_cost {0.0f, 0.0f};
@@ -429,9 +429,19 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
     // Get cost and sort cost
-    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist)) + loop_edge_cost;
-    float sortcost = cost.cost + heuristic;
+    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist)) +
+                 loop_edge_cost;
+    float dist = astarheuristic_.GetDistance(endtile->node(
+              directededge->endnode())->latlng());
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
@@ -448,7 +458,6 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // For each edge
   uint32_t density = 0;
-  float seconds = 0.0f;
   for (const auto& edge : dest.edges()) {
     // Keep the id and the cost to traverse the partial distance for the
     // remainder of the edge. This cost is subtracted from the total cost
@@ -461,38 +470,6 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
     density = tile->header()->density();
   }
   return density;
-}
-
-// Test is the shortest path has been found.
-bool PathAlgorithm::IsComplete(const uint32_t edge_label_index) {
-  //grab the label
-  const EdgeLabel& edge_label = edgelabels_[edge_label_index];
-
-  // if we've already found a destination and the search's current edge is
-  // more costly to get to, we are done
-  if (best_destination_.first != kInvalidLabel &&
-      edge_label.cost() > best_destination_.second) {
-    return true;
-  }
-
-  //check if its a destination
-  auto p = destinations_.find(edge_label.edgeid());
-  //it is indeed one of the possible destination edges
-  if(p != destinations_.end()) {
-    // if we didnt have another destination yet or this one is better
-    // The cost at this point is to the end of the destination edge.
-    // Subtract the partial cost from the end of the destination back to
-    // the location to get the partial cost along the edge.
-    auto cost = edge_label.cost() - p->second;
-    if (best_destination_.first == kInvalidLabel || cost < best_destination_.second) {
-      best_destination_.first = edge_label_index;
-      best_destination_.second = cost;
-    }
-    destinations_.erase(p);
-    //if we've found all of the destinations we are done looking
-    return destinations_.size() == 0;
-  }
-  return false;
 }
 
 // Form the path from the adjacency list.
