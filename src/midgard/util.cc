@@ -192,7 +192,7 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s){
 //TODO: this assumes that there is a linear relationship between distance on the sphere and
 //spherical coordinates, which is not the case for the x coordinate. this wont matter for small
 //distances...
-std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL> polyline, float resolution) {
+std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL>& polyline, float resolution) {
   //start out with the first point
   std::vector<PointLL> resampled;
   if(polyline.size() == 0)
