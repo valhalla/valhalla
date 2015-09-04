@@ -128,7 +128,7 @@ namespace std {
   template <>
   struct hash<valhalla::baldr::GraphId>
   {
-    std::size_t operator()(const valhalla::baldr::GraphId& k) const
+    inline std::size_t operator()(const valhalla::baldr::GraphId& k) const
     {
       return static_cast<size_t>(k.value);
     }
