@@ -577,6 +577,16 @@ struct graph_callback : public OSMPBF::Callback {
     } else
       w.set_name_index(osmdata_.name_offset_map.index(name));
 
+    // If this way is a loop we can make our lives way easier if we simply split it up
+    // into two edges in the graph. If a problem is hard, avoid the problem!
+    if(nodes.front() == nodes.back()) {
+      intersection_.set(nodes[nodes.size()/2]);
+      //TODO: update osmdata_.*_count?
+      // Infer cul-de-sac if a road edge is a loop and is low classification.
+      if(w.use() == Use::kRoad && w.road_class() > RoadClass::kTertiary)
+        w.set_use(Use::kCuldesac);
+    }
+
     // Add the way to the list
     ways_->push_back(w);
   }
