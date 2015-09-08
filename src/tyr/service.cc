@@ -431,6 +431,109 @@ namespace {
           if (maneuver.portions_unpaved())
             man->emplace("rough", maneuver.portions_unpaved());
 
+          // Process sign
+          if (maneuver.has_sign()) {
+            auto sign = json::map({});
+
+            // Process exit number
+            if (maneuver.sign().exit_number_elements_size() > 0) {
+              auto exit_number_elements = json::array({});
+              for (int i = 0; i < maneuver.sign().exit_number_elements_size();
+                  ++i) {
+                auto exit_number_element = json::map({});
+
+                // Add the exit number text
+                exit_number_element->emplace(
+                    "text", maneuver.sign().exit_number_elements(i).text());
+
+                // Add the exit number consecutive count only if greater than zero
+                if (maneuver.sign().exit_number_elements(i).consecutive_count() > 0) {
+                  exit_number_element->emplace(
+                      "consecutive_count",static_cast<uint64_t>(
+                          maneuver.sign().exit_number_elements(i).consecutive_count()));
+                }
+
+                exit_number_elements->emplace_back(exit_number_element);
+              }
+              sign->emplace("exit_number_elements",
+                            std::move(exit_number_elements));
+            }
+
+            // Process exit branch
+            if (maneuver.sign().exit_branch_elements_size() > 0) {
+              auto exit_branch_elements = json::array({});
+              for (int i = 0; i < maneuver.sign().exit_branch_elements_size();
+                  ++i) {
+                auto exit_branch_element = json::map({});
+
+                // Add the exit branch text
+                exit_branch_element->emplace(
+                    "text", maneuver.sign().exit_branch_elements(i).text());
+
+                // Add the exit branch consecutive count only if greater than zero
+                if (maneuver.sign().exit_branch_elements(i).consecutive_count() > 0) {
+                  exit_branch_element->emplace(
+                      "consecutive_count",static_cast<uint64_t>(
+                          maneuver.sign().exit_branch_elements(i).consecutive_count()));
+                }
+
+                exit_branch_elements->emplace_back(exit_branch_element);
+              }
+              sign->emplace("exit_branch_elements",
+                            std::move(exit_branch_elements));
+            }
+
+            // Process exit toward
+            if (maneuver.sign().exit_toward_elements_size() > 0) {
+              auto exit_toward_elements = json::array({});
+              for (int i = 0; i < maneuver.sign().exit_toward_elements_size();
+                  ++i) {
+                auto exit_toward_element = json::map({});
+
+                // Add the exit toward text
+                exit_toward_element->emplace(
+                    "text", maneuver.sign().exit_toward_elements(i).text());
+
+                // Add the exit toward consecutive count only if greater than zero
+                if (maneuver.sign().exit_toward_elements(i).consecutive_count() > 0) {
+                  exit_toward_element->emplace(
+                      "consecutive_count",static_cast<uint64_t>(
+                          maneuver.sign().exit_toward_elements(i).consecutive_count()));
+                }
+
+                exit_toward_elements->emplace_back(exit_toward_element);
+              }
+              sign->emplace("exit_toward_elements",
+                            std::move(exit_toward_elements));
+            }
+
+            // Process exit name
+            if (maneuver.sign().exit_name_elements_size() > 0) {
+              auto exit_name_elements = json::array({});
+              for (int i = 0; i < maneuver.sign().exit_name_elements_size();
+                  ++i) {
+                auto exit_name_element = json::map({});
+
+                // Add the exit name text
+                exit_name_element->emplace(
+                    "text", maneuver.sign().exit_name_elements(i).text());
+
+                // Add the exit name consecutive count only if greater than zero
+                if (maneuver.sign().exit_name_elements(i).consecutive_count() > 0) {
+                  exit_name_element->emplace(
+                      "consecutive_count",static_cast<uint64_t>(
+                          maneuver.sign().exit_name_elements(i).consecutive_count()));
+                }
+
+                exit_name_elements->emplace_back(exit_name_element);
+              }
+              sign->emplace("exit_name_elements",
+                            std::move(exit_name_elements));
+            }
+
+            man->emplace("sign", std::move(sign));
+          }
+
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
           //“portionsTollNote” : “<portionsTollNote>”,
