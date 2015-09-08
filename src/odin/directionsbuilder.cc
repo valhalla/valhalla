@@ -176,6 +176,60 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
           maneuver.verbal_post_transition_instruction());
     }
 
+    // Populate sign information
+    if (maneuver.HasExitSign()) {
+      auto* trip_sign = trip_maneuver->mutable_sign();
+
+      // Process exit number info
+      if (maneuver.HasExitNumberSign()) {
+        auto* trip_exit_number_elements = trip_sign
+            ->mutable_exit_number_elements();
+        for (const auto& exit_number : maneuver.signs().exit_number_list()) {
+          auto* trip_exit_number_element = trip_exit_number_elements->Add();
+          trip_exit_number_element->set_text(exit_number.text());
+          trip_exit_number_element->set_consecutive_count(
+              exit_number.consecutive_count());
+        }
+      }
+
+      // Process exit branch info
+      if (maneuver.HasExitBranchSign()) {
+        auto* trip_exit_branch_elements = trip_sign
+            ->mutable_exit_branch_elements();
+        for (const auto& exit_branch : maneuver.signs().exit_branch_list()) {
+          auto* trip_exit_branch_element = trip_exit_branch_elements->Add();
+          trip_exit_branch_element->set_text(exit_branch.text());
+          trip_exit_branch_element->set_consecutive_count(
+              exit_branch.consecutive_count());
+        }
+      }
+
+      // Process exit toward info
+      if (maneuver.HasExitTowardSign()) {
+        auto* trip_exit_toward_elements = trip_sign
+            ->mutable_exit_toward_elements();
+        for (const auto& exit_toward : maneuver.signs().exit_toward_list()) {
+          auto* trip_exit_toward_element = trip_exit_toward_elements->Add();
+          trip_exit_toward_element->set_text(exit_toward.text());
+          trip_exit_toward_element->set_consecutive_count(
+              exit_toward.consecutive_count());
+        }
+      }
+
+      // Process exit name info
+      if (maneuver.HasExitNameSign()) {
+        auto* trip_exit_name_elements = trip_sign
+            ->mutable_exit_name_elements();
+        for (const auto& exit_name : maneuver.signs().exit_name_list()) {
+          auto* trip_exit_name_element = trip_exit_name_elements->Add();
+          trip_exit_name_element->set_text(exit_name.text());
+          trip_exit_name_element->set_consecutive_count(
+              exit_name.consecutive_count());
+        }
+      }
+
+    }
+
   }
 
   // Populate summary
