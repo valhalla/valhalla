@@ -362,20 +362,23 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
 
-        // Set departure time from this transit stop
-        transit_stop_info->set_departure_date_time(
-            DateTime::get_duration(*origin.date_time_,
-                                   transit_departure->departure_time() -
-                                   origin_sec_from_mid));
+        if (transit_departure) {
 
-        // Copy the arrival time for use at the next transit stop
-        arrival_time = DateTime::get_duration(*origin.date_time_,
-                                   (transit_departure->departure_time() +
-                                       transit_departure->elapsed_time()) -
-                                       origin_sec_from_mid);
+          // Set departure time from this transit stop
+          transit_stop_info->set_departure_date_time(
+              DateTime::get_duration(*origin.date_time_,
+                                     transit_departure->departure_time() -
+                                     origin_sec_from_mid));
 
-        // Get the block Id
-        block_id = transit_departure->blockid();
+          // Copy the arrival time for use at the next transit stop
+          arrival_time = DateTime::get_duration(*origin.date_time_,
+                                     (transit_departure->departure_time() +
+                                         transit_departure->elapsed_time()) -
+                                         origin_sec_from_mid);
+
+          // Get the block Id
+          block_id = transit_departure->blockid();
+        }
       } else {
         // No departing trip, set the arrival time (for next stop) to empty
         // and set block Id to 0
@@ -769,25 +772,29 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
-    const TransitRoute* transit_route = graphtile->GetTransitRoute(
-        transit_departure->routeid());
-    const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
-    //use route short name if available otherwise trip short name.
-    if (transit_route->short_name_offset())
-      transit_info->set_short_name(
-          graphtile->GetName(transit_route->short_name_offset()));
-    else if (transit_trip->short_name_offset())
-      transit_info->set_short_name(
-          graphtile->GetName(transit_trip->short_name_offset()));
+    if (transit_departure) {
 
-    if (transit_route->long_name_offset())
-      transit_info->set_long_name(
-          graphtile->GetName(transit_route->long_name_offset()));
+      const TransitRoute* transit_route = graphtile->GetTransitRoute(
+          transit_departure->routeid());
+      const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
-    if (transit_departure->headsign_offset())
-      transit_info->set_headsign(
-          graphtile->GetName(transit_departure->headsign_offset()));
+      //use route short name if available otherwise trip short name.
+      if (transit_route && transit_route->short_name_offset())
+        transit_info->set_short_name(
+            graphtile->GetName(transit_route->short_name_offset()));
+      else if (transit_trip && transit_trip->short_name_offset())
+        transit_info->set_short_name(
+            graphtile->GetName(transit_trip->short_name_offset()));
+
+      if (transit_route && transit_route->long_name_offset())
+        transit_info->set_long_name(
+            graphtile->GetName(transit_route->long_name_offset()));
+
+      if (transit_departure->headsign_offset())
+        transit_info->set_headsign(
+            graphtile->GetName(transit_departure->headsign_offset()));
+    }
   }
 
   return trip_edge;
