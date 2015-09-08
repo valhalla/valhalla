@@ -216,8 +216,10 @@ namespace {
       }
 
       //there are limits though
-      if(shape.size() > max_shape)
-        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) + (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape));
+      if(shape.size() > max_shape) {
+        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) +
+            (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape));
+      }
     }
 
 
