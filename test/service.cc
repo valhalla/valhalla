@@ -52,6 +52,7 @@ namespace {
     config.add("skadi.service.proxy", "ipc://test_skadi_proxy");
     config.add("httpd.service.loopback", "ipc://test_skadi_results");
     config.add("additional_data.elevation", "test/data/");
+    config.add("service_limits.max_shape", "100");
 
     std::thread worker(valhalla::skadi::run_service, config);
     worker.detach();

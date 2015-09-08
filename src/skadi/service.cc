@@ -126,7 +126,8 @@ namespace {
   class skadi_worker_t {
     public:
     skadi_worker_t(const boost::property_tree::ptree& config):
-      sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false) {
+      sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
+      max_shape(config.get<size_t>("service_limits.max_shape")) {
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
@@ -170,14 +171,14 @@ namespace {
     }
 
     void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
-      //we require shape or encoded polyline
-      try {
-        //get some parameters
-        range = request.get<bool>("range", false);
-        auto input_shape = request.get_child_optional("shape");
-        encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-        auto resample_distance = request.get_optional<float>("resample_distance");
+      //get some parameters
+      range = request.get<bool>("range", false);
+      auto input_shape = request.get_child_optional("shape");
+      encoded_polyline = request.get_optional<std::string>("encoded_polyline");
+      auto resample_distance = request.get_optional<float>("resample_distance");
 
+      //we require shape or encoded polyline but we dont know which at first
+      try {
         //uncompressed shape
         if (input_shape) {
           for (const auto& latlng : *input_shape)
@@ -192,56 +193,38 @@ namespace {
         //not enough shape
         if (shape.size() < 1)
           throw std::runtime_error("Insufficient shape provided");
-
-        //resample the shape
-        if(resample_distance) {
-          if(*resample_distance > 10) {
-            shape = midgard::resample_spherical_polyline(shape, *resample_distance);
-            if(encoded_polyline)
-              *encoded_polyline = midgard::encode(shape);
-          }
-          else
-            throw std::runtime_error("resample_distance must be >= 10.0 meters");
-        }
       }
       catch (...) {
         throw std::runtime_error("Insufficiently specified required parameter 'shape' or 'encoded_polyline'");
       }
+
+      //resample the shape
+      if(resample_distance) {
+        if(*resample_distance >= 10) {
+          //resample the shape but make sure to keep the first and last shapepoint
+          auto last = shape.back();
+          shape = midgard::resample_spherical_polyline(shape, *resample_distance);
+          shape.emplace_back(std::move(last));
+          //reencode it for display if they sent it encoded
+          if(encoded_polyline)
+            *encoded_polyline = midgard::encode(shape);
+        }
+        else
+          throw std::runtime_error("'resample_distance' must be >= 10.0 meters");
+      }
+
+      //there are limits though
+      if(shape.size() > max_shape)
+        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) + "). The limit is " + std::to_string(max_shape));
     }
 
-  //example profile response:
-  /*
-  {
-    "input_shape":
-  [
+
+    /* example height with range response:
     {
-        "lat": 40.712433,
-        "lon": -76.504913
-    },
-    {
-        "lat": 40.712276,
-        "lon": -76.605263
-    },
-    {
-        "lat": 40.712124,
-        "lon": -76.805695
+      "shape": [ {"lat": 40.712433, "lon": -76.504913}, {"lat": 40.712276, "lon": -76.605263} ],
+      "range_height": [ [0,303], [8467,275], [25380,198] ]
     }
-  ],
-  "profile": [
-    [
-        0,
-        303
-    ],
-    [
-        8467,
-        275
-    ],
-    [
-        25380,
-        198
-    ]
-  ]
-}*/
+    */
     worker_t::result_t elevation(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //get the elevation of each posting
       std::vector<double> heights = sample.get_all(shape);
@@ -293,6 +276,7 @@ namespace {
       boost::optional<std::string> encoded_polyline;
       bool range;
       skadi::sample sample;
+      size_t max_shape;
   };
 }
 
