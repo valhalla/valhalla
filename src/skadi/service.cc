@@ -127,7 +127,7 @@ namespace {
     public:
     skadi_worker_t(const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
-      max_shape(config.get<size_t>("service_limits.max_shape")) {
+      max_shape(config.get<size_t>("service_limits.max_shape")), min_resample(config.get<float>("service_limits.min_resample")) {
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
@@ -201,8 +201,8 @@ namespace {
       //resample the shape
       bool resampled = false;
       if(resample_distance) {
-        if(*resample_distance < 10)
-          throw std::runtime_error("'resample_distance' must be >= 10.0 meters");
+        if(*resample_distance < min_resample)
+          throw std::runtime_error("'resample_distance' must be >= " + std::to_string(min_resample) + " meters");
         if(shape.size() > 1) {
           //resample the shape but make sure to keep the first and last shapepoint
           auto last = shape.back();
@@ -281,6 +281,7 @@ namespace {
       bool range;
       skadi::sample sample;
       size_t max_shape;
+      float min_resample;
   };
 }
 
