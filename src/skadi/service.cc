@@ -200,7 +200,9 @@ namespace {
 
       //resample the shape
       if(resample_distance) {
-        if(*resample_distance >= 10) {
+        if(*resample_distance < 10)
+          throw std::runtime_error("'resample_distance' must be >= 10.0 meters");
+        if(shape.size() > 1) {
           //resample the shape but make sure to keep the first and last shapepoint
           auto last = shape.back();
           shape = midgard::resample_spherical_polyline(shape, *resample_distance);
@@ -209,8 +211,6 @@ namespace {
           if(encoded_polyline)
             *encoded_polyline = midgard::encode(shape);
         }
-        else
-          throw std::runtime_error("'resample_distance' must be >= 10.0 meters");
       }
 
       //there are limits though
