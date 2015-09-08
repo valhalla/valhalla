@@ -18,7 +18,7 @@ constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
-// Default turn costs
+// Default turn costs.
 constexpr float kTCStraight         = 0.25f;
 constexpr float kTCSlight           = 0.5f;
 constexpr float kTCFavorable        = 0.75f;
@@ -50,20 +50,20 @@ constexpr float kMaxCyclingSpeed = 60.0f;
 constexpr float kDefaultUseRoadsFactor = 0.5f;
 
 // Avoid driveways
-constexpr float kDrivewayFactor = 10.0f;
+constexpr float kDrivewayFactor = 20.0f;
 
-// Weighting based on road class. These apply penalties to higher class
+// Weighting factor based on road class. These apply penalties to higher class
 // roads. These penalties are modulated by the useroads factor - further
 // avoiding higher class roads for those with low propensity for using roads.
-constexpr float kRoadClassWeight[] = {
-    2.5f,     // Motorway
-    2.0f,     // Trunk
-    1.5f,     // Primary
-    1.25f,    // Secondary
-    1.1f,     // Tertiary
-    1.05f,    // Unclassified
-    1.0f,     // Residential
-    1.5f      // Service, other
+constexpr float kRoadClassFactor[] = {
+    0.75f,  // Motorway
+    0.5f,   // Trunk
+    0.35f,  // Primary
+    0.25f,  // Secondary
+    0.1f,   // Tertiary
+    0.05f,  // Unclassified
+    0.0f,   // Residential
+    0.5f    // Service, other
 };
 
 // Speed adjustment factors based on weighted grade. Comments here show an
@@ -98,22 +98,22 @@ constexpr float kDefaultUseHillsFactor = 0.5f;
 // edges with the specified grade are weighted. Note that speed also is
 // influenced by grade, so these weights help furhte ravoid hills.
 constexpr float kAvoidHillsStrength[] = {
-  3.0f,      // -10%  - Treacherous descent possible
-  1.5f,      // -8%   - Steep downhill
-  0.75f,     // -6.5% - Good downhill - where is the bottom?
-  0.5f,      // -5%   - Picking up speed!
-  0.25f,     // -3%   - Modest downhill
+  2.0f,      // -10%  - Treacherous descent possible
+  1.0f,      // -8%   - Steep downhill
+  0.5f,      // -6.5% - Good downhill - where is the bottom?
+  0.3f,      // -5%   - Picking up speed!
+  0.2f,      // -3%   - Modest downhill
   0.1f,      // -1.5% - Smooth slight downhill, ride this all day!
   0.0f,      // 0%    - Flat, no avoidance
   0.1f,      // 1.5%  - These are called "false flat"
-  0.25f,     // 3%    - Slight rise
-  0.5f,      // 5%    - Small hill
-  0.75f,     // 6.5%  - Starting to feel this...
-  1.5f,      // 8%    - Moderately steep
-  3.0f,      // 10%   - Getting tough
-  6.0f,      // 11.5% - Tiring!
-  15.0f,     // 13%   - Ooof - this hurts
-  30.0f      // 15%   - Only for the strongest!
+  0.2f,      // 3%    - Slight rise
+  0.3f,      // 5%    - Small hill
+  0.5f,      // 6.5%  - Starting to feel this...
+  1.0f,      // 8%    - Moderately steep
+  2.5f,      // 10%   - Getting tough
+  5.0f,      // 11.5% - Tiring!
+  7.5f,      // 13%   - Ooof - this hurts
+  10.0f      // 15%   - Only for the strongest!
 };
 
 // Edge speed above which extra penalties apply (to avoid roads with higher
@@ -259,10 +259,11 @@ class BicycleCost : public DynamicCost {
   // beginners may use a value of 0.1 to stay away from roads unless
   // absolutely necessary.
   float useroads_;
+  float road_factor_;
 
-  // Elevation/grade factors (weighting applied based on the edge's weighted
+  // Elevation/grade penalty (weighting applied based on the edge's weighted
   // grade (relative value from 0-15)
-  float grade_weight[16];
+  float grade_penalty[16];
 
   // Threshold above which speed based penalties apply (based on the useroads
   // factor).
@@ -367,7 +368,14 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
               std::to_string(useroads_) + ": using default");
   }
 
-  // Set the speed penalty threshold and factor
+  // Set the road classification factor. use_roads factors above 0.5 start to
+  // reduce the weight difference between road classes while factors below 0.5
+  // start to increase the differences.
+  road_factor_ = (useroads_ > 0.5f) ?
+                 (useroads_ - 0.5f) * 0.5f : (0.5f - useroads_) * 5.0f;
+
+  // Set the speed penalty threshold and factor. With useroads = 1 the
+  // threshold is 70 kph (near 50 MPH).
   speed_penalty_threshold_ = kSpeedPenaltyThreshold +
       static_cast<uint32_t>(useroads_ * 30.0f);
   speed_factor_ = 1.1f / static_cast<float>(speed_penalty_threshold_);
@@ -378,15 +386,11 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
 
-  // Populate the grade weights (based on use_hill factor).
-  // Where this a downhill there usually is an uphill coming up so we
-  // don't really favor downhills (just avoid them less). Since speed
-  // is modified by weighted_grade, downhill sections get favored anyway!
-  // TODO - consider renaming this to usehills in the input.
-  float usehills = pt.get<float>("hilliness_factor", kDefaultUseHillsFactor);
+  // Populate the grade penalties (based on use_hills factor).
+  float usehills   = pt.get<float>("use_hills", kDefaultUseHillsFactor);
   float avoidhills = (1.0f - usehills);
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
-    grade_weight[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
+    grade_penalty[i] = 1.0f + avoidhills * kAvoidHillsStrength[i];
   }
 }
 
@@ -462,7 +466,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
   float speed = UpdateSpeed(edge->surface()) *
-		        kGradeBasedSpeedFactor[edge->weighted_grade()];
+		            kGradeBasedSpeedFactor[edge->weighted_grade()];
 
   // Apply a weighting factor to the cost based on desirability of cycling
   // on this edge. Based on several factors: rider propensity to ride on roads,
@@ -474,11 +478,11 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special use cases: cycleway and footway
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + useroads_ * 0.25f);
+    factor = (0.5f + useroads_ * 0.65f);
   } else if (edge->use() == Use::kFootway) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.
-    factor = 0.65f + (useroads_ * 0.5f);
+    factor = 0.75f + (useroads_ * 0.5f);
   } else if (edge->use() == Use::kMountainBike &&
              bicycletype_ == BicycleType::kMountain) {
     factor = 0.5f;
@@ -487,12 +491,12 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor = kDrivewayFactor;
   } else {
     // On a road - set a cost factor based on useroads factor and road
-    // classification
-    factor = (2.0f - useroads_) *
-            kRoadClassWeight[static_cast<uint32_t>(edge->classification())];
+    // classification.
+    factor += (road_factor_ *
+              kRoadClassFactor[static_cast<uint32_t>(edge->classification())]);
 
-    // Add a penalty for higher speed roads
-    // (above a threshold that depends on the useroads factor)
+    // Add a penalty for higher speed roads above a threshold that
+    // depends on the useroads factor.
     if (edge->speed() > speed_penalty_threshold_) {
       factor *= static_cast<float>(edge->speed()) * speed_factor_;
     }
@@ -513,12 +517,13 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= kBicycleNetworkFactor;
   }
 
-  // Update factor based on weights applied for weighted_grade / hilliness
-  factor *= grade_weight[edge->weighted_grade()];
+  // Update factor based on penalties applied for weighted_grade
+  // TODO - do we need to modulate by length?
+  factor *= grade_penalty[edge->weighted_grade()];
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   float sec = (edge->length() * speedfactor_[static_cast<uint32_t>(speed + 0.5f)]);
-  return Cost(sec * factor, sec);
+  return { sec * factor, sec };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
