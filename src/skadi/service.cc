@@ -199,6 +199,7 @@ namespace {
       }
 
       //resample the shape
+      bool resampled = false;
       if(resample_distance) {
         if(*resample_distance < 10)
           throw std::runtime_error("'resample_distance' must be >= 10.0 meters");
@@ -210,12 +211,13 @@ namespace {
           //reencode it for display if they sent it encoded
           if(encoded_polyline)
             *encoded_polyline = midgard::encode(shape);
+          resampled = true;
         }
       }
 
       //there are limits though
       if(shape.size() > max_shape)
-        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) + "). The limit is " + std::to_string(max_shape));
+        throw std::runtime_error("Too many shape points (" + std::to_string(shape.size()) + (resampled ? " after resampling" : "") + "). The limit is " + std::to_string(max_shape));
     }
 
 
