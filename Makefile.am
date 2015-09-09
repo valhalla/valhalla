@@ -35,6 +35,13 @@ clean-gcno:
 clean-local: clean-coverage clean-gcno
 endif
 
+#timezone info from boost
+valhalla/baldr/date_time_zonespec.h:
+	-wget -q https://raw.githubusercontent.com/boostorg/date_time/master/data/date_time_zonespec.csv
+	-xxd -i date_time_zonespec.csv > valhalla/baldr/date_time_zonespec.h
+CLEANFILES = date_time_zonespec.csv valhalla/baldr/date_time_zonespec.h
+
+
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
@@ -73,7 +80,8 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
 	valhalla/baldr/verbal_text_formatter_us_tx.h \
-	valhalla/baldr/verbal_text_formatter_factory.h
+	valhalla/baldr/verbal_text_formatter_factory.h \
+        valhalla/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_SOURCES = \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
