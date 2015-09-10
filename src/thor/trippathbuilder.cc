@@ -849,7 +849,7 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
 
   // Set the driveability flag for the intersecting edge
   itersecting_edge->set_driveability(
-      GetTripPathTraversability(nodeinfo->auto_traversability(edge_index)));
+      GetTripPathTraversability(nodeinfo->local_driveability(edge_index)));
 
   // Set the previous/intersecting edge name consistency
   itersecting_edge->set_prev_name_consistency(
