@@ -32,7 +32,7 @@ message TripPath {
     repeated string exit_name = 4;    // Not used much in US; Used in Canada
   }
 
-  enum Driveability {
+  enum Traversability {
     kNone = 0;
     kForward = 1;
     kBackward = 2;
@@ -106,7 +106,7 @@ message TripPath {
     optional uint32 end_heading = 6;        // 0-359
     optional uint32 begin_shape_index = 7;  // inclusive
     optional uint32 end_shape_index = 8;    // inclusive
-    optional Driveability driveability = 9;
+    optional Traversability traversability = 9;
     optional bool ramp = 10;
     optional bool turn_channel = 11;
     optional bool ferry = 12;
@@ -148,9 +148,11 @@ message TripPath {
 
   message IntersectingEdge {
     optional uint32 begin_heading = 1;       // 0-359
-    optional Driveability driveability = 2;
-    optional bool prev_name_consistency = 3;
-    optional bool curr_name_consistency = 4;
+    optional bool prev_name_consistency = 2;
+    optional bool curr_name_consistency = 3;
+    optional Traversability driveability = 4;
+    optional Traversability cyclability = 5;
+    optional Traversability walkability = 6;
   }
   
   message TransitStopInfo {

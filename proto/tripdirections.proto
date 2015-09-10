@@ -86,8 +86,8 @@ message TripDirections {
     message Sign {
 
       message Element {
-        optional string text = 1;              // The acutal sign element text
-        optional uint32 consecutive_count = 2; // The frequency of this sign within a set a consecutive signs
+        optional string text = 1;              // The actual sign element text
+        optional uint32 consecutive_count = 2; // The frequency of this sign element within a set a consecutive signs
       }
 
       repeated Element exit_number_elements = 1;  // The list of exit numbers, example: 67B

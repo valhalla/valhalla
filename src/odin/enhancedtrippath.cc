@@ -89,8 +89,8 @@ bool EnhancedTripPath_Edge::IsHighway() const {
 }
 
 bool EnhancedTripPath_Edge::IsOneway() const {
-  return ((driveability() == TripPath_Driveability_kForward)
-      || (driveability() == TripPath_Driveability_kBackward));
+  return ((traversability() == TripPath_Traversability_kForward)
+      || (traversability() == TripPath_Traversability_kBackward));
 }
 
 bool EnhancedTripPath_Edge::IsForward(uint32_t prev2curr_turn_degree) const {
@@ -173,8 +173,8 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | end_shape_index=";
   str += std::to_string(end_shape_index());
 
-  str += " | driveability=";
-  str += std::to_string(driveability());
+  str += " | traversability=";
+  str += std::to_string(traversability());
 
   str += " | ramp=";
   str += std::to_string(ramp());
@@ -342,8 +342,8 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(end_shape_index());
 
   str += delim;
-  str += "TripPath_Driveability_";
-  str += TripPath_Driveability_descriptor()->FindValueByNumber(driveability())
+  str += "TripPath_Traversability_";
+  str += TripPath_Traversability_descriptor()->FindValueByNumber(traversability())
       ->name();
 
   str += delim;
@@ -546,9 +546,9 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 // EnhancedTripPath_IntersectingEdge
 
 bool EnhancedTripPath_IntersectingEdge::IsDriveableOutbound() const {
-  TripPath_Driveability d = driveability();
-  if ((d == TripPath_Driveability_kForward)
-      || (d == TripPath_Driveability_kBoth)) {
+  TripPath_Traversability d = driveability();
+  if ((d == TripPath_Traversability_kForward)
+      || (d == TripPath_Traversability_kBoth)) {
     return true;
   }
   return false;
@@ -563,14 +563,20 @@ std::string EnhancedTripPath_IntersectingEdge::ToString() const {
   str += "begin_heading=";
   str += std::to_string(begin_heading());
 
-  str += " | driveability=";
-  str += std::to_string(driveability());
-
   str += " | prev_name_consistency=";
   str += std::to_string(prev_name_consistency());
 
   str += " | curr_name_consistency=";
   str += std::to_string(curr_name_consistency());
+
+  str += " | driveability=";
+  str += std::to_string(driveability());
+
+  str += " | cyclability=";
+  str += std::to_string(cyclability());
+
+  str += " | walkability=";
+  str += std::to_string(walkability());
 
   return str;
 }
