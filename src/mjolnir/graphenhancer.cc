@@ -1100,16 +1100,16 @@ void enhance(const boost::property_tree::ptree& pt,
         // is maintained.
         nodeinfo.set_heading(j, heading[j]);
 
-        // Set driveability
-        Driveability driveability;
+        // Set traversability for autos
+        Traversability traversability;
         if (directededge.forwardaccess() & kAutoAccess) {
-          driveability = (directededge.reverseaccess() & kAutoAccess) ?
-              Driveability::kBoth : Driveability::kForward;
+          traversability = (directededge.reverseaccess() & kAutoAccess) ?
+              Traversability::kBoth : Traversability::kForward;
         } else {
-          driveability = (directededge.reverseaccess() & kAutoAccess) ?
-                        Driveability::kBackward : Driveability::kNone;
+          traversability = (directededge.reverseaccess() & kAutoAccess) ?
+              Traversability::kBackward : Traversability::kNone;
         }
-        nodeinfo.set_local_driveability(j, driveability);
+        nodeinfo.set_auto_driveability(j, traversability);
       }
 
       // Go through directed edges and "enhance" directed edge attributes
@@ -1132,7 +1132,7 @@ void enhance(const boost::property_tree::ptree& pt,
             if (ConsistentNames(country_code,
                   tilebuilder.edgeinfo(directededge.edgeinfo_offset())->GetNames(),
                   tilebuilder.edgeinfo(tilebuilder.directededge(
-                		  nodeinfo.edge_index() + k).edgeinfo_offset())->GetNames())) {
+                      nodeinfo.edge_index() + k).edgeinfo_offset())->GetNames())) {
               nodeinfo.set_name_consistency(j, k, true);
             }
           }
