@@ -68,6 +68,27 @@ void TryIsoDateTime() {
     throw std::runtime_error(
         std::string("Iso date time failed ") + current_date_time);
   }
+
+  current_date_time = DateTime::iso_date_time("America/Chicago");
+  found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  if (found != std::string::npos)
+    time = current_date_time.substr(found+1);
+
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,"America/Chicago") != current_date_time) {
+    throw std::runtime_error(
+        std::string("Iso date time failed ") + current_date_time);
+  }
+
+  current_date_time = DateTime::iso_date_time("Africa/Porto-Novo");
+  found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
+  if (found != std::string::npos)
+    time = current_date_time.substr(found+1);
+
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,"Africa/Porto-Novo") != current_date_time) {
+    throw std::runtime_error(
+        std::string("Iso date time failed ") + current_date_time);
+  }
+
 }
 }
 
