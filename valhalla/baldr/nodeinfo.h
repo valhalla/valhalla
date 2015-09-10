@@ -221,7 +221,7 @@ class NodeInfo {
 
   // Node type
   struct NodeTypeInfo {
-    uint32_t local_driveability : 16; // Traversability for local edges (up to
+    uint32_t local_driveability : 16; // Driveability for local edges (up to
                                       // kMaxLocalEdgeIndex+1 edges)
     uint32_t density            : 4;  // Density (population? edges?)
     uint32_t type               : 4;  // Node type
