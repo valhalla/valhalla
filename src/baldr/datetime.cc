@@ -29,11 +29,7 @@ struct tz_db_t {
   tz_db_t() {
     std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
     std::stringstream ss(tz_data);
-    std::ofstream out("output.txt");
-        out << tz_data;
-        out.close();
     db.load_from_stream(ss);
-
   }
   const boost::local_time::tz_database* operator->() const {
       return &db;
