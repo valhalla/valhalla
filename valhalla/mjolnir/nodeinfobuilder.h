@@ -97,8 +97,8 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  localidx  Local edge index.
    * @param  t         Traversability (see graphconstants.h)
    */
-  void set_auto_driveability(const uint32_t localidx,
-                             const baldr::Traversability t);
+  void set_local_driveability(const uint32_t localidx,
+                              const baldr::Traversability t);
 
   /**
    * Set the relative density
