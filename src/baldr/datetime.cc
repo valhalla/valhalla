@@ -1,23 +1,47 @@
 #include <iostream>
 #include <sstream>
 
-#include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/date_time_zonespec.h>
+#include <fstream>
 
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
+namespace
+{
+
+const boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
+
+struct tz_db_t {
+  tz_db_t() {
+    std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
+    std::stringstream ss(tz_data);
+    std::ofstream out("output.txt");
+        out << tz_data;
+        out.close();
+    db.load_from_stream(ss);
+
+  }
+  const boost::local_time::tz_database* operator->() const {
+      return &db;
+  }
+  boost::local_time::tz_database db;
+};
+
+}
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
 //date_time is in the format of 20150516 or 2015-05-06T08:00
@@ -100,6 +124,8 @@ std::string date(const std::string& date_time) {
 //Get the iso date and time from a DOW mask and time.
 std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                           const std::string& tz) {
+  //thread safe static initialization of global singleton
+  static tz_db_t tz_db;
 
   std::string iso_date_time;
   std::stringstream ss("");
@@ -144,14 +170,9 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
     ss >> desired_time;
 
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    std::string tz_string;
-    if (tz == "America/Los_Angeles")
-      tz_string = "PST-08:00:00PDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-    else
-      tz_string = "EST-05:00:00EDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-
-    boost::local_time::time_zone_ptr time_zone(new boost::local_time::posix_time_zone(tz_string));
+    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
+
     pt = local_date_time.local_time();
     boost::gregorian::date date = pt.date();
     uint8_t desired_tod = (3600 * desired_time.time_of_day().hours()) +
@@ -176,6 +197,8 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
 
 //Get the current iso date and time.
 std::string iso_date_time(const std::string& tz) {
+  //thread safe static initialization of global singleton
+  static tz_db_t tz_db;
 
   std::string iso_date_time;
   if (tz.empty())
@@ -184,13 +207,9 @@ std::string iso_date_time(const std::string& tz) {
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
     std::string tz_string;
-    if (tz == "America/Los_Angeles")
-      tz_string = "PST-08:00:00PDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-    else
-      tz_string = "EST-05:00:00EDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-
-    boost::local_time::time_zone_ptr time_zone(new boost::local_time::posix_time_zone(tz_string));
+    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
+
     pt = local_date_time.local_time();
     boost::gregorian::date date = pt.date();
 
