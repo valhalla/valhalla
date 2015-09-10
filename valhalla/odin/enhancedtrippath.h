@@ -80,7 +80,7 @@ class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
 
   EnhancedTripPath_IntersectingEdge() = delete;
 
-  bool IsTraversableOutbound() const;
+  bool IsTraversableOutbound(const TripPath_TravelMode travel_mode) const;
 
   std::string ToString() const;
 
@@ -96,33 +96,33 @@ struct IntersectingEdgeCounts {
                          uint32_t l, uint32_t ls, uint32_t ldo, uint32_t lsdo)
       : right(r),
         right_similar(rs),
-        right_driveable_outbound(rdo),
-        right_similar_driveable_outbound(rsdo),
+        right_traversable_outbound(rdo),
+        right_similar_traversable_outbound(rsdo),
         left(l),
         left_similar(ls),
-        left_driveable_outbound(ldo),
-        left_similar_driveable_outbound(lsdo) {
+        left_traversable_outbound(ldo),
+        left_similar_traversable_outbound(lsdo) {
   }
 
   void clear() {
     right = 0;
     right_similar = 0;
-    right_driveable_outbound = 0;
-    right_similar_driveable_outbound = 0;
+    right_traversable_outbound = 0;
+    right_similar_traversable_outbound = 0;
     left = 0;
     left_similar = 0;
-    left_driveable_outbound = 0;
-    left_similar_driveable_outbound = 0;
+    left_traversable_outbound = 0;
+    left_similar_traversable_outbound = 0;
   }
 
   uint32_t right;
   uint32_t right_similar;
-  uint32_t right_driveable_outbound;
-  uint32_t right_similar_driveable_outbound;
+  uint32_t right_traversable_outbound;
+  uint32_t right_similar_traversable_outbound;
   uint32_t left;
   uint32_t left_similar;
-  uint32_t left_driveable_outbound;
-  uint32_t left_similar_driveable_outbound;
+  uint32_t left_traversable_outbound;
+  uint32_t left_similar_traversable_outbound;
 };
 
 class EnhancedTripPath_Node : public TripPath_Node {
@@ -136,15 +136,18 @@ class EnhancedTripPath_Node : public TripPath_Node {
   EnhancedTripPath_IntersectingEdge* GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(
-      uint32_t from_heading, IntersectingEdgeCounts& xedge_counts);
+      uint32_t from_heading, const TripPath_TravelMode travel_mode,
+      IntersectingEdgeCounts& xedge_counts);
 
   bool HasFowardIntersectingEdge(uint32_t from_heading);
 
-  bool HasForwardDriveableIntersectingEdge(uint32_t from_heading);
+  bool HasForwardTraversableIntersectingEdge(
+      uint32_t from_heading, const TripPath_TravelMode travel_mode);
 
   uint32_t GetStraightestIntersectingEdgeTurnDegree(uint32_t from_heading);
 
-  uint32_t GetStraightestDriveableIntersectingEdgeTurnDegree(uint32_t from_heading);
+  uint32_t GetStraightestTraversableIntersectingEdgeTurnDegree(
+      uint32_t from_heading, const TripPath_TravelMode travel_mode);
 
   std::string ToString() const;
 

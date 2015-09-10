@@ -8,12 +8,14 @@ namespace {
 
 void TryCalculateRightLeftIntersectingEdgeCounts(
     uint32_t from_heading, EnhancedTripPath_Node* node,
-    const IntersectingEdgeCounts& expected_xedge_counts) {
+    const IntersectingEdgeCounts& expected_xedge_counts,
+    const TripPath_TravelMode travel_mode = TripPath_TravelMode_kDrive) {
 
   IntersectingEdgeCounts xedge_counts;
   xedge_counts.clear();
 
-  node->CalculateRightLeftIntersectingEdgeCounts(from_heading, xedge_counts);
+  node->CalculateRightLeftIntersectingEdgeCounts(from_heading, travel_mode,
+                                                 xedge_counts);
   if (xedge_counts.right != expected_xedge_counts.right) {
     throw std::runtime_error("Incorrect right");
   }
@@ -22,13 +24,13 @@ void TryCalculateRightLeftIntersectingEdgeCounts(
     throw std::runtime_error("Incorrect right_similar");
   }
 
-  if (xedge_counts.right_driveable_outbound
-      != expected_xedge_counts.right_driveable_outbound) {
+  if (xedge_counts.right_traversable_outbound
+      != expected_xedge_counts.right_traversable_outbound) {
     throw std::runtime_error("Incorrect right_driveable_outbound");
   }
 
-  if (xedge_counts.right_similar_driveable_outbound
-      != expected_xedge_counts.right_similar_driveable_outbound) {
+  if (xedge_counts.right_similar_traversable_outbound
+      != expected_xedge_counts.right_similar_traversable_outbound) {
     throw std::runtime_error("Incorrect right_similar_driveable_outbound");
   }
 
@@ -40,13 +42,13 @@ void TryCalculateRightLeftIntersectingEdgeCounts(
     throw std::runtime_error("Incorrect left_similar");
   }
 
-  if (xedge_counts.left_driveable_outbound
-      != expected_xedge_counts.left_driveable_outbound) {
+  if (xedge_counts.left_traversable_outbound
+      != expected_xedge_counts.left_traversable_outbound) {
     throw std::runtime_error("Incorrect left_driveable_outbound");
   }
 
-  if (xedge_counts.left_similar_driveable_outbound
-      != expected_xedge_counts.left_similar_driveable_outbound) {
+  if (xedge_counts.left_similar_traversable_outbound
+      != expected_xedge_counts.left_similar_traversable_outbound) {
     throw std::runtime_error("Incorrect left_similar_driveable_outbound");
   }
 }

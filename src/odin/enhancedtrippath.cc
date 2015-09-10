@@ -545,10 +545,20 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
-bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound() const {
-  TripPath_Traversability d = driveability();
-  if ((d == TripPath_Traversability_kForward)
-      || (d == TripPath_Traversability_kBoth)) {
+bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound(
+    const TripPath_TravelMode travel_mode) const {
+  TripPath_Traversability t;
+
+  // Set traversability based on travel mode
+  if (travel_mode == TripPath_TravelMode_kDrive)
+    t = driveability();
+  else if (travel_mode == TripPath_TravelMode_kBicycle)
+    t = cyclability();
+  else
+    t = walkability();
+
+  if ((t == TripPath_Traversability_kForward)
+      || (t == TripPath_Traversability_kBoth)) {
     return true;
   }
   return false;
@@ -605,7 +615,8 @@ EnhancedTripPath_IntersectingEdge* EnhancedTripPath_Node::GetIntersectingEdge(
 }
 
 void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
-    uint32_t from_heading, IntersectingEdgeCounts& xedge_counts) {
+    uint32_t from_heading, const TripPath_TravelMode travel_mode,
+    IntersectingEdgeCounts& xedge_counts) {
   xedge_counts.clear();
 
   // No turn - just return
@@ -617,8 +628,8 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsTraversableOutbound();
+    bool xedge_traversable_outbound =
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
 
     if (path_turn_degree > 180) {
       if ((intersecting_turn_degree > path_turn_degree)
@@ -627,12 +638,12 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 true)) {
           ++xedge_counts.right_similar;
-          if (xedge_driveable_outbound) {
-            ++xedge_counts.right_similar_driveable_outbound;
+          if (xedge_traversable_outbound) {
+            ++xedge_counts.right_similar_traversable_outbound;
           }
         }
-        if (xedge_driveable_outbound) {
-          ++xedge_counts.right_driveable_outbound;
+        if (xedge_traversable_outbound) {
+          ++xedge_counts.right_traversable_outbound;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           && (intersecting_turn_degree > 180)) {
@@ -640,12 +651,12 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 false)) {
           ++xedge_counts.left_similar;
-          if (xedge_driveable_outbound) {
-            ++xedge_counts.left_similar_driveable_outbound;
+          if (xedge_traversable_outbound) {
+            ++xedge_counts.left_similar_traversable_outbound;
           }
         }
-        if (xedge_driveable_outbound) {
-          ++xedge_counts.left_driveable_outbound;
+        if (xedge_traversable_outbound) {
+          ++xedge_counts.left_traversable_outbound;
         }
       }
     } else {
@@ -655,12 +666,12 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 true)) {
           ++xedge_counts.right_similar;
-          if (xedge_driveable_outbound) {
-            ++xedge_counts.right_similar_driveable_outbound;
+          if (xedge_traversable_outbound) {
+            ++xedge_counts.right_similar_traversable_outbound;
           }
         }
-        if (xedge_driveable_outbound) {
-          ++xedge_counts.right_driveable_outbound;
+        if (xedge_traversable_outbound) {
+          ++xedge_counts.right_traversable_outbound;
         }
       } else if ((intersecting_turn_degree < path_turn_degree)
           || (intersecting_turn_degree > 180)) {
@@ -668,12 +679,12 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
         if (IsSimilarTurnDegree(path_turn_degree, intersecting_turn_degree,
                                 false)) {
           ++xedge_counts.left_similar;
-          if (xedge_driveable_outbound) {
-            ++xedge_counts.left_similar_driveable_outbound;
+          if (xedge_traversable_outbound) {
+            ++xedge_counts.left_similar_traversable_outbound;
           }
         }
-        if (xedge_driveable_outbound) {
-          ++xedge_counts.left_driveable_outbound;
+        if (xedge_traversable_outbound) {
+          ++xedge_counts.left_traversable_outbound;
         }
       }
     }
@@ -693,16 +704,16 @@ bool EnhancedTripPath_Node::HasFowardIntersectingEdge(
   return false;
 }
 
-bool EnhancedTripPath_Node::HasForwardDriveableIntersectingEdge(
-    uint32_t from_heading) {
+bool EnhancedTripPath_Node::HasForwardTraversableIntersectingEdge(
+    uint32_t from_heading, const TripPath_TravelMode travel_mode) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsTraversableOutbound();
+    bool xedge_traversable_outbound =
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
     if (((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46))
-        && xedge_driveable_outbound) {
+        && xedge_traversable_outbound) {
       return true;
     }
   }
@@ -710,8 +721,8 @@ bool EnhancedTripPath_Node::HasForwardDriveableIntersectingEdge(
 }
 
 //TODO: refactor to clean up code
-uint32_t EnhancedTripPath_Node::GetStraightestDriveableIntersectingEdgeTurnDegree(
-    uint32_t from_heading) {
+uint32_t EnhancedTripPath_Node::GetStraightestTraversableIntersectingEdgeTurnDegree(
+    uint32_t from_heading, const TripPath_TravelMode travel_mode) {
 
   uint32_t staightest_turn_degree = 180;  // Initialize to reverse turn degree
   uint32_t staightest_delta = 180;  // Initialize to reverse delta
@@ -719,12 +730,12 @@ uint32_t EnhancedTripPath_Node::GetStraightestDriveableIntersectingEdgeTurnDegre
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
-    bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsTraversableOutbound();
+    bool xedge_traversable_outbound =
+        GetIntersectingEdge(i)->IsTraversableOutbound(travel_mode);
     uint32_t straight_delta =
         (intersecting_turn_degree > 180) ?
             (360 - intersecting_turn_degree) : intersecting_turn_degree;
-    if (xedge_driveable_outbound && (straight_delta < staightest_delta)) {
+    if (xedge_traversable_outbound && (straight_delta < staightest_delta)) {
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
     }
