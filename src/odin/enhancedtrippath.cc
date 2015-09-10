@@ -545,7 +545,7 @@ std::string EnhancedTripPath_Edge::ListToParameterString(
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_IntersectingEdge
 
-bool EnhancedTripPath_IntersectingEdge::IsDriveableOutbound() const {
+bool EnhancedTripPath_IntersectingEdge::IsTraversableOutbound() const {
   TripPath_Traversability d = driveability();
   if ((d == TripPath_Traversability_kForward)
       || (d == TripPath_Traversability_kBoth)) {
@@ -618,7 +618,7 @@ void EnhancedTripPath_Node::CalculateRightLeftIntersectingEdgeCounts(
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
     bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsDriveableOutbound();
+        GetIntersectingEdge(i)->IsTraversableOutbound();
 
     if (path_turn_degree > 180) {
       if ((intersecting_turn_degree > path_turn_degree)
@@ -700,7 +700,7 @@ bool EnhancedTripPath_Node::HasForwardDriveableIntersectingEdge(
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
     bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsDriveableOutbound();
+        GetIntersectingEdge(i)->IsTraversableOutbound();
     if (((intersecting_turn_degree > 314) || (intersecting_turn_degree < 46))
         && xedge_driveable_outbound) {
       return true;
@@ -720,7 +720,7 @@ uint32_t EnhancedTripPath_Node::GetStraightestDriveableIntersectingEdgeTurnDegre
     uint32_t intersecting_turn_degree = GetTurnDegree(
         from_heading, intersecting_edge(i).begin_heading());
     bool xedge_driveable_outbound =
-        GetIntersectingEdge(i)->IsDriveableOutbound();
+        GetIntersectingEdge(i)->IsTraversableOutbound();
     uint32_t straight_delta =
         (intersecting_turn_degree > 180) ?
             (360 - intersecting_turn_degree) : intersecting_turn_degree;

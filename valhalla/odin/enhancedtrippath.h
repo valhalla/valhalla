@@ -80,7 +80,7 @@ class EnhancedTripPath_IntersectingEdge : public TripPath_IntersectingEdge {
 
   EnhancedTripPath_IntersectingEdge() = delete;
 
-  bool IsDriveableOutbound() const;
+  bool IsTraversableOutbound() const;
 
   std::string ToString() const;
 
