@@ -95,12 +95,12 @@ class NodeInfo {
   bool dst() const;
 
   /**
-   * Get the auto traversability of the local directed edge given a local
+   * Get the driveability of the local directed edge given a local
    * edge index.
    * @param  localidx  Local edge index.
    * @return Returns traversability (see graphconstants.h)
    */
-  Traversability auto_traversability(const uint32_t localidx) const;
+  Traversability local_driveability(const uint32_t localidx) const;
 
   /**
    * Get the relative density (TODO - define) at the node.
@@ -221,7 +221,7 @@ class NodeInfo {
 
   // Node type
   struct NodeTypeInfo {
-    uint32_t auto_traversability : 16; // Traversability for local edges (up to
+    uint32_t local_driveability : 16; // Traversability for local edges (up to
                                       // kMaxLocalEdgeIndex+1 edges)
     uint32_t density            : 4;  // Density (population? edges?)
     uint32_t type               : 4;  // Node type
