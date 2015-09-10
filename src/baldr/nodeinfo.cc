@@ -66,11 +66,11 @@ bool NodeInfo::dst() const {
   return admin_.dst;
 }
 
-// Get the driveability of the local directed edge given a local
+// Get the auto traversability of the local directed edge given a local
 // edge index.
-Driveability NodeInfo::local_driveability(const uint32_t localidx) const {
+Traversability NodeInfo::auto_traversability(const uint32_t localidx) const {
   uint32_t s = localidx * 2;     // 2 bits per index
-  return static_cast<Driveability>((type_.local_driveability & (3 << s)) >> s);
+  return static_cast<Traversability>((type_.auto_traversability & (3 << s)) >> s);
 }
 
 // Get the relative density at the node.
@@ -205,8 +205,8 @@ const uint64_t NodeInfo::internal_version() {
   ni.admin_.spare = ~ni.admin_.spare;
   boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
 
-  ni.type_.local_driveability = ~ni.type_.local_driveability;
-  boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
+  ni.type_.auto_traversability = ~ni.type_.auto_traversability;
+  boost::hash_combine(seed,ffs(ni.type_.auto_traversability+1)-1);
   ni.type_.density = ~ni.type_.density;
   boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
   ni.type_.type = ~ni.type_.type;
