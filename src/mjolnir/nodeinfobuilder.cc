@@ -120,7 +120,7 @@ void NodeInfoBuilder::set_dst(const bool dst) {
 // Set the driveability of the local directed edge given a local
 // edge index.
 void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
-                                              const Traversability t) {
+                                             const Traversability t) {
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index on set_local_driveability - skip");
   } else {
