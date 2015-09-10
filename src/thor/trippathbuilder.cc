@@ -817,7 +817,7 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
 
 
   const DirectedEdge* directededge =
-      graphtile->directededge(edge_index);
+      graphtile->directededge(edge_index + nodeinfo->edge_index());
 
   TripPath_IntersectingEdge* itersecting_edge =
       trip_node->add_intersecting_edge();
