@@ -1,23 +1,50 @@
 #include <iostream>
 #include <sstream>
 
-#include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/date_time_zonespec.h>
+#include <fstream>
 
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
+namespace
+{
+static boost::local_time::tz_database* tz_db_ = nullptr;
+static boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
+
+static boost::local_time::tz_database* get_tz_db() {
+  if(!tz_db_) {
+
+    boost::system::error_code error;
+    auto tmp_path = boost::filesystem::temp_directory_path(error);
+    std::string file;
+//try to save the file in the /tmp dir
+    if (error.value() == boost::system::errc::success) {
+      file = tmp_path.c_str();
+      file += "/";
+    }
+    file += "valhalla_tz.csv";
+    tz_db_ = new boost::local_time::tz_database();
+    std::ofstream outfile (file,std::ofstream::binary);
+    outfile.write(reinterpret_cast<char*>(&date_time_zonespec_csv),date_time_zonespec_csv_len);
+    tz_db_->load_from_file(file);
+  }
+  return tz_db_;
+}
+}
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
 //date_time is in the format of 20150516 or 2015-05-06T08:00
@@ -134,6 +161,10 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
       break;
   }
 
+  boost::local_time::tz_database* tz_db = get_tz_db();
+  if (!tz_db)
+    throw std::runtime_error("Unable to load boost's date_time_zonespec file.");
+
   try {
     boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
     input_facet->format("%H:%M");
@@ -144,14 +175,9 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
     ss >> desired_time;
 
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    std::string tz_string;
-    if (tz == "America/Los_Angeles")
-      tz_string = "PST-08:00:00PDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-    else
-      tz_string = "EST-05:00:00EDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-
-    boost::local_time::time_zone_ptr time_zone(new boost::local_time::posix_time_zone(tz_string));
+    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
+
     pt = local_date_time.local_time();
     boost::gregorian::date date = pt.date();
     uint8_t desired_tod = (3600 * desired_time.time_of_day().hours()) +
@@ -181,16 +207,16 @@ std::string iso_date_time(const std::string& tz) {
   if (tz.empty())
     return iso_date_time;
 
+  boost::local_time::tz_database* tz_db = get_tz_db();
+  if (!tz_db)
+    throw std::runtime_error("Unable to load boost's date_time_zonespec file.");
+
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
     std::string tz_string;
-    if (tz == "America/Los_Angeles")
-      tz_string = "PST-08:00:00PDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-    else
-      tz_string = "EST-05:00:00EDT+01:00:00,M3.2.0/02:00:00,M11.1.0/02:00:00";
-
-    boost::local_time::time_zone_ptr time_zone(new boost::local_time::posix_time_zone(tz_string));
+    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
+
     pt = local_date_time.local_time();
     boost::gregorian::date date = pt.date();
 
