@@ -22,28 +22,21 @@ namespace DateTime {
 
 namespace
 {
-static boost::local_time::tz_database* tz_db_ = nullptr;
-static boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
 
-static boost::local_time::tz_database* get_tz_db() {
-  if(!tz_db_) {
+const boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
 
-    boost::system::error_code error;
-    auto tmp_path = boost::filesystem::temp_directory_path(error);
-    std::string file;
-//try to save the file in the /tmp dir
-    if (error.value() == boost::system::errc::success) {
-      file = tmp_path.c_str();
-      file += "/";
-    }
-    file += "valhalla_tz.csv";
-    tz_db_ = new boost::local_time::tz_database();
-    std::ofstream outfile (file,std::ofstream::binary);
-    outfile.write(reinterpret_cast<char*>(&date_time_zonespec_csv),date_time_zonespec_csv_len);
-    tz_db_->load_from_file(file);
+struct tz_db_t {
+  tz_db_t() {
+    std::stringstream ss(
+      std::string(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len));
+    db.load_from_stream(ss);
   }
-  return tz_db_;
-}
+  const boost::local_time::tz_database* operator->() const {
+      return &db;
+  }
+  boost::local_time::tz_database db;
+};
+
 }
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
@@ -127,6 +120,8 @@ std::string date(const std::string& date_time) {
 //Get the iso date and time from a DOW mask and time.
 std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                           const std::string& tz) {
+  //thread safe static initialization of global singleton
+  static tz_db_t tz_db;
 
   std::string iso_date_time;
   std::stringstream ss("");
@@ -160,10 +155,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
       return iso_date_time;
       break;
   }
-
-  boost::local_time::tz_database* tz_db = get_tz_db();
-  if (!tz_db)
-    throw std::runtime_error("Unable to load boost's date_time_zonespec file.");
 
   try {
     boost::local_time::local_time_input_facet* input_facet = new boost::local_time::local_time_input_facet();
@@ -202,14 +193,12 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
 
 //Get the current iso date and time.
 std::string iso_date_time(const std::string& tz) {
+  //thread safe static initialization of global singleton
+  static tz_db_t tz_db;
 
   std::string iso_date_time;
   if (tz.empty())
     return iso_date_time;
-
-  boost::local_time::tz_database* tz_db = get_tz_db();
-  if (!tz_db)
-    throw std::runtime_error("Unable to load boost's date_time_zonespec file.");
 
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
