@@ -125,36 +125,56 @@ void decode(const std::string& encoded, container_t& output) {
 //specialize for list
 template <>
 std::list<PointLL> decode<std::list<PointLL> >(const std::string& encoded) {
-  //a place to keep the output
   std::list<PointLL> l;
   decode(encoded, l);
   return l;
 }
 template <>
 std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string& encoded) {
-  //a place to keep the output
   std::list<std::pair<double,double> > l;
   decode(encoded, l);
   return l;
 }
+template <>
+std::list<Point2> decode<std::list<Point2> >(const std::string& encoded) {
+  std::list<Point2> l;
+  decode(encoded, l);
+  return l;
+}
+template <>
+std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string& encoded) {
+  std::list<std::pair<float,float> > l;
+  decode(encoded, l);
+  return l;
+}
 
-//specialize for vector
+//specialize for vector with a preallocation
+//based on the length of the string we can make a guess at how many points are in it
+//as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
 template <>
 std::vector<PointLL> decode<std::vector<PointLL> >(const std::string& encoded) {
-  //a place to keep the output
   std::vector<PointLL> v;
-  //based on the length of the string we can make a guess at how many points are in it
-  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
   v.reserve(encoded.size() * .25f);
   decode(encoded, v);
   return v;
 }
 template <>
 std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string& encoded) {
-  //a place to keep the output
   std::vector<std::pair<double,double> > v;
-  //based on the length of the string we can make a guess at how many points are in it
-  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
+template <>
+std::vector<Point2> decode<std::vector<Point2> >(const std::string& encoded) {
+  std::vector<Point2> v;
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
+template <>
+std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string& encoded) {
+  std::vector<std::pair<float,float> > v;
   v.reserve(encoded.size() * .25f);
   decode(encoded, v);
   return v;
@@ -164,12 +184,23 @@ std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,doubl
 //projects that depend on this library aren't limited in the instantiations made here
 template std::string encode<std::vector<PointLL> >(const std::vector<PointLL>&);
 template std::string encode<std::vector<std::pair<double,double> > >(const std::vector<std::pair<double,double> >&);
+template std::string encode<std::vector<Point2> >(const std::vector<Point2>&);
+template std::string encode<std::vector<std::pair<float,float> > >(const std::vector<std::pair<float,float> >&);
+
 template std::string encode<std::list<PointLL> >(const std::list<PointLL>&);
 template std::string encode<std::list<std::pair<double,double> > >(const std::list<std::pair<double,double> >&);
+template std::string encode<std::list<Point2> >(const std::list<Point2>&);
+template std::string encode<std::list<std::pair<float,float> > >(const std::list<std::pair<float,float> >&);
+
 template std::vector<PointLL> decode<std::vector<PointLL> >(const std::string&);
 template std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string&);
+template std::vector<Point2> decode<std::vector<Point2> >(const std::string&);
+template std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string&);
+
 template std::list<PointLL> decode<std::list<PointLL> >(const std::string&);
 template std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string&);
+template std::list<Point2> decode<std::list<Point2> >(const std::string&);
+template std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string&);
 
 memory_status::memory_status(const std::unordered_set<std::string> interest){
   //grab the vm stats from the file
