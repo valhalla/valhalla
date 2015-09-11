@@ -130,6 +130,13 @@ std::list<PointLL> decode<std::list<PointLL> >(const std::string& encoded) {
   decode(encoded, l);
   return l;
 }
+template <>
+std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string& encoded) {
+  //a place to keep the output
+  std::list<std::pair<double,double> > l;
+  decode(encoded, l);
+  return l;
+}
 
 //specialize for vector
 template <>
@@ -142,13 +149,27 @@ std::vector<PointLL> decode<std::vector<PointLL> >(const std::string& encoded) {
   decode(encoded, v);
   return v;
 }
+template <>
+std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string& encoded) {
+  //a place to keep the output
+  std::vector<std::pair<double,double> > v;
+  //based on the length of the string we can make a guess at how many points are in it
+  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
 
 //explicit instantiations, we should probably just move the implementation to the header so that
 //projects that depend on this library aren't limited in the instantiations made here
 template std::string encode<std::vector<PointLL> >(const std::vector<PointLL>&);
+template std::string encode<std::vector<std::pair<double,double> > >(const std::vector<std::pair<double,double> >&);
 template std::string encode<std::list<PointLL> >(const std::list<PointLL>&);
+template std::string encode<std::list<std::pair<double,double> > >(const std::list<std::pair<double,double> >&);
 template std::vector<PointLL> decode<std::vector<PointLL> >(const std::string&);
+template std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string&);
 template std::list<PointLL> decode<std::list<PointLL> >(const std::string&);
+template std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string&);
 
 memory_status::memory_status(const std::unordered_set<std::string> interest){
   //grab the vm stats from the file
@@ -203,26 +224,29 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
   if(polyline.size() == 0)
     return resampled;
   resampled.emplace_back(polyline.front());
+  if(polyline.size() == 1)
+    return resampled;
 
   //for each point
   resolution *= RAD_PER_METER;
   double remaining = resolution;
+  PointLL last = resampled.back();
   for(auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     //radians
-    double lon2 = p->first * -RAD_PER_DEG;
-    double lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -RAD_PER_DEG;
+    auto lat2 = p->second * RAD_PER_DEG;
     //how much do we have left on this segment from where we are (in great arc radians)
     //double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) / 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2) *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
-    double d = acos(
-      sin(resampled.back().second * RAD_PER_DEG) * sin(lat2) +
-      cos(resampled.back().second * RAD_PER_DEG) * cos(lat2) *
-      cos(resampled.back().first * -RAD_PER_DEG - lon2)
+    auto d = acos(
+      sin(last.second * RAD_PER_DEG) * sin(lat2) +
+      cos(last.second * RAD_PER_DEG) * cos(lat2) *
+      cos(last.first * -RAD_PER_DEG - lon2)
     );
     //keep placing points while we can fit them
     while(d > remaining) {
       //some precomputed stuff
-      double lon1 = resampled.back().first * -RAD_PER_DEG;
-      double lat1 = resampled.back().second * RAD_PER_DEG;
+      auto lon1 = last.first * -RAD_PER_DEG;
+      auto lat1 = last.second * RAD_PER_DEG;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -232,9 +256,9 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      auto lon = atan2(y, x) * -DEG_PER_RAD;
-      auto lat = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
-      resampled.emplace_back(lon, lat);
+      last.first = atan2(y, x) * -DEG_PER_RAD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      resampled.push_back(last);
       //we just consumed a bit
       d -= remaining;
       //we need another bit
@@ -242,6 +266,7 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
     }
     //we're going to the next point so consume whatever's left
     remaining -= d;
+    last = *p;
   }
 
   //TODO: do we want to let them know remaining?
