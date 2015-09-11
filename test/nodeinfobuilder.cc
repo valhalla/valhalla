@@ -82,20 +82,20 @@ void TestWriteRead() {
     throw runtime_error("NodeInfo name_consistency for 6,6 test failed");
   }
 
-  nodebuilder.set_local_driveability(3, Driveability::kBoth);
-  nodebuilder.set_local_driveability(5, Driveability::kNone);
-  nodebuilder.set_local_driveability(7, Driveability::kForward);
-  nodebuilder.set_local_driveability(1, Driveability::kBackward);
-  if (nodebuilder.local_driveability(3) != Driveability::kBoth) {
+  nodebuilder.set_local_driveability(3, Traversability::kBoth);
+  nodebuilder.set_local_driveability(5, Traversability::kNone);
+  nodebuilder.set_local_driveability(7, Traversability::kForward);
+  nodebuilder.set_local_driveability(1, Traversability::kBackward);
+  if (nodebuilder.local_driveability(3) != Traversability::kBoth) {
     throw runtime_error("NodeInfo local_driveability 3 test failed");
   }
-  if (nodebuilder.local_driveability(5) != Driveability::kNone) {
+  if (nodebuilder.local_driveability(5) != Traversability::kNone) {
     throw runtime_error("NodeInfo local_driveability 5 test failed");
   }
-  if (nodebuilder.local_driveability(7) != Driveability::kForward) {
+  if (nodebuilder.local_driveability(7) != Traversability::kForward) {
     throw runtime_error("NodeInfo local_driveability 7 test failed");
   }
-  if (nodebuilder.local_driveability(1) != Driveability::kBackward) {
+  if (nodebuilder.local_driveability(1) != Traversability::kBackward) {
     throw runtime_error("NodeInfo local_driveability 1 test failed");
   }
 }
