@@ -9,8 +9,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
-#include <functional>
-#include <vector>
 
 #include <valhalla/midgard/pointll.h>
 
@@ -176,7 +174,8 @@ T circular_range_clamp(T value, T lower, T upper) {
 /**
  * Resample a polyline in spherical coordinates
  */
-std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL>& polyline, float resolution);
+template<class container_t>
+container_t resample_spherical_polyline(const container_t& polyline, double resolution);
 
 }
 }
