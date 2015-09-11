@@ -68,9 +68,9 @@ bool NodeInfo::dst() const {
 
 // Get the driveability of the local directed edge given a local
 // edge index.
-Driveability NodeInfo::local_driveability(const uint32_t localidx) const {
+Traversability NodeInfo::local_driveability(const uint32_t localidx) const {
   uint32_t s = localidx * 2;     // 2 bits per index
-  return static_cast<Driveability>((type_.local_driveability & (3 << s)) >> s);
+  return static_cast<Traversability>((type_.local_driveability & (3 << s)) >> s);
 }
 
 // Get the relative density at the node.

@@ -38,12 +38,12 @@ union Access {
   uint8_t v;
 };
 
-// Edge driveability (auto)
-enum class Driveability {
-  kNone = 0,        // Edge is not driveable in either direction
-  kForward = 1,     // Edge is driveable in the forward direction
-  kBackward = 2,    // Edge is driveable in the backward direction
-  kBoth = 3         // Edge is driveable in both directions
+// Edge traversability
+enum class Traversability {
+  kNone = 0,        // Edge is not traversable in either direction
+  kForward = 1,     // Edge is traversable in the forward direction
+  kBackward = 2,    // Edge is traversable in the backward direction
+  kBoth = 3         // Edge is traversable in both directions
 };
 
 // Maximum speed. This impacts the effectiveness of A* for driving routes

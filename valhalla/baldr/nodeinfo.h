@@ -98,9 +98,9 @@ class NodeInfo {
    * Get the driveability of the local directed edge given a local
    * edge index.
    * @param  localidx  Local edge index.
-   * @return Returns driveability (see graphconstants.h)
+   * @return Returns traversability (see graphconstants.h)
    */
-  Driveability local_driveability(const uint32_t localidx) const;
+  Traversability local_driveability(const uint32_t localidx) const;
 
   /**
    * Get the relative density (TODO - define) at the node.
