@@ -362,20 +362,23 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
 
-        // Set departure time from this transit stop
-        transit_stop_info->set_departure_date_time(
-            DateTime::get_duration(*origin.date_time_,
-                                   transit_departure->departure_time() -
-                                   origin_sec_from_mid));
+        if (transit_departure) {
 
-        // Copy the arrival time for use at the next transit stop
-        arrival_time = DateTime::get_duration(*origin.date_time_,
-                                   (transit_departure->departure_time() +
-                                       transit_departure->elapsed_time()) -
-                                       origin_sec_from_mid);
+          // Set departure time from this transit stop
+          transit_stop_info->set_departure_date_time(
+              DateTime::get_duration(*origin.date_time_,
+                                     transit_departure->departure_time() -
+                                     origin_sec_from_mid));
 
-        // Get the block Id
-        block_id = transit_departure->blockid();
+          // Copy the arrival time for use at the next transit stop
+          arrival_time = DateTime::get_duration(*origin.date_time_,
+                                     (transit_departure->departure_time() +
+                                         transit_departure->elapsed_time()) -
+                                         origin_sec_from_mid);
+
+          // Get the block Id
+          block_id = transit_departure->blockid();
+        }
       } else {
         // No departing trip, set the arrival time (for next stop) to empty
         // and set block Id to 0
@@ -466,7 +469,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         }
         AddTripIntersectingEdge(edge_idx, prior_opp_local_index,
                                 directededge->localedgeidx(), nodeinfo,
-                                trip_node);
+                                tile, trip_node);
       }
     }
 
@@ -522,16 +525,16 @@ TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
   }
 }
 
-TripPath_Driveability GetTripPathDriveability(Driveability driveability) {
-  switch (driveability) {
-    case Driveability::kNone:
-      return TripPath_Driveability_kNone;
-    case Driveability::kForward:
-      return TripPath_Driveability_kForward;
-    case Driveability::kBackward:
-      return TripPath_Driveability_kBackward;
-    case Driveability::kBoth:
-      return TripPath_Driveability_kBoth;
+TripPath_Traversability GetTripPathTraversability(Traversability traversability) {
+  switch (traversability) {
+    case Traversability::kNone:
+      return TripPath_Traversability_kNone;
+    case Traversability::kForward:
+      return TripPath_Traversability_kForward;
+    case Traversability::kBackward:
+      return TripPath_Traversability_kBackward;
+    case Traversability::kBoth:
+      return TripPath_Traversability_kBoth;
   }
 }
 
@@ -597,23 +600,31 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   trip_edge->set_length(directededge->length() * 0.001f * length_percentage);  // Convert to km
   trip_edge->set_speed(directededge->speed());
 
+  uint8_t kAccess = 0;
+  if (mode == sif::TravelMode::kBicycle)
+    kAccess = kBicycleAccess;
+  else if (mode == sif::TravelMode::kDrive)
+    kAccess = kAutoAccess;
+  else if (mode == sif::TravelMode::kPedestrian || mode == sif::TravelMode::kPublicTransit)
+    kAccess = kPedestrianAccess;
+
   // Test whether edge is traversed forward or reverse and set driveability and heading
   if (directededge->forward()) {
-    if ((directededge->forwardaccess() & kAutoAccess)
-        && (directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if ((directededge->forwardaccess() & kAutoAccess)
-        && !(directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kForward);
-    else if (!(directededge->forwardaccess() & kAutoAccess)
-        && (directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kBackward);
+    if ((directededge->forwardaccess() & kAccess)
+        && (directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kBoth);
+    else if ((directededge->forwardaccess() & kAccess)
+        && !(directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kForward);
+    else if (!(directededge->forwardaccess() & kAccess)
+        && (directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kBackward);
     else
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kNone);
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kNone);
 
     trip_edge->set_begin_heading(
         std::round(
@@ -625,21 +636,21 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
                                             kMetersOffsetForHeading)));
   } else {
     // Reverse driveability and heading
-    if ((directededge->forwardaccess() & kAutoAccess)
-        && (directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kBoth);
-    else if (!(directededge->forwardaccess() & kAutoAccess)
-        && (directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kForward);
-    else if ((directededge->forwardaccess() & kAutoAccess)
-        && !(directededge->reverseaccess() & kAutoAccess))
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kBackward);
+    if ((directededge->forwardaccess() & kAccess)
+        && (directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kBoth);
+    else if (!(directededge->forwardaccess() & kAccess)
+        && (directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kForward);
+    else if ((directededge->forwardaccess() & kAccess)
+        && !(directededge->reverseaccess() & kAccess))
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kBackward);
     else
-      trip_edge->set_driveability(
-          TripPath_Driveability::TripPath_Driveability_kNone);
+      trip_edge->set_traversability(
+          TripPath_Traversability::TripPath_Traversability_kNone);
 
     trip_edge->set_begin_heading(
         std::round(
@@ -769,25 +780,29 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
-    const TransitRoute* transit_route = graphtile->GetTransitRoute(
-        transit_departure->routeid());
-    const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
-    //use route short name if available otherwise trip short name.
-    if (transit_route->short_name_offset())
-      transit_info->set_short_name(
-          graphtile->GetName(transit_route->short_name_offset()));
-    else if (transit_trip->short_name_offset())
-      transit_info->set_short_name(
-          graphtile->GetName(transit_trip->short_name_offset()));
+    if (transit_departure) {
 
-    if (transit_route->long_name_offset())
-      transit_info->set_long_name(
-          graphtile->GetName(transit_route->long_name_offset()));
+      const TransitRoute* transit_route = graphtile->GetTransitRoute(
+          transit_departure->routeid());
+      const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
-    if (transit_departure->headsign_offset())
-      transit_info->set_headsign(
-          graphtile->GetName(transit_departure->headsign_offset()));
+      //use route short name if available otherwise trip short name.
+      if (transit_route && transit_route->short_name_offset())
+        transit_info->set_short_name(
+            graphtile->GetName(transit_route->short_name_offset()));
+      else if (transit_trip && transit_trip->short_name_offset())
+        transit_info->set_short_name(
+            graphtile->GetName(transit_trip->short_name_offset()));
+
+      if (transit_route && transit_route->long_name_offset())
+        transit_info->set_long_name(
+            graphtile->GetName(transit_route->long_name_offset()));
+
+      if (transit_departure->headsign_offset())
+        transit_info->set_headsign(
+            graphtile->GetName(transit_departure->headsign_offset()));
+    }
   }
 
   return trip_edge;
@@ -797,7 +812,12 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
                                               uint32_t prev_edge_index,
                                               uint32_t curr_edge_index,
                                               const baldr::NodeInfo* nodeinfo,
+                                              const baldr::GraphTile* graphtile,
                                               odin::TripPath_Node* trip_node) {
+
+
+  const DirectedEdge* directededge =
+      graphtile->directededge(edge_index + nodeinfo->edge_index());
 
   TripPath_IntersectingEdge* itersecting_edge =
       trip_node->add_intersecting_edge();
@@ -805,9 +825,31 @@ void TripPathBuilder::AddTripIntersectingEdge(uint32_t edge_index,
   // Set the heading for the intersecting edge
   itersecting_edge->set_begin_heading(nodeinfo->heading(edge_index));
 
+  Traversability traversability = Traversability::kNone;
+  if (directededge->forwardaccess() & kPedestrianAccess) {
+    traversability = (directededge->reverseaccess() & kPedestrianAccess) ?
+        Traversability::kBoth : Traversability::kForward;
+  } else {
+    traversability = (directededge->reverseaccess() & kPedestrianAccess) ?
+        Traversability::kBackward : Traversability::kNone;
+  }
+  // Set the walkability flag for the intersecting edge
+  itersecting_edge->set_walkability(GetTripPathTraversability(traversability));
+
+  traversability = Traversability::kNone;
+  if (directededge->forwardaccess() & kBicycleAccess) {
+    traversability = (directededge->reverseaccess() & kBicycleAccess) ?
+        Traversability::kBoth : Traversability::kForward;
+  } else {
+    traversability = (directededge->reverseaccess() & kBicycleAccess) ?
+        Traversability::kBackward : Traversability::kNone;
+  }
+  // Set the cyclability flag for the intersecting edge
+  itersecting_edge->set_cyclability(GetTripPathTraversability(traversability));
+
   // Set the driveability flag for the intersecting edge
   itersecting_edge->set_driveability(
-      GetTripPathDriveability(nodeinfo->local_driveability(edge_index)));
+      GetTripPathTraversability(nodeinfo->local_driveability(edge_index)));
 
   // Set the previous/intersecting edge name consistency
   itersecting_edge->set_prev_name_consistency(
