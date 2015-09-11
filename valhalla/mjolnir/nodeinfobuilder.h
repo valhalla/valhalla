@@ -92,13 +92,13 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_dst(const bool dst);
 
   /**
-   * Set the driveability of the local directed edge given a local
+   * Set the auto driveability of the local directed edge given a local
    * edge index.
    * @param  localidx  Local edge index.
-   * @param  d         Driveability (see graphconstants.h)
+   * @param  t         Traversability (see graphconstants.h)
    */
   void set_local_driveability(const uint32_t localidx,
-                              const baldr::Driveability d);
+                              const baldr::Traversability t);
 
   /**
    * Set the relative density
