@@ -1,6 +1,10 @@
 #include "test.h"
-#include "valhalla/midgard/util.h"
-#include "valhalla/midgard/distanceapproximator.h"
+#include "midgard/util.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/constants.h"
+
+#include <list>
+#include <iostream>
 
 using namespace valhalla::midgard;
 
@@ -125,11 +129,19 @@ void TestResample() {
     auto input_shape = decode<std::vector<PointLL>>(example.first);
     auto resampled = resample_spherical_polyline(input_shape, example.second);
 
+    std::cout << std::endl << "input" << std::endl;
+    for(auto p : input_shape){
+      std::cout << '[' << p.first << ',' << p.second << "],";
+    }
+    std::cout << std::endl << "output" << std::endl;
+    for(auto p : resampled){
+      std::cout << '[' << p.first << ',' << p.second << "],";
+    }
+
     //check that nothing is too far apart
-    for(auto p = resampled.cbegin() + 1; p != resampled.cend(); ++p) {
-      auto sqdist = DistanceApproximator::DistanceSquared(*p, *(p - 1));
-      auto dist = 1.f / FastInvSqrt(sqdist);
-      if(dist > example.second + 2)
+    for(auto p = std::next(resampled.cbegin()); p != resampled.cend(); ++p) {
+      auto dist = p->Distance(*std::prev(p));
+      if(dist > example.second + 1)
         throw std::runtime_error("Distance between any two points on the resampled line cannot be further than resample distance");
     }
 

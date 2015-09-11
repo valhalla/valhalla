@@ -9,15 +9,14 @@ using namespace valhalla::midgard;
 
 namespace {
 
-using perc_t = double;
-using container_t = std::vector<std::pair<perc_t, perc_t> >;
+using container_t = std::vector<PointLL >;
 
 bool appx_equal(const container_t& a, const container_t& b) {
   if(a.size() != b.size())
     return false;
   for(size_t i = 0; i < a.size(); ++i) {
-    const Point2& x = static_cast<const Point2&>(a[i]);
-    const Point2& y = static_cast<const Point2&>(b[i]);
+    const PointLL& x = static_cast<const PointLL&>(a[i]);
+    const PointLL& y = static_cast<const PointLL&>(b[i]);
     if(!x.ApproximatelyEqual(y))
       return false;
   }
@@ -60,7 +59,7 @@ void TestSimple() {
    */
 
   //check an easy case first just to be sure Point2/PointLL is working
-  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}});
+  auto encoded = encode<container_t>({{-76.3002f, 40.0433f}, {-76.3036f, 40.043f}});
   if(encoded != "gq`kkAny~opCvQnsE") {
     throw std::runtime_error("Encoding of Point2/PointLL vector failed");
   }
