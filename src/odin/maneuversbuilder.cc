@@ -176,15 +176,16 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  node=") + node->ToString());
     IntersectingEdgeCounts xedge_counts;
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+        prev_edge->travel_mode(),
         xedge_counts);
     LOG_TRACE(std::string("    right=") + std::to_string(xedge_counts.right)
         + std::string(" | right_similar=") + std::to_string(xedge_counts.right_similar)
-        + std::string(" | right_driveable_outbound=") + std::to_string(xedge_counts.right_driveable_outbound)
-        + std::string(" | right_similar_driveable_outbound=") + std::to_string(xedge_counts.right_similar_driveable_outbound));
+        + std::string(" | right_traversable_outbound=") + std::to_string(xedge_counts.right_traversable_outbound)
+        + std::string(" | right_similar_traversable_outbound=") + std::to_string(xedge_counts.right_similar_traversable_outbound));
     LOG_TRACE(std::string("    left =") + std::to_string(xedge_counts.left)
         + std::string(" | left_similar =") + std::to_string(xedge_counts.left_similar)
-        + std::string(" | left_driveable_outbound =") + std::to_string(xedge_counts.left_driveable_outbound)
-        + std::string(" | left_similar_driveable_outbound =") + std::to_string(xedge_counts.left_similar_driveable_outbound));
+        + std::string(" | left_traversable_outbound =") + std::to_string(xedge_counts.left_traversable_outbound)
+        + std::string(" | left_similar_traversable_outbound =") + std::to_string(xedge_counts.left_similar_traversable_outbound));
 #endif
 
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
@@ -697,15 +698,16 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     IntersectingEdgeCounts xedge_counts;
     trip_path_->GetEnhancedNode(node_index)
         ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   prev_edge->travel_mode(),
                                                    xedge_counts);
     if (prev_edge->drive_on_right()) {
       maneuver.set_roundabout_exit_count(
           maneuver.roundabout_exit_count()
-              + xedge_counts.right_driveable_outbound);
+              + xedge_counts.right_traversable_outbound);
     } else {
       maneuver.set_roundabout_exit_count(
           maneuver.roundabout_exit_count()
-              + xedge_counts.left_driveable_outbound);
+              + xedge_counts.left_traversable_outbound);
     }
   }
 
@@ -775,19 +777,20 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
         trip_path_->node(maneuver.end_node_index()).elapsed_time()
             - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
 
-    // TODO - determine if we want to count right driveable at entrance node
+    // TODO - determine if we want to count right traversable at entrance node
     // Roundabouts
 //    if (curr_edge->roundabout()) {
 //      IntersectingEdgeCounts xedge_counts;
 //      trip_path_->GetEnhancedNode(node_index)
 //            ->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+//                                                       prev_edge->travel_mode(),
 //                                                       xedge_counts);
 //      if (curr_edge->drive_on_right()) {
 //        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
-//                                           + xedge_counts.right_driveable_outbound);
+//                                           + xedge_counts.right_traversable_outbound);
 //      } else {
 //        maneuver.set_roundabout_exit_count(maneuver.roundabout_exit_count()
-//                                           + xedge_counts.left_driveable_outbound);
+//                                           + xedge_counts.left_traversable_outbound);
 //      }
 //    }
 
@@ -1337,14 +1340,15 @@ bool ManeuversBuilder::IsFork(int node_index, EnhancedTripPath_Edge* prev_edge,
     IntersectingEdgeCounts xedge_counts;
     // TODO: update to pass similar turn threshold
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   prev_edge->travel_mode(),
                                                    xedge_counts);
 
-    // if there is a similar driveable intersecting edge
-    //   or there is a driveable intersecting edge and curr edge is link(ramp)
-    if (((xedge_counts.left_similar_driveable_outbound > 0)
-        || (xedge_counts.right_similar_driveable_outbound > 0))
-        || (((xedge_counts.left_driveable_outbound > 0)
-            || (xedge_counts.right_driveable_outbound > 0)) && curr_edge->ramp())) {
+    // if there is a similar traversable intersecting edge
+    //   or there is a traversable intersecting edge and curr edge is link(ramp)
+    if (((xedge_counts.left_similar_traversable_outbound > 0)
+        || (xedge_counts.right_similar_traversable_outbound > 0))
+        || (((xedge_counts.left_traversable_outbound > 0)
+            || (xedge_counts.right_traversable_outbound > 0)) && curr_edge->ramp())) {
       return true;
     }
 
@@ -1400,6 +1404,7 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(
     IntersectingEdgeCounts xedge_counts;
     auto* node = trip_path_->GetEnhancedNode(node_index);
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   prev_edge->travel_mode(),
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
@@ -1412,10 +1417,10 @@ bool ManeuversBuilder::IsLeftPencilPointUturn(
     std::unique_ptr<StreetNames> common_base_names = prev_edge_names
         ->FindCommonBaseNames(*curr_edge_names);
 
-    // If no intersecting driveable left road exists
+    // If no intersecting traversable left road exists
     // and the from and to edges have a common base name
     // then it is a left pencil point u-turn
-    if ((xedge_counts.left_driveable_outbound == 0)
+    if ((xedge_counts.left_traversable_outbound == 0)
         && !common_base_names->empty()) {
       return true;
     }
@@ -1445,6 +1450,7 @@ bool ManeuversBuilder::IsRightPencilPointUturn(
     IntersectingEdgeCounts xedge_counts;
     auto* node = trip_path_->GetEnhancedNode(node_index);
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                   prev_edge->travel_mode(),
                                                    xedge_counts);
 
     std::unique_ptr<StreetNames> prev_edge_names = StreetNamesFactory::Create(
@@ -1457,10 +1463,10 @@ bool ManeuversBuilder::IsRightPencilPointUturn(
     std::unique_ptr<StreetNames> common_base_names = prev_edge_names
         ->FindCommonBaseNames(*curr_edge_names);
 
-    // If no intersecting driveable right road exists
+    // If no intersecting traversable right road exists
     // and the from and to edges have a common base name
     // then it is a right pencil point u-turn
-    if ((xedge_counts.right_driveable_outbound == 0)
+    if ((xedge_counts.right_traversable_outbound == 0)
         && !common_base_names->empty()) {
       return true;
     }
@@ -1479,51 +1485,26 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
 
   if (node->HasIntersectingEdges() && !node->motorway_junction()
       && !node->fork() && !curr_edge->IsHighway()) {
-    // Process driving mode
-    if ((curr_edge->travel_mode() == TripPath_TravelMode_kDrive)
-        || (curr_edge->travel_mode() == TripPath_TravelMode_kBicycle)) {
-      // if path edge is not forward
-      // and forward driveable intersecting edge exists
-      // then return true
-      if (!curr_edge->IsForward(turn_degree)
-          && node->HasForwardDriveableIntersectingEdge(
-              prev_edge->end_heading())) {
-        return true;
-      }
-      // if path edge is forward
-      // and forward driveable intersecting edge exists
-      // and path edge is not the straightest
-      // then return true
-      else if (curr_edge->IsForward(turn_degree)
-          && node->HasForwardDriveableIntersectingEdge(prev_edge->end_heading())
-          && !curr_edge->IsStraightest(
-              turn_degree,
-              node->GetStraightestDriveableIntersectingEdgeTurnDegree(
-                  prev_edge->end_heading()))) {
-        return true;
-      }
+    // if path edge is not forward
+    // and forward traversable intersecting edge exists
+    // then return true
+    if (!curr_edge->IsForward(turn_degree)
+        && node->HasForwardTraversableIntersectingEdge(
+            prev_edge->end_heading(), prev_edge->travel_mode())) {
+      return true;
     }
-    // Process non-driving mode
-    else {
-      // if path turn is not forward
-      // and forward intersecting edge exists
-      // then return true
-      if (!curr_edge->IsForward(turn_degree)
-          && node->HasFowardIntersectingEdge(prev_edge->end_heading())) {
-        return true;
-      }
-      // if path edge is forward
-      // and forward intersecting edge exists
-      // and path edge is not the straightest
-      // then return true
-      else if (curr_edge->IsForward(turn_degree)
-          && node->HasFowardIntersectingEdge(prev_edge->end_heading())
-          && !curr_edge->IsStraightest(
-              turn_degree,
-              node->GetStraightestIntersectingEdgeTurnDegree(
-                  prev_edge->end_heading()))) {
-        return true;
-      }
+    // if path edge is forward
+    // and forward traversable intersecting edge exists
+    // and path edge is not the straightest
+    // then return true
+    else if (curr_edge->IsForward(turn_degree)
+        && node->HasForwardTraversableIntersectingEdge(prev_edge->end_heading(),
+                                                       prev_edge->travel_mode())
+        && !curr_edge->IsStraightest(
+            turn_degree,
+            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+                prev_edge->end_heading(), prev_edge->travel_mode()))) {
+      return true;
     }
   }
 
@@ -1536,39 +1517,23 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
   node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(),
+                                                 prev_edge->travel_mode(),
                                                  xedge_counts);
 
   Maneuver::RelativeDirection relative_direction =
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  // Process driving mode
-  if ((maneuver.travel_mode() == TripPath_TravelMode_kDrive)
-      || (maneuver.travel_mode() == TripPath_TravelMode_kBicycle)) {
-    if ((xedge_counts.right_similar_driveable_outbound == 0)
-        && (xedge_counts.left_similar_driveable_outbound > 0)
-        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepRight);
-    } else if ((xedge_counts.right_similar_driveable_outbound > 0)
-        && (xedge_counts.left_similar_driveable_outbound == 0)
-        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepLeft);
-    }
-  }
-  // Process non-driving mode
-  else {
-    if ((xedge_counts.right_similar == 0) && (xedge_counts.left_similar > 0)
-        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepRight);
-    } else if ((xedge_counts.right_similar > 0)
-        && (xedge_counts.left_similar == 0)
-        && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-      maneuver.set_begin_relative_direction(
-          Maneuver::RelativeDirection::kKeepLeft);
-    }
+  if ((xedge_counts.right_similar_traversable_outbound == 0)
+      && (xedge_counts.left_similar_traversable_outbound > 0)
+      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+    maneuver.set_begin_relative_direction(
+        Maneuver::RelativeDirection::kKeepRight);
+  } else if ((xedge_counts.right_similar_traversable_outbound > 0)
+      && (xedge_counts.left_similar_traversable_outbound == 0)
+      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
+    maneuver.set_begin_relative_direction(
+        Maneuver::RelativeDirection::kKeepLeft);
   }
 }
 
