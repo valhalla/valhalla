@@ -64,15 +64,6 @@ class PointLL : public Point2 {
   float DistanceSquared(const PointLL& ll2) const;
 
   /**
-   * Compute the length of the polyline represented by a set of
-   * lat,lng points. Avoids having to copy the points into the
-   * polyline.
-   * @param  pts  List of lat,lng points.
-   * @return  Returns the length in meters
-   */
-  static float Length(const std::vector<PointLL>& pts);
-
-  /**
    * Calculates the curvature using this position and 2 others. Found by
    * computing the radius of the circle that circumscribes the 3 positions.
    * @param   ll1   Second lat,lng position

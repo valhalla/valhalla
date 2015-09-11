@@ -72,6 +72,17 @@ T sqr(const T a) {
   return a * a;
 }
 
+// Compute the length of the polyline represented by a set of lat,lng points.
+// Avoids having to copy the points into a polyline, polyline should really just extend
+// A container class like vector or list
+template <class container_t>
+float length(const container_t& pts) {
+ float length = 0.0f;
+ for(auto p = std::next(pts.cbegin()); p != pts.end(); ++p)
+   length += p->Distance(*std::prev(p));
+ return length;
+}
+
 /**
  * Polyline encode a container of points into a string
  * Note: newer versions of this algorithm allow one to specify a zoom level
