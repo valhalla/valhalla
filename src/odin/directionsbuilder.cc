@@ -57,7 +57,7 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 
   // Create the narrative
   // TODO - factory
-  NarrativeBuilder::Build(directions_options, maneuvers);
+  NarrativeBuilder::Build(directions_options, etp, maneuvers);
 
   // Return trip directions
   return PopulateTripDirections(directions_options, etp, maneuvers);
@@ -129,6 +129,20 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       direction_location->set_country(path_location.country());
     if (path_location.has_date_time())
       direction_location->set_date_time(path_location.date_time());
+    if (path_location.has_side_of_street()) {
+      if (path_location.side_of_street()
+          == TripPath_Location_SideOfStreet_kLeft) {
+        direction_location->set_side_of_street(
+            TripDirections_Location_SideOfStreet_kLeft);
+      } else if (path_location.side_of_street()
+          == TripPath_Location_SideOfStreet_kRight) {
+        direction_location->set_side_of_street(
+            TripDirections_Location_SideOfStreet_kRight);
+      } else {
+        direction_location->set_side_of_street(
+            TripDirections_Location_SideOfStreet_kNone);
+      }
+    }
   }
 
   // Populate maneuvers

@@ -12,6 +12,12 @@ message TripPath {
       kBreak = 0;
       kThrough = 1;
     }
+    
+    enum SideOfStreet {
+      kNone = 0;
+      kLeft = 1;
+      kRight = 2;
+    }
 
     optional LatLng ll = 1;
     optional Type type = 2;
@@ -23,6 +29,7 @@ message TripPath {
     optional string postal_code = 8;    
     optional string country = 9;    
     optional string date_time = 10;   // ISO 8601 date/time YYYY-MM-DDThh:mm
+    optional SideOfStreet side_of_street = 11;
   }
 
   message Sign {

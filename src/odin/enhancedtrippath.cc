@@ -77,6 +77,24 @@ std::string EnhancedTripPath::GetStateCode(int node_index) {
   return GetAdmin(node(node_index).admin_index())->state_code();
 }
 
+const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetOrigin() const {
+  // Validate location count
+  if (location_size() < 2) {
+    throw std::runtime_error("Trip must have at least 2 locations");
+  }
+
+  return location(0);
+}
+
+const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetDestination() const {
+  // Validate location count
+  if (location_size() < 2) {
+    throw std::runtime_error("Trip must have at least 2 locations");
+  }
+
+  return location(location_size() - 1);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
 
