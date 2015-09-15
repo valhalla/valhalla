@@ -445,10 +445,11 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
     AddToAdjacencyList(edgeid, sortcost);
     edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
-            directededge->opp_local_idx(), mode_);
+            directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
   }
 }
 
