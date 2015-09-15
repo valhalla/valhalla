@@ -3,6 +3,7 @@
 #include <valhalla/midgard/logging.h>
 
 #include "odin/narrativebuilder.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 
 #include <boost/format.hpp>
@@ -17,6 +18,7 @@ namespace valhalla {
 namespace odin {
 
 void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
+                             const EnhancedTripPath* etp,
                              std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
@@ -43,15 +45,16 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kDestination:
       case TripDirections_Maneuver_Type_kDestinationLeft: {
         // Set instruction
-        maneuver.set_instruction(std::move(FormDestinationInstruction(maneuver)));
+        maneuver.set_instruction(
+            std::move(FormDestinationInstruction(etp, maneuver)));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertDestinationInstruction(maneuver)));
+            std::move(FormVerbalAlertDestinationInstruction(etp, maneuver)));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalDestinationInstruction(maneuver)));
+            std::move(FormVerbalDestinationInstruction(etp, maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kBecomes: {
@@ -531,47 +534,196 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormDestinationInstruction(Maneuver& maneuver) {
+std::string NarrativeBuilder::FormDestinationInstruction(
+    const EnhancedTripPath* etp, Maneuver& maneuver) {
   // 0 "You have arrived at your destination."
+  // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  // 2 "Your destination is on the <SOS>."
+  // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
 
-  // TODO
-  //  "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-  //  "Your destination is on the <SOS>."
-  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+  uint8_t phrase_id = 0;
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction = "You have arrived at your destination.";
+
+  // Determine if location (name or street) exists
+  std::string location;
+  auto& dest = etp->GetDestination();
+  // Check for location name
+  if (dest.has_name() && !(dest.name().empty())) {
+    phrase_id += 1;
+    location = dest.name();
+  }
+  // Check for location street
+  else if (dest.has_street() && !(dest.street().empty())) {
+    phrase_id += 1;
+    location = dest.street();
+  }
+
+  // Check for side of street
+  std::string sos;
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft)
+      || (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight)) {
+    phrase_id += 2;
+    sos = FormTurnTypeInstruction(maneuver.type());
+  }
+
+  switch (phrase_id) {
+    // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+    case 1: {
+      instruction = (boost::format("You have arrived at %1%.") % location).str();
+      break;
+    }
+    // 2 "Your destination is on the <SOS>."
+    case 2: {
+      instruction = (boost::format("Your destination is on the %1%.")
+          % sos).str();
+      break;
+    }
+    // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+    case 3: {
+      instruction = (boost::format(
+          "%1% is on the %2%.") % location
+          % sos).str();
+      break;
+    }
+    // 0 "You have arrived at your destination."
+    default: {
+      instruction = "You have arrived at your destination.";
+      break;
+    }
+  }
 
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalAlertDestinationInstruction(
-    Maneuver& maneuver) {
+    const EnhancedTripPath* etp, Maneuver& maneuver) {
   // 0 "You will arrive at your destination."
+  // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  // 2 "Your destination will be on the <SOS>."
+  // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>."
 
-  // TODO
-  //  "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-  //  "Your destination will be on the <SOS>."
-  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>"
-
+  uint8_t phrase_id = 0;
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction = "You will arrive at your destination.";
+
+  // Determine if location (name or street) exists
+  std::string location;
+  auto& dest = etp->GetDestination();
+  // Check for location name
+  if (dest.has_name() && !(dest.name().empty())) {
+    phrase_id += 1;
+    location = dest.name();
+  }
+  // Check for location street
+  else if (dest.has_street() && !(dest.street().empty())) {
+    phrase_id += 1;
+    auto* verbal_formatter = maneuver.verbal_formatter();
+    if (verbal_formatter)
+      location = verbal_formatter->Format(dest.street());
+    else
+      location = dest.street();
+  }
+
+  // Check for side of street
+  std::string sos;
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft)
+      || (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight)) {
+    phrase_id += 2;
+    sos = FormTurnTypeInstruction(maneuver.type());
+  }
+
+  switch (phrase_id) {
+    // 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+    case 1: {
+      instruction = (boost::format("You will arrive at %1%.") % location).str();
+      break;
+    }
+    // 2 "Your destination will be on the <SOS>."
+    case 2: {
+      instruction = (boost::format("Your destination will be on the %1%.")
+          % sos).str();
+      break;
+    }
+    // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>."
+    case 3: {
+      instruction = (boost::format(
+          "%1% will be on the %2%.") % location
+          % sos).str();
+      break;
+    }
+    // 0 "You will arrive at your destination."
+    default: {
+      instruction = "You will arrive at your destination.";
+      break;
+    }
+  }
 
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalDestinationInstruction(
-    Maneuver& maneuver) {
+    const EnhancedTripPath* etp, Maneuver& maneuver) {
   // 0 "You have arrived at your destination."
+  // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+  // 2 "Your destination is on the <SOS>."
+  // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
 
-  // TODO
-  //  "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
-  //  "Your destination is on the <SOS>."
-  //  "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+  uint8_t phrase_id = 0;
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction = "You have arrived at your destination.";
+
+  // Determine if location (name or street) exists
+  std::string location;
+  auto& dest = etp->GetDestination();
+  // Check for location name
+  if (dest.has_name() && !(dest.name().empty())) {
+    phrase_id += 1;
+    location = dest.name();
+  }
+  // Check for location street
+  else if (dest.has_street() && !(dest.street().empty())) {
+    phrase_id += 1;
+    auto* verbal_formatter = maneuver.verbal_formatter();
+    if (verbal_formatter)
+      location = verbal_formatter->Format(dest.street());
+    else
+      location = dest.street();
+  }
+
+  // Check for side of street
+  std::string sos;
+  if ((maneuver.type() == TripDirections_Maneuver_Type_kDestinationLeft)
+      || (maneuver.type() == TripDirections_Maneuver_Type_kDestinationRight)) {
+    phrase_id += 2;
+    sos = FormTurnTypeInstruction(maneuver.type());
+  }
+
+  switch (phrase_id) {
+    // 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+    case 1: {
+      instruction = (boost::format("You have arrived at %1%.") % location).str();
+      break;
+    }
+    // 2 "Your destination is on the <SOS>."
+    case 2: {
+      instruction = (boost::format("Your destination is on the %1%.")
+          % sos).str();
+      break;
+    }
+    // 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+    case 3: {
+      instruction = (boost::format(
+          "%1% is on the %2%.") % location
+          % sos).str();
+      break;
+    }
+    // 0 "You have arrived at your destination."
+    default: {
+      instruction = "You have arrived at your destination.";
+      break;
+    }
+  }
 
   return instruction;
 }
@@ -2789,7 +2941,8 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
     case TripDirections_Maneuver_Type_kUturnRight:
     case TripDirections_Maneuver_Type_kRampRight:
     case TripDirections_Maneuver_Type_kExitRight:
-    case TripDirections_Maneuver_Type_kStayRight: {
+    case TripDirections_Maneuver_Type_kStayRight:
+    case TripDirections_Maneuver_Type_kDestinationRight: {
       return "right";
     }
     case TripDirections_Maneuver_Type_kSharpRight: {
@@ -2803,7 +2956,8 @@ std::string NarrativeBuilder::FormTurnTypeInstruction(
     case TripDirections_Maneuver_Type_kUturnLeft:
     case TripDirections_Maneuver_Type_kRampLeft:
     case TripDirections_Maneuver_Type_kExitLeft:
-    case TripDirections_Maneuver_Type_kStayLeft: {
+    case TripDirections_Maneuver_Type_kStayLeft:
+    case TripDirections_Maneuver_Type_kDestinationLeft: {
       return "left";
     }
     case TripDirections_Maneuver_Type_kStayStraight: {

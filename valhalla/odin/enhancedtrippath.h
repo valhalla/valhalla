@@ -38,6 +38,10 @@ class EnhancedTripPath : public TripPath {
 
   std::string GetStateCode(int node_index);
 
+  const ::valhalla::odin::TripPath_Location& GetOrigin() const;
+
+  const ::valhalla::odin::TripPath_Location& GetDestination() const;
+
 };
 
 class EnhancedTripPath_Edge : public TripPath_Edge {

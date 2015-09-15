@@ -138,6 +138,11 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     throw std::runtime_error("Trip path has only one node");
   }
 
+  // Validate location count
+  if (trip_path_->location_size() < 2) {
+    throw std::runtime_error("Trip must have at least 2 locations");
+  }
+
   LOG_INFO(
       std::string(
           "trip_path_->node_size()=" + std::to_string(trip_path_->node_size())));
@@ -542,12 +547,21 @@ void ManeuversBuilder::CountAndSortExitSigns(std::list<Maneuver>& maneuvers) {
 void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   int node_index = trip_path_->GetLastNodeIndex();
 
-  // TODO - side of street
-  // TripDirections_Maneuver_Type_kDestinationRight
-  // TripDirections_Maneuver_Type_kDestinationLeft
-
-  // Set the destination maneuver type
-  maneuver.set_type(TripDirections_Maneuver_Type_kDestination);
+  // Determine if the destination has a side of street
+  // and set the appropriate destination maneuver type
+  switch (trip_path_->GetDestination().side_of_street()) {
+    case TripPath_Location_SideOfStreet_kLeft: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kDestinationLeft);
+      break;
+    }
+    case TripPath_Location_SideOfStreet_kRight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kDestinationRight);
+      break;
+    }
+    default: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kDestination);
+    }
+  }
 
   // Set the begin and end node index
   maneuver.set_begin_node_index(node_index);
@@ -558,17 +572,31 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   maneuver.set_begin_shape_index(prev_edge->end_shape_index());
   maneuver.set_end_shape_index(prev_edge->end_shape_index());
 
+  // Set the verbal text formatter
+  maneuver.set_verbal_formatter(
+      VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
+                                         trip_path_->GetStateCode(node_index)));
+
 }
 
 void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   int node_index = 0;
 
-  // TODO - side of street
-  // TripDirections_Maneuver_Type_kStartRight
-  // TripDirections_Maneuver_Type_kStartLeft
-
-  // Set the start maneuver type
-  maneuver.set_type(TripDirections_Maneuver_Type_kStart);
+  // Determine if the origin has a side of street
+  // and set the appropriate start maneuver type
+  switch (trip_path_->GetOrigin().side_of_street()) {
+    case TripPath_Location_SideOfStreet_kLeft: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kStartLeft);
+      break;
+    }
+    case TripPath_Location_SideOfStreet_kRight: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kStartRight);
+      break;
+    }
+    default: {
+      maneuver.set_type(TripDirections_Maneuver_Type_kStart);
+    }
+  }
 
   FinalizeManeuver(maneuver, node_index);
 }

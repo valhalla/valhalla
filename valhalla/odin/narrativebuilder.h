@@ -6,6 +6,7 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/directions_options.pb.h>
 
+#include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 
 namespace valhalla {
@@ -25,6 +26,7 @@ class NarrativeBuilder {
   NarrativeBuilder() = delete;
 
   static void Build(const DirectionsOptions& directions_options,
+                    const EnhancedTripPath* etp,
                     std::list<Maneuver>& maneuvers);
 
  protected:
@@ -38,11 +40,14 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static std::string FormDestinationInstruction(Maneuver& maneuver);
+  static std::string FormDestinationInstruction(const EnhancedTripPath* etp,
+                                                Maneuver& maneuver);
 
-  static std::string FormVerbalAlertDestinationInstruction(Maneuver& maneuver);
+  static std::string FormVerbalAlertDestinationInstruction(
+      const EnhancedTripPath* etp, Maneuver& maneuver);
 
-  static std::string FormVerbalDestinationInstruction(Maneuver& maneuver);
+  static std::string FormVerbalDestinationInstruction(
+      const EnhancedTripPath* etp, Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormBecomesInstruction(Maneuver& maneuver,
