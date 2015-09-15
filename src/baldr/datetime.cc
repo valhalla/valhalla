@@ -34,9 +34,21 @@ struct tz_db_t {
   const boost::local_time::tz_database* operator->() const {
       return &db;
   }
+
   boost::local_time::tz_database db;
 };
 
+}
+
+//Get the list of regions.
+std::vector<std::string> get_region_list() {
+  //thread safe static initialization of global singleton
+  static tz_db_t tz_db;
+  std::vector<std::string> v = tz_db->region_list();
+  std::vector<std::string>::iterator it;
+  it = v.begin();
+  it = v.insert (it,"None");
+  return v;
 }
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
@@ -189,7 +201,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
   } catch (std::exception& e){}
   return iso_date_time;
 }
-
 
 //Get the current iso date and time.
 std::string iso_date_time(const std::string& tz) {

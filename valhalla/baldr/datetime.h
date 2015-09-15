@@ -9,6 +9,12 @@ namespace baldr {
 namespace DateTime {
 
   /**
+   *
+   * Get the list of regions.
+   */
+  std::vector<std::string> get_region_list();
+
+  /**
    * Get the number of days elapsed from the pivot date until
    * inputed date.
    * @param   date_time in the format of 20150516 or 2015-05-06T08:00
