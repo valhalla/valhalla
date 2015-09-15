@@ -202,8 +202,6 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed, ffs(ni.admin_.timezone+1)-1);
   ni.admin_.dst = ~ni.admin_.dst;
   boost::hash_combine(seed, ffs(ni.admin_.dst+1)-1);
-  ni.admin_.spare = ~ni.admin_.spare;
-  boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
 
   ni.type_.local_driveability = ~ni.type_.local_driveability;
   boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
