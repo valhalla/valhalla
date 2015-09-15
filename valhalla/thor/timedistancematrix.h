@@ -38,6 +38,18 @@ struct TimeDistance {
   }
 };
 
+// Structure to hold time distance results from a thread (for many to many
+// time distance matrix)
+struct TimeDistanceResults {
+  uint32_t origin_index;  // Origin index of the one to many result
+  std::vector<TimeDistance> time_distance;
+
+  // Sorting method to sort by origin_index
+  bool operator < (const TimeDistanceResults& other) const {
+    return origin_index < other.origin_index;
+  }
+};
+
 // Structure to hold information about each destination.
 struct Destination {
   bool settled;         // Has the best time/distance to this destination
@@ -103,10 +115,19 @@ class TimeDistanceMatrix : public PathAlgorithm {
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
 
+  /**
+   * Clear the temporary information generated during time+distance
+   * matrix construction.
+   */
+  virtual void Clear();
+
  protected:
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
+
+  // Cost threshold for termination
+  float cost_threshold_;
 
   // List of destinations
   std::vector<Destination> destinations_;

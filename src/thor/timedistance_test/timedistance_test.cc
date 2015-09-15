@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <queue>
-#include <tuple>
 #include <cmath>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -18,11 +16,7 @@
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/odin/util.h>
-#include <valhalla/proto/trippath.pb.h>
-#include <valhalla/proto/tripdirections.pb.h>
-#include <valhalla/proto/directions_options.pb.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/distanceapproximator.h>
 
 #include "thor/timedistancematrix.h"
 
@@ -34,7 +28,7 @@ using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
-
+// Format the time string
 std::string GetFormattedTime(uint32_t seconds) {
   if (seconds == 0) {
     return "0";
@@ -64,26 +58,22 @@ int main(int argc, char *argv[]) {
   "\n"
   " Usage: timedistance_test [options]\n"
   "\n"
-  "timedistance_test is a simple command line test tool for shortest path routing. "
+  "timedistance_test is a command line test tool for time+distance matrix routing. "
   "\n"
-  "Use the -o and -d options OR the -j option for specifying the locations. "
+  "Use the -j option for specifying the locations. "
   "\n"
   "\n");
 
-  std::string origin, destination, routetype, json, config;
-  bool multi_run = false;
-  uint32_t iterations;
+  std::string routetype, json, config;
+  std::string matrixtype = "one_to_many";
+  uint32_t iterations = 1;
 
   options.add_options()("help,h", "Print this help message.")(
       "version,v", "Print the version of this software.")(
-      "origin,o",
-      boost::program_options::value<std::string>(&origin),
-      "Origin: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
-      "destination,d",
-      boost::program_options::value<std::string>(&destination),
-      "Destination: lat,lng,[through|stop],[name],[street],[city/town/village],[state/province/canton/district/region/department...],[zip code],[country].")(
       "type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")(
+           "Route Type: auto|bicycle|pedestrian|auto-shorter")(
+      "matrixtype,m", boost::program_options::value<std::string>(&matrixtype),
+               "Matrix Type: one_to_many|many_to_many|many_to_one")(
       "json,j",
       boost::program_options::value<std::string>(&json),
       "JSON Example: '{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40.749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")
@@ -91,19 +81,14 @@ int main(int argc, char *argv[]) {
       // positional arguments
       ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
 
-
   bpo::positional_options_description pos_options;
   pos_options.add("config", 1);
-
   bpo::variables_map vm;
-
   try {
     bpo::store(
         bpo::command_line_parser(argc, argv).options(options).positional(
-            pos_options).run(),
-        vm);
+            pos_options).run(), vm);
     bpo::notify(vm);
-
   } catch (std::exception &e) {
     std::cerr << "Unable to parse command line options because: " << e.what()
               << "\n" << "This is a bug, please report it at " PACKAGE_BUGREPORT
@@ -119,10 +104,6 @@ int main(int argc, char *argv[]) {
   if (vm.count("version")) {
     std::cout << "timedistance_test " << VERSION << "\n";
     return EXIT_SUCCESS;
-  }
-
-  if (vm.count("multi-run")) {
-    multi_run = true;
   }
 
   // We require JSON input of locations (unlike pathtest). The first location
@@ -214,8 +195,7 @@ int main(int argc, char *argv[]) {
     }
   };
 
-  // Get path locations (Loki) for all locations. The first location in the
-  // incoming list is the origin, the rest are destinations.
+  // Get path locations (Loki) for all locations.
   auto t0 = std::chrono::high_resolution_clock::now();
   std::vector<PathLocation> path_locations;
   for (auto& loc : locations) {
@@ -229,17 +209,49 @@ int main(int argc, char *argv[]) {
   // TODO - add ManyToOne and some way of computing ManyToMany
   t0 = std::chrono::high_resolution_clock::now();
   TimeDistanceMatrix tdm;
-  std::vector<TimeDistance> res = tdm.OneToMany(0, path_locations, reader,
-                                               mode_costing, mode);
+  std::vector<TimeDistance> res;
+  for (uint32_t n = 0; n < iterations; n++) {
+    res.clear();
+    if (matrixtype == "one_to_many") {
+      // First location in the list is the origin
+      res = tdm.OneToMany(0, path_locations, reader, mode_costing, mode);
+    } else if (matrixtype == "many_to_many") {
+      res = tdm.ManyToMany(path_locations, reader, mode_costing, mode);
+    } else {
+      // Last location in the list is the destination of many to one
+      uint32_t idx = path_locations.size() - 1;
+      res = tdm.ManyToOne(idx, path_locations, reader, mode_costing, mode);
+    }
+    tdm.Clear();
+  }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count();
-  LOG_INFO("TDMatrix Processing took " + std::to_string(ms) + " ms");
+  float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
+  LOG_INFO("TDMatrix average time to compute: " + std::to_string(avg) + " sec");
 
-  uint32_t idx = 0;
-  for (auto& td : res) {
-    LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
-        " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
-    idx++;
+  // Log results
+  LOG_INFO("Results:");
+  if (matrixtype == "many_to_many") {
+    uint32_t idx1 = 0;
+    uint32_t idx2 = 0;
+    uint32_t nlocs = path_locations.size();
+    for (auto& td : res) {
+      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
+          ": Distance= " + std::to_string(td.dist) +
+          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      idx2++;
+      if (idx2 == nlocs) {
+        idx2 = 0;
+        idx1++;
+      }
+    }
+  } else {
+    uint32_t idx = 0;
+    for (auto& td : res) {
+      LOG_INFO(std::to_string(idx) + ": Distance= " + std::to_string(td.dist) +
+          " Time= " + GetFormattedTime(td.time) + " secs = " + std::to_string(td.time));
+      idx++;
+    }
   }
 
   return EXIT_SUCCESS;

@@ -41,6 +41,21 @@ GraphId loop(const uint32_t origin_index, const std::vector<PathLocation>& locat
   return {};
 }
 
+// Clear the temporary information generated during time + distance matrix
+// construction.
+void TimeDistanceMatrix::Clear() {
+  // Clear the edge labels and destination list
+  edgelabels_.clear();
+  destinations_.clear();
+  dest_edges_.clear();
+
+  // Clear elements from the adjacency list
+  adjacencylist_.reset();
+
+  // Clear the edge status flags
+  edgestatus_.reset();
+}
+
 // Calculate time and distance from one origin location to many destination
 // locations.
 std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
@@ -76,7 +91,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   SetDestinations(graphreader, origin_index, locations, costing);
 
   // Set the initial cost threshold
-  float cost_threshold = DEFAULT_COST_THRESHOLD;
+  cost_threshold_ = DEFAULT_COST_THRESHOLD;
 
   // Find shortest path
   const GraphTile* tile;
@@ -108,7 +123,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     }
 
     // Terminate when we are beyond the cost threshold
-    if (pred.cost().cost > cost_threshold) {
+    if (pred.cost().cost > cost_threshold_) {
       return FormTimeDistanceMatrix();
     }
 
@@ -181,6 +196,37 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   return {};      // Should never get here
 }
 
+// Many to one time and distance cost matrix. Computes time and distance
+// from many locations to one location. The last location in the locations
+// vector is assumed to be the destination.
+std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
+            const uint32_t dest_index,
+            const std::vector<PathLocation>& locations,
+            GraphReader& graphreader,
+            const std::shared_ptr<DynamicCost>* mode_costing,
+            const TravelMode mode) {
+  LOG_ERROR("Not yet implemented");
+  return { };
+}
+
+// Many to one time and distance cost matrix. Computes time and distance
+// from many locations to many locations.
+std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
+           const std::vector<PathLocation>& locations,
+           GraphReader& graphreader,
+           const std::shared_ptr<DynamicCost>* mode_costing,
+           const sif::TravelMode mode) {
+  // Run a series of one to many calls and concatenate the results.
+  std::vector<TimeDistance> many_to_many;
+  for (uint32_t origin_idx = 0; origin_idx < locations.size(); origin_idx++) {
+    std::vector<TimeDistance> td = OneToMany(origin_idx, locations,
+                          graphreader, mode_costing, mode);
+    many_to_many.insert(many_to_many.end(), td.begin(), td.end());
+    Clear();
+  }
+  return many_to_many;
+}
+
 // Set destinations
 void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
           const uint32_t origin_index,
@@ -209,7 +255,10 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
 
         // Form a threshold cost (the total cost to traverse the edge)
         const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        d.threshold = (costing->EdgeCost(tile->directededge(edge.id), 0.0f)).cost;
+        float c = costing->EdgeCost(tile->directededge(edge.id), 0.0f).cost;
+        if (c > d.threshold) {
+          d.threshold = c;
+        }
 
         // Mark the edge as having a destination on it and add the
         // destination index
@@ -234,7 +283,7 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
     // Skip if destination has already been settled.
     // TODO - remove once the threshold logic is fully validated
     if (dest.settled) {
-      LOG_ERROR("Destination alread settled, threshold might be too low");
+      LOG_ERROR("Destination " + std::to_string(dest_idx) + " already settled, threshold might be too low");
       continue;
     }
 
@@ -245,7 +294,6 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
       LOG_ERROR("Could not find the destination edge");
       continue;
     }
-
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
@@ -266,15 +314,36 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
 
   // Settle any destinations where current cost is above the destination's
   // best cost + threshold. This helps remove destinations where one edge
-  // cannot be reached (e.g. on a cul-de-sac or where turn restrictions apply)
+  // cannot be reached (e.g. on a cul-de-sac or where turn restrictions apply).
+  // Update the cost threshold if at least one path to all destinations has
+  // been found.
+  bool allfound = true;
+  float maxcost = 0.0f;
   for (auto& d : destinations_) {
-    if (!d.settled &&
-        (d.best_cost.cost + d.threshold) < pred.cost().cost) {
-      d.settled = true;
-      settled_count_++;
+    // Skip any settled destinations
+    if (d.settled) {
+      continue;
+    }
+
+    // Do not update cost threshold if no path to this destination
+    // has been found
+    if (d.distance == 0) {
+      allfound = false;
+    } else {
+      // Settle any destinations above their threshold and update maxcost
+      if ((d.best_cost.cost + d.threshold) < pred.cost().cost) {
+        d.settled = true;
+        settled_count_++;
+      }
+      maxcost = std::max(maxcost, d.best_cost.cost + d.threshold);
     }
   }
 
+  // Update cost threshold for early termination if at least one path has
+  // been found to each destination
+  if (allfound) {
+    cost_threshold_ = maxcost;
+  }
   return settled_count_ == destinations_.size();
 }
 
@@ -285,30 +354,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix() {
     td.emplace_back(dest.best_cost.secs, dest.distance);
   }
   return td;
-}
-
-// Many to one time and distance cost matrix. Computes time and distance
-// from many locations to one location. The last location in the locations
-// vector is assumed to be the destination.
-std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
-            const uint32_t dest_index,
-            const std::vector<PathLocation>& locations,
-            GraphReader& graphreader,
-            const std::shared_ptr<DynamicCost>* mode_costing,
-            const TravelMode mode) {
-  LOG_ERROR("Not yet implemented");
-  return { };
-}
-
-// Many to one time and distance cost matrix. Computes time and distance
-// from many locations to many locations.
-std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
-           const std::vector<PathLocation>& locations,
-           GraphReader& graphreader,
-           const std::shared_ptr<DynamicCost>* mode_costing,
-           const sif::TravelMode mode) {
-  LOG_ERROR("Not yet implemented");
-  return { };
 }
 
 }
