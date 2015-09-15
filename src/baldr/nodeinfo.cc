@@ -61,11 +61,6 @@ uint32_t NodeInfo::timezone() const {
   return admin_.timezone;
 }
 
-// Is daylight saving time observed at the node's location.
-bool NodeInfo::dst() const {
-  return admin_.dst;
-}
-
 // Get the driveability of the local directed edge given a local
 // edge index.
 Traversability NodeInfo::local_driveability(const uint32_t localidx) const {
@@ -200,8 +195,8 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed,ffs(ni.admin_.admin_index+1)-1);
   ni.admin_.timezone = ~ni.admin_.timezone;
   boost::hash_combine(seed, ffs(ni.admin_.timezone+1)-1);
-  ni.admin_.dst = ~ni.admin_.dst;
-  boost::hash_combine(seed, ffs(ni.admin_.dst+1)-1);
+  ni.admin_.spare = ~ni.admin_.spare;
+  boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
 
   ni.type_.local_driveability = ~ni.type_.local_driveability;
   boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
