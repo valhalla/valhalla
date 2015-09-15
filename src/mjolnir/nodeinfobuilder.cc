@@ -112,11 +112,6 @@ void NodeInfoBuilder::set_timezone(const uint16_t timezone) {
   }
 }
 
-// Set the daylight saving time flag
-void NodeInfoBuilder::set_dst(const bool dst) {
-  admin_.dst = dst;
-}
-
 // Set the driveability of the local directed edge given a local
 // edge index.
 void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
