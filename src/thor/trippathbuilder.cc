@@ -130,6 +130,55 @@ void AssignAdmins(TripPath& trip_path,
 namespace valhalla {
 namespace thor {
 
+namespace {
+TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
+  switch (road_class) {
+    case RoadClass::kMotorway:
+      return TripPath_RoadClass_kMotorway;
+    case RoadClass::kTrunk:
+      return TripPath_RoadClass_kTrunk;
+    case RoadClass::kPrimary:
+      return TripPath_RoadClass_kPrimary;
+    case RoadClass::kSecondary:
+      return TripPath_RoadClass_kSecondary;
+    case RoadClass::kTertiary:
+      return TripPath_RoadClass_kTertiary;
+    case RoadClass::kUnclassified:
+      return TripPath_RoadClass_kUnclassified;
+    case RoadClass::kResidential:
+      return TripPath_RoadClass_kResidential;
+    case RoadClass::kServiceOther:
+      return TripPath_RoadClass_kServiceOther;
+  }
+}
+
+TripPath_Traversability GetTripPathTraversability(Traversability traversability) {
+  switch (traversability) {
+    case Traversability::kNone:
+      return TripPath_Traversability_kNone;
+    case Traversability::kForward:
+      return TripPath_Traversability_kForward;
+    case Traversability::kBackward:
+      return TripPath_Traversability_kBackward;
+    case Traversability::kBoth:
+      return TripPath_Traversability_kBoth;
+  }
+}
+
+TripPath_Location_SideOfStreet GetTripPathSideOfStreet(
+    PathLocation::SideOfStreet sos) {
+  switch (sos) {
+    case PathLocation::SideOfStreet::NONE:
+      return TripPath_Location_SideOfStreet_kNone;
+    case PathLocation::SideOfStreet::LEFT:
+      return TripPath_Location_SideOfStreet_kLeft;
+    case PathLocation::SideOfStreet::RIGHT:
+      return TripPath_Location_SideOfStreet_kRight;
+  }
+}
+
+}
+
 // Default constructor
 TripPathBuilder::TripPathBuilder() {
 }
@@ -213,19 +262,33 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   GraphId startnode = first_tile->directededge(
       first_node->edge_index() + first_edge->opp_index())->endnode();
 
-  // Partial edge at the start
+  // Partial edge at the start and side of street (sos)
   auto start_pct = origin.edges().front().dist;
+  auto start_sos = origin.edges().front().sos;
   auto start_vrt = origin.vertex();
-  for (size_t i = 1; i < origin.edges().size(); ++i)
-    if (origin.edges()[i].id == path.front().edgeid)
+  for (size_t i = 1; i < origin.edges().size(); ++i) {
+    if (origin.edges()[i].id == path.front().edgeid) {
       start_pct = origin.edges()[i].dist;
+      start_sos = origin.edges()[i].sos;
+    }
+  }
+  // Set the origin side of street, if one exists
+  if (start_sos != PathLocation::SideOfStreet::NONE)
+    tp_orig->set_side_of_street(GetTripPathSideOfStreet(start_sos));
 
   // Partial edge at the end
   auto end_pct = dest.edges().front().dist;
+  auto end_sos = dest.edges().front().sos;
   auto end_vrt = dest.vertex();
-  for (size_t i = 1; i < dest.edges().size(); ++i)
-    if (dest.edges()[i].id == path.back().edgeid)
+  for (size_t i = 1; i < dest.edges().size(); ++i) {
+    if (dest.edges()[i].id == path.back().edgeid) {
       end_pct = dest.edges()[i].dist;
+      end_sos = dest.edges()[i].sos;
+    }
+  }
+  // Set the destination side of street, if one exists
+  if (end_sos != PathLocation::SideOfStreet::NONE)
+    tp_dest->set_side_of_street(GetTripPathSideOfStreet(end_sos));
 
   // Special case - destination is at a node - end percent is 1
   if (dest.IsNode()) {
@@ -501,43 +564,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
   //hand it back
   return trip_path;
-}
-
-namespace {
-TripPath_RoadClass GetTripPathRoadClass(RoadClass road_class) {
-  switch (road_class) {
-    case RoadClass::kMotorway:
-      return TripPath_RoadClass_kMotorway;
-    case RoadClass::kTrunk:
-      return TripPath_RoadClass_kTrunk;
-    case RoadClass::kPrimary:
-      return TripPath_RoadClass_kPrimary;
-    case RoadClass::kSecondary:
-      return TripPath_RoadClass_kSecondary;
-    case RoadClass::kTertiary:
-      return TripPath_RoadClass_kTertiary;
-    case RoadClass::kUnclassified:
-      return TripPath_RoadClass_kUnclassified;
-    case RoadClass::kResidential:
-      return TripPath_RoadClass_kResidential;
-    case RoadClass::kServiceOther:
-      return TripPath_RoadClass_kServiceOther;
-  }
-}
-
-TripPath_Traversability GetTripPathTraversability(Traversability traversability) {
-  switch (traversability) {
-    case Traversability::kNone:
-      return TripPath_Traversability_kNone;
-    case Traversability::kForward:
-      return TripPath_Traversability_kForward;
-    case Traversability::kBackward:
-      return TripPath_Traversability_kBackward;
-    case Traversability::kBoth:
-      return TripPath_Traversability_kBoth;
-  }
-}
-
 }
 
 // Add a trip edge to the trip node and set its attributes
