@@ -32,7 +32,7 @@ Please see `./configure --help` for more options on how to control the build pro
 Using
 -----
 
-For detailed information about what algorithms, data structures and executables are contained within loki, please see the more [detailed documentation](docs/index.md).
+For detailed information about what algorithms, data structures and executables are contained within sif, please see the more [detailed documentation](docs/index.md).
 
 The build will produce both libraries and headers for use in other Valhalla organization projects, however you are free to use Sif for your own projects as well. To simplify the inclusion of the Sif library in another autotoolized project you may make use of [sif m4](m4/valhalla_loki.m4) in your own `configure.ac` file. For an example of this please have a look at `configure.ac` in another one of the valhalla projects. Sif, and all of the projects under the Valhalla organization use the [MIT License](COPYING).
 
