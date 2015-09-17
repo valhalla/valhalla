@@ -5,11 +5,11 @@ namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-TransitRoute:: TransitRoute(const uint32_t routeid, const uint32_t agencyid,
-            const char* tl_routeid, const uint32_t short_name_offset,
-            const uint32_t long_name_offset, const uint32_t desc_offset)
+TransitRoute:: TransitRoute(const uint32_t routeid, const char* tl_routeid,
+                            const uint32_t short_name_offset,
+                            const uint32_t long_name_offset,
+                            const uint32_t desc_offset)
     : routeid_(routeid),
-      agencyid_(agencyid),
       short_name_offset_(short_name_offset),
       long_name_offset_(long_name_offset),
       desc_offset_(desc_offset) {
@@ -19,14 +19,6 @@ TransitRoute:: TransitRoute(const uint32_t routeid, const uint32_t agencyid,
 // Get the internal route Id.
 uint32_t TransitRoute::routeid() const {
   return routeid_;
-}
-
-/**
-* Get the internal agency Id for this route.
-* @return  Returns the internal agency Id.
-*/
-uint32_t TransitRoute::agencyid() const {
-  return agencyid_;
 }
 
 /**
