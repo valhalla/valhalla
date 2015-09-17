@@ -19,7 +19,11 @@ using Point = valhalla::midgard::PointLL;
 using LineSegment = valhalla::midgard::LineSegment2<Point>;
 using BoundingBox = valhalla::midgard::AABB2<Point>;
 
-
+// Represents one intersection beetween one side of a bounding box and a segment
+struct BoundingBoxIntersection {
+  Point point;  // The intersection point
+  int dx, dy;   // The direction to the cell adjacent to the intersected side
+};
 
 
 class GridRangeQuery
@@ -69,6 +73,14 @@ class GridRangeQuery
   }
 
 
+  Point CellCenter(int i, int j) const {
+    return {
+        bbox_.minx() + (i + 0.5) * cell_width_,
+        bbox_.miny() + (j + 0.5) * cell_height_
+      };
+  }
+
+
   const std::vector<GraphId> &ItemsInCell(int i, int j) const {
     return items_[i + j * num_cols_];
   }
@@ -83,12 +95,15 @@ class GridRangeQuery
     Point b = segment.b();
 
     auto intersects = BoundingBoxLineSegmentIntersections(bbox_, LineSegment(a, b));
-    if (bbox_.Contains(a)) intersects.push_back(a);
-    if (bbox_.Contains(b)) intersects.push_back(b);
+    std::vector<Point> points;
+    for (const auto &i : intersects) points.push_back(i.point);
+
+    if (bbox_.Contains(a)) points.push_back(a);
+    if (bbox_.Contains(b)) points.push_back(b);
 
     float mint = 1, maxt = 0;
     Point minp, maxp;
-    for (const auto &p : intersects) {
+    for (const auto &p : points) {
       float t = Unlerp(a, b, p);
       if (t < mint) {
         mint = t;
@@ -118,26 +133,28 @@ class GridRangeQuery
     Point start = interior.a();
     Point end = interior.b();
     Point current_point = start;
+    int i, j;
+    std::tie(i, j) = GridCoordinates(current_point);
 
     // Walk along start,end
     while (Unlerp(start, end, current_point) < 1.0) {
-      int i, j;
-      std::tie(i, j) = GridCoordinates(current_point);
       ItemsInCell(i, j).push_back(edgeid);
 
       auto intersects = CellLineSegmentIntersections(i, j, LineSegment(current_point, end));
 
-      float bestt = 0;
-      Point bestp;
-      for (const auto &p : intersects) {
-        float t = Unlerp(current_point, end, p);
-        if (t > bestt) {
-          bestt = t;
-          bestp = p;
+      float bestd = end.DistanceSquared(CellCenter(i, j));
+      BoundingBoxIntersection bestp;
+      for (const auto &intersect : intersects) {
+        float d = end.DistanceSquared(CellCenter(i + intersect.dx, j + intersect.dy));
+        if (d < bestd) {
+          bestd = d;
+          bestp = intersect;
         }
       }
-      if (bestt > 0) {
-        current_point = bestp;
+      if (bestd < end.DistanceSquared(CellCenter(i, j))) {
+        current_point = bestp.point;
+        i += bestp.dx;
+        j += bestp.dy;
       } else {
         break;
       }
@@ -179,16 +196,16 @@ class GridRangeQuery
   }
 
 
-  std::vector<Point>
+  std::vector<BoundingBoxIntersection>
   CellLineSegmentIntersections(int i, int j, const LineSegment &segment) const {
     BoundingBox box = CellBoundingBox(i, j);
     return BoundingBoxLineSegmentIntersections(box, segment);
   }
 
 
-  std::vector<Point>
+  std::vector<BoundingBoxIntersection>
   BoundingBoxLineSegmentIntersections(const BoundingBox &box, const LineSegment &segment) const {
-    std::vector<Point> intersects;
+    std::vector<BoundingBoxIntersection> intersects;
 
     LineSegment e1({box.minx(), box.miny()}, {box.maxx(), box.miny()});
     LineSegment e2({box.maxx(), box.miny()}, {box.maxx(), box.maxy()});
@@ -196,10 +213,14 @@ class GridRangeQuery
     LineSegment e4({box.minx(), box.maxy()}, {box.minx(), box.miny()});
 
     Point intersect;
-    if (segment.Intersect(e1, intersect)) intersects.push_back(intersect);
-    if (segment.Intersect(e2, intersect)) intersects.push_back(intersect);
-    if (segment.Intersect(e3, intersect)) intersects.push_back(intersect);
-    if (segment.Intersect(e4, intersect)) intersects.push_back(intersect);
+    if (segment.Intersect(e1, intersect))
+      intersects.push_back(BoundingBoxIntersection({intersect, 0, -1}));
+    if (segment.Intersect(e2, intersect))
+      intersects.push_back(BoundingBoxIntersection({intersect,  1,  0}));
+    if (segment.Intersect(e3, intersect))
+      intersects.push_back(BoundingBoxIntersection({intersect,  0,  1}));
+    if (segment.Intersect(e4, intersect))
+      intersects.push_back(BoundingBoxIntersection({intersect, -1,  0}));
 
     return intersects;
   }
@@ -225,7 +246,7 @@ void TestGridTools()
 
   auto intersects = grid.CellLineSegmentIntersections(2, 3, LineSegment({2.5, 3.5}, {10, 3.5}));
   assert(intersects.size() == 1);
-  assert(intersects[0].x() == 3 && intersects[0].y() == 3.5);
+  assert(intersects[0].point.x() == 3 && intersects[0].point.y() == 3.5);
 }
 
 
@@ -243,8 +264,8 @@ void TestAddLineSegment()
   assert(items88.empty());
 
   grid.AddLineSegment(1, LineSegment({10, 3.5}, {2.5, 3.5}));
-  items23 = grid.ItemsInCell(2, 3);
-  assert(items23.size() == 2);
+  auto items33 = grid.ItemsInCell(2, 3);
+  assert(items33.size() == 2);
 
 
   grid.AddLineSegment(0, LineSegment({-10, -10}, {110, 110}));
