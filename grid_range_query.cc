@@ -7,13 +7,23 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/linesegment2.h>
+
 
 using GraphId = uint32_t;
-using PointLL = std::pair<float, float>;  // longitude, latitude (i.e. x and y)
-using LineSegment = std::pair<PointLL, PointLL>;  // start point, end point
-using BoundingBox = std::tuple<float, float, float, float>;  // left, bottom, right, top
-enum {LEFT=0, BOTTOM, RIGHT, TOP};
+using PointLL = valhalla::midgard::PointLL;
+using LineSegment = valhalla::midgard::LineSegment2<PointLL>;
+using BoundingBox = valhalla::midgard::AABB2<PointLL>;
 
+
+
+std::vector<PointLL>
+LineSegmentBoundingBoxIntersection(const LineSegment &s, const BoundingBox &b) {
+
+  return {};
+}
 
 
 class GridRangeQuery
@@ -28,10 +38,8 @@ class GridRangeQuery
   GridRangeQuery(const BoundingBox& bbox, uint32_t num_cols, uint32_t num_rows)
       : bbox_(bbox)
   {
-    auto grid_width = std::abs(std::get<RIGHT>(bbox) - std::get<LEFT>(bbox)),
-        grid_height = std::abs(std::get<TOP>(bbox) - std::get<BOTTOM>(bbox));
-    cell_width_ = grid_width / num_cols;
-    cell_height_ = grid_height / num_rows;
+    cell_width_ = bbox.Width() / num_cols;
+    cell_height_ = bbox.Height() / num_rows;
   }
 
   // Get bbox of the grid
