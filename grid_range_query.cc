@@ -1,5 +1,4 @@
 // -*- mode: c++ -*-
-// compile: [c++ | g++] -Wall -std=c++11 grid_range_query.cc
 
 #include <iostream>
 #include <algorithm>
@@ -9,6 +8,8 @@
 #include <set>
 #include <cmath>
 #include <cassert>
+#include <stdexcept>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
@@ -30,17 +31,30 @@ class GridRangeQuery
 {
  public:
   GridRangeQuery(const BoundingBox& bbox, float cell_width, float cell_height) {
+    if (cell_width <= 0.f) {
+      throw std::invalid_argument("invalid cell width");
+    }
+    if (cell_height <= 0.f) {
+      throw std::invalid_argument("invalid cell height");
+    }
     Init(bbox, cell_width, cell_height);
   }
 
 
   // Divide the grid into num_cols by num_rows cells
   GridRangeQuery(const BoundingBox& bbox, uint32_t num_cols, uint32_t num_rows) {
+    if (num_cols <= 0) {
+      throw std::invalid_argument("invalid number of columns");
+    }
+    if (num_cols <= 0) {
+      throw std::invalid_argument("invalid number of rows");
+    }
     Init(bbox, bbox.Width() / num_cols, bbox.Height() / num_rows);
   }
 
 
   void Init(const BoundingBox& bbox, float cell_width, float cell_height) {
+    assert(cell_width >= 0.f && cell_height >= 0.f);
     bbox_ = bbox;
     cell_width_ = cell_width;
     cell_height_ = cell_height;
@@ -294,5 +308,6 @@ int main(int argc, char *argv[])
   TestGridTools();
   TestAddLineSegment();
   TestQuery();
+  std::cout << "all tests passed" << std::endl;
   return 0;
 }
