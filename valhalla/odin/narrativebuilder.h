@@ -36,6 +36,7 @@ class NarrativeBuilder {
 
   static std::string FormVerbalStartInstruction(
       Maneuver& maneuver,
+      DirectionsOptions_Units units,
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
@@ -68,6 +69,7 @@ class NarrativeBuilder {
 
   static std::string FormVerbalContinueInstruction(
       Maneuver& maneuver,
+      DirectionsOptions_Units units,
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
@@ -336,15 +338,13 @@ class NarrativeBuilder {
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
-  static std::string FormVerbalPostTransitionKilometersInstruction(
-      Maneuver& maneuver, bool include_street_names = false,
-      uint32_t element_max_count = kVerbalPostElementMaxCount,
-      std::string delim = kVerbalDelim);
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormDistance(Maneuver& maneuver,
+                                  DirectionsOptions_Units units);
 
-  static std::string FormVerbalPostTransitionMilesInstruction(
-      Maneuver& maneuver, bool include_street_names = false,
-      uint32_t element_max_count = kVerbalPostElementMaxCount,
-      std::string delim = kVerbalDelim);
+  static std::string FormKilometers(float kilometers);
+
+  static std::string FormMiles(float miles);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormCardinalDirection(

@@ -31,14 +31,19 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalStartInstruction(maneuver)));
-
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
             std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                FormVerbalStartInstruction(maneuver,
+                                           directions_options.units())));
+
+        // Set verbal post transition instruction only if there are
+        // begin street names
+        if (maneuver.HasBeginStreetNames()) {
+          maneuver.set_verbal_post_transition_instruction(
+              std::move(
+                  FormVerbalPostTransitionInstruction(
+                      maneuver, directions_options.units(),
+                      maneuver.HasBeginStreetNames())));
+        }
         break;
       }
       case TripDirections_Maneuver_Type_kDestinationRight:
@@ -84,13 +89,11 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalContinueInstruction(maneuver)));
-
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
             std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+                FormVerbalContinueInstruction(maneuver,
+                                              directions_options.units())));
+
+        // NOTE: No verbal post transition instruction
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
@@ -494,9 +497,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  // 0 "Go <FormCardinalDirection>."
-  // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+    Maneuver& maneuver, DirectionsOptions_Units units,
+    uint32_t element_max_count, std::string delim) {
+  // 0 "Go <FormCardinalDirection> for <DISTANCE>."
+  // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
+  // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -511,21 +516,29 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
     street_names = maneuver.begin_street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   } else if (maneuver.HasStreetNames()) {
-    phrase_id = 1;
+    phrase_id = 2;
     street_names = maneuver.street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   }
 
   switch (phrase_id) {
-    // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+    // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
     case 1: {
       instruction = (boost::format("Go %1% on %2%.")
           % cardinal_direction % street_names).str();
       break;
     }
-    // 0 "Go <FormCardinalDirection>."
+    // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
+    case 2: {
+      instruction = (boost::format("Go %1% on %2% for %3%.")
+          % cardinal_direction % street_names % FormDistance(maneuver, units))
+          .str();
+      break;
+    }
+    // 0 "Go <FormCardinalDirection> for <DISTANCE>."
     default: {
-      instruction = (boost::format("Go %1%.") % cardinal_direction).str();
+      instruction = (boost::format("Go %1% for %2%.") % cardinal_direction
+          % FormDistance(maneuver, units)).str();
       break;
     }
   }
@@ -813,13 +826,25 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Continue"
   //  "Continue on <STREET_NAMES(1)>."
-  return FormVerbalContinueInstruction(maneuver, element_max_count, delim);
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Continue";
+
+  if (maneuver.HasStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString(
+        element_max_count, delim, maneuver.verbal_formatter());
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Continue"
-  //  "Continue on <STREET_NAMES(2)>."
+    Maneuver& maneuver, DirectionsOptions_Units units,
+    uint32_t element_max_count, std::string delim) {
+  //  "Continue for <DISTANCE>"
+  //  "Continue on <STREET_NAMES(2)> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -831,6 +856,8 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
         element_max_count, delim, maneuver.verbal_formatter());
   }
 
+  instruction += " for ";
+  instruction += FormDistance(maneuver, units);
   instruction += ".";
   return instruction;
 }
@@ -2770,33 +2797,8 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
     Maneuver& maneuver, DirectionsOptions_Units units,
     bool include_street_names, uint32_t element_max_count,
     std::string delim) {
-  switch (units) {
-    case DirectionsOptions_Units_kMiles: {
-      return FormVerbalPostTransitionMilesInstruction(
-          maneuver, include_street_names, element_max_count, delim);
-    }
-    default: {
-      return FormVerbalPostTransitionKilometersInstruction(
-          maneuver, include_street_names, element_max_count, delim);
-    }
-  }
-}
-
-std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
-    Maneuver& maneuver, bool include_street_names,
-    uint32_t element_max_count, std::string delim) {
-
-  // 0 "Continue for 1.2 kilometers"
-  // 1 "Continue for 1 kilometer."
-  // 2 "Continue for a half kilometer." (500 meters)
-  // 3 "Continue for 100 meters." (30-400 and 600-900 meters)
-  // 4 "Continue for less than 10 meters."
-  //
-  // 5 "Continue on <STREET_NAMES(2)> for 1.2 kilometers"
-  // 6 "Continue on <STREET_NAMES(2)> for 1 kilometer."
-  // 7 "Continue on <STREET_NAMES(2)> for a half kilometer." (500 meters)
-  // 8 "Continue on <STREET_NAMES(2)> for 100 meters." (30-400 and 600-900 meters)
-  // 9 "Continue on <STREET_NAMES(2)> for less than 10 meters."
+  // "Continue for <DISTANCE>."
+  // "Continue on <STREET_NAMES(2)> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -2808,29 +2810,56 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
         element_max_count, delim, maneuver.verbal_formatter());
   }
   instruction += " for ";
+  instruction += FormDistance(maneuver, units);
+  instruction += ".";
 
-  float kilometers = maneuver.length();
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormDistance(
+    Maneuver& maneuver, DirectionsOptions_Units units) {
+  switch (units) {
+    case DirectionsOptions_Units_kMiles: {
+      return FormMiles(maneuver.length(DirectionsOptions_Units_kMiles));
+    }
+    default: {
+      return FormKilometers(maneuver.length(DirectionsOptions_Units_kKilometers));
+    }
+  }
+}
+
+std::string NarrativeBuilder::FormKilometers(float kilometers) {
+
+  // 0 "1.2 kilometers"
+  // 1 "1 kilometer"
+  // 2 "a half kilometer" (500 meters)
+  // 3 "100 meters" (30-400 and 600-900 meters)
+  // 4 "less than 10 meters"
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+
   float kilometer_tenths = std::round(kilometers * 10) / 10;
 
   if (kilometer_tenths > 1.0f) {
-    instruction += (boost::format("%.1f kilometers.") % kilometer_tenths).str();
+    instruction += (boost::format("%.1f kilometers") % kilometer_tenths).str();
   } else if (kilometer_tenths == 1.0f) {
-    instruction += "1 kilometer.";
+    instruction += "1 kilometer";
   } else if (kilometer_tenths == 0.5f) {
-    instruction += "a half kilometer.";
+    instruction += "a half kilometer";
   } else {
     float kilometer_hundredths = std::round(kilometers * 100) / 100;
     float kilometer_thousandths = std::round(kilometers * 1000) / 1000;
 
     // Process hundred meters
     if (kilometer_hundredths > 0.09f) {
-      instruction += (boost::format("%d meters.")
+      instruction += (boost::format("%d meters")
           % static_cast<uint32_t>(kilometer_tenths * 1000)).str();
     } else if (kilometer_thousandths > 0.009f) {
-      instruction += (boost::format("%d meters.")
+      instruction += (boost::format("%d meters")
           % static_cast<uint32_t>(kilometer_hundredths * 1000)).str();
     } else {
-      instruction += "less than 10 meters.";
+      instruction += "less than 10 meters";
     }
 
   }
@@ -2838,61 +2867,41 @@ std::string NarrativeBuilder::FormVerbalPostTransitionKilometersInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormVerbalPostTransitionMilesInstruction(
-    Maneuver& maneuver, bool include_street_names,
-    uint32_t element_max_count, std::string delim) {
+std::string NarrativeBuilder::FormMiles(float miles) {
 
-  // 0  "Continue for 1.2 miles"
-  // 1  "Continue for 1 mile."
-  // 2  "Continue for a half mile."
-  // 3  "Continue for 2 tenths of a mile." (2-4, 6-9)
-  // 4  "Continue for 1 tenth of a mile."
-  // 5  "Continue for 200 feet." (10-90, 100-500)
-  // 6  "Continue for less than 10 feet."
-  //
-  // 7  "Continue on <STREET_NAMES(2)> for 1.2 miles"
-  // 8  "Continue on <STREET_NAMES(2)> for 1 mile."
-  // 9  "Continue on <STREET_NAMES(2)> for a half mile."
-  // 10 "Continue on <STREET_NAMES(2)> for two tenths of a mile." (2-4, 6-9)
-  // 11 "Continue on <STREET_NAMES(2)> for 1 tenth of a mile."
-  // 12 "Continue on <STREET_NAMES(2)> for 200 feet." (10-90, 100-500)
-  // 13 "Continue on <STREET_NAMES(2)> for less than 10 feet."
+  // 0  "1.2 miles"
+  // 1  "1 mile."
+  // 2  "a half mile."
+  // 3  "2 tenths of a mile." (2-4, 6-9)
+  // 4  "1 tenth of a mile."
+  // 5  "200 feet." (10-90, 100-500)
+  // 6  "less than 10 feet."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Continue";
-
-  if (include_street_names && maneuver.HasStreetNames()) {
-    instruction += " on ";
-    instruction += maneuver.street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
-  }
-  instruction += " for ";
-
-  float miles = maneuver.length(DirectionsOptions_Units_kMiles);
   float mile_tenths = std::round(miles * 10) / 10;
 
   if (mile_tenths > 1.0f) {
-    instruction += (boost::format("%.1f miles.") % mile_tenths).str();
+    instruction += (boost::format("%.1f miles") % mile_tenths).str();
   } else if (mile_tenths == 1.0f) {
-    instruction += "1 mile.";
+    instruction += "1 mile";
   } else if (mile_tenths == 0.5f) {
-    instruction += "a half mile.";
+    instruction += "a half mile";
   } else if (mile_tenths > 0.1f) {
-      instruction += (boost::format("%d tenths of a mile.")
+      instruction += (boost::format("%d tenths of a mile")
           % static_cast<uint32_t>(mile_tenths * 10)).str();
   } else if ((miles > 0.0973f) && (mile_tenths == 0.1f)) {
-    instruction += "1 tenth of a mile.";
+    instruction += "1 tenth of a mile";
   } else {
     uint32_t feet = static_cast<uint32_t>(std::round(miles * 5280));
     if (feet > 94) {
-      instruction += (boost::format("%d feet.")
+      instruction += (boost::format("%d feet")
           % static_cast<uint32_t>(std::round(feet / 100.0f) * 100)).str();
     } else if (feet > 9) {
-      instruction += (boost::format("%d feet.")
+      instruction += (boost::format("%d feet")
           % static_cast<uint32_t>(std::round(feet / 10.0f) * 10)).str();
     } else {
-      instruction += "less than 10 feet.";
+      instruction += "less than 10 feet";
     }
 
   }
