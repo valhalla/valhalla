@@ -111,7 +111,7 @@ namespace {
     return array;
   }
 
-  json::ArrayPtr serialize_shape(const std::vector<PointLL>& shape) {
+  json::ArrayPtr serialize_shape(const std::list<PointLL>& shape) {
     auto array = json::array({});
     for(const auto& p : shape) {
       array->emplace_back(json::map({
@@ -175,7 +175,7 @@ namespace {
       range = request.get<bool>("range", false);
       auto input_shape = request.get_child_optional("shape");
       encoded_polyline = request.get_optional<std::string>("encoded_polyline");
-      auto resample_distance = request.get_optional<float>("resample_distance");
+      auto resample_distance = request.get_optional<double>("resample_distance");
 
       //we require shape or encoded polyline but we dont know which at first
       try {
@@ -185,7 +185,7 @@ namespace {
             shape.push_back(baldr::Location::FromPtree(latlng.second).latlng_);
         }//compressed shape
         else if (encoded_polyline) {
-          shape = midgard::decode<std::vector<midgard::PointLL> >(*encoded_polyline);
+          shape = midgard::decode<std::list<midgard::PointLL> >(*encoded_polyline);
         }//no shape
         else
           throw std::runtime_error("No shape provided");
@@ -237,8 +237,8 @@ namespace {
       //get the distances between the postings
       if (range) {
         std::vector<float> ranges; ranges.reserve(shape.size()); ranges.emplace_back(0);
-        for(auto point = shape.cbegin() + 1; point != shape.cend(); ++point)
-          ranges.emplace_back(ranges.back() +  point->Distance(*(point - 1)));
+        for(auto point = std::next(shape.cbegin()); point != shape.cend(); ++point)
+          ranges.emplace_back(ranges.back() +  point->Distance(*std::prev(point)));
         json = json::map({
           {"range_height", serialize_range_height(ranges, heights, sample.get_no_data_value())}
         });
@@ -276,7 +276,7 @@ namespace {
       encoded_polyline.reset();
     }
     protected:
-      std::vector<PointLL> shape;
+      std::list<PointLL> shape;
       boost::optional<std::string> encoded_polyline;
       bool range;
       skadi::sample sample;
