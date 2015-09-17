@@ -280,10 +280,10 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
 
-    // Skip if destination has already been settled.
-    // TODO - remove once the threshold logic is fully validated
+    // Skip if destination has already been settled. This can happen since we
+    // do not remove remaining destination edges for this destination from
+    // dest_edges.
     if (dest.settled) {
-      LOG_ERROR("Destination " + std::to_string(dest_idx) + " already settled, threshold might be too low");
       continue;
     }
 
