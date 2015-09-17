@@ -6,6 +6,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <set>
 #include <cmath>
 #include <cassert>
 #include <valhalla/midgard/aabb2.h>
@@ -68,8 +69,12 @@ class GridRangeQuery
   }
 
 
-  std::vector<GraphId> ItemsInCell(int i, int j) const {
-    return items_[i + j * num_rows_];
+  const std::vector<GraphId> &ItemsInCell(int i, int j) const {
+    return items_[i + j * num_cols_];
+  }
+
+  std::vector<GraphId> &ItemsInCell(int i, int j) {
+    return items_[i + j * num_cols_];
   }
 
 
@@ -86,7 +91,7 @@ class GridRangeQuery
     while (Unlerp(start, end, current_point) < 1.0) {
       int i, j;
       std::tie(i, j) = GridCoordinates(current_point);
-      items_[i + j * num_rows_].push_back(edgeid);
+      ItemsInCell(i, j).push_back(edgeid);
 
       auto intersects = CellLineSegmentIntersections(i, j, LineSegment(current_point, end));
 
@@ -109,8 +114,26 @@ class GridRangeQuery
 
 
   // Query all edges that intersects with the range
-  std::vector<GraphId> Query(const BoundingBox& range) const {
-    return {};
+  std::set<GraphId> Query(const BoundingBox& range) const {
+    std::set<GraphId> results;
+
+    int mini, minj, maxi, maxj;
+    std::tie(mini, minj) = GridCoordinates({range.minx(), range.miny()});
+    std::tie(maxi, maxj) = GridCoordinates({range.maxx(), range.maxy()});
+
+    mini = std::max(0, std::min(mini, num_cols_));
+    maxi = std::max(0, std::min(maxi, num_cols_));
+    minj = std::max(0, std::min(minj, num_rows_));
+    maxj = std::max(0, std::min(maxj, num_rows_));
+
+    for (int i = mini; i < maxi; ++i) {
+      for (int j = minj; j < maxj; ++j) {
+        auto items = ItemsInCell(i, j);
+        results.insert(items.begin(), items.end());
+      }
+    }
+
+    return results;
   }
 
 
@@ -148,8 +171,8 @@ class GridRangeQuery
   BoundingBox bbox_;
   float cell_width_;
   float cell_height_;
-  size_t num_rows_;
-  size_t num_cols_;
+  int num_rows_;
+  int num_cols_;
   std::vector<std::vector<GraphId> > items_;
 };
 
@@ -167,6 +190,7 @@ void TestGridTools()
   assert(intersects[0].x() == 3 && intersects[0].y() == 3.5);
 }
 
+
 void TestAddLineSegment()
 {
   BoundingBox bbox(0, 0, 100, 100);
@@ -177,15 +201,23 @@ void TestAddLineSegment()
   assert(items23.size() == 1);
   auto items53 = grid.ItemsInCell(5, 3);
   assert(items53.size() == 1);
+  auto items88 = grid.ItemsInCell(8, 8);
+  assert(items88.empty());
+}
 
 
-  // auto edges = grid.Query(BoundingBox(0, 0, 0.5, 0.5));
-  // assert(edges.size() == 1 && edges[0] == 0);
+void TestQuery()
+{
+  BoundingBox bbox(0, 0, 100, 100);
+  GridRangeQuery grid(bbox, 100u, 100u);
 
-  // edges = grid.Query(BoundingBox(0.6, 0.6, 1, 1));
-  // assert(edges.empty());
+  grid.AddLineSegment(0, LineSegment({2.5, 3.5}, {10, 3.5}));
 
-  // TODO more tests
+  auto items = grid.Query(BoundingBox(2, 2, 5, 5));
+  assert(items.size() == 1 && items.find(0) != items.end());
+
+  items = grid.Query(BoundingBox(10, 10, 20, 20));
+  assert(items.empty());
 }
 
 
@@ -193,5 +225,6 @@ int main(int argc, char *argv[])
 {
   TestGridTools();
   TestAddLineSegment();
+  TestQuery();
   return 0;
 }
