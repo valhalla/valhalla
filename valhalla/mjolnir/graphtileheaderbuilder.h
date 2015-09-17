@@ -89,12 +89,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_departurecount(const uint32_t departures);
 
   /**
-   * Sets the number of transit trips in this tile.
-   * @param  trips  The number of transit trips.
-   */
-  void set_tripcount(const uint32_t trips);
-
-  /**
    * Sets the number of transit stops in this tile.
    * @param  stops  The number of transit stops.
    */

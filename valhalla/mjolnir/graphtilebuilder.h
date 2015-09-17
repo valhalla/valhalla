@@ -339,9 +339,6 @@ class GraphTileBuilder : public baldr::GraphTile {
   // departure time
   std::vector<baldr::TransitDeparture> departure_builder_;
 
-  // Transit trips. Sorted by trip Id.
-  std::vector<baldr::TransitTrip> trip_builder_;
-
   // Transit stops. Sorted by stop Id.
   std::vector<baldr::TransitStop> stop_builder_;
 

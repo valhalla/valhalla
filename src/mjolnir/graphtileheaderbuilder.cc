@@ -72,11 +72,6 @@ void GraphTileHeaderBuilder::set_departurecount(const uint32_t departures) {
   transit1_.departurecount = departures;
 }
 
-// Sets the number of transit trips in this tile.
-void GraphTileHeaderBuilder::set_tripcount(const uint32_t trips) {
-  transit1_.tripcount = trips;
-}
-
 // Sets the number of transit stops in this tile.
 void GraphTileHeaderBuilder::set_stopcount(const uint32_t stops) {
   transit1_.stopcount = stops;

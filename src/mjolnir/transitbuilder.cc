@@ -336,14 +336,15 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       dep.shapeid = 0;
       dep.blockid = 0;
 
-      // Remove? Bad?
-      dep.service = dep.trip; //trip key will work for service key.
-
       const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
       if (except_dates && !except_dates->empty())
         dep.has_subtractions = true;
       else
         dep.has_subtractions = false;
+
+      dep.service = 0;
+      if (dep.has_subtractions)
+        dep.service = dep.trip; //trip key will work for service key.
 
       //wheelchair_accessible
       //short_name
@@ -418,21 +419,7 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
         }
       }
 
-      const auto& trip = trip_routes.find(dep.trip);
-      //Add the trips.
-      if (trip == trip_routes.end()) {
-
-        std::string tl_tripid = stop_pairs.second.get<std::string>("trip", "");
-        std::string shortname = stop_pairs.second.get<std::string>("trip_short_name", "");
-
-        // Add names and create transit trip
-        TransitTrip trip(dep.trip, dep.route, tl_tripid.c_str(),
-                         tilebuilder.AddName(shortname == "null" ? "" : shortname),
-                         tilebuilder.AddName(headsign));
-        tilebuilder.AddTransitTrip(trip);
-
-        trip_routes[dep.trip] = dep.route;
-      }
+      trip_routes[dep.trip] = dep.route;
 
       const auto& calendar = calendar_exceptions.find(dep.trip);
       if (calendar == calendar_exceptions.end()) {
@@ -519,14 +506,14 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
 
       // Add names and create the transit route
       // Remove agency?
-      TransitRoute route(routeid, 0, tl_routeid.c_str(),
+      TransitRoute route(routeid, tl_routeid.c_str(),
                          tilebuilder.AddName(shortname == "null" ? "" : shortname),
                          tilebuilder.AddName(longname == "null" ? "" : longname),
                          tilebuilder.AddName(desc == "null" ? "" : desc));
       tilebuilder.AddTransitRoute(route);
 
-     // if (routeid == 22)
-     //   std::cout << shortname << " " << longname << std::endl;
+      if (routeid == 56)
+         std::cout << shortname << " " << longname << std::endl;
 
       n++;
 
