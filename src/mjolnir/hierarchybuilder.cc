@@ -533,6 +533,9 @@ void FormTilesInNewLevel(
       node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                 admin.country_iso(), admin.state_iso(),
                                                 admin.start_dst(), admin.end_dst()));
+
+      node.set_timezone(baseni.timezone());
+
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       std::vector<DirectedEdgeBuilder> directededges;

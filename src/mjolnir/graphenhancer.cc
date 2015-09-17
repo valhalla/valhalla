@@ -33,6 +33,7 @@
 #include <valhalla/baldr/streetnames_factory.h>
 #include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
@@ -557,6 +558,128 @@ uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys
   return index;
 }
 
+bool TileHasOneTimeZone(sqlite3 *db_handle, const AABB2<PointLL>& aabb,
+                        const std::vector<std::string>& regions, uint32_t& idx) {
+
+  idx = 0;
+
+  if (!db_handle)
+    return false;
+
+  sqlite3_stmt *stmt = 0;
+  uint32_t ret;
+  char *err_msg = nullptr;
+  uint32_t result = 0;
+  std::string tz_id = "";
+
+  std::string sql = "select TZID from tz_world where ";
+  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + ")) ";
+  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+  sql += "'tz_world' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + "));";
+
+  uint32_t count = 0;
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK) {
+    result = sqlite3_step(stmt);
+
+    if (result != SQLITE_ROW)
+      return false;
+
+    while (result == SQLITE_ROW) {
+
+      if (count == 1) { //bail
+
+        if (stmt) {
+          sqlite3_finalize(stmt);
+          stmt = 0;
+        }
+        idx = 0;
+        return false;
+      }
+
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+        tz_id = (char*)sqlite3_column_text(stmt, 0);
+      else if (stmt) {
+        sqlite3_finalize(stmt);
+        stmt = 0;
+        return false;
+      }
+      count++;
+      result = sqlite3_step(stmt);
+    }
+  } else return false;
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+
+  if (tz_id.empty())
+    return false;
+
+  std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
+  if (it == regions.end())
+     return false;
+  idx = std::distance(regions.begin(),it);
+  return true;
+}
+
+uint32_t GetTimeZoneIdx(sqlite3 *db_handle, const PointLL& pt, const std::vector<std::string>& regions) {
+
+  if (!db_handle)
+    return 0;
+
+  sqlite3_stmt *stmt = 0;
+  uint32_t ret;
+  char *err_msg = nullptr;
+  uint32_t result = 0;
+  std::string tz_id = "";
+
+  std::string sql = "select TZID from tz_world where ST_Contains(geom, MakePoint(";
+  sql += std::to_string(pt.x()) + ", " + std::to_string(pt.y());
+  sql += ")) and tz_world.ROWID IN (SELECT rowid FROM idx_tz_world_geom WHERE xmin <= ";
+  sql += std::to_string(pt.x()) + " AND xmax >= " + std::to_string(pt.x());
+  sql += " AND ymin <= " + std::to_string(pt.y()) + " AND ymax >= ";
+  sql += std::to_string(pt.y()) + ") limit 1;";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK) {
+    result = sqlite3_step(stmt);
+
+    if (result != SQLITE_ROW)
+      return 0;
+
+    while (result == SQLITE_ROW) {
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+        tz_id = (char*)sqlite3_column_text(stmt, 0);
+      else if (stmt) {
+        sqlite3_finalize(stmt);
+        stmt = 0;
+        return 0;
+      }
+      result = sqlite3_step(stmt);
+    }
+  } else return 0;
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+
+  if (tz_id.empty())
+    return 0;
+
+  std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
+  if (it == regions.end())
+     return 0;
+  uint32_t idx = std::distance(regions.begin(),it);
+  return idx;
+}
+
 std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
                                                              const AABB2<PointLL>& aabb, GraphTileBuilder& tilebuilder) {
   std::unordered_map<uint32_t,multi_polygon_type> polys;
@@ -921,39 +1044,76 @@ void enhance(const boost::property_tree::ptree& pt,
              boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue, std::mutex& lock,
              std::promise<enhancer_stats>& result) {
+
+  boost::property_tree::ptree prop = pt.get_child("admin");
   // Initialize the admin DB (if it exists)
-  std::string dir = pt.get<std::string>("admin_dir");
-  std::string db_name = pt.get<std::string>("db_name");
+  std::string dir = prop.get<std::string>("admin_dir");
+  std::string db_name = prop.get<std::string>("db_name");
   std::string database = dir + "/" +  db_name;
-  sqlite3 *db_handle = nullptr;
+  sqlite3 *admin_db_handle = nullptr;
   if (boost::filesystem::exists(database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
+    uint32_t ret = sqlite3_open_v2(database.c_str(), &admin_db_handle,
                         SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      db_handle = nullptr;
+      sqlite3_close(admin_db_handle);
+      admin_db_handle = nullptr;
       return;
     }
 
     // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
+    sqlite3_enable_load_extension(admin_db_handle, 1);
     sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
+    ret = sqlite3_exec(admin_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
     if (ret != SQLITE_OK) {
       LOG_ERROR("load_extension() error: " + std::string(err_msg));
       sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
+      sqlite3_close(admin_db_handle);
       return;
     }
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
     LOG_WARN("Admin db " + database + " not found.  Not saving admin information.");
+
+  prop = pt.get_child("timezone");
+  // Initialize the tz DB (if it exists)
+  dir = prop.get<std::string>("timezone_dir");
+  db_name = prop.get<std::string>("db_name");
+  database = dir + "/" +  db_name;
+  sqlite3 *tz_db_handle = nullptr;
+  if (boost::filesystem::exists(database)) {
+    spatialite_init(0);
+    sqlite3_stmt* stmt = 0;
+    char* err_msg = nullptr;
+    std::string sql;
+    uint32_t ret = sqlite3_open_v2(database.c_str(), &tz_db_handle,
+                        SQLITE_OPEN_READONLY, nullptr);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("cannot open " + database);
+      sqlite3_close(tz_db_handle);
+      admin_db_handle = nullptr;
+      return;
+    }
+
+    // loading SpatiaLite as an extension
+    sqlite3_enable_load_extension(tz_db_handle, 1);
+    sql = "SELECT load_extension('libspatialite.so')";
+    ret = sqlite3_exec(tz_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("load_extension() error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(tz_db_handle);
+      return;
+    }
+    LOG_INFO("SpatiaLite loaded as an extension");
+  }
+  else
+    LOG_WARN("Time zone db " + database + " not found.  Not saving time zone information.");
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -965,6 +1125,8 @@ void enhance(const boost::property_tree::ptree& pt,
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   lock.unlock();
+
+  const std::vector<std::string> regions = DateTime::get_region_list();
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -1003,13 +1165,19 @@ void enhance(const boost::property_tree::ptree& pt,
     // Get the admin polygons. If only one exists for the tile check if the
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
-    if (db_handle) {
-      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id),
+    if (admin_db_handle) {
+      polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
                            tilebuilder);
       if (polys.size() == 1) {
         // TODO - check if tile bounding box is entirely inside the polygon...
         tile_within_one_admin = true;
       }
+    }
+
+    bool tile_within_one_tz = false;
+    uint32_t time_zone_idx = 0;
+    if (tz_db_handle) {
+      tile_within_one_tz = TileHasOneTimeZone(tz_db_handle, tiles.TileBounds(id), regions, time_zone_idx);
     }
 
     // First pass - update links (set use to ramp or turn channel) and
@@ -1070,7 +1238,13 @@ void enhance(const boost::property_tree::ptree& pt,
                     GetAdminId(polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
 
-      // TODO - timezone
+      // Set the time zone index
+      if (tile_within_one_tz)
+        nodeinfo.set_timezone(time_zone_idx);
+      else {
+        uint32_t tz_index = GetTimeZoneIdx(tz_db_handle, nodeinfo.latlng(), regions);
+        nodeinfo.set_timezone(tz_index);
+      }
 
       // Set the country code
       std::string country_code = "";
@@ -1200,8 +1374,11 @@ void enhance(const boost::property_tree::ptree& pt,
     lock.unlock();
   }
 
-  if (db_handle)
-    sqlite3_close (db_handle);
+  if (admin_db_handle)
+    sqlite3_close (admin_db_handle);
+
+  if (tz_db_handle)
+    sqlite3_close (tz_db_handle);
 
   // Send back the statistics
   result.set_value(stats);
@@ -1247,7 +1424,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
-                 std::ref(pt.get_child("mjolnir.admin")),
+                 std::ref(pt.get_child("mjolnir")),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
   }
