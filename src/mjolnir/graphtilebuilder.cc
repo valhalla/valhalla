@@ -55,11 +55,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     departure_builder_.emplace_back(std::move(departures_[i]));
     text_offsets.insert(departures_[i].headsign_offset());
   }
-  for (uint32_t i = 0; i < header_->tripcount(); i++) {
-    trip_builder_.emplace_back(std::move(transit_trips_[i]));
-    text_offsets.insert(transit_trips_[i].short_name_offset());
-    text_offsets.insert(transit_trips_[i].headsign_offset());
-  }
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     stop_builder_.emplace_back(std::move(transit_stops_[i]));
     text_offsets.insert(transit_stops_[i].name_offset());
@@ -159,7 +154,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_departurecount(departure_builder_.size());
-    header_builder_.set_tripcount(trip_builder_.size());
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_transfercount(transfer_builder_.size());
@@ -171,7 +165,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
             + (departure_builder_.size() * sizeof(TransitDeparture))
-            + (trip_builder_.size() * sizeof(TransitTrip))
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (transfer_builder_.size() * sizeof(TransitTransfer))
@@ -198,11 +191,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     std::sort(departure_builder_.begin(), departure_builder_.end());
     file.write(reinterpret_cast<const char*>(&departure_builder_[0]),
                departure_builder_.size() * sizeof(TransitDeparture));
-
-    // Sort and write the transit trips
-    std::sort(trip_builder_.begin(), trip_builder_.end());
-    file.write(reinterpret_cast<const char*>(&trip_builder_[0]),
-               trip_builder_.size() * sizeof(TransitTrip));
 
     // Sort and write the transit stops
     std::sort(stop_builder_.begin(), stop_builder_.end());
@@ -291,10 +279,6 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&departures_[0]),
                hdr.departurecount() * sizeof(TransitDeparture));
 
-    // Write the existing transit trips
-    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
-               hdr.tripcount() * sizeof(TransitTrip));
-
     // Write the existing transit stops
     file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
                hdr.stopcount() * sizeof(TransitStop));
@@ -366,10 +350,6 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
                hdr.departurecount() * sizeof(TransitDeparture));
-
-    // Write the existing transit trips
-    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
-               hdr.tripcount() * sizeof(TransitTrip));
 
     // Write the existing transit stops
     file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
@@ -445,11 +425,6 @@ void GraphTileBuilder::ClearDirectedEdges() {
 // Add a transit departure.
 void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
   departure_builder_.emplace_back(std::move(departure));
-}
-
-// Add a transit trip.
-void GraphTileBuilder::AddTransitTrip(const TransitTrip& trip) {
-  trip_builder_.emplace_back(std::move(trip));
 }
 
 // Add a transit stop.
