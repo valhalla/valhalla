@@ -906,7 +906,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
     }
     shape.push_back(std::get<0>(closest));
     shape.push_back(stop.ll);
-    length = std::max(1.0f, PointLL::Length(shape));
+    length = std::max(1.0f, valhalla::midgard::length(shape));
 
     // Add connection to start node
     connection_edges.push_back({startnode, stop.graphid, stop.key, length, shape});
@@ -925,7 +925,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
       }
       shape2.push_back(std::get<0>(closest));
       shape2.push_back(stop.ll);
-      length2 = std::max(1.0f, PointLL::Length(shape2));
+      length2 = std::max(1.0f, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
       connection_edges.push_back({endnode, stop.graphid, stop.key, length2, shape2});

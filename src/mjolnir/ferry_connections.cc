@@ -3,7 +3,7 @@
 #include <queue>
 #include <unordered_map>
 
-#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -142,7 +142,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
       // Get cost - need the length and speed of the edge
       auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-      float cost = current_cost + (PointLL::Length(shape) * 3.6f) / w.speed();
+      float cost = current_cost + (valhalla::midgard::length(shape) * 3.6f) / w.speed();
 
       // Check if already in adj set - skip if cost is higher than prior path
       if (node_status[endnode].set == kTemporary) {
@@ -227,7 +227,7 @@ bool ShortFerry(const uint32_t node_index, node_bundle& bundle,
       auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
       if (bundle2.node.attributes_.non_ferry_edge) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
-        if (PointLL::Length(shape) < 2000.0f) {
+        if (valhalla::midgard::length(shape) < 2000.0f) {
           const OSMWay w = *ways[edge.first.wayindex_];
           wayid = w.way_id();
           short_edge = true;

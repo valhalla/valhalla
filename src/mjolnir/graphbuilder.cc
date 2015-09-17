@@ -537,7 +537,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               added);
 
             //length
-            auto length = PointLL::Length(shape);
+            auto length = valhalla::midgard::length(shape);
 
             //grade estimation
             uint32_t forward_grade = 6, reverse_grade = 6;
