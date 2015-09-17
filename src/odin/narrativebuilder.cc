@@ -31,14 +31,19 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalStartInstruction(maneuver)));
-
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
             std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units(),
-                    maneuver.HasBeginStreetNames())));
+                FormVerbalStartInstruction(maneuver,
+                                           directions_options.units())));
+
+        // Set verbal post transition instruction only if there are
+        // begin street names
+        if (maneuver.HasBeginStreetNames()) {
+          maneuver.set_verbal_post_transition_instruction(
+              std::move(
+                  FormVerbalPostTransitionInstruction(
+                      maneuver, directions_options.units(),
+                      maneuver.HasBeginStreetNames())));
+        }
         break;
       }
       case TripDirections_Maneuver_Type_kDestinationRight:
@@ -492,9 +497,11 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalStartInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  // 0 "Go <FormCardinalDirection>."
-  // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+    Maneuver& maneuver, DirectionsOptions_Units units,
+    uint32_t element_max_count, std::string delim) {
+  // 0 "Go <FormCardinalDirection> for <DISTANCE>."
+  // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
+  // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -509,21 +516,29 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
     street_names = maneuver.begin_street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   } else if (maneuver.HasStreetNames()) {
-    phrase_id = 1;
+    phrase_id = 2;
     street_names = maneuver.street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   }
 
   switch (phrase_id) {
-    // 1 "Go <FormCardinalDirection> on <STREET_NAMES|BEGIN_STREET_NAMES>."
+    // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
     case 1: {
       instruction = (boost::format("Go %1% on %2%.")
           % cardinal_direction % street_names).str();
       break;
     }
-    // 0 "Go <FormCardinalDirection>."
+    // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
+    case 2: {
+      instruction = (boost::format("Go %1% on %2% for %3%.")
+          % cardinal_direction % street_names % FormDistance(maneuver, units))
+          .str();
+      break;
+    }
+    // 0 "Go <FormCardinalDirection> for <DISTANCE>."
     default: {
-      instruction = (boost::format("Go %1%.") % cardinal_direction).str();
+      instruction = (boost::format("Go %1% for %2%.") % cardinal_direction
+          % FormDistance(maneuver, units)).str();
       break;
     }
   }

@@ -36,6 +36,7 @@ class NarrativeBuilder {
 
   static std::string FormVerbalStartInstruction(
       Maneuver& maneuver,
+      DirectionsOptions_Units units,
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
