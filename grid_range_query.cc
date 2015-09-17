@@ -50,19 +50,26 @@ class GridRangeQuery
     return bbox_;
   }
 
-  std::pair<int, int> GridCoordinates(const Point &p) {
+
+  std::pair<int, int> GridCoordinates(const Point &p) const {
     float dx = p.x() - bbox_.minx();
     float dy = p.y() - bbox_.miny();
     return { int(dx / cell_width_), int(dy / cell_height_) };
   }
 
-  BoundingBox CellBoundingBox(int i, int j) {
+
+  BoundingBox CellBoundingBox(int i, int j) const {
     return BoundingBox(
         bbox_.minx() + i * cell_width_,
         bbox_.miny() + j * cell_height_,
         bbox_.minx() + (i + 1) * cell_width_,
         bbox_.miny() + (j + 1) * cell_height_
       );
+  }
+
+
+  std::vector<GraphId> ItemsInCell(int i, int j) const {
+    return items_[i + j * num_rows_];
   }
 
 
@@ -75,10 +82,28 @@ class GridRangeQuery
     Point end = segment.b();
     Point current_point = start;
 
+    // Walk along start,end
     while (Unlerp(start, end, current_point) < 1.0) {
-      std::pair<int, int> current_cell = GridCoordinates(current_point);
-      items_[current_cell.first + current_cell.second * num_rows_].push_back(edgeid);
+      int i, j;
+      std::tie(i, j) = GridCoordinates(current_point);
+      items_[i + j * num_rows_].push_back(edgeid);
 
+      auto intersects = CellLineSegmentIntersections(i, j, LineSegment(current_point, end));
+
+      float bestt = 0;
+      Point bestp;
+      for (const auto &p : intersects) {
+        float t = Unlerp(current_point, end, p);
+        if (t > bestt) {
+          bestt = t;
+          bestp = p;
+        }
+      }
+      if (bestt > 0) {
+        current_point = bestp;
+      } else {
+        break;
+      }
     }
   }
 
@@ -90,7 +115,7 @@ class GridRangeQuery
 
 
   // Return t such that p = a + t * (b - a)
-  float Unlerp(const Point &a, const Point &b, const Point &p) {
+  float Unlerp(const Point &a, const Point &b, const Point &p) const {
     if (std::abs(b.x() - a.x()) > std::abs(b.y() - a.y())) {
       return (p.x() - a.x()) / (b.x() - a.x());
     } else {
@@ -100,7 +125,7 @@ class GridRangeQuery
 
 
   std::vector<Point>
-  CellLineSegmentIntersections(int i, int j, const LineSegment &segment) {
+  CellLineSegmentIntersections(int i, int j, const LineSegment &segment) const {
     std::vector<Point> intersects;
 
     BoundingBox cell = CellBoundingBox(i, j);
@@ -132,7 +157,6 @@ class GridRangeQuery
 void TestGridTools()
 {
   BoundingBox bbox(0, 0, 100, 100);
-  // Divide the grid into 100x100 cells
   GridRangeQuery grid(bbox, 100u, 100u);
 
   auto c = grid.GridCoordinates({12.5, 13.7});
@@ -143,14 +167,17 @@ void TestGridTools()
   assert(intersects[0].x() == 3 && intersects[0].y() == 3.5);
 }
 
-void TestGridRangeQuery()
+void TestAddLineSegment()
 {
   BoundingBox bbox(0, 0, 100, 100);
-  // Divide the grid into 100x100 cells
   GridRangeQuery grid(bbox, 100u, 100u);
 
+  grid.AddLineSegment(0, LineSegment({2.5, 3.5}, {10, 3.5}));
+  auto items23 = grid.ItemsInCell(2, 3);
+  assert(items23.size() == 1);
+  auto items53 = grid.ItemsInCell(5, 3);
+  assert(items53.size() == 1);
 
-  // grid.AddLineSegment(0, LineSegment({0, 0}, {0.5, 0.5}));
 
   // auto edges = grid.Query(BoundingBox(0, 0, 0.5, 0.5));
   // assert(edges.size() == 1 && edges[0] == 0);
@@ -165,6 +192,6 @@ void TestGridRangeQuery()
 int main(int argc, char *argv[])
 {
   TestGridTools();
-  TestGridRangeQuery();
+  TestAddLineSegment();
   return 0;
 }
