@@ -307,12 +307,12 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
 
 // Walk the shape and look for any empty tiles that the shape intersects
 void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
-                const Tiles<PointLL>& tiling, std::vector<PointLL>& shape,
+                const Tiles<PointLL>& tiling, std::list<PointLL>& shape,
                 DataQuality& stats) {
   // Walk the shape segments until we are outside
   uint32_t current_tile = tile1.tileid();
   auto shape1 = shape.begin();
-  auto shape2 = shape1 + 1;
+  auto shape2 = std::next(shape1);
   while (shape2 < shape.end()) {
     uint32_t next_tile = tiling.TileId(shape2->lat(), shape2->lng());
     if (next_tile != current_tile) {
@@ -370,8 +370,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::vector<PointLL> shape;
-    shape.reserve(count);
+    std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.lng, node.lat);
@@ -537,13 +536,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               added);
 
             //length
-            auto length = PointLL::Length(shape);
+            auto length = valhalla::midgard::length(shape);
 
             //grade estimation
             uint32_t forward_grade = 6, reverse_grade = 6;
             if(sample && !w.tunnel()) {
               //evenly sample the shape
-              std::vector<PointLL> resampled;
+              std::list<PointLL> resampled;
               //if it is really short or a bridge just do both ends
               auto interval = POSTING_INTERVAL;
               if(length < POSTING_INTERVAL * 3 || w.bridge()) {

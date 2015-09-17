@@ -501,7 +501,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
-                                       const std::vector<PointLL>& lls,
+                                       const std::list<PointLL>& lls,
                                        const std::vector<std::string>& names,
                                        bool& added) {
   // If we haven't yet added edge info for this edge tuple

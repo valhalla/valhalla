@@ -316,7 +316,7 @@ bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
 
 uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, const std::vector<PointLL>& shape, const float length, const bool forward) {
   //evenly sample the shape
-  std::vector<PointLL> resampled;
+  std::list<PointLL> resampled;
   //if it was really short just do both ends
   auto interval = POSTING_INTERVAL;
   if(length < POSTING_INTERVAL * 3) {
@@ -384,16 +384,10 @@ void AddShortcutEdges(
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
-      std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(
-          directededge->edgeinfo_offset());
-      std::vector<PointLL> shape;
-      if (directededge->forward()) {
-        shape = edgeinfo->shape();
-      } else {
-        // Reverse the shape
-        std::vector<PointLL> edgeshape = edgeinfo->shape();
-        shape.insert(shape.end(), edgeshape.rbegin(), edgeshape.rend());
-      }
+      std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      std::vector<PointLL> shape = edgeinfo->shape();
+      if (!directededge->forward())
+        std::reverse(shape.begin(), shape.end());
 
       // Get names - they apply over all edges of the shortcut
       std::vector<std::string> names = tile->GetNames(

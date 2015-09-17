@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
 #include <vector>
+#include <list>
 #include <string>
 #include <iostream>
 
@@ -44,7 +45,7 @@ class EdgeInfoBuilder {
    * @param  shape  List of lat,lng points describing the
    *                shape of the edge.
    */
-  void set_shape(const std::vector<PointLL>& shape);
+  void set_shape(const std::list<PointLL>& shape);
 
   /**
    * Set the encoded shape string.
