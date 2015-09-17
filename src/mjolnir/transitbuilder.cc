@@ -172,12 +172,12 @@ std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb) 
       index++;
     }
 
+    stop.key = s.second.get<uint32_t>("key", 0);
+
     //Hack for now.  transit land has a BoundBox bug.
     if (aabb.Contains(PointLL(lon,lat))) {
 
       stop.ll.Set(lon,lat);
-
-      stop.key = s.second.get<uint32_t>("key", 0);
       stop.name = s.second.get<std::string>("name", "");
 
       if (stop.key == 0) {
@@ -198,6 +198,8 @@ std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb) 
 
       stops.emplace_back(std::move(stop));
     }
+    else
+      LOG_ERROR("GetStops.  Stop should not be in tile: " + file + " " + std::to_string(stop.key));
   }
 
   return stops;
@@ -282,7 +284,7 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 std::vector<Departure> ProcessStopPairs(const std::string& file,
                                         std::unordered_map<uint32_t, uint32_t>& trip_routes,
                                         std::unordered_set<uint32_t>& calendar_exceptions,
-                                        const uint32_t stop_key,
+                                        const std::unordered_map<uint32_t, uint32_t>& stops,
                                         GraphTileBuilder& tilebuilder) {
 
   boost::property_tree::ptree pt;
@@ -296,16 +298,25 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
 
   try
   {
+
     for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
 
-      // needed?
       const uint32_t origin_key = stop_pairs.second.get<uint32_t>("origin_key", 0);
-      if (origin_key != stop_key)
+      const uint32_t dest_key = stop_pairs.second.get<uint32_t>("destination_key", 0);
+
+      if (origin_key == 0 || dest_key == 0) {
+        LOG_ERROR("No origin or destination key exists in file " + file);
         continue;
+      }
+
+      if (stops.find(origin_key) == stops.end() || stops.find(dest_key) == stops.end()) {
+        LOG_ERROR("No origin_key or destination_key not found in stops.  File: " + file);
+        continue;
+      }
 
       Departure dep;
       dep.orig_stop = origin_key;
-      dep.dest_stop = stop_pairs.second.get<uint32_t>("destination_key", 0);
+      dep.dest_stop = dest_key;
       dep.route = stop_pairs.second.get<uint32_t>("route_key", 0);
       dep.trip = stop_pairs.second.get<uint32_t>("trip_key", 0);
 
@@ -324,20 +335,34 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       //TODO
       dep.shapeid = 0;
       dep.blockid = 0;
+
+      // Remove? Bad?
       dep.service = dep.trip; //trip key will work for service key.
-      dep.has_subtractions = false;
+
+      const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
+      if (except_dates && !except_dates->empty())
+        dep.has_subtractions = true;
+      else
+        dep.has_subtractions = false;
+
       //wheelchair_accessible
       //short_name
 
-      dep.dep_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("origin_departure_time", ""));
-      dep.arr_time = DateTime::seconds_from_midnight(stop_pairs.second.get<std::string>("destination_arrival_time", ""));
+      const std::string origin_time = stop_pairs.second.get<std::string>("origin_departure_time", "");
+      const std::string dest_time = stop_pairs.second.get<std::string>("destination_arrival_time", "");
+
+      if (origin_time.empty() || dest_time.empty())
+        continue;
+
+      dep.dep_time = DateTime::seconds_from_midnight(origin_time);
+      dep.arr_time = DateTime::seconds_from_midnight(dest_time);
       dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
       dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
 
       uint32_t index = 1;
       uint32_t dow_mask = kDOWNone;
 
-      for(auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
+      for(const auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
         bool dow = service_days.second.get_value<bool>();
 
         if (dow) {
@@ -372,16 +397,16 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
       dep.headsign = (headsign == "null" ? "" : headsign);
 
-      auto added_dates = stop_pairs.second.get_child_optional("service_added_dates");
+      const auto& added_dates = stop_pairs.second.get_child_optional("service_added_dates");
 
       if (added_dates && added_dates->empty())
         departures.emplace_back(std::move(dep));
-      else //do not move, must create additions for the departure. {
+      else //do not move, must create additions for the departure.
         departures.emplace_back(dep);
 
       //Add the additions.
       if (added_dates && !added_dates->empty()) {
-        for(auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
+        for(const auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
 
           std::string date = service_added_dates.second.get_value<std::string>();
 
@@ -412,11 +437,12 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       const auto& calendar = calendar_exceptions.find(dep.trip);
       if (calendar == calendar_exceptions.end()) {
 
-        for(auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
+        for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
 
           std::string date = service_except_dates.second.get_value<std::string>();
           uint32_t days = DateTime::days_from_pivot_date(date);
 
+          //Remove service?
           TransitCalendar calendar(dep.trip, days, CalendarExceptionType::kRemoved);
           tilebuilder.AddTransitCalendar(calendar);
 
@@ -426,7 +452,7 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
     }
   }
   catch (std::exception &e) {
-    LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
+    LOG_ERROR("ProcessStopPairs.  Exception in json file " + file);
   }
 
   return departures;
@@ -448,61 +474,69 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
 
   uint32_t n = 0;
   try {
-    // Iterate through all route keys
-    for (const auto& key : keys) {
-      // Skip (do not need): route_id, route_color, route_text_color, and
-      // route_url
-      for (const auto& routes : pt.get_child("routes")) {
 
-        uint32_t routeid = routes.second.get<uint32_t>("key", 0);
-        if (key != routeid)
-          continue;
+    for (const auto& routes : pt.get_child("routes")) {
 
-        std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
-        std::string shortname = routes.second.get<std::string>("name", "");
-        std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
-        std::string desc = routes.second.get<std::string>("tags.route_desc", "");
-        std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
-        uint32_t type = 0;
+      uint32_t routeid = routes.second.get<uint32_t>("key", 0);
 
-        if (vehicle_type == "tram")
-          type = 0;
-        else if (vehicle_type == "metro")
-          type = 1;
-        else if (vehicle_type == "rail")
-          type = 2;
-        else if (vehicle_type == "bus")
-          type = 3;
-        else if (vehicle_type == "ferry")
-          type = 4;
-        else if (vehicle_type == "cablecar")
-          type = 5;
-        else if (vehicle_type == "gondola")
-          type = 6;
-        else if (vehicle_type == "funicular")
-          type = 7;
-        else {
-          LOG_WARN("Unsupported vehicle_type: " + vehicle_type);
-          continue;
-        }
-
-        // Add names and create the transit route
-        // TODO:  Fix short name.
-        TransitRoute route(routeid, 0, tl_routeid.c_str(),
-                           tilebuilder.AddName(shortname == "null" ? "" : shortname),
-                           tilebuilder.AddName(longname == "null" ? "" : longname),
-                           tilebuilder.AddName(desc == "null" ? "" : desc));
-        tilebuilder.AddTransitRoute(route);
-        n++;
-
-        // Route type - need this to store in edge?
-        route_types[routeid] = type;
-        break;
+      if (routeid == 0) {
+        LOG_ERROR("Route key not found in file " + file);
+        continue;
       }
+
+      if (keys.find(routeid) == keys.end()) {
+        LOG_ERROR("No route_key not found route keys.  File: " + file + " route key: " + std::to_string(routeid));
+        continue;
+      }
+
+      std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
+      std::string shortname = routes.second.get<std::string>("name", "");
+      std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
+      std::string desc = routes.second.get<std::string>("tags.route_desc", "");
+      std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
+      uint32_t type = 0;
+
+      if (vehicle_type == "tram")
+        type = 0;
+      else if (vehicle_type == "metro")
+        type = 1;
+      else if (vehicle_type == "rail")
+        type = 2;
+      else if (vehicle_type == "bus")
+        type = 3;
+      else if (vehicle_type == "ferry")
+        type = 4;
+      else if (vehicle_type == "cablecar")
+        type = 5;
+      else if (vehicle_type == "gondola")
+        type = 6;
+      else if (vehicle_type == "funicular")
+        type = 7;
+      else {
+        LOG_WARN("Unsupported vehicle_type: " + vehicle_type);
+        continue;
+      }
+
+      // Add names and create the transit route
+      // Remove agency?
+      TransitRoute route(routeid, 0, tl_routeid.c_str(),
+                         tilebuilder.AddName(shortname == "null" ? "" : shortname),
+                         tilebuilder.AddName(longname == "null" ? "" : longname),
+                         tilebuilder.AddName(desc == "null" ? "" : desc));
+      tilebuilder.AddTransitRoute(route);
+
+     // if (routeid == 22)
+     //   std::cout << shortname << " " << longname << std::endl;
+
+      n++;
+
+      // Route type - need this to store in edge?
+      route_types[routeid] = type;
+      break;
     }
   }
   catch (std::exception &e) {
-    LOG_ERROR("Exception in json file " + file + " for transit.  " + e.what());
+    LOG_ERROR("AddRoutes.  Exception in json file " + file + " for transit.  " + e.what());
   }
 
   LOG_INFO("Added " + std::to_string(n) + " routes");
@@ -510,6 +544,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
   return route_types;
 }
 
+// Remove transfers?
 // Add transfers from a stop
 void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
                   GraphTileBuilder& tilebuilder) {
@@ -869,7 +904,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
            " done. New directed edge count = " + std::to_string(tilebuilder.directededges().size()));
 }
 
-void AddOSMConnection(Stop& stop, const GraphTile* tile,
+void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& tilehierarchy,
                       std::vector<OSMConnectionEdge>& connection_edges) {
   PointLL ll = stop.ll;
   uint64_t wayid = stop.way_id;
@@ -913,8 +948,10 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
     stop.conn_count = 0;
+    const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
     LOG_ERROR("No closest edge found for this stop: " + stop.name + " way Id = " +
-              std::to_string(wayid));
+              std::to_string(wayid) + " tile " + std::to_string(aabb.minx()) + ", " + std::to_string(aabb.miny()) + ", " +
+              std::to_string(aabb.maxx()) + ", " +  std::to_string(aabb.maxy()));
     return;
   }
 
@@ -1039,7 +1076,7 @@ void build(const boost::property_tree::ptree& config_pt,
       if (stop.graphid.Tile_Base() == tile_id) {
         // Add connections to the OSM network
         if (stop.parent == 0) {
-          AddOSMConnection(stop, tile, connection_edges);
+          AddOSMConnection(stop, tile, tile_hierarchy, connection_edges);
         }
       }
     }
@@ -1058,6 +1095,11 @@ void build(const boost::property_tree::ptree& config_pt,
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".json";
     const std::string file = transit_dir + file_name;
+
+    std::vector<Departure> departures = ProcessStopPairs(file, trip_routes,
+                                                         calendar_exceptions,
+                                                         stop_indexes, tilebuilder);
+    LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
     for (auto& stop : stops) {
       if (stop.graphid.Tile_Base() == tile_id) {
@@ -1078,13 +1120,6 @@ void build(const boost::property_tree::ptree& config_pt,
         }
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-        std::vector<Departure> departures = ProcessStopPairs(file, trip_routes,
-                                                             calendar_exceptions,
-                                                             stop.key, tilebuilder);
-
-        LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures for "
-          + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
-
         for (auto& dep : departures) {
           route_keys.insert(dep.route);
           trip_keys.insert(dep.trip);
