@@ -242,6 +242,11 @@ void TestAddLineSegment()
   auto items88 = grid.ItemsInCell(8, 8);
   assert(items88.empty());
 
+  grid.AddLineSegment(1, LineSegment({10, 3.5}, {2.5, 3.5}));
+  items23 = grid.ItemsInCell(2, 3);
+  assert(items23.size() == 2);
+
+
   grid.AddLineSegment(0, LineSegment({-10, -10}, {110, 110}));
   auto items50 = grid.ItemsInCell(50, 50);
   assert(items50.size() == 1);
