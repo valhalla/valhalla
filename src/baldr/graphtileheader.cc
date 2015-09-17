@@ -95,11 +95,6 @@ uint32_t GraphTileHeader::departurecount() const {
   return transit1_.departurecount;
 }
 
-// Gets the number of transit trips in this tile.
-uint32_t GraphTileHeader::tripcount() const {
-  return transit1_.tripcount;
-}
-
 // Gets the number of transit stops in this tile.
 uint32_t GraphTileHeader::stopcount() const {
   return transit1_.stopcount;

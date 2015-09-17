@@ -76,7 +76,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/transitroute.h \
 	valhalla/baldr/transitstop.h \
 	valhalla/baldr/transittransfer.h \
-	valhalla/baldr/transittrip.h \
 	valhalla/baldr/verbal_text_formatter.h \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
@@ -112,7 +111,6 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/transitroute.cc \
 	src/baldr/transitstop.cc \
 	src/baldr/transittransfer.cc \
-	src/baldr/transittrip.cc \
 	src/baldr/verbal_text_formatter.cc \
 	src/baldr/verbal_text_formatter_us.cc \
 	src/baldr/verbal_text_formatter_us_co.cc \

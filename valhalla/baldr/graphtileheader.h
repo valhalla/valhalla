@@ -202,7 +202,7 @@ class GraphTileHeader {
   // Number of transit departure records
   struct Transit1 {
     uint64_t departurecount : 24;
-    uint64_t tripcount      : 24;
+    uint64_t spare          : 24;
     uint64_t stopcount      : 16;
   };
   Transit1 transit1_;

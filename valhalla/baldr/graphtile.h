@@ -10,7 +10,6 @@
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/transittrip.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
@@ -192,15 +191,6 @@ class GraphTile {
    */
    const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
                                                const uint32_t tripid) const;
-
-  /**
-   * Get the transit trip given its trip Id.
-   * @param   tripid  Trip Id.
-   * @return  Returns a pointer to the transit trip information. Returns
-   *          nullptr if the trip is not found.
-   */
-  const TransitTrip* GetTransitTrip(const uint32_t tripid) const;
-
   /**
    * Get the transit stop given its stop Id.
    * @param   stopid  Stop Id.
@@ -272,9 +262,6 @@ class GraphTile {
   // Transit departures, many per index (indexed by directed edge index and
   // sorted by departure time)
   TransitDeparture* departures_;
-
-  // Transit trips (indexed by trip Id - unique)
-  TransitTrip* transit_trips_;
 
   // Transit stops (indexed by stop Id - unique)
   TransitStop* transit_stops_;

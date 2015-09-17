@@ -48,7 +48,6 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       departures_(nullptr),
-      transit_trips_(nullptr),
       transit_stops_(nullptr),
       transit_routes_(nullptr),
       transit_transfers_(nullptr),
@@ -106,10 +105,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    departures_ = reinterpret_cast<TransitDeparture*>(ptr);
    ptr += header_->departurecount() * sizeof(TransitDeparture);
 
-   // Set a pointer to the transit trip list
-   transit_trips_ = reinterpret_cast<TransitTrip*>(ptr);
-   ptr += header_->tripcount() * sizeof(TransitTrip);
-
    // Set a pointer to the transit stop list
    transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
    ptr += header_->stopcount() * sizeof(TransitStop);
@@ -128,7 +123,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
 LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
-         " Trips: " + std::to_string(header_->tripcount()) +
          " Stops: " + std::to_string(header_->stopcount()) +
          " Routes: " + std::to_string(header_->routecount()) +
          " Transfers: " + std::to_string(header_->transfercount()) +
@@ -534,34 +528,6 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
 
   LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
            " and tripid = " + std::to_string(tripid));
-  return nullptr;
-}
-
-// Get the transit trip given its trip Id.
-const TransitTrip* GraphTile::GetTransitTrip(const uint32_t tripid) const {
-  uint32_t count = header_->tripcount();
-  if (count == 0) {
-    return nullptr;
-  }
-
-  // Binary search - trip Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_trips_[mid].tripid() == tripid) {
-      return &transit_trips_[mid];
-    }
-    if (tripid < transit_trips_[mid].tripid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No trip found for tripid = " + std::to_string(tripid));
   return nullptr;
 }
 
