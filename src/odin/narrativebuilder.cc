@@ -84,13 +84,11 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalContinueInstruction(maneuver)));
-
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
             std::move(
-                FormVerbalPostTransitionInstruction(
-                    maneuver, directions_options.units())));
+                FormVerbalContinueInstruction(maneuver,
+                                              directions_options.units())));
+
+        // NOTE: No verbal post transition instruction
         break;
       }
       case TripDirections_Maneuver_Type_kSlightRight:
@@ -813,13 +811,25 @@ std::string NarrativeBuilder::FormVerbalAlertContinueInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
   //  "Continue"
   //  "Continue on <STREET_NAMES(1)>."
-  return FormVerbalContinueInstruction(maneuver, element_max_count, delim);
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  instruction += "Continue";
+
+  if (maneuver.HasStreetNames()) {
+    instruction += " on ";
+    instruction += maneuver.street_names().ToString(
+        element_max_count, delim, maneuver.verbal_formatter());
+  }
+
+  instruction += ".";
+  return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalContinueInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Continue"
-  //  "Continue on <STREET_NAMES(2)>."
+    Maneuver& maneuver, DirectionsOptions_Units units,
+    uint32_t element_max_count, std::string delim) {
+  //  "Continue for <DISTANCE>"
+  //  "Continue on <STREET_NAMES(2)> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -831,6 +841,8 @@ std::string NarrativeBuilder::FormVerbalContinueInstruction(
         element_max_count, delim, maneuver.verbal_formatter());
   }
 
+  instruction += " for ";
+  instruction += FormDistance(maneuver, units);
   instruction += ".";
   return instruction;
 }
