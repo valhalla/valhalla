@@ -78,13 +78,45 @@ class GridRangeQuery
   }
 
 
+  bool InteriorLineSegment(const LineSegment &segment, LineSegment &interior) {
+    Point a = segment.a();
+    Point b = segment.b();
+
+    auto intersects = BoundingBoxLineSegmentIntersections(bbox_, LineSegment(a, b));
+    if (bbox_.Contains(a)) intersects.push_back(a);
+    if (bbox_.Contains(b)) intersects.push_back(b);
+
+    float mint = 1, maxt = 0;
+    Point minp, maxp;
+    for (const auto &p : intersects) {
+      float t = Unlerp(a, b, p);
+      if (t < mint) {
+        mint = t;
+        minp = p;
+      }
+      if (t > maxt) {
+        maxt = t;
+        maxp = p;
+      }
+    }
+
+    if (mint < 1 && maxt > 0) {
+      interior = LineSegment(minp, maxp);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
   // Index a line segment into the grid
   void AddLineSegment(const GraphId edgeid, const LineSegment& segment) {
     // For now assume the segment is entirely inside the box
-    assert(bbox_.Contains(segment.a()) && bbox_.Contains(segment.b()));
+    LineSegment interior;
+    if (!InteriorLineSegment(segment, interior)) return;
 
-    Point start = segment.a();
-    Point end = segment.b();
+    Point start = interior.a();
+    Point end = interior.b();
     Point current_point = start;
 
     // Walk along start,end
@@ -149,13 +181,19 @@ class GridRangeQuery
 
   std::vector<Point>
   CellLineSegmentIntersections(int i, int j, const LineSegment &segment) const {
+    BoundingBox box = CellBoundingBox(i, j);
+    return BoundingBoxLineSegmentIntersections(box, segment);
+  }
+
+
+  std::vector<Point>
+  BoundingBoxLineSegmentIntersections(const BoundingBox &box, const LineSegment &segment) const {
     std::vector<Point> intersects;
 
-    BoundingBox cell = CellBoundingBox(i, j);
-    LineSegment e1({cell.minx(), cell.miny()}, {cell.maxx(), cell.miny()});
-    LineSegment e2({cell.maxx(), cell.miny()}, {cell.maxx(), cell.maxy()});
-    LineSegment e3({cell.maxx(), cell.maxy()}, {cell.minx(), cell.maxy()});
-    LineSegment e4({cell.minx(), cell.maxy()}, {cell.minx(), cell.miny()});
+    LineSegment e1({box.minx(), box.miny()}, {box.maxx(), box.miny()});
+    LineSegment e2({box.maxx(), box.miny()}, {box.maxx(), box.maxy()});
+    LineSegment e3({box.maxx(), box.maxy()}, {box.minx(), box.maxy()});
+    LineSegment e4({box.minx(), box.maxy()}, {box.minx(), box.miny()});
 
     Point intersect;
     if (segment.Intersect(e1, intersect)) intersects.push_back(intersect);
@@ -203,6 +241,10 @@ void TestAddLineSegment()
   assert(items53.size() == 1);
   auto items88 = grid.ItemsInCell(8, 8);
   assert(items88.empty());
+
+  grid.AddLineSegment(0, LineSegment({-10, -10}, {110, 110}));
+  auto items50 = grid.ItemsInCell(50, 50);
+  assert(items50.size() == 1);
 }
 
 
