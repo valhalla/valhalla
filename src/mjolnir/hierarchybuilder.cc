@@ -319,7 +319,7 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
   std::vector<PointLL> resampled;
   //if it was really short just do both ends
   auto interval = POSTING_INTERVAL;
-  if(length <= POSTING_INTERVAL) {
+  if(length < POSTING_INTERVAL * 3) {
     resampled = {shape.front(), shape.back()};
     interval = length;
   }

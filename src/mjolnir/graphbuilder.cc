@@ -546,7 +546,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
               std::vector<PointLL> resampled;
               //if it is really short or a bridge just do both ends
               auto interval = POSTING_INTERVAL;
-              if(length <= POSTING_INTERVAL || w.bridge()) {
+              if(length < POSTING_INTERVAL * 3 || w.bridge()) {
                 resampled = {shape.front(), shape.back()};
                 interval = length;
               }
