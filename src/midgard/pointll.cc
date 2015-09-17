@@ -71,16 +71,6 @@ float PointLL::Distance(const PointLL& ll2) const {
     return (float)(acos(cosb) * kRadEarthMeters);
 }
 
-// Compute the length of the polyline represented by a set of lat,lng points.
-// Avoids having to copy the points into a polyline.
-float PointLL::Length(const std::vector<PointLL>& pts) {
-  float length = 0.0f;
-  for (auto pt1 = pts.begin(), pt2 = pt1 + 1; pt2 < pts.end(); pt1++, pt2++) {
-    length+= pt1->Distance(*pt2);
-  }
-  return length;
-}
-
 // Calculates the curvature using this position and 2 others. Found by
 // computing the radius of the circle that circumscribes the 3 positions.
 float PointLL::Curvature(const PointLL& ll1, const PointLL& ll2) const {

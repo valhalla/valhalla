@@ -7,14 +7,20 @@
 #include <cmath>
 #include <stdlib.h>
 #include <sstream>
-#include <vector>
 #include <fstream>
 #include <algorithm>
+#include <vector>
+#include <list>
 #include <sys/stat.h>
 
 namespace {
+
 constexpr double POLYLINE_PRECISION = 1E6;
 constexpr double INV_POLYLINE_PRECISION = 1.0 / POLYLINE_PRECISION;
+constexpr double RAD_PER_METER  = 1.0 / 6378160.187;
+constexpr double RAD_PER_DEG = M_PI / 180.0;
+constexpr double DEG_PER_RAD = 180.0 / M_PI;
+
 }
 
 namespace valhalla {
@@ -27,14 +33,6 @@ int GetTime(const float length, const float speed) {
 uint32_t GetTurnDegree(const uint32_t from_heading, const uint32_t to_heading) {
   return (((to_heading - from_heading) + 360) % 360);
 }
-
-// TODO - do we really need these?
-/*float degrees_to_radians(const float d) {
- return d * kDegPerRad;
- }
- float radians_to_degrees(const float r) {
- return r * kRadPerDeg;
- }*/
 
 float rand01() {
   return (float)rand() / (float)RAND_MAX;
@@ -90,13 +88,7 @@ std::string encode(const container_t& points) {
 }
 
 template<class container_t>
-container_t decode(const std::string& encoded) {
-  //a place to keep the output
-  container_t output;
-  //based on the length of the string we can make a guess at how many points are in it
-  //as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
-  output.reserve(encoded.size() * .25f);
-
+void decode(const std::string& encoded, container_t& output) {
   //what byte are we looking at
   size_t i = 0;
 
@@ -128,23 +120,87 @@ container_t decode(const std::string& encoded) {
     last_lon = lon;
     last_lat = lat;
   }
-  return output;
+}
+
+//specialize for list
+template <>
+std::list<PointLL> decode<std::list<PointLL> >(const std::string& encoded) {
+  std::list<PointLL> l;
+  decode(encoded, l);
+  return l;
+}
+template <>
+std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string& encoded) {
+  std::list<std::pair<double,double> > l;
+  decode(encoded, l);
+  return l;
+}
+template <>
+std::list<Point2> decode<std::list<Point2> >(const std::string& encoded) {
+  std::list<Point2> l;
+  decode(encoded, l);
+  return l;
+}
+template <>
+std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string& encoded) {
+  std::list<std::pair<float,float> > l;
+  decode(encoded, l);
+  return l;
+}
+
+//specialize for vector with a preallocation
+//based on the length of the string we can make a guess at how many points are in it
+//as above we'll say each point uses 6 bytes, so we overshoot to a quarter of the size
+template <>
+std::vector<PointLL> decode<std::vector<PointLL> >(const std::string& encoded) {
+  std::vector<PointLL> v;
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
+template <>
+std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string& encoded) {
+  std::vector<std::pair<double,double> > v;
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
+template <>
+std::vector<Point2> decode<std::vector<Point2> >(const std::string& encoded) {
+  std::vector<Point2> v;
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
+}
+template <>
+std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string& encoded) {
+  std::vector<std::pair<float,float> > v;
+  v.reserve(encoded.size() * .25f);
+  decode(encoded, v);
+  return v;
 }
 
 //explicit instantiations, we should probably just move the implementation to the header so that
 //projects that depend on this library aren't limited in the instantiations made here
 template std::string encode<std::vector<PointLL> >(const std::vector<PointLL>&);
+template std::string encode<std::vector<std::pair<double,double> > >(const std::vector<std::pair<double,double> >&);
 template std::string encode<std::vector<Point2> >(const std::vector<Point2>&);
-template std::string encode<std::vector<std::pair<float, float> > >(
-    const std::vector<std::pair<float, float> >&);
-template std::string encode<std::vector<std::pair<double, double> > >(
-    const std::vector<std::pair<double, double> >&);
+template std::string encode<std::vector<std::pair<float,float> > >(const std::vector<std::pair<float,float> >&);
+
+template std::string encode<std::list<PointLL> >(const std::list<PointLL>&);
+template std::string encode<std::list<std::pair<double,double> > >(const std::list<std::pair<double,double> >&);
+template std::string encode<std::list<Point2> >(const std::list<Point2>&);
+template std::string encode<std::list<std::pair<float,float> > >(const std::list<std::pair<float,float> >&);
+
 template std::vector<PointLL> decode<std::vector<PointLL> >(const std::string&);
+template std::vector<std::pair<double,double> > decode<std::vector<std::pair<double,double> > >(const std::string&);
 template std::vector<Point2> decode<std::vector<Point2> >(const std::string&);
-template std::vector<std::pair<float, float> > decode<
-    std::vector<std::pair<float, float> > >(const std::string&);
-template std::vector<std::pair<double, double> > decode<
-    std::vector<std::pair<double, double> > >(const std::string&);
+template std::vector<std::pair<float,float> > decode<std::vector<std::pair<float,float> > >(const std::string&);
+
+template std::list<PointLL> decode<std::list<PointLL> >(const std::string&);
+template std::list<std::pair<double,double> > decode<std::list<std::pair<double,double> > >(const std::string&);
+template std::list<Point2> decode<std::list<Point2> >(const std::string&);
+template std::list<std::pair<float,float> > decode<std::list<std::pair<float,float> > >(const std::string&);
 
 memory_status::memory_status(const std::unordered_set<std::string> interest){
   //grab the vm stats from the file
@@ -188,59 +244,71 @@ std::ostream& operator<<(std::ostream& stream, const memory_status& s){
   return stream;
 }
 
-
-//TODO: this assumes that there is a linear relationship between distance on the sphere and
-//spherical coordinates, which is not the case for the x coordinate. this wont matter for small
-//distances...
-std::vector<PointLL> resample_spherical_polyline(const std::vector<PointLL>& polyline, float resolution) {
+/* This method makes use of several computations explained and demonstrated at:
+ * http://williams.best.vwh.net/avform.htm *
+ * We humbly bow to you sir!
+ */
+template <class container_t>
+container_t resample_spherical_polyline(const container_t& polyline, double resolution) {
   //start out with the first point
-  std::vector<PointLL> resampled;
+  container_t resampled;
   if(polyline.size() == 0)
     return resampled;
-  resampled.reserve(polyline.size());
-  resampled.push_back(polyline.front());
+  resampled.emplace_back(polyline.front());
+  if(polyline.size() == 1)
+    return resampled;
 
   //for each point
-  float remaining_dist = 0;
-  auto last = resampled.back();
-  for(auto p = polyline.cbegin() + 1; p != polyline.cend(); ++p) {
-    //get the appx distance of this segment
-    auto dist = DistanceApproximator::DistanceSquared(*p, *(p - 1));
-    dist = 1.f / FastInvSqrt(dist);
-    auto ratio = resolution / dist;
-    auto x_off = ratio * (p->first - (p - 1)->first);
-    auto y_off = ratio * (p->second - (p - 1)->second);
-
-    //if there was some left from the previous segment
-    if(remaining_dist > 0) {
-      //we can fit a point on this segment
-      if(remaining_dist < dist) {
-        auto remaining_ratio = remaining_dist / resolution;
-        resampled.emplace_back(last.first + x_off * remaining_ratio, last.second + y_off * remaining_ratio);
-        last = resampled.back();
-        dist -= remaining_dist;
-      }//we are swallowing this segment as well
-      else {
-        last = *p;
-        remaining_dist -= dist;
-        continue;
-      }
+  resolution *= RAD_PER_METER;
+  double remaining = resolution;
+  PointLL last = resampled.back();
+  for(auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
+    //radians
+    auto lon2 = p->first * -RAD_PER_DEG;
+    auto lat2 = p->second * RAD_PER_DEG;
+    //how much do we have left on this segment from where we are (in great arc radians)
+    //double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) / 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2) *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
+    auto d = acos(
+      sin(last.second * RAD_PER_DEG) * sin(lat2) +
+      cos(last.second * RAD_PER_DEG) * cos(lat2) *
+      cos(last.first * -RAD_PER_DEG - lon2)
+    );
+    //keep placing points while we can fit them
+    while(d > remaining) {
+      //some precomputed stuff
+      auto lon1 = last.first * -RAD_PER_DEG;
+      auto lat1 = last.second * RAD_PER_DEG;
+      auto sd = sin(d);
+      auto a = sin(d - remaining) / sd;
+      auto acs1 = a * cos(lat1);
+      auto b = sin(remaining) / sd;
+      auto bcs2 = b * cos(lat2);
+      //find the interpolated point along the arc
+      auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
+      auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
+      auto z = a * sin(lat1) + b * sin(lat2);
+      last.first = atan2(y, x) * -DEG_PER_RAD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      resampled.push_back(last);
+      //we just consumed a bit
+      d -= remaining;
+      //we need another bit
+      remaining = resolution;
     }
-
-    //while we can place a point on this segment
-    while(dist > resolution) {
-      //from the last point we got up to p is whats left so move next_distance along it
-      resampled.emplace_back(last.first + x_off, last.second + y_off);
-      last = resampled.back();
-      dist -= resolution;
-    }
-    //we are up to p on the polyline now
+    //we're going to the next point so consume whatever's left
+    remaining -= d;
     last = *p;
-    remaining_dist = resolution - dist;
   }
 
+  //TODO: do we want to let them know remaining?
+
+  //hand it back
   return resampled;
 }
+
+//explicit instantiations
+template std::vector<PointLL> resample_spherical_polyline<std::vector<PointLL> >(const std::vector<PointLL>&, double);
+template std::list<PointLL> resample_spherical_polyline<std::list<PointLL> >(const std::list<PointLL>&, double);
 
 }
 }

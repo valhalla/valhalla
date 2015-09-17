@@ -9,16 +9,13 @@ using namespace valhalla::midgard;
 
 namespace {
 
-using perc_t = double;
-using container_t = std::vector<std::pair<perc_t, perc_t> >;
+using container_t = std::vector<std::pair<double,double> >;
 
 bool appx_equal(const container_t& a, const container_t& b) {
   if(a.size() != b.size())
     return false;
   for(size_t i = 0; i < a.size(); ++i) {
-    const Point2& x = static_cast<const Point2&>(a[i]);
-    const Point2& y = static_cast<const Point2&>(b[i]);
-    if(!x.ApproximatelyEqual(y))
+    if(!equal(a[i].first, b[i].first) || !equal(a[i].second, b[i].second))
       return false;
   }
   return true;
@@ -59,11 +56,10 @@ void TestSimple() {
    * python -c "import random; import gpolyencode; x = [ [round(random.random() * 180 - 90, 5), round(random.random() * 360 - 180, 5)] for a in range(0, random.randint(1,100)) ]; p = gpolyencode.GPolyEncoder().encode(x)['points']; print; print 'do_pair(' + str(x).replace('[','{').replace(']','}') + ', \"' + repr(p)[1:-1] + '\");'; print"
    */
 
-  //check an easy case first just to be sure Point2/PointLL is working
+  //check an easy case first just to be sure its working
   auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}});
-  if(encoded != "gq`kkAny~opCvQnsE") {
-    throw std::runtime_error("Encoding of Point2/PointLL vector failed");
-  }
+  if(encoded != "gq`kkAny~opCvQnsE")
+    throw std::runtime_error("Expected: gq`kkAny~opCvQnsE but got: " + encoded);
 
   //note we are testing with higher precision to avoid truncation/roundoff errors just to make the test cases easier to generate
   do_pair({{41.37084, -5.03016}, {76.8342, 42.01251}}, "~o_rHola|mA{egvxA_kosbA");
