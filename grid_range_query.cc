@@ -1,10 +1,12 @@
 // -*- mode: c++ -*-
-// compile: [clang++ | g++] -Wall -std=c++11 grid_range_query.cc
+// compile: [c++ | g++] -Wall -std=c++11 grid_range_query.cc
 
 #include <algorithm>
 #include <tuple>
-#include <pair>
-
+#include <utility>
+#include <vector>
+#include <cmath>
+#include <cassert>
 
 using GraphId = uint32_t;
 using PointLL = std::pair<float, float>;  // longitude, latitude (i.e. x and y)
@@ -39,10 +41,12 @@ class GridRangeQuery
   // TODO more getters here
 
   // Index a line segment into the grid
-  virtual void AddLineSegment(const GraphId edgeid, const LineSegment& segment);
+  void AddLineSegment(const GraphId edgeid, const LineSegment& segment) {}
 
   // Query all edges that intersects with the range
-  virtual std::vector<GraphId> Query(const AABB2& range) const;
+  std::vector<GraphId> Query(const AABB2& range) const {
+    return {};
+  }
 
  private:
   AABB2 bbox_;
