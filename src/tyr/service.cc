@@ -366,6 +366,12 @@ namespace {
             loc->emplace("heading",static_cast<uint64_t>(location->heading()));
           if (!location->date_time().empty())
             loc->emplace("date_time",location->date_time());
+          if (location->has_side_of_street()) {
+            if (location->side_of_street() == TripDirections_Location_SideOfStreet_kLeft)
+              loc->emplace("side_of_street", std::string("left"));
+            else if (location->side_of_street() == TripDirections_Location_SideOfStreet_kRight)
+              loc->emplace("side_of_street", std::string("right"));
+          }
 
           //loc->emplace("sideOfStreet",location->side_of_street());
 
