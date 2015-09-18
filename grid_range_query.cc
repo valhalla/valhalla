@@ -108,6 +108,15 @@ class GridRangeQuery
     Point a = segment.a();
     Point b = segment.b();
 
+    if (a == b) {
+      if (bbox_.Contains(a)) {
+        interior = LineSegment(a, b);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
     auto intersects = BoundingBoxLineSegmentIntersections(bbox_, LineSegment(a, b));
     std::vector<Point> points;
     for (const auto &i : intersects) points.push_back(i.point);
@@ -130,6 +139,7 @@ class GridRangeQuery
     }
 
     if (mint < 1 && maxt > 0) {
+      assert(mint <= maxt);
       interior = LineSegment(minp, maxp);
       return true;
     } else {
@@ -146,9 +156,16 @@ class GridRangeQuery
 
     Point start = interior.a();
     Point end = interior.b();
+
     Point current_point = start;
     int i, j;
     std::tie(i, j) = GridCoordinates(current_point);
+
+    // Special case
+    if (start == end) {
+      ItemsInCell(i, j).push_back(edgeid);
+      return;
+    }
 
     // Walk along start,end
     while (Unlerp(start, end, current_point) < 1.0) {
@@ -261,6 +278,46 @@ void TestGridTools()
   auto intersects = grid.CellLineSegmentIntersections(2, 3, LineSegment({2.5, 3.5}, {10, 3.5}));
   assert(intersects.size() == 1);
   assert(intersects[0].point.x() == 3 && intersects[0].point.y() == 3.5);
+
+  LineSegment interior;
+  LineSegment segment;
+  bool ok;
+
+  segment = LineSegment({0, 0}, {100, 100});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(0, 0) && interior.b() == Point(100, 100));
+
+  segment = LineSegment({0, 0}, {50, 50});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(0, 0) && interior.b() == Point(50, 50));
+
+  segment = LineSegment({50, 50}, {150, 150});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(50, 50) && interior.b() == Point(100, 100));
+
+  segment = LineSegment({-50, -50}, {150, 150});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(0, 0) && interior.b() == Point(100, 100));
+
+  segment = LineSegment({100, 100}, {150, 150});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(!ok);
+
+  segment = LineSegment({120, 120}, {150, 150});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(!ok);
+
+  segment = LineSegment({20, 20}, {80, 80});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(20, 20) && interior.b() == Point(80, 80));
+
+  segment = LineSegment({20, 20}, {20, 20});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(ok && interior.a() == Point(20, 20) && interior.b() == Point(20, 20));
+
+  segment = LineSegment({200, 200}, {200, 200});
+  ok = grid.InteriorLineSegment(segment, interior);
+  assert(!ok);
 }
 
 
@@ -281,10 +338,13 @@ void TestAddLineSegment()
   auto items33 = grid.ItemsInCell(2, 3);
   assert(items33.size() == 2);
 
-
   grid.AddLineSegment(0, LineSegment({-10, -10}, {110, 110}));
   auto items50 = grid.ItemsInCell(50, 50);
   assert(items50.size() == 1);
+
+  auto old_item00_size = grid.ItemsInCell(0, 0).size();
+  grid.AddLineSegment(0, LineSegment({0.5, 0.5}, {0.5, 0.5}));
+  assert(grid.ItemsInCell(0, 0).size() == old_item00_size + 1);
 }
 
 
