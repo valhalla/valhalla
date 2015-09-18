@@ -137,16 +137,38 @@ class TimeDistanceMatrix : public PathAlgorithm {
   std::unordered_map<baldr::GraphId, std::vector<uint32_t>> dest_edges_;
 
   /**
+   * Sets the origin for a many to one time+distance matrix computation.
+   * @param  graphreader   Graph reader for accessing routing graph.
+   * @param  dest          Destination
+   * @param  costing       Costing method.
+   */
+  void SetOriginManyToOne(baldr::GraphReader& graphreader,
+                        const baldr::PathLocation& dest,
+                        const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
    * Add destinations.
+   * @param  graphreader   Graph reader for accessing routing graph.
+   * @param  dest_index    Index of the "destination" in the locations vector.
+   * @param  locations     List of locations.
+   * @param  costing       Costing method.
+   */
+  void SetDestinations(baldr::GraphReader& graphreader,
+                       const uint32_t dest_index,
+                       const std::vector<baldr::PathLocation>& locations,
+                       const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Set destinations for the many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin_index  Index of the origin in the locations vector.
    * @param  locations     List of locations.
    * @param  costing       Costing method.
    */
-  void SetDestinations(baldr::GraphReader& graphreader,
-                       const uint32_t origin_index,
-                       const std::vector<baldr::PathLocation>& locations,
-                       const std::shared_ptr<sif::DynamicCost>& costing);
+  void SetDestinationsManyToOne(baldr::GraphReader& graphreader,
+            const uint32_t origin_index,
+            const std::vector<baldr::PathLocation>& locations,
+            const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
