@@ -124,8 +124,6 @@ class AutoCost : public DynamicCost {
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
-   * Defaults to 0. Costing models that wish to include edge transition
-   * costs (i.e., intersection/turn costs) must override this method.
    * @param  idx   Directed edge local index
    * @param  node  Node (intersection) where transition occurs.
    * @param  opp_edge  Pointer to the opposing directed edge - this is the
