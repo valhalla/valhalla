@@ -281,14 +281,14 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 }
 
 // Get scheduled departures for a stop
-std::vector<Departure> ProcessStopPairs(const std::string& file,
-                                        std::unordered_map<uint32_t, uint32_t>& trip_routes,
-                                        std::unordered_set<uint32_t>& calendar_exceptions,
-                                        const std::unordered_map<uint32_t, uint32_t>& stops,
-                                        GraphTileBuilder& tilebuilder) {
+std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
+                                                              std::unordered_map<uint32_t, uint32_t>& trip_routes,
+                                                              std::unordered_multimap<uint32_t, std::string>& calendar_exceptions,
+                                                              const std::unordered_map<uint32_t, uint32_t>& stops,
+                                                              GraphTileBuilder& tilebuilder) {
 
   boost::property_tree::ptree pt;
-  std::vector<Departure> departures;
+  std::unordered_multimap<uint32_t, Departure> departures;
 
   // Make sure it exists
   if (boost::filesystem::exists(file))
@@ -337,14 +337,14 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       dep.blockid = 0;
 
       const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
-      if (except_dates && !except_dates->empty())
+      if (except_dates && !except_dates->empty()) {
         dep.has_subtractions = true;
-      else
-        dep.has_subtractions = false;
-
-      dep.service = 0;
-      if (dep.has_subtractions)
         dep.service = dep.trip; //trip key will work for service key.
+      }
+      else {
+        dep.has_subtractions = false;
+        dep.service = 0;
+      }
 
       //wheelchair_accessible
       //short_name
@@ -398,44 +398,50 @@ std::vector<Departure> ProcessStopPairs(const std::string& file,
       std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
       dep.headsign = (headsign == "null" ? "" : headsign);
 
+      trip_routes[dep.trip] = dep.route;
+
+      if (dep.has_subtractions) {
+        for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
+          std::string date = service_except_dates.second.get_value<std::string>();
+          bool found = false;
+          auto range = calendar_exceptions.equal_range(dep.trip);
+          for(auto id = range.first; id != range.second; ++id) {
+            if(id->second == date) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            uint32_t days = DateTime::days_from_pivot_date(date);
+            TransitCalendar calendar(dep.trip, days, CalendarExceptionType::kRemoved);
+            tilebuilder.AddTransitCalendar(calendar);
+
+            calendar_exceptions.emplace(dep.trip, date);
+          }
+        }
+      }
+
       const auto& added_dates = stop_pairs.second.get_child_optional("service_added_dates");
-
-      if (added_dates && added_dates->empty())
-        departures.emplace_back(std::move(dep));
-      else //do not move, must create additions for the departure.
-        departures.emplace_back(dep);
-
       //Add the additions.
       if (added_dates && !added_dates->empty()) {
+        //cant use std::move because there are additions.
+        departures.emplace(dep.orig_stop,dep);
+        //addition can't have a subtractions.
+        dep.has_subtractions = false;
+        dep.service = 0;
         for(const auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
 
           std::string date = service_added_dates.second.get_value<std::string>();
 
           uint32_t days = DateTime::days_from_pivot_date(date);
 
-          dep.start_date =  days;
-          dep.end_date =  days;
-          departures.emplace_back(dep);
+          dep.start_date = days;
+          dep.end_date = days;
+          //cant use std::move because this is an addition.
+          departures.emplace(dep.orig_stop,dep);
         }
       }
-
-      trip_routes[dep.trip] = dep.route;
-
-      const auto& calendar = calendar_exceptions.find(dep.trip);
-      if (calendar == calendar_exceptions.end()) {
-
-        for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
-
-          std::string date = service_except_dates.second.get_value<std::string>();
-          uint32_t days = DateTime::days_from_pivot_date(date);
-
-          //Remove service?
-          TransitCalendar calendar(dep.trip, days, CalendarExceptionType::kRemoved);
-          tilebuilder.AddTransitCalendar(calendar);
-
-          calendar_exceptions.insert(dep.trip);
-        }
-      }
+      else departures.emplace(dep.orig_stop,std::move(dep));
     }
   }
   catch (std::exception &e) {
@@ -511,22 +517,16 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
                          tilebuilder.AddName(longname == "null" ? "" : longname),
                          tilebuilder.AddName(desc == "null" ? "" : desc));
       tilebuilder.AddTransitRoute(route);
-
-      if (routeid == 56)
-         std::cout << shortname << " " << longname << std::endl;
-
       n++;
-
       // Route type - need this to store in edge?
       route_types[routeid] = type;
-      break;
     }
   }
   catch (std::exception &e) {
     LOG_ERROR("AddRoutes.  Exception in json file " + file + " for transit.  " + e.what());
   }
 
-  LOG_INFO("Added " + std::to_string(n) + " routes");
+  LOG_DEBUG("Added " + std::to_string(n) + " routes");
 
   return route_types;
 }
@@ -1032,7 +1032,7 @@ void build(const boost::property_tree::ptree& config_pt,
     n++;
   }
   std::unordered_map<uint32_t, uint32_t> trip_routes;
-  std::unordered_set<uint32_t> calendar_exceptions;
+  std::unordered_multimap<uint32_t, std::string> calendar_exceptions;
 
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
@@ -1083,9 +1083,10 @@ void build(const boost::property_tree::ptree& config_pt,
     file_name += ".json";
     const std::string file = transit_dir + file_name;
 
-    std::vector<Departure> departures = ProcessStopPairs(file, trip_routes,
-                                                         calendar_exceptions,
-                                                         stop_indexes, tilebuilder);
+    std::unordered_multimap<uint32_t, Departure> departures =
+        ProcessStopPairs(file, trip_routes,calendar_exceptions,stop_indexes,
+                         tilebuilder);
+
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
     for (auto& stop : stops) {
@@ -1107,7 +1108,9 @@ void build(const boost::property_tree::ptree& config_pt,
         }
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-        for (auto& dep : departures) {
+        auto range = departures.equal_range(stop.key);
+        for(auto key = range.first; key != range.second; ++key) {
+          Departure dep = key->second;
           route_keys.insert(dep.route);
           trip_keys.insert(dep.trip);
 
@@ -1160,13 +1163,12 @@ void build(const boost::property_tree::ptree& config_pt,
       }
     }
 
-    LOG_INFO("Added " + std::to_string(trip_routes.size()) + " trips");
+    LOG_DEBUG("Added " + std::to_string(trip_routes.size()) + " trips");
 
     // Add routes to the tile. Get map of route types.
     std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
                                                                    route_keys,
                                                                    tilebuilder);
-
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder, stop_edge_map, stops, connection_edges,
                stop_indexes, route_types);
@@ -1244,7 +1246,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished with " + std::to_string(all_stops.stops.size()) +
+  LOG_DEBUG("Finished with " + std::to_string(all_stops.stops.size()) +
              " stops in " + std::to_string(all_stops.tiles.size()) + " tiles");
 
   if (all_stops.tiles.size() == 0) {
