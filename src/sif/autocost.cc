@@ -31,6 +31,14 @@ constexpr float kTCCrossing         = 2.0f;
 constexpr float kTCUnfavorable      = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse          = 5.0f;
+
+// Turn costs based on side of street driving
+constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
+      kTCFavorable, kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
+      kTCUnfavorable, kTCSlight };
+constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCSlight,
+      kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
+      kTCFavorable, kTCSlight };
 }
 
 
@@ -122,6 +130,22 @@ class AutoCost : public DynamicCost {
                               const EdgeLabel& pred) const;
 
   /**
+   * Returns the cost to make the transition from the predecessor edge
+   * when using a reverse search (from destination towards the origin).
+   * @param  idx   Directed edge local index
+   * @param  node  Node (intersection) where transition occurs.
+   * @param  opp_edge  Pointer to the opposing directed edge - this is the
+   *                   "from" or predecessor edge in the transition.
+   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
+   *                        predecessor. This is the "to" edge.
+   * @return  Returns the cost and time (seconds)
+   */
+  virtual Cost TransitionCostReverse(const uint32_t idx,
+                              const baldr::NodeInfo* node,
+                              const baldr::DirectedEdge* opp_edge,
+                              const baldr::DirectedEdge* opp_pred_edge) const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the
@@ -157,16 +181,6 @@ class AutoCost : public DynamicCost {
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
-
-  /**
-   * Compute a turn cost based on the turn type, crossing flag,
-   * and whether right or left side of road driving.
-   * @param  turn_type  Turn type (see baldr/turn.h)
-   * @param  crossing   Crossing another road if true.
-   * @param  drive_on_right  Right hand side of road driving if true.
-   */
-  float TurnCost(const baldr::Turn::Type turn_type, const bool crossing,
-                 const bool drive_on_right) const;
 };
 
 
@@ -295,10 +309,70 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) *
-               TurnCost(edge->turntype(idx),
-                       edge->edge_to_right(idx) && edge->edge_to_left(idx),
-                       edge->drive_on_right());
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    } else {
+      turn_cost = (edge->drive_on_right()) ?
+          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    }
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
+  }
+
+  // Return cost (time and penalty)
+  return { seconds + penalty, seconds };
+}
+
+// Returns the cost to make the transition from the predecessor edge
+// when using a reverse search (from destination towards the origin).
+// pred is the opposing current edge in the reverse tree
+// edge is the opposing predecessor in the reverse tree
+Cost AutoCost::TransitionCostReverse(const uint32_t idx,
+                            const baldr::NodeInfo* node,
+                            const baldr::DirectedEdge* pred,
+                            const baldr::DirectedEdge* edge) const {
+  // Accumulate cost and penalty
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+
+  // Special cases with both time and penalty: country crossing,
+  // gate, toll booth
+  if (edge->ctry_crossing()) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  }
+  if (node->type() == NodeType::kGate) {
+    seconds += gate_cost_;
+  } else if (node->type() == NodeType::kTollBooth) {
+    seconds += tollbooth_cost_;
+    penalty += tollbooth_penalty_;
+  }
+
+  // Additional penalties without any time cost
+  if (!pred->destonly() && edge->destonly()) {
+    penalty += destination_only_penalty_;
+  }
+  if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
+    penalty += alley_penalty_;
+  }
+  if (!node->name_consistency(idx, edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
+  }
+
+  // Transition time = densityfactor * stopimpact * turncost
+  if (edge->stopimpact(idx) > 0) {
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    } else {
+      turn_cost = (edge->drive_on_right()) ?
+          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    }
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
   }
 
   // Return cost (time and penalty)
@@ -313,40 +387,6 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 // estimate is less than the least possible time along roads.
 float AutoCost::AStarCostFactor() const {
   return speedfactor_[kMaxSpeedKph];
-}
-
-// Compute a turn cost based on the turn type, crossing flag,
-// and whether right or left side of road driving.
-float AutoCost::TurnCost(const baldr::Turn::Type turn_type,
-                         const bool crossing,
-                         const bool drive_on_right) const {
-  if (crossing) {
-    return kTCCrossing;
-  }
-
-  switch (turn_type) {
-  case Turn::Type::kStraight:
-    return kTCStraight;
-
-  case Turn::Type::kSlightLeft:
-  case Turn::Type::kSlightRight:
-    return kTCSlight;
-
-  case Turn::Type::kRight:
-    return (drive_on_right) ? kTCFavorable : kTCUnfavorable;
-
-  case Turn::Type::kLeft:
-    return (drive_on_right) ? kTCUnfavorable : kTCFavorable;
-
-  case Turn::Type::kSharpRight:
-    return (drive_on_right) ? kTCFavorableSharp : kTCUnfavorableSharp;
-
-  case Turn::Type::kSharpLeft:
-    return (drive_on_right) ? kTCUnfavorableSharp : kTCFavorableSharp;
-
-  case Turn::Type::kReverse:
-    return kTCReverse;
-  }
 }
 
 cost_ptr_t CreateAutoCost(const boost::property_tree::ptree& config) {
