@@ -203,6 +203,7 @@ struct graph_callback : public OSMPBF::Callback {
     last_way_ = osmid;
 
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
+    loop_nodes_.clear();
     for (size_t i = 0; i < nodes.size(); ++i) {
       const auto& node = nodes[i];
       if(shape_.IsUsed(node)) {
@@ -214,6 +215,11 @@ struct graph_callback : public OSMPBF::Callback {
       }
       way_nodes_->push_back({{node}, ways_->size(), i});
       shape_.set(node);
+      // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
+      // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
+      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      if(inserted.second == false)
+        intersection_.set(nodes[i - inserted.first->second]); //TODO: update osmdata_.*_count?
     }
     intersection_.set(nodes.front());
     intersection_.set(nodes.back());
@@ -577,15 +583,9 @@ struct graph_callback : public OSMPBF::Callback {
     } else
       w.set_name_index(osmdata_.name_offset_map.index(name));
 
-    // If this way is a loop we can make our lives way easier if we simply split it up
-    // into two edges in the graph. If a problem is hard, avoid the problem!
-    if(nodes.front() == nodes.back()) {
-      intersection_.set(nodes[nodes.size()/2]);
-      //TODO: update osmdata_.*_count?
-      // Infer cul-de-sac if a road edge is a loop and is low classification.
-      if(w.use() == Use::kRoad && w.road_class() > RoadClass::kTertiary)
-        w.set_use(Use::kCuldesac);
-    }
+    // Infer cul-de-sac if a road edge is a loop and is low classification.
+    if(loop_nodes_.size() != nodes.size() && w.use() == Use::kRoad && w.road_class() > RoadClass::kTertiary)
+      w.set_use(Use::kCuldesac);
 
     // Add the way to the list
     ways_->push_back(w);
@@ -806,6 +806,7 @@ struct graph_callback : public OSMPBF::Callback {
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
+  std::unordered_map<uint64_t, size_t> loop_nodes_;
 };
 
 }
