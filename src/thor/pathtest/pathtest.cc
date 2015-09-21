@@ -574,6 +574,8 @@ int main(int argc, char *argv[]) {
     t2 = std::chrono::high_resolution_clock::now();
     msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+    LOG_INFO("Trip time in seconds = " + std::to_string(trip_directions.summary().time()));
+    LOG_INFO("Trip Length in meters = " + std::to_string(trip_directions.summary().length() * 1609.344f));
     data.setSuccess("success");
   } else {
     // Route was unsuccessful
@@ -603,10 +605,10 @@ int main(int argc, char *argv[]) {
   }
 
   // Set the arc distance. Convert to miles if needed
-   if (directions_options.units() == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
-     d1 *= kMilePerKm;
-   }
-   data.setArcDist(d1);
+  if (directions_options.units() == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+    d1 *= kMilePerKm;
+  }
+  data.setArcDist(d1);
 
   // Time all stages for the stats file: location processing,
   // path computation, trip path building, and directions

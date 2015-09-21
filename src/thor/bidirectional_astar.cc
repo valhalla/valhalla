@@ -243,9 +243,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
           continue;
         }
 
-       // Get cost. TODO - do we need to use opposing edge for EdgeCost?
+       // Get cost. Use opposing edge for EdgeCost.
        Cost newcost = pred2.cost() +
-              costing->EdgeCost(directededge, nodeinfo->density()) +
+              costing->EdgeCost(opp_edge, nodeinfo->density()) +
               costing->TransitionCostReverse(directededge->localedgeidx(),
                                              nodeinfo, opp_edge, opp_pred_edge);
 
