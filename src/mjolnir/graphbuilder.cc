@@ -347,7 +347,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
 
     // Increment
     shape1 = shape2;
-    std::next(shape2);
+    shape2 = std::next(shape2);
   }
 }
 
