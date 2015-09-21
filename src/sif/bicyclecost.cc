@@ -28,6 +28,14 @@ constexpr float kTCUnfavorable      = 2.0f;
 constexpr float kTCUnfavorableSharp = 2.5f;
 constexpr float kTCReverse          = 5.0f;
 
+// Turn costs based on side of street driving
+constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
+      kTCFavorable, kTCFavorableSharp, kTCReverse, kTCUnfavorableSharp,
+      kTCUnfavorable, kTCSlight };
+constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCSlight,
+      kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
+      kTCFavorable, kTCSlight };
+
 // Cost of traversing an edge with steps. Make this high but not impassible.
 // Equal to about 5 minutes (penalty) but fixed time of 30 seconds.
 const Cost kBicycleStepsCost = { 300.0f, 30.0f };
@@ -44,6 +52,18 @@ constexpr float kDefaultCyclingSpeed[] = {
 // Maximum is just above the fastest average speed in Tour de France time trial
 constexpr float kMinCyclingSpeed = 5.0f;
 constexpr float kMaxCyclingSpeed = 60.0f;
+
+// Speed factors based on surface types (defined for each bicycle type).
+// These values determine the percentage by which speed us reduced for
+// each surface type. (0 values indicate unusable surface types).
+constexpr float kRoadSurfaceSpeedFactors[] =
+        { 1.0f, 1.0f, 0.9f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f };
+constexpr float kHybridSurfaceSpeedFactors[] =
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.5f, 0.0f, 0.0f, 0.0f };
+constexpr float kCrossSurfaceSpeedFactors[] =
+        { 1.0f, 1.0f, 1.0f, 0.8f, 0.7f, 0.5f, 0.0f, 0.0f };
+constexpr float kMountainSurfaceSpeedFactors[] =
+        { 1.0f, 1.0f, 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 0.0f };
 
 // User propensity to use roads. Range of values from 0 (avoid roads - try to
 // stay on cycleways and paths) to 1 (totally comfortable riding on roads).
@@ -248,6 +268,12 @@ class BicycleCost : public DynamicCost {
   // Bicycle type
   BicycleType bicycletype_;
 
+  // Minimal surface type usable by the bicycle type
+  Surface minimal_allowed_surface_;
+
+  // Surface speed factors
+  const float* surface_speed_factor_;
+
   // A measure of willingness to ride with traffic. Ranges from 0-1 with
   // 0 being not willing at all and 1 being totally comfortable. This factor
   // determines how much cycle lanes and paths are preferred over roads (if
@@ -277,13 +303,6 @@ class BicycleCost : public DynamicCost {
    */
   float TurnCost(const baldr::Turn::Type turn_type, const bool crossing,
                  const bool drive_on_right) const;
-
-  /**
-   * Update speed based on road surface and bicycle type.
-   * @param  surface  Road surface type.
-   * @return  Returns an updated speed to use on this road surface.
-   */
-  float UpdateSpeed(const Surface surface) const;
 
  public:
   /**
@@ -352,6 +371,23 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   uint32_t t = static_cast<uint32_t>(bicycletype_);
   speed_ = pt.get<float>("cycling_speed", kDefaultCyclingSpeed[t]);
 
+  // Set the minimal surface type usable by the bicycle type and the
+  // surface speed factors.
+  if (bicycletype_ == BicycleType::kRoad) {
+    minimal_allowed_surface_ = Surface::kCompacted;
+    surface_speed_factor_ = kRoadSurfaceSpeedFactors;
+  } else if (bicycletype_ == BicycleType::kHybrid) {
+    minimal_allowed_surface_ =  Surface::kDirt;
+    surface_speed_factor_ = kHybridSurfaceSpeedFactors;
+  } else if (bicycletype_ == BicycleType::kCross) {
+    minimal_allowed_surface_ =  Surface::kGravel;
+    surface_speed_factor_ = kCrossSurfaceSpeedFactors;
+  } else {
+    // Mountain - allow all but impassable
+    minimal_allowed_surface_ =  Surface::kPath;
+    surface_speed_factor_ = kMountainSurfaceSpeedFactors;
+  }
+
   // Validate speed (make sure it is in the accepted range)
   if (speed_ < kMinCyclingSpeed || speed_ > kMaxCyclingSpeed) {
     LOG_WARN("Outside valid cycling speed range " + std::to_string(speed_) +
@@ -410,14 +446,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  if (bicycletype_ == BicycleType::kRoad)
-    return edge->surface() <= Surface::kCompacted;
-  else if (bicycletype_ == BicycleType::kHybrid)
-      return edge->surface() <= Surface::kDirt;
-  else if (bicycletype_ == BicycleType::kCross)
-    return edge->surface() <= Surface::kGravel;
-  else // if (bicycletype_ == BicycleType::kMountain)
-    return edge->surface() <= Surface::kPath;   // Allow all but impassable
+  return edge->surface() <= minimal_allowed_surface_;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -436,14 +465,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   // Prohibit certain roads based on surface type and bicycle type
-  if (bicycletype_ == BicycleType::kRoad)
-    return opp_edge->surface() <= Surface::kCompacted;
-  else if (bicycletype_ == BicycleType::kHybrid)
-      return opp_edge->surface() <= Surface::kDirt;
-  else if (bicycletype_ == BicycleType::kCross)
-    return opp_edge->surface() <= Surface::kGravel;
-  else // if (bicycletype_ == BicycleType::kMountain)
-    return opp_edge->surface() <= Surface::kPath; // Allow all but impassable
+  return opp_edge->surface() <= minimal_allowed_surface_;
 }
 
 // Check if access is allowed at the specified node.
@@ -463,7 +485,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Update speed based on surface factor. Lower speed for rougher surfaces
   // depending on the bicycle type. Modulate speed based on weighted grade
   // (relative measure of elevation change along the edge)
-  float speed = UpdateSpeed(edge->surface()) *
+  float speed = speed_ *
+                surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
 		            kGradeBasedSpeedFactor[edge->weighted_grade()];
 
   // Apply a weighting factor to the cost based on desirability of cycling
@@ -556,10 +579,16 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) *
-               TurnCost(edge->turntype(idx),
-                       edge->edge_to_right(idx) && edge->edge_to_left(idx),
-                       edge->drive_on_right());
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    } else {
+      turn_cost = (edge->drive_on_right()) ?
+          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    }
+    seconds += trans_density_factor_[node->density()] *
+               edge->stopimpact(idx) * turn_cost;
   }
 
   // Return cost (time and penalty)
@@ -601,10 +630,16 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
-    seconds += trans_density_factor_[node->density()] * edge->stopimpact(idx) *
-               TurnCost(edge->turntype(idx),
-                        edge->edge_to_right(idx) && edge->edge_to_left(idx),
-                        edge->drive_on_right());
+    float turn_cost;
+    if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
+      turn_cost = kTCCrossing;
+    } else {
+      turn_cost = (edge->drive_on_right()) ?
+          kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))] :
+          kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
+    }
+    seconds += trans_density_factor_[node->density()] *
+              edge->stopimpact(idx) * turn_cost;
   }
 
   // Return cost (time and penalty)
@@ -622,88 +657,6 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 float BicycleCost::AStarCostFactor() const {
   // Assume max speed of 80 kph (50 MPH)
   return speedfactor_[80];
-}
-
-// Compute a turn cost based on the turn type, crossing flag,
-// and whether right or left side of road bicycling.
-float BicycleCost::TurnCost(const baldr::Turn::Type turn_type,
-                         const bool crossing,
-                         const bool drive_on_right) const {
-  if (crossing) {
-    return kTCCrossing;
-  }
-
-  switch (turn_type) {
-  case Turn::Type::kStraight:
-    return kTCStraight;
-
-  case Turn::Type::kSlightLeft:
-  case Turn::Type::kSlightRight:
-    return kTCSlight;
-
-  case Turn::Type::kRight:
-    return (drive_on_right) ? kTCFavorable : kTCUnfavorable;
-
-  case Turn::Type::kLeft:
-    return (drive_on_right) ? kTCUnfavorable : kTCFavorable;
-
-  case Turn::Type::kSharpRight:
-    return (drive_on_right) ? kTCFavorableSharp : kTCUnfavorableSharp;
-
-  case Turn::Type::kSharpLeft:
-    return (drive_on_right) ? kTCUnfavorableSharp : kTCFavorableSharp;
-
-  case Turn::Type::kReverse:
-    return kTCReverse;
-  }
-}
-
-// Update speed based on road surface
-float BicycleCost::UpdateSpeed(const Surface surface) const {
-  // Use average speed for paved smooth and paved roads
-  if (surface <= Surface::kPaved) {
-    return speed_;
-  }
-
-  // Modify average speed based on bicycle type and road surface
-  if (bicycletype_ == BicycleType::kRoad) {
-    // Road bicycle - slightly slower on rough paved roads, much slower on
-    // compacted surfaces (avoid). Not allowed on rougher surfaces.
-    return (surface == Surface::kPavedRough) ?
-          speed_ * 0.85f : speed_* 0.5f;
-  } else if (bicycletype_ == BicycleType::kHybrid) {
-    // Hybrid bicycle - no penalty on rough paved roads. Slightly slower
-    // on compacted surfaces and much slower on dirt. Not allowed on rougher
-    // surfaces
-    if (surface == Surface::kPavedRough) {
-      return speed_;
-    } else if (surface == Surface::kCompacted) {
-      return speed_ * 0.75f;
-    } else {
-      return speed_ * 0.5f;
-    }
-  } else if (bicycletype_ == BicycleType::kCross) {
-    // Cross bicycle -slightly slower on compacted surfaces and dirt.
-    // Much slower on gravel. Not allowed on surface = path.
-    if (surface == Surface::kPavedRough) {
-      return speed_;
-    } else if (surface == Surface::kCompacted) {
-      return speed_ * 0.8f;
-    } else if (surface == Surface::kDirt) {
-      return speed_ * 0.65f;
-    } else {
-      return speed_ * 0.5f;
-    }
-  } else {
-    // Mountain bicycle - slightly slower on gravel and path surfaces.
-    if (surface <= Surface::kDirt) {
-      return speed_;
-    } else if (surface == Surface::kGravel) {
-      return speed_ * 0.85f;
-    } else {
-      return speed_ * 0.7f;
-    }
-  }
 }
 
 cost_ptr_t CreateBicycleCost(const boost::property_tree::ptree& config) {
