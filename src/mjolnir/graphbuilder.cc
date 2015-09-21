@@ -311,9 +311,9 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
                 DataQuality& stats) {
   // Walk the shape segments until we are outside
   uint32_t current_tile = tile1.tileid();
-  auto shape1 = shape.begin();
+  auto shape1 = shape.cbegin();
   auto shape2 = std::next(shape1);
-  while (shape2 < shape.end()) {
+  while (shape2 != shape.cend()) {
     uint32_t next_tile = tiling.TileId(shape2->lat(), shape2->lng());
     if (next_tile != current_tile) {
       // If a neighbor we can just add this tile
@@ -347,7 +347,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
 
     // Increment
     shape1 = shape2;
-    shape2++;
+    std::next(shape2);
   }
 }
 

@@ -279,7 +279,7 @@ bool CanContract(const GraphTile* tile, const NodeInfo* nodeinfo,
 // Connect 2 edges shape and update the next end node in the new level
 uint32_t ConnectEdges(const GraphId& basenode,
                                      const GraphId& edgeid,
-                                     std::vector<PointLL>& shape,
+                                     std::list<PointLL>& shape,
                                      GraphId& nodeb,
                                      uint32_t& opp_local_idx, hierarchy_info& info) {
   // Get the tile and directed edge. Set the opp_local_idx
@@ -288,13 +288,15 @@ uint32_t ConnectEdges(const GraphId& basenode,
   opp_local_idx = directededge->opp_local_idx();
 
   // Get the shape for this edge and append to the shortcut's shape
-  std::vector<PointLL> edgeshape = tile->edgeinfo(
-          directededge->edgeinfo_offset())->shape();
-  if (directededge->forward()) {
-    shape.insert(shape.end(), edgeshape.begin() + 1, edgeshape.end());
-  } else {
-    shape.insert(shape.end(), edgeshape.rbegin() + 1, edgeshape.rend());
-  }
+  auto encoded = tile->edgeinfo(directededge->edgeinfo_offset())->encoded_shape();
+  std::list<PointLL> edgeshape = valhalla::midgard::decode<std::list<PointLL> >(encoded);
+  // Need to flip it
+  if (!directededge->forward())
+    std::reverse(edgeshape.begin(), edgeshape.end());
+  // Don't need this one
+  edgeshape.pop_front();
+  // We'll take the rest though
+  shape.splice(shape.end(), edgeshape);
 
   // Update the end node and return the length
   nodeb = info.nodemap_[directededge->endnode().value];
@@ -314,7 +316,7 @@ bool IsEnteringEdgeOfContractedNode(const GraphId& node, const GraphId& edge,
   }
 }
 
-uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, const std::vector<PointLL>& shape, const float length, const bool forward) {
+uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, const std::list<PointLL>& shape, const float length, const bool forward) {
   //evenly sample the shape
   std::list<PointLL> resampled;
   //if it was really short just do both ends
@@ -385,7 +387,7 @@ void AddShortcutEdges(
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       std::unique_ptr<const EdgeInfo> edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
-      std::vector<PointLL> shape = edgeinfo->shape();
+      std::list<PointLL> shape = valhalla::midgard::decode<std::list<PointLL> >(edgeinfo->encoded_shape());
       if (!directededge->forward())
         std::reverse(shape.begin(), shape.end());
 
