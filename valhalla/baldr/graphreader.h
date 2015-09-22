@@ -11,10 +11,6 @@
 namespace valhalla {
 namespace baldr {
 
-//avoid requiring the opposing edges tile
-//be returned in the methods below
-const GraphTile* NULL_TILE = nullptr;
-
 /**
  * Class that manages access to GraphTiles. Reads new tiles where necessary
  * and manages a memory cache of active tiles. It is NOT thread-safe!
@@ -94,7 +90,8 @@ class GraphReader {
    *          exist (can occur with a regional extract where adjacent tile
    *          is missing).
    */
-  GraphId GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile = NULL_TILE);
+  GraphId GetOpposingEdgeId(const GraphId& edgeid);
+  GraphId GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile);
 
   /**
    * Convenience method to get an opposing directed edge.
@@ -103,7 +100,8 @@ class GraphReader {
    *          opposing edge does not exist (can occur with a regional extract
    *          where the adjacent tile is missing)
    */
-  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile = NULL_TILE);
+  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid);
+  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile);
 
  protected:
   // Information about where the tiles are kept
