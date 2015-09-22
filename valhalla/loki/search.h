@@ -39,8 +39,7 @@ const sif::EdgeFilter PassThroughFilter = [](const baldr::DirectedEdge* edge){ r
  * @return pathLocation  the correlated data with in the tile that matches the input
  */
 baldr::PathLocation Search(const baldr::Location& location, baldr::GraphReader& reader,
-  sif::EdgeFilter filter = PassThroughFilter,
-  const SearchStrategy strategy = SearchStrategy::EDGE);
+  sif::EdgeFilter filter = PassThroughFilter, const SearchStrategy strategy = SearchStrategy::EDGE);
 
 }
 }

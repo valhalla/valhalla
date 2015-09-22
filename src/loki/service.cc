@@ -105,7 +105,7 @@ namespace {
   //TODO: move json header to baldr
   //TODO: make objects serialize themselves
 
-  json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader) {
+  json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
     auto array = json::array({});
     std::unordered_multimap<uint64_t, PointLL> ids;
     for(const auto& edge : location.edges()) {
@@ -126,13 +126,25 @@ namespace {
         //only serialize it if we didnt do it before
         if(!duplicate) {
           ids.emplace(edge_info->wayid(), location.vertex());
-          array->emplace_back(
-            json::map({
-              {"way_id", edge_info->wayid()},
-              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
-            })
-          );
+          //they want MOAR!
+          if(verbose) {
+            array->emplace_back(
+              json::map({
+                {"way_id", edge_info->wayid()},
+                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
+                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
+              })
+            );
+          }//spare the details
+          else {
+            array->emplace_back(
+              json::map({
+                {"way_id", edge_info->wayid()},
+                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
+                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
+              })
+            );
+          }
         }
       }
       catch(...) {
@@ -143,9 +155,9 @@ namespace {
     return array;
   }
 
-  json::MapPtr serialize(const PathLocation& location, GraphReader& reader) {
+  json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
     return json::map({
-      {"ways", serialize_edges(location, reader)},
+      {"ways", serialize_edges(location, reader, verbose)},
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fp_t{location.latlng_.lng(), 6}}
     });
@@ -326,7 +338,7 @@ namespace {
       for(const auto& location : locations) {
         try {
           auto correlated = loki::Search(location, reader, costing_filter);
-          json->emplace_back(serialize(correlated, reader));
+          json->emplace_back(serialize(correlated, reader, request.get<bool>("verbose", false)));
         }
         catch(const std::exception& e) {
           json->emplace_back(serialize(location.latlng_, e.what()));
