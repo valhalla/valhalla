@@ -17,7 +17,7 @@ const GraphTile* NULL_TILE = nullptr;
 
 /**
  * Class that manages access to GraphTiles. Reads new tiles where necessary
- * and manages a memory cache of active tiles.
+ * and manages a memory cache of active tiles. It is NOT thread-safe!
  */
 class GraphReader {
  public:
