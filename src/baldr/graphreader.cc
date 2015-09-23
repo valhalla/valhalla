@@ -13,6 +13,7 @@ using namespace valhalla::baldr;
 namespace {
   constexpr size_t DEFAULT_MAX_CACHE_SIZE = 1073741824; //1 gig
   constexpr size_t AVERAGE_TILE_SIZE = 2097152; //2 megs
+  const GraphTile* NO_TILE = nullptr;
 }
 
 namespace valhalla {
@@ -96,24 +97,27 @@ bool GraphReader::OverCommitted() const {
 
 // Convenience method to get an opposing directed edge graph Id.
 GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid) {
+  return GetOpposingEdgeId(edgeid, NO_TILE);
+}
+GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& tile) {
   const auto* directededge = GetGraphTile(edgeid)->directededge(edgeid);
-  GraphId endnodeid = directededge->endnode();
-  const auto* tile = GetGraphTile(endnodeid);
-  GraphId opposing_edge_id = { };
+  GraphId id = directededge->endnode();
+  tile = GetGraphTile(id);
   if (tile != nullptr) {
-    const auto* endnode = GetGraphTile(endnodeid)->node(endnodeid);
-    opposing_edge_id.Set(endnodeid.tileid(), endnodeid.level(),
-                       endnode->edge_index() + directededge->opp_index());
+    const auto* endnode = GetGraphTile(id)->node(id);
+    id.fields.id = endnode->edge_index() + directededge->opp_index();
+    return id;
   }
-  return opposing_edge_id;
+  return {};
 }
 
 // Convenience method to get an opposing directed edge.
 const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid) {
-  GraphId oppedgeid = GetOpposingEdgeId(edgeid);
-  return (oppedgeid.Is_Valid()) ?
-      GetGraphTile(oppedgeid)->directededge(oppedgeid): nullptr;
-
+  return GetOpposingEdge(edgeid, NO_TILE);
+}
+const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile) {
+  GraphId oppedgeid = GetOpposingEdgeId(edgeid, tile);
+  return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
 }
 
 
