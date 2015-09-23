@@ -90,6 +90,39 @@ void TryIsoDateTime() {
   }
 
 }
+
+void TryGetServiceDays(std::string begin_date, std::string end_date, uint32_t dow_mask, uint64_t value) {
+
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, dow_mask);
+
+  if (value != days)
+    throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
+}
+
+void TryAddServiceDays(uint64_t days, std::string begin_date, std::string end_date, std::string added_date, uint64_t value) {
+
+  uint64_t result = DateTime::add_service_day(days, begin_date, end_date, added_date);
+  if (value != result)
+    throw std::runtime_error("Invalid bits set for added service day. " + added_date);
+}
+
+void TryRemoveServiceDays(uint64_t days, std::string begin_date, std::string end_date, std::string removed_date, uint64_t value) {
+
+  uint64_t result = DateTime::remove_service_day(days, begin_date, end_date, removed_date);
+  if (value != result)
+    throw std::runtime_error("Invalid bits set for added service day. " + removed_date);
+}
+
+void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::string new_end_date, uint32_t dow_mask) {
+
+  DateTime::get_service_days(begin_date, end_date, dow_mask);
+
+  if (end_date != new_end_date)
+    throw std::runtime_error("End date not cut off at 60 days.");
+
+}
+
+
 }
 
 void TestGetDaysFromPivotDate() {
@@ -173,6 +206,76 @@ void TestGetSecondsFromMidnight() {
   TryGetSecondsFromMidnight("2015-05-06T24:01:01", 86461);
 }
 
+void TestServiceDays() {
+
+  uint32_t dow_mask = kDOWNone;
+
+  //Test just the weekend for 4 days.
+  //bits 2 and 3
+  dow_mask |= kSaturday;
+  dow_mask |= kSunday;
+
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 6);
+
+  //Test just the weekend and Friday for 4 days.
+  //bits 2 and 3
+  dow_mask |= kFriday;
+
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 7);
+
+  //Test just the weekend and Friday and Monday for 4 days.
+  //bits 2 and 3
+  dow_mask |= kMonday;
+
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 15);
+
+  //Test just the weekend and Friday and Monday for 4 days.
+  //Add Tuesday; however, result should be still 15 as we are only testing 4 days.
+  //bits 2 and 3
+  dow_mask |= kTuesday;
+
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 15);
+
+  //Test everyday for 60 days.
+  dow_mask |= kWednesday;
+  dow_mask |= kThursday;
+
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 1152921504606846975);
+
+  //Test weekends for 60 days.
+  dow_mask = kDOWNone;
+  dow_mask |= kSaturday;
+  dow_mask |= kSunday;
+
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 435749860008887046);
+
+  //Test weekends for 60 days plus Columbus Day
+  TryAddServiceDays(435749860008887046,"2015-09-25", "2017-09-28", "2015-10-12", 435749860009018118);
+
+  //Try to add a date out of the date range
+  TryAddServiceDays(435749860008887046,"2015-09-25", "2017-09-28", "2018-10-12", 435749860008887046);
+
+  //Test weekends for 60 days remove Columbus Day
+  TryRemoveServiceDays(435749860009018118,"2015-09-25", "2017-09-28", "2015-10-12", 435749860008887046);
+
+  //Try to remove a date out of the date range
+  TryRemoveServiceDays(435749860009018118,"2015-09-25", "2017-09-28", "2018-10-12", 435749860009018118);
+
+  //Test weekdays for 60 days.
+  dow_mask = kDOWNone;
+  dow_mask |= kMonday;
+  dow_mask |= kTuesday;
+  dow_mask |= kWednesday;
+  dow_mask |= kThursday;
+  dow_mask |= kFriday;
+
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 717171644597959929);
+
+  //Test to confirm that enddate is cut off at 60 days
+  TryTestServiceEndDate("2015-09-25", "2017-09-28", "2015-11-23", dow_mask);
+
+}
+
 int main(void) {
   test::suite suite("datetime");
 
@@ -183,6 +286,7 @@ int main(void) {
   suite.test(TEST_CASE(TestTime));
   suite.test(TEST_CASE(TestDate));
   suite.test(TEST_CASE(TestIsoDateTime));
+  suite.test(TEST_CASE(TestServiceDays));
 
   return suite.tear_down();
 }
