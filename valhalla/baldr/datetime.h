@@ -3,6 +3,8 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace valhalla {
 namespace baldr {
@@ -13,6 +15,47 @@ namespace DateTime {
    * Get the list of regions.
    */
   std::vector<std::string> get_region_list();
+
+  /**
+   * Get a formatted date from a string.
+   * @param date
+   * @return  Returns the formatted date.
+   */
+  boost::gregorian::date get_formatted_date(const std::string& date);
+
+  /**
+   * Get the days that this transit service is running in 60 days or less
+   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   dow_mask that this service runs.
+   * @return  Returns the number of days.
+   */
+  uint64_t get_service_days(const std::string& start_date,
+                            std::string& end_date, const uint32_t& dow_mask);
+
+  /**
+   * Adds a service day to the days.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   added_date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the updated days.  Days will only be updated if the added date
+   *          is in the start and end date range.
+   */
+  uint64_t add_service_day(const uint64_t& days, const std::string& start_date,
+                           const std::string& end_date, const std::string& added_date);
+
+  /**
+   * Removes a service day to the days.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the updated days.  Days will only be updated if the removed date
+   *          is in the start and end date range.
+   */
+  uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
+                              const std::string& end_date, const std::string& removed_date);
 
   /**
    * Get the number of days elapsed from the pivot date until
