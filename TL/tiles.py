@@ -107,7 +107,7 @@ class Tile(object):
 
      return file
 
-def main(argv):
+def check_args(argv):
    global level_
    global tilesize_
    global output_transit_dir_
@@ -161,7 +161,7 @@ if __name__ == "__main__":
    now = time.strftime("%c")
    print ("Start time: %s" % now )
   
-   main(sys.argv[1:])
+   check_args(sys.argv[1:])
 
    directory = output_transit_dir_ + "/" + str(level_)
    shutil.rmtree(directory, ignore_errors=True)
@@ -178,6 +178,9 @@ if __name__ == "__main__":
 
    trip_key = 1
    trips = dict()
+
+   block_key = 1
+   blocks = dict()
 
    for row in xrange(0, nrows_):
       for col in xrange(0, ncolumns_):
@@ -258,6 +261,14 @@ if __name__ == "__main__":
                      onestops[onestop_id] = onestop_key
                      onestop_key = onestop_key + 1
                   tl_s_p['route_key'] = onestops[onestop_id]
+                  
+                  block_id = tl_s_p['block_id']
+                  if block_id is not None:
+                     block = block_id + tl_s_p['route_onestop_id']
+                     if block not in blocks:
+                        blocks[block] = block_key
+                        block_key = block_key + 1
+                     tl_s_p['block_key'] = blocks[block]			
 
                   trip = tl_s_p['trip']
                   if trip not in trips:
