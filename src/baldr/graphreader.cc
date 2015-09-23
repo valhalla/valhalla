@@ -104,8 +104,7 @@ GraphId GraphReader::GetOpposingEdgeId(const GraphId& edgeid, const GraphTile*& 
   GraphId id = directededge->endnode();
   tile = GetGraphTile(id);
   if (tile != nullptr) {
-    const auto* endnode = GetGraphTile(id)->node(id);
-    id.fields.id = endnode->edge_index() + directededge->opp_index();
+    id.fields.id = tile->node(id)->edge_index() + directededge->opp_index();
     return id;
   }
   return {};
@@ -118,6 +117,16 @@ const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid) {
 const DirectedEdge* GraphReader::GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile) {
   GraphId oppedgeid = GetOpposingEdgeId(edgeid, tile);
   return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
+}
+
+// Convenience method to get the relative edge density (from the
+// begin node of an edge).
+uint32_t GraphReader::GetEdgeDensity(const GraphId& edgeid) {
+  // Get the end node of the opposing directed edge
+  const DirectedEdge* opp_edge = GetOpposingEdge(edgeid);
+  GraphId id = opp_edge->endnode();
+  const GraphTile* tile = GetGraphTile(id);
+  return (tile != nullptr) ? tile->node(id)->density() : 0;
 }
 
 
