@@ -191,7 +191,7 @@ bool EdgeLabel::origin() const {
 }
 
 // Sets this edge as an origin.
-bool EdgeLabel::set_origin() {
+void EdgeLabel::set_origin() {
   attributes_.origin = true;
 }
 

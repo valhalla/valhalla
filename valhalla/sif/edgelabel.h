@@ -219,7 +219,7 @@ class EdgeLabel {
   /**
    * Sets this edge as an origin.
    */
-  bool set_origin();
+  void set_origin();
 
   /**
    * Get the current walking distance in meters.
