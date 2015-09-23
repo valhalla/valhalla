@@ -211,6 +211,17 @@ class EdgeLabel {
   bool has_transit() const;
 
   /**
+   * Is this edge an origin edge?
+   * @return  Returns true if this edge is an origin edge.
+   */
+  bool origin() const;
+
+  /**
+   * Sets this edge as an origin.
+   */
+  bool set_origin();
+
+  /**
    * Get the current walking distance in meters.
    * @return  Returns the current walking distance accumulated since last stop.
    */
@@ -273,6 +284,7 @@ class EdgeLabel {
    * shortcut:      Was the prior edge a shortcut edge?
    * dest_only      Was the prior edge destination only.
    * has_transit    True if any transit taken along the path to this edge.
+   * origin         True if this is an origin edge.
    */
   struct Attributes {
     uint32_t use           : 8;
@@ -284,7 +296,7 @@ class EdgeLabel {
     uint32_t mode          : 4;
     uint32_t dest_only     : 1;
     uint32_t has_transit   : 1;
-    uint32_t spare         : 1;
+    uint32_t origin        : 1;
   };
   Attributes attributes_;
 
