@@ -103,6 +103,14 @@ class GraphReader {
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid);
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, const GraphTile*& tile);
 
+  /**
+   * Convenience method to get the relative edge density (from the
+   * begin node of an edge).
+   * @param   edgeid  Graph Id of the directed edge.
+   * @return  Returns the relative edge density at the begin node of the edge.
+   */
+  uint32_t GetEdgeDensity(const GraphId& edgeid);
+
  protected:
   // Information about where the tiles are kept
   const TileHierarchy tile_hierarchy_;
