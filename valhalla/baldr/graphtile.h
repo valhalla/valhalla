@@ -227,17 +227,6 @@ class GraphTile {
   TransitTransfer* GetTransfer(const uint32_t from_stopid,
                                const uint32_t to_stopid) const;
 
-  /**
-   * Get a pointer to the first calendar exception record given the service
-   * Id and compute the number of calendar exception records.
-   * @param   serviceid  Service Id.
-   * @return  Returns a pair with a pointer to the initial calendar exception
-   *          record and a count of calendar exception records for this
-   *          service Id.
-   */
-  std::pair<TransitCalendar*, uint32_t> GetCalendarExceptions(
-                const uint32_t serviceid) const;
-
  protected:
 
   // Size of the tile in bytes
