@@ -272,9 +272,6 @@ class GraphTile {
   // Transit transfers, 1 or more per index (indexed by from stop Id)
   TransitTransfer* transit_transfers_;
 
-  // Transit calendar exceptions, 1 or more per index (indexed by service Id)
-  TransitCalendar* transit_exceptions_;
-
   // Signs (indexed by directed edge index)
   Sign* signs_;
 

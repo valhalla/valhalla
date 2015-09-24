@@ -1,4 +1,5 @@
 #include "baldr/graphtile.h"
+#include "baldr/datetime.h"
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
@@ -51,7 +52,6 @@ GraphTile::GraphTile()
       transit_stops_(nullptr),
       transit_routes_(nullptr),
       transit_transfers_(nullptr),
-      transit_exceptions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
       edgeinfo_(nullptr),
@@ -117,9 +117,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
    ptr += header_->transfercount() * sizeof(TransitTransfer);
 
-   // Set a pointer to the transit calendar exception list
-   transit_exceptions_ = reinterpret_cast<TransitCalendar*>(ptr);
-   ptr += header_->calendarcount() * sizeof(TransitCalendar);
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
 LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
@@ -437,27 +434,15 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
           return &departures_[mid];
         }
       } else if (dep.start_date() <= date && date <= dep.end_date()) {
-        // Within valid date range for departure. Check the day of week mask
-        if ((dep.days() & dow) > 0) {
-          // Check that there are no calendar exceptions
-          if (dep.serviceid() == 0) {
-            return &departures_[mid];
-          } else {
-            // Check if there is a calendar exception for this date.
-            bool except = false;
-            auto exceptions = GetCalendarExceptions(dep.serviceid());
-            TransitCalendar* calendar = exceptions.first;
-            for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
-              if (calendar->date() == date) {
-                except = true;
-                break;
-              }
-            }
-            if (!except) {
-              return &departures_[mid];
-            }
-          }
-        }
+        // Within valid date range for departure. Check the days
+
+        if (DateTime::is_service_available(dep.days(), dep.start_date(), date, dep.end_date()))
+          return &departures_[mid];
+
+      } else if (date > dep.end_date()) {
+
+        if ((dep.days_of_week() & dow) > 0)
+          return &departures_[mid];
       }
     }
 
@@ -687,56 +672,6 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
     LOG_DEBUG("No transfers found from stopid = " + std::to_string(from_stopid) +
               " to stopid " + std::to_string(to_stopid));
     return nullptr;
-  }
-}
-
-
-// Get a pointer to the first calendar exception record given the service
-// Id and compute the number of calendar exception records.
-std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
-               const uint32_t serviceid) const {
-  uint32_t count = header_->calendarcount();
-  if (count == 0) {
-    return {nullptr, 0};
-  }
-
-  // Binary search
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  bool found = false;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_exceptions_[mid].serviceid() == serviceid) {
-      found = true;
-      break;
-    }
-    if (serviceid < transit_exceptions_[mid].serviceid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  if (found) {
-    // Back up while prior is equal (or at the beginning)
-    while (mid > 0 &&
-          transit_exceptions_[mid-1].serviceid() == serviceid) {
-      mid--;
-    }
-
-    // Set the start and increment until not equal to get the count
-    uint32_t n = 0;
-    TransitCalendar* start = &transit_exceptions_[mid];
-    while (transit_exceptions_[mid].serviceid() == serviceid && mid < count) {
-      n++;
-      mid++;
-    }
-    return {start, n};
-  } else {
-    LOG_ERROR("No calendar exceptions found for serviceid = " +
-                  std::to_string(serviceid));
-    return {nullptr, 0};
   }
 }
 
