@@ -5,7 +5,6 @@
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/transitcalendar.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
