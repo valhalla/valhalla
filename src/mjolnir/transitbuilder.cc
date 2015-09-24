@@ -45,19 +45,18 @@ struct Stop {
 };
 
 struct Departure {
+  uint64_t days;
   uint32_t orig_stop;
   uint32_t dest_stop;
   uint32_t trip;
   uint32_t route;
   uint32_t blockid;
-  uint32_t service;
   uint32_t shapeid;
   uint32_t dep_time;
   uint32_t arr_time;
   uint32_t start_date;
   uint32_t end_date;
   uint32_t dow;
-  uint32_t has_subtractions;
   uint32_t wheelchair_accessible;
   std::string headsign;
   std::string short_name;
@@ -297,7 +296,6 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
                                                               std::unordered_map<uint32_t, bool>& stop_access,
-                                                              std::unordered_multimap<uint32_t, std::string>& calendar_exceptions,
                                                               const std::unordered_map<uint32_t, uint32_t>& stops,
                                                               GraphTileBuilder& tilebuilder) {
 
@@ -348,31 +346,24 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
 
       //TODO
       dep.shapeid = 0;
-      dep.blockid = 0;
 
-      const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
-      if (except_dates && !except_dates->empty()) {
-        dep.has_subtractions = true;
-        dep.service = dep.trip; //trip key will work for service key.
-      }
-      else {
-        dep.has_subtractions = false;
-        dep.service = 0;
-      }
+      dep.blockid = stop_pairs.second.get<uint32_t>("block_key", 0);
 
+      //TODO
       //wheelchair_accessible
-      //short_name
 
       const std::string origin_time = stop_pairs.second.get<std::string>("origin_departure_time", "");
       const std::string dest_time = stop_pairs.second.get<std::string>("destination_arrival_time", "");
 
+      // bus hack for now
       if (origin_time.empty() || dest_time.empty())
         continue;
 
       dep.dep_time = DateTime::seconds_from_midnight(origin_time);
       dep.arr_time = DateTime::seconds_from_midnight(dest_time);
-      dep.start_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_start_date", ""));
-      dep.end_date =  DateTime::days_from_pivot_date(stop_pairs.second.get<std::string>("service_end_date", ""));
+
+      std::string start_date = stop_pairs.second.get<std::string>("service_start_date", "");
+      std::string end_date = stop_pairs.second.get<std::string>("service_end_date", "");
 
       uint32_t index = 1;
       uint32_t dow_mask = kDOWNone;
@@ -383,25 +374,25 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
         if (dow) {
           switch (index) {
             case 1:
-              dow_mask = dow_mask | kMonday;
+              dow_mask |= kMonday;
               break;
             case 2:
-              dow_mask = dow_mask | kTuesday;
+              dow_mask |= kTuesday;
               break;
             case 3:
-              dow_mask = dow_mask | kWednesday;
+              dow_mask |= kWednesday;
               break;
             case 4:
-              dow_mask = dow_mask | kThursday;
+              dow_mask |= kThursday;
               break;
             case 5:
-              dow_mask = dow_mask | kFriday;
+              dow_mask |= kFriday;
               break;
             case 6:
-              dow_mask = dow_mask | kSaturday;
+              dow_mask |= kSaturday;
               break;
             case 7:
-              dow_mask = dow_mask | kSunday;
+              dow_mask |= kSunday;
               break;
           }
         }
@@ -409,6 +400,18 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
       }
 
       dep.dow = dow_mask;
+
+      std::string tz = stop_pairs.second.get<std::string>("origin_timezone", "");
+
+      //end_date will be updated if greater than 60 days.
+      //start_date will be updated to today if the start date is in the past
+      //the start date to end date or 60 days, whichever is less.
+      //set the bits based on the dow.
+
+      dep.days = DateTime::get_service_days(start_date, end_date, tz, dow_mask);
+      dep.start_date =  DateTime::days_from_pivot_date(start_date);
+      dep.end_date =  DateTime::days_from_pivot_date(end_date);
+
       std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
       dep.headsign = (headsign == "null" ? "" : headsign);
 
@@ -419,48 +422,26 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
       stop_access[dep.orig_stop] = access;
       stop_access[dep.dest_stop] = access;
 
-      if (dep.has_subtractions) {
+      //if subtractions are between start and end date then turn off bit.
+      const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
+      if (except_dates && !except_dates->empty()) {
         for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
           std::string date = service_except_dates.second.get_value<std::string>();
-          bool found = false;
-          auto range = calendar_exceptions.equal_range(dep.trip);
-          for(auto id = range.first; id != range.second; ++id) {
-            if(id->second == date) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            uint32_t days = DateTime::days_from_pivot_date(date);
-            TransitCalendar calendar(dep.trip, days, CalendarExceptionType::kRemoved);
-            tilebuilder.AddTransitCalendar(calendar);
-
-            calendar_exceptions.emplace(dep.trip, date);
-          }
+          dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
         }
       }
 
+      //if additions are between start and end date then turn on bit.
       const auto& added_dates = stop_pairs.second.get_child_optional("service_added_dates");
       //Add the additions.
       if (added_dates && !added_dates->empty()) {
-        //cant use std::move because there are additions.
-        departures.emplace(dep.orig_stop,dep);
-        //addition can't have a subtractions.
-        dep.has_subtractions = false;
-        dep.service = 0;
+
         for(const auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
-
           std::string date = service_added_dates.second.get_value<std::string>();
-
-          uint32_t days = DateTime::days_from_pivot_date(date);
-
-          dep.start_date = days;
-          dep.end_date = days;
-          //cant use std::move because this is an addition.
-          departures.emplace(dep.orig_stop,dep);
+          dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
         }
       }
-      else departures.emplace(dep.orig_stop,std::move(dep));
+      departures.emplace(dep.orig_stop,std::move(dep));
     }
   }
   catch (std::exception &e) {
@@ -1059,7 +1040,6 @@ void build(const boost::property_tree::ptree& config_pt,
     n++;
   }
   std::unordered_map<uint32_t, bool> stop_access;
-  std::unordered_multimap<uint32_t, std::string> calendar_exceptions;
 
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
@@ -1111,8 +1091,7 @@ void build(const boost::property_tree::ptree& config_pt,
     const std::string file = transit_dir + file_name;
 
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(file, stop_access,calendar_exceptions,stop_indexes,
-                         tilebuilder);
+        ProcessStopPairs(file, stop_access,stop_indexes,tilebuilder);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
@@ -1160,7 +1139,7 @@ void build(const boost::property_tree::ptree& config_pt,
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
           TransitDeparture td(lineid, dep.trip,dep.route,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                      dep.start_date, dep.end_date, dep.dow, dep.service);
+                      dep.start_date, dep.end_date, dep.dow, dep.days);
 
           LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                        " dep time = " + std::to_string(td.departure_time()) +
