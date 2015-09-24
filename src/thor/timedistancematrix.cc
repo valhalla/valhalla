@@ -9,38 +9,6 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-// If we end up with locations where there is a trivial path but you would
-// have to traverse the edge in reverse to do it we need to mark this as a
-// loop so that the initial edge can be considered on the path at some later
-// point in time
-// TODO - test and validate loop cases.
-GraphId loop(const uint32_t origin_index, const std::vector<PathLocation>& locations) {
-  const PathLocation& origin = locations[origin_index];
-  for (const auto& origin_edge : origin.edges()) {
-    uint32_t index = 0;
-    for (const auto& destination : locations) {
-      if (index == origin_index) {
-        index++;
-        continue;
-      }
-      for (const auto& destination_edge : destination.edges()) {
-        // same id and the origin shows up at the end of the edge
-        // while the destination shows up at the beginning of the edge
-        if (origin_edge.id == destination_edge.id &&
-            origin_edge.dist > destination_edge.dist) {
-          //something is wrong if we have more than one option here
-          if (origin.edges().size() != 1 || destination.edges().size() != 1)
-            throw std::runtime_error("Found oneway loop but multiple ins and outs!");
-
-          return origin_edge.id;
-        }
-      }
-      index++;
-    }
-  }
-  return {};
-}
-
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void TimeDistanceMatrix::Clear() {
@@ -68,14 +36,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
-  // Alter the destination edges if at a node - loki always gives edges
-  // leaving a node, but when a destination we want edges entering the node
-//  PathLocation dest = update_destinations(graphreader, destination,
-//                                          costing->GetFilter());
-
-  // Check for loop path (on any of the destination edges)
-  PathInfo loop_edge_info(mode_, 0.0f, loop(origin_index, locations), 0);
-
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
   // factor (needed for setting the origin).
@@ -87,7 +47,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
-  SetOrigin(graphreader, locations[origin_index], costing, loop_edge_info);
+  SetOriginOneToMany(graphreader, locations[origin_index], costing);
   SetDestinations(graphreader, origin_index, locations, costing);
 
   // Set the initial cost threshold
@@ -208,14 +168,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
-
-  // Alter the destination edges if at a node - loki always gives edges
-  // leaving a node, but when a destination we want edges entering the node
-//  PathLocation dest = update_destinations(graphreader, destination,
-//                                          costing->GetFilter());
-
-  // Check for loop path (on any of the destination edges)
-//  PathInfo loop_edge_info(mode_, 0.0f, loop(dest_index, locations), 0);
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost. Initialize A* heuristic with 0 cost
@@ -365,6 +317,51 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
   return many_to_many;
 }
 
+// Add an edge at the origin to the adjacency list
+void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
+                 const PathLocation& origin,
+                 const std::shared_ptr<DynamicCost>& costing) {
+  // Iterate through edges and add to adjacency list
+  for (const auto& edge : (origin.edges())) {
+    // If origin is at a node - skip any inbound edge (dist = 1)
+    if (origin.IsNode() && edge.dist == 1) {
+      continue;
+    }
+
+    // Get the directed edge
+    GraphId edgeid = edge.id;
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+
+    // Get cost and sort cost
+    Cost cost = costing->EdgeCost(directededge,
+                  graphreader.GetEdgeDensity(edgeid)) * (1.0f - edge.dist);
+    float dist = astarheuristic_.GetDistance(endtile->node(
+                      directededge->endnode())->latlng());
+    float sortcost = cost.cost + astarheuristic_.Get(dist);
+
+    // Add EdgeLabel to the adjacency list (but do not set its status).
+    // Set the predecessor edge index to invalid to indicate the origin
+    // of the path.
+    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
+    adjacencylist_->Add(edgelabels_.size(), sortcost);
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
+            sortcost, dist, directededge->restrictions(),
+            directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
+    edge_label.set_origin();
+
+    // Set the origin flag
+    edgelabels_.push_back(std::move(edge_label));
+  }
+}
+
 // Add origin for a many to one time distance matrix.
 void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                       const PathLocation& dest,
@@ -392,7 +389,8 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
 
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations
-    Cost origin_cost = costing->EdgeCost(opp_dir_edge, 0) * edge.dist;
+    Cost origin_cost = costing->EdgeCost(opp_dir_edge,
+                         graphreader.GetEdgeDensity(opp_edge_id)) * edge.dist;
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -433,7 +431,8 @@ void TimeDistanceMatrix::SetDestinations(GraphReader& graphreader,
 
         // Form a threshold cost (the total cost to traverse the edge)
         const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id), 0.0f).cost;
+        float c = costing->EdgeCost(tile->directededge(edge.id),
+                    graphreader.GetEdgeDensity(edge.id)).cost;
         if (c > d.threshold) {
           d.threshold = c;
         }
@@ -480,7 +479,8 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
 
         // Form a threshold cost (the total cost to traverse the edge)
         const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-        float c = costing->EdgeCost(tile->directededge(edge.id), 0.0f).cost;
+        float c = costing->EdgeCost(tile->directededge(edge.id),
+                    graphreader.GetEdgeDensity(edge.id)).cost;
         if (c > d.threshold) {
           d.threshold = c;
         }
@@ -519,7 +519,7 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
       LOG_ERROR("Could not find the destination edge");
       continue;
     }
-
+// TODO - need density for edgecost method...
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;

@@ -315,6 +315,11 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                  const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.edges()) {
+    // If origin is at a node - skip any inbound edge (dist = 1)
+    if (origin.IsNode() && edge.dist == 1) {
+      continue;
+    }
+
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
@@ -329,7 +334,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
-    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist));
+    Cost cost = costing->EdgeCost(directededge,
+                   graphreader.GetEdgeDensity(edgeid)) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(endtile->node(
                     directededge->endnode())->latlng());
     float sortcost = cost.cost + astarheuristic_.Get(dist);
@@ -349,6 +355,12 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                      const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
   for (const auto& edge : dest.edges()) {
+    // If the destination is at a node, skip any inbound edges (so any
+    // opposing outbound edges are not considered)
+    if (dest.IsNode() && edge.dist == 1.0f) {
+      continue;
+    }
+
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
@@ -370,7 +382,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the origin
-    Cost cost = (costing->EdgeCost(opp_dir_edge, 0) * (1.0f - edge.dist));
+    Cost cost = costing->EdgeCost(opp_dir_edge,
+                    graphreader.GetEdgeDensity(opp_edge_id)) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(endtile->node(
                       directededge->endnode())->latlng());
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);

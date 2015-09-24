@@ -65,19 +65,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint32_t>(TravelMode::kPublicTransit)];
 
-  // Alter the destination edges if at a node - loki always gives edges
-  // leaving a node, but when a destination we want edges entering the node
-  PathLocation dest = update_destinations(graphreader, destination,
-                                          costing->GetFilter());
-
-  // Check for trivial path
-  auto trivial_id = trivial(origin, dest);
-  if (trivial_id.Is_Valid()) {
-    std::vector<PathInfo> trivialpath;
-    trivialpath.emplace_back(mode_, 0, trivial_id, 0);
-    return trivialpath;
-  }
-
   // For now the date_time must be set on the origin.
   if (!origin.date_time_)
     return { };
@@ -88,16 +75,14 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   uint32_t date = DateTime::days_from_pivot_date(*origin.date_time_);
   uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
 
-  // Check for loop path
-  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), dest.vertex(), costing);
+  Init(origin.vertex(), destination.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
 
-  // Initialize the origin and destination locations
-  SetOrigin(graphreader, origin, costing, loop_edge_info);
-  SetDestination(graphreader, dest, costing);
+  // Initialize the origin and destination locations. Initialize the
+  // destination first in case the origin edge includes a destination edge.
+  SetDestination(graphreader, destination, costing);
+  SetOrigin(graphreader, origin, destination, costing);
 
   // Find shortest path
   uint32_t blockid, tripid, prior_stop;
@@ -115,13 +100,25 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     }
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
-    // edge (if so complete the route and form the path). Mark the edge as
-    // permanently labeled.
+    // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
     if (destinations_.find(pred.edgeid()) != destinations_.end()) {
-      return FormPath(predindex, loop_edge_info);
+      // Check if a trivial path. Skip if no predecessor and not
+      // trivial (cannot reach destination along this one edge).
+      if (pred.predecessor() == kInvalidLabel) {
+        if (IsTrivial(pred.edgeid(), origin, destination)) {
+          return FormPath(predindex);
+        }
+      } else {
+        return FormPath(predindex);
+      }
     }
-    edgestatus_->Update(pred.edgeid(), kPermanent);
+
+    // Mark the edge as permanently labeled. Do not do this for an origin
+    // edge (this will allow loops/around the block cases)
+    if (!pred.origin()) {
+      edgestatus_->Update(pred.edgeid(), kPermanent);
+    }
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations

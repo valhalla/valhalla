@@ -139,6 +139,16 @@ class TimeDistanceMatrix : public PathAlgorithm {
   /**
    * Sets the origin for a many to one time+distance matrix computation.
    * @param  graphreader   Graph reader for accessing routing graph.
+   * @param  origin        Origin location information.
+   * @param  costing       Costing method.
+   */
+  void SetOriginOneToMany(baldr::GraphReader& graphreader,
+                   const baldr::PathLocation& origin,
+                   const std::shared_ptr<sif::DynamicCost>& costing);
+
+  /**
+   * Sets the origin for a many to one time+distance matrix computation.
+   * @param  graphreader   Graph reader for accessing routing graph.
    * @param  dest          Destination
    * @param  costing       Costing method.
    */
