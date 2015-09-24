@@ -47,8 +47,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::vector<PointLL> shape;
-    shape.reserve(count);
+    std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.lng, node.lat);
@@ -207,8 +206,7 @@ bool ShortFerry(const uint32_t node_index, node_bundle& bundle,
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::vector<PointLL> shape;
-    shape.reserve(count);
+    std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.lng, node.lat);
@@ -227,7 +225,7 @@ bool ShortFerry(const uint32_t node_index, node_bundle& bundle,
       auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
       if (bundle2.node.attributes_.non_ferry_edge) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
-        if (valhalla::midgard::length(shape) < 2000.0f) {
+        if (midgard::length(shape) < 2000.0f) {
           const OSMWay w = *ways[edge.first.wayindex_];
           wayid = w.way_id();
           short_edge = true;

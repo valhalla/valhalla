@@ -207,10 +207,11 @@ class GraphTileBuilder : public baldr::GraphTile {
    *
    * @return  The edge info offset that will be stored in the directed edge.
    */
+  template <class shape_container_t>
   uint32_t AddEdgeInfo(const uint32_t edgeindex, const baldr::GraphId& nodea,
                        const baldr::GraphId& nodeb,
                        const uint64_t wayid,
-                       const std::vector<PointLL>& lls,
+                       const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        bool& added);
 

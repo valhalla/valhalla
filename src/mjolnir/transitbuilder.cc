@@ -17,6 +17,7 @@
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::midgard;
@@ -89,10 +90,10 @@ struct OSMConnectionEdge {
   GraphId stop_node;
   uint32_t stop_key;   // Transit stop key (the to node)
   float length;
-  std::vector<PointLL> shape;
+  std::list<PointLL> shape;
 
   OSMConnectionEdge(const GraphId& f, const GraphId& t, const uint32_t k,
-                    const float l, const std::vector<PointLL>& s)
+                    const float l, const std::list<PointLL>& s)
       :  osm_node(f),
          stop_node(t),
          stop_key(k),
@@ -582,10 +583,9 @@ Use GetTransitUse(const uint32_t rt) {
   }
 }
 
-std::vector<PointLL> GetShape(const PointLL& stop_ll,
-                              const PointLL& endstop_ll,
-                              const uint32_t shapeid) {
-  std::vector<PointLL> shape;
+std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, const uint32_t shapeid) {
+
+  std::list<PointLL> shape;
 
   /*
    * TODO: port to use transit land shape.
@@ -837,7 +837,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       std::vector<std::string> names;
-      std::vector<PointLL> shape = { stop.ll, endstop.ll };
+      std::list<PointLL> shape = { stop.ll, endstop.ll };
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(0, stop.graphid,
                      endstop.graphid, 0, shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -876,9 +876,11 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // route within TripPathBuilder.
       bool added = false;
       std::vector<std::string> names;
-      std::vector<PointLL> shape = GetShape(stop.ll, endstop.ll, transitedge.shapeid);
+      auto shape = GetShape(stop.ll, endstop.ll, transitedge.shapeid);
+
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            stop.graphid, endstop.graphid, 0, shape, names, added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -956,7 +958,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
   if (stop.graphid.Tile_Base() == startnode.Tile_Base()) {
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
-    std::vector<PointLL> shape;
+    std::list<PointLL> shape;
     for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
@@ -975,7 +977,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
     // Add connection to end node
     if (startnode.tileid() == endnode.tileid()) {
       // Add shape from the end to closest point on edge
-      std::vector<PointLL> shape2;
+      std::list<PointLL> shape2;
       for (int32_t i = closest_shape.size()-1; i > std::get<2>(closest); i--) {
         shape2.push_back(closest_shape[i]);
       }

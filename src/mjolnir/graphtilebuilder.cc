@@ -449,11 +449,12 @@ bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex, const baldr::GraphI
 }
 
 // Add edge info
+template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const GraphId& nodea,
                                        const baldr::GraphId& nodeb,
                                        const uint64_t wayid,
-                                       const std::vector<PointLL>& lls,
+                                       const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        bool& added) {
   // If we haven't yet added edge info for this edge tuple
@@ -496,6 +497,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     return existing_edge_offset_item->second;
   }
 }
+template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
+  (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
+   const std::vector<PointLL>&, const std::vector<std::string>&, bool&);
+template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL> >
+  (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
+   const std::list<PointLL>&, const std::vector<std::string>&, bool&);
 
 // Add a name to the text list
 uint32_t GraphTileBuilder::AddName(const std::string& name) {
