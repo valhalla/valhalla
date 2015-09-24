@@ -16,7 +16,6 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/signinfo.h>
-#include <valhalla/baldr/transitcalendar.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
@@ -161,12 +160,6 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  transfer  Transit transfer record.
    */
   void AddTransitTransfer(const baldr::TransitTransfer& transfer);
-
-  /**
-   * Add a transit calendar exception.
-   * @param  exception  Transit calendar exception record.
-   */
-  void AddTransitCalendar(const baldr::TransitCalendar& exception);
 
   /**
    * Add sign information.
@@ -347,9 +340,6 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Transit transfers. Sorted by from stop Id.
   std::vector<baldr::TransitTransfer> transfer_builder_;
-
-  // Transit calendar exceptions. Sorted by service Id.
-  std::vector<baldr::TransitCalendar> exception_builder_;
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.

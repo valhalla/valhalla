@@ -69,9 +69,6 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->transfercount(); i++) {
     transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
   }
-  for (uint32_t i = 0; i < header_->calendarcount(); i++) {
-    exception_builder_.emplace_back(std::move(transit_exceptions_[i]));
-  }
 
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
@@ -157,7 +154,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_transfercount(transfer_builder_.size());
-    header_builder_.set_calendarcount(exception_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
@@ -168,7 +164,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (transfer_builder_.size() * sizeof(TransitTransfer))
-            + (exception_builder_.size() * sizeof(TransitCalendar))
             + (signs_builder_.size() * sizeof(SignBuilder))
             + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
 
@@ -206,11 +201,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     std::sort(transfer_builder_.begin(), transfer_builder_.end());
     file.write(reinterpret_cast<const char*>(&transfer_builder_[0]),
                transfer_builder_.size() * sizeof(TransitTransfer));
-
-    // Sort and write the transit calendar exceptions
-    std::sort(exception_builder_.begin(), exception_builder_.end());
-    file.write(reinterpret_cast<const char*>(&exception_builder_[0]),
-               exception_builder_.size() * sizeof(TransitCalendar));
 
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
@@ -291,10 +281,6 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
                hdr.transfercount() * sizeof(TransitTransfer));
 
-    // Write the existing transit calendar exceptions
-    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
-               hdr.calendarcount() * sizeof(TransitCalendar));
-
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
@@ -362,10 +348,6 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     // Write the existing transit transfers
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
                hdr.transfercount() * sizeof(TransitTransfer));
-
-    // Write the existing transit calendar exceptions
-    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
-               hdr.calendarcount() * sizeof(TransitCalendar));
 
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
@@ -440,11 +422,6 @@ void GraphTileBuilder::AddTransitRoute(const TransitRoute& route)  {
 // Add a transit transfer.
 void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
   transfer_builder_.emplace_back(std::move(transfer));
-}
-
-// Add a transit calendar exception.
-void GraphTileBuilder::AddTransitCalendar(const TransitCalendar& exception)  {
-  exception_builder_.emplace_back(std::move(exception));
 }
 
 // Add signs
