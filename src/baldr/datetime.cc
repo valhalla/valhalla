@@ -70,7 +70,7 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //Get service days
 //Start from the start date to end date or 60 days, whichever is less.
 //set the bits based on the dow.
-uint64_t get_service_days(const std::string& start_date, std::string& end_date, const uint32_t& dow_mask) {
+uint64_t get_service_days(std::string& start_date, std::string& end_date, const std::string& tz, const uint32_t& dow_mask) {
 
   //start_date is in the format of 20150516 or 2015-05-06T08:00
   boost::gregorian::date s_date;
@@ -80,8 +80,18 @@ uint64_t get_service_days(const std::string& start_date, std::string& end_date, 
   boost::gregorian::date e_date;
   e_date = get_formatted_date(end_date);
 
-  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
+  if (!tz.empty()) {
+    boost::gregorian::date current_date = get_formatted_date(iso_date_time(tz));
+    if (s_date <= current_date && current_date <= e_date) {
+      s_date = current_date;
+      start_date = to_iso_extended_string(s_date);
+    }
+    else if (current_date > e_date) //reject.
+      return 0;
+  }
 
+  // only support 60 days out.  (59 days and include the end_date = 60)
+  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
   if (enddate <= e_date) {
     e_date = enddate;
     end_date = to_iso_extended_string(e_date);
@@ -188,6 +198,21 @@ uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
     return bit_set.to_ulong();
   }
   return days;
+}
+
+// check if service is available for a date.
+bool is_service_available(const uint64_t& days, const uint32_t& start_date, const uint32_t& date, const uint32_t& end_date) {
+
+  if (start_date <= date && date <= end_date) {
+    boost::gregorian::date start = pivot_date_ + boost::gregorian::days(start_date);
+    boost::gregorian::date d = pivot_date_ + boost::gregorian::days(date);
+
+    std::bitset<64> bit_set(days);
+    boost::gregorian::date_period range(start, d);
+    uint32_t length = range.length().days();
+    return bit_set.test(length);
+  }
+  return false;
 }
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.

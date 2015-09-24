@@ -27,11 +27,12 @@ namespace DateTime {
    * Get the days that this transit service is running in 60 days or less
    * @param   start_date in the format of 20150516 or 2015-05-06T08:00
    * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
-  uint64_t get_service_days(const std::string& start_date,
-                            std::string& end_date, const uint32_t& dow_mask);
+  uint64_t get_service_days(std::string& start_date, std::string& end_date,
+                            const std::string& tz, const uint32_t& dow_mask);
 
   /**
    * Adds a service day to the days.
@@ -56,6 +57,16 @@ namespace DateTime {
    */
   uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
                               const std::string& end_date, const std::string& removed_date);
+
+  /**
+   * Check if service is available for a date.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date in the format of days since pivot
+   * @param   date the date in question...in the format of days since pivot.
+   * @param   end_date in the format of days since pivot
+   */
+  bool is_service_available(const uint64_t& days, const uint32_t& start_date,
+                            const uint32_t& date, const uint32_t& end_date);
 
   /**
    * Get the number of days elapsed from the pivot date until
