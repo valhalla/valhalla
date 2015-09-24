@@ -185,6 +185,16 @@ bool EdgeLabel::has_transit() const {
   return attributes_.has_transit;
 }
 
+// Is this edge an origin edge?
+bool EdgeLabel::origin() const {
+  return attributes_.origin;
+}
+
+// Sets this edge as an origin.
+void EdgeLabel::set_origin() {
+  attributes_.origin = true;
+}
+
 // Get the current walking distance in meters.
 uint32_t EdgeLabel::walking_distance() const {
   return walking_distance_;
