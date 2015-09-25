@@ -15,6 +15,9 @@ void no_data() {
 
   if(s.get(std::make_pair(0.0,0.0)) != s.get_no_data_value())
     throw std::logic_error("Asked for point with no data should be no data value");
+
+  if(s.get(std::make_pair(200.0, 200.0)) != s.get_no_data_value())
+    throw std::logic_error("Asked for point outside of valid range");
 }
 
 void get() {
