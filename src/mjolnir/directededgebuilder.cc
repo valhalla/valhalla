@@ -77,12 +77,14 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_caraccess(forward, way.auto_forward());
   set_busaccess(forward, way.bus_forward());
   set_bicycleaccess(forward, way.bike_forward());
+  set_emergencyaccess(forward, way.emergency_forward());
   set_pedestrianaccess(forward, way.pedestrian());
 
   // Access for opposite direction
   set_caraccess(!forward, way.auto_backward());
   set_busaccess(!forward, way.bus_backward());
   set_bicycleaccess(!forward, way.bike_backward());
+  set_emergencyaccess(!forward, way.emergency_backward());
   set_pedestrianaccess(!forward, way.pedestrian());
 }
 
