@@ -97,7 +97,7 @@ namespace skadi {
     auto lon = std::floor(coord.first);
     auto lat = std::floor(coord.second);
     auto index = static_cast<uint16_t>(lat + 90) * 360 + static_cast<uint16_t>(lon + 180);
-    if(!cache[index])
+    if(index > cache.size() || !cache[index])
       return NO_DATA_VALUE;
 
     //grab the data array and what row and column we need
