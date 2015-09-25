@@ -29,7 +29,60 @@ constexpr float NO_HEADING = 30.f * 30.f;
 //how much of the shape should be sampled to get heading
 constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
-constexpr float ANGLE_WIDTH = 89.f;
+constexpr float ANGLE_WIDTH = 88.f;
+
+//TODO: move to midgard and test the crap out of this
+//we are essentially estimating the angle of the tangent
+//at a point along a discretised curve. we attempt to mostly
+//use the shape coming into the point on the curve but if there
+//isnt enough there we will use the shape coming out of the it
+float Angle(size_t index, const PointLL& point, const std::vector<PointLL>& shape, bool forward) {
+  //depending on if we are going forward or backward we choose a different increment
+  auto increment = forward ? -1 : 1;
+  auto first_end = forward ? shape.cbegin() : shape.cend() - 1 ;
+  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
+
+  //u and v will be points we move along the shape until we have enough distance between them or run out of points
+
+  //move backwards until we have enough or run out
+  float remaining = HEADING_SAMPLE;
+  auto u = point;
+  auto i = shape.cbegin() + index + forward;
+  while(remaining > 0 && i != first_end) {
+    //move along and see how much distance that added
+    i += increment;
+    auto d = u.Distance(*i);
+    //are we done yet?
+    if(remaining <= d) {
+      auto coef = remaining / d;
+      u = u.AffineCombination(1 - coef, coef, *i);
+      return u.Heading(point);
+    }
+    //next one
+    u = *i;
+    remaining -= d;
+  }
+
+  //move forwards until we have enough or run out
+  auto v = point;
+  i = shape.cbegin() + index + !forward;
+  while(remaining > 0 && i != second_end) {
+    //move along and see how much distance that added
+    i -= increment;
+    auto d = v.Distance(*i);
+    //are we done yet?
+    if(remaining <= d) {
+      auto coef = remaining / d;
+      v = v.AffineCombination(1 - coef, coef, *i);
+      return u.Heading(v);
+    }
+    //next one
+    v = *i;
+    remaining -= d;
+  }
+
+  return u.Heading(v);
+}
 
 bool HeadingFilter(const DirectedEdge* edge, const std::unique_ptr<const EdgeInfo>& info,
   const std::tuple<PointLL, float, int>& point, boost::optional<int> heading) {
@@ -38,9 +91,8 @@ bool HeadingFilter(const DirectedEdge* edge, const std::unique_ptr<const EdgeInf
     return false;
 
   //get the angle of the shape from this point
-  std::vector<PointLL> sub_shape(info->shape().begin() + std::get<2>(point), info->shape().end());
-  sub_shape.front() = std::get<0>(point);
-  auto angle = std::fmod(PointLL::HeadingAlongPolyline(sub_shape, HEADING_SAMPLE) + (180.f * !edge->forward()), 360.f);
+  auto angle = Angle(std::get<2>(point), std::get<0>(point), info->shape(), edge->forward());
+  std::cout << " ANGLE " << angle;
   //we want the closest distance between two angles which can be had
   //across 0 or between the two so we just need to know which is bigger
   if(*heading > angle)
@@ -100,6 +152,7 @@ PathLocation CorrelateNode(GraphReader& reader, const NodeInfo* node, const Loca
   //now that we have a node we can pass back all the edges leaving and entering it
   const auto* start_edge = tile->directededge(node->edge_index());
   const auto* end_edge = start_edge + node->edge_count();
+  auto closest_point = std::make_tuple(node->latlng(), sqdist, 0);
   for(const auto* edge = start_edge; edge < end_edge; ++edge) {
     //get some info about this edge and the opposing
     GraphId id = tile->id();
@@ -107,21 +160,28 @@ PathLocation CorrelateNode(GraphReader& reader, const NodeInfo* node, const Loca
     const GraphTile* other_tile;
     const auto other_id = reader.GetOpposingEdgeId(id, other_tile);
     const auto* other_edge = other_tile->directededge(other_id);
+    auto info = tile->edgeinfo(edge->edgeinfo_offset());
 
     //do we want this edge
     if(!filter(edge)) {
-      if(!HeadingFilter(edge, tile->edgeinfo(edge->edgeinfo_offset()), std::make_tuple(node->latlng(), sqdist, 0), location.heading_))
-        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(id), 0.f, PathLocation::NONE});
+      std::cout << std::endl << "CONSIDERING: " << id.fields.id;
+      PathLocation::PathEdge path_edge{std::move(id), 0.f, PathLocation::NONE};
+      std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
+      if(!HeadingFilter(edge, info, closest_point, location.heading_))
+        correlated.CorrelateEdge(std::move(path_edge));
       else
-        heading_filtered.emplace_back(std::move(id), 0.f, PathLocation::NONE);
+        heading_filtered.emplace_back(std::move(path_edge));
     }
 
-    //do we want the opposing
+    //do we want the evil twin
     if(!filter(other_edge)) {
-      if(!HeadingFilter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), std::make_tuple(node->latlng(), sqdist, 0), location.heading_))
-        correlated.CorrelateEdge(PathLocation::PathEdge{std::move(other_id), 1.f, PathLocation::NONE});
+      std::cout << std::endl << "CONSIDERING: " << other_id.fields.id;
+      PathLocation::PathEdge path_edge{std::move(other_id), 1.f, PathLocation::NONE};
+      std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
+      if(!HeadingFilter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
+        correlated.CorrelateEdge(std::move(path_edge));
       else
-        heading_filtered.emplace_back(std::move(other_id), 1.f, PathLocation::NONE);
+        heading_filtered.emplace_back(std::move(path_edge));
     }
   }
 
