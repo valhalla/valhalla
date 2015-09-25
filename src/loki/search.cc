@@ -163,7 +163,6 @@ PathLocation CorrelateNode(GraphReader& reader, const NodeInfo* node, const Loca
 
     //do we want this edge
     if(!filter(edge)) {
-      std::cout << std::endl << "CONSIDERING: " << id.fields.id;
       PathLocation::PathEdge path_edge{std::move(id), 0.f, PathLocation::NONE};
       std::get<2>(closest_point) = edge->forward() ? 0 : info->shape().size() - 2;
       if(!HeadingFilter(edge, info, closest_point, location.heading_))
@@ -174,7 +173,6 @@ PathLocation CorrelateNode(GraphReader& reader, const NodeInfo* node, const Loca
 
     //do we want the evil twin
     if(!filter(other_edge)) {
-      std::cout << std::endl << "CONSIDERING: " << other_id.fields.id;
       PathLocation::PathEdge path_edge{std::move(other_id), 1.f, PathLocation::NONE};
       std::get<2>(closest_point) = other_edge->forward() ? 0 : info->shape().size() - 2;
       if(!HeadingFilter(other_edge, tile->edgeinfo(edge->edgeinfo_offset()), closest_point, location.heading_))
