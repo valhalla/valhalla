@@ -31,7 +31,7 @@ constexpr float HEADING_SAMPLE = 30.f;
 //cone width to use for cosine similarity comparisons for favoring heading
 constexpr float ANGLE_WIDTH = 88.f;
 
-//TODO: move to midgard and test the crap out of this
+//TODO: move this to midgard and test the crap out of it
 //we are essentially estimating the angle of the tangent
 //at a point along a discretised curve. we attempt to mostly
 //use the shape coming into the point on the curve but if there
@@ -92,7 +92,6 @@ bool HeadingFilter(const DirectedEdge* edge, const std::unique_ptr<const EdgeInf
 
   //get the angle of the shape from this point
   auto angle = Angle(std::get<2>(point), std::get<0>(point), info->shape(), edge->forward());
-  std::cout << " ANGLE " << angle;
   //we want the closest distance between two angles which can be had
   //across 0 or between the two so we just need to know which is bigger
   if(*heading > angle)
