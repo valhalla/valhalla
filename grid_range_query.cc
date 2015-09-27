@@ -54,7 +54,7 @@ class GridRangeQuery
 
 
   void Init(const BoundingBox& bbox, float cell_width, float cell_height) {
-    assert(cell_width >= 0.f && cell_height >= 0.f);
+    assert(cell_width > 0.f && cell_height > 0.f);
     bbox_ = bbox;
     cell_width_ = cell_width;
     cell_height_ = cell_height;
