@@ -238,6 +238,7 @@ struct graph_callback : public OSMPBF::Callback {
     const auto& surface_exists = results.find("surface");
     bool has_surface_tag = (surface_exists != results.end());
 
+    const auto& emergency = results.find("use");
     if (!has_surface_tag)
       has_surface = false;
 
@@ -282,12 +283,16 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_bus_forward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_forward")
         w.set_bike_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "emergency_forward")
+        w.set_emergency_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
       else if (tag.first == "bus_backward")
         w.set_bus_backward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_backward")
         w.set_bike_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "emergency_backward")
+        w.set_emergency_backward(tag.second == "true" ? true : false);
       else if (tag.first == "pedestrian")
         w.set_pedestrian(tag.second == "true" ? true : false);
 
