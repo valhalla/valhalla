@@ -136,12 +136,11 @@ OfflineMatch(MapMatching& mm,
 {
   mm.Clear();
   Time time;
+  CandidateQuery cq(mm.graphreader());
   for (const auto& measurement : measurements) {
-    Location location(measurement.lnglat, baldr::Location::StopType::BREAK);
-    auto candidates = EdgeSearch(location,
-                                 mm.graphreader(),
-                                 mm.costing()->GetFilter(),
-                                 search_radius * search_radius);
+    auto candidates = cq.Query(measurement.lnglat,
+                               search_radius,
+                               mm.costing()->GetFilter());
     time = mm.AppendState(measurement, candidates);
   }
   auto path = mm.SearchPath(time);

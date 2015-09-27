@@ -21,13 +21,13 @@ int main(int argc, char *argv[])
   boost::property_tree::ptree config;
   boost::property_tree::read_json("conf/valhalla.json", config);
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir.hierarchy"));
-  float sq_radius = radius * radius;
   auto costing = sif::CreatePedestrianCost(*config.get_child_optional("costing_options.pedestrian"));
-  Location location{{lon, lat}, baldr::Location::StopType::BREAK};
+  PointLL location(lon, lat);
+  CandidateQuery cq(reader);
   for (int i=0; i < 10; i++) {
-    auto candidates = EdgeSearch(location, reader, costing->GetFilter(), sq_radius);
+    auto candidates = cq.Query(location, radius * radius, costing->GetFilter());
   }
-  auto candidates = EdgeSearch(location, reader, costing->GetFilter(), sq_radius);
+  auto candidates = cq.Query(location, radius * radius, costing->GetFilter());
   for (const auto& candidate : candidates) {
     std::cout << candidate.distance() << std::endl;
   }

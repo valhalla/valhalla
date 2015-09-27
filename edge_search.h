@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 
 #include <cmath>
+#include <tuple>
 #include <algorithm>
 
 #include <boost/property_tree/ptree.hpp>
@@ -22,13 +23,14 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 
-// Copy from valhalla/loki/search.cc
-std::tuple<PointLL, float, size_t>
+std::tuple<PointLL, float, size_t, float>
 Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator)
 {
-  size_t closest_segment = 0;
+  size_t closest_segment = 0.f;
   float closest_distance = std::numeric_limits<float>::max();
+  float closest_partial_length = 0.f;
   PointLL closest_point{};
+  float total_length = 0.f;
 
   //for each segment
   for(size_t i = 0; i < shape.size() - 1; ++i) {
@@ -59,10 +61,22 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
       closest_segment = i;
       closest_distance = distance;
       closest_point = std::move(point);
+      closest_partial_length = total_length;
     }
+
+    //total edge length
+    total_length += u.Distance(v);
   }
 
-  return std::make_tuple(std::move(closest_point), closest_distance, closest_segment);
+  // Offset is a float between 0 and 1 representing the location of
+  // the closest point on LineString to the given Point, as a fraction
+  // of total 2d line length.
+  closest_partial_length += shape[closest_segment].Distance(closest_point);
+  float offset = static_cast<float>(closest_partial_length / total_length);
+  offset = std::max(0.f, std::min(offset, 1.f));
+  assert(0.f <= offset && offset <= 1.f);
+
+  return std::make_tuple(std::move(closest_point), closest_distance, closest_segment, offset);
 }
 
 
@@ -111,21 +125,36 @@ const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edg
 }
 
 
-std::vector<Candidate>
-EdgeSearch(const Location& location,
-           GraphReader& reader,
-           EdgeFilter filter,
-           float sq_search_radius)
+class CandidateQuery
 {
-  std::vector<Candidate> candidates;
-
-  const GraphTile* tile = reader.GetGraphTile(location.latlng_);
-  if(!tile || tile->header()->directededgecount() == 0) {
-    return candidates;
+ public:
+  CandidateQuery(GraphReader& reader)
+      : reader_(reader) {
   }
 
+  virtual std::vector<Candidate> Query(const PointLL& point, float radius, EdgeFilter filter = nullptr);
+
+  virtual std::vector<std::vector<Candidate>>
+  QueryBulk(const std::vector<PointLL>& points, float radius, EdgeFilter filter = nullptr);
+
+ private:
+  GraphReader& reader_;
+};
+
+
+std::vector<Candidate>
+CandidateQuery::Query(const PointLL& location,
+                      float sq_search_radius,
+                      EdgeFilter filter)
+{
+  const GraphTile* tile = reader_.GetGraphTile(location);
+  if(!tile || tile->header()->directededgecount() == 0) {
+    return {};
+  }
+
+  std::vector<Candidate> candidates;
   std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
-  DistanceApproximator approximator(location.latlng_);
+  DistanceApproximator approximator(location);
 
   //for each edge
   const auto first_node = tile->node(0);
@@ -138,40 +167,44 @@ EdgeSearch(const Location& location,
     for (auto edge = first_edge; edge < last_edge; edge++) {
 
       //we haven't looked at this edge yet and its not junk
-      if(!filter(edge) && visited.insert(edge->edgeinfo_offset()).second) {
+      if(visited.insert(edge->edgeinfo_offset()).second && (!filter || !filter(edge))) {
         auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edge);
-        auto tuple = Project(location.latlng_, edgeinfo_ptr->shape(), approximator);
-        auto sq_distance = std::get<1>(tuple);
+        auto shape = edgeinfo_ptr->shape();
+        PointLL point;
+        float sq_distance;
+        size_t segment;
+        float offset;
+        std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         if (sq_distance <= sq_search_radius) {
-          auto edgeid = get_edgeid(*tile, edge);
-          auto segment = std::get<2>(tuple);
-
-          // Get length ratio of the closet point
-          auto point = std::get<0>(tuple);
-          float partial_length = 0.f;
-          for(size_t i = 0; i < segment; ++i) {
-            partial_length += edgeinfo_ptr->shape()[i].Distance(edgeinfo_ptr->shape()[i + 1]);
-          }
-          partial_length += edgeinfo_ptr->shape()[segment].Distance(point);
-          float length_ratio = static_cast<float>(partial_length / static_cast<double>(edge->length()));
-
-          length_ratio = std::max(0.f, std::min(length_ratio, 1.f));
-          assert(0.f <= length_ratio && length_ratio <= 1.f);
-          auto distance = std::sqrt(sq_distance);
-
-          PathLocation correlated(location);
+          PathLocation correlated(Location(location, Location::StopType::BREAK));
           correlated.CorrelateVertex(point);
-          correlated.CorrelateEdge({edgeid, length_ratio});
-          if (!filter(get_directededge(*tile, edgeid))) {
-            auto opp_edgeid = reader.GetOpposingEdgeId(edgeid);
-            correlated.CorrelateEdge({opp_edgeid, 1 - length_ratio});
+
+          auto edgeid = get_edgeid(*tile, edge);
+          correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
+
+          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
+          if (!filter || !filter(get_directededge(*tile, opp_edgeid))) {
+            correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
           }
 
-          candidates.emplace_back(correlated, distance);
+          candidates.emplace_back(correlated, std::sqrt(sq_distance));
         }
       }
     }
   }
 
   return candidates;
+}
+
+
+std::vector<std::vector<Candidate>>
+CandidateQuery::QueryBulk(const std::vector<PointLL>& locations,
+                          float radius,
+                          EdgeFilter filter)
+{
+  std::vector<std::vector<Candidate>> results;
+  for (const auto& location : locations) {
+    results.push_back(Query(location, radius));
+  }
+  return results;
 }
