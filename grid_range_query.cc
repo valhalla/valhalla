@@ -5,7 +5,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <cmath>
 #include <cassert>
 #include <stdexcept>
@@ -194,8 +194,8 @@ class GridRangeQuery
 
 
   // Query all edges that intersects with the range
-  std::set<GraphId> Query(const BoundingBox& range) const {
-    std::set<GraphId> results;
+  std::unordered_set<GraphId> Query(const BoundingBox& range) const {
+    std::unordered_set<GraphId> results;
 
     int mini, minj, maxi, maxj;
     std::tie(mini, minj) = GridCoordinates({range.minx(), range.miny()});
