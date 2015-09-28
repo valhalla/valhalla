@@ -17,6 +17,8 @@
 #include <valhalla/sif/dynamiccost.h>
 
 #include "candidate.h"
+#include "grid_range_query.h"
+
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -132,12 +134,15 @@ class CandidateQuery
       : reader_(reader) {
   }
 
+  virtual ~CandidateQuery() {
+  }
+
   virtual std::vector<Candidate> Query(const PointLL& point, float radius, EdgeFilter filter = nullptr);
 
   virtual std::vector<std::vector<Candidate>>
   QueryBulk(const std::vector<PointLL>& points, float radius, EdgeFilter filter = nullptr);
 
- private:
+ protected:
   GraphReader& reader_;
 };
 
@@ -167,7 +172,7 @@ CandidateQuery::Query(const PointLL& location,
     for (auto edge = first_edge; edge < last_edge; edge++) {
 
       //we haven't looked at this edge yet and its not junk
-      if(visited.insert(edge->edgeinfo_offset()).second && (!filter || !filter(edge))) {
+      if (visited.insert(edge->edgeinfo_offset()).second && (!filter || !filter(edge))) {
         auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edge);
         auto shape = edgeinfo_ptr->shape();
         PointLL point;
@@ -208,3 +213,242 @@ CandidateQuery::QueryBulk(const std::vector<PointLL>& locations,
   }
   return results;
 }
+
+
+inline float TranslateLatitudeInMeters(float lat, float meters)
+{
+  float offset = meters / kMetersPerDegreeLat;
+  return lat + offset;
+}
+
+
+inline float TranslateLatitudeInMeters(const PointLL& lnglat, float meters)
+{
+  return TranslateLatitudeInMeters(lnglat.lat(), meters);
+}
+
+
+inline float TranslateLongitudeInMeters(const PointLL& lnglat, float meters)
+{
+  float offset = meters / DistanceApproximator::MetersPerLngDegree(lnglat.lat());
+  return lnglat.lng() + offset;
+}
+
+
+inline BoundingBox ExtendByMeters(const BoundingBox& bbox, float meters)
+{
+  // TODO negative meters may cause problems
+  PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
+                TranslateLatitudeInMeters(bbox.minpt(), -meters));
+  PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
+                TranslateLatitudeInMeters(bbox.maxpt(), meters));
+  return {minpt, maxpt};
+}
+
+
+inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
+{
+  // TODO negative meters may cause problems
+  PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
+                TranslateLatitudeInMeters(pt, -meters));
+  PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
+                TranslateLatitudeInMeters(pt, meters));
+  return {minpt, maxpt};
+}
+
+
+// Add each road linestring's line segments into grid. Only one side
+// of directed edges is added
+void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
+{
+  std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
+  const auto first_node = tile.node(0);
+  const auto last_node  = first_node + tile.header()->nodecount();
+  for (auto start_node = first_node; start_node < last_node; start_node++) {
+    const auto first_edge = tile.directededge(start_node->edge_index());
+    const auto last_edge  = first_edge + start_node->edge_count();
+    for (auto edge = first_edge; edge < last_edge; edge++) {
+      if (visited.insert(edge->edgeinfo_offset()).second) {
+        auto shape = get_edgeinfo_ptr(tile, edge)->shape();
+        if (shape.empty()) {
+          continue;
+        }
+        auto edgeid = get_edgeid(tile, edge);
+        for (decltype(shape.size()) i = 0; i < shape.size() - 1; ++i) {
+          grid_ptr->AddLineSegment(edgeid, LineSegment(shape[i], shape[i+1]));
+        }
+      }
+    }
+  }
+}
+
+
+class CandidateGridQuery: public CandidateQuery
+{
+ private:
+  const TileHierarchy& hierarchy_;
+  float cell_width_;
+  float cell_height_;
+  std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
+
+ public:
+  CandidateGridQuery(GraphReader& reader,
+                     float cell_width, float cell_height)
+      : CandidateQuery(reader),
+        hierarchy_(reader.GetTileHierarchy()),
+        cell_width_(cell_width),
+        cell_height_(cell_height) {
+  }
+
+  ~CandidateGridQuery() {
+  }
+
+  const GridRangeQuery<GraphId>* GetGrid(GraphId tile_id)
+  {
+    return GetGrid(reader_.GetGraphTile(tile_id));
+  }
+
+  const GridRangeQuery<GraphId>* GetGrid(const GraphTile* tile_ptr)
+  {
+    if (!tile_ptr) {
+      return nullptr;
+    }
+
+    auto tile_id = tile_ptr->id();
+    auto cached = grid_cache_.find(tile_id);
+    if (cached != grid_cache_.end()) {
+      return &(cached->second);
+    }
+
+    GridRangeQuery<GraphId> grid(tile_ptr->BoundingBox(hierarchy_), cell_width_, cell_height_);
+    // TODO does rehash change pointer addresses?
+    auto inserted = grid_cache_.emplace(tile_id, std::move(grid));
+    auto grid_ptr = &(inserted.first->second);
+    IndexTile(*tile_ptr, grid_ptr);
+    return grid_ptr;
+  }
+
+  std::unordered_set<GraphId>
+  RangeQuery(const BoundingBox& range)
+  {
+    auto tile_of_minpt = reader_.GetGraphTile(range.minpt()),
+         tile_of_maxpt = reader_.GetGraphTile(range.maxpt());
+
+    // If the range is inside a single tile
+    //
+    // +--------+---------+
+    // |        | +----+  |
+    // |        | +----+  |
+    // +--------+---------+
+    // |        |         |
+    // |        |         |
+    // +--------+---------+
+    if (tile_of_minpt == tile_of_maxpt) {
+      if (tile_of_minpt) {
+        auto grid = GetGrid(tile_of_minpt);
+        if (grid) {
+          return grid->Query(range);
+        } else {
+          return {};
+        }
+      }
+      return {};
+    }
+
+    // Otherwise this range intersects with multiple tiles:
+    //
+    // NOTE for simplicity we only consider the case that the range is
+    // smaller than tile's bounding box
+    //
+    //   intersects 4 tiles               intersects 2 tiles
+    // +---------+-----------+  +-------+---------+  +-------+-------+
+    // |      +--+-----+     |  |   +---+----+    |  | +---+ |       |
+    // |      |  |     |     |  |   +---+----+    |  | |   | |       |
+    // +------+--+-----+-----+  +-------+---------+  +-+---+-+-------+
+    // |      |  |     |     |  |       |         |  | +---+ +       |
+    // |      +--+-----+     |  |       |         |  |       |       |
+    // +---------+-----------+  +-------+---------+  +-------+-------+
+    std::unordered_set<GraphId> result;
+
+    if (tile_of_minpt) {
+      auto grid = GetGrid(tile_of_minpt);
+      if (grid) {
+        auto set = grid->Query(range);
+        result.insert(set.begin(), set.end());
+      }
+    }
+
+    if (tile_of_maxpt) {
+      auto grid = GetGrid(tile_of_maxpt);
+      if (grid) {
+        auto set = grid->Query(range);
+        result.insert(set.begin(), set.end());
+      }
+    }
+
+    auto tile_of_lefttop = reader_.GetGraphTile(PointLL(range.minx(), range.maxy()));
+    if (tile_of_lefttop
+        && tile_of_lefttop != tile_of_minpt
+        && tile_of_lefttop != tile_of_maxpt) {
+      auto grid = GetGrid(tile_of_lefttop);
+      if (grid) {
+        auto set = grid->Query(range);
+        result.insert(set.begin(), set.end());
+      }
+    }
+
+    auto tile_of_rightbottom = reader_.GetGraphTile(PointLL(range.maxx(), range.miny()));
+    if (tile_of_rightbottom
+        && tile_of_rightbottom != tile_of_minpt
+        && tile_of_rightbottom != tile_of_maxpt) {
+      assert(tile_of_rightbottom != tile_of_lefttop);
+      auto grid = GetGrid(tile_of_rightbottom);
+      if (grid) {
+        auto set = grid->Query(range);
+        result.insert(set.begin(), set.end());
+      }
+    }
+
+    return result;
+  }
+
+
+  std::vector<Candidate>
+  Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) override
+  {
+    const GraphTile* tile = reader_.GetGraphTile(location);
+    if(!tile || tile->header()->directededgecount() == 0) {
+      return {};
+    }
+
+    std::vector<Candidate> candidates;
+    DistanceApproximator approximator(location);
+    auto range = ExtendByMeters(location, std::sqrt(sq_search_radius));
+
+    for (const auto edgeid : RangeQuery(range)) {
+      auto edge = get_directededge(*tile, edgeid);
+      if (!filter || !filter(edge)) {
+        auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edgeid);
+        const auto& shape = edgeinfo_ptr->shape();
+        PointLL point;
+        float sq_distance;
+        size_t segment;
+        float offset;
+        std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
+        if (sq_distance <= sq_search_radius) {
+          PathLocation correlated(Location(location, Location::StopType::BREAK));
+          correlated.CorrelateVertex(point);
+          correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
+
+          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
+          if (!filter || !filter(get_directededge(*tile, opp_edgeid))) {
+            correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
+          }
+
+          candidates.emplace_back(correlated, sq_distance);
+        }
+      }
+    }
+    return candidates;
+  }
+};
