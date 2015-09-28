@@ -13,6 +13,7 @@ namespace {
 void TryOptimizer(const uint32_t nlocs, const std::vector<float>& costs,
                   const std::vector<uint32_t>& expected_order) {
   Optimizer optimizer;
+  optimizer.Seed(111111);
   auto order = optimizer.Solve(nlocs, costs);
   for (uint32_t n = 0; n < nlocs; n++) {
     if (order[n] != expected_order[n]) {
