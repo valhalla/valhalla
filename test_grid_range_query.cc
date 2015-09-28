@@ -6,7 +6,7 @@
 void TestGridTools()
 {
   BoundingBox bbox(0, 0, 100, 100);
-  GridRangeQuery grid(bbox, 100u, 100u);
+  GridRangeQuery<int> grid(bbox, 100u, 100u);
 
   auto c = grid.GridCoordinates({12.5, 13.7});
   assert(c.first == 12 && c.second == 13);
@@ -60,7 +60,7 @@ void TestGridTools()
 void TestAddLineSegment()
 {
   BoundingBox bbox(0, 0, 100, 100);
-  GridRangeQuery grid(bbox, 100u, 100u);
+  GridRangeQuery<int> grid(bbox, 100u, 100u);
 
   grid.AddLineSegment(0, LineSegment({2.5, 3.5}, {10, 3.5}));
   auto items23 = grid.ItemsInCell(2, 3);
@@ -87,7 +87,7 @@ void TestAddLineSegment()
 void TestQuery()
 {
   BoundingBox bbox(0, 0, 100, 100);
-  GridRangeQuery grid(bbox, 100u, 100u);
+  GridRangeQuery<int> grid(bbox, 100u, 100u);
 
   grid.AddLineSegment(0, LineSegment({2.5, 3.5}, {10, 3.5}));
 

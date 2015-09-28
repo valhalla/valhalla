@@ -14,7 +14,6 @@
 #include <valhalla/midgard/linesegment2.h>
 
 
-using GraphId = uint32_t;
 using Point = valhalla::midgard::PointLL;
 using LineSegment = valhalla::midgard::LineSegment2<Point>;
 using BoundingBox = valhalla::midgard::AABB2<Point>;
@@ -26,6 +25,7 @@ struct BoundingBoxIntersection {
 };
 
 
+template <typename key_t>
 class GridRangeQuery
 {
  public:
@@ -94,11 +94,11 @@ class GridRangeQuery
   }
 
 
-  const std::vector<GraphId> &ItemsInCell(int i, int j) const {
+  const std::vector<key_t> &ItemsInCell(int i, int j) const {
     return items_[i + j * num_cols_];
   }
 
-  std::vector<GraphId> &ItemsInCell(int i, int j) {
+  std::vector<key_t> &ItemsInCell(int i, int j) {
     return items_[i + j * num_cols_];
   }
 
@@ -148,7 +148,7 @@ class GridRangeQuery
 
 
   // Index a line segment into the grid
-  void AddLineSegment(const GraphId edgeid, const LineSegment& segment) {
+  void AddLineSegment(const key_t edgeid, const LineSegment& segment) {
     // For now assume the segment is entirely inside the box
     LineSegment interior;
     if (!InteriorLineSegment(segment, interior)) return;
@@ -191,10 +191,9 @@ class GridRangeQuery
     }
   }
 
-
   // Query all edges that intersects with the range
-  std::unordered_set<GraphId> Query(const BoundingBox& range) const {
-    std::unordered_set<GraphId> results;
+  std::unordered_set<key_t> Query(const BoundingBox& range) const {
+    std::unordered_set<key_t> results;
 
     int mini, minj, maxi, maxj;
     std::tie(mini, minj) = GridCoordinates({range.minx(), range.miny()});
@@ -262,5 +261,5 @@ class GridRangeQuery
   float cell_height_;
   int num_rows_;
   int num_cols_;
-  std::vector<std::vector<GraphId> > items_;
+  std::vector<std::vector<key_t> > items_;
 };
