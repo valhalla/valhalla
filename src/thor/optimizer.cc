@@ -31,7 +31,7 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
   // temperature based on tour cost
   best_tour_ = tour_;
   best_cost_ = TourCost(costs, tour_);
-  float tempurature = best_cost_ / count_;
+  float temperature = best_cost_ / count_;
 
   // Perform simulated annealing. Set a run limit per annealing step and a
   // success limit to break out early if enough successes are found.
@@ -40,11 +40,11 @@ std::vector<uint32_t> Optimizer::Solve(const uint32_t count,
   successes_ = 20  * count_;
   for (uint32_t i = 0; i < 100; i++) {
     // Break if no successes were found during this annealing step.
-    if (Anneal(costs, tempurature) == 0)
+    if (Anneal(costs, temperature) == 0)
       break;
 
     // Reduce temperature
-    tempurature *= kCoolingRate;
+    temperature *= kCoolingRate;
   }
 
   // Return the best tour
