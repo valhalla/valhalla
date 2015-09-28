@@ -259,7 +259,6 @@ int main(int argc, char *argv[]) {
     for (auto& loc : tour) {
       LOG_INFO("   : " + std::to_string(loc));
     }
-
   } else {
     uint32_t idx = 0;
     for (auto& td : res) {
