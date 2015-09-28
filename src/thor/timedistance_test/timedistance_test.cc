@@ -19,6 +19,7 @@
 #include <valhalla/midgard/logging.h>
 
 #include "thor/timedistancematrix.h"
+#include "thor/optimizer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -245,6 +246,20 @@ int main(int argc, char *argv[]) {
         idx1++;
       }
     }
+
+    // Optimize the path
+    std::vector<float> costs;
+    for (auto& td : res) {
+      costs.push_back(static_cast<float>(td.time));
+    }
+
+    Optimizer opt;
+    auto tour = opt.Solve(nlocs, costs);
+    LOG_INFO("Optimal Tour:");
+    for (auto& loc : tour) {
+      LOG_INFO("   : " + std::to_string(loc));
+    }
+
   } else {
     uint32_t idx = 0;
     for (auto& td : res) {
