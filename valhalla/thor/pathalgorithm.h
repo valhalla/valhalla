@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 100000;
+constexpr uint32_t kBucketCount = 20000;
 
 // If the destination is at a node we want the incoming edge Ids
 // with distance = 1.0 (the full edge). This returns and updated
