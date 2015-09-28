@@ -9,7 +9,7 @@ LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_loki -lvalhalla_sif -lvalhal
 compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search test_grid_range_query
 
 
-test_grid_range_query: grid_range_query.cc
+test_grid_range_query: test_grid_range_query.cc grid_range_query.h
 	$(CC) $(FLAGS) -lvalhalla_midgard $< -o $@
 
 
