@@ -96,6 +96,9 @@ void TestQuery()
 
   items = grid.Query(BoundingBox(10, 10, 20, 20));
   assert(items.empty());
+
+  items = grid.Query(BoundingBox(2, 3, 2.5, 3.5));
+  assert(items.size() == 1 && items.find(0) != items.end());
 }
 
 

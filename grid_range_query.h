@@ -59,6 +59,9 @@ class GridRangeQuery
     cell_height_ = cell_height;
     num_rows_ = ceil(bbox_.Width() / cell_width);
     num_cols_ = ceil(bbox_.Height() / cell_height);
+    // TODO handle num_rows_ <= 0
+    assert(num_rows_ > 0);
+    assert(num_cols_ > 0);
     items_.resize(num_cols_ * num_rows_);
   }
 
@@ -196,17 +199,22 @@ class GridRangeQuery
     std::unordered_set<key_t> results;
 
     int mini, minj, maxi, maxj;
-    std::tie(mini, minj) = GridCoordinates({range.minx(), range.miny()});
-    std::tie(maxi, maxj) = GridCoordinates({range.maxx(), range.maxy()});
+    std::tie(mini, minj) = GridCoordinates(range.minpt());
+    std::tie(maxi, maxj) = GridCoordinates(range.maxpt());
 
-    mini = std::max(0, std::min(mini, num_cols_));
-    maxi = std::max(0, std::min(maxi, num_cols_));
-    minj = std::max(0, std::min(minj, num_rows_));
-    maxj = std::max(0, std::min(maxj, num_rows_));
+    // TODO handle num_rows_ <= 0
+    mini = std::max(0, std::min(mini, num_cols_ - 1));
+    maxi = std::max(0, std::min(maxi, num_cols_ - 1));
+    minj = std::max(0, std::min(minj, num_rows_ - 1));
+    maxj = std::max(0, std::min(maxj, num_rows_ - 1));
 
-    for (int i = mini; i < maxi; ++i) {
-      for (int j = minj; j < maxj; ++j) {
-        auto items = ItemsInCell(i, j);
+    // TODO handle case maxi < minj
+    assert(mini <= maxi);
+    assert(minj <= maxj);
+
+    for (int i = mini; i <= maxi; ++i) {
+      for (int j = minj; j <= maxj; ++j) {
+        const auto& items = ItemsInCell(i, j);
         results.insert(items.begin(), items.end());
       }
     }
