@@ -71,6 +71,8 @@ class ViterbiSearchInterface
   // Search the optimal path from the initial time to the target time
   virtual std::vector<const T*> SearchPath(Time target) = 0;
 
+  virtual ~ViterbiSearchInterface() {
+  }
  protected:
   // Calculate transition cost from left candidate to right candidate
   virtual float TransitionCost(const T& left, const T& right) const = 0;

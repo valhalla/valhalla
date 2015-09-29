@@ -9,6 +9,8 @@ template <typename T>
 class LabelInterface
 {
  public:
+  virtual ~LabelInterface() {
+  }
   using id_type = T;
   virtual T id() const = 0;
   virtual double sortcost() const = 0;
