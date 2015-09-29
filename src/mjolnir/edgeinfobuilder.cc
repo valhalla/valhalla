@@ -18,12 +18,21 @@ void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
 // Set the indexes to names used by this edge.
 void EdgeInfoBuilder::set_text_name_offset_list(
     const std::vector<uint32_t>& text_name_offset_list) {
-  text_name_offset_list_ = text_name_offset_list;
+  if (text_name_offset_list.size() > kMaxNamesPerEdge) {
+    LOG_WARN("Tried to exceed max names per edge: " +
+                  std::to_string(text_name_offset_list.size()));
+  } else {
+    text_name_offset_list_ = text_name_offset_list;
+  }
 }
 
 // Set the indexes to names used by this edge.
 void EdgeInfoBuilder::AddNameOffset(const uint32_t offset) {
-  text_name_offset_list_.push_back(offset);
+  if (text_name_offset_list_.size() == kMaxNamesPerEdge) {
+    LOG_WARN("Tried to exceed max names per edge");
+  } else {
+    text_name_offset_list_.push_back(offset);
+  }
 }
 
 // Set the shape of the edge. Encode the vector of lat,lng to a string.
@@ -63,7 +72,7 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
 
   // Check if we are exceeding the max encoded size
   if (eib.encoded_shape_.size() > kMaxEncodedShapeSize) {
-    LOG_ERROR("Exceeding max encoded shape size: " +
+    LOG_WARN("Exceeding max encoded shape size: " +
               std::to_string(eib.encoded_shape_.size()));
     item.encoded_shape_size = static_cast<uint32_t>(kMaxEncodedShapeSize);
   } else {

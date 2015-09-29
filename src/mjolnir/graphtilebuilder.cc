@@ -1,10 +1,12 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/edgeinfo.h>
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
 #include <list>
+#include <algorithm>
 
 using namespace valhalla::baldr;
 
@@ -106,7 +108,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (auto offset : edge_info_offsets) {
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
-      LOG_ERROR("GraphTileBuilder TileID: " +
+      LOG_WARN("GraphTileBuilder TileID: " +
             std::to_string(header_->graphid().tileid()) +
             " offset stored in directed edge: = " + std::to_string(offset) +
             " current ei offset= " + std::to_string(edge_info_offset_));
@@ -128,7 +130,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (auto offset : text_offsets) {
     // Verify offsets as we add text
     if (offset != text_list_offset_) {
-      LOG_ERROR("Saved offset = " + std::to_string(offset) +
+      LOG_WARN("Saved offset = " + std::to_string(offset) +
                 " text_list_offset_= " +
                  std::to_string(text_list_offset_));
     }
@@ -517,12 +519,21 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 
     // Add names to the common text/name list. Skip blank names.
     std::vector<uint32_t> text_name_offset_list;
-    text_name_offset_list.reserve(names.size());
+    text_name_offset_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
+    size_t name_count = 0;
     for (const auto& name : names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         uint32_t offset = AddName(name);
         text_name_offset_list.emplace_back(offset);
+        ++name_count;
       }
     }
     edgeinfo.set_text_name_offset_list(text_name_offset_list);
