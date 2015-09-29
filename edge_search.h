@@ -174,7 +174,7 @@ CandidateQuery::Query(const PointLL& location,
       //we haven't looked at this edge yet and its not junk
       if (visited.insert(edge->edgeinfo_offset()).second && (!filter || !filter(edge))) {
         auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edge);
-        auto shape = edgeinfo_ptr->shape();
+        const auto& shape = edgeinfo_ptr->shape();
         PointLL point;
         float sq_distance;
         size_t segment;
@@ -261,6 +261,9 @@ inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
 // of directed edges is added
 void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
 {
+  if (!grid_ptr) {
+    return;
+  }
   std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
   const auto first_node = tile.node(0);
   const auto last_node  = first_node + tile.header()->nodecount();
@@ -269,7 +272,8 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
     const auto last_edge  = first_edge + start_node->edge_count();
     for (auto edge = first_edge; edge < last_edge; edge++) {
       if (visited.insert(edge->edgeinfo_offset()).second) {
-        auto shape = get_edgeinfo_ptr(tile, edge)->shape();
+        auto edgeinfo_ptr = get_edgeinfo_ptr(tile, edge);
+        const auto& shape = edgeinfo_ptr->shape();
         if (shape.empty()) {
           continue;
         }
@@ -373,7 +377,7 @@ class CandidateGridQuery: public CandidateQuery
     if (tile_of_minpt) {
       auto grid = GetGrid(tile_of_minpt);
       if (grid) {
-        auto set = grid->Query(range);
+        const auto& set = grid->Query(range);
         result.insert(set.begin(), set.end());
       }
     }
@@ -381,7 +385,7 @@ class CandidateGridQuery: public CandidateQuery
     if (tile_of_maxpt) {
       auto grid = GetGrid(tile_of_maxpt);
       if (grid) {
-        auto set = grid->Query(range);
+        const auto& set = grid->Query(range);
         result.insert(set.begin(), set.end());
       }
     }
@@ -392,7 +396,7 @@ class CandidateGridQuery: public CandidateQuery
         && tile_of_lefttop != tile_of_maxpt) {
       auto grid = GetGrid(tile_of_lefttop);
       if (grid) {
-        auto set = grid->Query(range);
+        const auto& set = grid->Query(range);
         result.insert(set.begin(), set.end());
       }
     }
@@ -404,7 +408,7 @@ class CandidateGridQuery: public CandidateQuery
       assert(tile_of_rightbottom != tile_of_lefttop);
       auto grid = GetGrid(tile_of_rightbottom);
       if (grid) {
-        auto set = grid->Query(range);
+        const auto& set = grid->Query(range);
         result.insert(set.begin(), set.end());
       }
     }
