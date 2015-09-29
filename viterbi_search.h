@@ -93,6 +93,7 @@ template <typename T, bool Maximize>
 class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 {
  public:
+  ~NaiveViterbiSearch();
   Time AppendState(typename std::vector<T>::const_iterator begin,
                    typename std::vector<T>::const_iterator end);
   const CANDIDATE_TYPE* SearchWinner(Time target) override;
@@ -239,6 +240,13 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   const std::vector<const CANDIDATE_TYPE*>
   FormPathSegment(const CANDIDATE_TYPE* candidate_ptr) const;
 };
+
+
+template <typename T, bool Maximize>
+NaiveViterbiSearch<T, Maximize>::~NaiveViterbiSearch()
+{
+  Clear();
+}
 
 
 template <typename T, bool Maximize>

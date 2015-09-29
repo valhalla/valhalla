@@ -65,11 +65,6 @@ class MapMatching: public ViterbiSearch<Candidate>
     return time;
   }
 
-  void Clear()
-  {
-    ViterbiSearch<Candidate>::Clear();
-  }
-
   const std::shared_ptr<sif::DynamicCost> costing() const
   {
     return mode_costing_[static_cast<uint32_t>(mode_)];
