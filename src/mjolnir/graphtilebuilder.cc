@@ -1,10 +1,12 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/edgeinfo.h>
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <stdexcept>
 #include <list>
+#include <algorithm>
 
 using namespace valhalla::baldr;
 
@@ -517,12 +519,21 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
 
     // Add names to the common text/name list. Skip blank names.
     std::vector<uint32_t> text_name_offset_list;
-    text_name_offset_list.reserve(names.size());
+    text_name_offset_list.reserve(std::min(names.size(), kMaxNamesPerEdge));
+    size_t name_count = 0;
     for (const auto& name : names) {
+      // Stop adding names if max count has been reached
+      if (name_count == kMaxNamesPerEdge) {
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+        break;
+      }
+
+      // Verify name is not empty
       if (!(name.empty())) {
         // Add name and add its offset to edge info's list.
         uint32_t offset = AddName(name);
         text_name_offset_list.emplace_back(offset);
+        ++name_count;
       }
     }
     edgeinfo.set_text_name_offset_list(text_name_offset_list);

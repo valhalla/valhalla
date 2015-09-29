@@ -18,12 +18,21 @@ void EdgeInfoBuilder::set_wayid(const uint64_t wayid) {
 // Set the indexes to names used by this edge.
 void EdgeInfoBuilder::set_text_name_offset_list(
     const std::vector<uint32_t>& text_name_offset_list) {
-  text_name_offset_list_ = text_name_offset_list;
+  if (text_name_offset_list.size() > kMaxNamesPerEdge) {
+    LOG_ERROR("Exceeding max names per edge: " +
+                  std::to_string(text_name_offset_list.size()));
+  } else {
+    text_name_offset_list_ = text_name_offset_list;
+  }
 }
 
 // Set the indexes to names used by this edge.
 void EdgeInfoBuilder::AddNameOffset(const uint32_t offset) {
-  text_name_offset_list_.push_back(offset);
+  if (text_name_offset_list_.size() == kMaxNamesPerEdge) {
+    LOG_ERROR("Exceeding max names per edge");
+  } else {
+    text_name_offset_list_.push_back(offset);
+  }
 }
 
 // Set the shape of the edge. Encode the vector of lat,lng to a string.
