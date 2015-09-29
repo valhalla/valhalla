@@ -16,80 +16,6 @@ namespace thor {
 
 constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
-// If the destination is at a node we want the incoming edge Ids
-// with distance = 1.0 (the full edge). This returns and updated
-// destination PathLocation.
-// TODO - move this logic into Loki
-// TODO - fail the route if no dest edges
-PathLocation update_destinations(GraphReader& graphreader,
-                                 const PathLocation& destination,
-                                 const EdgeFilter& filter) {
-  if (destination.IsNode()) {
-    // Copy the current destination info and clear the edges
-    PathLocation dest = destination;
-    dest.ClearEdges();
-
-    // Get the node. Iterate through the edges and get opposing edges. Add
-    // to the destination edges if it is allowed by the costing model
-    GraphId destedge = destination.edges()[0].id;
-    GraphId opposing_edge = graphreader.GetOpposingEdgeId(destedge);
-    GraphId endnode = graphreader.GetGraphTile(opposing_edge)->directededge(opposing_edge)->endnode();
-    const GraphTile* tile = graphreader.GetGraphTile(endnode);
-    const NodeInfo* nodeinfo = tile->node(endnode);
-    GraphId edgeid(endnode.tileid(), endnode.level(), nodeinfo->edge_index());
-    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, edgeid++) {
-      GraphId opposing_edge = graphreader.GetOpposingEdgeId(edgeid);
-      tile = graphreader.GetGraphTile(opposing_edge);
-      const DirectedEdge* edge = tile->directededge(opposing_edge);
-      if (!filter(edge)) {
-        dest.CorrelateEdge(PathLocation::PathEdge{opposing_edge, 1.0f});
-      }
-    }
-    return dest;
-  } else {
-    // No need to alter destination edges
-    return destination;
-  }
-}
-
-// Check if any of the pairs of origin and destination edges could be a
-// trivial path. This means the origin and destination are on the same edge.
-GraphId trivial(const PathLocation& origin, const PathLocation& destination) {
-  // NOTE: there could be a shorter path by leaving this edge and coming
-  // back in the other direction however this should be uncommon
-  for(const auto& origin_edge : origin.edges()) {
-    for(const auto& destination_edge : destination.edges()) {
-      // same id and the origin shows up at the beginning of the edge
-      // while the destination shows up at the end of the edge
-      if (origin_edge.id == destination_edge.id &&
-          origin_edge.dist <= destination_edge.dist) {
-        return origin_edge.id;
-      }
-    }
-  }
-  return {};
-}
-
-// If we end up with locations where there is a trivial path but you would
-// have to traverse the edge in reverse to do it we need to mark this as a
-// loop so that the initial edge can be considered on the path at some later
-// point in time
-GraphId loop(const PathLocation& origin, const PathLocation& destination) {
-  for(const auto& origin_edge : origin.edges()) {
-    for(const auto& destination_edge : destination.edges()) {
-      //same id and the origin shows up at the end of the edge
-      //while the destination shows up at the beginning of the edge
-      if(origin_edge.id == destination_edge.id && origin_edge.dist > destination_edge.dist) {
-        //something is wrong if we have more than one option here
-        if(origin.edges().size() != 1 || destination.edges().size() != 1)
-          throw std::runtime_error("Found oneway loop but multiple ins and outs!");
-        return origin_edge.id;
-      }
-    }
-  }
-  return {};
-}
-
 // Default constructor
 PathAlgorithm::PathAlgorithm()
     : mode_(TravelMode::kDrive),
@@ -181,30 +107,14 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
 
-  // Alter the destination edges if at a node - loki always gives edges
-  // leaving a node, but when a destination we want edges entering the node
-  PathLocation dest = update_destinations(graphreader, destination,
-                                          costing->GetFilter());
-
-  // Check for trivial path
-  mode_ = costing->travelmode();
-  auto trivial_id = trivial(origin, dest);
-  if (trivial_id.Is_Valid()) {
-    std::vector<PathInfo> trivialpath;
-    trivialpath.emplace_back(mode_, 0, trivial_id, 0);
-    return trivialpath;
-  }
-
-  // Check for loop path
-  PathInfo loop_edge_info(mode_, 0.0f, loop(origin, dest), 0);
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), dest.vertex(), costing);
+  Init(origin.vertex(), destination.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
 
-  // Initialize the origin and destination locations
-  SetOrigin(graphreader, origin, costing, loop_edge_info);
-  uint32_t density = SetDestination(graphreader, dest, costing);
+  // Initialize the origin and destination locations. Initialize the
+  // destination first in case the origin edge includes a destination edge.
+  uint32_t density = SetDestination(graphreader, destination, costing);
+  SetOrigin(graphreader, origin, destination, costing);
 
   // Update hierarchy limits
   if (allow_transitions_) {
@@ -226,13 +136,25 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     }
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
-    // edge (if so complete the route and form the path). Mark the edge as
-    // permanently labeled.
+    // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
     if (destinations_.find(pred.edgeid()) != destinations_.end()) {
-      return FormPath(predindex, loop_edge_info);
+      // Check if a trivial path. Skip if no predecessor and not
+      // trivial (cannot reach destination along this one edge).
+      if (pred.predecessor() == kInvalidLabel) {
+        if (IsTrivial(pred.edgeid(), origin, destination)) {
+          return FormPath(predindex);
+        }
+      } else {
+        return FormPath(predindex);
+      }
     }
-    edgestatus_->Update(pred.edgeid(), kPermanent);
+
+    // Mark the edge as permanently labeled. Do not do this for an origin
+    // edge (this will allow loops/around the block cases)
+    if (!pred.origin()) {
+      edgestatus_->Update(pred.edgeid(), kPermanent);
+    }
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations
@@ -399,31 +321,15 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
 // Add an edge at the origin to the adjacency list
 void PathAlgorithm::SetOrigin(GraphReader& graphreader,
                  const PathLocation& origin,
-                 const std::shared_ptr<DynamicCost>& costing,
-                 const PathInfo& loop_edge_info) {
-  // Do some additional bookkeeping if this path needs to be a loop
-  GraphId loop_edge_id = loop_edge_info.edgeid;
-  std::vector<baldr::PathLocation::PathEdge> loop_edges;
-  Cost loop_edge_cost {0.0f, 0.0f};
-  if (loop_edge_id.Is_Valid()) {
-    //grab some info about the edge and whats connected to the end of it
-    const auto directededge = graphreader.GetGraphTile(loop_edge_id)->directededge(loop_edge_id);
-    const auto node_id = directededge->endnode();
-    const auto tile = graphreader.GetGraphTile(node_id);
-    const auto node_info = tile->node(node_id);
-    loop_edge_cost = costing->EdgeCost(directededge, node_info->density()) *
-                        (1.f - origin.edges().front().dist);
-    //keep information about all the edges leaving the end of this edge
-    for(uint32_t edge_index = node_info->edge_index(); edge_index < node_info->edge_index() + node_info->edge_count(); ++edge_index) {
-      if(!costing->GetFilter()(tile->directededge(edge_index))) {
-        loop_edges.emplace_back(node_id, 0.f);
-        loop_edges.back().id.fields.id = edge_index;
-      }
-    }
-  }
-
+                 const PathLocation& destination,
+                 const std::shared_ptr<DynamicCost>& costing) {
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : (loop_edges.size() ? loop_edges : origin.edges())) {
+  for (const auto& edge : (origin.edges())) {
+    // If origin is at a node - skip any inbound edge (dist = 1)
+    if (origin.IsNode() && edge.dist == 1) {
+      continue;
+    }
+
     // Get the directed edge
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
@@ -436,20 +342,38 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
       continue;
     }
 
-    // Get cost and sort cost
-    Cost cost = (costing->EdgeCost(directededge, 0) * (1.0f - edge.dist)) +
-                 loop_edge_cost;
+    // Get cost
+    Cost cost = costing->EdgeCost(directededge,
+                    graphreader.GetEdgeDensity(edge.id)) * (1.0f - edge.dist);
     float dist = astarheuristic_.GetDistance(endtile->node(
-              directededge->endnode())->latlng());
+                    directededge->endnode())->latlng());
+
+    // If this edge is a destination, subtract the partial/remainder cost
+    // (cost from the dest. location to the end of the edge) if the
+    // destination is in a forward direction along the edge
+    // TODO - if this doesn't make the cost go negative!
+    auto p = destinations_.find(edgeid);
+    if (p != destinations_.end()) {
+      if (IsTrivial(edgeid, origin, destination)) {
+        cost -= p->second;
+      }
+    }
+
+    // Compute sortcost
     float sortcost = cost.cost + astarheuristic_.Get(dist);
 
-    // Add EdgeLabel to the adjacency list. Set the predecessor edge index
-    // to invalid to indicate the origin of the path.
+    // Add EdgeLabel to the adjacency list (but do not set its status).
+    // Set the predecessor edge index to invalid to indicate the origin
+    // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    AddToAdjacencyList(edgeid, sortcost);
-    edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
+    adjacencylist_->Add(edgelabels_.size(), sortcost);
+    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
+    edge_label.set_origin();
+
+    // Set the origin flag
+    edgelabels_.push_back(std::move(edge_label));
   }
 }
 
@@ -460,12 +384,17 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
   // For each edge
   uint32_t density = 0;
   for (const auto& edge : dest.edges()) {
+    // If destination is at a node skip any outbound edges
+    if (dest.IsNode() && edge.dist == 0.0f) {
+      continue;
+    }
+
     // Keep the id and the cost to traverse the partial distance for the
     // remainder of the edge. This cost is subtracted from the total cost
     // up to the end of the destination edge.
     const GraphTile* tile = graphreader.GetGraphTile(edge.id);
-    destinations_[edge.id] = (costing->EdgeCost(tile->directededge(edge.id), 0.0f) *
-                (1.0f - edge.dist));
+    destinations_[edge.id] = costing->EdgeCost(tile->directededge(edge.id),
+              graphreader.GetEdgeDensity(edge.id)) * (1.0f - edge.dist);
 
     // Get the tile relative density
     density = tile->header()->density();
@@ -473,9 +402,28 @@ uint32_t PathAlgorithm::SetDestination(GraphReader& graphreader,
   return density;
 }
 
+// Check for path completion along the same edge. Edge ID in question
+// is along both an origin and destination and origin shows up at the
+// beginning of the edge while the destination shows up at the end of
+// the edge
+bool PathAlgorithm::IsTrivial(const GraphId& edgeid,
+                              const PathLocation& origin,
+                              const PathLocation& destination) const {
+  for (const auto& destination_edge : destination.edges()) {
+    if (destination_edge.id == edgeid) {
+      for (const auto& origin_edge : origin.edges()) {
+        if (origin_edge.id == edgeid &&
+            origin_edge.dist <= destination_edge.dist) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 // Form the path from the adjacency list.
-std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
-             const PathInfo& loop_edge_info) {
+std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest) {
   // Metrics to track
   LOG_INFO("path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
   LOG_INFO("path_iterations::" + std::to_string(edgelabels_.size()));
@@ -487,16 +435,6 @@ std::vector<PathInfo> PathAlgorithm::FormPath(const uint32_t dest,
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost().secs,
                       edgelabel.edgeid(), edgelabel.tripid());
-  }
-
-  // We had a loop which means we end on the same edge we began
-  // this special case can only be handled by adding back the start
-  // edge at the end of the path finding because we need to encounter
-  // the same edge twice (loop) and the algorithm doesn't allow for this
-  if (loop_edge_info.edgeid.Is_Valid()) {
-    // Loop edge uses the mode of the last edge found above.
-    // TODO - what is the elapsed time on the loop edge?
-    path.emplace_back(loop_edge_info);
   }
 
   // Reverse the list and return

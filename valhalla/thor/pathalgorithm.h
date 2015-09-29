@@ -32,30 +32,6 @@ baldr::PathLocation update_destinations(baldr::GraphReader& graphreader,
                                  const sif::EdgeFilter& filter);
 
 /**
- * Check if any of the pairs of origin and destination edges could be a
- * trivial path. This means the origin and destination are on the same edge.
- * @param   origin  Origin location.
- * @param   destination  Destination location.
- * @return  Returns the Graph Id representing the trivial path (invalid graph
- *          Id indicates the path is not trivial.
- */
-baldr::GraphId trivial(const baldr::PathLocation& origin,
-                       const baldr::PathLocation& destination);
-
-/**
- * If we end up with locations where there is a trivial path but you would
- * have to traverse the edge in reverse to do it we need to mark this as a
- * loop so that the initial edge can be considered on the path at some later
- * point in time.
- * @param   origin  Origin location.
- * @param   destination  Destination location.
- * @return  Returns the Graph Id representing the origin edge of the loop path
- *          (invalid graph Id indicates the path is not a loop.
- */
-baldr::GraphId loop(const baldr::PathLocation& origin,
-                    const baldr::PathLocation& destination);
-
-/**
  * Algorithm to create shortest path. This is a single direction A* algorithm.
  * For driving routes it uses a highway hierarchy with shortcut edges to
  * improve performance.
@@ -100,7 +76,7 @@ class PathAlgorithm {
   // Current travel mode
   sif::TravelMode mode_;
 
-  // Current walking distance.
+  // Current walking distance. TODO - make this distance or mode distance?
   uint32_t walking_distance_;
 
   // Hierarchy limits.
@@ -109,13 +85,13 @@ class PathAlgorithm {
   // A* heuristic
   AStarHeuristic astarheuristic_;
 
-  // List of edge labels
+  // Vector of edge labels (requires access by index).
   std::vector<sif::EdgeLabel> edgelabels_;
 
-  // Adjacency list
+  // Adjacency list - approximate double bucket sort
   std::shared_ptr<AdjacencyList> adjacencylist_;
 
-  // Edge status
+  // Edge status. Mark edges that are in adjacency list or settled.
   std::shared_ptr<EdgeStatus> edgestatus_;
 
   // Destinations, id and cost
@@ -177,20 +153,20 @@ class PathAlgorithm {
   /**
    * Add edges at the origin to the adjacency list.
    * @param  graphreader  Graph tile reader.
-   * @param  origin       Location information of the destination
-   * @param  costing      Dynamic costing
-   * @param  loop_edge    Loop edge information
+   * @param  origin       Location information of the origin.
+   * @param  dest         Location information of the destination.
+   * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
                  const baldr::PathLocation& origin,
-                 const std::shared_ptr<sif::DynamicCost>& costing,
-                 const PathInfo& loop_edge);
+                 const baldr::PathLocation& dest,
+                 const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
-   * @param   dest         Location information of the destination
-   * @param   costing      Dynamic costing
+   * @param   dest         Location information of the destination.
+   * @param   costing      Dynamic costing.
    * @return  Returns the relative density near the destination (0-15)
    */
   uint32_t SetDestination(baldr::GraphReader& graphreader,
@@ -198,16 +174,26 @@ class PathAlgorithm {
                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Test if the completed path is trivial (on the same edge in a forward
+   * direction from the origin to the destination.
+   * @param  edgeid   Edge where path completion occurs.
+   * @param  orig     Location information of the origin.
+   * @param  origin   Location information of the destination
+   * @return Returns true if the path is trivial.
+   */
+  bool IsTrivial(const baldr::GraphId& edgeid,
+                 const baldr::PathLocation& orig,
+                 const baldr::PathLocation& dest) const;
+
+  /**
    * Form the path from the adjacency list. Recovers the path from the
    * destination backwards towards the origin (using predecessor information)
    * @param   dest  Index in the edge labels of the destination edge.
-   * @param   loop   PathInfo representing the loop edge (invalid if none)
    * @return  Returns the path info, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
    */
-  std::vector<PathInfo> FormPath(const uint32_t dest,
-                                 const PathInfo& loop);
+  std::vector<PathInfo> FormPath(const uint32_t dest);
 };
 
 /**
