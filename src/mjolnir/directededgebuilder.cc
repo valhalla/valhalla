@@ -253,7 +253,7 @@ void DirectedEdgeBuilder::set_cyclelane(const CycleLane cyclelane) {
 // along this edge. See baldr/directededge.h for definitions.
 void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
   if (bikenetwork > kMaxBicycleNetwork) {
-    LOG_ERROR("Bicycle Network mask exceeds maximum: " +
+    LOG_WARN("Bicycle Network mask exceeds maximum: " +
               std::to_string(bikenetwork));
     attributes_.bikenetwork = 0;
   } else {
@@ -265,7 +265,7 @@ void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
 void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
   // TOTO - make sure we don't exceed some max value
   if (lanecount > kMaxLaneCount) {
-    LOG_ERROR("Exceeding maximum lane count: " + std::to_string(lanecount));
+    LOG_WARN("Exceeding maximum lane count: " + std::to_string(lanecount));
     attributes_.lanecount = kMaxLaneCount;
   } else {
     attributes_.lanecount = lanecount;
@@ -277,7 +277,7 @@ void DirectedEdgeBuilder::set_lanecount(const uint32_t lanecount) {
 // all vehicles, at all times.
 void DirectedEdgeBuilder::set_restrictions(const uint32_t mask) {
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
-    LOG_ERROR("Restrictions mask exceeds allowable limit: " +
+    LOG_WARN("Restrictions mask exceeds allowable limit: " +
                 std::to_string(mask));
     attributes_.restrictions &= ((1 << kMaxTurnRestrictionEdges) - 1);
   } else {
@@ -387,7 +387,7 @@ void DirectedEdgeBuilder::set_hovaccess(const bool forward, const bool hov) {
 void DirectedEdgeBuilder::set_speed(const uint32_t speed) {
   // TODO - protect against exceeding max speed
   if (speed > kMaxSpeed) {
-    LOG_ERROR("Exceeding maximum speed: " + std::to_string(speed));
+    LOG_WARN("Exceeding maximum speed: " + std::to_string(speed));
     speed_ = static_cast<unsigned char>(kMaxSpeed);
   } else {
     speed_ = static_cast<unsigned char>(speed);
@@ -445,7 +445,7 @@ void DirectedEdgeBuilder::set_edge_to_left(const uint32_t localidx,
 void DirectedEdgeBuilder::set_stopimpact(const uint32_t localidx,
                                          const uint32_t stopimpact) {
   if (stopimpact > kMaxStopImpact) {
-    LOG_ERROR("Exceeding maximum stop impact: " + std::to_string(stopimpact));
+    LOG_WARN("Exceeding maximum stop impact: " + std::to_string(stopimpact));
     stopimpact_.s.stopimpact = OverwriteBits(stopimpact_.s.stopimpact,
                                            kMaxStopImpact, localidx, 3);
   } else {
@@ -483,7 +483,7 @@ DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {
 // identified on the different levels.
 void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
   if (idx > kMaxEdgesPerNode) {
-    LOG_ERROR("Local Edge Index exceeds max: " + std::to_string(idx));
+    LOG_WARN("Local Edge Index exceeds max: " + std::to_string(idx));
     hierarchy_.localedgeidx = kMaxEdgesPerNode;
   } else {
     hierarchy_.localedgeidx = idx;
@@ -495,7 +495,7 @@ void DirectedEdgeBuilder::set_localedgeidx(const uint32_t idx) {
 // so it can be used for edge transition costing.
 void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
   if (idx > kMaxEdgesPerNode) {
-    LOG_ERROR("Exceeding max edges in opposing local index: " + std::to_string(idx));
+    LOG_WARN("Exceeding max edges in opposing local index: " + std::to_string(idx));
     hierarchy_.opp_local_idx = kMaxEdgesPerNode;
   } else {
     hierarchy_.opp_local_idx = idx;
@@ -506,7 +506,7 @@ void DirectedEdgeBuilder::set_opp_local_idx(const uint32_t idx) {
 void DirectedEdgeBuilder::set_shortcut(const uint32_t shortcut) {
   // 0 is not a valid shortcut
   if (shortcut == 0) {
-    LOG_ERROR("Invalid shortcut mask = 0");
+    LOG_WARN("Invalid shortcut mask = 0");
     return;
   }
 
@@ -522,7 +522,7 @@ void DirectedEdgeBuilder::set_shortcut(const uint32_t shortcut) {
 // Set the flag for whether this edge is superseded by a shortcut edge.
 void DirectedEdgeBuilder::set_superseded(const uint32_t superseded) {
   if (superseded > kMaxShortcutsFromNode) {
-      LOG_ERROR("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
+      LOG_WARN("Exceeding max shortcut edges from a node: " + std::to_string(superseded));
   } else {
     hierarchy_.superseded = (1 << (superseded-1));
   }

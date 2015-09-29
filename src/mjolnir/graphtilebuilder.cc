@@ -108,7 +108,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (auto offset : edge_info_offsets) {
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
-      LOG_ERROR("GraphTileBuilder TileID: " +
+      LOG_WARN("GraphTileBuilder TileID: " +
             std::to_string(header_->graphid().tileid()) +
             " offset stored in directed edge: = " + std::to_string(offset) +
             " current ei offset= " + std::to_string(edge_info_offset_));
@@ -130,7 +130,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (auto offset : text_offsets) {
     // Verify offsets as we add text
     if (offset != text_list_offset_) {
-      LOG_ERROR("Saved offset = " + std::to_string(offset) +
+      LOG_WARN("Saved offset = " + std::to_string(offset) +
                 " text_list_offset_= " +
                  std::to_string(text_list_offset_));
     }
