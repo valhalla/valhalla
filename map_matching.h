@@ -97,7 +97,7 @@ class MapMatching: public ViterbiSearch<Candidate>
 
  protected:
   float TransitionCost(const CandidateWrapper<Candidate>& left,
-                       const CandidateWrapper<Candidate>& right) const
+                       const CandidateWrapper<Candidate>& right) const override
   {
     auto pa = thor::PathAlgorithm();
     auto path = pa.GetBestPath(left.candidate().pathlocation(),
@@ -116,13 +116,13 @@ class MapMatching: public ViterbiSearch<Candidate>
     return delta / beta_;
   }
 
-  inline float EmissionCost(const CandidateWrapper<Candidate>& candidate) const
+  inline float EmissionCost(const CandidateWrapper<Candidate>& candidate) const override
   {
     auto distance = candidate.candidate().distance();
     return (distance * distance) / double_sq_sigma_z_;
   }
 
-  inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const
+  inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
   {
     return prev_costsofar + transition_cost + emission_cost;
   }

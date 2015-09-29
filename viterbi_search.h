@@ -13,7 +13,7 @@ using CandidateId = uint32_t;
 
 
 template <typename T>
-class CandidateWrapper
+class CandidateWrapper final
 {
  public:
   CandidateWrapper(const CandidateId id, const Time time, const T& candidate)
@@ -43,11 +43,11 @@ struct LabelTemplate: public LabelInterface<CandidateId>
         predecessor(p) {
   }
 
-  inline CandidateId id() const {
+  inline CandidateId id() const override {
     return candidate->id();
   }
 
-  inline double sortcost() const {
+  inline double sortcost() const override {
     return costsofar;
   }
 
@@ -95,8 +95,8 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
  public:
   Time AppendState(typename std::vector<T>::const_iterator begin,
                    typename std::vector<T>::const_iterator end);
-  const CANDIDATE_TYPE* SearchWinner(Time target);
-  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target);
+  const CANDIDATE_TYPE* SearchWinner(Time target) override;
+  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
 
   // TODO in-class initilization well supported?
   // An invalid costsofar indicates that candiadte is unreachable from
@@ -117,9 +117,9 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   }
 
  protected:
-  virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const = 0;
-  virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const = 0;
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const = 0;
+  virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const override = 0;
+  virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const override = 0;
+  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
 
  private:
   using Label = LabelTemplate<T>;
@@ -370,12 +370,12 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 
   virtual Time AppendState(typename std::vector<T>::const_iterator begin,
                            typename std::vector<T>::const_iterator end);
-  const CANDIDATE_TYPE* SearchWinner(Time time);
+  const CANDIDATE_TYPE* SearchWinner(Time time) override;
   const CANDIDATE_TYPE* SearchWinner();
   const CANDIDATE_TYPE* SearchLastWinner(Time time);
   const CANDIDATE_TYPE* SearchLastWinner();
 
-  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target);
+  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
 
   const CANDIDATE_TYPE* previous(const CANDIDATE_TYPE& candidate) const;
 
@@ -398,9 +398,9 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   }
 
  protected:
-  virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const = 0;
-  virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const = 0;
-  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const = 0;
+  virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const override = 0;
+  virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const override = 0;
+  virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
 
  private:
   using State = std::vector<const CANDIDATE_TYPE*>;
