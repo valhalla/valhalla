@@ -273,21 +273,21 @@ void TestCandidatePair()
   CandidatePairId pair;
   pair = candidateid_make_pair(0, 1);
   assert(pair == 1);
-  assert(candidateid_right(pair) == 0);
-  assert(candidateid_left(pair) == 1);
+  assert(candidateid_left(pair) == 0);
+  assert(candidateid_right(pair) == 1);
 
   pair = candidateid_make_pair(1, 0);
   assert(pair == static_cast<CandidatePairId>(1) << 32);
-  assert(candidateid_right(pair) == 1);
-  assert(candidateid_left(pair) == 0);
+  assert(candidateid_left(pair) == 1);
+  assert(candidateid_right(pair) == 0);
 
   pair = candidateid_make_pair(12, 30);
-  assert(candidateid_right(pair) == 12);
-  assert(candidateid_left(pair) == 30);
+  assert(candidateid_left(pair) == 12);
+  assert(candidateid_right(pair) == 30);
 
   pair = ~0;
-  assert(candidateid_right(pair) == ~0);
   assert(candidateid_left(pair) == ~0);
+  assert(candidateid_right(pair) == ~0);
 }
 
 

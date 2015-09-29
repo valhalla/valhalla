@@ -13,19 +13,19 @@ using CandidateId = uint32_t;
 using CandidatePairId = uint64_t;
 
 
-inline CandidatePairId candidateid_make_pair(CandidateId right, CandidateId left)
+inline CandidatePairId candidateid_make_pair(CandidateId left, CandidateId right)
 {
-  return (static_cast<CandidatePairId>(right) << 32) + left;
+  return (static_cast<CandidatePairId>(left) << 32) + right;
 }
 
 
-inline CandidateId candidateid_right(CandidatePairId pair)
+inline CandidateId candidateid_left(CandidatePairId pair)
 {
   return static_cast<CandidateId>(pair >> 32);
 }
 
 
-inline CandidateId candidateid_left(CandidatePairId pair)
+inline CandidateId candidateid_right(CandidatePairId pair)
 {
   return static_cast<CandidateId>((pair << 32) >> 32);
 }
