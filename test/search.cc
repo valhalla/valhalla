@@ -96,6 +96,8 @@ void make_tile() {
   c.first = {tile_id.tileid(), tile_id.level(), 2}; c.second = {.01, .01};
   d.first = {tile_id.tileid(), tile_id.level(), 3}; d.second = {.2, .1};
 
+  //NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so on
+
   //B
   {
     auto node = add_node(b, 2);
@@ -139,7 +141,6 @@ void search(const valhalla::baldr::Location& location, const valhalla::midgard::
   if(!p.vertex().ApproximatelyEqual(expected_point))
     throw std::runtime_error("Found wrong point");
 
-
   valhalla::baldr::PathLocation answer(location);
   answer.CorrelateVertex(expected_point);
   for(const auto& expected_edge : expected_edges)
@@ -155,22 +156,30 @@ void TestNodeSearch() {
   using S = PathLocation::SideOfStreet;
   using PE = PathLocation::PathEdge;
 
-  search({b.second}, b.second, { PE{{t, l, 0}, 0, S::NONE}, PE{{t, l, 1}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  search({a.second}, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, {{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  search({c.second}, c.second, { PE{{t, l, 5}, 0, S::NONE}, PE{{t, l, 6}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  search({d.second}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  search({b.second}, b.second, { PE{{t, l, 0}, 0, S::NONE}, PE{{t, l, 1}, 0, S::NONE}, //leaving edges
+                                 PE{{t, l, 7}, 1, S::NONE}, PE{{t, l, 2}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
+
+  search({a.second}, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE}, //leaving edges
+                                 PE{{t, l, 1}, 1, S::NONE}, PE{{t, l, 8}, 1, S::NONE}, PE{{t, l, 5}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
+
+  search({c.second}, c.second, { PE{{t, l, 5}, 0, S::NONE}, PE{{t, l, 6}, 0, S::NONE}, //leaving edges
+                                 PE{{t, l, 4}, 1, S::NONE}, PE{{t, l, 9}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
+
+  search({d.second}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE}, //leaving edges
+                                 PE{{t, l, 0}, 1, S::NONE}, PE{{t, l, 3}, 1, S::NONE}, PE{{t, l, 6}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
 
   //slightly off the node
-  search({d.second + PointLL(.0001, .0001)}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  search({d.second + PointLL(.0001, .0001)}, d.second, { PE{{t, l, 7}, 0, S::NONE}, PE{{t, l, 8}, 0, S::NONE}, PE{{t, l, 9}, 0, S::NONE}, //leaving edges
+                                                         PE{{t, l, 0}, 1, S::NONE}, PE{{t, l, 3}, 1, S::NONE}, PE{{t, l, 6}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE); //arriving edges
 
   //with heading
   Location x{a.second};
-  x.heading_ = 90;
+  x.heading_ = 90;    //leaving only
   search(x, a.second, { PE{{t, l, 3}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  x.heading_ = 270;
-  search(x, a.second, { PE{{t, l, 2}, 0, S::NONE}, PE{{t, l, 3}, 0, S::NONE}, PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
-  x.heading_ = 269;
-  search(x, a.second, { PE{{t, l, 4}, 0, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  x.heading_ = 270;   //arriving only
+  search(x, a.second, { PE{{t, l, 8}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
+  x.heading_ = 265;   //leaving                    //arriving
+  search(x, a.second, { PE{{t, l, 4}, 0, S::NONE}, PE{{t, l, 1}, 1, S::NONE}, PE{{t, l, 8}, 1, S::NONE} }, valhalla::loki::SearchStrategy::NODE);
 }
 
 void TestEdgeSearch() {
