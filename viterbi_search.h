@@ -10,6 +10,25 @@
 
 using Time = uint32_t;
 using CandidateId = uint32_t;
+using CandidatePairId = uint64_t;
+
+
+inline CandidatePairId candidateid_make_pair(CandidateId right, CandidateId left)
+{
+  return (static_cast<CandidatePairId>(right) << 32) + left;
+}
+
+
+inline CandidateId candidateid_right(CandidatePairId pair)
+{
+  return static_cast<CandidateId>(pair >> 32);
+}
+
+
+inline CandidateId candidateid_left(CandidatePairId pair)
+{
+  return static_cast<CandidateId>((pair << 32) >> 32);
+}
 
 
 template <typename T>
