@@ -396,6 +396,19 @@ PathLocation EdgeSearch(const Location& location, GraphReader& reader, EdgeFilte
     }
   }
 
+  //snap to node
+  bool front = std::get<0>(closest_point) == closest_edge_info->shape().front();
+  bool back = std::get<0>(closest_point) == closest_edge_info->shape().back();
+  //it was the begin node
+  if((front && closest_edge->forward()) || (back && !closest_edge->forward())) {
+    const GraphTile* other_tile;
+    auto opposing_edge = reader.GetOpposingEdge(closest_edge_id, other_tile);
+    return CorrelateNode(reader, location, filter, tile, other_tile->node(opposing_edge->endnode()), std::get<1>(closest_point));
+  }//it was the end node
+  else if((back && closest_edge->forward()) || (front && !closest_edge->forward())) {
+    const GraphTile* other_tile = reader.GetGraphTile(closest_edge->endnode());
+    return CorrelateNode(reader, location, filter, other_tile, other_tile->node(closest_edge->endnode()), std::get<1>(closest_point));
+  }
   //it was along the edge
   return CorrelateEdge(reader, location, filter, closest_point, closest_edge, closest_edge_id, closest_edge_info);
 }
