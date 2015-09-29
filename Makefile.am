@@ -66,12 +66,17 @@ libvalhalla_thor_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) $(BOOST_PROGRAM_OP
 bin_PROGRAMS = \
 	pathtest \
 	citytest \
+	adjlistbenchmark \
 	timedistance_test \
 	thor_service
 pathtest_SOURCES = \
 	src/thor/pathtest/pathtest.cc
 pathtest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pathtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_thor.la
+adjlistbenchmark_SOURCES = \
+	src/thor/adjlistbenchmark/adjlistbenchmark.cc
+adjlistbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+adjlistbenchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_thor.la
 citytest_SOURCES = \
 	src/thor/citytest/citytest.cc
 citytest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@

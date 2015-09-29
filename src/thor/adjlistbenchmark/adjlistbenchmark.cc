@@ -6,95 +6,115 @@
 
 #include <valhalla/midgard/util.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/sif/edgelabel.h>
 #include "config.h"
 
-#include "thor/edgelabel.h"
 #include "thor/adjacencylist.h"
 
 using namespace valhalla::midgard;
+using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace bpo = boost::program_options;
 
-unsigned int GetRandom(const unsigned int maxcost) {
-  return (unsigned int)(rand01() * maxcost);
+uint32_t GetRandom(const uint32_t maxcost) {
+  return (uint32_t)(rand01() * maxcost);
 }
 
 /**
  * Benchmark of adjacency list. Constructs a large number of random numbers,
  * adds EdgeLabels to the AdjacencyList with those as the sortcost. Then
- * removes them from the list.
+ * removes them from the list. This compares performance of an STL
+ * priority_queue with the custom approximate double bucket sorting used
+ * in adjacencylist.cc.
  */
-int Benchmark(const unsigned int n, const float maxcost,
+int Benchmark(const uint32_t n, const float maxcost,
               const float bucketsize) {
-  std::vector<unsigned int> costs(n);
-  for (unsigned int i = 0; i < n; i++) {
-    costs[i] = (unsigned int)GetRandom(maxcost);
+  // Create a set of random costs
+  std::vector<uint32_t> costs(n);
+  for (uint32_t i = 0; i < n; i++) {
+    costs[i] = (uint32_t)GetRandom(maxcost);
   }
 
-  std::clock_t start1 = std::clock();
-
+  // Test performance of STL priority queue. Construct labels
+  // and add to the priority queue
+  std::clock_t start = std::clock();
   std::priority_queue<EdgeLabel> pqueue;
-
-  for (unsigned int i = 0; i < n; i++) {
+  for (uint32_t i = 0; i < n; i++) {
     EdgeLabel el;
     el.SetSortCost(costs[i]);
-    pqueue.push(el);
+    pqueue.push(std::move(el));
   }
 
-  unsigned int count = 0;
+  uint32_t count = 0;
+  std::vector<uint32_t> ordered_cost1;
   while (!pqueue.empty()) {
-    EdgeLabel e = pqueue.top();
+    EdgeLabel el = pqueue.top();
+    ordered_cost1.push_back(el.sortcost());
     pqueue.pop();
     count++;
   }
+  uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
+  LOG_INFO("Priority Queue: Added and removed " + std::to_string(count) +
+           " edgelabels in " + std::to_string(ms) + " ms");
 
-  unsigned int msecs1 = (std::clock() - start1) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("Priority Queue: Added and removed " + std::to_string(count) + " edgelabels in " +
-    std::to_string(msecs1) + " ms");
+  // Didn't alter the sort order of priority queue, so reverse the vector
+  std::reverse(ordered_cost1.begin(), ordered_cost1.end());
 
-  std::clock_t start = std::clock();
-
+  // Test performance of double bucket adjacency list. Set the bucket maxcost
+  // such that EmptyOverflow is called once
+  start = std::clock();
   AdjacencyList adjlist(0, maxcost / 2, bucketsize);
 
   // Construct EdgeLabels and add to adjacency list
-  for (unsigned int i = 0; i < n; i++) {
-    EdgeLabel* edgelabel = new EdgeLabel();
-    edgelabel->SetSortCost(costs[i]);
-    adjlist.Add(edgelabel);
+  std::vector<EdgeLabel> edgelabels;
+  for (uint32_t i = 0; i < n; i++) {
+    EdgeLabel el;
+    el.SetSortCost(costs[i]);
+    edgelabels.push_back(std::move(el));
+    adjlist.Add(i, costs[i]);
   }
 
-//  unsigned int count = 0;
-  EdgeLabel* edge;
-  while ((edge = adjlist.Remove()) != nullptr) {
-    delete edge;
+  // Get edge label indexes from the adj list. Accumulate total cost to make
+  // sure compiler doesn't optimize too much.
+  count = 0;
+  std::vector<uint32_t> ordered_cost2;
+  while (true) {
+    uint32_t idx = adjlist.Remove(edgelabels);
+    if (idx == kInvalidLabel) {
+      break;
+    }
+
+    // Copy the edge label - simulates what is done in PathAlgorithm
+    EdgeLabel el = edgelabels[idx];
+    ordered_cost2.push_back(el.sortcost());
     count++;
   }
-  unsigned int msecs = (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-  LOG_INFO("Added and removed " + std::to_string(count) + " edgelabels in " +
-    std::to_string(msecs1) + " ms");
+  ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
+  LOG_INFO("Bucketed Adj. List: Added and removed " + std::to_string(count) +
+           " edgelabels in " + std::to_string(ms) + " ms");
 
+  // Verify order
+  for (uint32_t i = 0; i < count; i++) {
+    if (ordered_cost1[i] != ordered_cost2[i]) {
+      LOG_INFO("Costs: " + std::to_string(ordered_cost1[i]) + "," +
+               std::to_string(ordered_cost2[i]));
+    }
+  }
   return 0;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
   bpo::options_description options(
   "valhalla " VERSION "\n"
   "\n"
-  " Usage: valhalla [options]\n"
+  " Usage: adjlistbenchmark [options]\n"
   "\n"
-  "valhalla is simply a program that fronts a stubbed out library in the "
-  "autotools framework. The purpose of it is to have a standard configuration "
-  "for any new project that one might want to do using autotools and c++11. "
-  "It includes some pretty standard dependencies for convenience but those "
-  "may or may not be actual requirements for valhalla to build. "
+  "adjlistbenchmark is benchmark comparing performance of an STL priority_queue"
+  "to the approximate double bucket adjacency list class supplied with Valhalla."
   "\n"
   "\n");
-
-
-  std::string echo;
 
   options.add_options()
     ("help,h", "Print this help message.")
@@ -102,13 +122,9 @@ int main(int argc, char *argv[])
     ;
 
   bpo::variables_map vm;
-
   try {
     bpo::store(bpo::command_line_parser(argc,argv)
-      .options(options)
-      .positional(pos_options)
-      .run(),
-      vm);
+      .options(options).run(), vm);
     bpo::notify(vm);
 
   } catch (std::exception &e) {
@@ -127,7 +143,7 @@ int main(int argc, char *argv[])
   }
 
   // Benchmark with count, maxcost, and bucketsize
-  Benchmark(500000, 50000, 5);
+  Benchmark(1000000, 50000, 1);
   LOG_INFO("Done Benchmark!");
 
   return EXIT_SUCCESS;
