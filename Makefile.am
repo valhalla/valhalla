@@ -42,7 +42,9 @@ nobase_include_HEADERS = \
 	valhalla/loki/service.h
 libvalhalla_loki_la_SOURCES = \
 	src/loki/search.cc \
-	src/loki/service.cc
+	src/loki/service.cc \
+	src/loki/locate_action.cc \
+	src/loki/route_action.cc
 libvalhalla_loki_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 libvalhalla_loki_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
