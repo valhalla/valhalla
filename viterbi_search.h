@@ -428,6 +428,7 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const override = 0;
   virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const override = 0;
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
+  const std::vector<const CANDIDATE_TYPE*>& state(Time time) const;
 
  private:
   using State = std::vector<const CANDIDATE_TYPE*>;
@@ -621,6 +622,12 @@ void ViterbiSearch<T>::InitQueue(const ViterbiSearch<T>::State& state)
     }
     queue_.push(Label(emission_cost, candidate_ptr, nullptr));
   }
+}
+
+
+template <typename T>
+const std::vector<const CANDIDATE_TYPE*>& ViterbiSearch<T>::state(Time time) const {
+  return states_[time];
 }
 
 
