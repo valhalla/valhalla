@@ -374,8 +374,9 @@ void AddShortcutEdges(
     // entrance ramps can lead to a contracted node
     GraphId basenode = newnode.basenode;
     GraphId nodeb = info.nodemap_[directededge->endnode().value];
-    if (info.tilednodes_[nodeb.tileid()][nodeb.id()].contract
-        && IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
+    if (nodeb.Is_Valid() &&
+        info.tilednodes_[nodeb.tileid()][nodeb.id()].contract &&
+        IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
 
       // Form a shortcut edge.
       //TODO: this seems really dangerous, we need a virtual destructor in directededge
