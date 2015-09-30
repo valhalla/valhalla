@@ -11,12 +11,6 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE};
-  const std::unordered_map<std::string, ACTION_TYPE> ACTION{
-    {"/route", ROUTE},
-    {"/viaroute", VIAROUTE},
-    {"/locate", LOCATE}
-  };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
