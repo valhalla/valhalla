@@ -9,10 +9,6 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
-TimeDistanceMatrix::TimeDistanceMatrix()
-    : initial_cost_threshold_(DEFAULT_COST_THRESHOLD) {
-}
-
 TimeDistanceMatrix::TimeDistanceMatrix(float initial_cost_threshold)
     : initial_cost_threshold_(initial_cost_threshold) {
 }
