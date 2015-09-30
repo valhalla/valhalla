@@ -76,6 +76,17 @@ struct Destination {
 class TimeDistanceMatrix : public PathAlgorithm {
  public:
   /**
+   * Constructor with default cost threshold.
+   */
+  TimeDistanceMatrix();
+
+  /**
+   * Constructor with cost threshold.
+   * @param initial_cost_threshold  Cost threshold for termination.
+   */
+  TimeDistanceMatrix(float initial_cost_threshold);
+
+  /**
    * One to many time and distance cost matrix. Computes time and distance
    * matrix from one origin location to many other locations.
    * @param  origin_index  Index in the locations list of the origin.
@@ -125,6 +136,9 @@ class TimeDistanceMatrix : public PathAlgorithm {
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
+
+  // Initial cost threshold for termination
+  float initial_cost_threshold_;
 
   // Cost threshold for termination
   float cost_threshold_;
