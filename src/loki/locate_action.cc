@@ -10,10 +10,8 @@ using namespace valhalla::baldr;
 
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE};
+  enum ACTION_TYPE {LOCATE};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
-    {"/route", ROUTE},
-    {"/viaroute", VIAROUTE},
     {"/locate", LOCATE}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};

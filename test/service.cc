@@ -6,8 +6,10 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <thread>
 #include <unistd.h>
+#include <valhalla/midgard/logging.h>
 
 #include "loki/service.h"
+
 
 using namespace valhalla;
 using namespace prime_server;
@@ -119,14 +121,16 @@ namespace {
         //get the string of bytes to send formatted for http protocol
         request_str = request->to_string();
         ++request;
+       // LOG_INFO("Request string :: " + request_str);
         return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
       [&request](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
-          throw std::runtime_error("Unexpected response code");
+          throw std::runtime_error("Unexpected response code ::" + response.code);
+
         if(response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error("Unexpected response body");
+          throw std::runtime_error("Unexpected response body :: "+ response.body);
 
         return request != requests.cend();
       }, 1

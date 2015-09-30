@@ -11,11 +11,10 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-  enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE};
+  enum ACTION_TYPE {ROUTE, VIAROUTE};
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/route", ROUTE},
-    {"/viaroute", VIAROUTE},
-    {"/locate", LOCATE}
+    {"/viaroute", VIAROUTE}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -42,29 +41,6 @@ namespace {
             break;
           }
         }
-        //only serialize it if we didnt do it before
-        if(!duplicate) {
-          ids.emplace(edge_info->wayid(), location.vertex());
-          //they want MOAR!
-          if(verbose) {
-            array->emplace_back(
-              json::map({
-                {"way_id", edge_info->wayid()},
-                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
-              })
-            );
-          }//spare the details
-          else {
-            array->emplace_back(
-              json::map({
-                {"way_id", edge_info->wayid()},
-                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
-              })
-            );
-          }
-        }
       }
       catch(...) {
         //this really shouldnt ever get hit
@@ -72,23 +48,6 @@ namespace {
       }
     }
     return array;
-  }
-
-  json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
-    return json::map({
-      {"ways", serialize_edges(location, reader, verbose)},
-      {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fp_t{location.latlng_.lng(), 6}}
-    });
-  }
-
-  json::MapPtr serialize(const PointLL& ll, const std::string& reason) {
-    return json::map({
-      {"ways", static_cast<std::nullptr_t>(nullptr)},
-      {"input_lat", json::fp_t{ll.lat(), 6}},
-      {"input_lon", json::fp_t{ll.lng(), 6}},
-      {"reason", reason}
-    });
   }
 }
 
