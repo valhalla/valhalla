@@ -113,8 +113,7 @@ class MapMatching: public ViterbiSearch<Candidate>
 
   inline float EmissionCost(const CandidateWrapper<Candidate>& candidate) const override
   {
-    auto distance = candidate.candidate().distance();
-    return (distance * distance) / double_sq_sigma_z_;
+    return candidate.candidate().sq_distance() / double_sq_sigma_z_;
   }
 
   inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
