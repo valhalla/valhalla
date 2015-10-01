@@ -9,6 +9,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/json.h>
 
 using namespace valhalla::midgard;
 
@@ -83,6 +84,12 @@ class EdgeInfo {
    * @return  Returns the encoded shape string.
    */
   std::string encoded_shape() const;
+
+  /**
+   * Returns json representing this object
+   * @return json object
+   */
+  json::MapPtr json() const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator ==(const EdgeInfo& rhs) const;

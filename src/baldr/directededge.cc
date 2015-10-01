@@ -1,6 +1,34 @@
 #include "baldr/directededge.h"
 #include <boost/functional/hash.hpp>
 
+using namespace valhalla::baldr;
+
+namespace {
+
+json::MapPtr bike_network_json(uint8_t mask) {
+  return json::map({
+    {"national", static_cast<bool>(mask && kNcn)},
+    {"regional", static_cast<bool>(mask && kRcn)},
+    {"local", static_cast<bool>(mask && kLcn)},
+    {"mountain", static_cast<bool>(mask && kMcn)},
+  });
+}
+
+json::MapPtr access_json(Access a) {
+  return json::map({
+    {"bicycle", static_cast<bool>(a.fields.bicycle)},
+    {"bus", static_cast<bool>(a.fields.bus)},
+    {"car", static_cast<bool>(a.fields.car)},
+    {"emergency", static_cast<bool>(a.fields.emergency)},
+    {"HOV", static_cast<bool>(a.fields.hov)},
+    {"pedestrian", static_cast<bool>(a.fields.pedestrian)},
+    {"taxi", static_cast<bool>(a.fields.taxi)},
+    {"truck", static_cast<bool>(a.fields.truck)},
+  });
+}
+
+}
+
 namespace valhalla {
 namespace baldr {
 
@@ -308,6 +336,65 @@ bool DirectedEdge::trans_down() const {
 // Is this directed edge a shortcut?
 bool DirectedEdge::is_shortcut() const {
   return hierarchy_.is_shortcut;
+}
+
+// Json representation
+json::MapPtr DirectedEdge::json() const {
+  return json::map({});
+
+  return json::map({
+    {"end_node", endnode_.json()},
+    {"speed", static_cast<uint64_t>(speed_)},
+    //{"opp_index", static_cast<bool>(attributes_.opp_index)},
+    //{"edge_info_offset", static_cast<uint64_t>(dataoffsets_.edgeinfo_offset)},
+    //{"restrictions", attributes_.restrictions},
+    {"access_conditions", static_cast<bool>(dataoffsets_.access_conditions)},
+    {"start_timed_turn_restriction", static_cast<bool>(dataoffsets_.start_ttr)},
+    {"start_multi_edge_restriction", static_cast<bool>(dataoffsets_.start_mer)},
+    {"end_multi_edge_restriction", static_cast<bool>(dataoffsets_.end_mer)},
+    {"has_exit_sign", static_cast<bool>(dataoffsets_.exitsign)},
+    {"drive_on_right", static_cast<bool>(attributes_.drive_on_right)},
+    {"ferry", static_cast<bool>(attributes_.ferry)},
+    {"rail_ferry", static_cast<bool>(attributes_.railferry)},
+    {"toll", static_cast<bool>(attributes_.toll)},
+    {"seasonal", static_cast<bool>(attributes_.seasonal)},
+    {"destination_only", static_cast<bool>(attributes_.dest_only)},
+    {"tunnel", static_cast<bool>(attributes_.tunnel)},
+    {"bridge", static_cast<bool>(attributes_.bridge)},
+    {"round_about", static_cast<bool>(attributes_.roundabout)},
+    {"unreachable", static_cast<bool>(attributes_.unreachable)},
+    {"traffic_signal", static_cast<bool>(attributes_.traffic_signal)},
+    {"forward", static_cast<bool>(attributes_.forward)},
+    {"not_thru", static_cast<bool>(attributes_.not_thru)},
+    {"cycle_lane", to_string(static_cast<CycleLane>(attributes_.cycle_lane))},
+    {"bike_network", bike_network_json(attributes_.bikenetwork)},
+    {"lane_count", static_cast<uint64_t>(attributes_.lanecount)},
+    {"use", to_string(static_cast<Use>(attributes_.use))},
+    {"speed_type", to_string(static_cast<SpeedType>(attributes_.speed_type))},
+    {"country_crossing", static_cast<bool>(attributes_.ctry_crossing)},
+    {"geo_attributes", json::map({
+      {"length", static_cast<uint64_t>(geoattributes_.length)},
+      {"weighted_grade", json::fp_t{static_cast<double>(geoattributes_.weighted_grade - 6.5) / .6, 2}},
+      //{"curvature", static_cast<uint64_t>(geoattributes_.curvature)},
+    })},
+    {"access", access_json(forwardaccess_)},
+    //{"access", access_json(reverseaccess_)},
+    {"classification", json::map({
+      {"classification", to_string(static_cast<RoadClass>(classification_.classification))},
+      {"surface", to_string(static_cast<Surface>(classification_.surface))},
+      {"link", static_cast<bool>(classification_.link)},
+      {"internal", static_cast<bool>(classification_.internal)},
+    })},
+    //{"hierarchy", json::map({
+    //  {"", hierarchy_.localedgeidx},
+    //  {"", hierarchy_.opp_local_idx},
+    //  {"", hierarchy_.shortcut},
+    //  {"", hierarchy_.superseded},
+    //  {"", hierarchy_.trans_up},
+    //  {"", hierarchy_.trans_down},
+    //  {"", hierarchy_.is_shortcut},
+    //})},
+  });
 }
 
 // Get the internal version. Used for data validity checks.

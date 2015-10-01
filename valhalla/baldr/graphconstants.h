@@ -68,6 +68,22 @@ const std::unordered_map<std::string, RoadClass> stringToRoadClass =
     {"Unclassified", RoadClass::kUnclassified},{"Residential", RoadClass::kResidential},
     {"ServiceOther", RoadClass::kServiceOther}
   };
+const std::unordered_map<uint8_t, std::string> RoadClassStrings = {
+  {static_cast<uint8_t>(RoadClass::kMotorway), "motorway"},
+  {static_cast<uint8_t>(RoadClass::kTrunk), "trunk"},
+  {static_cast<uint8_t>(RoadClass::kPrimary), "primary"},
+  {static_cast<uint8_t>(RoadClass::kSecondary), "secondary"},
+  {static_cast<uint8_t>(RoadClass::kTertiary), "tertiary"},
+  {static_cast<uint8_t>(RoadClass::kUnclassified), "unclassified"},
+  {static_cast<uint8_t>(RoadClass::kResidential), "residential"},
+  {static_cast<uint8_t>(RoadClass::kServiceOther), "service_other"},
+};
+inline std::string to_string(RoadClass r) {
+  auto i = RoadClassStrings.find(static_cast<uint8_t>(r));
+  if(i == RoadClassStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Maximum length in meters of an internal intersection edge
 constexpr float kMaxInternalLength = 32.0f;
@@ -75,6 +91,42 @@ constexpr float kMaxInternalLength = 32.0f;
 // Maximum length in meters of a "link" that can be assigned use=kTurnChannel
 // (vs. kRamp)
 constexpr float kMaxTurnChannelLength = 200.0f;
+
+// Bicycle Network constants. Bit constants.
+constexpr uint8_t kNcn = 1;   // Part of national bicycle network
+constexpr uint8_t kRcn = 2;   // Part of regional bicycle network
+constexpr uint8_t kLcn = 4;   // Part of local bicycle network
+constexpr uint8_t kMcn = 8;   // Part of mountain bicycle network
+constexpr uint8_t kMaxBicycleNetwork = 15;
+
+// Maximum offset to edge information
+constexpr uint32_t kMaxEdgeInfoOffset = 33554431;   // 2^25 bytes
+
+// Maximum length of an edge
+constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
+
+// Maximum number of edges allowed in a turn restriction mask
+constexpr uint32_t kMaxTurnRestrictionEdges = 8;
+
+// Maximum speed (kph)
+constexpr float kMaxSpeed = 255.0f;
+
+// Maximum lane count
+constexpr uint32_t kMaxLaneCount = 15;
+
+// Number of edges considered for edge transitions
+constexpr uint32_t kNumberOfEdgeTransitions = 8;
+
+// Maximum shortcuts edges from a node. More than this can be
+// added but this is the max. that can supersede an edge
+constexpr uint32_t kMaxShortcutsFromNode = 7;
+
+// Maximum stop impact
+constexpr uint32_t kMaxStopImpact = 7;
+
+// Maximum grade and curvature factors.
+constexpr uint32_t kMaxGradeFactor = 15;
+constexpr uint32_t kMaxCurvatureFactor = 15;
 
 // Node types.
 enum class NodeType : uint8_t {
@@ -134,6 +186,34 @@ enum class Use : uint8_t {
   kBusConnection = 53,     // Connection to a bus stop
   kTransitConnection = 54  // Connection to multi-use transit stop
 };
+const std::unordered_map<uint8_t, std::string> UseStrings = {
+  {static_cast<uint8_t>(Use::kRoad), "road"},
+  {static_cast<uint8_t>(Use::kRamp), "ramp"},
+  {static_cast<uint8_t>(Use::kTurnChannel), "turn_channel"},
+  {static_cast<uint8_t>(Use::kTrack), "track"},
+  {static_cast<uint8_t>(Use::kDriveway), "driveway"},
+  {static_cast<uint8_t>(Use::kAlley), "alley"},
+  {static_cast<uint8_t>(Use::kParkingAisle), "parking_aisle"},
+  {static_cast<uint8_t>(Use::kEmergencyAccess), "emergency_access"},
+  {static_cast<uint8_t>(Use::kDriveThru), "drive_through"},
+  {static_cast<uint8_t>(Use::kCuldesac), "culdesac"},
+  {static_cast<uint8_t>(Use::kCycleway), "cycleway"},
+  {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
+  {static_cast<uint8_t>(Use::kFootway), "footway"},
+  {static_cast<uint8_t>(Use::kSteps), "steps"},
+  {static_cast<uint8_t>(Use::kOther), "other"},
+  {static_cast<uint8_t>(Use::kRail), "rail"},
+  {static_cast<uint8_t>(Use::kBus), "bus"},
+  {static_cast<uint8_t>(Use::kRailConnection), "rail_connection"},
+  {static_cast<uint8_t>(Use::kBusConnection), "bus_connnection"},
+  {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
+};
+inline std::string to_string(Use u) {
+  auto i = UseStrings.find(static_cast<uint8_t>(u));
+  if(i == UseStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Speed type
 enum class SpeedType : uint8_t {
@@ -142,6 +222,18 @@ enum class SpeedType : uint8_t {
   kClassifiedUrban = 2,   // Classified speed in urban area
   kClassifiedRural = 3    // Classified speed in rural area
 };
+const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
+  {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
+  {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
+  {static_cast<uint8_t>(SpeedType::kClassifiedUrban), "classified_urban"},
+  {static_cast<uint8_t>(SpeedType::kClassifiedRural), "classified_rural"},
+};
+inline std::string to_string(SpeedType s) {
+  auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
+  if(i == SpeedTypeStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Indication of the type of cycle lane (if any) present along an edge.
 // Higher values are more favorable to safe bicycling.
@@ -152,6 +244,18 @@ enum class CycleLane : uint8_t {
   kSeparated = 3  // A separate cycle lane (physical separation from the
                   // main carriageway)
 };
+const std::unordered_map<uint8_t, std::string> CycleLaneStrings = {
+  {static_cast<uint8_t>(CycleLane::kNone), "none"},
+  {static_cast<uint8_t>(CycleLane::kShared), "shared"},
+  {static_cast<uint8_t>(CycleLane::kDedicated), "dedicated"},
+  {static_cast<uint8_t>(CycleLane::kSeparated), "separated"},
+};
+inline std::string to_string(CycleLane c) {
+  auto i = CycleLaneStrings.find(static_cast<uint8_t>(c));
+  if(i == CycleLaneStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Generalized representation of surface types. Lower values indicate smoother
 // surfaces. Vehicle or bicycle type can use this to avoid or disallow edges
@@ -166,6 +270,22 @@ enum class Surface : uint8_t {
   kPath = 6,
   kImpassable = 7
 };
+const std::unordered_map<uint8_t, std::string> SurfaceStrings = {
+  {static_cast<uint8_t>(Surface::kPavedSmooth), "paved_smooth"},
+  {static_cast<uint8_t>(Surface::kPaved), "paved"},
+  {static_cast<uint8_t>(Surface::kPavedRough), "paved_rough"},
+  {static_cast<uint8_t>(Surface::kCompacted), "compacted"},
+  {static_cast<uint8_t>(Surface::kDirt), "dirt"},
+  {static_cast<uint8_t>(Surface::kGravel), "gravel"},
+  {static_cast<uint8_t>(Surface::kPath), "path"},
+  {static_cast<uint8_t>(Surface::kImpassable), "impassable"},
+};
+inline std::string to_string(Surface s) {
+  auto i = SurfaceStrings.find(static_cast<uint8_t>(s));
+  if(i == SurfaceStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Used for restrictions.  A restriction starts and ends on a particular day
 enum class DOW : uint8_t {
