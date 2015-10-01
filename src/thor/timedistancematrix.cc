@@ -9,8 +9,11 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+// Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix(float initial_cost_threshold)
-    : initial_cost_threshold_(initial_cost_threshold) {
+    : settled_count_(0),
+      initial_cost_threshold_(initial_cost_threshold),
+      cost_threshold_(initial_cost_threshold) {
 }
 
 // Clear the temporary information generated during time + distance matrix
