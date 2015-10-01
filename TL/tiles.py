@@ -166,11 +166,39 @@ if __name__ == "__main__":
    directory = output_transit_dir_ + "/" + str(level_)
    shutil.rmtree(directory, ignore_errors=True)
 
-#until we get the list of BB from transitland, default to SF
-   minx = -123.0977
-   miny = 36.9005
-   maxx = -121.2520
-   maxy = 38.2576
+   bb_list = []
+
+#The following will obtain all the transit bounding boxes(BBs) from transit land.
+#If you only want to download your market, comment out the code 
+#from the begin to the end transitland BBs download sections.  
+#Next, add your BB to the list in the custom BB section.  A
+#San Francisco BB is shown as an example.  
+
+# begin transitland BBs download
+   tl_bb_url = 'http://dev.transit.land/api/v1/feeds.geojson'
+   tl_bbs = json_resource_t(tl_bb_url)
+
+   for features in tl_bbs.kv.get('features', []):
+      coords = features['geometry']['coordinates'][0]
+      # following for debuging.
+      #for index in range(len(coords)-1):
+      #   print(coords[index][0])
+      #   print(coords[index][1])
+      minx = coords[0][0]
+      miny = coords[0][1]
+
+      maxx = coords[2][0]
+      maxy = coords[2][1]
+
+      bb_list.append(Tile(minx,miny,maxx,maxy))
+## end transitland BBs download
+
+#custom BB 
+#   minx = -123.0977
+#   miny = 36.9005
+#   maxx = -121.2520
+#   maxy = 38.2576
+#bb_list.append(Tile(minx,miny,maxx,maxy))
 
 #used to generate unique keys for onestop IDs
    onestop_key = 1
@@ -194,148 +222,155 @@ if __name__ == "__main__":
          tile = Tile(min_x,min_y,max_x,max_y)
          #After we get the BBs from transitland we will check if any of the BBs
          #intersect this tile
-         if tile.intersects(minx,miny,maxx,maxy): 
+
+         for tl_bb in bb_list:
+
+            if tile.intersects(tl_bb.minx,tl_bb.miny,tl_bb.maxx,tl_bb.maxy): 
             
-            dictionary = defaultdict(list)
-            file = tile.file( row, col, max_tile_id_)
+               dictionary = defaultdict(list)
+               file = tile.file( row, col, max_tile_id_)
 
-            url = 'http://dev.transit.land/api/v1/stops?per_page=4000&bbox='
-            url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
-            while url:
+               url = 'http://dev.transit.land/api/v1/stops?per_page=10000&bbox='
+               url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
+               while url:
                
-               tl_stops = json_resource_t(url)
-               meta = tl_stops.kv.get('meta', [])
+                  tl_stops = json_resource_t(url)
+                  meta = tl_stops.kv.get('meta', [])
 
-               for tl_s in tl_stops.kv.get('stops', []):
-                  onestop_id = tl_s['onestop_id']
-                  if onestop_id not in onestops:
-                     onestops[onestop_id] = onestop_key
-                     onestop_key = onestop_key + 1
-                  tl_s['key'] = onestops[onestop_id]
+                  for tl_s in tl_stops.kv.get('stops', []):
+                     onestop_id = tl_s['onestop_id']
+                     if onestop_id not in onestops:
+                        onestops[onestop_id] = onestop_key
+                        onestop_key = onestop_key + 1
+                     tl_s['key'] = onestops[onestop_id]
                   
-                  dictionary['stops'].append(tl_s)
+                     dictionary['stops'].append(tl_s)
+
+                  if not dictionary:
+                     break
+
+                  print(url)
+                  dictionary['stops_url'].append(url)
+
+                  if 'next' in meta.keys():
+                     url = meta['next']
+                  else:
+                     url = ""
 
                if not dictionary:
-                  break
+                  continue
 
-               print(url)
-               dictionary['stops_url'].append(url)
+               stop_pairs = defaultdict(list)
 
-               if 'next' in meta.keys():
-                  url = meta['next']
-               else:
-                  url = ""
+               url = 'http://dev.transit.land/api/v1/schedule_stop_pairs?per_page=10000&bbox='
+               url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
 
-            if not dictionary:
-               continue
+               while url:
+                  print(url) 
 
-            stop_pairs = defaultdict(list)
+                  tl_stop_pairs = json_resource_t(url)
+                  meta = tl_stop_pairs.kv.get('meta', [])
 
-            url = 'http://dev.transit.land/api/v1/schedule_stop_pairs?per_page=4000&bbox='
-            url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
+                  dictionary['schedule_stop_pairs_url'].append(url)
 
-            while url:
-               print(url) 
+                  for tl_s_p in tl_stop_pairs.kv.get('schedule_stop_pairs', []):
 
-               tl_stop_pairs = json_resource_t(url)
-               meta = tl_stop_pairs.kv.get('meta', [])
-
-               dictionary['schedule_stop_pairs_url'].append(url)
-
-               for tl_s_p in tl_stop_pairs.kv.get('schedule_stop_pairs', []):
-
-                  onestop_id = tl_s_p['origin_onestop_id']
-                  if onestop_id not in onestops:
-                     onestops[onestop_id] = onestop_key
-                     onestop_key = onestop_key + 1
-                  tl_s_p['origin_key'] = onestops[onestop_id]
+                     onestop_id = tl_s_p['origin_onestop_id']
+                     if onestop_id not in onestops:
+                        onestops[onestop_id] = onestop_key
+                        onestop_key = onestop_key + 1
+                     tl_s_p['origin_key'] = onestops[onestop_id]
                 
-                  onestop_id = tl_s_p['destination_onestop_id']
-                  if onestop_id not in onestops:
-                     onestops[onestop_id] = onestop_key
-                     onestop_key = onestop_key + 1
-                  tl_s_p['destination_key'] = onestops[onestop_id] 
+                     onestop_id = tl_s_p['destination_onestop_id']
+                     if onestop_id not in onestops:
+                        onestops[onestop_id] = onestop_key
+                        onestop_key = onestop_key + 1
+                     tl_s_p['destination_key'] = onestops[onestop_id] 
                   
-                  onestop_id = tl_s_p['route_onestop_id']
-                  if onestop_id not in onestops:
-                     onestops[onestop_id] = onestop_key
-                     onestop_key = onestop_key + 1
-                  tl_s_p['route_key'] = onestops[onestop_id]
+                     onestop_id = tl_s_p['route_onestop_id']
+                     if onestop_id not in onestops:
+                        onestops[onestop_id] = onestop_key
+                        onestop_key = onestop_key + 1
+                     tl_s_p['route_key'] = onestops[onestop_id]
                   
-                  block_id = tl_s_p['block_id']
-                  if block_id is not None:
-                     block = block_id + tl_s_p['route_onestop_id']
-                     if block not in blocks:
-                        blocks[block] = block_key
-                        block_key = block_key + 1
-                     tl_s_p['block_key'] = blocks[block]			
+                     block_id = tl_s_p['block_id']
+                     if block_id is not None:
+                        block = block_id + tl_s_p['route_onestop_id']
+                        if block not in blocks:
+                           blocks[block] = block_key
+                           block_key = block_key + 1
+                        tl_s_p['block_key'] = blocks[block]			
 
-                  trip = tl_s_p['trip']
-                  if trip not in trips:
-                     trips[trip] = trip_key
-                     trip_key = trip_key + 1
-                  tl_s_p['trip_key'] = trips[trip]
+                     trip = tl_s_p['trip']
+                     if trip not in trips:
+                        trips[trip] = trip_key
+                        trip_key = trip_key + 1
+                     tl_s_p['trip_key'] = trips[trip]
 
-                  stop_pairs['schedule_stop_pairs'].append(tl_s_p)
+                     stop_pairs['schedule_stop_pairs'].append(tl_s_p)
 
-               #should never happen.  Stops exist, but stop_pairs do not.
+                  #should never happen.  Stops exist, but stop_pairs do not.
+                  if not stop_pairs:
+                     break;
+
+                  if 'next' in meta.keys():
+                     url = meta['next']
+                  else:
+                     url = ""
+
                if not stop_pairs:
-                  break;
+                  raise ValueError('Stops exist, but stop_pairs do not!')
 
-               if 'next' in meta.keys():
-                  url = meta['next']
-               else:
-                  url = ""
+               dictionary.update(stop_pairs)
 
-            if not stop_pairs:
-               raise ValueError('Stops exist, but stop_pairs do not!')
+               routes = defaultdict(list)
 
-            dictionary.update(stop_pairs)
-
-            routes = defaultdict(list)
-
-            url = 'http://dev.transit.land/api/v1/routes?per_page=4000&bbox='
-            url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
+               url = 'http://dev.transit.land/api/v1/routes?per_page=10000&bbox='
+               url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
 
 #hack due to BB issue
 #            if (min_x == -121.75 and min_y == 37.0 and max_x == -121.5 and max_y == 37.25):
-#               url = 'http://dev.transit.land/api/v1/routes?per_page=4000'
+#               url = 'http://dev.transit.land/api/v1/routes?per_page=10000'
 
-            while url:
-               print(url)
+               while url:
+                  print(url)
 
-               tl_routes = json_resource_t(url)
-               meta = tl_routes.kv.get('meta', [])
+                  tl_routes = json_resource_t(url)
+                  meta = tl_routes.kv.get('meta', [])
 
-               routes['route_url'].append(url)
+                  routes['route_url'].append(url)
 
-               for tl_r in tl_routes.kv.get('routes', []):
+                  for tl_r in tl_routes.kv.get('routes', []):
 
-                  onestop_id = tl_r['onestop_id']
-                  if onestop_id not in onestops:
-                     onestops[onestop_id] = onestop_key
-                     onestop_key = onestop_key + 1
-                  tl_r['key'] = onestops[onestop_id]
+                     onestop_id = tl_r['onestop_id']
+                     if onestop_id not in onestops:
+                        onestops[onestop_id] = onestop_key
+                        onestop_key = onestop_key + 1
+                     tl_r['key'] = onestops[onestop_id]
 
-                  routes['routes'].append(tl_r)
+                     routes['routes'].append(tl_r)
 
-               #should never happen.  Stops and stop_pairs exist, but routes do not.
+                  #should never happen.  Stops and stop_pairs exist, but routes do not.
+                  if not routes:
+                     break;
+
+                  if 'next' in meta.keys():
+                     url = meta['next']
+                  else:
+                     url = ""
+
                if not routes:
-                  break;
+                  raise ValueError('Stops and stop_pairs exist, but routes do not!')
 
-               if 'next' in meta.keys():
-                  url = meta['next']
-               else:
-                  url = ""
+               dictionary.update(routes)
 
-            if not routes:
-               raise ValueError('Stops and stop_pairs exist, but routes do not!')
-
-            dictionary.update(routes)
-
-            with open(file, 'w') as f:
-               json.dump(dictionary, f, indent=2, sort_keys=True)
-
+               with open(file, 'w') as f:
+                  json.dump(dictionary, f, indent=2, sort_keys=True)
+               
+               #break ensures that we don't download data for a tile more than once.
+               #a valhalla tile can intersect multiple markets. 
+               break 
+               
    now = time.strftime("%c")   
    print("End time: %s" % now )
 
