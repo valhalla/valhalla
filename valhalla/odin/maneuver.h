@@ -146,6 +146,40 @@ class Maneuver {
   uint32_t roundabout_exit_count() const;
   void set_roundabout_exit_count(uint32_t roundabout_exit_count);
 
+  bool fork() const;
+  void set_fork(bool fork);
+
+  bool begin_intersecting_edge_name_consistency() const;
+  void set_begin_intersecting_edge_name_consistency(
+      bool begin_intersecting_edge_name_consistency);
+
+  bool intersecting_forward_edge() const;
+  void set_intersecting_forward_edge(bool intersecting_forward_edge);
+
+  const std::string& verbal_transition_alert_instruction() const;
+  void set_verbal_transition_alert_instruction(
+      const std::string& verbal_transition_alert_instruction);
+  void set_verbal_transition_alert_instruction(
+      std::string&& verbal_transition_alert_instruction);
+  bool HasVerbalTransitionAlertInstruction() const;
+
+  const std::string& verbal_pre_transition_instruction() const;
+  void set_verbal_pre_transition_instruction(
+      const std::string& verbal_pre_transition_instruction);
+  void set_verbal_pre_transition_instruction(
+      std::string&& verbal_pre_transition_instruction);
+  bool HasVerbalPreTransitionInstruction() const;
+
+  const std::string& verbal_post_transition_instruction() const;
+  void set_verbal_post_transition_instruction(
+      const std::string& verbal_post_transition_instruction);
+  void set_verbal_post_transition_instruction(
+      std::string&& verbal_post_transition_instruction);
+  bool HasVerbalPostTransitionInstruction() const;
+
+  bool tee() const;
+  void set_tee(bool tee);
+
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
@@ -193,40 +227,6 @@ class Maneuver {
   void InsertTransitStop(std::string name, std::string arrival_date_time,
                          std::string departure_date_time);
 
-  bool fork() const;
-  void set_fork(bool fork);
-
-  bool begin_intersecting_edge_name_consistency() const;
-  void set_begin_intersecting_edge_name_consistency(
-      bool begin_intersecting_edge_name_consistency);
-
-  bool intersecting_forward_edge() const;
-  void set_intersecting_forward_edge(bool intersecting_forward_edge);
-
-  const std::string& verbal_transition_alert_instruction() const;
-  void set_verbal_transition_alert_instruction(
-      const std::string& verbal_transition_alert_instruction);
-  void set_verbal_transition_alert_instruction(
-      std::string&& verbal_transition_alert_instruction);
-  bool HasVerbalTransitionAlertInstruction() const;
-
-  const std::string& verbal_pre_transition_instruction() const;
-  void set_verbal_pre_transition_instruction(
-      const std::string& verbal_pre_transition_instruction);
-  void set_verbal_pre_transition_instruction(
-      std::string&& verbal_pre_transition_instruction);
-  bool HasVerbalPreTransitionInstruction() const;
-
-  const std::string& verbal_post_transition_instruction() const;
-  void set_verbal_post_transition_instruction(
-      const std::string& verbal_post_transition_instruction);
-  void set_verbal_post_transition_instruction(
-      std::string&& verbal_post_transition_instruction);
-  bool HasVerbalPostTransitionInstruction() const;
-
-  bool tee() const;
-  void set_tee(bool tee);
-
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(
       std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
@@ -265,13 +265,6 @@ class Maneuver {
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
   uint32_t roundabout_exit_count_;
-  TripPath_TravelMode travel_mode_;
-  bool transit_connection_;
-  // TODO determine how we want to handle in the future
-  TransitStop transit_connection_stop_;
-  bool rail_;
-  bool bus_;
-  TransitInfo transit_info_;
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
   bool intersecting_forward_edge_;
@@ -279,6 +272,22 @@ class Maneuver {
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
   bool tee_;
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Transit support
+
+  // Transit travel mode
+  TripPath_TravelMode travel_mode_;
+  bool rail_;
+  bool bus_;
+
+  // Transit connection flag and the associated stop
+  bool transit_connection_;
+  TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
+
+  // The transit info including list of stops
+  TransitInfo transit_info_;
+  ////////////////////////////////////////////////////////////////////////////
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 

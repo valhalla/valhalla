@@ -498,7 +498,14 @@ void PopulateManeuver(
     std::vector<std::vector<std::string>> exit_names,
     uint32_t internal_right_turn_count = 0,
     uint32_t internal_left_turn_count = 0,
-    uint32_t roundabout_exit_count = 0) {
+    uint32_t roundabout_exit_count = 0,
+    bool fork = false,
+    bool begin_intersecting_edge_name_consistency = false,
+    bool intersecting_forward_edge = false,
+    std::string verbal_transition_alert_instruction = "",
+    std::string verbal_pre_transition_instruction = "",
+    std::string verbal_post_transition_instruction = "",
+    bool tee = false) {
 
   maneuver.set_type(type);
 
@@ -572,6 +579,13 @@ void PopulateManeuver(
   maneuver.set_internal_right_turn_count(internal_right_turn_count);
   maneuver.set_internal_left_turn_count(internal_left_turn_count);
   maneuver.set_roundabout_exit_count(roundabout_exit_count);
+  maneuver.set_fork(fork);
+  maneuver.set_begin_intersecting_edge_name_consistency(begin_intersecting_edge_name_consistency);
+  maneuver.set_intersecting_forward_edge(intersecting_forward_edge);
+  maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
+  maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
+  maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
+  maneuver.set_tee(tee);
 }
 
 void TestLeftInternalStraightCombine() {

@@ -392,6 +392,97 @@ void Maneuver::set_roundabout_exit_count(uint32_t roundabout_exit_count) {
   roundabout_exit_count_ = roundabout_exit_count;
 }
 
+bool Maneuver::fork() const {
+  return fork_;
+}
+
+void Maneuver::set_fork(bool fork) {
+  fork_ = fork;
+}
+
+bool Maneuver::begin_intersecting_edge_name_consistency() const {
+  return begin_intersecting_edge_name_consistency_;
+}
+
+void Maneuver::set_begin_intersecting_edge_name_consistency(
+    bool begin_intersecting_edge_name_consistency) {
+  begin_intersecting_edge_name_consistency_ =
+      begin_intersecting_edge_name_consistency;
+}
+
+bool Maneuver::intersecting_forward_edge() const {
+  return intersecting_forward_edge_;
+}
+
+void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
+  intersecting_forward_edge_ = intersecting_forward_edge;
+}
+
+const std::string& Maneuver::verbal_transition_alert_instruction() const {
+  return verbal_transition_alert_instruction_;
+}
+
+void Maneuver::set_verbal_transition_alert_instruction(
+    const std::string& verbal_transition_alert_instruction) {
+  verbal_transition_alert_instruction_ = verbal_transition_alert_instruction;
+}
+
+void Maneuver::set_verbal_transition_alert_instruction(
+    std::string&& verbal_transition_alert_instruction) {
+  verbal_transition_alert_instruction_ = std::move(
+      verbal_transition_alert_instruction);
+}
+
+bool Maneuver::HasVerbalTransitionAlertInstruction() const {
+  return (!verbal_transition_alert_instruction_.empty());
+}
+
+const std::string& Maneuver::verbal_pre_transition_instruction() const {
+  return verbal_pre_transition_instruction_;
+}
+
+void Maneuver::set_verbal_pre_transition_instruction(
+    const std::string& verbal_pre_transition_instruction) {
+  verbal_pre_transition_instruction_ = verbal_pre_transition_instruction;
+}
+
+void Maneuver::set_verbal_pre_transition_instruction(
+    std::string&& verbal_pre_transition_instruction) {
+  verbal_pre_transition_instruction_ = std::move(
+      verbal_pre_transition_instruction);
+}
+
+bool Maneuver::HasVerbalPreTransitionInstruction() const {
+  return (!verbal_pre_transition_instruction_.empty());
+}
+
+const std::string& Maneuver::verbal_post_transition_instruction() const {
+  return verbal_post_transition_instruction_;
+}
+
+void Maneuver::set_verbal_post_transition_instruction(
+    const std::string& verbal_post_transition_instruction) {
+  verbal_post_transition_instruction_ = verbal_post_transition_instruction;
+}
+
+void Maneuver::set_verbal_post_transition_instruction(
+    std::string&& verbal_post_transition_instruction) {
+  verbal_post_transition_instruction_ = std::move(
+      verbal_post_transition_instruction);
+}
+
+bool Maneuver::HasVerbalPostTransitionInstruction() const {
+  return (!verbal_post_transition_instruction_.empty());
+}
+
+bool Maneuver::tee() const {
+  return tee_;
+}
+
+void Maneuver::set_tee(bool tee) {
+  tee_ = tee;
+}
+
 TripPath_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -520,97 +611,6 @@ void Maneuver::InsertTransitStop(std::string name,
                                             departure_date_time);
 }
 
-bool Maneuver::fork() const {
-  return fork_;
-}
-
-void Maneuver::set_fork(bool fork) {
-  fork_ = fork;
-}
-
-bool Maneuver::begin_intersecting_edge_name_consistency() const {
-  return begin_intersecting_edge_name_consistency_;
-}
-
-void Maneuver::set_begin_intersecting_edge_name_consistency(
-    bool begin_intersecting_edge_name_consistency) {
-  begin_intersecting_edge_name_consistency_ =
-      begin_intersecting_edge_name_consistency;
-}
-
-bool Maneuver::intersecting_forward_edge() const {
-  return intersecting_forward_edge_;
-}
-
-void Maneuver::set_intersecting_forward_edge(bool intersecting_forward_edge) {
-  intersecting_forward_edge_ = intersecting_forward_edge;
-}
-
-const std::string& Maneuver::verbal_transition_alert_instruction() const {
-  return verbal_transition_alert_instruction_;
-}
-
-void Maneuver::set_verbal_transition_alert_instruction(
-    const std::string& verbal_transition_alert_instruction) {
-  verbal_transition_alert_instruction_ = verbal_transition_alert_instruction;
-}
-
-void Maneuver::set_verbal_transition_alert_instruction(
-    std::string&& verbal_transition_alert_instruction) {
-  verbal_transition_alert_instruction_ = std::move(
-      verbal_transition_alert_instruction);
-}
-
-bool Maneuver::HasVerbalTransitionAlertInstruction() const {
-  return (!verbal_transition_alert_instruction_.empty());
-}
-
-const std::string& Maneuver::verbal_pre_transition_instruction() const {
-  return verbal_pre_transition_instruction_;
-}
-
-void Maneuver::set_verbal_pre_transition_instruction(
-    const std::string& verbal_pre_transition_instruction) {
-  verbal_pre_transition_instruction_ = verbal_pre_transition_instruction;
-}
-
-void Maneuver::set_verbal_pre_transition_instruction(
-    std::string&& verbal_pre_transition_instruction) {
-  verbal_pre_transition_instruction_ = std::move(
-      verbal_pre_transition_instruction);
-}
-
-bool Maneuver::HasVerbalPreTransitionInstruction() const {
-  return (!verbal_pre_transition_instruction_.empty());
-}
-
-const std::string& Maneuver::verbal_post_transition_instruction() const {
-  return verbal_post_transition_instruction_;
-}
-
-void Maneuver::set_verbal_post_transition_instruction(
-    const std::string& verbal_post_transition_instruction) {
-  verbal_post_transition_instruction_ = verbal_post_transition_instruction;
-}
-
-void Maneuver::set_verbal_post_transition_instruction(
-    std::string&& verbal_post_transition_instruction) {
-  verbal_post_transition_instruction_ = std::move(
-      verbal_post_transition_instruction);
-}
-
-bool Maneuver::HasVerbalPostTransitionInstruction() const {
-  return (!verbal_post_transition_instruction_.empty());
-}
-
-bool Maneuver::tee() const {
-  return tee_;
-}
-
-void Maneuver::set_tee(bool tee) {
-  tee_ = tee;
-}
-
 const VerbalTextFormatter* Maneuver::verbal_formatter() const {
   return verbal_formatter_.get();
 }
@@ -712,20 +712,6 @@ std::string Maneuver::ToString() const {
   man_str += " | roundabout_exit_count=";
   man_str += std::to_string(roundabout_exit_count_);
 
-  man_str += " | travel_mode=";
-  man_str += std::to_string(travel_mode_);
-
-  man_str += " | transit_connection=";
-  man_str += std::to_string(transit_connection_);
-
-  man_str += " | rail=";
-  man_str += std::to_string(rail_);
-
-  man_str += " | bus=";
-  man_str += std::to_string(bus_);
-
-  // TODO: transit_info
-
   man_str += " | fork=";
   man_str += std::to_string(fork_);
 
@@ -747,9 +733,25 @@ std::string Maneuver::ToString() const {
   man_str += " | tee=";
   man_str += std::to_string(tee_);
 
+  man_str += " | travel_mode=";
+  man_str += std::to_string(travel_mode_);
+
+  man_str += " | rail=";
+  man_str += std::to_string(rail_);
+
+  man_str += " | bus=";
+  man_str += std::to_string(bus_);
+
+  man_str += " | transit_connection=";
+  man_str += std::to_string(transit_connection_);
+
+  // TODO: transit_connection_stop
+  // TODO: transit_info
+
   return man_str;
 }
 
+// Used by ManeuverBuilder unit tests - therefore, order is important
 std::string Maneuver::ToParameterString() const {
   const std::string delim = ", ";
   std::string man_str;
@@ -849,11 +851,46 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(roundabout_exit_count_);
 
   man_str += delim;
-  man_str += "TripPath_TravelMode_";
-  man_str += TripPath_TravelMode_descriptor()
-      ->FindValueByNumber(travel_mode_)->name();
+  man_str += std::to_string(fork_);
 
-  // TODO: transit_info, et al
+  man_str += delim;
+  man_str += std::to_string(begin_intersecting_edge_name_consistency_);
+
+  man_str += delim;
+  man_str += std::to_string(intersecting_forward_edge_);
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_transition_alert_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_pre_transition_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_post_transition_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += std::to_string(tee_);
+
+  // Transit TODO
+//  man_str += delim;
+//  man_str += "TripPath_TravelMode_";
+//  man_str += TripPath_TravelMode_descriptor()
+//      ->FindValueByNumber(travel_mode_)->name();
+//  bool rail_;
+//  bool bus_;
+
+  // Transit connection flag and the associated stop
+//  transit_connection_;
+//  TransitStop transit_connection_stop_;
+
+  // The transit info including list of stops
+//  TransitInfo transit_info_;
 
   return man_str;
 }
