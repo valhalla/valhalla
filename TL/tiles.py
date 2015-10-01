@@ -174,7 +174,7 @@ if __name__ == "__main__":
 #Next, add your BB to the list in the custom BB section.  A
 #San Francisco BB is shown as an example.  
 
-# begin transitland BBs download
+#<begin transitland BBs download>
    tl_bb_url = 'http://dev.transit.land/api/v1/feeds.geojson'
    tl_bbs = json_resource_t(tl_bb_url)
 
@@ -191,7 +191,7 @@ if __name__ == "__main__":
       maxy = coords[2][1]
 
       bb_list.append(Tile(minx,miny,maxx,maxy))
-## end transitland BBs download
+#<end transitland BBs download>
 
 #custom BB 
 #   minx = -123.0977
