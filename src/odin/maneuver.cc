@@ -751,6 +751,7 @@ std::string Maneuver::ToString() const {
   return man_str;
 }
 
+// Used by ManeuverBuilder unit tests - therefore, order is important
 std::string Maneuver::ToParameterString() const {
   const std::string delim = ", ";
   std::string man_str;
@@ -848,6 +849,33 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(roundabout_exit_count_);
+
+  man_str += delim;
+  man_str += std::to_string(fork_);
+
+  man_str += delim;
+  man_str += std::to_string(begin_intersecting_edge_name_consistency_);
+
+  man_str += delim;
+  man_str += std::to_string(intersecting_forward_edge_);
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_transition_alert_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_pre_transition_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += "\"";
+  man_str += verbal_post_transition_instruction_;
+  man_str += "\"";
+
+  man_str += delim;
+  man_str += std::to_string(tee_);
 
   // Transit TODO
 //  man_str += delim;
