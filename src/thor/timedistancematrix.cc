@@ -9,6 +9,10 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+TimeDistanceMatrix::TimeDistanceMatrix(float initial_cost_threshold)
+    : initial_cost_threshold_(initial_cost_threshold) {
+}
+
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void TimeDistanceMatrix::Clear() {
@@ -32,6 +36,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
+  cost_threshold_ = initial_cost_threshold_;
+
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
@@ -41,7 +47,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   // factor (needed for setting the origin).
   astarheuristic_.Init(locations[origin_index].latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
-  adjacencylist_.reset(new AdjacencyList(0.0f, kBucketCount * bucketsize,
+  adjacencylist_.reset(new AdjacencyList(0.0f, initial_cost_threshold_,
                                          bucketsize));
   edgestatus_.reset(new EdgeStatus());
 
@@ -49,9 +55,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
   settled_count_ = 0;
   SetOriginOneToMany(graphreader, locations[origin_index], costing);
   SetDestinations(graphreader, origin_index, locations, costing);
-
-  // Set the initial cost threshold
-  cost_threshold_ = DEFAULT_COST_THRESHOLD;
 
   // Find shortest path
   const GraphTile* tile;
@@ -165,6 +168,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
+  cost_threshold_ = initial_cost_threshold_;
+
   // Set the mode and costing
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode_)];
@@ -174,7 +179,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   // factor (needed for setting the origin).
   astarheuristic_.Init(locations[dest_index].latlng_, 0.0f);
   uint32_t bucketsize = costing->UnitSize();
-  adjacencylist_.reset(new AdjacencyList(0.0f, kBucketCount * bucketsize,
+  adjacencylist_.reset(new AdjacencyList(0.0f, initial_cost_threshold_,
                                          bucketsize));
   edgestatus_.reset(new EdgeStatus());
 
@@ -182,9 +187,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
   settled_count_ = 0;
   SetOriginManyToOne(graphreader, locations[dest_index], costing);
   SetDestinationsManyToOne(graphreader, dest_index, locations, costing);
-
-  // Set the initial cost threshold
-  cost_threshold_ = DEFAULT_COST_THRESHOLD;
 
   // Find shortest path
   const GraphTile* tile;
