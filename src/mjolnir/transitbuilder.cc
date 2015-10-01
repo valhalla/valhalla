@@ -370,7 +370,8 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
       uint32_t dow_mask = kDOWNone;
 
       for(const auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
-        bool dow = service_days.second.get_value<bool>();
+        std::string day = service_days.second.get_value<std::string>();
+        bool dow = (day == "true" ? true : false);
 
         if (dow) {
           switch (index) {
@@ -479,7 +480,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
       }
 
       if (keys.find(routeid) == keys.end()) {
-        LOG_ERROR("No route_key not found route keys.  File: " + file + " route key: " + std::to_string(routeid));
+        LOG_WARN("Extra route exists in File: " + file + " route key: " + std::to_string(routeid));
         continue;
       }
 
