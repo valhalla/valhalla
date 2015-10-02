@@ -2,7 +2,7 @@
 #define VALHALLA_THOR_ADJACENCYLIST_H_
 
 #include <vector>
-#include <list>
+#include <deque>
 
 #include <valhalla/sif/edgelabel.h>
 
@@ -84,16 +84,20 @@ class AdjacencyList {
   float currentcost_;  // Current cost.
 
   // Low level buckets
-  std::vector<std::list<uint32_t>> buckets_;
+  std::vector<std::deque<uint32_t>> buckets_;
 
-  // Current bucket in the list
-  std::vector<std::list<uint32_t>>::iterator currentbucket_;
+  // Current bucket in the deque
+  std::vector<std::deque<uint32_t>>::iterator currentbucket_;
 
   // Overflow bucket
-  std::list<uint32_t> overflowbucket_;
+  std::deque<uint32_t> overflowbucket_;
 
-  // Returns the bucket given the cost
-  std::list<uint32_t>& Bucket(const float cost);
+  /**
+   * Returns the bucket given the cost.
+   * @param  cost  Sort cost.
+   * @return Returns the bucket that the cost lies within.
+   */
+  std::deque<uint32_t>& Bucket(const float cost);
 
   /**
    * Empties the overflow bucket by placing the label indexes into the
