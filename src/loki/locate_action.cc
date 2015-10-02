@@ -102,6 +102,7 @@ namespace {
   json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbose) {
     auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
+      {"node", static_cast<std::nullptr_t>(nullptr)},
       {"input_lat", json::fp_t{ll.lat(), 6}},
       {"input_lon", json::fp_t{ll.lng(), 6}},
     });
