@@ -19,8 +19,8 @@
 namespace valhalla {
 namespace thor {
 
-constexpr float MAX_COST = 99999999.9999f;
-constexpr float DEFAULT_COST_THRESHOLD = 7200.0f;  // 2 hours
+constexpr float kMaxCost = 99999999.9999f;
+constexpr float kDefaultCostThreshold = 7200.0f;  // 2 hours
 
 // Time and Distance structure
 struct TimeDistance {
@@ -66,7 +66,7 @@ struct Destination {
   // will be lower.
   Destination()
       : settled(false),
-        best_cost{ MAX_COST, MAX_COST },
+        best_cost{ kMaxCost, kMaxCost },
         distance(0),
         threshold(0.0f) {
   }
@@ -79,7 +79,7 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * Constructor with cost threshold.
    * @param initial_cost_threshold  Cost threshold for termination.
    */
-  TimeDistanceMatrix(float initial_cost_threshold = DEFAULT_COST_THRESHOLD);
+  TimeDistanceMatrix(float initial_cost_threshold = kDefaultCostThreshold);
 
   /**
    * One to many time and distance cost matrix. Computes time and distance

@@ -117,7 +117,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), kPermanent);
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -209,7 +209,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.status.set == kPermanent) {
+      if (edgestatus.set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -311,7 +311,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change). Update
       // trip Id and block Id.
-      if (edgestatus.status.set == kTemporary) {
+      if (edgestatus.set() == EdgeSet::kTemporary) {
         uint32_t idx = edgestatus.status.index;
         float dc = edgelabels_[idx].cost().cost - newcost.cost;
         if (dc > 0) {
@@ -379,7 +379,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
             diredge->opp_local_idx(), mode_, length,
             0, 0,  0, false);
     adjlist.Add(label_idx, cost.cost);
-    edgestatus.Set(oppedge, kTemporary, label_idx);
+    edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx);
     label_idx++;
   }
 
@@ -400,7 +400,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
     // Remove label from adjacency list, mark it as done - copy the EdgeLabel
     // for use in costing
     EdgeLabel pred = edgelabels[predindex];
-    edgestatus.Set(pred.edgeid(), kPermanent, pred.edgeid());
+    edgestatus.Set(pred.edgeid(), EdgeSet::kPermanent, pred.edgeid());
 
     // Get the end node of the prior directed edge and check access
     GraphId node = pred.endnode();
@@ -431,7 +431,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo es = edgestatus.Get(edgeid);
-      if (es.status.set == kPermanent) {
+      if (es.set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -442,7 +442,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
       uint32_t walking_distance = pred.walking_distance() + directededge->length();
 
       // Check if lower cost path
-      if (es.status.set == kTemporary) {
+      if (es.set() == EdgeSet::kTemporary) {
         uint32_t idx = es.status.index;
         float dc = edgelabels[idx].cost().cost - newcost.cost;
         if (dc > 0) {
@@ -461,7 +461,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const PathLocation& destinatio
                     directededge->opp_local_idx(), mode_, walking_distance,
                     0, 0, 0, false);
       adjlist.Add(label_idx, newcost.cost);
-      edgestatus.Set(edgeid, kTemporary, label_idx);
+      edgestatus.Set(edgeid, EdgeSet::kTemporary, label_idx);
       label_idx++;
     }
   }

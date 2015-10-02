@@ -153,7 +153,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
-      edgestatus_->Update(pred.edgeid(), kPermanent);
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -221,7 +221,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.status.set == kPermanent) {
+      if (edgestatus.set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -243,7 +243,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
-      if (edgestatus.status.set == kTemporary) {
+      if (edgestatus.set() == EdgeSet::kTemporary) {
         CheckIfLowerCostPath(edgestatus.status.index, predindex, newcost);
         continue;
       }
@@ -258,9 +258,8 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
         if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
           continue;
         }
-        dist = astarheuristic_.GetDistance(tile->node(
-                  directededge->endnode())->latlng());
-        sortcost += astarheuristic_.Get(dist);
+        sortcost += astarheuristic_.Get(
+                    tile->node(directededge->endnode())->latlng(), dist);
       }
 
       // Add to the adjacency list and edge labels.
@@ -279,7 +278,7 @@ void PathAlgorithm::AddToAdjacencyList(const GraphId& edgeid,
                                        const float sortcost) {
   uint32_t idx = edgelabels_.size();
   adjacencylist_->Add(idx, sortcost);
-  edgestatus_->Set(edgeid, kTemporary, idx);
+  edgestatus_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
 // Check if edge is temporarily labeled and this path has less cost. If

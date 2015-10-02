@@ -113,13 +113,13 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       expand_reverse = false;
 
       // Mark edge as done - copy the EdgeLabel for use in costing
-      edgestatus_->Update(pred.edgeid(), kPermanent);
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
       // Get the opposing edge - if permanently labeled in reverse search set
       // we have the shortest path
       GraphId oppedge = graphreader.GetOpposingEdgeId(pred.edgeid());
       EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
-      if (oppedgestatus.status.set == kPermanent) {
+      if (oppedgestatus.set() == EdgeSet::kPermanent) {
         return FormPath(predindex,oppedgestatus.status.index, graphreader);
       }
 
@@ -150,7 +150,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         // Get the current set. Skip this edge if permanently labeled (best
         // path already found to this directed edge).
         EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-        if (edgestatus.status.set == kPermanent) {
+        if (edgestatus.set() == EdgeSet::kPermanent) {
           continue;
         }
 
@@ -162,7 +162,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         // Check if edge is temporarily labeled and this path has less cost. If
         // less cost the predecessor is updated and the sort cost is decremented
         // by the difference in real cost (A* heuristic doesn't change)
-        if (edgestatus.status.set == kTemporary) {
+        if (edgestatus.set() == EdgeSet::kTemporary) {
           CheckIfLowerCostPath(edgestatus.status.index, predindex, newcost);
           continue;
         }
@@ -189,13 +189,13 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       expand_reverse = true;
 
       // Mark edge as done - copy the EdgeLabel for use in costing
-      edgestatus_reverse_->Update(pred2.edgeid(), kPermanent);
+      edgestatus_reverse_->Update(pred2.edgeid(), EdgeSet::kPermanent);
 
       // Get the opposing edge - if permanently labeled in forward search set
       // we have the shortest path
       GraphId oppedge = graphreader.GetOpposingEdgeId(pred2.edgeid());
       EdgeStatusInfo oppedgestatus = edgestatus_->Get(oppedge);
-      if (oppedgestatus.status.set == kPermanent) {
+      if (oppedgestatus.set() == EdgeSet::kPermanent) {
         return FormPath(oppedgestatus.status.index, predindex2, graphreader);
       }
 
@@ -232,7 +232,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         // Get the current set. Skip this edge if permanently labeled (best
         // path already found to this directed edge).
         EdgeStatusInfo edgestatus = edgestatus_reverse_->Get(edgeid);
-        if (edgestatus.status.set == kPermanent) {
+        if (edgestatus.set() == EdgeSet::kPermanent) {
           continue;
         }
 
@@ -252,7 +252,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
        // Check if edge is temporarily labeled and this path has less cost. If
        // less cost the predecessor is updated and the sort cost is decremented
        // by the difference in real cost (A* heuristic doesn't change)
-       if (edgestatus.status.set == kTemporary) {
+       if (edgestatus.set() == EdgeSet::kTemporary) {
          CheckIfLowerCostPathReverse(edgestatus.status.index, predindex2, newcost);
          continue;
        }
@@ -290,7 +290,7 @@ void BidirectionalAStar::AddToAdjacencyListReverse(const GraphId& edgeid,
                                         const float sortcost) {
   uint32_t idx = edgelabels_reverse_.size();
   adjacencylist_reverse_->Add(idx, sortcost);
-  edgestatus_reverse_->Set(edgeid, kTemporary, idx);
+  edgestatus_reverse_->Set(edgeid, EdgeSet::kTemporary, idx);
 }
 
 // Check if edge is temporarily labeled and this path has less cost. If
