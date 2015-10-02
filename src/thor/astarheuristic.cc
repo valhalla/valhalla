@@ -26,6 +26,12 @@ float AStarHeuristic::Get(const midgard::PointLL& ll) const {
   return sqrtf(distapprox_.DistanceSquared(ll)) * costfactor_;
 }
 
+// Get the A* heuristic given the lat,lng. Returns distance via and argument.
+float AStarHeuristic::Get(const midgard::PointLL& ll, float& dist) const {
+  dist = sqrtf(distapprox_.DistanceSquared(ll));
+  return  dist * costfactor_;
+}
+
 // Get the A* heuristic given the distance to the destination.
 float AStarHeuristic::Get(const float dist) const {
   return dist * costfactor_;
