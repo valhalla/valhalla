@@ -340,8 +340,6 @@ bool DirectedEdge::is_shortcut() const {
 
 // Json representation
 json::MapPtr DirectedEdge::json() const {
-  return json::map({});
-
   return json::map({
     {"end_node", endnode_.json()},
     {"speed", static_cast<uint64_t>(speed_)},
