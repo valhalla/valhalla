@@ -141,6 +141,24 @@ enum class NodeType : uint8_t {
   kParking = 8,             // Parking location
   kMotorWayJunction = 9     // Highway = motorway_junction
 };
+const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
+  {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
+  {static_cast<uint8_t>(NodeType::kGate), "gate"},
+  {static_cast<uint8_t>(NodeType::kBollard), "bollard"},
+  {static_cast<uint8_t>(NodeType::kTollBooth), "toll_booth"},
+  {static_cast<uint8_t>(NodeType::kRailStop), "rail_stop"},
+  {static_cast<uint8_t>(NodeType::kBusStop), "bus_stop"},
+  {static_cast<uint8_t>(NodeType::kMultiUseTransitStop), "multi_use_transit_stop"},
+  {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
+  {static_cast<uint8_t>(NodeType::kParking), "parking"},
+  {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
+};
+inline std::string to_string(NodeType n) {
+  auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
+  if(i == NodeTypeStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Intersection types. Classifications of various intersections.
 // TODO - enumerate and assign!
@@ -152,6 +170,18 @@ enum class IntersectionType : uint8_t {
   kFork = 3           // All edges are links OR all edges are not links
                       // and node is a motorway_junction.
 };
+const std::unordered_map<uint8_t, std::string> IntersectionTypeStrings = {
+  {static_cast<uint8_t>(IntersectionType::kRegular), "road"},
+  {static_cast<uint8_t>(IntersectionType::kFalse), "ramp"},
+  {static_cast<uint8_t>(IntersectionType::kDeadEnd), "turn_channel"},
+  {static_cast<uint8_t>(IntersectionType::kFork), "track"},
+};
+inline std::string to_string(IntersectionType x) {
+  auto i = IntersectionTypeStrings.find(static_cast<uint8_t>(x));
+  if(i == IntersectionTypeStrings.cend())
+    return "null";
+  return i->second;
+}
 
 // Edge use. Indicates specialized uses.
 enum class Use : uint8_t {
