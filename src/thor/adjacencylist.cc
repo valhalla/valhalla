@@ -51,42 +51,27 @@ void AdjacencyList::Clear() {
 // Add a label index to the adjacency list. Adds it to the appropriate bucket
 // based on the sort cost.
 void AdjacencyList::Add(const uint32_t label, const float sortcost) {
-  if (sortcost < currentcost_) {
-    currentbucket_->emplace_front(label);
-  } else if (sortcost < maxcost_) {
-    buckets_[static_cast<uint32_t>((sortcost-mincost_)*inv_)].push_back(label);
-  } else {
-    overflowbucket_.push_back(label);
-  }
+  Bucket(sortcost).push_back(label);
 }
 
 // The specified label now has a smaller cost.  Reorders it in the sorted list
 void AdjacencyList::DecreaseCost(const uint32_t label,
                                  const float newsortcost,
                                  const float previouscost) {
-  // Get the bucket the label index currently is in. Protect against
-  // previous cost less than current cost
-  std::list<uint32_t>& previousbucket =
-      (previouscost < currentcost_) ?
-          Bucket(currentcost_) : Bucket(previouscost);
-
-  // If less than current cost add to the front of the current bucket
-  if (newsortcost < currentcost_) {
-    // Remove the label index from the old bucket and push it on the
-    // front of the current (so it is the next edge processed)
-    previousbucket.remove(label);
-    currentbucket_->emplace_front(label);
-    return;
+  // Get the buckets of the previous and new costs. Nothing needs to be done
+  // if old cost and the new cost are in the same buckets.
+  auto& prevbucket = Bucket(previouscost);
+  auto& newbucket  = Bucket(newsortcost);
+  if (prevbucket != newbucket) {
+    // Remove the label index from the old bucket and add to end of newbucket
+    for (auto it = prevbucket.begin(); it != prevbucket.end(); ++it) {
+      if (*it == label) {
+        prevbucket.erase(it);
+        break;
+      }
+    }
+    newbucket.push_back(label);
   }
-
-  // If the old cost and the new cost are in the same bucket just return
-  std::list<uint32_t>& newbucket = Bucket(newsortcost);
-  if (previousbucket == newbucket)
-    return;
-
-  // Remove the label index from the old bucket and add it to the new bucket
-  previousbucket.remove(label);
-  newbucket.push_back(label);
 }
 
 // Remove the label with the lowest cost
@@ -132,10 +117,14 @@ uint32_t AdjacencyList::Remove(const std::vector<EdgeLabel>& edgelabels) {
 }
 
 // Returns the bucket given the cost
-std::list<uint32_t>& AdjacencyList::Bucket(const float cost) {
-  return (cost < maxcost_) ?
-      buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
-      overflowbucket_;
+std::deque<uint32_t>& AdjacencyList::Bucket(const float cost) {
+  if (cost < currentcost_) {
+    return *currentbucket_;
+  } else {
+    return (cost < maxcost_) ?
+        buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)] :
+        overflowbucket_;
+  }
 }
 
 // Empties the overflow bucket by placing the labels into the
