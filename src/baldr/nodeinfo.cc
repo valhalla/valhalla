@@ -2,8 +2,51 @@
 #include <boost/functional/hash.hpp>
 #include <cmath>
 
+#include <baldr/datetime.h>
+#include <baldr/graphtile.h>
+
+using namespace valhalla::baldr;
+
 namespace {
+
 const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
+
+json::MapPtr access_json(Access a) {
+  return json::map({
+    {"bicycle", static_cast<bool>(a.fields.bicycle)},
+    {"bus", static_cast<bool>(a.fields.bus)},
+    {"car", static_cast<bool>(a.fields.car)},
+    {"emergency", static_cast<bool>(a.fields.emergency)},
+    {"HOV", static_cast<bool>(a.fields.hov)},
+    {"pedestrian", static_cast<bool>(a.fields.pedestrian)},
+    {"taxi", static_cast<bool>(a.fields.taxi)},
+    {"truck", static_cast<bool>(a.fields.truck)},
+  });
+}
+
+json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
+  //admin
+  auto m = json::map({
+    {"iso_3166-1", admin.country_iso()},
+    {"country", admin.country_text()},
+    {"iso_3166-2", admin.state_iso()},
+    {"state", admin.state_text()},
+  });
+
+  //timezone
+  const auto& tz_db = DateTime::get_tz_db();
+  auto tz = tz_db.time_zone_from_region(tz_db.regions[tz_index]);
+  if(tz) {
+    //TODO: so much to do but posix tz has pretty much all the info
+    m->emplace("time_zone_posix", tz->to_posix_string());
+    m->emplace("standard_time_zone_name", tz->std_zone_name());
+    if(tz->has_dst())
+      m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
+  }
+
+  return m;
+}
+
 }
 
 namespace valhalla {
@@ -151,6 +194,28 @@ uint32_t NodeInfo::heading(const uint32_t localidx) const {
   return static_cast<uint32_t>(std::round(
       ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift)
           * kHeadingExpandFactor));
+}
+
+json::MapPtr NodeInfo::json(const GraphTile* tile) const {
+  auto m = json::map({
+    {"lon", json::fp_t{latlng_.first, 6}},
+    {"lat", json::fp_t{latlng_.second, 6}},
+    {"best_road_class", to_string(static_cast<RoadClass>(attributes_.bestrc_))},
+    {"edge_count", static_cast<uint64_t>(attributes_.edge_count_)},
+    {"access", access_json(access_)},
+    {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
+    {"administrative", admin_json(tile->admininfo(admin_.admin_index), admin_.timezone)},
+    {"child", static_cast<uint64_t>(type_.child)},
+    {"density", static_cast<uint64_t>(type_.density)},
+    {"local_edge_count", static_cast<uint64_t>(type_.local_edge_count)},
+    {"mode_change", static_cast<bool>(type_.mode_change)},
+    {"parent", static_cast<bool>(type_.parent)},
+    {"traffic_signal", static_cast<bool>(type_.traffic_signal)},
+    {"type", to_string(static_cast<NodeType>(type_.type))},
+  });
+  if(is_transit())
+    m->emplace("stop_id", static_cast<uint64_t>(stop_.stop_id));
+  return m;
 }
 
 // Get the hash_value

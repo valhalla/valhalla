@@ -4,9 +4,22 @@
 #include <string>
 #include <memory>
 
+#include <boost/date_time/local_time/tz_database.hpp>
+
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
+
+  struct tz_db_t : public boost::local_time::tz_database {
+    tz_db_t();
+    std::vector<std::string> regions;
+  };
+
+  /**
+   * Get the timezone database singleton
+   * @return  timezone database
+   */
+  const tz_db_t& get_tz_db();
 
   /**
    * Get the number of days elapsed from the pivot date until

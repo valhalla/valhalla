@@ -5,11 +5,14 @@
 #include <valhalla/midgard/util.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
 
 using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
+
+class GraphTile;
 
 constexpr uint32_t kMaxTileEdgeCount    = 4194303;  // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
@@ -185,6 +188,13 @@ class NodeInfo {
   uint32_t heading(const uint32_t localidx) const;
 
   /**
+   * Returns the json representation of the object
+   * @param   the tile required to get admin information
+   * @return  json object
+   */
+  json::MapPtr json(const GraphTile* tile) const;
+
+  /**
    * Get the computed version of NodeInfo attributes.
    * @return   Returns internal version.
    */
@@ -224,7 +234,7 @@ class NodeInfo {
     uint32_t local_driveability : 16; // Driveability for local edges (up to
                                       // kMaxLocalEdgeIndex+1 edges)
     uint32_t density            : 4;  // Density (population? edges?)
-    uint32_t type               : 4;  // Node type
+    uint32_t type               : 4;  // Node type, see graphconstants NodeType
     uint32_t local_edge_count   : 3;  // # of edges on local level (up to
                                       // kMaxLocalEdgeIndex+1)
     uint32_t end                : 1;  // End node (only connects to 1 edge)
