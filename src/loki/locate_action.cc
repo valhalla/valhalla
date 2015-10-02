@@ -32,7 +32,7 @@ namespace {
                 edge.sos == PathLocation::LEFT ? std::string("left") :
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
               },
-              {"percent_along", json::fp_t{edge.dist, 2} },
+              {"percent_along", json::fp_t{edge.dist, 5} },
               {"edge_id", edge.id.json()},
               {"edge", directed_edge->json()},
               {"edge_info", edge_info->json()},
@@ -49,7 +49,7 @@ namespace {
                 edge.sos == PathLocation::LEFT ? std::string("left") :
                   (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
               },
-              {"percent_along", json::fp_t{edge.dist, 2} },
+              {"percent_along", json::fp_t{edge.dist, 5} },
             })
           );
         }
