@@ -73,7 +73,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), kPermanent);
+    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
@@ -125,7 +125,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.status.set == kPermanent) {
+      if (edgestatus.set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -138,7 +138,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
-      if (edgestatus.status.set == kTemporary) {
+      if (edgestatus.set() == EdgeSet::kTemporary) {
         uint32_t idx = edgestatus.status.index;
         float dc = edgelabels_[idx].cost().cost - newcost.cost;
         if (dc > 0) {
@@ -205,7 +205,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), kPermanent);
+    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
@@ -259,7 +259,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // Get the current set. Skip this edge if permanently labeled (best
       // path already found to this directed edge).
       EdgeStatusInfo edgestatus = edgestatus_->Get(edgeid);
-      if (edgestatus.status.set == kPermanent) {
+      if (edgestatus.set() == EdgeSet::kPermanent) {
         continue;
       }
 
@@ -280,7 +280,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated and the sort cost is decremented
       // by the difference in real cost (A* heuristic doesn't change)
-      if (edgestatus.status.set == kTemporary) {
+      if (edgestatus.set() == EdgeSet::kTemporary) {
         uint32_t idx = edgestatus.status.index;
         float dc = edgelabels_[idx].cost().cost - newcost.cost;
         if (dc > 0) {
