@@ -192,7 +192,7 @@ class NodeInfo {
    * @param   the tile required to get admin information
    * @return  json object
    */
-  json::MapPtr json(GraphTile* tile) const;
+  json::MapPtr json(const GraphTile* tile) const;
 
   /**
    * Get the computed version of NodeInfo attributes.

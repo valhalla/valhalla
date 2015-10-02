@@ -196,7 +196,7 @@ uint32_t NodeInfo::heading(const uint32_t localidx) const {
           * kHeadingExpandFactor));
 }
 
-json::MapPtr NodeInfo::json(GraphTile* tile) const {
+json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
     {"lon", json::fp_t{latlng_.first, 6}},
     {"lat", json::fp_t{latlng_.second, 6}},
