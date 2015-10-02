@@ -134,10 +134,12 @@ class PathAlgorithm {
    * @param edge       Directed edge (a transition edge)
    * @param pred       Predecessor information
    * @param predindex  Predecessor index in the edge labels.
+   * @param dist       Distance to the destination.
    */
   void HandleTransitionEdge(const uint32_t level,const baldr::GraphId& edgeid,
                       const baldr::DirectedEdge* edge,
-                      const sif::EdgeLabel& pred, const uint32_t predindex);
+                      const sif::EdgeLabel& pred, const uint32_t predindex,
+                      const float dist);
 
   /**
    * Modify hierarchy limits based on distance between origin and destination

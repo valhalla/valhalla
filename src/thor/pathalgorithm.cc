@@ -174,6 +174,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
+    GraphId current_tile = node.Tile_Base();
 
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
@@ -196,12 +197,13 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-    for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n;
+    for (uint32_t i = 0; i < nodeinfo->edge_count();
                 i++, directededge++, edgeid++) {
       // Handle transition edges they either get skipped or added to the
       // adjacency list using the predecessor info
       if (directededge->trans_up() || directededge->trans_down()) {
-          HandleTransitionEdge(level, edgeid, directededge, pred,  predindex);
+        HandleTransitionEdge(level, edgeid, directededge, pred,
+                             predindex, dist2dest);
         continue;
       }
 
@@ -254,12 +256,18 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float dist = 0.0f;
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
-        // Skip if tile not found.
-        if ((tile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
-          continue;
+        if (directededge->endnode().Tile_Base() == current_tile) {
+          sortcost += astarheuristic_.Get(
+              tile->node(directededge->endnode())->latlng(), dist);
+        } else {
+          // Get tile at the end node. Skip if tile not found.
+          const GraphTile* t2 = graphreader.GetGraphTile(directededge->endnode());
+          if (t2 == nullptr) {
+            continue;
+          }
+          sortcost += astarheuristic_.Get(
+                    t2->node(directededge->endnode())->latlng(), dist);
         }
-        sortcost += astarheuristic_.Get(
-                    tile->node(directededge->endnode())->latlng(), dist);
       }
 
       // Add to the adjacency list and edge labels.
@@ -299,13 +307,14 @@ void PathAlgorithm::CheckIfLowerCostPath(const uint32_t idx,
 // Handle a transition edge between hierarchies.
 void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
                     const GraphId& edgeid, const DirectedEdge* edge,
-                    const EdgeLabel& pred, const uint32_t predindex) {
+                    const EdgeLabel& pred, const uint32_t predindex,
+                    const float dist) {
   // Skip any transition edges that are not allowed.
   if (!allow_transitions_ ||
       (edge->trans_up() &&
-       !hierarchy_limits_[level].AllowUpwardTransition(pred.distance())) ||
+       !hierarchy_limits_[level].AllowUpwardTransition(dist)) ||
       (edge->trans_down() &&
-       !hierarchy_limits_[level].AllowDownwardTransition(pred.distance()))) {
+       !hierarchy_limits_[level].AllowDownwardTransition(dist))) {
     return;
   }
 
@@ -313,7 +322,7 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
   // using the predecessor information. Transition edges have no length.
   AddToAdjacencyList(edgeid, pred.sortcost());
   edgelabels_.emplace_back(predindex, edgeid,
-                edge, pred.cost(), pred.sortcost(), pred.distance(),
+                edge, pred.cost(), pred.sortcost(), dist,
                 pred.restrictions(), pred.opp_local_idx(), mode_);
 }
 
