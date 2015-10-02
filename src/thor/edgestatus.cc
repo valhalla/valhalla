@@ -5,8 +5,9 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace thor {
 
-// Constructor
-EdgeStatus::EdgeStatus() {
+// Constructor given an initial size.
+EdgeStatus::EdgeStatus(const uint32_t sz) {
+  edgestatus_.reserve(sz);
 }
 
 // Clear current edge status (all become unreached)
@@ -22,7 +23,7 @@ void EdgeStatus::Set(const baldr::GraphId& edgeid,
 
 // Update the edge status of a GraphId
 void EdgeStatus::Update(const baldr::GraphId& edgeid, const EdgeSet set) {
-  edgestatus_[edgeid].status.set = set;
+  edgestatus_[edgeid].status.set = static_cast<uint32_t>(set);
 }
 
 // Get the edge status of a GraphId. If not found in the map the

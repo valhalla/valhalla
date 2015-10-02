@@ -7,8 +7,11 @@
 namespace valhalla {
 namespace thor {
 
+// Default size to reserve for the EdgeStatus unordered map
+constexpr uint32_t kDefaultEdgeStatusSize = 2000000;
+
 // Edge label status
-enum EdgeSet {
+enum class EdgeSet : uint8_t {
   kUnreached = 0,   // Unreached - not yet encountered in search
   kPermanent = 1,   // Permanent - shortest path to this edge has been found
   kTemporary = 2    // Temporary - edge has been encountered but there could
@@ -25,7 +28,7 @@ struct EdgeStatusInfo {
   SetAndIndex status;
 
   EdgeStatusInfo() {
-    status.set   = static_cast<uint32_t>(kUnreached);
+    status.set   = static_cast<uint32_t>(EdgeSet::kUnreached);
     status.index = 0;
   }
 
@@ -33,18 +36,23 @@ struct EdgeStatusInfo {
     status.set   = static_cast<uint32_t>(set);
     status.index = index;
   }
+
+  EdgeSet set() const {
+    return static_cast<EdgeSet>(status.set);
+  }
 };
 
 /**
  * Class to define / lookup the status and index of an edge in the edge label
- * list during the shortest path algorithm.
+ * list during shortest path algorithms.
  */
 class EdgeStatus {
  public:
-  EdgeStatus();
-
-  virtual ~EdgeStatus() {
-  }
+  /**
+   * Constructor given an initial size.
+   * @param  sz  Size to reserve for edgestatus unordered map.
+   */
+  EdgeStatus(const uint32_t sz = kDefaultEdgeStatusSize);
 
   /**
    * Initialize the status to unreached for all edges.
