@@ -151,7 +151,11 @@ class MapMatching: public ViterbiSearch<Candidate>
     }
 
     // Route
-    thor::TimeDistanceMatrix pa(MaxRouteDistance(left, right));
+    auto max_route_distance = MaxRouteDistance(left, right);
+    if (max_route_distance <= 0.f) {
+      return 0.f;
+    }
+    thor::TimeDistanceMatrix pa(max_route_distance);
     const auto& timedistances = pa.OneToMany(0, locations, graphreader_, mode_costing_, mode_);
     assert(timedistances.size() == candidates.size() + 1);
 
