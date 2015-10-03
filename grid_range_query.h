@@ -31,46 +31,46 @@ class GridRangeQuery
  public:
   GridRangeQuery(const BoundingBox& bbox, float cell_width, float cell_height) {
     if (cell_width <= 0.f) {
-      throw std::invalid_argument("invalid cell width");
+      throw std::invalid_argument("invalid cell width (require positive width)");
     }
     if (cell_height <= 0.f) {
-      throw std::invalid_argument("invalid cell height");
+      throw std::invalid_argument("invalid cell height (require positive height)");
     }
-    Init(bbox, cell_width, cell_height);
-  }
-
-
-  // Divide the grid into num_cols by num_rows cells
-  GridRangeQuery(const BoundingBox& bbox, uint32_t num_cols, uint32_t num_rows) {
-    if (num_cols <= 0) {
-      throw std::invalid_argument("invalid number of columns");
+    auto bbox_width = bbox.Width();
+    if (bbox_width <= 0.f) {
+      throw std::invalid_argument("invalid bounding box (require positive width)");
     }
-    if (num_cols <= 0) {
-      throw std::invalid_argument("invalid number of rows");
+    auto bbox_height = bbox.Height();
+    if (bbox_height <= 0.f) {
+      throw std::invalid_argument("invalid bounding box (require positive height)");
     }
-    Init(bbox, bbox.Width() / num_cols, bbox.Height() / num_rows);
-  }
-
-
-  void Init(const BoundingBox& bbox, float cell_width, float cell_height) {
-    assert(cell_width > 0.f && cell_height > 0.f);
     bbox_ = bbox;
-    cell_width_ = cell_width;
-    cell_height_ = cell_height;
-    num_rows_ = ceil(bbox_.Width() / cell_width);
-    num_cols_ = ceil(bbox_.Height() / cell_height);
-    // TODO handle num_rows_ <= 0
-    assert(num_rows_ > 0);
-    assert(num_cols_ > 0);
+    cell_width_ = std::min(bbox_width, cell_width);
+    cell_height_ = std::min(bbox_height, cell_height);
+    num_rows_ = ceil(bbox_width / cell_width_);
+    num_cols_ = ceil(bbox_height / cell_height_);
     items_.resize(num_cols_ * num_rows_);
   }
 
-
-  // Get bbox of the grid
-  const BoundingBox bbox() const {
+  const BoundingBox& bbox() const {
     return bbox_;
   }
 
+  const int num_rows() const {
+    return num_rows_;
+  }
+
+  const int num_cols() const {
+    return num_cols_;
+  }
+
+  const float cell_width() const {
+    return cell_width_;
+  }
+
+  const float cell_height() const {
+    return cell_height_;
+  }
 
   std::pair<int, int> GridCoordinates(const Point &p) const {
     float dx = p.x() - bbox_.minx();
@@ -107,8 +107,8 @@ class GridRangeQuery
 
 
   bool InteriorLineSegment(const LineSegment &segment, LineSegment &interior) {
-    Point a = segment.a();
-    Point b = segment.b();
+    const Point& a = segment.a();
+    const Point& b = segment.b();
 
     if (a == b) {
       if (bbox_.Contains(a)) {
@@ -152,12 +152,13 @@ class GridRangeQuery
 
   // Index a line segment into the grid
   void AddLineSegment(const key_t edgeid, const LineSegment& segment) {
-    // For now assume the segment is entirely inside the box
     LineSegment interior;
+
+    // Do nothing if segment is completely outside the box
     if (!InteriorLineSegment(segment, interior)) return;
 
-    Point start = interior.a();
-    Point end = interior.b();
+    const Point& start = interior.a();
+    const Point& end = interior.b();
 
     Point current_point = start;
     int i, j;
@@ -173,7 +174,7 @@ class GridRangeQuery
     while (Unlerp(start, end, current_point) < 1.0) {
       ItemsInCell(i, j).push_back(edgeid);
 
-      auto intersects = CellLineSegmentIntersections(i, j, LineSegment(current_point, end));
+      const auto& intersects = CellLineSegmentIntersections(i, j, LineSegment(current_point, end));
 
       float bestd = end.DistanceSquared(CellCenter(i, j));
       BoundingBoxIntersection bestp;
@@ -202,15 +203,10 @@ class GridRangeQuery
     std::tie(mini, minj) = GridCoordinates(range.minpt());
     std::tie(maxi, maxj) = GridCoordinates(range.maxpt());
 
-    // TODO handle num_rows_ <= 0
     mini = std::max(0, std::min(mini, num_cols_ - 1));
     maxi = std::max(0, std::min(maxi, num_cols_ - 1));
     minj = std::max(0, std::min(minj, num_rows_ - 1));
     maxj = std::max(0, std::min(maxj, num_rows_ - 1));
-
-    // TODO handle case maxi < minj
-    assert(mini <= maxi);
-    assert(minj <= maxj);
 
     for (int i = mini; i <= maxi; ++i) {
       for (int j = minj; j <= maxj; ++j) {
