@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     measurements.push_back({mmt_id++, PointLL(lng, lat)});
   }
 
-  auto path = OfflineMatch(mm, measurements, radius);
+  const CandidateGridQuery grid(graphreader, 0.25/1000, 0.25/1000);
+  auto path = OfflineMatch(mm, grid, measurements, radius);
 
   for (const auto candidate_ptr : path) {
     if (candidate_ptr) {

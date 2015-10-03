@@ -189,16 +189,16 @@ class MapMatching: public ViterbiSearch<Candidate>
 
 std::vector<const CandidateWrapper<Candidate>*>
 OfflineMatch(MapMatching& mm,
+             const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
              float search_radius)
 {
   mm.Clear();
   Time time;
-  CandidateQuery cq(mm.graphreader());
   for (const auto& measurement : measurements) {
-    auto candidates = cq.Query(measurement.lnglat,
-                               search_radius,
-                               mm.costing()->GetFilter());
+    const auto& candidates = cq.Query(measurement.lnglat,
+                                      search_radius,
+                                      mm.costing()->GetFilter());
     time = mm.AppendState(measurement, candidates);
   }
   auto path = mm.SearchPath(time);
