@@ -3,6 +3,7 @@
 #include <cmath>
 #include <tuple>
 #include <algorithm>
+#include <iostream>  // TODO remove
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -137,7 +138,7 @@ class CandidateQuery
   virtual ~CandidateQuery() {
   }
 
-  virtual std::vector<Candidate> Query(const PointLL& point, float radius, EdgeFilter filter = nullptr);
+  virtual std::vector<Candidate> Query(const PointLL& point, float radius, EdgeFilter filter = nullptr) const;
 
   virtual std::vector<std::vector<Candidate>>
   QueryBulk(const std::vector<PointLL>& points, float radius, EdgeFilter filter = nullptr);
@@ -150,7 +151,7 @@ class CandidateQuery
 std::vector<Candidate>
 CandidateQuery::Query(const PointLL& location,
                       float sq_search_radius,
-                      EdgeFilter filter)
+                      EdgeFilter filter) const
 {
   const GraphTile* tile = reader_.GetGraphTile(location);
   if(!tile || tile->header()->directededgecount() == 0) {
@@ -293,7 +294,7 @@ class CandidateGridQuery: public CandidateQuery
   const TileHierarchy& hierarchy_;
   float cell_width_;
   float cell_height_;
-  std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
+  mutable std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
 
  public:
   CandidateGridQuery(GraphReader& reader,
@@ -307,12 +308,12 @@ class CandidateGridQuery: public CandidateQuery
   ~CandidateGridQuery() {
   }
 
-  const GridRangeQuery<GraphId>* GetGrid(GraphId tile_id)
+  const GridRangeQuery<GraphId>* GetGrid(GraphId tile_id) const
   {
     return GetGrid(reader_.GetGraphTile(tile_id));
   }
 
-  const GridRangeQuery<GraphId>* GetGrid(const GraphTile* tile_ptr)
+  const GridRangeQuery<GraphId>* GetGrid(const GraphTile* tile_ptr) const
   {
     if (!tile_ptr) {
       return nullptr;
@@ -333,7 +334,7 @@ class CandidateGridQuery: public CandidateQuery
   }
 
   std::unordered_set<GraphId>
-  RangeQuery(const BoundingBox& range)
+  RangeQuery(const BoundingBox& range) const
   {
     auto tile_of_minpt = reader_.GetGraphTile(range.minpt()),
          tile_of_maxpt = reader_.GetGraphTile(range.maxpt());
@@ -418,7 +419,7 @@ class CandidateGridQuery: public CandidateQuery
 
 
   std::vector<Candidate>
-  Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) override
+  Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) const override
   {
     const GraphTile* tile = reader_.GetGraphTile(location);
     if(!tile || tile->header()->directededgecount() == 0) {
