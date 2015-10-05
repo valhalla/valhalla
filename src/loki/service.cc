@@ -26,7 +26,8 @@ namespace {
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> ACTION{
     {"/route", loki_worker_t::ROUTE},
     {"/viaroute", loki_worker_t::VIAROUTE},
-    {"/locate", loki_worker_t::LOCATE}
+    {"/locate", loki_worker_t::LOCATE},
+    {"/timedistancematrix", loki_worker_t::TIMEDISTANCEMATRIX}
   };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -126,7 +127,7 @@ namespace valhalla {
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate'", headers_t{CORS});
+          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate' '/timedistancematrix'", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -141,6 +142,8 @@ namespace valhalla {
             return route(action->second, request_pt, info);
           case LOCATE:
             return locate(request_pt, info);
+          case TIMEDISTANCEMATRIX:
+            return timedistancematrix(request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet

@@ -40,6 +40,13 @@ namespace {
     http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":-90}], \"costing\": \"pedestrian\"}"),
     http_request_t(GET, "/locate?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
     http_request_t(POST, "/locate", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
+    http_request_t(GET, "/timedistancematrix?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"one_to_many\"}"),
+    http_request_t(POST, "/timedistancematrix", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"one_to_many\"}"),
+    http_request_t(GET, "/timedistancematrix?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"many_to_one\"}"),
+    http_request_t(POST, "/timedistancematrix", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"many_to_one\"}"),
+    http_request_t(GET, "/timedistancematrix?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"many_to_many\"}"),
+    http_request_t(POST, "/timedistancematrix", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\", \"matrix_type\": \"many_to_many\"}"),
+    http_request_t(GET, "/timedistancematrix?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}")
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -65,8 +72,15 @@ namespace {
     {400, std::string("Exceeded max route locations of 2")},
     {400, std::string("Locations are in unconnected regions. Go check/edit the map at osm.org")},
     {400, std::string("Locations are in unconnected regions. Go check/edit the map at osm.org")},
-    {400, std::string("No costing method found for 'yak'")},
-    {400, std::string("No costing method found for 'yak'")},
+    {400, std::string("")},  //matrix output
+    {400, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")},
+    {200, std::string("")}
   };
 
 
@@ -121,7 +135,7 @@ namespace {
         //get the string of bytes to send formatted for http protocol
         request_str = request->to_string();
         ++request;
-       // LOG_INFO("Request string :: " + request_str);
+        LOG_INFO("Request string :: " + request_str);
         return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
       [&request](const void* data, size_t size) {
