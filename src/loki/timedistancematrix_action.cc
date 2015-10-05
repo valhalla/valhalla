@@ -4,17 +4,15 @@
 #include <boost/property_tree/info_parser.hpp>
 
 #include <valhalla/baldr/json.h>
+#include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/thor/timedistancematrix.h>
 
 using namespace prime_server;
 using namespace valhalla::baldr;
-using namespace valhalla::sif;
-using namespace valhalla::thor;
 
 namespace {
-  enum ACTION_TYPE {TIMEDISTANCEMATRIX};
-  enum MATRIX_TYPE {ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY};
+  enum ACTION_TYPE { TIMEDISTANCEMATRIX };
+  enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
   const std::unordered_map<std::string, ACTION_TYPE> ACTION{
     {"/timedistancematrix", TIMEDISTANCEMATRIX}
   };
@@ -62,48 +60,48 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::timedistancematrix(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      auto matrix_type = request.get<std::string>("matrix_type"); //one-to-many, many-to-one, many-to-many
-      transform(matrix_type.begin(), matrix_type.end(), matrix_type.begin(), tolower);
-      if(!matrix_type)
-        throw std::runtime_error("Insufficiently specified required parameter matrix_type.");
+      auto json = json::array({});
 
+      auto matrix_type = MATRIX.find(request.get<std::string>("matrix_type"));
       auto costing = request.get<std::string>("costing");
-      if(!costing)
+      if(costing.empty())
         throw std::runtime_error("No edge/node costing provided");
 
-      auto max_distance = config.get<float>("timedistance_limits." + matrix_type + ".max_distance" + request.get<std::string>("costing"));
-      auto max_locations = config.get<int>("timedistance_limits." + matrix_type + ".max_locations");
+      //see if any locations pairs are unreachable or too far apart
+      auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
+      auto max_distance = config.get<float>("timedistance_limits." + matrix_type->first + ".max_distance" + request.get<std::string>("costing"));
+      auto max_locations = config.get<int>("timedistance_limits." + matrix_type->first + ".max_locations");
+      //check that location size does not exceed max.
+      if (locations.size() > max_locations)
+        throw std::runtime_error("Number of locations exceeds the max location limit.");
+
+      LOG_INFO("Location size::" + std::to_string(locations.size()));
 
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
+
+        //check connectivity
+        uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
+        uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
+        if(!reader.AreConnected({a_id, lowest_level->first, 0}, {b_id, lowest_level->first, 0}))
+          throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
+
         //check if distance between latlngs exceed max distance limit for each mode of travel
         auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
         if (path_distance > max_distance)
           throw std::runtime_error("Path distance exceeds the max distance limit.");
 
-        LOG_INFO("location_distance::" + std::to_string(path_distance));
+        LOG_INFO("Location distance::" + std::to_string(path_distance));
       }
 
-      // Get the costing method. We do this each time since prior route may
-      // have changed hierarchy_limits. Also, this simulates how the service
-      // works
-      cost_ptr_t mode_costing[4];
-      cost_ptr_t cost = factory.Create(
-                costing, config.get_child("costing_options." + costing));
-      TravelMode mode = cost->travelmode();
-      mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-      switch (matrix_type) {
-        case ONE_TO_MANY:
-          //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
-          return thor::TimeDistanceMatrix::OneToMany(locations.begin(), locations, reader, mode_costing, mode);
+      switch ( matrix_type->second ) {
+        case MATRIX_TYPE::ONE_TO_MANY:
+          json->emplace_back(matrix_type->first, locations.begin(),locations, reader, costing_filter, costing);
           break;
-        case MANY_TO_ONE:
-          //Returns a row vector of computed time and distance from each location to the last (destination) location provided.
-          return thor::TimeDistanceMatrix::ManyToOne(locations.end(), locations, reader, mode_costing, mode);
+        case MATRIX_TYPE::MANY_TO_ONE:
+          json->emplace_back(matrix_type->first, locations.end(),locations, reader, costing_filter, costing);
           break;
-        case MANY_TO_MANY:
-          //Returns a square matrix of computed time and distance from each location to every other location.
-          return thor::TimeDistanceMatrix::ManyToMany(locations, reader, mode_costing, mode);
+        case MATRIX_TYPE::MANY_TO_MANY:
+          json->emplace_back(matrix_type->first, locations, reader, costing_filter, costing);
           break;
         default:
           throw std::runtime_error("Invalid matrix_type provided. Try one_to_many, many_to_one or many_to_many.");
