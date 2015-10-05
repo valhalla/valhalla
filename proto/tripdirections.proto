@@ -119,6 +119,7 @@ message TripDirections {
     optional string verbal_post_transition_instruction = 14; // verbal post-transition instruction
     repeated string begin_street_name = 15;                  // begin street names
     optional Sign sign = 16;                                 // associated sign information, for example: exit number
+    optional uint32 roundabout_exit_count = 17;              // which spoke to exit roundabout after entering
   }
   
   optional uint64 trip_id = 1;
