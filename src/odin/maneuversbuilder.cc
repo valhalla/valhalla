@@ -1541,6 +1541,7 @@ bool ManeuversBuilder::IsIntersectingForwardEdge(
 
 void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
   auto* prev_edge = trip_path_->GetPrevEdge(maneuver.begin_node_index());
+  auto* curr_edge = trip_path_->GetCurrEdge(maneuver.begin_node_index());
 
   IntersectingEdgeCounts xedge_counts;
   auto* node = trip_path_->GetEnhancedNode(maneuver.begin_node_index());
@@ -1552,16 +1553,35 @@ void ManeuversBuilder::DetermineRelativeDirection(Maneuver& maneuver) {
       ManeuversBuilder::DetermineRelativeDirection(maneuver.turn_degree());
   maneuver.set_begin_relative_direction(relative_direction);
 
-  if ((xedge_counts.right_similar_traversable_outbound == 0)
-      && (xedge_counts.left_similar_traversable_outbound > 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepRight);
-  } else if ((xedge_counts.right_similar_traversable_outbound > 0)
-      && (xedge_counts.left_similar_traversable_outbound == 0)
-      && (relative_direction == Maneuver::RelativeDirection::kKeepStraight)) {
-    maneuver.set_begin_relative_direction(
-        Maneuver::RelativeDirection::kKeepLeft);
+  // Adjust keep straight, if needed
+  if (relative_direction == Maneuver::RelativeDirection::kKeepStraight) {
+    if ((xedge_counts.right_similar_traversable_outbound == 0)
+        && (xedge_counts.left_similar_traversable_outbound > 0)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar_traversable_outbound > 0)
+        && (xedge_counts.left_similar_traversable_outbound == 0)) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    } else if ((xedge_counts.left_similar_traversable_outbound == 0)
+        && (xedge_counts.left_traversable_outbound > 0)
+        && (xedge_counts.right_traversable_outbound == 0)
+        && !curr_edge->IsStraightest(
+            maneuver.turn_degree(),
+            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+                prev_edge->end_heading(), prev_edge->travel_mode()))) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepRight);
+    } else if ((xedge_counts.right_similar_traversable_outbound == 0)
+        && (xedge_counts.right_traversable_outbound > 0)
+        && (xedge_counts.left_traversable_outbound == 0)
+        && !curr_edge->IsStraightest(
+            maneuver.turn_degree(),
+            node->GetStraightestTraversableIntersectingEdgeTurnDegree(
+                prev_edge->end_heading(), prev_edge->travel_mode()))) {
+      maneuver.set_begin_relative_direction(
+          Maneuver::RelativeDirection::kKeepLeft);
+    }
   }
 }
 
