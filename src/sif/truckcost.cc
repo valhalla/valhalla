@@ -38,6 +38,7 @@ constexpr float kTCReverse          = 5.0f;
 constexpr float kDefaultTruckWeight = 5.0f;  // TODO - units and default value
 constexpr float kDefaultTruckHeight = 3.65f; // Meters (12 feet)
 constexpr float kDefaultTruckWidth  = 3.0f;  // Meters (10 feet)
+constexpr float kDefaultTruckLength = 21.5f; // Meters (70 feet)
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
@@ -189,6 +190,7 @@ class TruckCost : public DynamicCost {
   float axleload_;      // Axle load - how does this differ from weight?
   float height_;        // Vehicle height in meters
   float width_;         // Vehicle width in meters
+  float length_;        // Vehicle length in meters
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -222,6 +224,7 @@ TruckCost::TruckCost(const boost::property_tree::ptree& pt)
   axleload_ = pt.get<float>("axleload", weight_);
   height_   = pt.get<float>("height", kDefaultTruckHeight);
   width_    = pt.get<float>("width", kDefaultTruckWidth);
+  length_   = pt.get<float>("length", kDefaultTruckLength);
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
