@@ -3,6 +3,7 @@ AC_INIT([mjolnir],
 	[https://github.com/valhalla/mjolnir/issues],
 	[mjolnir-0.0.1],
 	[https://github.com/valhalla/mjolnir])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
