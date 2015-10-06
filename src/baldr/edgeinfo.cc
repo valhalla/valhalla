@@ -1,5 +1,18 @@
 #include "baldr/edgeinfo.h"
 
+using namespace valhalla::baldr;
+
+namespace {
+
+json::ArrayPtr names_json(const std::vector<std::string>& names) {
+  auto a = json::array({});
+  for(const auto& n : names)
+    a->push_back(n);
+  return a;
+}
+
+}
+
 namespace valhalla {
 namespace baldr {
 
@@ -85,6 +98,14 @@ std::string EdgeInfo::encoded_shape() const {
   } else {
     return std::string(encoded_shape_, item_->encoded_shape_size);
   }
+}
+
+json::MapPtr EdgeInfo::json() const {
+  return json::map({
+    {"way_id", static_cast<uint64_t>(wayid_)},
+    {"names", names_json(GetNames())},
+    {"shape", encoded_shape()},
+  });
 }
 
 }

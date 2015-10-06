@@ -4,45 +4,10 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/turn.h>
+#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
-
-// Bicycle Network constants. Bit constants.
-constexpr uint8_t kNcn = 1;   // Part of national bicycle network
-constexpr uint8_t kRcn = 2;   // Part of regional bicycle network
-constexpr uint8_t kLcn = 4;   // Part of local bicycle network
-constexpr uint8_t kMcn = 8;   // Part of mountain bicycle network
-constexpr uint8_t kMaxBicycleNetwork = 15;
-
-// Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 33554431;   // 2^25 bytes
-
-// Maximum length of an edge
-constexpr uint32_t kMaxEdgeLength = 16777215;   // 2^24 meters
-
-// Maximum number of edges allowed in a turn restriction mask
-constexpr uint32_t kMaxTurnRestrictionEdges = 8;
-
-// Maximum speed (kph)
-constexpr float kMaxSpeed = 255.0f;
-
-// Maximum lane count
-constexpr uint32_t kMaxLaneCount = 15;
-
-// Number of edges considered for edge transitions
-constexpr uint32_t kNumberOfEdgeTransitions = 8;
-
-// Maximum shortcuts edges from a node. More than this can be
-// added but this is the max. that can supersede an edge
-constexpr uint32_t kMaxShortcutsFromNode = 7;
-
-// Maximum stop impact
-constexpr uint32_t kMaxStopImpact = 7;
-
-// Maximum grade and curvature factors.
-constexpr uint32_t kMaxGradeFactor = 15;
-constexpr uint32_t kMaxCurvatureFactor = 15;
 
 /**
  * Directed edge within the graph.
@@ -414,6 +379,12 @@ class DirectedEdge {
    * @return  Returns true if this edge is a shortcut.
    */
   bool is_shortcut() const;
+
+  /**
+   * Create a json object representing this edge
+   * @return  Returns the json object
+   */
+  json::MapPtr json() const;
 
   /**
    * Get the computed version of DirectedEdge attributes.

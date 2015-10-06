@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 
+#include <valhalla/baldr/json.h>
+
 namespace valhalla {
 namespace baldr {
 
@@ -79,6 +81,13 @@ union GraphId {
    * @return graphid with only tileid and level included
    */
   GraphId Tile_Base() const;
+
+  /**
+   * The json representation of the id
+   *
+   * @return  json
+   */
+  json::Value json() const;
 
   /**
    * Get the computed version of GraphId attributes.

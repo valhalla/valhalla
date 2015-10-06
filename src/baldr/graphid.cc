@@ -65,6 +65,16 @@ GraphId GraphId::Tile_Base() const {
   return GraphId( fields.tileid,  fields.level, 0);
 }
 
+json::Value GraphId::json() const {
+  if(Is_Valid())
+    return json::map({
+      {"level", static_cast<uint64_t>(fields.level)},
+      {"tile_id", static_cast<uint64_t>(fields.tileid)},
+      {"id", static_cast<uint64_t>(fields.id)},
+    });
+  return static_cast<nullptr_t>(nullptr);
+}
+
 // Post increments the id.
 void GraphId::operator ++(int) {
   fields.id++;

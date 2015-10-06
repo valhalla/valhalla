@@ -9,46 +9,38 @@
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/date_time_zonespec.h>
 #include <fstream>
 
+using namespace valhalla::baldr;
+
+namespace {
+
+const boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
+
+}
+
 namespace valhalla {
 namespace baldr {
 namespace DateTime {
 
-namespace
-{
-
-const boost::gregorian::date pivot_date_ = boost::gregorian::from_undelimited_string(kPivotDate);
-
-struct tz_db_t {
-  tz_db_t() {
-    std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
-    std::stringstream ss(tz_data);
-    db.load_from_stream(ss);
-  }
-  const boost::local_time::tz_database* operator->() const {
-      return &db;
-  }
-
-  boost::local_time::tz_database db;
-};
-
+tz_db_t::tz_db_t() {
+  //load up the tz data
+  std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
+  std::stringstream ss(tz_data);
+  load_from_stream(ss);
+  //cache the regions and add our own unclassified one
+  regions = boost::local_time::tz_database::region_list();
+  regions.insert(regions.begin(), "None");
 }
 
-//Get the list of regions.
-std::vector<std::string> get_region_list() {
+const tz_db_t& get_tz_db() {
   //thread safe static initialization of global singleton
-  static tz_db_t tz_db;
-  std::vector<std::string> v = tz_db->region_list();
-  std::vector<std::string>::iterator it;
-  it = v.begin();
-  it = v.insert (it,"None");
-  return v;
+  static const tz_db_t tz_db;
+  return tz_db;
 }
 
 //get a formatted date.
@@ -287,8 +279,7 @@ std::string date(const std::string& date_time) {
 //Get the iso date and time from a DOW mask and time.
 std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                           const std::string& tz) {
-  //thread safe static initialization of global singleton
-  static tz_db_t tz_db;
+
 
   std::string iso_date_time;
   std::stringstream ss("");
@@ -333,7 +324,7 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
     ss >> desired_time;
 
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
+    boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
 
     pt = local_date_time.local_time();
@@ -359,9 +350,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
 
 //Get the current iso date and time.
 std::string iso_date_time(const std::string& tz) {
-  //thread safe static initialization of global singleton
-  static tz_db_t tz_db;
-
   std::string iso_date_time;
   if (tz.empty())
     return iso_date_time;
@@ -369,7 +357,7 @@ std::string iso_date_time(const std::string& tz) {
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
     std::string tz_string;
-    boost::local_time::time_zone_ptr time_zone = tz_db->time_zone_from_region(tz);
+    boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
 
     pt = local_date_time.local_time();
