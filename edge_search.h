@@ -84,13 +84,6 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
 
 
 // Some helpers
-inline const DirectedEdge*
-get_directededge(const GraphTile& tile, const GraphId edgeid)
-{
-  return tile.directededge(edgeid);
-}
-
-
 inline std::unique_ptr<const EdgeInfo>
 get_edgeinfo_ptr(const GraphTile& tile, const DirectedEdge* directededge)
 {
@@ -102,8 +95,7 @@ get_edgeinfo_ptr(const GraphTile& tile, const DirectedEdge* directededge)
 inline std::unique_ptr<const EdgeInfo>
 get_edgeinfo_ptr(const GraphTile& tile, const GraphId edgeid)
 {
-  auto edge = get_directededge(tile, edgeid);
-  return get_edgeinfo_ptr(tile, edge);
+  return get_edgeinfo_ptr(tile, tile.directededge(edgeid));
 }
 
 
@@ -188,8 +180,9 @@ CandidateQuery::Query(const PointLL& location,
           auto edgeid = get_edgeid(*tile, edge);
           correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
 
-          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-          if (!filter || !filter(get_directededge(*tile, opp_edgeid))) {
+          const auto opp_edge_ptr = reader_.GetOpposingEdge(edgeid);
+          if (!filter || !filter(opp_edge_ptr)) {
+            auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
             correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
           }
 
@@ -421,17 +414,16 @@ class CandidateGridQuery: public CandidateQuery
   std::vector<Candidate>
   Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) const override
   {
-    const GraphTile* tile = reader_.GetGraphTile(location);
-    if(!tile || tile->header()->directededgecount() == 0) {
-      return {};
-    }
-
     std::vector<Candidate> candidates;
     DistanceApproximator approximator(location);
     auto range = ExtendByMeters(location, std::sqrt(sq_search_radius));
 
     for (const auto edgeid : RangeQuery(range)) {
-      auto edge = get_directededge(*tile, edgeid);
+      auto tile = reader_.GetGraphTile(edgeid);
+      if (!tile) {
+        continue;
+      }
+      auto edge = tile->directededge(edgeid);
       if (!filter || !filter(edge)) {
         auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edgeid);
         const auto& shape = edgeinfo_ptr->shape();
@@ -445,8 +437,9 @@ class CandidateGridQuery: public CandidateQuery
           correlated.CorrelateVertex(point);
           correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
 
-          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-          if (!filter || !filter(get_directededge(*tile, opp_edgeid))) {
+          const auto opp_edge_ptr = reader_.GetOpposingEdge(edgeid);
+          if (!filter || !filter(opp_edge_ptr)) {
+            auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
             correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
           }
 
