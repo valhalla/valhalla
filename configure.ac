@@ -3,6 +3,7 @@ AC_INIT([skadi],
 	[https://github.com/valhalla/skadi/issues],
 	[skadi-0.0.1],
 	[https://github.com/valhalla/skadi])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
