@@ -3,6 +3,7 @@ AC_INIT([loki],
 	[https://github.com/valhalla/loki/issues],
 	[loki-0.0.1],
 	[https://github.com/valhalla/loki])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([subdir-objects parallel-tests])
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])

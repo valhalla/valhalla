@@ -11,11 +11,7 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-  enum ACTION_TYPE { TIMEDISTANCEMATRIX };
   enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
-  const std::unordered_map<std::string, ACTION_TYPE> ACTION{
-    {"/timedistancematrix", TIMEDISTANCEMATRIX}
-  };
   const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
     {"one_to_many", ONE_TO_MANY},
     {"many_to_one", MANY_TO_ONE},
