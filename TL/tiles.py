@@ -319,7 +319,7 @@ if __name__ == "__main__":
                      url = ""
 
                if not stop_pairs:
-                  raise ValueError('Stops exist, but stop_pairs do not!')
+                  print('Stops exist, but stop_pairs do not!')
 
                dictionary.update(stop_pairs)
 
