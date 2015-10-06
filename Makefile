@@ -17,7 +17,7 @@ test_grid_range_query: test_grid_range_query.cc grid_range_query.h
 	$(CC) $(FLAGS) -lvalhalla_midgard $< -o $@
 
 
-test_map_matching: test_map_matching.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h
+test_map_matching: test_map_matching.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h costings.h
 	$(CC) $(FLAGS) $(LIBS) $< -o $@
 
 
