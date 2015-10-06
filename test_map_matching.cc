@@ -35,24 +35,37 @@ int main(int argc, char *argv[])
   MapMatching mm(sigma_z, beta, graphreader, mode_costing, static_cast<sif::TravelMode>(mode));
   std::vector<Measurement> measurements;
   MeasurementId mmt_id = 0;
-  while (!std::cin.eof()) {
-    float lng, lat;
-    std::cin >> lng;
-    std::cin >> lat;
-    measurements.push_back({mmt_id++, PointLL(lng, lat)});
-  }
-
+  std::string line;
   const CandidateGridQuery grid(graphreader, 0.25/1000, 0.25/1000);
-  auto path = OfflineMatch(mm, grid, measurements, radius);
-
-  for (const auto candidate_ptr : path) {
-    if (candidate_ptr) {
-      auto& candidate = candidate_ptr->candidate();
-      auto measurement = mm.measurement(candidate_ptr->time());
-      std::cout << measurement.id << " ";
-      std::cout << candidate_ptr->id() << " ";
-      std::cout << candidate.distance() << std::endl;
+  float sq_search_radius = radius * radius;
+  while (true) {
+    std::getline(std::cin, line);
+    if (std::cin.eof() || line.empty()) {
+      const auto& path = OfflineMatch(mm, grid, measurements, sq_search_radius);
+      size_t count = 0;
+      for (const auto candidate_ptr : path) {
+        if (candidate_ptr) {
+          auto& candidate = candidate_ptr->candidate();
+          auto measurement = mm.measurement(candidate_ptr->time());
+          count ++;
+          // std::cout << measurement.id << " ";
+          // std::cout << candidate_ptr->id() << " ";
+          // std::cout << candidate.distance() << std::endl;
+        }
+      }
+      std::cout << count << "/" << measurements.size() << std::endl;
+      measurements.clear();
+      mmt_id = 0;
+      if (std::cin.eof()) {
+        break;
+      } else {
+        continue;
+      }
     }
+    float lng, lat;
+    std::stringstream stream(line);
+    stream >> lng; stream >> lat;
+    measurements.push_back({mmt_id++, PointLL(lng, lat)});
   }
   return 0;
 }
