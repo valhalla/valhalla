@@ -59,8 +59,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::timedistancematrix(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
-      auto json = json::array({});
+    worker_t::result_t loki_worker_t::timedistancematrix(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
 
       auto matrix_type = MATRIX.find(request.get<std::string>("matrix_type"));
       auto costing = request.get<std::string>("costing");
@@ -69,8 +68,8 @@ namespace valhalla {
 
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("timedistance_limits." + matrix_type->first + ".max_distance" + request.get<std::string>("costing"));
-      auto max_locations = config.get<int>("timedistance_limits." + matrix_type->first + ".max_locations");
+      auto max_distance = config.get<float>("timedistancematrix_limits." + matrix_type->first + ".max_distance" + request.get<std::string>("costing"));
+      auto max_locations = config.get<int>("timedistancematrix_limits." + matrix_type->first + ".max_locations");
       //check that location size does not exceed max.
       if (locations.size() > max_locations)
         throw std::runtime_error("Number of locations exceeds the max location limit.");
@@ -78,7 +77,6 @@ namespace valhalla {
       LOG_INFO("Location size::" + std::to_string(locations.size()));
 
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
-
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
         uint32_t b_id = lowest_level->second.tiles.TileId(location->latlng_);
@@ -93,33 +91,17 @@ namespace valhalla {
         LOG_INFO("Location distance::" + std::to_string(path_distance));
       }
 
-      switch ( matrix_type->second ) {
-        case MATRIX_TYPE::ONE_TO_MANY:
-          json->emplace_back(matrix_type->first, locations.begin(),locations, reader, costing_filter, costing);
-          break;
-        case MATRIX_TYPE::MANY_TO_ONE:
-          json->emplace_back(matrix_type->first, locations.end(),locations, reader, costing_filter, costing);
-          break;
-        case MATRIX_TYPE::MANY_TO_MANY:
-          json->emplace_back(matrix_type->first, locations, reader, costing_filter, costing);
-          break;
-        default:
-          throw std::runtime_error("Invalid matrix_type provided. Try one_to_many, many_to_one or many_to_many.");
+      //correlate the various locations to the underlying graph
+      for(size_t i = 0; i < locations.size(); ++i) {
+        auto correlated = loki::Search(locations[i], reader, costing_filter);
+        request.put("route_type" , matrix_type->first);
+        request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
-      //jsonp callback if need be
-      std::ostringstream stream;
-      auto jsonp = request.get_optional<std::string>("jsonp");
-      if(jsonp)
-        stream << *jsonp << '(';
-      stream << *json;
-      if(jsonp)
-        stream << ')';
-
-      worker_t::result_t result{false};
-      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
-      response.from_info(request_info);
-      result.messages.emplace_back(response.to_string());
+      std::stringstream stream;
+      boost::property_tree::write_info(stream, request);
+      worker_t::result_t result{true};
+      result.messages.emplace_back(stream.str());
       return result;
     }
   }

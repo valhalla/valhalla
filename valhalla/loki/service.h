@@ -26,7 +26,7 @@ namespace valhalla {
       void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
       prime_server::worker_t::result_t locate(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       prime_server::worker_t::result_t route(const ACTION_TYPE& action, boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
-      prime_server::worker_t::result_t timedistancematrix(const boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
+      prime_server::worker_t::result_t timedistancematrix(boost::property_tree::ptree& request, prime_server::http_request_t::info_t& request_info);
       void cleanup();
      protected:
       boost::property_tree::ptree config;
