@@ -540,6 +540,11 @@ namespace {
             man->emplace("sign", std::move(sign));
           }
 
+          // Roundabout count
+          if (maneuver.has_roundabout_exit_count()) {
+            man->emplace("roundabout_exit_count", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+          }
+
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
           //“portionsTollNote” : “<portionsTollNote>”,
