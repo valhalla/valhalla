@@ -1126,7 +1126,7 @@ void enhance(const boost::property_tree::ptree& pt,
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   lock.unlock();
 
-  const std::vector<std::string> regions = DateTime::get_region_list();
+  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {

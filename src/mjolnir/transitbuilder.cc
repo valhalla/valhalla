@@ -243,7 +243,7 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  const std::vector<std::string> regions = DateTime::get_region_list();
+  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
 
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
