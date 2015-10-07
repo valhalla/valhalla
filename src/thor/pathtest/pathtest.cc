@@ -300,6 +300,30 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   return trip_directions;
 }
 
+// Retuirns the costing method (created from the dynamic cost factory).
+// Get the costing options. Get the base options from the config and the
+// options for the specified costing method. Merge in any request costing
+// options that override those in the config.
+valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
+                                      boost::property_tree::ptree& config,
+                                      boost::property_tree::ptree& request,
+                                      const std::string& costing) {
+ std::string method_options = "costing_options." + costing;
+ auto config_costing = config.get_child_optional(method_options);
+ if (!config_costing)
+   throw std::runtime_error("No costing method found for '" + costing + "'");
+ auto request_costing = request.get_child_optional(method_options);
+ if (request_costing) {
+   // If the request has any options for this costing type, merge the 2
+   // costing options - override any config options that are in the request.
+   // and add any request options not in the config.
+   for (const auto& r : *request_costing) {
+     config_costing->put_child(r.first, r.second);
+   }
+ }
+ return factory.Create(costing, *config_costing);
+}
+
 // Main method for testing a single path
 int main(int argc, char *argv[]) {
   bpo::options_description options("pathtest " VERSION "\n"
@@ -383,6 +407,7 @@ int main(int argc, char *argv[]) {
   Location originloc(PointLL { 0, 0 });
   Location destloc(PointLL { 0, 0 });
   // argument checking and verification
+  boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
     for (auto arg : std::vector<std::string> { "origin", "destination", "type",
         "config" }) {
@@ -400,7 +425,6 @@ int main(int argc, char *argv[]) {
   } else {
     std::stringstream stream;
     stream << json;
-    boost::property_tree::ptree json_ptree;
     boost::property_tree::read_json(stream, json_ptree);
     std::vector<Location> locations;
     try {
@@ -498,6 +522,7 @@ int main(int argc, char *argv[]) {
   factory.Register("bus", CreateBusCost);
   factory.Register("bicycle", CreateBicycleCost);
   factory.Register("pedestrian", CreatePedestrianCost);
+  factory.Register("truck", CreateTruckCost);
   factory.Register("transit", CreateTransitCost);
 
   // Figure out the route type
@@ -518,20 +543,17 @@ int main(int argc, char *argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create("auto",
-                        pt.get_child("costing_options.auto"));
-    mode_costing[1] = factory.Create("pedestrian",
-                        pt.get_child("costing_options.pedestrian"));
-    mode_costing[2] = factory.Create("bicycle",
-                        pt.get_child("costing_options.bicycle"));
-    mode_costing[3] = factory.Create("transit",
-                        pt.get_child("costing_options.transit"));
+    mode_costing[0] = get_costing(factory, pt, json_ptree, "auto");
+    mode_costing[1] = get_costing(factory, pt, json_ptree, "pedestrian");
+    mode_costing[2] = get_costing(factory, pt, json_ptree, "bicycle");
+    mode_costing[3] = get_costing(factory, pt, json_ptree, "transit");
     mode = TravelMode::kPedestrian;
     pathalgorithm = &mm;
   } else {
-    // Assign costing method
-    std::shared_ptr<DynamicCost> cost = factory.Create(
-        routetype, pt.get_child("costing_options." + routetype));
+    // Assign costing method, override any config options that are in the
+    // json request
+    std::shared_ptr<DynamicCost> cost = get_costing(factory, pt,
+                              json_ptree, routetype);
     mode = cost->travelmode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
 
@@ -543,7 +565,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // For now assume pedestrian mode at origin and destination
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   auto getPathLoc = [&reader, &cost, &data] (Location& loc, std::string status) {
@@ -555,6 +576,7 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
   };
+
   PathLocation pathOrigin = getPathLoc(originloc, "fail_invalid_origin");
   PathLocation pathDest = getPathLoc(destloc, "fail_invalid_dest");
   auto t2 = std::chrono::high_resolution_clock::now();
