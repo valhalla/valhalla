@@ -49,7 +49,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
       auto max_distance = config.get<float>("service_limits.max_distance." + request.get<std::string>("costing"));

@@ -55,7 +55,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::timedistancematrix(boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
+    worker_t::result_t loki_worker_t::time_distance_matrix(boost::property_tree::ptree& request) {
 
       auto matrix_type = MATRIX.find(request.get<std::string>("matrix_type"));
       auto costing = request.get<std::string>("costing");
@@ -64,8 +64,8 @@ namespace valhalla {
 
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("timedistancematrix_limits." + matrix_type->first + ".max_distance" + request.get<std::string>("costing"));
-      auto max_locations = config.get<int>("timedistancematrix_limits." + matrix_type->first + ".max_locations");
+      auto max_distance = config.get<float>("time_distance_matrix_limits." + matrix_type->first + ".max_distance" + request.get<std::string>("costing"));
+      auto max_locations = config.get<int>("time_distance_matrix_limits." + matrix_type->first + ".max_locations");
       //check that location size does not exceed max.
       if (locations.size() > max_locations)
         throw std::runtime_error("Number of locations exceeds the max location limit.");
@@ -86,11 +86,10 @@ namespace valhalla {
 
         LOG_INFO("Location distance::" + std::to_string(path_distance));
       }
-
+      request.put("matrix_type" , matrix_type->first);
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, costing_filter);
-        request.put("route_type" , matrix_type->first);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 

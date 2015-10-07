@@ -139,11 +139,11 @@ namespace valhalla {
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            return route(action->second, request_pt, info);
+            return route(action->second, request_pt);
           case LOCATE:
             return locate(request_pt, info);
           case TIMEDISTANCEMATRIX:
-            return timedistancematrix(request_pt, info);
+            return time_distance_matrix(request_pt);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
