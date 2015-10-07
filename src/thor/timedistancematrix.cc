@@ -73,7 +73,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+
+    // Mark the edge as permanently labeled. Do not do this for an origin
+    // edge (this will allow loops/around the block cases)
+    if (!pred.origin()) {
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+    }
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
@@ -82,8 +87,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(destedge->second, edge, pred,
-                             predindex, costing)) {
+      if (UpdateDestinations(origin_index, locations, destedge->second, edge,
+                             pred, predindex, costing)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -205,7 +210,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
     // Remove label from adjacency list, mark it as permanently labeled.
     // Copy the EdgeLabel for use in costing
     EdgeLabel pred = edgelabels_[predindex];
-    edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+
+    // Mark the edge as permanently labeled. Do not do this for an origin
+    // edge (this will allow loops/around the block cases)
+    if (!pred.origin()) {
+      edgestatus_->Update(pred.edgeid(), EdgeSet::kPermanent);
+    }
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
@@ -214,8 +224,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(destedge->second, edge, pred,
-                             predindex, costing)) {
+      if (UpdateDestinations(dest_index, locations, destedge->second, edge,
+                             pred, predindex, costing)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -345,24 +355,21 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
       continue;
     }
 
-    // Get cost and sort cost
+    // Get cost. Use this as sortcost since A* is not used for time+distance
+    // matrix computations. . Get distance along the remainder of this edge.
     Cost cost = costing->EdgeCost(directededge,
                   graphreader.GetEdgeDensity(edgeid)) * (1.0f - edge.dist);
-    float dist = astarheuristic_.GetDistance(endtile->node(
-                      directededge->endnode())->latlng());
-    float sortcost = cost.cost + astarheuristic_.Get(dist);
+    uint32_t d = static_cast<uint32_t>(directededge->length() *
+                             (1.0f - edge.dist));
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
-    // of the path.
-    uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.dist));
-    adjacencylist_->Add(edgelabels_.size(), sortcost);
+    // of the path. Set the origin flag
+    adjacencylist_->Add(edgelabels_.size(), cost.cost);
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost,
-            sortcost, dist, directededge->restrictions(),
+            cost.cost, 0.0f, directededge->restrictions(),
             directededge->opp_local_idx(), mode_, d, 0, 0, 0, false);
     edge_label.set_origin();
-
-    // Set the origin flag
     edgelabels_.push_back(std::move(edge_label));
   }
 }
@@ -393,18 +400,21 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     }
 
     // Get cost. Use this as sortcost since A* is not used for time
-    // distance matrix computations
-    Cost origin_cost = costing->EdgeCost(opp_dir_edge,
+    // distance matrix computations. Get the distance along the edge.
+    Cost cost = costing->EdgeCost(opp_dir_edge,
                          graphreader.GetEdgeDensity(opp_edge_id)) * edge.dist;
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.dist);
 
-    // Add EdgeLabel to the adjacency list. Set the predecessor edge index
-    // to invalid to indicate the origin of the path.
-    AddToAdjacencyList(opp_edge_id, origin_cost.cost);
-    edgelabels_.emplace_back(kInvalidLabel, opp_edge_id,
-                           opp_dir_edge, origin_cost, origin_cost.cost,
-                           0.0f, 0, opp_dir_edge->opp_local_idx(), mode_,
-                           d, 0, 0, 0, false);
+    // Add EdgeLabel to the adjacency list (but do not set its status).
+    // Set the predecessor edge index to invalid to indicate the origin
+    // of the path. Set the origin flag.
+    // TODO - restrictions?
+    adjacencylist_->Add(edgelabels_.size(), cost.cost);
+    EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost,
+            cost.cost, 0.0f, 0, opp_dir_edge->opp_local_idx(), mode_, d,
+            0, 0, 0, false);
+    edge_label.set_origin();
+    edgelabels_.push_back(std::move(edge_label));
   }
 }
 
@@ -501,7 +511,9 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(GraphReader& graphreader,
 
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled.
-bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
+bool TimeDistanceMatrix::UpdateDestinations(const uint32_t origin_index,
+                                const std::vector<PathLocation>& locations,
+                                std::vector<uint32_t>& destinations,
                                 const DirectedEdge* edge,
                                 const EdgeLabel& pred,
                                 const uint32_t predindex,
@@ -524,6 +536,15 @@ bool TimeDistanceMatrix::UpdateDestinations(std::vector<uint32_t>& destinations,
       LOG_ERROR("Could not find the destination edge");
       continue;
     }
+
+    // Skip case where destination is along the origin edge, there is no
+    // predecessor, and the destination cannot be reached via trival path.
+    if (pred.predecessor() == kInvalidLabel &&
+        !IsTrivial(pred.edgeid(), locations[origin_index],
+                   locations[dest_idx])) {
+      continue;
+    }
+
 // TODO - need density for edgecost method...
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.

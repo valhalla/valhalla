@@ -192,6 +192,8 @@ class TimeDistanceMatrix : public PathAlgorithm {
   /**
    * Update destinations along an edge that has been settled (lowest cost path
    * found to the end of edge).
+   * @param   origin_index  Index of the origin location.
+   * @param   locations     List of locations.
    * @param   destinations  Vector of destination indexes along this edge.
    * @param   edge          Directed edge
    * @param   pred          Predecessor information in shortest path.
@@ -199,7 +201,9 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * @param   costing       Costing method.
    * @return  Returns true if all destinations have been settled.
    */
-  bool UpdateDestinations(std::vector<uint32_t>& destinations,
+  bool UpdateDestinations(const uint32_t origin_index,
+                          const std::vector<baldr::PathLocation>& locations,
+                          std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const sif::EdgeLabel& pred,
                           const uint32_t predindex,
