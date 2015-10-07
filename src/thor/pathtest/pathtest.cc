@@ -576,7 +576,6 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
   };
-
   PathLocation pathOrigin = getPathLoc(originloc, "fail_invalid_origin");
   PathLocation pathDest = getPathLoc(destloc, "fail_invalid_dest");
   auto t2 = std::chrono::high_resolution_clock::now();
