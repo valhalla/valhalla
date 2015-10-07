@@ -7,6 +7,6 @@ message DirectionsOptions {
     kMiles = 1;
   }
 
-  optional Units units = 1;
-  optional string language = 2 [default = "en_US"];
+  optional Units units = 1;                         // kKilometers or kMiles
+  optional string language = 2 [default = "en-US"]; // Based on IETF BCP 47 language tag string
 }
