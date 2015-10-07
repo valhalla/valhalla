@@ -310,7 +310,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
-  } else if (node->type() == NodeType::kTollBooth) {
+  }
+  if (node->type() == NodeType::kTollBooth ||
+      (!pred.toll() && edge->toll())) {
     seconds += tollbooth_cost_;
     penalty += tollbooth_penalty_;
   }
@@ -365,7 +367,9 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
-  } else if (node->type() == NodeType::kTollBooth) {
+  }
+  if (node->type() == NodeType::kTollBooth ||
+     (!pred->toll() && edge->toll())) {
     seconds += tollbooth_cost_;
     penalty += tollbooth_penalty_;
   }

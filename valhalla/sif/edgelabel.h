@@ -217,6 +217,12 @@ class EdgeLabel {
   bool origin() const;
 
   /**
+   * Does this edge have a toll?
+   * @return  Returns true if this edge has a toll.
+   */
+  bool toll() const;
+
+  /**
    * Sets this edge as an origin.
    */
   void set_origin();
@@ -285,9 +291,10 @@ class EdgeLabel {
    * dest_only      Was the prior edge destination only.
    * has_transit    True if any transit taken along the path to this edge.
    * origin         True if this is an origin edge.
+   * toll           Edge is toll.
    */
   struct Attributes {
-    uint32_t use           : 8;
+    uint32_t use           : 6;
     uint32_t opp_local_idx : 7;
     uint32_t restrictions  : 7;
     uint32_t trans_up      : 1;
@@ -297,6 +304,8 @@ class EdgeLabel {
     uint32_t dest_only     : 1;
     uint32_t has_transit   : 1;
     uint32_t origin        : 1;
+    uint32_t toll          : 1;
+    uint32_t spare         : 1;
   };
   Attributes attributes_;
 

@@ -44,6 +44,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
   attributes_.shortcut      = edge->shortcut();
   attributes_.mode          = static_cast<uint32_t>(mode);
   attributes_.dest_only     = edge->destonly();
+  attributes_.toll          = edge->toll();
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -72,6 +73,7 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
   attributes_.shortcut      = edge->shortcut();
   attributes_.mode          = static_cast<uint32_t>(mode);
   attributes_.dest_only     = edge->destonly();
+  attributes_.toll          = edge->toll();
   attributes_.has_transit   = has_transit;
 }
 
@@ -193,6 +195,11 @@ bool EdgeLabel::origin() const {
 // Sets this edge as an origin.
 void EdgeLabel::set_origin() {
   attributes_.origin = true;
+}
+
+// Does this edge have a toll.
+bool EdgeLabel::toll() const {
+  return attributes_.toll;
 }
 
 // Get the current walking distance in meters.
