@@ -27,7 +27,8 @@ using namespace valhalla::sif;
 
 
 std::tuple<PointLL, float, size_t, float>
-Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator)
+Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator,
+        float snap_distance = 1.f)
 {
   size_t closest_segment = 0.f;
   float closest_distance = std::numeric_limits<float>::max();
@@ -78,6 +79,16 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
   float offset = static_cast<float>(closest_partial_length / total_length);
   offset = std::max(0.f, std::min(offset, 1.f));
   assert(0.f <= offset && offset <= 1.f);
+
+  if (total_length * offset <= snap_distance) {
+    offset = 0.f;
+    closest_point = shape.front();
+    closest_distance = approximator.DistanceSquared(closest_point);
+  } else if (total_length * (1.f - offset) <= snap_distance) {
+    offset = 1.f;
+    closest_point = shape.back();
+    closest_distance = approximator.DistanceSquared(closest_point);
+  }
 
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment, offset);
 }
