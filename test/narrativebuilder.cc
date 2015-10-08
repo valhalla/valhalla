@@ -201,7 +201,21 @@ void TryBuild(const DirectionsOptions& directions_options,
   }
 }
 
-void PopulateStartManeuverList(std::list<Maneuver>& maneuvers,
+void PopulateStartManeuverList_0(std::list<Maneuver>& maneuvers,
+                               const std::string& country_code,
+                               const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { }, { }, { }, "",
+                   0.786592, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 88, 80, 0,
+                   1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0,
+                   0, 0, 1, 0, "", "", "", 0);
+
+}
+
+void PopulateStartManeuverList_1(std::list<Maneuver>& maneuvers,
                                const std::string& country_code,
                                const std::string& state_code) {
   maneuvers.emplace_back();
@@ -213,6 +227,20 @@ void PopulateStartManeuverList(std::list<Maneuver>& maneuvers,
                    209, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
                    { }, 0, 0, 0, 0, 1, 0, "", "", "", 0);
 
+}
+
+void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
+                                 const std::string& country_code,
+                                 const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "US 222", "PA 272" },
+                   { "North Prince Street", "US 222", "PA 272" }, { }, "",
+                   5.098166, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 173, 143,
+                   0, 45, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0);
 }
 
 void SetExpectedManeuverInstructions(
@@ -228,7 +256,7 @@ void SetExpectedManeuverInstructions(
   maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
 }
 
-void TestBuildStartInstructions_miles_en_US() {
+void TestBuildStartInstructions_0_miles_en_US() {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -239,11 +267,37 @@ void TestBuildStartInstructions_miles_en_US() {
 
   // Configure start maneuvers
   std::list<Maneuver> maneuvers;
-  PopulateStartManeuverList(maneuvers, country_code, state_code);
+  PopulateStartManeuverList_0(maneuvers, country_code, state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
-  PopulateStartManeuverList(expected_maneuvers, country_code, state_code);
+  PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Go east.",
+      "",
+      "Go east for a half mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Go southwest on 5th Avenue.",
@@ -254,7 +308,33 @@ void TestBuildStartInstructions_miles_en_US() {
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
-void TestBuildStartInstructions_kilometers_en_US() {
+void TestBuildStartInstructions_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Go south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "",
+      "Go south on North Prince Street, U.S. 2 22.",
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_0_kilometers_en_US() {
   std::string country_code = "US";
   std::string state_code = "NY";
 
@@ -265,17 +345,70 @@ void TestBuildStartInstructions_kilometers_en_US() {
 
   // Configure start maneuvers
   std::list<Maneuver> maneuvers;
-  PopulateStartManeuverList(maneuvers, country_code, state_code);
+  PopulateStartManeuverList_0(maneuvers, country_code, state_code);
 
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
-  PopulateStartManeuverList(expected_maneuvers, country_code, state_code);
+  PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Go east.",
+      "",
+      "Go east for 800 meters.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_1_kilometers_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
       "Go southwest on 5th Avenue.",
       "",
       "Go southwest on 5th Avenue for 200 meters.",
       "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+void TestBuildStartInstructions_2_kilometers_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kKilometers);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateStartManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Go south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "",
+      "Go south on North Prince Street, U.S. 2 22.",
+      "Continue on U.S. 2 22, Pennsylvania 2 72 for 5.1 kilometers.");
+
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -1245,11 +1378,23 @@ int main() {
   // FormVerbalPostTransitionInstruction
   suite.test(TEST_CASE(TestFormVerbalPostTransitionInstruction));
 
-  // BuildStartInstructions_miles_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_miles_en_US));
+  // BuildStartInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_0_miles_en_US));
 
-  // BuildStartInstructions_kilometers_en_US
-  suite.test(TEST_CASE(TestBuildStartInstructions_kilometers_en_US));
+  // BuildStartInstructions_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_1_miles_en_US));
+
+  // BuildStartInstructions_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_2_miles_en_US));
+
+  // BuildStartInstructions_0_kilometers_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_0_kilometers_en_US));
+
+  // BuildStartInstructions_1_kilometers_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_1_kilometers_en_US));
+
+  // BuildStartInstructions_2_kilometers_en_US
+  suite.test(TEST_CASE(TestBuildStartInstructions_2_kilometers_en_US));
 
   return suite.tear_down();
 }
