@@ -50,10 +50,10 @@ namespace {
 
     for(size_t i = start; i < end; i++) {
       row->emplace_back(json::map({
-        {"origin", json::array({correlated[origin].latlng_.lng(), correlated[origin].latlng_.lat})},
-        {"destination", json::array({correlated[i].latlng_.lng(), correlated[i].latlng_.lat})},
+        {"origin", json::array({json::fp_t{correlated[origin].latlng_.lng(), 5}, json::fp_t{correlated[origin].latlng_.lat(), 5}})},
+        {"destination", json::array({json::fp_t{correlated[i].latlng_.lng(), 5}, json::fp_t{correlated[i].latlng_.lat(), 5}})},
         {"time", static_cast<uint64_t>(tds[i].time)},
-        {"distance", static_cast<float>(tds[i].dist)},
+        {"distance", static_cast<uint64_t>(tds[i].dist)},
       }));
     }
     return row;
