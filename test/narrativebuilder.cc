@@ -258,7 +258,7 @@ void SetExpectedManeuverInstructions(
 
 void TestBuildStartInstructions_0_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "NY";
+  std::string state_code = "PA";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -310,7 +310,7 @@ void TestBuildStartInstructions_1_miles_en_US() {
 
 void TestBuildStartInstructions_2_miles_en_US() {
   std::string country_code = "US";
-  std::string state_code = "NY";
+  std::string state_code = "PA";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -336,7 +336,7 @@ void TestBuildStartInstructions_2_miles_en_US() {
 
 void TestBuildStartInstructions_0_kilometers_en_US() {
   std::string country_code = "US";
-  std::string state_code = "NY";
+  std::string state_code = "PA";
 
   // Configure directions options
   DirectionsOptions directions_options;
@@ -388,7 +388,7 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
 
 void TestBuildStartInstructions_2_kilometers_en_US() {
   std::string country_code = "US";
-  std::string state_code = "NY";
+  std::string state_code = "PA";
 
   // Configure directions options
   DirectionsOptions directions_options;
