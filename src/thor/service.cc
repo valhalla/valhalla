@@ -47,13 +47,12 @@ namespace {
 
   json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
     auto row = json::array({});
-
     for(size_t i = start; i < end; i++) {
       row->emplace_back(json::map({
         {"origin", json::array({json::fp_t{correlated[origin].latlng_.lng(), 5}, json::fp_t{correlated[origin].latlng_.lat(), 5}})},
         {"destination", json::array({json::fp_t{correlated[i].latlng_.lng(), 5}, json::fp_t{correlated[i].latlng_.lat(), 5}})},
         {"time", static_cast<uint64_t>(tds[i].time)},
-        {"distance", static_cast<uint64_t>(tds[i].dist)},
+        {"distance", static_cast<uint64_t>(tds[i].dist)}
       }));
     }
     return row;
@@ -148,6 +147,8 @@ namespace {
         std::string costing = init_request(request);
 
         auto matrix = request.get_optional<std::string>("matrix_type");
+        LOG_INFO("Matrix Request Type :: " + *matrix);
+
         if (matrix) {
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
@@ -233,18 +234,17 @@ namespace {
     //TODO: Do we need to pass costing for multimodal?
     worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       json::MapPtr json;
-
-      thor::TimeDistanceMatrix* tdmatrix;
+      thor::TimeDistanceMatrix tdmatrix;
 
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(correlated, tdmatrix->OneToMany(0, correlated, reader, mode_costing, mode));
+         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode));
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(correlated, tdmatrix->ManyToOne(correlated.size()-1, correlated, reader, mode_costing, mode));
+         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size()-1, correlated, reader, mode_costing, mode));
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(correlated, tdmatrix->ManyToMany(correlated, reader, mode_costing, mode));
+         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode));
          break;
       }
 
