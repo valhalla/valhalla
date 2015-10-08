@@ -423,28 +423,43 @@ class CandidateGridQuery: public CandidateQuery
       if (!tile) {
         continue;
       }
+
       auto edge = tile->directededge(edgeid);
-      if (!filter || !filter(edge)) {
-        auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edgeid);
-        const auto& shape = edgeinfo_ptr->shape();
-        PointLL point;
-        float sq_distance;
-        size_t segment;
-        float offset;
+      // edgeinfo is needed here because it returns an unique ptr
+      auto edgeinfo = get_edgeinfo_ptr(*tile, edgeid);
+      const auto& shape = edgeinfo->shape();
+      PointLL point;
+      float sq_distance;
+      size_t segment;
+      float offset;
+      PathLocation correlated(Location(location, Location::StopType::BREAK));
+
+      // Flag for avoiding recomputing projection later
+      bool included = !filter || !filter(edge);
+
+      if (included) {
         std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         if (sq_distance <= sq_search_radius) {
-          PathLocation correlated(Location(location, Location::StopType::BREAK));
           correlated.CorrelateVertex(point);
           correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
-
-          const auto opp_edge_ptr = reader_.GetOpposingEdge(edgeid);
-          if (!filter || !filter(opp_edge_ptr)) {
-            auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-            correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
-          }
-
-          candidates.emplace_back(correlated, sq_distance);
         }
+      }
+
+      // Correlate its opp side
+      const auto opp_edge = reader_.GetOpposingEdge(edgeid);
+      if (!filter || !filter(opp_edge)) {
+        if (!included) {
+          std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
+        }
+        if (sq_distance <= sq_search_radius) {
+          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
+          correlated.CorrelateEdge({opp_edgeid, opp_edge->forward()? offset : 1.f - offset});
+          correlated.CorrelateVertex(point);
+        }
+      }
+
+      if (!correlated.edges().empty()) {
+        candidates.emplace_back(correlated, sq_distance);
       }
     }
     return candidates;
