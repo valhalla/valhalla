@@ -14,49 +14,44 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  //TODO: move json header to baldr
-  //TODO: make objects serialize themselves
-
   json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
     auto array = json::array({});
-    std::unordered_multimap<uint64_t, PointLL> ids;
     for(const auto& edge : location.edges()) {
       try {
         //get the osm way id
         auto tile = reader.GetGraphTile(edge.id);
         auto* directed_edge = tile->directededge(edge.id);
         auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
-        //check if we did this one before
-        auto range = ids.equal_range(edge_info->wayid());
-        bool duplicate = false;
-        for(auto id = range.first; id != range.second; ++id) {
-          if(id->second == location.vertex()) {
-            duplicate = true;
-            break;
-          }
-        }
-        //only serialize it if we didnt do it before
-        if(!duplicate) {
-          ids.emplace(edge_info->wayid(), location.vertex());
-          //they want MOAR!
-          if(verbose) {
-            array->emplace_back(
-              json::map({
-                {"way_id", edge_info->wayid()},
-                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
-              })
-            );
-          }//spare the details
-          else {
-            array->emplace_back(
-              json::map({
-                {"way_id", edge_info->wayid()},
-                {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
-                {"correlated_lon", json::fp_t{location.vertex().lng(), 6}}
-              })
-            );
-          }
+        //they want MOAR!
+        if(verbose) {
+          array->emplace_back(
+            json::map({
+              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
+              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}},
+              {"side_of_street",
+                edge.sos == PathLocation::LEFT ? std::string("left") :
+                  (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
+              },
+              {"percent_along", json::fp_t{edge.dist, 5} },
+              {"edge_id", edge.id.json()},
+              {"edge", directed_edge->json()},
+              {"edge_info", edge_info->json()},
+            })
+          );
+        }//they want it lean and mean
+        else {
+          array->emplace_back(
+            json::map({
+              {"way_id", edge_info->wayid()},
+              {"correlated_lat", json::fp_t{location.vertex().lat(), 6}},
+              {"correlated_lon", json::fp_t{location.vertex().lng(), 6}},
+              {"side_of_street",
+                edge.sos == PathLocation::LEFT ? std::string("left") :
+                  (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))
+              },
+              {"percent_along", json::fp_t{edge.dist, 5} },
+            })
+          );
         }
       }
       catch(...) {
@@ -68,20 +63,52 @@ namespace {
   }
 
   json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
-    return json::map({
-      {"ways", serialize_edges(location, reader, verbose)},
+    //serialze all the edges
+    auto m = json::map({
+      {"edges", serialize_edges(location, reader, verbose)},
       {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fp_t{location.latlng_.lng(), 6}}
+      {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
     });
+
+    //serialize the node
+    GraphId node;
+    if(location.IsNode()) {
+      for(const auto& e : location.edges()) {
+        if(e.dist == 1.f) {
+          node = reader.GetGraphTile(e.id)->directededge(e.id)->endnode();
+          const GraphTile* tile = reader.GetGraphTile(node);
+          auto* node_info = tile->node(node);
+          if(verbose)
+            m->emplace("node", node_info->json(tile));
+          else {
+            m->emplace("node", json::map({
+              {"lon", json::fp_t{node_info->latlng().first, 6}},
+              {"lat", json::fp_t{node_info->latlng().second, 6}},
+              //TODO: osm_id
+            }));
+          }
+          break;
+        }
+      }
+    }//no node
+    else
+      m->emplace("node", static_cast<nullptr_t>(nullptr));
+    if(verbose)
+      m->emplace("node_id", node.json());
+
+    return m;
   }
 
-  json::MapPtr serialize(const PointLL& ll, const std::string& reason) {
-    return json::map({
-      {"ways", static_cast<std::nullptr_t>(nullptr)},
+  json::MapPtr serialize(const PointLL& ll, const std::string& reason, bool verbose) {
+    auto m = json::map({
+      {"edges", static_cast<std::nullptr_t>(nullptr)},
+      {"node", static_cast<std::nullptr_t>(nullptr)},
       {"input_lat", json::fp_t{ll.lat(), 6}},
       {"input_lon", json::fp_t{ll.lng(), 6}},
-      {"reason", reason}
     });
+    if(verbose)
+      m->emplace("reason", reason);
+    return m;
   }
 }
 
@@ -91,13 +118,14 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::locate(const boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //correlate the various locations to the underlying graph
       auto json = json::array({});
+      auto verbose = request.get<bool>("verbose", false);
       for(const auto& location : locations) {
         try {
           auto correlated = loki::Search(location, reader, costing_filter);
-          json->emplace_back(serialize(correlated, reader, request.get<bool>("verbose", false)));
+          json->emplace_back(serialize(correlated, reader, verbose));
         }
         catch(const std::exception& e) {
-          json->emplace_back(serialize(location.latlng_, e.what()));
+          json->emplace_back(serialize(location.latlng_, e.what(), verbose));
         }
       }
 
@@ -116,5 +144,6 @@ namespace valhalla {
       result.messages.emplace_back(response.to_string());
       return result;
     }
+
   }
 }
