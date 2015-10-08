@@ -426,6 +426,7 @@ class CandidateGridQuery: public CandidateQuery
   Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) const override
   {
     std::vector<Candidate> candidates;
+    std::unordered_set<GraphId> visited_nodes;
     DistanceApproximator approximator(location);
     auto range = ExtendByMeters(location, std::sqrt(sq_search_radius));
 
@@ -435,7 +436,9 @@ class CandidateGridQuery: public CandidateQuery
         continue;
       }
 
-      auto edge = tile->directededge(edgeid);
+      const auto edge = tile->directededge(edgeid);
+      const auto opp_edge = reader_.GetOpposingEdge(edgeid);
+
       // edgeinfo is needed here because it returns an unique ptr
       auto edgeinfo = get_edgeinfo_ptr(*tile, edgeid);
       const auto& shape = edgeinfo->shape();
@@ -443,6 +446,7 @@ class CandidateGridQuery: public CandidateQuery
       float sq_distance;
       size_t segment;
       float offset;
+      GraphId snapped_node;
       PathLocation correlated(Location(location, Location::StopType::BREAK));
 
       // Flag for avoiding recomputing projection later
@@ -451,26 +455,41 @@ class CandidateGridQuery: public CandidateQuery
       if (included) {
         std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         if (sq_distance <= sq_search_radius) {
+          float dist = edge->forward()? offset : 1.f - offset;
+          if (dist == 1.f) {
+            snapped_node = edge->endnode();
+          } else if (dist == 0.f) {
+            snapped_node = opp_edge->endnode();
+          }
+          correlated.CorrelateEdge({edgeid, dist});
           correlated.CorrelateVertex(point);
-          correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
         }
       }
 
       // Correlate its opp side
-      const auto opp_edge = reader_.GetOpposingEdge(edgeid);
       if (!filter || !filter(opp_edge)) {
         if (!included) {
           std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         }
         if (sq_distance <= sq_search_radius) {
+          float dist = opp_edge->forward()? offset : 1.f - offset;
+          if (dist == 1.f) {
+            snapped_node = opp_edge->endnode();
+          } else if (dist == 0.f) {
+            snapped_node = edge->endnode();
+          }
           auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-          correlated.CorrelateEdge({opp_edgeid, opp_edge->forward()? offset : 1.f - offset});
+          correlated.CorrelateEdge({opp_edgeid, dist});
           correlated.CorrelateVertex(point);
         }
       }
 
       if (!correlated.edges().empty()) {
-        candidates.emplace_back(correlated, sq_distance);
+        // Add back if it is an edge correlated or it's a node correlated
+        // but it's not added yet
+        if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
+          candidates.emplace_back(correlated, sq_distance);
+        }
       }
     }
     return candidates;
