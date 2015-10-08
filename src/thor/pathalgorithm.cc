@@ -195,6 +195,7 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
 
     // Expand from end node.
     uint32_t shortcuts = 0;
+    uint32_t max_shortcut_length = static_cast<uint32_t>(dist2dest * 0.5f);
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
     const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
     for (uint32_t i = 0; i < nodeinfo->edge_count();
@@ -207,11 +208,13 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
         continue;
       }
 
-      // Skip shortcut edges when near the destination.
-      // TODO - do not think this is needed - moved this out of autocost.
-      // If needed should base it on a hierarchy limit...
-      if (directededge->is_shortcut() && dist2dest < 10000.0f)
+      // Skip shortcut edges when near the destination. Always skip within
+      // 10km but also reject long shortcut edges outside this distance.
+      // TODO - configure this distance based on density?
+      if (directededge->is_shortcut() && (dist2dest < 10000.0f ||
+          directededge->length() > max_shortcut_length)) {
         continue;
+      }
 
       // Skip any superseded edges that match the shortcut mask. Also skip
       // if no access is allowed to this edge (based on costing method)
