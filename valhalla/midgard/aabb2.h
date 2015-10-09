@@ -153,7 +153,7 @@ class AABB2 {
    * @return  Returns true if the circle intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersects(const coord_t& center, const x_t radius) const;
+  bool Intersects(const coord_t& center, const float radius) const;
 
   /**
    * Gets the width of the bounding box.

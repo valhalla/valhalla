@@ -173,7 +173,7 @@ bool AABB2<coord_t>::Intersects(const coord_t& a, const coord_t& b) const {
 }
 
 template <class coord_t>
-bool AABB2<coord_t>::Intersects(const coord_t& c, x_t r) const {
+bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
   // Trivial case - center of circle is within the bounding box
   if (Contains(c))
     return true;
