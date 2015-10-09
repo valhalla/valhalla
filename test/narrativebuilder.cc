@@ -296,6 +296,33 @@ void PopulateDestinationManeuverList_3(std::list<Maneuver>& maneuvers,
                    0, 0, 0, "", "", "", 0);
 }
 
+void PopulateContinueManeuverList_0(std::list<Maneuver>& maneuvers,
+                                    const std::string& country_code,
+                                    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kContinue, { }, { }, { }, "",
+                   0.097000, 26, 0, Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 291, 323, 1,
+                   3, 3, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 0, 0, "", "", "", 0);
+}
+
+void PopulateContinueManeuverList_1(std::list<Maneuver>& maneuvers,
+                                    const std::string& country_code,
+                                    const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kContinue, { "10th Avenue" },
+                   { }, { }, "", 0.481000, 34, 6,
+                   Maneuver::RelativeDirection::kKeepStraight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 185, 218,
+                   2, 5, 4, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 1, 0, "", "", "", 0);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -630,6 +657,67 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
            static_cast<EnhancedTripPath*>(&path));
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// FormContinueInstruction
+// 0 "Continue."
+// 0 "Continue."
+// 0 "Continue for <DISTANCE>."
+void TestBuildContinueInstructions_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateContinueManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateContinueManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Continue.",
+      "Continue.",
+      "Continue for 300 feet.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormContinueInstruction
+// 1 "Continue on <STREET_NAMES>."
+// 1 "Continue on <STREET_NAMES(1)>."
+// 1 "Continue on <STREET_NAMES(2)> for <DISTANCE>."
+void TestBuildContinueInstructions_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateContinueManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateContinueManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Continue on 10th Avenue.",
+      "Continue on 10th Avenue.",
+      "Continue on 10th Avenue for 3 tenths of a mile.",
+      "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
 
 // FormDestinati onInstruction
 Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
@@ -1626,6 +1714,12 @@ int main() {
 
   // BuildDestinationInstructions_3_miles_en_US
   suite.test(TEST_CASE(TestBuildDestinationInstructions_3_miles_en_US));
+
+  // BuildContinueInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildContinueInstructions_0_miles_en_US));
+
+  // BuildContinueInstructions_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildContinueInstructions_1_miles_en_US));
 
   return suite.tear_down();
 }
