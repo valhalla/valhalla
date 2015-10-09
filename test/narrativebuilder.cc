@@ -5,7 +5,8 @@
 #include "valhalla/odin/sign.h"
 #include "valhalla/odin/signs.h"
 #include "valhalla/odin/narrativebuilder.h"
-
+#include <valhalla/proto/trippath.pb.h>
+#include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/baldr/verbal_text_formatter_factory.h>
 
 using namespace std;
@@ -243,6 +244,58 @@ void PopulateStartManeuverList_2(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 1, 0, "", "", "", 0);
 }
 
+void PopulateDestinationManeuverList_0(std::list<Maneuver>& maneuvers,
+                                       const std::string& country_code,
+                                       const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kDestination, { }, { }, { },
+                   "", 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 6, 6,
+                   7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0,
+                   0, 0, 0, "", "", "", 0);
+}
+
+void PopulateDestinationManeuverList_1(std::list<Maneuver>& maneuvers,
+                                       const std::string& country_code,
+                                       const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kDestination, { }, { }, { }, "",
+                   0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 120,
+                   120, 1756, 1756, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 0, 0, 0, 0, 0, "", "", "", 0);
+}
+
+void PopulateDestinationManeuverList_2(std::list<Maneuver>& maneuvers,
+                                       const std::string& country_code,
+                                       const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kDestinationRight, { }, { },
+                   { }, "", 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0,
+                   0, 0, 0, "", "", "", 0);
+}
+
+void PopulateDestinationManeuverList_3(std::list<Maneuver>& maneuvers,
+                                       const std::string& country_code,
+                                       const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kDestinationLeft, { }, { },
+                   { }, "", 0.000000, 0, 0, Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorth, 0, 0, 4, 4,
+                   6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 0, 0,
+                   0, 0, 0, "", "", "", 0);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -413,6 +466,172 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// FormDestinationInstruction
+// 0 "You have arrived at your destination."
+// 0 "You will arrive at your destination."
+// 0 "You have arrived at your destination."
+void TestBuildDestinationInstructions_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateDestinationManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateDestinationManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "You have arrived at your destination.",
+      "You will arrive at your destination.",
+      "You have arrived at your destination.",
+      "");
+
+  // Add location info to trip path
+  TripPath path;
+  TripPath_Location* location;
+  // origin
+  location = path.add_location();
+  // destination
+  location = path.add_location();
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers,
+           static_cast<EnhancedTripPath*>(&path));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormDestinationInstruction
+// 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+// 1 "You will arrive at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+// 1 "You have arrived at <LOCATION_NAME|LOCATION_STREET_ADDRESS>."
+void TestBuildDestinationInstructions_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateDestinationManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateDestinationManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "You have arrived at 3206 Powelton Avenue.",
+      "You will arrive at 32 o6 Powelton Avenue.",
+      "You have arrived at 32 o6 Powelton Avenue.",
+      "");
+
+  // Add location info to trip path
+  TripPath path;
+  TripPath_Location* location;
+  // origin
+  location = path.add_location();
+  // destination
+  location = path.add_location();
+  location->set_street("3206 Powelton Avenue");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers,
+           static_cast<EnhancedTripPath*>(&path));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormDestinationInstruction
+// 2 "Your destination is on the <SOS>."
+// 2 "Your destination will be on the <SOS>."
+// 2 "Your destination is on the <SOS>."
+void TestBuildDestinationInstructions_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateDestinationManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateDestinationManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Your destination is on the right.",
+      "Your destination will be on the right.",
+      "Your destination is on the right.",
+      "");
+
+  // Add location info to trip path
+  TripPath path;
+  TripPath_Location* location;
+  // origin
+  location = path.add_location();
+  // destination
+  location = path.add_location();
+  location->set_side_of_street(TripPath_Location_SideOfStreet_kRight);
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers,
+           static_cast<EnhancedTripPath*>(&path));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormDestinationInstruction
+// 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+// 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> will be on the <SOS>"
+// 3 "<LOCATION_NAME|LOCATION_STREET_ADDRESS> is on the <SOS>."
+void TestBuildDestinationInstructions_3_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure start maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateDestinationManeuverList_3(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateDestinationManeuverList_3(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Lancaster Brewing Company is on the left.",
+      "Lancaster Brewing Company will be on the left.",
+      "Lancaster Brewing Company is on the left.",
+      "");
+
+  // Add location info to trip path
+  TripPath path;
+  TripPath_Location* location;
+  // origin
+  location = path.add_location();
+  // destination
+  location = path.add_location();
+  location->set_name("Lancaster Brewing Company");
+  location->set_side_of_street(TripPath_Location_SideOfStreet_kLeft);
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers,
+           static_cast<EnhancedTripPath*>(&path));
+}
+
+
+// FormDestinati onInstruction
 Maneuver CreateVerbalPostManeuver(vector<std::string> street_names,
                                   float kilometers,
                                   TripDirections_Maneuver_Type type =
@@ -1395,6 +1614,18 @@ int main() {
 
   // BuildStartInstructions_2_kilometers_en_US
   suite.test(TEST_CASE(TestBuildStartInstructions_2_kilometers_en_US));
+
+  // BuildDestinationInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildDestinationInstructions_0_miles_en_US));
+
+  // BuildDestinationInstructions_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildDestinationInstructions_1_miles_en_US));
+
+  // BuildDestinationInstructions_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildDestinationInstructions_2_miles_en_US));
+
+  // BuildDestinationInstructions_3_miles_en_US
+  suite.test(TEST_CASE(TestBuildDestinationInstructions_3_miles_en_US));
 
   return suite.tear_down();
 }
