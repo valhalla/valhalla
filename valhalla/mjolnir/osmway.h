@@ -290,6 +290,19 @@ struct OSMWay {
   bool bike_forward() const;
 
   /**
+   * Sets the emergency_forward flag.
+   * @param  emergency_forward   Can an emergency vehicle drive in
+   *                             the forward direction?
+   */
+  void set_emergency_forward(const bool emergency_forward);
+
+  /**
+   * Get the emergency forward flag.
+   * @return  Returns emergency forward flag.
+   */
+  bool emergency_forward() const;
+
+  /**
    * Sets the auto_backward flag.
    * @param  auto_backward   Can you drive in the reverse direction?
    */
@@ -348,6 +361,19 @@ struct OSMWay {
    * @return  Returns bike backward flag.
    */
   bool bike_backward() const;
+
+  /**
+   * Sets the emergency_backward flag.
+   * @param  emergency_backward   Can an emergency vehicle drive
+   *                              in the reverse direction?
+   */
+  void set_emergency_backward(const bool emergency_backward);
+
+  /**
+   * Get the emergency backward flag.
+   * @return  Returns emergency backward flag.
+   */
+  bool emergency_backward() const;
 
   /**
    * Sets the destination_only flag.
@@ -692,18 +718,20 @@ struct OSMWay {
   // Access
   union WayAccess {
     struct Fields {
-      uint16_t auto_forward     :1;
-      uint16_t bus_forward      :1;
-      uint16_t taxi_forward     :1;
-      uint16_t truck_forward    :1;
-      uint16_t bike_forward     :1;
-      uint16_t auto_backward    :1;
-      uint16_t bus_backward     :1;
-      uint16_t taxi_backward    :1;
-      uint16_t truck_backward   :1;
-      uint16_t bike_backward    :1;
-      uint16_t pedestrian       :1;
-      uint16_t spare            :5;
+      uint16_t auto_forward       :1;
+      uint16_t bus_forward        :1;
+      uint16_t taxi_forward       :1;
+      uint16_t truck_forward      :1;
+      uint16_t bike_forward       :1;
+      uint16_t emergency_forward  :1;
+      uint16_t auto_backward      :1;
+      uint16_t bus_backward       :1;
+      uint16_t taxi_backward      :1;
+      uint16_t truck_backward     :1;
+      uint16_t bike_backward      :1;
+      uint16_t emergency_backward :1;
+      uint16_t pedestrian         :1;
+      uint16_t spare              :3;
     } fields;
     uint16_t v;
   };
