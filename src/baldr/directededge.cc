@@ -14,16 +14,16 @@ json::MapPtr bike_network_json(uint8_t mask) {
   });
 }
 
-json::MapPtr access_json(Access a) {
+json::MapPtr access_json(uint32_t access) {
   return json::map({
-    {"bicycle", static_cast<bool>(a.fields.bicycle)},
-    {"bus", static_cast<bool>(a.fields.bus)},
-    {"car", static_cast<bool>(a.fields.car)},
-    {"emergency", static_cast<bool>(a.fields.emergency)},
-    {"HOV", static_cast<bool>(a.fields.hov)},
-    {"pedestrian", static_cast<bool>(a.fields.pedestrian)},
-    {"taxi", static_cast<bool>(a.fields.taxi)},
-    {"truck", static_cast<bool>(a.fields.truck)},
+    {"bicycle", static_cast<bool>(access && kBicycleAccess)},
+    {"bus", static_cast<bool>(access && kBusAccess)},
+    {"car", static_cast<bool>(access && kAutoAccess)},
+    {"emergency", static_cast<bool>(access && kEmergencyAccess)},
+    {"HOV", static_cast<bool>(access && kHOVAccess)},
+    {"pedestrian", static_cast<bool>(access && kPedestrianAccess)},
+    {"taxi", static_cast<bool>(access && kTaxiAccess)},
+    {"truck", static_cast<bool>(access && kTruckAccess)},
   });
 }
 
@@ -36,8 +36,7 @@ namespace baldr {
 DirectedEdge::DirectedEdge()
     : dataoffsets_{},
       geoattributes_{0,6}, //grade of 6 means flat
-      forwardaccess_{},
-      reverseaccess_{},
+      access_{},
       speed_(0),
       classification_{},
       attributes_{},
@@ -54,32 +53,13 @@ GraphId DirectedEdge::endnode() const {
 // ------------------  Data offsets and flags for extended data -------------//
 
 // Get the offset to the common edge information.
-uint32_t DirectedEdge::edgeinfo_offset() const {
+uint64_t DirectedEdge::edgeinfo_offset() const {
   return dataoffsets_.edgeinfo_offset;
 }
 
-// Does this directed edge have general access conditions?
-bool DirectedEdge::access_conditions() const {
-  return dataoffsets_.access_conditions;
-}
-
-// Does this edge start a simple, timed turn restriction (from one
-// edge to another).
-bool DirectedEdge::start_ttr() const {
-  return dataoffsets_.start_ttr;
-}
-
-// Does this edge start a multi-edge turn restriction. These are restrictions
-// from one edge to another via one or more edges. Can include times.
-bool DirectedEdge::start_mer() const {
-  return dataoffsets_.start_mer;
-}
-
-// Does this edge end a multi-edge turn restriction. These are restrictions
-// from one edge to another via one or more edges. This is the end edge of
-// such a restriction. Can include times.
-bool DirectedEdge::end_mer() const {
-  return dataoffsets_.end_mer;
+// Get the general restriction or access condition (per mode) for this directed edge.
+uint64_t DirectedEdge::access_restriction() const {
+  return dataoffsets_.access_restriction;
 }
 
 // Does this directed edge have exit signs.
@@ -225,12 +205,12 @@ bool DirectedEdge::ctry_crossing() const {
 
 // Get the access modes in the forward direction (bit field).
 uint8_t DirectedEdge::forwardaccess() const {
-  return forwardaccess_.v;
+  return access_.forwardaccess;
 }
 
 // Get the access modes in the reverse direction (bit field).
 uint8_t DirectedEdge::reverseaccess() const {
-  return reverseaccess_.v;
+  return access_.reverseaccess;
 }
 
 // -------------------------------- Default speed -------------------------- //
@@ -346,10 +326,9 @@ json::MapPtr DirectedEdge::json() const {
     //{"opp_index", static_cast<bool>(attributes_.opp_index)},
     //{"edge_info_offset", static_cast<uint64_t>(dataoffsets_.edgeinfo_offset)},
     //{"restrictions", attributes_.restrictions},
-    {"access_conditions", static_cast<bool>(dataoffsets_.access_conditions)},
-    {"start_timed_turn_restriction", static_cast<bool>(dataoffsets_.start_ttr)},
-    {"start_multi_edge_restriction", static_cast<bool>(dataoffsets_.start_mer)},
-    {"end_multi_edge_restriction", static_cast<bool>(dataoffsets_.end_mer)},
+    {"access_restriction", static_cast<bool>(dataoffsets_.access_restriction)},
+    {"start_complex_restriction", static_cast<bool>(dataoffsets_.start_complex_restriction)},
+    {"end_complex_restriction", static_cast<bool>(dataoffsets_.end_complex_restriction)},
     {"has_exit_sign", static_cast<bool>(dataoffsets_.exitsign)},
     {"drive_on_right", static_cast<bool>(attributes_.drive_on_right)},
     {"ferry", static_cast<bool>(attributes_.ferry)},
@@ -375,7 +354,7 @@ json::MapPtr DirectedEdge::json() const {
       {"weighted_grade", json::fp_t{static_cast<double>(geoattributes_.weighted_grade - 6.5) / .6, 2}},
       //{"curvature", static_cast<uint64_t>(geoattributes_.curvature)},
     })},
-    {"access", access_json(forwardaccess_)},
+    {"access", access_json(access_.forwardaccess)},
     //{"access", access_json(reverseaccess_)},
     {"classification", json::map({
       {"classification", to_string(static_cast<RoadClass>(classification_.classification))},
@@ -402,8 +381,7 @@ const uint64_t DirectedEdge::internal_version() {
   DirectedEdge de;
   de.dataoffsets_ = {};
   de.geoattributes_ = {};
-  de.forwardaccess_ = {};
-  de.reverseaccess_ = {};
+  de.access_ = {};
   de.speed_ = 0;
   de.attributes_ = {};
   de.classification_ = {};
@@ -411,14 +389,12 @@ const uint64_t DirectedEdge::internal_version() {
   // DataOffsets
   de.dataoffsets_.edgeinfo_offset = ~de.dataoffsets_.edgeinfo_offset;
   boost::hash_combine(seed, ffs(de.dataoffsets_.edgeinfo_offset+1)-1);
-  de.dataoffsets_.access_conditions = ~de.dataoffsets_.access_conditions;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.access_conditions+1)-1);
-  de.dataoffsets_.start_ttr = ~de.dataoffsets_.start_ttr;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.start_ttr+1)-1);
-  de.dataoffsets_.start_mer = ~de.dataoffsets_.start_mer;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.start_mer+1)-1);
-  de.dataoffsets_.end_mer = ~de.dataoffsets_.end_mer;
-  boost::hash_combine(seed, ffs(de.dataoffsets_.end_mer+1)-1);
+  de.dataoffsets_.access_restriction = ~de.dataoffsets_.access_restriction;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.access_restriction+1)-1);
+  de.dataoffsets_.start_complex_restriction = ~de.dataoffsets_.start_complex_restriction;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.start_complex_restriction+1)-1);
+  de.dataoffsets_.end_complex_restriction = ~de.dataoffsets_.end_complex_restriction;
+  boost::hash_combine(seed, ffs(de.dataoffsets_.end_complex_restriction+1)-1);
   de.dataoffsets_.exitsign = ~de.dataoffsets_.exitsign;
   boost::hash_combine(seed, ffs(de.dataoffsets_.exitsign+1)-1);
   de.dataoffsets_.spare = ~de.dataoffsets_.spare;
@@ -479,22 +455,13 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.spare+1)-1);
 
   // Access
-  de.forwardaccess_.fields.car  = ~de.forwardaccess_.fields.car;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.car+1)-1);
-  de.forwardaccess_.fields.pedestrian  = ~de.forwardaccess_.fields.pedestrian;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.pedestrian+1)-1);
-  de.forwardaccess_.fields.bicycle  = ~de.forwardaccess_.fields.bicycle;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.bicycle+1)-1);
-  de.forwardaccess_.fields.truck  = ~de.forwardaccess_.fields.truck;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.truck+1)-1);
-  de.forwardaccess_.fields.emergency  = ~de.forwardaccess_.fields.emergency;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.emergency+1)-1);
-  de.forwardaccess_.fields.taxi  = ~de.forwardaccess_.fields.taxi;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.taxi+1)-1);
-  de.forwardaccess_.fields.bus  = ~de.forwardaccess_.fields.bus;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.bus+1)-1);
-  de.forwardaccess_.fields.hov  = ~de.forwardaccess_.fields.hov;
-  boost::hash_combine(seed,ffs(de.forwardaccess_.fields.hov+1)-1);
+  de.access_.forwardaccess  = ~de.access_.forwardaccess;
+  boost::hash_combine(seed,ffs(de.access_.forwardaccess+1)-1);
+  de.access_.reverseaccess  = ~de.access_.reverseaccess;
+  boost::hash_combine(seed,ffs(de.access_.reverseaccess+1)-1);
+
+  de.access_.truck_speed  = ~de.access_.truck_speed;
+  boost::hash_combine(seed,ffs(de.access_.truck_speed+1)-1);
 
   // Speed
   boost::hash_combine(seed,de.speed_);

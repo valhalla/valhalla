@@ -23,21 +23,6 @@ constexpr uint8_t kCoins  = 1; // Coins
 constexpr uint8_t kNotes  = 2; // Bills
 constexpr uint8_t kETC    = 4; // Electronic Toll Collector
 
-// Access structure used by NodeInfo and DirectedEdge
-union Access {
-  struct Fields {
-    uint8_t car          : 1; // Auto and light vehicle access
-    uint8_t pedestrian   : 1; // Pedestrian access
-    uint8_t bicycle      : 1; // Bicycle access
-    uint8_t truck        : 1; // Truck / heavy good vehicle access
-    uint8_t emergency    : 1; // Emergency vehicle access
-    uint8_t taxi         : 1; // Taxi access
-    uint8_t bus          : 1; // Bus access
-    uint8_t hov          : 1; // High occupancy vehicle access
-  } fields;
-  uint8_t v;
-};
-
 // Edge traversability
 enum class Traversability {
   kNone = 0,        // Edge is not traversable in either direction

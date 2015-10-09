@@ -71,7 +71,7 @@ class NodeInfo {
    * See graphconstants.h
    * @return  Returns the access bit mask indicating allowable modes.
    */
-  uint8_t access() const;
+  uint16_t access() const;
 
   /**
    * Get the intersection type.
@@ -214,7 +214,11 @@ class NodeInfo {
   NodeAttributes attributes_;
 
   // Node access (see graphconstants.h)
-  Access access_;
+  struct AllowedAccess {
+    uint16_t access : 12;
+    uint16_t spare  : 4;
+  };
+  AllowedAccess access_;
 
   // Intersection type. Classification of the intersection.
   // (see graphconstants.h)

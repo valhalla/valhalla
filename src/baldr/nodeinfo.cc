@@ -11,16 +11,16 @@ namespace {
 
 const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
 
-json::MapPtr access_json(Access a) {
+json::MapPtr access_json(uint16_t access) {
   return json::map({
-    {"bicycle", static_cast<bool>(a.fields.bicycle)},
-    {"bus", static_cast<bool>(a.fields.bus)},
-    {"car", static_cast<bool>(a.fields.car)},
-    {"emergency", static_cast<bool>(a.fields.emergency)},
-    {"HOV", static_cast<bool>(a.fields.hov)},
-    {"pedestrian", static_cast<bool>(a.fields.pedestrian)},
-    {"taxi", static_cast<bool>(a.fields.taxi)},
-    {"truck", static_cast<bool>(a.fields.truck)},
+    {"bicycle", static_cast<bool>(access && kBicycleAccess)},
+    {"bus", static_cast<bool>(access && kBusAccess)},
+    {"car", static_cast<bool>(access && kAutoAccess)},
+    {"emergency", static_cast<bool>(access && kEmergencyAccess)},
+    {"HOV", static_cast<bool>(access && kHOVAccess)},
+    {"pedestrian", static_cast<bool>(access && kPedestrianAccess)},
+    {"taxi", static_cast<bool>(access && kTaxiAccess)},
+    {"truck", static_cast<bool>(access && kTruckAccess)},
   });
 }
 
@@ -85,8 +85,8 @@ RoadClass NodeInfo::bestrc() const {
 
 // Get the access modes (bit mask) allowed to pass through the node.
 // See graphconstants.h
-uint8_t NodeInfo::access() const {
-  return access_.v;
+uint16_t NodeInfo::access() const {
+  return access_.access;
 }
 
 // Get the intersection type.
@@ -197,7 +197,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
     {"lat", json::fp_t{latlng_.second, 6}},
     {"best_road_class", to_string(static_cast<RoadClass>(attributes_.bestrc_))},
     {"edge_count", static_cast<uint64_t>(attributes_.edge_count_)},
-    {"access", access_json(access_)},
+    {"access", access_json(access_.access)},
     {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
     {"administrative", admin_json(tile->admininfo(admin_.admin_index), admin_.timezone)},
     {"child", static_cast<uint64_t>(type_.child)},
@@ -237,22 +237,10 @@ const uint64_t NodeInfo::internal_version() {
   boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
 
   // Access
-  ni.access_.fields.car  = ~ni.access_.fields.car;
-  boost::hash_combine(seed,ffs(ni.access_.fields.car+1)-1);
-  ni.access_.fields.pedestrian  = ~ni.access_.fields.pedestrian;
-  boost::hash_combine(seed,ffs(ni.access_.fields.pedestrian+1)-1);
-  ni.access_.fields.bicycle  = ~ni.access_.fields.bicycle;
-  boost::hash_combine(seed,ffs(ni.access_.fields.bicycle+1)-1);
-  ni.access_.fields.truck  = ~ni.access_.fields.truck;
-  boost::hash_combine(seed,ffs(ni.access_.fields.truck+1)-1);
-  ni.access_.fields.emergency  = ~ni.access_.fields.emergency;
-  boost::hash_combine(seed,ffs(ni.access_.fields.emergency+1)-1);
-  ni.access_.fields.taxi  = ~ni.access_.fields.taxi;
-  boost::hash_combine(seed,ffs(ni.access_.fields.taxi+1)-1);
-  ni.access_.fields.bus  = ~ni.access_.fields.bus;
-  boost::hash_combine(seed,ffs(ni.access_.fields.bus+1)-1);
-  ni.access_.fields.hov  = ~ni.access_.fields.hov;
-  boost::hash_combine(seed,ffs(ni.access_.fields.hov+1)-1);
+  ni.access_.access  = ~ni.access_.access;
+  boost::hash_combine(seed,ffs(ni.access_.access+1)-1);
+  ni.access_.spare  = ~ni.access_.spare;
+  boost::hash_combine(seed,ffs(ni.access_.spare+1)-1);
 
   boost::hash_combine(seed,ni.intersection_);
 
