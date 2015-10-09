@@ -183,6 +183,14 @@ T circular_range_clamp(T value, T lower, T upper) {
 }
 
 /**
+ * standard clamp
+ */
+template <class T>
+T clamp(T value, T lower, T upper) {
+  return std::max(std::min(value, upper), lower);
+}
+
+/**
  * Resample a polyline in spherical coordinates
  */
 template<class container_t>
