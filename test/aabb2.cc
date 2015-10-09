@@ -34,7 +34,7 @@ void TestContainsBb() {
 
 void TryIntesectsLn(const AABB2<Point2>& box, const Point2& a,
                     const Point2& b, bool expected) {
-  if (box.Intersect(a, b) != expected)
+  if (box.Intersects(a, b) != expected)
     throw runtime_error("Intersects line test failed");
 }
 
@@ -167,6 +167,23 @@ void TestVector() {
   TryTestVector(a, pts);
 }
 
+void TestIntersectsCircle() {
+  auto check = [](bool a, bool b){
+    if(a != b)
+      throw std::logic_error(a ? "Circle DOES intersect" : "Circle DOESNT intersect");
+  };
+
+  AABB2<Point2> box(-1, -1, 1, 1);
+  check(box.Intersects({0,     0},    1),   true);
+  check(box.Intersects({0,     0},    100), true);
+  check(box.Intersects({2,     1},    1),   true);
+  check(box.Intersects({-2,   -1},    1),   true);
+  check(box.Intersects({-1.5, -1.5},  0.1), false);
+  check(box.Intersects({0,     5},    4.1), true);
+  check(box.Intersects({2,    -2},    1.415), true);
+  check(box.Intersects({-2,    2},    1.413), false);
+}
+
 }
 
 int main() {
@@ -204,6 +221,8 @@ int main() {
 
   //Test vector.
   suite.test(TEST_CASE(TestVector));
+
+  suite.test(TEST_CASE(TestIntersectsCircle));
 
   return suite.tear_down();
 }
