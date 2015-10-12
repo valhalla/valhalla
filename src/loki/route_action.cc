@@ -92,7 +92,7 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("service_limits.max_distance." + request.get<std::string>("costing"));
+      auto max_distance = config.get<float>("service_limits." + request.get<std::string>("costing") + ".max_distance");
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
 
         //check connectivity
