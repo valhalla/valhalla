@@ -45,12 +45,16 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
+
+  //TODO: refactor to output input location list, change origin & destination to from_index & to_index and list the index #
   json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
       row->emplace_back(json::map({
         {"origin", json::array({json::fp_t{correlated[origin].latlng_.lng(), 5}, json::fp_t{correlated[origin].latlng_.lat(), 5}})},
         {"destination", json::array({json::fp_t{correlated[i].latlng_.lng(), 5}, json::fp_t{correlated[i].latlng_.lat(), 5}})},
+        //{"from_index", },
+        //{"to_index", },
         {"time", static_cast<uint64_t>(tds[i].time)},
         {"distance", static_cast<uint64_t>(tds[i].dist)}
       }));
@@ -60,6 +64,7 @@ namespace {
 
   //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
   // {
+  //   input_locations: [{},{},{}],
   //   one_to_many:
   //   [
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
@@ -147,7 +152,6 @@ namespace {
         std::string costing = init_request(request);
 
         auto matrix = request.get_optional<std::string>("matrix_type");
-        LOG_INFO("Matrix Request Type :: " + *matrix);
 
         if (matrix) {
           auto matrix_iter = MATRIX.find(*matrix);
@@ -155,10 +159,10 @@ namespace {
             return get_matrix(matrix_iter->second, costing, request, info);
           }
           else {
-            throw std::runtime_error("");
+            throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         }
-        return get_trip_path(costing, request, request_str);
+        return get_trip_path(costing, request_str);
 
       }
       catch(const std::exception& e) {
@@ -170,7 +174,7 @@ namespace {
       }
     }
 
-    worker_t::result_t get_trip_path(const std::string &costing, const boost::property_tree::ptree &request, const std::string &request_str){
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str){
       worker_t::result_t result{true};
       // Forward the original request
       result.messages.emplace_back(std::move(request_str));
