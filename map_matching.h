@@ -188,13 +188,16 @@ std::vector<const CandidateWrapper<Candidate>*>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
-             float search_radius)
+             float sq_search_radius)
 {
+  if (measurements.empty()) {
+    return {};
+  }
   mm.Clear();
   Time time;
   for (const auto& measurement : measurements) {
     const auto& candidates = cq.Query(measurement.lnglat,
-                                      search_radius,
+                                      sq_search_radius,
                                       mm.costing()->GetFilter());
     time = mm.AppendState(measurement, candidates);
   }
