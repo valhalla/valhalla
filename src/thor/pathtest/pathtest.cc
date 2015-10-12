@@ -402,7 +402,7 @@ int main(int argc, char *argv[]) {
   DirectionsOptions directions_options;
   directions_options.set_units(
       DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
-  directions_options.set_language("en_US");
+  directions_options.set_language("en-US");
 
   // Locations
   std::vector<Location> locations;
