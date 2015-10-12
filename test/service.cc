@@ -106,7 +106,7 @@ namespace {
         \"min_resample\": 10.0 \
       }, \
       \"costing_options\": { \"pedestrian\": {} } \
-        }";
+    }";
     boost::property_tree::json_parser::read_json(json, config);
 
     //service worker
