@@ -30,27 +30,38 @@ using namespace valhalla::thor;
 namespace bpo = boost::program_options;
 
 // Format the time string
-std::string GetFormattedTime(uint32_t seconds) {
-  if (seconds == 0) {
+std::string GetFormattedTime(uint32_t secs) {
+  if (secs == 0) {
     return "0";
   }
-  uint32_t hours = (uint32_t) seconds / 3600;
-  uint32_t minutes = ((uint32_t) (seconds / 60)) % 60;
-  std::string formattedTime = "";
-  // Hours
-  if (hours > 0) {
-    formattedTime += std::to_string(hours);
-    formattedTime += (hours == 1) ? " hour" : " hours";
-    if (minutes > 0) {
-      formattedTime += ", ";
-    }
-  }
-  // Minutes
-  if (minutes > 0) {
-    formattedTime += std::to_string(minutes);
-    formattedTime += (minutes == 1) ? " minute" : " minutes";
-  }
-  return formattedTime;
+  uint32_t hours   =  secs / 3600;
+  uint32_t minutes = (secs / 60) % 60;
+  uint32_t seconds =  secs % 60;
+  return std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds);
+}
+
+// Returns the costing method (created from the dynamic cost factory).
+// Get the costing options. Get the base options from the config and the
+// options for the specified costing method. Merge in any request costing
+// options that override those in the config.
+valhalla::sif::cost_ptr_t get_costing(CostFactory<DynamicCost> factory,
+                                      boost::property_tree::ptree& config,
+                                      boost::property_tree::ptree& request,
+                                      const std::string& costing) {
+ std::string method_options = "costing_options." + costing;
+ auto config_costing = config.get_child_optional(method_options);
+ if (!config_costing)
+   throw std::runtime_error("No costing method found for '" + costing + "'");
+ auto request_costing = request.get_child_optional(method_options);
+ if (request_costing) {
+   // If the request has any options for this costing type, merge the 2
+   // costing options - override any config options that are in the request.
+   // and add any request options not in the config.
+   for (const auto& r : *request_costing) {
+     config_costing->put_child(r.first, r.second);
+   }
+ }
+ return factory.Create(costing, *config_costing);
 }
 
 // Main method for testing time and distance matrix methods
@@ -101,7 +112,6 @@ int main(int argc, char *argv[]) {
     std::cout << options << "\n";
     return EXIT_SUCCESS;
   }
-
   if (vm.count("version")) {
     std::cout << "timedistance_test " << VERSION << "\n";
     return EXIT_SUCCESS;
@@ -169,19 +179,15 @@ int main(int argc, char *argv[]) {
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
-    mode_costing[0] = factory.Create("auto",
-                        pt.get_child("costing_options.auto"));
-    mode_costing[1] = factory.Create("pedestrian",
-                        pt.get_child("costing_options.pedestrian"));
-    mode_costing[2] = factory.Create("bicycle",
-                        pt.get_child("costing_options.bicycle"));
-    mode_costing[3] = factory.Create("transit",
-                        pt.get_child("costing_options.transit"));
+    mode_costing[0] = get_costing(factory, pt, json_ptree, "auto");
+    mode_costing[1] = get_costing(factory, pt, json_ptree, "pedestrian");
+    mode_costing[2] = get_costing(factory, pt, json_ptree, "bicycle");
+    mode_costing[3] = get_costing(factory, pt, json_ptree, "transit");
     mode = TravelMode::kPedestrian;
   } else {
     // Assign costing method
-    std::shared_ptr<DynamicCost> cost = factory.Create(
-        routetype, pt.get_child("costing_options." + routetype));
+    std::shared_ptr<DynamicCost> cost = get_costing(factory, pt,
+                                  json_ptree, routetype);
     mode = cost->travelmode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
   }
@@ -267,7 +273,6 @@ int main(int argc, char *argv[]) {
       idx++;
     }
   }
-
   return EXIT_SUCCESS;
 }
 

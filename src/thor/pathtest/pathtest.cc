@@ -300,7 +300,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   return trip_directions;
 }
 
-// Retuirns the costing method (created from the dynamic cost factory).
+// Returns the costing method (created from the dynamic cost factory).
 // Get the costing options. Get the base options from the config and the
 // options for the specified costing method. Merge in any request costing
 // options that override those in the config.
