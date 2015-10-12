@@ -64,10 +64,10 @@ namespace valhalla {
 
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("time_distance_matrix_limits." + matrix_type->first + ".max_distance." + request.get<std::string>("costing"));
-      auto max_locations = config.get<int>("time_distance_matrix_limits." + matrix_type->first + ".max_locations");
+      auto max_distance = config.get<float>("matrix_limits." + request.get<std::string>("costing") + ".max_distance");
+      auto max_route_locations = config.get<size_t>("matrix_limits." + request.get<std::string>("costing") + ".max_route_locations");
       //check that location size does not exceed max.
-      if (locations.size() > max_locations)
+      if (locations.size() > max_route_locations)
         throw std::runtime_error("Number of locations exceeds the max location limit.");
 
       LOG_INFO("Location size::" + std::to_string(locations.size()));
