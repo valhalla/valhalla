@@ -3,9 +3,9 @@
 #include <algorithm>
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/thor/pathinfo.h>
-#include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/timedistancematrix.h>
 
 #include "viterbi_search.h"
@@ -23,7 +23,8 @@ struct Measurement {
 };
 
 
-using CandidateRoute = std::pair<CandidateId, std::vector<thor::PathInfo>>;
+constexpr float kBreakageDistance = 2000.f;  // meters
+constexpr float kClosestDistance = 0.f;  // meters
 
 
 class MapMatching: public ViterbiSearch<Candidate>
@@ -107,28 +108,28 @@ class MapMatching: public ViterbiSearch<Candidate>
     return static_cast<float>(path.back().elapsed_time);
   }
 
-  inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left, const CandidateWrapper<Candidate>& right) const
+  inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
+                                   const CandidateWrapper<Candidate>& right) const
   {
-    const auto &left_mmt = measurements_[left.time()],
-              &right_mmt = measurements_[right.time()];
-    return left_mmt.lnglat.Distance(right_mmt.lnglat);
+    const auto &left_pt = left.candidate().pathlocation().vertex(),
+              &right_pt = right.candidate().pathlocation().vertex();
+    return left_pt.Distance(right_pt);
+  }
+
+  inline float GreatCircleDistance(const Measurement& left,
+                                   const Measurement& right) const
+  {
+    return left.lnglat.Distance(right.lnglat);
   }
 
   // It's slow. Don't use it
   float TransitionCost2(const CandidateWrapper<Candidate>& left,
                         const CandidateWrapper<Candidate>& right) const
   {
-    auto route_distance = GetBestPathDistance(left, right);
-    const auto &left_measurement = measurements_[left.time()],
-              &right_measurement = measurements_[right.time()];
-    const auto great_circle_distance = left_measurement.lnglat.Distance(right_measurement.lnglat);
-    return std::abs(route_distance - great_circle_distance) / beta_;
-  }
-
-  float MaxRouteDistance(const CandidateWrapper<Candidate>& left,
-                         const CandidateWrapper<Candidate>& right) const
-  {
-    return std::min(2000.f, GreatCircleDistance(left, right) * 2);
+    const auto &left_mmt = measurements_[left.time()],
+              &right_mmt = measurements_[right.time()];
+    auto delta = GetBestPathDistance(left, right) - GreatCircleDistance(left_mmt, right_mmt);
+    return std::abs(delta) / beta_;
   }
 
   float TransitionCost(const CandidateWrapper<Candidate>& left,
@@ -141,6 +142,25 @@ class MapMatching: public ViterbiSearch<Candidate>
       return cached->second;
     }
 
+    // Handle cases when two measurements are too far or too close
+    const auto &left_mmt = measurements_[left.time()],
+              &right_mmt = measurements_[right.time()];
+    auto mmt_distance = GreatCircleDistance(left_mmt, right_mmt);
+    if (mmt_distance > kBreakageDistance) {
+      for (const auto& candidate_ptr : state(right.time())) {
+        auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
+        transition_cache_[p] = -1.f;
+      }
+      return -1.f;
+    } else if (mmt_distance <= kClosestDistance) {
+      for (const auto& candidate_ptr : state(right.time())) {
+        auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
+        transition_cache_[p] = 0.f;
+      }
+      return 0.f;
+    }
+    auto max_route_distance = std::min(mmt_distance * 2, kBreakageDistance);
+
     // Prepare locations
     const auto& candidates = state(right.time());
     std::vector<PathLocation> locations;
@@ -151,10 +171,6 @@ class MapMatching: public ViterbiSearch<Candidate>
     }
 
     // Route
-    auto max_route_distance = MaxRouteDistance(left, right);
-    if (max_route_distance <= 0.f) {
-      return 0.f;
-    }
     thor::TimeDistanceMatrix pa(max_route_distance);
     const auto& timedistances = pa.OneToMany(0, locations, graphreader_, mode_costing_, mode_);
     assert(timedistances.size() == candidates.size() + 1);
@@ -163,14 +179,15 @@ class MapMatching: public ViterbiSearch<Candidate>
     auto great_circle_distance = GreatCircleDistance(left, right);
     auto candidate_itr = candidates.begin();
     for (auto td_itr = timedistances.begin() + 1; td_itr != timedistances.end(); td_itr++, candidate_itr++) {
-      CandidatePairId pair = candidateid_make_pair(left.id(), (*candidate_itr)->id());
       // dist <= 0 means path not found
       float cost = td_itr->dist <= 0? -1.f : std::abs(td_itr->dist - great_circle_distance) / beta_;
-      transition_cache_[pair] = cost;
+      auto pt = (*candidate_itr)->candidate().pathlocation().vertex();
+      auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
+      transition_cache_[p] = cost;
     }
 
     // Must be there
-    assert(transition_cache_.find(pair)!=transition_cache_.end());
+    assert(transition_cache_.find(pair) != transition_cache_.end());
 
     return transition_cache_[pair];
   }
