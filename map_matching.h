@@ -3,13 +3,10 @@
 #include <algorithm>
 
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/thor/pathinfo.h>
-#include <valhalla/thor/timedistancematrix.h>
 
 #include "viterbi_search.h"
 #include "edge_search.h"
+#include "sp.h"
 
 using namespace valhalla;
 
@@ -93,21 +90,6 @@ class MapMatching: public ViterbiSearch<Candidate>
   mutable std::unordered_map<CandidatePairId, float> transition_cache_;
 
  protected:
-  float GetBestPathDistance(const CandidateWrapper<Candidate>& left,
-                            const CandidateWrapper<Candidate>& right) const
-  {
-    thor::PathAlgorithm pa;
-    auto path = pa.GetBestPath(left.candidate().pathlocation(),
-                               right.candidate().pathlocation(),
-                               graphreader_,
-                               mode_costing_,
-                               mode_);
-    if (path.empty()) {
-      return -1.f;
-    }
-    return static_cast<float>(path.back().elapsed_time);
-  }
-
   inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
                                    const CandidateWrapper<Candidate>& right) const
   {
@@ -120,16 +102,6 @@ class MapMatching: public ViterbiSearch<Candidate>
                                    const Measurement& right) const
   {
     return left.lnglat.Distance(right.lnglat);
-  }
-
-  // It's slow. Don't use it
-  float TransitionCost2(const CandidateWrapper<Candidate>& left,
-                        const CandidateWrapper<Candidate>& right) const
-  {
-    const auto &left_mmt = measurements_[left.time()],
-              &right_mmt = measurements_[right.time()];
-    auto delta = GetBestPathDistance(left, right) - GreatCircleDistance(left_mmt, right_mmt);
-    return std::abs(delta) / beta_;
   }
 
   float TransitionCost(const CandidateWrapper<Candidate>& left,
@@ -170,18 +142,17 @@ class MapMatching: public ViterbiSearch<Candidate>
       locations.push_back(candidate_ptr->candidate().pathlocation());
     }
 
-    // Route
-    thor::TimeDistanceMatrix pa(max_route_distance);
-    const auto& timedistances = pa.OneToMany(0, locations, graphreader_, mode_costing_, mode_);
-    assert(timedistances.size() == candidates.size() + 1);
-
-    // Cache results
-    auto great_circle_distance = GreatCircleDistance(left, right);
+    // Route and cache results
+    LabelSet labelset(std::ceil(max_route_distance));
+    auto results = find_shortest_path(graphreader_, locations, 0, labelset);
     auto candidate_itr = candidates.begin();
-    for (auto td_itr = timedistances.begin() + 1; td_itr != timedistances.end(); td_itr++, candidate_itr++) {
-      // dist <= 0 means path not found
-      float cost = td_itr->dist <= 0? -1.f : std::abs(td_itr->dist - great_circle_distance) / beta_;
-      auto pt = (*candidate_itr)->candidate().pathlocation().vertex();
+    for (uint16_t dest = 1; dest < locations.size(); dest++, candidate_itr++) {
+      float cost = -1.f;
+      auto it = results.find(dest);
+      if (it != results.end()) {
+        auto route_distance = labelset.label(it->second).cost;
+        cost = std::abs(route_distance - mmt_distance) / beta_;
+      }
       auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
       transition_cache_[p] = cost;
     }
