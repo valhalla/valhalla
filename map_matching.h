@@ -54,6 +54,15 @@ class MapMatching: public ViterbiSearch<Candidate>
     Clear();
   }
 
+  void Clear() {
+    measurements_.clear();
+    // TODO do we need clear this?
+    // const std::shared_ptr<DynamicCost>* mode_costing_;
+    transition_cache_.clear();
+    // TODO avoid this?
+    ViterbiSearch<Candidate>::Clear();
+  }
+
   Time AppendState(const Measurement& measurement,
                    const std::vector<Candidate>& candidates)
   {
