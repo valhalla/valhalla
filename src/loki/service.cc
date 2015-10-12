@@ -93,8 +93,7 @@ namespace {
 
 namespace valhalla {
   namespace loki {
-    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")),
-      max_route_locations(config.get<size_t>("service_limits.max_route_locations")) {
+    loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")) {
 
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
@@ -162,6 +161,9 @@ namespace valhalla {
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
+      auto costing = request.get_optional<std::string>("costing");
+      auto max_route_locations = (costing ? config.get<size_t>("service_limits." + *costing + ".max_route_locations") : config.get<size_t>("service_limits.auto.max_route_locations"));
+
       if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
       for(const auto& location : *request_locations) {
@@ -179,7 +181,6 @@ namespace valhalla {
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
       //using the costing we can determine what type of edge filtering to use
-      auto costing = request.get_optional<std::string>("costing");
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {

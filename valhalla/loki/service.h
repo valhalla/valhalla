@@ -33,7 +33,6 @@ namespace valhalla {
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter costing_filter;
       valhalla::baldr::GraphReader reader;
-      size_t max_route_locations;
     };
   }
 }
