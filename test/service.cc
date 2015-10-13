@@ -6,6 +6,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <thread>
 #include <unistd.h>
+#include <valhalla/midgard/logging.h>
 
 #include "loki/service.h"
 
@@ -39,11 +40,11 @@ namespace {
     http_request_t(GET, "/locate?json={\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
     http_request_t(POST, "/locate", "{\"locations\":[{\"lon\":0,\"lat\":90}], \"costing\": \"yak\"}"),
     http_request_t(GET, "/route?json={\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-      ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-      ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}"),
+        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
+        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}"),
     http_request_t(POST, "/route", "{\"locations\":[{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-      ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
-      ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}]}")
+        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}"
+        ",{\"lon\":0,\"lat\":90},{\"lon\":0,\"lat\":90}], \"costing\": \"auto\"}")
   };
 
   const std::vector<std::pair<uint16_t,std::string> > responses {
@@ -69,10 +70,10 @@ namespace {
     {400, std::string("No edge/node costing provided")},
     {400, std::string("Locations are in unconnected regions. Go check/edit the map at osm.org")},
     {400, std::string("Locations are in unconnected regions. Go check/edit the map at osm.org")},
-    {400, std::string("No such node (service_limits.yak.max_route_locations)")},
-    {400, std::string("No such node (service_limits.yak.max_route_locations)")},
-    {400, std::string("Exceeded max route locations of 20")},
-    {400, std::string("Exceeded max route locations of 20")}
+    {400, std::string("No such node (service_limits.yak.max_locations)")},
+    {400, std::string("No such node (service_limits.yak.max_locations)")},
+    {400, std::string("Exceeded max locations of 20")},
+    {400, std::string("Exceeded max locations of 20")}
   };
 
 
@@ -100,13 +101,13 @@ namespace {
       \"thor\": { \"service\": { \"proxy\": \"ipc://test_thor_proxy\" } }, \
       \"httpd\": { \"service\": { \"loopback\": \"ipc://test_loki_results\" } }, \
       \"service_limits\": { \
-        \"auto\": { \"max_distance\": 5000000.0, \"max_route_locations\": 20 }, \
-        \"pedestrian\": { \"max_distance\": 250000.0, \"max_route_locations\": 50 }, \
+        \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
+        \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50 }, \
         \"max_shape\": 750000,\
         \"min_resample\": 10.0 \
       }, \
-      \"costing_options\": { \"pedestrian\": {} } \
-    }";
+     \"costing_options\": { \"auto\": {}, \"pedestrian\": {} } \
+      }";
     boost::property_tree::json_parser::read_json(json, config);
 
     //service worker
@@ -129,15 +130,16 @@ namespace {
           return std::make_pair<const void*, size_t>(nullptr, 0);
         //get the string of bytes to send formatted for http protocol
         request_str = request->to_string();
+        //LOG_INFO("Loki Test Request :: " + request_str + '\n');
         ++request;
         return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
       },
       [&request](const void* data, size_t size) {
         auto response = http_response_t::from_string(static_cast<const char*>(data), size);
         if(response.code != responses[request - requests.cbegin() - 1].first)
-          throw std::runtime_error("Unexpected response code");
+          throw std::runtime_error("Expected Response Code: '" + std::to_string(responses[request - requests.cbegin() - 1].first) +", Actual Response Code: " + std::to_string(response.code) + ", "+ response.body);
         if(response.body != responses[request - requests.cbegin() - 1].second)
-          throw std::runtime_error("Unexpected response body: " + response.body);
+          throw std::runtime_error("Expected Response: '" + responses[request - requests.cbegin() - 1].second +", Actual Response: " + std::to_string(responses[request - requests.cbegin() - 1].first) + ", " + response.body);
 
         return request != requests.cend();
       }, 1
@@ -161,4 +163,3 @@ int main(void) {
 
   return suite.tear_down();
 }
-
