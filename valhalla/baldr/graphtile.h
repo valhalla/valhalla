@@ -15,6 +15,8 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/util.h>
+
 #include <boost/shared_array.hpp>
 #include <memory>
 #include "signinfo.h"
@@ -249,6 +251,14 @@ class GraphTile {
   std::pair<TransitCalendar*, uint32_t> GetCalendarExceptions(
                 const uint32_t serviceid) const;
 
+  /**
+   * Get an iteratable list of GraphIds given a cell in the tile
+   * @param  column the cell's column
+   * @param  row the cell's row
+   * @return iterable container of graphids contained in the cell
+   */
+  midgard::iterable_t<GraphId> GetCell(size_t column, size_t row) const;
+
  protected:
 
   // Size of the tile in bytes
@@ -294,6 +304,10 @@ class GraphTile {
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
   Admin* admins_;
+
+  // List of edge graph ids. The list is broken up in cells which have
+  // indices in the tile header.
+  GraphId* edge_cells_;
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.

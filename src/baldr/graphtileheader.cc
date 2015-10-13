@@ -140,5 +140,18 @@ uint32_t GraphTileHeader::merlist_offset() const {
   return merlist_offset_;
 }
 
+// Get the offset to the timed restriction list. (TODO)
+uint32_t GraphTileHeader::timedres_offset() const {
+  return timedres_offset_;
+}
+
+// Get the offset to the given cell in the 5x5 grid.
+std::pair<uint32_t, uint32_t> GraphTileHeader::cell_offset(size_t column, size_t row) const {
+  auto i = row * 5 + column;
+  if(i > kCellCount)
+    throw std::runtime_error("Cell out of bounds");
+  return std::make_pair(cell_offsets_[i], cell_offsets_[i + 1]);
+}
+
 }
 }
