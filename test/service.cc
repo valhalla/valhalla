@@ -10,7 +10,6 @@
 
 #include "loki/service.h"
 
-
 using namespace valhalla;
 using namespace prime_server;
 

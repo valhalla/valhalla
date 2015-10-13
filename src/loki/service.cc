@@ -193,6 +193,7 @@ namespace valhalla {
         throw std::runtime_error("Insufficient number of locations provided");
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
+      //using the costing we can determine what type of edge filtering to use
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
