@@ -97,6 +97,16 @@ namespace {
 namespace valhalla {
   namespace loki {
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")) {
+      auto costing_options = config.get_child("costing_options");
+      for (const auto& kv : costing_options) {
+        auto max_locations = config.get_optional<std::string>("service_limits." + kv.first + ".max_locations");
+        if (!max_locations)
+          throw std::runtime_error("The config costing options for max_locations are incorrectly loaded.");
+
+        auto max_distance = config.get_optional<std::string>("service_limits." + kv.first + ".max_distance");
+        if (!max_distance)
+          throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
+      }
 
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
@@ -164,11 +174,14 @@ namespace valhalla {
       }
     }
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
+      auto costing = request.get_optional<std::string>("costing");
+      //using the costing we can determine what type of edge filtering to use
+      size_t max_locations = std::numeric_limits<size_t>::max(); //TODO: locate should really have a limit..
+      if (costing)
+        max_locations = config.get<size_t>("service_limits." + *costing + ".max_locations");
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
-      auto costing = request.get_optional<std::string>("costing");
-      auto max_route_locations = (costing ? config.get<size_t>("service_limits." + *costing + ".max_route_locations") : config.get<size_t>("service_limits.auto.max_route_locations"));
-
       if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter '" + std::string(action == VIAROUTE ? "loc'" : "locations'"));
       for(const auto& location : *request_locations) {
@@ -178,14 +191,13 @@ namespace valhalla {
         catch (...) {
           throw std::runtime_error("Failed to parse location");
         }
-        if(action != LOCATE && locations.size() > max_route_locations)
-          throw std::runtime_error("Exceeded max route locations of " + std::to_string(max_route_locations));
+        if(action != LOCATE && locations.size() > max_locations)
+          throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations));
       }
       if(locations.size() < (action == LOCATE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
-      //using the costing we can determine what type of edge filtering to use
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
