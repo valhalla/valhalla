@@ -62,8 +62,10 @@ namespace valhalla {
           throw std::runtime_error("Locations are in unconnected regions. Go check/edit the map at osm.org");
 
         //check if distance between latlngs exceed max distance limit for each mode of travel
-        auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
-        if (path_distance > max_distance)
+        auto path_distance = std::prev(location)->latlng_.Distance(location->latlng_);
+        max_distance-=path_distance;
+
+        if (max_distance < 0)
           throw std::runtime_error("Path distance exceeds the max distance limit.");
 
         LOG_INFO("location_distance::" + std::to_string(path_distance));
