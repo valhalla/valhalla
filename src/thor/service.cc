@@ -41,25 +41,62 @@ namespace {
     {"many_to_one", MANY_TO_ONE},
     {"many_to_many", MANY_TO_MANY}
   };
+  std::size_t tdindex = 0;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
+  json::ArrayPtr serialize_locations(const std::vector<PathLocation>& correlated) {
+    auto input_locs = json::array({});
+    for(size_t i = 0; i < correlated.size(); i++) {
+      input_locs->emplace_back(
+        json::map({
+          {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
+          {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
+        })
+      );
+    }
+    return input_locs;
+  }
 
-  //TODO: refactor to output input location list, change origin & destination to from_index & to_index and list the index #
   json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
-      row->emplace_back(json::map({
-        {"origin", json::array({json::fp_t{correlated[origin].latlng_.lng(), 5}, json::fp_t{correlated[origin].latlng_.lat(), 5}})},
-        {"destination", json::array({json::fp_t{correlated[i].latlng_.lng(), 5}, json::fp_t{correlated[i].latlng_.lat(), 5}})},
-        //{"from_index", },
-        //{"to_index", },
-        {"time", static_cast<uint64_t>(tds[i].time)},
-        {"distance", static_cast<uint64_t>(tds[i].dist)}
-      }));
+        row->emplace_back(json::map({
+          {"distance", static_cast<uint64_t>(tds[i].dist)},
+          {"time", static_cast<uint64_t>(tds[i].time)},
+          {"to_index", std::size_t(i)},
+          {"from_index", std::size_t(origin)}
+        }));
     }
     return row;
+  }
+
+  json::ArrayPtr serialize_column(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+    auto column = json::array({});
+    for(size_t i = start; i < end; i++) {
+      column->emplace_back(json::map({
+          {"distance", static_cast<uint64_t>(tds[origin].dist)},
+          {"time", static_cast<uint64_t>(tds[origin].time)},
+          {"to_index", std::size_t(i)},
+          {"from_index", std::size_t(origin)}
+        }));
+    }
+    return column;
+  }
+
+  json::ArrayPtr serialize_square(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+    auto square = json::array({});
+    for(size_t i = start; i < end; i++) {
+      square->emplace_back(json::map({
+          {"distance", static_cast<uint64_t>(tds[tdindex].dist)},
+          {"time", static_cast<uint64_t>(tds[tdindex].time)},
+          {"to_index", std::size_t(i)},
+          {"from_index", std::size_t(origin)}
+        }));
+        tdindex++;
+    }
+    return square;
   }
 
   //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
@@ -73,11 +110,13 @@ namespace {
   json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
     return json::map({
       {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size())})},
+      {"input_locations", json::array({serialize_locations(correlated)})}
     });
   }
 
   //Returns a column vector of computed time and distance from each location to the last (destination) location provided.
   // {
+  //   input_locations: [{},{},{}],
   //   many_to_one:
   //   [
   //     [{origin0,dest0,x,x}],
@@ -87,17 +126,19 @@ namespace {
   //   ]
   // }
   json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
-    json::ArrayPtr column_matrix;
+    json::ArrayPtr column_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i){
-      column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, correlated.size()));
+      column_matrix->emplace_back(serialize_column(correlated, tds, i, correlated.size()-1, correlated.size()));
     }
     return json::map({
       {"many_to_one", column_matrix},
+      {"input_locations", json::array({serialize_locations(correlated)})}
     });
   }
 
   //Returns a square matrix of computed time and distance from each location to every other location.
   // {
+  //   input_locations: [{},{},{}],
   //   many_to_many:
   //   [
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}],
@@ -107,12 +148,13 @@ namespace {
   //   ]
   // }
   json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
-    json::ArrayPtr square_matrix;
+    json::ArrayPtr square_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i){
-      square_matrix->emplace_back(serialize_row(correlated, tds, i, i, correlated.size()));
+      square_matrix->emplace_back(serialize_square(correlated, tds, i, 0, correlated.size()));
     }
     return json::map({
       {"many_to_many", square_matrix},
+      {"input_locations", json::array({serialize_locations(correlated)})}
     });
   }
 
