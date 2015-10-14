@@ -218,15 +218,28 @@ namespace {
 
     worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str){
       worker_t::result_t result{true};
+
       // Forward the original request
       result.messages.emplace_back(std::move(request_str));
 
       // For each pair of origin/destination
+      bool prior_is_node = false;
+      baldr::GraphId through_edge;
+      baldr::PathLocation& last_break_origin = correlated[0];
+      std::vector<baldr::PathLocation> through_loc;
+      std::vector<thor::PathInfo> path_edges;
       for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
         auto origin = *std::prev(path_location);
         auto destination = *path_location;
 
-        // Get the algorithm type
+        // Through edge is valid if last destination was "through"
+        if (through_edge.Is_Valid()) {
+          UpdateOrigin(origin, prior_is_node, through_edge);
+        } else {
+          last_break_origin = origin;
+        }
+
+        // Get the algorithm type for this location pair
         thor::PathAlgorithm* path_algorithm;
         if (costing == "multimodal") {
           path_algorithm = &multi_modal_astar;
@@ -238,43 +251,119 @@ namespace {
           path_algorithm = &astar;
         }
 
-        // Find the path.
-        std::vector<thor::PathInfo> path_edges = path_algorithm->GetBestPath(
-                origin, destination, reader, mode_costing, mode);
-
-        // If path is not found try again with relaxed limits (if allowed)
+        // Get best path
         if (path_edges.size() == 0) {
-          valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-          if (cost->AllowMultiPass()) {
-            // 2nd pass
-            LOG_INFO("Try again with relaxed hierarchy limits");
-            path_algorithm->Clear();
-            cost->RelaxHierarchyLimits(16.0f);
-            path_edges = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
+          GetPath(path_algorithm, origin, destination, path_edges);
+          if (path_edges.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
+        } else {
+          // Get the path in a temporary vector
+          std::vector<thor::PathInfo> temp_path;
+          GetPath(path_algorithm, origin, destination, temp_path);
+          if (temp_path.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
 
-            // 3rd pass
-            if (path_edges.size() == 0) {
-              path_algorithm->Clear();
-              cost->DisableHighwayTransitions();
-              path_edges = path_algorithm->GetBestPath(origin, destination, reader, mode_costing, mode);
-            }
+          // Append the temp_path edges to path_edges, adding the elapsed
+          // time from the end of the current path. If continuing along the
+          // same edge, remove the prior so we do not get a duplicate edge.
+          uint32_t t = path_edges.back().elapsed_time;
+          if (temp_path.front().edgeid == path_edges.back().edgeid) {
+            path_edges.pop_back();
+          }
+          for (auto edge : temp_path) {
+            edge.elapsed_time += t;
+            path_edges.emplace_back(edge);
           }
         }
 
-        if (path_edges.size() == 0) {
-          throw std::runtime_error("No path could be found for input");
+        // Build trip path for this leg and add to the result if this
+        // location is a BREAK or if this is the last location
+        if (destination.stoptype_ == Location::StopType::BREAK ||
+            path_location == --correlated.cend()) {
+          // Form output information based on path edges
+          auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                              last_break_origin, destination, through_loc);
+
+          // The protobuf path
+          result.messages.emplace_back(trip_path.SerializeAsString());
+
+          // Clear path edges and set through edge to invalid
+          path_edges.clear();
+          through_edge = baldr::GraphId();
+        } else {
+          // This is a through location. Save last edge as the through_edge
+          prior_is_node = destination.IsNode();
+          through_edge = path_edges.back().edgeid;
+
+          // Add to list of through locations for this leg
+          through_loc.emplace_back(destination);
         }
 
-        // Form output information based on path edges
-        auto trip_path = thor::TripPathBuilder::Build(reader, path_edges, origin, destination);
-        result.messages.emplace_back(trip_path.SerializeAsString());
-
-        //if we have another one coming we need to clear
-        if(--correlated.cend() != path_location)
+        // If we have another one coming we need to clear
+        if (--correlated.cend() != path_location)
           path_algorithm->Clear();
-      }
+        }
 
-      return result;
+        return result;
+    }
+
+    /**
+     * Update the origin edges for a through location.
+     */
+    void UpdateOrigin(baldr::PathLocation& origin, bool prior_is_node,
+                      const baldr::GraphId& through_edge) {
+      if (prior_is_node) {
+        // TODO - remove the opposing through edge from list of edges unless
+        // all outbound edges are entering noth_thru regions.
+        // For now allow all edges
+      } else {
+        // Check if the edge is entering a not_thru region - if so do not
+        // exclude the opposing edge
+        const DirectedEdge* de = reader.GetGraphTile(through_edge)->directededge(through_edge);
+        if (de->not_thru()) {
+          return;
+        }
+
+        // Set the origin edge to the through_edge
+        auto edges = origin.edges();
+        for (auto e : edges) {
+          if (e.id == through_edge) {
+            origin.ClearEdges();
+            origin.CorrelateEdge(e);
+            break;
+          }
+        }
+      }
+    }
+
+    void GetPath(thor::PathAlgorithm* path_algorithm,
+                 baldr::PathLocation& origin, baldr::PathLocation& destination,
+                 std::vector<thor::PathInfo>& path_edges) {
+      // Find the path.
+      path_edges = path_algorithm->GetBestPath(origin, destination, reader,
+                                               mode_costing, mode);
+
+      // If path is not found try again with relaxed limits (if allowed)
+      if (path_edges.size() == 0) {
+        valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+        if (cost->AllowMultiPass()) {
+          // 2nd pass
+          path_algorithm->Clear();
+          cost->RelaxHierarchyLimits(16.0f);
+          path_edges = path_algorithm->GetBestPath(origin, destination,
+                                    reader, mode_costing, mode);
+
+          // 3rd pass
+          if (path_edges.size() == 0) {
+            path_algorithm->Clear();
+            cost->DisableHighwayTransitions();
+            path_edges = path_algorithm->GetBestPath(origin, destination,
+                                     reader, mode_costing, mode);
+          }
+        }
+      }
     }
 
     //TODO: Do we need to pass costing for multimodal?
