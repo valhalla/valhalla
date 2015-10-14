@@ -17,6 +17,14 @@ class grid {
 
   /**
    * Constructor for grid
+   * @param extents    the extents of the grid in the form of an AABB2
+   * @param divisions  the number of divisions in the grid in both the x and y axis
+   */
+  template <class coord_t>
+  grid(const AABB2<coord_t>& extents, size_t divisions);
+
+  /**
+   * Constructor for grid
    * @param min        the minimum extreme point of the grid
    * @param max        the maximum extreme point of the grid
    * @param divisions  the number of divisions in the grid in both the x and y axis

@@ -14,6 +14,11 @@ namespace valhalla {
   namespace midgard {
 
     template <class coord_t>
+    grid<coord_t>::grid(const AABB2<coord_t>& extents, size_t divisions){
+      grid(extents.minpt(), extents.maxpt(), divisions);
+    }
+
+    template <class coord_t>
     grid<coord_t>::grid(const coord_t& min, const coord_t& max, size_t divisions):
       divisions(divisions), super_cell(min, max) {
 
