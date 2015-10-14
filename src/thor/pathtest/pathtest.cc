@@ -81,6 +81,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   bool multi_run, uint32_t iterations) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
+  std::vector<PathLocation> through_loc;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   data.incPasses();
@@ -109,7 +110,8 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
 
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin, dest);
+  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin,
+                                              dest, through_loc);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");
@@ -404,8 +406,9 @@ int main(int argc, char *argv[]) {
       DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  Location originloc(PointLL { 0, 0 });
-  Location destloc(PointLL { 0, 0 });
+  // Locations
+  std::vector<Location> locations;
+
   // argument checking and verification
   boost::property_tree::ptree json_ptree;
   if (vm.count("json") == 0) {
@@ -420,13 +423,13 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     }
-    originloc = Location::FromCsv(origin);
-    destloc = Location::FromCsv(destination);
+    locations.push_back(Location::FromCsv(origin));
+    locations.push_back(Location::FromCsv(destination));
   } else {
     std::stringstream stream;
     stream << json;
     boost::property_tree::read_json(stream, json_ptree);
-    std::vector<Location> locations;
+
     try {
       for (const auto& location : json_ptree.get_child("locations"))
         locations.emplace_back(std::move(Location::FromPtree(location.second)));
@@ -436,9 +439,6 @@ int main(int argc, char *argv[]) {
       throw std::runtime_error(
           "insufficiently specified required parameter 'locations'");
     }
-
-    originloc = locations.at(0);
-    destloc = locations.at(locations.size() - 1);
 
     // Parse out the type of route - this provides the costing method to use
     std::string costing;
@@ -483,28 +483,37 @@ int main(int argc, char *argv[]) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  //Something to hold the statistics
-  PathStatistics data({originloc.latlng_.lat(), originloc.latlng_.lng()},
-                      {destloc.latlng_.lat(), destloc.latlng_.lng()});
+  // Something to hold the statistics
+  uint32_t n = locations.size() - 1;
+  PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
+                      {locations[n].latlng_.lat(), locations[n].latlng_.lng()});
 
-  // Distance in km
-  float d1 = originloc.latlng_.Distance(destloc.latlng_) * kKmPerMeter;
+  // Crow flies distance between locations (km)
+  float d1 = 0.0f;
+  for (uint32_t i = 0; i < n; i++) {
+    d1 += locations[i].latlng_.Distance(locations[i+1].latlng_) * kKmPerMeter;
+  }
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
 
-  auto tile_hierarchy = reader.GetTileHierarchy();
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  uint32_t origin_tile = tiles.TileId(originloc.latlng_);
-  uint32_t dest_tile = tiles.TileId(destloc.latlng_);
+  // If we are testing connectivity
   if (connectivity) {
     auto t10 = std::chrono::high_resolution_clock::now();
-    if (!reader.AreConnected({origin_tile, local_level, 0}, {dest_tile, local_level, 0})) {
-      LOG_INFO("No tile connectivity between origin and destination.");
-      data.setSuccess("fail_no_connectivity");
-      data.log();
-      return EXIT_SUCCESS;
+    auto tile_hierarchy = reader.GetTileHierarchy();
+    auto local_level = tile_hierarchy.levels().rbegin()->second.level;
+    auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+    for (uint32_t i = 0; i < n; i++) {
+      uint32_t orig_tile = tiles.TileId(locations[i].latlng_);
+      uint32_t dest_tile = tiles.TileId(locations[i+1].latlng_);
+      if (!reader.AreConnected({orig_tile, local_level, 0},
+                               {dest_tile, local_level, 0})) {
+        LOG_INFO("No tile connectivity between locations " + std::to_string(i)
+                 + " and " + std::to_string(i+1));
+        data.setSuccess("fail_no_connectivity");
+        data.log();
+        return EXIT_SUCCESS;
+      }
     }
     auto t20 = std::chrono::high_resolution_clock::now();
     uint32_t msecs1 =
@@ -530,16 +539,10 @@ int main(int argc, char *argv[]) {
     c = std::tolower(c);
   LOG_INFO("routetype: " + routetype);
 
-  // Construct costing methods
-  PathAlgorithm astar;
-  BidirectionalAStar bd;
-  MultiModalPathAlgorithm mm;
-
   // Get the costing method - pass the JSON configuration
   TripPath trip_path;
   TravelMode mode;
   std::shared_ptr<DynamicCost> mode_costing[4];
-  PathAlgorithm* pathalgorithm;
   if (routetype == "multimodal") {
     // Create array of costing methods per mode and set initial mode to
     // pedestrian
@@ -548,7 +551,6 @@ int main(int argc, char *argv[]) {
     mode_costing[2] = get_costing(factory, pt, json_ptree, "bicycle");
     mode_costing[3] = get_costing(factory, pt, json_ptree, "transit");
     mode = TravelMode::kPedestrian;
-    pathalgorithm = &mm;
   } else {
     // Assign costing method, override any config options that are in the
     // json request
@@ -556,15 +558,9 @@ int main(int argc, char *argv[]) {
                               json_ptree, routetype);
     mode = cost->travelmode();
     mode_costing[static_cast<uint32_t>(mode)] = cost;
-
-    // Choose path algorithm. Use bi-directional A* for pedestrian > 10km
-    if (routetype == "pedestrian" || routetype == "bicycle") {
-      pathalgorithm = (d1 > 10.0f) ? &bd : &astar;
-    } else {
-      pathalgorithm = &astar;
-    }
   }
 
+  // Find locations
   auto t1 = std::chrono::high_resolution_clock::now();
   std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
   auto getPathLoc = [&reader, &cost, &data] (Location& loc, std::string status) {
@@ -576,51 +572,75 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
   };
-  PathLocation pathOrigin = getPathLoc(originloc, "fail_invalid_origin");
-  PathLocation pathDest = getPathLoc(destloc, "fail_invalid_dest");
+  std::vector<PathLocation> path_location;
+  for (auto loc : locations) {
+    path_location.push_back(getPathLoc(loc, "fail_invalid_origin"));
+  }
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
   LOG_INFO("Location Processing took " + std::to_string(msecs) + " ms");
 
   // Get the route
-  trip_path = PathTest(reader, pathOrigin, pathDest, pathalgorithm,
-                       mode_costing, mode, data, multi_run, iterations);
+  PathAlgorithm astar;
+  BidirectionalAStar bd;
+  MultiModalPathAlgorithm mm;
+  for (uint32_t i = 0; i < n; i++) {
+    float km = locations[i].latlng_.Distance(locations[i+1].latlng_) * kKmPerMeter;
 
-  if (trip_path.node().size() > 0) {
-    // Try the the directions
-    t1 = std::chrono::high_resolution_clock::now();
-    TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
-                                                    originloc, destloc, data);
-    t2 = std::chrono::high_resolution_clock::now();
-    msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
-    LOG_INFO("Trip time in seconds = " + std::to_string(trip_directions.summary().time()));
-    LOG_INFO("Trip Length in meters = " + std::to_string(trip_directions.summary().length() * 1609.344f));
-    data.setSuccess("success");
-  } else {
-    // Route was unsuccessful
-    data.setSuccess("fail_no_route");
+    // Choose path algorithm. Use bi-directional A* for pedestrian > 10km
+    PathAlgorithm* pathalgorithm;
+    if (routetype == "multimodal") {
+      pathalgorithm = &mm;
+    } else if (routetype == "pedestrian" || routetype == "bicycle") {
+      pathalgorithm = (km > 10.0f) ? &bd : &astar;
+    } else {
+      pathalgorithm = &astar;
+    }
 
-    // Check if origins are unreachable
-     for (auto& edge : pathOrigin.edges()) {
-       const GraphTile* tile = reader.GetGraphTile(edge.id);
-       const DirectedEdge* directededge = tile->directededge(edge.id);
-       if (directededge->unreachable()) {
+    // Get the best path
+    trip_path = PathTest(reader, path_location[i], path_location[i+1],
+                         pathalgorithm, mode_costing, mode, data,
+                         multi_run, iterations);
+
+    // If successful get directions
+    if (trip_path.node().size() > 0) {
+      // Try the the directions
+      t1 = std::chrono::high_resolution_clock::now();
+      TripDirections trip_directions = DirectionsTest(directions_options, trip_path,
+                        locations[i], locations[i+1], data);
+      t2 = std::chrono::high_resolution_clock::now();
+      msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+      LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
+      LOG_INFO("Trip time in seconds = " + std::to_string(trip_directions.summary().time()));
+      LOG_INFO("Trip Length in meters = " + std::to_string(trip_directions.summary().length() * 1609.344f));
+      data.setSuccess("success");
+    } else {
+      // Route was unsuccessful
+      data.setSuccess("fail_no_route");
+
+      // Check if origins are unreachable
+       for (auto& edge : path_location[i].edges()) {
+         const GraphTile* tile = reader.GetGraphTile(edge.id);
+         const DirectedEdge* directededge = tile->directededge(edge.id);
          std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
-             directededge->edgeinfo_offset());
-         LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+                        directededge->edgeinfo_offset());
+         if (directededge->unreachable()) {
+           LOG_INFO("Origin edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+         }
+         LOG_INFO("Origin wayId = " + std::to_string(ei->wayid()));
        }
-     }
 
-    // Check if destinations are unreachable
-    for (auto& edge : pathDest.edges()) {
-      const GraphTile* tile = reader.GetGraphTile(edge.id);
-      const DirectedEdge* directededge = tile->directededge(edge.id);
-      if (directededge->unreachable()) {
+      // Check if destinations are unreachable
+      for (auto& edge : path_location[i+1].edges()) {
+        const GraphTile* tile = reader.GetGraphTile(edge.id);
+        const DirectedEdge* directededge = tile->directededge(edge.id);
         std::unique_ptr<const EdgeInfo> ei = tile->edgeinfo(
-            directededge->edgeinfo_offset());
-        LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+                      directededge->edgeinfo_offset());
+        if (directededge->unreachable()) {
+          LOG_INFO("Destination edge is unconnected: wayid = " + std::to_string(ei->wayid()));
+        }
+        LOG_INFO("Destination wayId = " + std::to_string(ei->wayid()));
       }
     }
   }
@@ -635,6 +655,7 @@ int main(int argc, char *argv[]) {
   // path computation, trip path building, and directions
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t0).count();
+  LOG_INFO("Total time= " + std::to_string(msecs) + " ms");
   data.addRuntime(msecs);
   data.log();
 
