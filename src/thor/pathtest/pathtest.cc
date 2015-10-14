@@ -81,6 +81,7 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
                   bool multi_run, uint32_t iterations) {
   auto t1 = std::chrono::high_resolution_clock::now();
   std::vector<PathInfo> pathedges;
+  std::vector<PathLocation> through_loc;
   pathedges = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode);
   cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   data.incPasses();
@@ -109,7 +110,8 @@ TripPath PathTest(GraphReader& reader, const PathLocation& origin,
 
   // Form trip path
   t1 = std::chrono::high_resolution_clock::now();
-  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin, dest);
+  TripPath trip_path = TripPathBuilder::Build(reader, pathedges, origin,
+                                              dest, through_loc);
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripPathBuilder took " + std::to_string(msecs) + " ms");

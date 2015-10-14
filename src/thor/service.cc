@@ -81,6 +81,7 @@ namespace {
         bool prior_is_node = false;
         baldr::GraphId through_edge;
         baldr::PathLocation& last_break_origin = correlated[0];
+        std::vector<baldr::PathLocation> through_loc;
         std::vector<thor::PathInfo> path_edges;
         for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
           auto origin = *std::prev(path_location);
@@ -138,7 +139,7 @@ namespace {
               path_location == --correlated.cend()) {
             // Form output information based on path edges
             auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                last_break_origin, destination);
+                                last_break_origin, destination, through_loc);
 
             // The protobuf path
             result.messages.emplace_back(trip_path.SerializeAsString());
@@ -150,6 +151,9 @@ namespace {
             // This is a through location. Save last edge as the through_edge
             prior_is_node = destination.IsNode();
             through_edge = path_edges.back().edgeid;
+
+            // Add to list of through locations for this leg
+            through_loc.emplace_back(destination);
           }
 
           // If we have another one coming we need to clear
@@ -208,7 +212,6 @@ namespace {
         valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
         if (cost->AllowMultiPass()) {
           // 2nd pass
-          LOG_INFO("Try again with relaxed hierarchy limits");
           path_algorithm->Clear();
           cost->RelaxHierarchyLimits(16.0f);
           path_edges = path_algorithm->GetBestPath(origin, destination,

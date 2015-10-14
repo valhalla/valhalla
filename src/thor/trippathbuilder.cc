@@ -193,11 +193,11 @@ TripPathBuilder::~TripPathBuilder() {
 TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                 const std::vector<PathInfo>& path,
                                 const PathLocation& origin,
-                                const PathLocation& dest) {
+                                const PathLocation& dest,
+                                const std::vector<PathLocation>& through_loc) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
-  // TODO - in future we will handle vias
   // Set origin
   TripPath_Location* tp_orig = trip_path.add_location();
   TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
@@ -222,6 +222,33 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_heading(*origin.heading_);
   if (origin.date_time_)
     tp_orig->set_date_time(*origin.date_time_);
+
+  // Add list of through locations
+  for (auto through : through_loc) {
+    TripPath_Location* tp_through = trip_path.add_location();
+    TripPath_LatLng* through_ll = tp_through->mutable_ll();
+    through_ll->set_lat(through.latlng_.lat());
+    through_ll->set_lng(through.latlng_.lng());
+    tp_through->set_type(
+        (through.stoptype_ == Location::StopType::BREAK) ?
+            TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
+    if (!through.name_.empty())
+      tp_through->set_name(through.name_);
+    if (!through.street_.empty())
+      tp_through->set_street(through.street_);
+    if (!through.city_.empty())
+      tp_through->set_city(through.city_);
+    if (!through.state_.empty())
+      tp_through->set_state(through.state_);
+    if (!through.zip_.empty())
+      tp_through->set_postal_code(through.zip_);
+    if (!through.country_.empty())
+      tp_through->set_country(through.country_);
+    if (through.heading_)
+      tp_through->set_heading(*through.heading_);
+    if (through.date_time_)
+      tp_through->set_date_time(*through.date_time_);
+  }
 
   // Set destination
   TripPath_Location* tp_dest = trip_path.add_location();
