@@ -193,19 +193,17 @@ TripPathBuilder::~TripPathBuilder() {
 TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                 const std::vector<PathInfo>& path,
                                 const PathLocation& origin,
-                                const PathLocation& dest) {
+                                const PathLocation& dest,
+                                const std::vector<PathLocation>& through_loc) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
 
-  // TODO - in future we will handle vias
-  // Set origin
+  // Set origin (assumed to be a break)
   TripPath_Location* tp_orig = trip_path.add_location();
   TripPath_LatLng* orig_ll = tp_orig->mutable_ll();
   orig_ll->set_lat(origin.latlng_.lat());
   orig_ll->set_lng(origin.latlng_.lng());
-  tp_orig->set_type(
-      (origin.stoptype_ == Location::StopType::BREAK) ?
-          TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
+  tp_orig->set_type(TripPath_Location_Type_kBreak);
   if (!origin.name_.empty())
     tp_orig->set_name(origin.name_);
   if (!origin.street_.empty())
@@ -223,14 +221,37 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   if (origin.date_time_)
     tp_orig->set_date_time(*origin.date_time_);
 
-  // Set destination
+  // Add list of through locations
+  for (auto through : through_loc) {
+    TripPath_Location* tp_through = trip_path.add_location();
+    TripPath_LatLng* through_ll = tp_through->mutable_ll();
+    through_ll->set_lat(through.latlng_.lat());
+    through_ll->set_lng(through.latlng_.lng());
+    tp_through->set_type(TripPath_Location_Type_kThrough);
+    if (!through.name_.empty())
+      tp_through->set_name(through.name_);
+    if (!through.street_.empty())
+      tp_through->set_street(through.street_);
+    if (!through.city_.empty())
+      tp_through->set_city(through.city_);
+    if (!through.state_.empty())
+      tp_through->set_state(through.state_);
+    if (!through.zip_.empty())
+      tp_through->set_postal_code(through.zip_);
+    if (!through.country_.empty())
+      tp_through->set_country(through.country_);
+    if (through.heading_)
+      tp_through->set_heading(*through.heading_);
+    if (through.date_time_)
+      tp_through->set_date_time(*through.date_time_);
+  }
+
+  // Set destination (assumed to be a break)
   TripPath_Location* tp_dest = trip_path.add_location();
   TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
   dest_ll->set_lat(dest.latlng_.lat());
   dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(
-      (dest.stoptype_ == Location::StopType::BREAK) ?
-          TripPath_Location_Type_kBreak : TripPath_Location_Type_kThrough);
+  tp_dest->set_type(TripPath_Location_Type_kBreak);
   if (!dest.name_.empty())
     tp_dest->set_name(dest.name_);
   if (!dest.street_.empty())
