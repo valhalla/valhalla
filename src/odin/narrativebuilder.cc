@@ -98,44 +98,24 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       }
       case TripDirections_Maneuver_Type_kSlightRight:
       case TripDirections_Maneuver_Type_kSlightLeft: {
-        if (maneuver.HasSimilarNames(prev_maneuver, true)) {
-          // Set stay on instruction
-          maneuver.set_instruction(
-              std::move(FormBearToStayOnInstruction(maneuver)));
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormBearInstruction(maneuver, prev_maneuver)));
 
-          // Set verbal transition alert instruction
-          maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalAlertBearToStayOnInstruction(maneuver)));
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertBearInstruction(maneuver, prev_maneuver)));
 
-          // Set verbal pre transition instruction
-          maneuver.set_verbal_pre_transition_instruction(
-              std::move(FormVerbalBearToStayOnInstruction(maneuver)));
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalBearInstruction(maneuver, prev_maneuver)));
 
-          // Set verbal post transition instruction
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units())));
-        } else {
-          FormBearInstruction(maneuver);
-          // Set instruction
-          maneuver.set_instruction(std::move(FormBearInstruction(maneuver)));
-
-          // Set verbal transition alert instruction
-          maneuver.set_verbal_transition_alert_instruction(
-              std::move(FormVerbalAlertBearInstruction(maneuver)));
-
-          // Set verbal pre transition instruction
-          maneuver.set_verbal_pre_transition_instruction(
-              std::move(FormVerbalBearInstruction(maneuver)));
-
-          // Set verbal post transition instruction
-          maneuver.set_verbal_post_transition_instruction(
-              std::move(
-                  FormVerbalPostTransitionInstruction(
-                      maneuver, directions_options.units(),
-                      maneuver.HasBeginStreetNames())));
-        }
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units(),
+                    maneuver.HasBeginStreetNames())));
         break;
       }
       case TripDirections_Maneuver_Type_kRight:
@@ -977,103 +957,134 @@ std::string NarrativeBuilder::FormVerbalTurnInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver) {
-  //  "Bear <FormTurnTypeInstruction>."
-  //  "Bear <FormTurnTypeInstruction> onto <STREET_NAMES>."
-  //  "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+std::string NarrativeBuilder::FormBearInstruction(Maneuver& maneuver,
+                                                  Maneuver* prev_maneuver) {
+  //  0 "Bear <FormTurnTypeInstruction>."
+  //  1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES>."
+  //  2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  //  3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Bear ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
+  uint8_t phrase_id = 0;
 
+  if (maneuver.HasStreetNames()) {
+    phrase_id = 1;
+  }
   if (maneuver.HasBeginStreetNames()) {
-    instruction += " onto ";
-    instruction += maneuver.begin_street_names().ToString();
-    instruction += ". Continue on ";
-    instruction += maneuver.street_names().ToString();
-  } else if (maneuver.HasStreetNames()) {
-    instruction += " onto ";
-    instruction += maneuver.street_names().ToString();
+    phrase_id = 2;
+  }
+  if (!maneuver.HasBeginStreetNames()
+      && maneuver.HasSimilarNames(prev_maneuver, true)) {
+    phrase_id = 3;
   }
 
-  instruction += ".";
+  switch (phrase_id) {
+    // 1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES>."
+    case 1: {
+      instruction = (boost::format("Bear %1% onto %2%.")
+          % FormTurnTypeInstruction(maneuver.type())
+          % maneuver.street_names().ToString()).str();
+      break;
+    }
+      // 2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    case 2: {
+      instruction = (boost::format("Bear %1% onto %2%. Continue on %3%.")
+          % FormTurnTypeInstruction(maneuver.type())
+          % maneuver.begin_street_names().ToString()
+          % maneuver.street_names().ToString()).str();
+      break;
+    }
+      // 3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
+    case 3: {
+      instruction = (boost::format("Bear %1% to stay on %2%.")
+          % FormTurnTypeInstruction(maneuver.type())
+          % maneuver.street_names().ToString()).str();
+      break;
+    }
+      // 0 "Bear <FormTurnTypeInstruction>."
+    default: {
+      instruction = (boost::format("Bear %1%.")
+          % FormTurnTypeInstruction(maneuver.type())).str();
+      break;
+    }
+  }
+
   return instruction;
 }
 
 std::string NarrativeBuilder::FormVerbalAlertBearInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Bear <FormTurnTypeInstruction>."
-  //  "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(1)|BEGIN_STREET_NAMES(1)>."
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
+    std::string delim) {
+  //  0 "Bear <FormTurnTypeInstruction>."
+  //  1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
+  //  2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
+  //  3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
 
-  return FormVerbalBearInstruction(maneuver, element_max_count, delim);
+  return FormVerbalBearInstruction(maneuver, prev_maneuver, element_max_count,
+                                   delim);
 }
 
 std::string NarrativeBuilder::FormVerbalBearInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Bear <FormTurnTypeInstruction>."
-  //  "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(2)|BEGIN_STREET_NAMES(2)>."
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
+    std::string delim) {
+  //  0 "Bear <FormTurnTypeInstruction>."
+  //  1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
+  //  1 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
+  //  3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Bear ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
+  uint8_t phrase_id = 0;
 
+  std::string street_names;
+  if (maneuver.HasStreetNames()) {
+    phrase_id = 1;
+  }
   if (maneuver.HasBeginStreetNames()) {
-    instruction += " onto ";
-    instruction += maneuver.begin_street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
-  } else if (maneuver.HasStreetNames()) {
-    instruction += " onto ";
-    instruction += maneuver.street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
+    phrase_id = 2;
+  }
+  if (!maneuver.HasBeginStreetNames()
+      && maneuver.HasSimilarNames(prev_maneuver, true)) {
+    phrase_id = 3;
   }
 
-  instruction += ".";
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormBearToStayOnInstruction(Maneuver& maneuver) {
-  // "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
-
-  std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Bear ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
-
-  if (maneuver.HasStreetNames()) {
-    instruction += " to stay on ";
-    instruction += maneuver.street_names().ToString();
+  switch (phrase_id) {
+    // 1 "Bear <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
+    case 1: {
+      instruction =
+          (boost::format("Bear %1% onto %2%.")
+              % FormTurnTypeInstruction(maneuver.type())
+              % maneuver.street_names().ToString(
+                  element_max_count, delim, maneuver.verbal_formatter())).str();
+      break;
+    }
+    // 2 "Bear <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
+    case 2: {
+      instruction =
+          (boost::format("Bear %1% onto %2%.")
+              % FormTurnTypeInstruction(maneuver.type())
+              % maneuver.begin_street_names().ToString(
+                  element_max_count, delim, maneuver.verbal_formatter())).str();
+      break;
+    }
+    // 3 "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
+    case 3: {
+      instruction =
+          (boost::format("Bear %1% to stay on %2%.")
+              % FormTurnTypeInstruction(maneuver.type())
+              % maneuver.street_names().ToString(
+                  element_max_count, delim, maneuver.verbal_formatter())).str();
+      break;
+    }
+    // 0 "Bear <FormTurnTypeInstruction>."
+    default: {
+      instruction = (boost::format("Bear %1%.")
+          % FormTurnTypeInstruction(maneuver.type())).str();
+      break;
+    }
   }
 
-  instruction += ".";
-  return instruction;
-}
-
-std::string NarrativeBuilder::FormVerbalAlertBearToStayOnInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  // "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
-
-  return FormVerbalBearToStayOnInstruction(maneuver, element_max_count,
-                                           delim);
-}
-
-std::string NarrativeBuilder::FormVerbalBearToStayOnInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  // "Bear <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
-
-  std::string instruction;
-  instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Bear ";
-  instruction += FormTurnTypeInstruction(maneuver.type());
-
-  if (maneuver.HasStreetNames()) {
-    instruction += " to stay on ";
-    instruction += maneuver.street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
-  }
-
-  instruction += ".";
   return instruction;
 }
 

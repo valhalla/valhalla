@@ -88,28 +88,16 @@ class NarrativeBuilder {
       std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
-  static std::string FormBearInstruction(Maneuver& maneuver);
+  static std::string FormBearInstruction(Maneuver& maneuver,
+                                         Maneuver* prev_maneuver);
 
   static std::string FormVerbalAlertBearInstruction(
-      Maneuver& maneuver,
+      Maneuver& maneuver, Maneuver* prev_maneuver,
       uint32_t element_max_count = kVerbalAlertElementMaxCount,
       std::string delim = kVerbalDelim);
 
   static std::string FormVerbalBearInstruction(
-      Maneuver& maneuver,
-      uint32_t element_max_count = kVerbalPreElementMaxCount,
-      std::string delim = kVerbalDelim);
-
-  /////////////////////////////////////////////////////////////////////////////
-  static std::string FormBearToStayOnInstruction(Maneuver& maneuver);
-
-  static std::string FormVerbalAlertBearToStayOnInstruction(
-      Maneuver& maneuver,
-      uint32_t element_max_count = kVerbalAlertElementMaxCount,
-      std::string delim = kVerbalDelim);
-
-  static std::string FormVerbalBearToStayOnInstruction(
-      Maneuver& maneuver,
+      Maneuver& maneuver, Maneuver* prev_maneuver,
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
