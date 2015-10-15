@@ -12,7 +12,7 @@ using namespace valhalla::baldr;
 
 namespace {
   enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
-  const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
+  const std::unordered_map<std::string, MATRIX_TYPE> TDMATRIX{
     {"one_to_many", ONE_TO_MANY},
     {"many_to_one", MANY_TO_ONE},
     {"many_to_many", MANY_TO_MANY}
@@ -55,17 +55,17 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::time_distance_matrix(boost::property_tree::ptree& request) {
+    worker_t::result_t loki_worker_t::matrix(boost::property_tree::ptree& request) {
 
-      auto matrix_type = MATRIX.find(request.get<std::string>("matrix_type"));
+      auto matrix_type = TDMATRIX.find(request.get<std::string>("matrix_type"));
       auto costing = request.get<std::string>("costing");
       if(costing.empty())
         throw std::runtime_error("No edge/node costing provided");
 
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("service_limits." + request.get<std::string>("costing") + ".max_distance");
-      auto max_route_locations = config.get<size_t>("service_limits." + request.get<std::string>("costing") + ".max_locations");
+      auto max_distance = config.get<float>("service_limits." + costing + ".max_distance");
+      auto max_route_locations = config.get<size_t>("service_limits." + costing + ".max_locations");
       //check that location size does not exceed max.
       if (locations.size() > max_route_locations)
         throw std::runtime_error("Number of locations exceeds the max location limit.");
