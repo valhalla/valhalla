@@ -340,7 +340,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                  path.front().mode, edge, trip_path.add_node(), tile,
                                  end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
-    trip_edge->set_end_shape_index(shape.size());
+    trip_edge->set_end_shape_index(shape.size()-1);
     auto* node = trip_path.add_node();
     node->set_elapsed_time(path.front().elapsed_time);
 
