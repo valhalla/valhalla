@@ -99,6 +99,29 @@ bool Maneuver::HasStreetNames() const {
   return (!street_names_->empty());
 }
 
+bool Maneuver::HasSameNames(
+    const Maneuver* other_maneuver,
+    bool allow_begin_intersecting_edge_name_consistency) const {
+
+  // Allow similar intersecting edge names
+  // OR verify that there are no similar intersecting edge names
+  if (allow_begin_intersecting_edge_name_consistency
+      || !begin_intersecting_edge_name_consistency()) {
+    // If this maneuver has street names
+    // and other maneuver exists
+    if (HasStreetNames() && other_maneuver) {
+      // other and this maneuvers have same names
+      std::unique_ptr<StreetNames> same_street_names = other_maneuver
+          ->street_names().FindCommonStreetNames(street_names());
+      if (!same_street_names->empty()
+          && (street_names().size() == same_street_names->size())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool Maneuver::HasSimilarNames(
     const Maneuver* other_maneuver,
     bool allow_begin_intersecting_edge_name_consistency) const {

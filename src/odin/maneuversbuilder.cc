@@ -1288,6 +1288,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Process simple u-turns
+  if (GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading()) == 180) {
+    // If drive on right then left u-turn
+    if (prev_edge->drive_on_right()) {
+      maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+    } else {
+      maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+    }
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process pencil point u-turns
   if (IsLeftPencilPointUturn(node_index, prev_edge, curr_edge)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
