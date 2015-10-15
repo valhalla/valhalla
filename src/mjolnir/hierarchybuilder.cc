@@ -506,7 +506,8 @@ void FormTilesInNewLevel(
       info.graphreader_.Clear();
 
     // Create GraphTileBuilder for the new tile
-    GraphTileBuilder tilebuilder;
+    GraphId tile(tileid, level, 0);
+    GraphTileBuilder tilebuilder(info.graphreader_.GetTileHierarchy(), tile, false);
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
     tilebuilder.AddAdmin("None","None","","","","");
@@ -611,8 +612,7 @@ void FormTilesInNewLevel(
     }
 
     // Store the new tile
-    GraphId tile(tileid, level, 0);
-    tilebuilder.StoreTileData(info.graphreader_.GetTileHierarchy(), tile);
+    tilebuilder.StoreTileData();
     LOG_DEBUG((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
          tile % tilebuilder.size()).str());
 
@@ -734,7 +734,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs);
+  tilebuilder.Update(hdrbuilder, nodes, directededges, signs);
 
   LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

@@ -18,6 +18,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/grid.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
@@ -337,7 +338,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
             }
 
             // Check if the shape segment intersects the tile
-            if (tiling.TileBounds(tileid).Intersect(*shape1, *shape2)) {
+            if (tiling.TileBounds(tileid).Intersects(*shape1, *shape2)) {
               stats.AddIntersectedTile(id);
             }
           }
@@ -391,8 +392,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   for(; tile_start != tile_end; ++tile_start) {
     try {
       // What actually writes the tile
-      GraphTileBuilder graphtile;
-      GraphId tileid1 = tile_start->first.Tile_Base();
+      GraphId tile_id = tile_start->first.Tile_Base();
+      GraphTileBuilder graphtile(hierarchy, tile_id, false);
 
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
@@ -406,7 +407,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end ? nodes.end() - node_itr :
         std::next(tile_start)->second - tile_start->second));
 
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -571,9 +572,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             // If the end node is in a different tile and the tile is not
             // a neighboring tile then check for possible shape intersection with
             // empty tiles
-            GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
-            if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2))
-              CheckForIntersectingTiles(tileid1, tileid2, tiling, shape, stats);
+            GraphId other_tile = (*nodes[target]).graph_id.Tile_Base();
+            if (tile_id != other_tile && !tiling.AreNeighbors(tile_id, other_tile))
+              CheckForIntersectingTiles(tile_id, other_tile, tiling, shape, stats);
           }//now we have the edge info offset
           else {
             found = geo_attribute_cache.find(edge_info_offset);
@@ -641,7 +642,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       }
 
       // Write the actual tile to disk
-      graphtile.StoreTileData(hierarchy, tile_start->first);
+      graphtile.StoreTileData();
 
       // Made a tile
       LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.size()).str());
@@ -718,9 +719,9 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   // Add "empty" tiles for any intersected tiles
   for (auto& empty_tile : stats.intersected_tiles) {
     if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
-      GraphTileBuilder graphtile;
+      GraphTileBuilder graphtile(tile_hierarchy, empty_tile, false);
       LOG_DEBUG("Add empty tile for: " + std::to_string(empty_tile.tileid()));
-      graphtile.StoreTileData(tile_hierarchy, empty_tile);
+      graphtile.StoreTileData();
     }
   }
   LOG_DEBUG("Added " + std::to_string(stats.intersected_tiles.size()) +

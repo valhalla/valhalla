@@ -1150,7 +1150,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // Write the new file
     lock.lock();
-    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData();
     lock.unlock();
   }
 

@@ -1190,7 +1190,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Write the new file
     lock.lock();
-    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData();
     LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
 
     // Check if we need to clear the tile cache

@@ -41,10 +41,6 @@ using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
  */
 class GraphTileBuilder : public baldr::GraphTile {
  public:
-  /**
-   * Constructor
-   */
-  GraphTileBuilder();
 
   /**
    * Constructor given an existing tile. This is used to read in the tile
@@ -66,19 +62,16 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  graphid  GraphID to store.
    * @param  hierarchy  Gives info about number of tiles per level
    */
-  void StoreTileData(const baldr::TileHierarchy& hierarchy,
-                     const baldr::GraphId& graphid);
+  void StoreTileData();
 
   /**
    * Update a graph tile with new header, nodes, and directed edges. Used
    * in GraphValidator to update directed edge information.
-   * @param hierarchy How the tiles are setup on disk
    * @param hdr Updated header
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const baldr::TileHierarchy& hierarchy,
-            const GraphTileHeaderBuilder& hdr,
+  void Update(const GraphTileHeaderBuilder& hdr,
             const std::vector<NodeInfoBuilder>& nodes,
             const std::vector<DirectedEdgeBuilder>& directededges);
 
@@ -86,15 +79,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Update a graph tile with new header, nodes, directed edges, signs,
    * and turn restrictions.
    * This is used to add directed edges connecting two hierarchy levels.
-   * @param  hierarchy      How the tiles are setup on disk
    * @param  hdr            Update header
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
    * @param  signs          Updated list of signs.
    * @param  trs            Updated list of turn restrictions.
    */
-  void Update(const baldr::TileHierarchy& hierarchy,
-              const GraphTileHeaderBuilder& hdr,
+  void Update(const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
               const std::vector<SignBuilder>& signs);
@@ -324,6 +315,9 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Write all textlist items to specified stream
   void SerializeTextListToOstream(std::ostream& out);
+
+  // Tile hierarchy for disk access location
+  TileHierarchy hierarchy_;
 
   // Header information for the tile
   GraphTileHeaderBuilder header_builder_;
