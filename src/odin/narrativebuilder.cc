@@ -885,10 +885,10 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
 std::string NarrativeBuilder::FormVerbalAlertTurnInstruction(
     Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
     std::string delim) {
-  //  0 "Turn <FormTurnTypeInstruction>."
-  //  1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
-  //  2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
-  //  3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
+  // 0 "Turn <FormTurnTypeInstruction>."
+  // 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
+  // 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
+  // 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
 
   return FormVerbalTurnInstruction(maneuver, prev_maneuver, element_max_count,
                                    delim);

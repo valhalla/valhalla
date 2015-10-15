@@ -173,7 +173,8 @@ void TryBuild(const DirectionsOptions& directions_options,
     if (man->instruction() != expected_man->instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver instruction - expected: "
-              + expected_man->instruction());
+              + expected_man->instruction() + "  |  produced: "
+              + man->instruction());
     }
 
     // Check maneuver verbal_transition_alert_instruction
@@ -181,7 +182,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_transition_alert_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_transition_alert_instruction - expected: "
-              + expected_man->verbal_transition_alert_instruction());
+              + expected_man->verbal_transition_alert_instruction()
+              + "  |  produced: " + man->verbal_transition_alert_instruction());
     }
 
     // Check maneuver verbal_pre_transition_instruction
@@ -189,7 +191,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_pre_transition_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_pre_transition_instruction - expected: "
-              + expected_man->verbal_pre_transition_instruction());
+              + expected_man->verbal_pre_transition_instruction()
+              + "  |  produced: " + man->verbal_pre_transition_instruction());
     }
 
     // Check maneuver verbal_post_transition_instruction
@@ -197,7 +200,8 @@ void TryBuild(const DirectionsOptions& directions_options,
         != expected_man->verbal_post_transition_instruction()) {
       throw std::runtime_error(
           "Incorrect maneuver verbal_post_transition_instruction - expected: "
-              + expected_man->verbal_post_transition_instruction());
+              + expected_man->verbal_post_transition_instruction()
+              + "  |  produced: " + man->verbal_post_transition_instruction());
     }
   }
 }
@@ -323,6 +327,71 @@ void PopulateContinueManeuverList_1(std::list<Maneuver>& maneuvers,
                    0, 0, 0, 0, 1, 0, "", "", "", 0);
 }
 
+void PopulateTurnManeuverList_0(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kLeft, { }, { }, { }, "",
+                   0.824000, 60, 282, Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kWest, 260, 268, 1,
+                   2, 1, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0, 1,
+                   0, 0, 1, 1, "", "", "", 0);
+}
+
+void PopulateTurnManeuverList_1(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kSharpRight,
+                   { "Flatbush Avenue" }, { }, { }, "", 0.192229, 44, 147,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 322,
+                   322, 1, 4, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 1, 0, 0, 0, 1, 1, "", "", "", 0);
+}
+
+void PopulateTurnManeuverList_2(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kSharpLeft, { "MD 924" }, {
+                       "North Bond Street", "US 1 Business", "MD 924" },
+                   { }, "", 0.840369, 111, 201,
+                   Maneuver::RelativeDirection::kLeft,
+                   TripDirections_Maneuver_CardinalDirection_kSouthEast, 141,
+                   144, 2, 16, 2, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+}
+
+void PopulateTurnManeuverList_3(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRight, { "Sunstone Drive" },
+                   { }, { }, "", 0.077000, 49, 89,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 75, 77, 1,
+                   3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1, 0,
+                   0, 0, 1, 1, "", "", "", 0);
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRight, { "Sunstone Drive" },
+                   { }, { }, "", 0.038000, 12, 90,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 167, 167,
+                   3, 4, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 1,
+                   0, 0, 0, 1, 0, "", "", "", 1);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -330,6 +399,19 @@ void SetExpectedManeuverInstructions(
     const string& verbal_pre_transition_instruction,
     const string& verbal_post_transition_instruction) {
   Maneuver& maneuver = expected_maneuvers.back();
+  maneuver.set_instruction(instruction);
+  maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
+  maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
+  maneuver.set_verbal_post_transition_instruction(verbal_post_transition_instruction);
+}
+
+void SetExpectedPreviousManeuverInstructions(
+    std::list<Maneuver>& expected_maneuvers,
+    const string& instruction,
+    const string& verbal_transition_alert_instruction,
+    const string& verbal_pre_transition_instruction,
+    const string& verbal_post_transition_instruction) {
+  Maneuver& maneuver = expected_maneuvers.front();
   maneuver.set_instruction(instruction);
   maneuver.set_verbal_transition_alert_instruction(verbal_transition_alert_instruction);
   maneuver.set_verbal_pre_transition_instruction(verbal_pre_transition_instruction);
@@ -345,7 +427,7 @@ void TestBuildStartInstructions_0_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_0(maneuvers, country_code, state_code);
 
@@ -371,7 +453,7 @@ void TestBuildStartInstructions_1_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_1(maneuvers, country_code, state_code);
 
@@ -397,7 +479,7 @@ void TestBuildStartInstructions_2_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_2(maneuvers, country_code, state_code);
 
@@ -423,7 +505,7 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kKilometers);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_0(maneuvers, country_code, state_code);
 
@@ -449,7 +531,7 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kKilometers);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_1(maneuvers, country_code, state_code);
 
@@ -475,7 +557,7 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kKilometers);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateStartManeuverList_2(maneuvers, country_code, state_code);
 
@@ -507,7 +589,7 @@ void TestBuildDestinationInstructions_0_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateDestinationManeuverList_0(maneuvers, country_code, state_code);
 
@@ -547,7 +629,7 @@ void TestBuildDestinationInstructions_1_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateDestinationManeuverList_1(maneuvers, country_code, state_code);
 
@@ -588,7 +670,7 @@ void TestBuildDestinationInstructions_2_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateDestinationManeuverList_2(maneuvers, country_code, state_code);
 
@@ -629,7 +711,7 @@ void TestBuildDestinationInstructions_3_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateDestinationManeuverList_3(maneuvers, country_code, state_code);
 
@@ -671,7 +753,7 @@ void TestBuildContinueInstructions_0_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateContinueManeuverList_0(maneuvers, country_code, state_code);
 
@@ -702,7 +784,7 @@ void TestBuildContinueInstructions_1_miles_en_US() {
   directions_options.set_units(DirectionsOptions_Units_kMiles);
   directions_options.set_language("en-US");
 
-  // Configure start maneuvers
+  // Configure maneuvers
   std::list<Maneuver> maneuvers;
   PopulateContinueManeuverList_1(maneuvers, country_code, state_code);
 
@@ -715,6 +797,136 @@ void TestBuildContinueInstructions_1_miles_en_US() {
       "Continue on 10th Avenue.",
       "Continue on 10th Avenue for 3 tenths of a mile.",
       "");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 0 "Turn <FormTurnTypeInstruction>."
+// 0 "Turn <FormTurnTypeInstruction>."
+// 0 "Turn <FormTurnTypeInstruction>."
+void TestBuildTurnInstructions_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn left.",
+      "Turn left.",
+      "Turn left.",
+      "Continue for a half mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES>."
+// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(1)>."
+// 1 "Turn <FormTurnTypeInstruction> onto <STREET_NAMES(2)>."
+void TestBuildTurnInstructions_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "NY";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn sharp right onto Flatbush Avenue.",
+      "Turn sharp right onto Flatbush Avenue.",
+      "Turn sharp right onto Flatbush Avenue.",
+      "Continue for 1 tenth of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(1)>."
+// 2 "Turn <FormTurnTypeInstruction> onto <BEGIN_STREET_NAMES(2)>."
+void TestBuildTurnInstructions_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "MD";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924.",
+      "Turn sharp left onto North Bond Street.",
+      "Turn sharp left onto North Bond Street, U.S. 1 Business.",
+      "Continue on Maryland 9 24 for a half mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormTurnInstruction
+// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES>."
+// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(1)>."
+// 3 "Turn <FormTurnTypeInstruction> to stay on <STREET_NAMES(2)>."
+void TestBuildTurnInstructions_3_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "VA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateTurnManeuverList_3(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateTurnManeuverList_3(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Turn right onto Sunstone Drive.",
+      "Turn right onto Sunstone Drive.",
+      "Turn right onto Sunstone Drive.",
+      "Continue for 300 feet.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Turn right to stay on Sunstone Drive.",
+      "Turn right to stay on Sunstone Drive.",
+      "Turn right to stay on Sunstone Drive.",
+      "Continue for 100 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -1720,6 +1932,18 @@ int main() {
 
   // BuildContinueInstructions_1_miles_en_US
   suite.test(TEST_CASE(TestBuildContinueInstructions_1_miles_en_US));
+
+  // BuildTurnInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildTurnInstructions_0_miles_en_US));
+
+  // BuildTurnInstructions_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildTurnInstructions_1_miles_en_US));
+
+  // BuildTurnInstructions_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildTurnInstructions_2_miles_en_US));
+
+  // BuildTurnInstructions_3_miles_en_US
+  suite.test(TEST_CASE(TestBuildTurnInstructions_3_miles_en_US));
 
   return suite.tear_down();
 }
