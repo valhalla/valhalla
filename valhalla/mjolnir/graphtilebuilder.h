@@ -13,6 +13,8 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <valhalla/midgard/grid.h>
+
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/signinfo.h>
@@ -22,13 +24,14 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/transittrip.h>
+#include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 #include <valhalla/mjolnir/admininfobuilder.h>
-#include <valhalla/baldr/tilehierarchy.h>
+
 #include "signbuilder.h"
 
 namespace valhalla {
@@ -373,6 +376,10 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Text list. List of names used within this tile
   std::list<std::string> textlistbuilder_;
+
+  // Cells of the tile to intersect with the edges' shapes
+  grid<PointLL> binner_;
+  std::array<std::list<GraphId>, kCellCount> bins_;
 };
 
 }
