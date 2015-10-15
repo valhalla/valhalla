@@ -46,6 +46,10 @@ class Maneuver {
   void set_street_names(std::unique_ptr<StreetNames>&& street_names);
   bool HasStreetNames() const;
 
+  bool HasSameNames(
+      const Maneuver* other_maneuver,
+      bool allow_begin_intersecting_edge_name_consistency = false) const;
+
   bool HasSimilarNames(
       const Maneuver* other_maneuver,
       bool allow_begin_intersecting_edge_name_consistency = false) const;

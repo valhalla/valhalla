@@ -146,15 +146,15 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
       case TripDirections_Maneuver_Type_kUturnLeft: {
         // Set instruction
         maneuver.set_instruction(
-            std::move(FormUturnInstruction(maneuver)));
+            std::move(FormUturnInstruction(maneuver, prev_maneuver)));
 
         // Set verbal transition alert instruction
         maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertUturnInstruction(maneuver)));
+            std::move(FormVerbalAlertUturnInstruction(maneuver, prev_maneuver)));
 
         // Set verbal pre transition instruction
         maneuver.set_verbal_pre_transition_instruction(
-            std::move(FormVerbalUturnInstruction(maneuver)));
+            std::move(FormVerbalUturnInstruction(maneuver, prev_maneuver)));
 
         // Set verbal post transition instruction
         maneuver.set_verbal_post_transition_instruction(
@@ -1088,11 +1088,15 @@ std::string NarrativeBuilder::FormVerbalBearInstruction(
   return instruction;
 }
 
-std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
-  //  "Make a <FormTurnTypeInstruction> U-turn."
-  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
-  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
+std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
+                                                   Maneuver* prev_maneuver) {
+  //  0 "Make a <FormTurnTypeInstruction> U-turn."
+  //  1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
+  //  2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
+  //  3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
+  //  4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+  //  5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+  // TODO: rework with phrase ids
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -1106,7 +1110,11 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
   }
 
   if (maneuver.HasStreetNames()) {
-    instruction += " onto ";
+    if (maneuver.HasSameNames(prev_maneuver, true)) {
+      instruction += " to stay on ";
+    } else {
+      instruction += " onto ";
+    }
     instruction += maneuver.street_names().ToString();
   }
 
@@ -1115,10 +1123,13 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver) {
 }
 
 std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Make a <FormTurnTypeInstruction> U-turn."
-  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
-  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
+    std::string delim) {
+  // 0 "Make a <FormTurnTypeInstruction> U-turn."
+  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
+  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(1)>."
+  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
+  // TODO: rework with phrase ids
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -1131,7 +1142,11 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
     instruction += maneuver.cross_street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   } else if (maneuver.HasStreetNames()) {
-    instruction += " onto ";
+    if (maneuver.HasSameNames(prev_maneuver, true)) {
+      instruction += " to stay on ";
+    } else {
+      instruction += " onto ";
+    }
     instruction += maneuver.street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   }
@@ -1141,11 +1156,15 @@ std::string NarrativeBuilder::FormVerbalAlertUturnInstruction(
 }
 
 std::string NarrativeBuilder::FormVerbalUturnInstruction(
-    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  "Make a <FormTurnTypeInstruction> U-turn."
-  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
-  //  "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
-  //  "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
+    Maneuver& maneuver, Maneuver* prev_maneuver, uint32_t element_max_count,
+    std::string delim) {
+  // 0 "Make a <FormTurnTypeInstruction> U-turn."
+  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
+  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(2)>."
+  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
+  // 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
+  // 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
+  // TODO: rework with phrase ids
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -1160,7 +1179,11 @@ std::string NarrativeBuilder::FormVerbalUturnInstruction(
   }
 
   if (maneuver.HasStreetNames()) {
-    instruction += " onto ";
+    if (maneuver.HasSameNames(prev_maneuver, true)) {
+      instruction += " to stay on ";
+    } else {
+      instruction += " onto ";
+    }
     instruction += maneuver.street_names().ToString(
         element_max_count, delim, maneuver.verbal_formatter());
   }
