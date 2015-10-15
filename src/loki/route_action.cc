@@ -17,33 +17,6 @@ namespace {
 
   //TODO: move json header to baldr
   //TODO: make objects serialize themselves
-
-  json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
-    auto array = json::array({});
-    std::unordered_multimap<uint64_t, PointLL> ids;
-    for(const auto& edge : location.edges()) {
-      try {
-        //get the osm way id
-        auto tile = reader.GetGraphTile(edge.id);
-        auto* directed_edge = tile->directededge(edge.id);
-        auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
-        //check if we did this one before
-        auto range = ids.equal_range(edge_info->wayid());
-        bool duplicate = false;
-        for(auto id = range.first; id != range.second; ++id) {
-          if(id->second == location.vertex()) {
-            duplicate = true;
-            break;
-          }
-        }
-      }
-      catch(...) {
-        //this really shouldnt ever get hit
-        LOG_WARN("Expected edge not found in graph but found by loki::search!");
-      }
-    }
-    return array;
-  }
 }
 
 namespace valhalla {

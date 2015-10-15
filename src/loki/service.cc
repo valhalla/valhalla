@@ -175,7 +175,6 @@ namespace valhalla {
     }
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       auto costing = request.get_optional<std::string>("costing");
-      //using the costing we can determine what type of edge filtering to use
       size_t max_locations = std::numeric_limits<size_t>::max(); //TODO: locate should really have a limit..
       if (costing)
         max_locations = config.get<size_t>("service_limits." + *costing + ".max_locations");
@@ -198,6 +197,7 @@ namespace valhalla {
         throw std::runtime_error("Insufficient number of locations provided");
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
+      //using the costing we can determine what type of edge filtering to use
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
