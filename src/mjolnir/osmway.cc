@@ -49,6 +49,16 @@ float OSMWay::speed() const {
   return static_cast<float>(speed_);
 }
 
+// Sets the truck speed in KPH.
+void OSMWay::set_truck_speed(const float speed) {
+  truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+}
+
+// Gets the truck speed in KPH.
+float OSMWay::truck_speed() const {
+  return static_cast<float>(truck_speed_);
+}
+
 // Set the index for the ref.
 void OSMWay::set_ref_index(const uint32_t idx) {
   ref_index_ = idx;
@@ -236,7 +246,7 @@ void OSMWay::set_truck_forward(const bool truck_forward) {
 
 // Get the truck forward flag.
 bool OSMWay::truck_forward() const {
-  return access_.fields.auto_forward;
+  return access_.fields.truck_forward;
 }
 
 // Set bike forward flag.
@@ -481,12 +491,12 @@ bool OSMWay::drive_on_right() const {
 
 //Sets the bike network mask
 void OSMWay::set_bike_network(const uint32_t bikenetwork) {
-  attributes_.fields.bikenetwork = bikenetwork;
+  attributes_.fields.bike_network = bikenetwork;
 }
 
 //Get the bike network mask
 uint32_t OSMWay::bike_network() const {
-  return attributes_.fields.bikenetwork;
+  return attributes_.fields.bike_network;
 }
 
 // Set exit flag.
@@ -507,6 +517,16 @@ void  OSMWay::set_tagged_speed(const bool tagged_speed) {
 // Get the tagged_speed flag.
 bool  OSMWay::tagged_speed() const {
   return attributes_.fields.tagged_speed;
+}
+
+// Sets the truck route flag.
+void OSMWay::set_truck_route(const bool truck_route) {
+  attributes_.fields.truck_route = truck_route;
+}
+
+// Get the truck_route flag.
+bool OSMWay::truck_route() const {
+  return attributes_.fields.truck_route;
 }
 
 // Get the road class.
