@@ -309,12 +309,14 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
   else
     return departures;
 
+  uint32_t origin_key = 0;
+
   try
   {
 
     for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
 
-      const uint32_t origin_key = stop_pairs.second.get<uint32_t>("origin_key", 0);
+      origin_key = stop_pairs.second.get<uint32_t>("origin_key", 0);
       const uint32_t dest_key = stop_pairs.second.get<uint32_t>("destination_key", 0);
 
       if (origin_key == 0 || dest_key == 0) {
@@ -447,7 +449,7 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
     }
   }
   catch (std::exception &e) {
-    LOG_ERROR("ProcessStopPairs.  Exception in json file " + file);
+    LOG_ERROR("ProcessStopPairs.  origin_key = " + std::to_string(origin_key) + " Exception in json file " + file);
   }
 
   return departures;
