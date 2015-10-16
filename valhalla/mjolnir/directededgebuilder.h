@@ -24,23 +24,24 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
 
   /**
    * Constructor with arguments.
-   * @param  way      OSM way info generated from parsing OSM tags with Lua.
-   * @param  endnode  GraphId of the end node of this directed edge.
-   * @param  length   Length in meters.
-   * @param  speed    Speed in kph.
-   * @param  use      Use of the edge.
-   * @param  rc       Road class / importance
-   * @param  localidx  Index of the edge (from the node) on the local level
-   * @param  restrictions Mask of simple turn restrictions at the end node
-   *                      of this directed edge.
-   * @param  bike_network Mask of bike_networks from relations.
+   * @param  way            OSM way info generated from parsing OSM tags with Lua.
+   * @param  endnode        GraphId of the end node of this directed edge.
+   * @param  length         Length in meters.
+   * @param  speed          Speed in kph.
+   * @param  truck_speed    Truck speed in kph.
+   * @param  use            Use of the edge.
+   * @param  rc             Road class / importance
+   * @param  localidx       Index of the edge (from the node) on the local level
+   * @param  restrictions   Mask of simple turn restrictions at the end node
+   *                        of this directed edge.
+   * @param  bike_network   Mask of bike_networks from relations.
    */
   DirectedEdgeBuilder(const OSMWay& way, const baldr::GraphId& endnode,
                       const bool forward, const uint32_t length,
-                      const uint32_t speed, const baldr::Use use,
-                      const baldr::RoadClass rc, const uint32_t localidx,
-                      const bool signal, const uint32_t restrictions,
-                      const uint32_t bike_network);
+                      const uint32_t speed, const uint32_t truck_speed,
+                      const baldr::Use use, const baldr::RoadClass rc,
+                      const uint32_t localidx, const bool signal,
+                      const uint32_t restrictions, const uint32_t bike_network);
 
   /**
    * Set the end node of this directed edge.
@@ -56,35 +57,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_edgeinfo_offset(const uint32_t offset);
 
   /**
-   * Set the access conditions flag.
-   * @param  access  True if the directed edge has general access conditions,
-   *                 false if not.
+   * Set the restriction or access condition per mode
+   * @param  access  General access conditions
    */
-  void set_access_conditions(const bool access);
-
-  /**
-   * Set the flag indicating this directed edge starts a simple, timed turn
-   * restriction (from one edge to another).
-   * @param  ttr   True if this edge starts a simple, timed turn restriction.
-   */
-  void start_ttr(const bool ttr);
-
-  /**
-   * Set the flag indicating this directed edge starts a multi-edge turn
-   * restriction. These are restrictions from one edge to another via one or
-   * more edges. Can include times.
-   * @param  mer  Ttrue if this edge starts a multi-edge restriction.
-   */
-  void start_mer(const bool mer);
-
-  /**
-   * Set the flag indicating this directed edge ends a multi-edge turn
-   * restriction. These are restrictions from one edge to another via one
-   * or more edges. This is the end edge of such a restriction.
-   * Can include times.
-   * @param  mer  True if this edge starts a multi-edge restriction.
-   */
-  void end_mer(const bool mer);
+  void set_access(const uint32_t access);
 
   /**
    * Sets the exit sign flag.
@@ -221,7 +197,13 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * along this edge. See baldr/directededge.h for definitions.
    * @param  bikenetwork  Bicycle network mask.
   */
-  void set_bikenetwork(const uint32_t bikenetwork);
+  void set_bike_network(const uint32_t bike_network);
+
+  /**
+   * Set the truck route flag for this directed edge.
+   * @param  truck_route  Truck route flag.
+   */
+  void set_truck_route(const bool truck_route);
 
   /**
    * Sets the number of lanes
@@ -331,6 +313,12 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  speed  Speed in KPH.
   */
   void set_speed(const uint32_t speed);
+
+  /**
+   * Sets the truck speed in KPH.
+   * @param  truck speed  Speed in KPH.
+  */
+  void set_truck_speed(const uint32_t speed);
 
   /**
    * Sets the classification (importance) of this edge.

@@ -33,27 +33,30 @@ DirectedEdgeBuilder::DirectedEdgeBuilder()
 }
 
 // Constructor with parameters
-DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
-                   const GraphId& endnode,
+DirectedEdgeBuilder::DirectedEdgeBuilder(
+                   const OSMWay& way, const GraphId& endnode,
                    const bool forward, const uint32_t length,
-                   const uint32_t speed, const baldr::Use use,
-                   const RoadClass rc, const uint32_t localidx,
-                   const bool signal, const uint32_t restrictions,
-                   const uint32_t bike_network)
+                   const uint32_t speed, const uint32_t truck_speed,
+                   const baldr::Use use, const RoadClass rc,
+                   const uint32_t localidx, const bool signal,
+                   const uint32_t restrictions, const uint32_t bike_network)
      :  DirectedEdge() {
   set_endnode(endnode);
   set_length(length);
   set_use(use);
   set_speed(speed);    // KPH
+  set_truck_speed(truck_speed); // KPH
   set_ferry(way.ferry());
   set_railferry(way.rail());
   set_toll(way.toll());
   set_dest_only(way.destination_only());
 
   if (bike_network)
-    set_bikenetwork(way.bike_network() | bike_network);
+    set_bike_network(way.bike_network() | bike_network);
   else
-    set_bikenetwork(way.bike_network());
+    set_bike_network(way.bike_network());
+
+  set_truck_route(way.truck_route());
 
   if (!way.destination_only())
     set_dest_only(way.no_thru_traffic());
@@ -75,6 +78,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Set forward flag and access (based on direction)
   set_forward(forward);
   set_caraccess(forward, way.auto_forward());
+  set_truckaccess(forward, way.truck_forward());
   set_busaccess(forward, way.bus_forward());
   set_bicycleaccess(forward, way.bike_forward());
   set_emergencyaccess(forward, way.emergency_forward());
@@ -82,6 +86,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   // Access for opposite direction
   set_caraccess(!forward, way.auto_backward());
+  set_truckaccess(!forward, way.truck_backward());
   set_busaccess(!forward, way.bus_backward());
   set_bicycleaccess(!forward, way.bike_backward());
   set_emergencyaccess(!forward, way.emergency_backward());
@@ -104,30 +109,9 @@ void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
   }
 }
 
-// Set the access conditions flag.
-void DirectedEdgeBuilder::set_access_conditions(const bool access) {
-  dataoffsets_.access_conditions = access;
-}
-
-// Set the flag indicating this directed edge starts a simple, timed turn
-// restriction (from one edge to another).
-void DirectedEdgeBuilder::start_ttr(const bool ttr) {
-  dataoffsets_.start_ttr = ttr;
-}
-
-// Set the flag indicating this directed edge starts a multi-edge turn
-// restriction. These are restrictions from one edge to another via one or
-// more edges. Can include times.
-void DirectedEdgeBuilder::start_mer(const bool mer) {
-  dataoffsets_.start_mer = mer;
-}
-
-// Set the flag indicating this directed edge ends a multi-edge turn
-// restriction. These are restrictions from one edge to another via one
-// or more edges. This is the end edge of such a restriction.
-// Can include times.
-void DirectedEdgeBuilder::end_mer(const bool mer) {
-  dataoffsets_.end_mer = mer;
+// Set the access.
+void DirectedEdgeBuilder::set_access(const uint32_t access) {
+  dataoffsets_.access_restriction = access;
 }
 
 // Sets the exit flag.
@@ -251,14 +235,19 @@ void DirectedEdgeBuilder::set_cyclelane(const CycleLane cyclelane) {
 
 // Sets the bike network mask indicating which (if any) bicycle networks are
 // along this edge. See baldr/directededge.h for definitions.
-void DirectedEdgeBuilder::set_bikenetwork(const uint32_t bikenetwork) {
-  if (bikenetwork > kMaxBicycleNetwork) {
+void DirectedEdgeBuilder::set_bike_network(const uint32_t bike_network) {
+  if (bike_network > kMaxBicycleNetwork) {
     LOG_WARN("Bicycle Network mask exceeds maximum: " +
-              std::to_string(bikenetwork));
-    attributes_.bikenetwork = 0;
+              std::to_string(bike_network));
+    attributes_.bike_network = 0;
   } else {
-    attributes_.bikenetwork = bikenetwork;
+    attributes_.bike_network = bike_network;
   }
+}
+
+// Sets truck route flag.
+void DirectedEdgeBuilder::set_truck_route(const bool truck_route) {
+  attributes_.truck_route = truck_route;
 }
 
 // Sets the number of lanes
@@ -302,84 +291,84 @@ void DirectedEdgeBuilder::set_ctry_crossing(const bool crossing) {
 
 // Set all forward access modes to true (used for transition edges)
 void DirectedEdgeBuilder::set_all_forward_access() {
-  forwardaccess_.v = kAllAccess;
+  access_.forwardaccess = kAllAccess;
 }
 
 // Sets the car access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_caraccess(const bool forward, const bool car) {
-  if (forward) {
-    forwardaccess_.fields.car = car;
-  } else {
-    reverseaccess_.fields.car = car;
+  if (forward && car) {
+      access_.forwardaccess |= kAutoAccess;
+  } else if (!forward && car) {
+    access_.reverseaccess |= kAutoAccess;
   }
 }
 
 // Sets the taxi access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_taxiaccess(const bool forward, const bool taxi) {
-  if (forward) {
-    forwardaccess_.fields.taxi = taxi;
-  } else {
-    reverseaccess_.fields.taxi = taxi;
+  if (forward && taxi) {
+      access_.forwardaccess |= kTaxiAccess;
+  } else if (!forward && taxi) {
+    access_.reverseaccess |= kTaxiAccess;
   }
 }
 
 // Sets the truck access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_truckaccess(const bool forward,
                                           const bool truck) {
-  if (forward) {
-    forwardaccess_.fields.truck = truck;
-  } else {
-    reverseaccess_.fields.truck = truck;
+  if (forward && truck) {
+      access_.forwardaccess |= kTruckAccess;
+  } else if (!forward && truck) {
+    access_.reverseaccess |= kTruckAccess;
   }
 }
 
 // Sets the pedestrian access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_pedestrianaccess(const bool forward,
                                                const bool pedestrian) {
-  if (forward) {
-    forwardaccess_.fields.pedestrian = pedestrian;
-  } else {
-    reverseaccess_.fields.pedestrian = pedestrian;
+  if (forward && pedestrian) {
+      access_.forwardaccess |= kPedestrianAccess;
+  } else if (!forward && pedestrian) {
+    access_.reverseaccess |= kPedestrianAccess;
   }
 }
 
 // Sets the bicycle access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_bicycleaccess(const bool forward,
                                             const bool bicycle) {
-  if (forward) {
-    forwardaccess_.fields.bicycle = bicycle;
-  } else {
-    reverseaccess_.fields.bicycle = bicycle;
+  if (forward && bicycle) {
+      access_.forwardaccess |= kBicycleAccess;
+  } else if (!forward && bicycle) {
+    access_.reverseaccess |= kBicycleAccess;
   }
 }
 
 // Sets the emergency access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_emergencyaccess(const bool forward,
                                               const bool emergency) {
-  if (forward) {
-    forwardaccess_.fields.emergency = emergency;
-  } else {
-    reverseaccess_.fields.emergency = emergency;
+  if (forward && emergency) {
+      access_.forwardaccess |= kEmergencyAccess;
+  } else if (!forward && emergency) {
+    access_.reverseaccess |= kEmergencyAccess;
   }
 }
 
 // Sets the bus access of the edge in the specified direction.
 void DirectedEdgeBuilder::set_busaccess(const bool forward,
                                         const bool bus) {
-  if (forward) {
-    forwardaccess_.fields.bus = bus;
-  } else {
-    reverseaccess_.fields.bus = bus;
+  if (forward && bus) {
+      access_.forwardaccess |= kBusAccess;
+  } else if (!forward && bus) {
+    access_.reverseaccess |= kBusAccess;
   }
 }
 
 // Sets the high occupancy vehicle (HOV) access of the edge in the specified
 // direction.
 void DirectedEdgeBuilder::set_hovaccess(const bool forward, const bool hov) {
-  if (forward) {
-    forwardaccess_.fields.hov = hov;
-  } else {
-    reverseaccess_.fields.hov = hov;
+  if (forward && hov) {
+      access_.forwardaccess |= kHOVAccess;
+  } else if (!forward && hov) {
+    access_.reverseaccess |= kHOVAccess;
   }
 }
 
@@ -391,6 +380,17 @@ void DirectedEdgeBuilder::set_speed(const uint32_t speed) {
     speed_ = static_cast<unsigned char>(kMaxSpeed);
   } else {
     speed_ = static_cast<unsigned char>(speed);
+  }
+}
+
+// Sets the truck speed in KPH.
+void DirectedEdgeBuilder::set_truck_speed(const uint32_t speed) {
+  // TODO - protect against exceeding max speed
+  if (speed > kMaxSpeed) {
+    LOG_WARN("Exceeding maximum truck speed: " + std::to_string(speed));
+    access_.truck_speed = static_cast<unsigned char>(kMaxSpeed);
+  } else {
+    access_.truck_speed = static_cast<unsigned char>(speed);
   }
 }
 
@@ -473,7 +473,11 @@ void DirectedEdgeBuilder::set_lineid(const uint32_t lineid) {
 
 DirectedEdgeBuilder DirectedEdgeBuilder::flipped() const {
   auto other = *this;
-  std::swap(other.forwardaccess_, other.reverseaccess_);
+
+  const uint32_t access = other.access_.forwardaccess;
+  other.access_.forwardaccess = other.access_.reverseaccess;
+  other.access_.reverseaccess = access;
+
   other.attributes_.forward = !other.attributes_.forward;
   return other;
 }
