@@ -511,6 +511,8 @@ void FormTilesInNewLevel(
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
     tilebuilder.AddAdmin("None","None","","","","");
 
+//    std::vector<AccessRestriction> access_restrictions;
+
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
     edgeindex = 0;
@@ -569,6 +571,15 @@ void FormTilesInNewLevel(
             tilebuilder.AddSigns(edgeindex + directededges.size(), signs);
           }
 
+          // Get the restrictions from the base directed edge
+/*          std::vector<AccessRestriction> restrictions =
+              tile->GetAccessRestrictions(oldedgeid.id());
+          if (restrictions.size()) {
+            for (const auto& res : restrictions)
+              access_restrictions.emplace_back(edgeindex + directededges.size(),
+                                               res.type(), res.value());
+          }
+*/
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
@@ -612,6 +623,8 @@ void FormTilesInNewLevel(
       nodeid++;
       edgeindex += directededges.size();
     }
+
+//    tilebuilder.AddAccessRestrictions(access_restrictions);
 
     // Store the new tile
     GraphId tile(tileid, level, 0);
@@ -660,15 +673,25 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
 
+//  uint32_t nextresidx = (tilebuilder.header()->restrictioncount() > 0) ?
+//      tilebuilder.accessrestriction(0).edgeid() : existinghdr.directededgecount() + 1;
+
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
+
   uint32_t signidx = 0;
   uint32_t signcount = existinghdr.signcount();
+
+//  uint32_t residx = 0;
+//  uint32_t rescount = existinghdr.restrictioncount();
+
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
   std::vector<SignBuilder> signs;
+  std::vector<AccessRestriction> restrictions;
+
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
@@ -694,6 +717,20 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
               0 : tilebuilder.sign(signidx).edgeindex();
       }
 
+      // Add any restrictions that use this idx - increment their index by the
+      // number of added edges
+/*      while (idx == nextresidx && residx < rescount) {
+
+        AccessRestriction res = tilebuilder.accessrestriction(residx);
+        AccessRestriction r(idx+n,res.type(),res.value());
+        restrictions.emplace_back(std::move(r));
+
+        // Increment to the next restriction and update nextresidx
+        residx++;
+        nextresidx = (residx >= rescount) ?
+              0 : tilebuilder.accessrestriction(residx).edgeid();
+      }
+*/
       // Increment index
       idx++;
     }
@@ -735,9 +772,14 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
               std::to_string(signs.size()) + " Header says: " +
               std::to_string(hdrbuilder.signcount()));
   }
+  if (restrictions.size() != hdrbuilder.restrictioncount()) {
+      LOG_ERROR("AddConnectionsToBaseTile: restriction size = " +
+                std::to_string(restrictions.size()) + " Header says: " +
+                std::to_string(hdrbuilder.restrictioncount()));
+  }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs);
+  tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs, restrictions);
 
   LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

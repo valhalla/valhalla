@@ -1162,6 +1162,11 @@ void enhance(const boost::property_tree::ptree& pt,
     // are not used/created or if none is found.
     tilebuilder.AddAdmin("None","None","","","","");
 
+    // this will be our updated list of restictions.
+    // need to do some conversions on weights; therefore, we must update
+    // the restriction list.
+//    std::vector<AccessRestriction> access_restrictions;
+
     // Get the admin polygons. If only one exists for the tile check if the
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
@@ -1264,6 +1269,23 @@ void enhance(const boost::property_tree::ptree& pt,
       for (uint32_t j = 0; j < ntrans; j++) {
         DirectedEdgeBuilder& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
+/*        std::vector<AccessRestriction> restrictions =
+            tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
+
+        // must convert US weight values from short ton (U.S. customary) to metric
+        if (country_code == "US" || country_code == "MM" || country_code == "LR") {
+          for (const auto& res : restrictions) {
+            if (res.type() == AccessType::kMaxWeight || res.type() == AccessType::kMaxAxleLoad) {
+              access_restrictions.emplace_back(nodeinfo.edge_index()+j,
+                                               res.type(), std::round(res.value()/1.10231));
+            } else access_restrictions.emplace_back(res);
+          }
+        } else {
+          for (const auto& res : restrictions)
+            access_restrictions.emplace_back(res);
+        }
+*/
         auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
@@ -1361,6 +1383,8 @@ void enhance(const boost::property_tree::ptree& pt,
         }
       }
     }
+
+//    tilebuilder.AddAccessRestrictions(access_restrictions);
 
     // Write the new file
     lock.lock();
