@@ -20,7 +20,6 @@
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/transittrip.h>
 
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
@@ -137,12 +136,6 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  departure  Transit departure record.
    */
   void AddTransitDeparture(const baldr::TransitDeparture& departure);
-
-  /**
-   * Add a transit trip.
-   * @param  trip  Transit trip record.
-   */
-  void AddTransitTrip(const baldr::TransitTrip& trip);
 
   /**
    * Add a transit stop.
