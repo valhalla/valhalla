@@ -67,6 +67,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
 	valhalla/mjolnir/osmpbfparser.h \
+        valhalla/mjolnir/osmaccessrestriction.h \
 	valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
@@ -98,6 +99,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmadmin.cc \
 	src/mjolnir/osmnode.cc \
 	src/mjolnir/osmpbfparser.cc \
+        src/mjolnir/osmaccessrestriction.cc \
 	src/mjolnir/osmrestriction.cc \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \

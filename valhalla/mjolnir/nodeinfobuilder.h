@@ -86,12 +86,6 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_timezone(const uint16_t timezone);
 
   /**
-   * Set the daylight saving time flag
-   * @param  dst  dst flag.
-   */
-  void set_dst(const bool dst);
-
-  /**
    * Set the auto driveability of the local directed edge given a local
    * edge index.
    * @param  localidx  Local edge index.

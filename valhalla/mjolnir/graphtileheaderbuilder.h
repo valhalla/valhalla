@@ -89,12 +89,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_departurecount(const uint32_t departures);
 
   /**
-   * Sets the number of transit trips in this tile.
-   * @param  trips  The number of transit trips.
-   */
-  void set_tripcount(const uint32_t trips);
-
-  /**
    * Sets the number of transit stops in this tile.
    * @param  stops  The number of transit stops.
    */
@@ -111,6 +105,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param  transfers   The number of transit transfers.
    */
   void set_transfercount(const uint32_t transfers);
+
+  /**
+   * Sets the number of restrictions in this tile.
+   * @param  restrictions   The number of access restrictions.
+   */
+  void set_restrictioncount(const uint32_t restrictions);
 
   /**
    * Gets the number of transit calendar exceptions in this tile.

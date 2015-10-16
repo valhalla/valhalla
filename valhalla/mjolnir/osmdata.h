@@ -11,6 +11,7 @@
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/osmadmin.h>
 #include <valhalla/mjolnir/osmrestriction.h>
+#include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 
@@ -24,6 +25,8 @@ struct OSMBike {
 };
 
 using RestrictionsMap = std::unordered_multimap<uint64_t, OSMRestriction>;
+using AccessRestrictionsMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
+
 using BikeMap = std::unordered_multimap<uint64_t, OSMBike>;
 
 using OSMStringMap = std::unordered_map<uint64_t, std::string>;
@@ -57,6 +60,9 @@ struct OSMData {
 
   // Stores simple restrictions. Indexed by the from way Id.
   RestrictionsMap restrictions;
+
+  // Stores access restrictions. Indexed by the from way Id.
+  AccessRestrictionsMap access_restrictions;
 
   // Stores bike information from the relations.  Indexed by the way Id.
   BikeMap bike_relations;

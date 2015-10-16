@@ -242,6 +242,10 @@ struct graph_callback : public OSMPBF::Callback {
     if (!has_surface_tag)
       has_surface = false;
 
+    const auto& highway_junction = results.find("highway");
+    bool is_highway_junction = ((highway_junction != results.end())
+        && (highway_junction->second == "motorway_junction"));
+
     for (const auto& tag : results) {
 
       if (tag.first == "road_class") {
@@ -279,6 +283,8 @@ struct graph_callback : public OSMPBF::Callback {
 
       else if (tag.first == "auto_forward")
         w.set_auto_forward(tag.second == "true" ? true : false);
+      else if (tag.first == "truck_forward")
+        w.set_truck_forward(tag.second == "true" ? true : false);
       else if (tag.first == "bus_forward")
         w.set_bus_forward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_forward")
@@ -287,6 +293,8 @@ struct graph_callback : public OSMPBF::Callback {
         w.set_emergency_forward(tag.second == "true" ? true : false);
       else if (tag.first == "auto_backward")
         w.set_auto_backward(tag.second == "true" ? true : false);
+      else if (tag.first == "truck_backward")
+        w.set_truck_backward(tag.second == "true" ? true : false);
       else if (tag.first == "bus_backward")
         w.set_bus_backward(tag.second == "true" ? true : false);
       else if (tag.first == "bike_backward")
@@ -368,6 +376,49 @@ struct graph_callback : public OSMPBF::Callback {
       else if (tag.first == "speed") {
         w.set_speed(std::stof(tag.second));
         w.set_tagged_speed(true);
+      }
+
+      else if (tag.first == "maxspeed:hgv") {
+        w.set_truck_speed(std::stof(tag.second));
+      }
+      else if (tag.first == "truck_route") {
+        w.set_truck_route(tag.second == "true" ? true : false);
+      }
+      else if (tag.first == "hazmat") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kHazmat);
+        restriction.set_value(tag.second == "true" ? true : false);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+      }
+      else if (tag.first == "maxheight") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxHeight);
+        restriction.set_value(std::stof(tag.second)*100);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+      }
+      else if (tag.first == "maxwidth") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxWidth);
+        restriction.set_value(std::stof(tag.second)*100);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+      }
+      else if (tag.first == "maxlength") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxLength);
+        restriction.set_value(std::stof(tag.second)*100);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+      }
+      else if (tag.first == "maxweight") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxWeight);
+        restriction.set_value(std::stof(tag.second)*100);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
+      }
+      else if (tag.first == "maxaxleload") {
+        OSMAccessRestriction restriction;
+        restriction.set_type(AccessType::kMaxAxleLoad);
+        restriction.set_value(std::stof(tag.second)*100);
+        osmdata_.access_restrictions.insert(AccessRestrictionsMap::value_type(osmid, restriction));
       }
 
       else if (tag.first == "default_speed")

@@ -306,6 +306,20 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   return mask;
 }
 
+void AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
+                        const OSMData& osmdata, GraphTileBuilder& graphtile) {
+
+  auto res = osmdata.access_restrictions.equal_range(wayid);
+  if (res.first == osmdata.access_restrictions.end()) {
+    return;
+  }
+
+  for (auto r = res.first; r != res.second; ++r) {
+    AccessRestriction access_restriction(edgeid, r->second.type(),  r->second.value());
+    graphtile.AddAccessRestriction(access_restriction);
+  }
+}
+
 // Walk the shape and look for any empty tiles that the shape intersects
 void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
                 const Tiles<PointLL>& tiling, std::list<PointLL>& shape,
@@ -450,6 +464,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             speed = kMaxSpeedKph;
           }
 
+          uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
+          if (truck_speed > kMaxSpeedKph) {
+            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) + " wayId= " +
+                       std::to_string(w.way_id()));
+            truck_speed = kMaxSpeedKph;
+          }
+
           // Cul du sac
           auto use = w.use();
           if(use == Use::kCuldesac)
@@ -583,8 +604,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add a directed edge and get a reference to it
           graphtile.directededges().emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
-                                     speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                     n, has_signal, restrictions, bike_network);
+                                                speed, truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                                n, has_signal, restrictions, bike_network);
           DirectedEdgeBuilder& directededge = graphtile.directededges().back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
@@ -610,6 +631,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             graphtile.AddSigns(idx, exits);
             directededge.set_exitsign(true);
           }
+
+          //add restrictions..For now only storing access restrictions for trucks
+//          if (directededge.forwardaccess() & kTruckAccess)
+//            AddAccessRestrictions(idx, w.way_id(), osmdata, graphtile);
 
           // Increment the directed edge index within the tile
           idx++;

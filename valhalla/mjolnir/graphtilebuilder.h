@@ -18,12 +18,10 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/signinfo.h>
-#include <valhalla/baldr/transitcalendar.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/transittrip.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
@@ -86,12 +84,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
    * @param  signs          Updated list of signs.
-   * @param  trs            Updated list of turn restrictions.
+   * @param  restrictions   Updated list of access restrictions.
    */
   void Update(const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
-              const std::vector<SignBuilder>& signs);
+              const std::vector<SignBuilder>& signs,
+              const std::vector<AccessRestriction>& restrictions);
 
   /**
    * Add a node and its outbound edges. Sets the node's edge index
@@ -123,12 +122,6 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddTransitDeparture(const baldr::TransitDeparture& departure);
 
   /**
-   * Add a transit trip.
-   * @param  trip  Transit trip record.
-   */
-  void AddTransitTrip(const baldr::TransitTrip& trip);
-
-  /**
    * Add a transit stop.
    * @param  stop  Transit stop record.
    */
@@ -147,10 +140,16 @@ class GraphTileBuilder : public baldr::GraphTile {
   void AddTransitTransfer(const baldr::TransitTransfer& transfer);
 
   /**
-   * Add a transit calendar exception.
-   * @param  exception  Transit calendar exception record.
+   * Add an access restriction.
+   * @param  access_restriction  Access Restriction record.
    */
-  void AddTransitCalendar(const baldr::TransitCalendar& exception);
+  void AddAccessRestriction(const baldr::AccessRestriction& access_restriction);
+
+  /**
+   * Add restriction.
+   * @param  restrictions Access restrictions
+   */
+  void AddAccessRestrictions(const std::vector<AccessRestriction>& restrictions);
 
   /**
    * Add sign information.
@@ -260,6 +259,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   DirectedEdgeBuilder& directededge_builder(const size_t idx);
 
   /**
+   * Gets a non-const access restriction from existing tile data.
+   * @param  idx  Index of the restriction (index in the array, not the
+   *              directed edge index) within the tile.
+   * @return  Returns a reference to the access restriction.
+   */
+  AccessRestriction& accessrestriction(const size_t idx);
+
+  /**
    * Gets a non-const sign (builder) from existing tile data.
    * @param  idx  Index of the sign (index in the array, not the
    *              directed edge index) within the tile.
@@ -327,9 +334,6 @@ class GraphTileBuilder : public baldr::GraphTile {
   // departure time
   std::vector<baldr::TransitDeparture> departure_builder_;
 
-  // Transit trips. Sorted by trip Id.
-  std::vector<baldr::TransitTrip> trip_builder_;
-
   // Transit stops. Sorted by stop Id.
   std::vector<baldr::TransitStop> stop_builder_;
 
@@ -339,8 +343,8 @@ class GraphTileBuilder : public baldr::GraphTile {
   // Transit transfers. Sorted by from stop Id.
   std::vector<baldr::TransitTransfer> transfer_builder_;
 
-  // Transit calendar exceptions. Sorted by service Id.
-  std::vector<baldr::TransitCalendar> exception_builder_;
+  // List of restrictions. Sorted by directed edge Id
+  std::vector<baldr::AccessRestriction> access_restriction_builder_;
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.

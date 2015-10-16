@@ -80,7 +80,7 @@ void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
 
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfoBuilder::set_access(const uint32_t access) {
-  access_.v = access;
+  access_.access = access;
 }
 
 // Set the intersection type.
@@ -110,11 +110,6 @@ void NodeInfoBuilder::set_timezone(const uint16_t timezone) {
   } else {
     admin_.timezone = timezone;
   }
-}
-
-// Set the daylight saving time flag
-void NodeInfoBuilder::set_dst(const bool dst) {
-  admin_.dst = dst;
 }
 
 // Set the driveability of the local directed edge given a local

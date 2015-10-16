@@ -11,6 +11,8 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphtile.h>
@@ -33,31 +35,32 @@ struct Stop {
   uint32_t type;
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
+  uint32_t wheelchair_boarding;
+  uint32_t timezone;
   PointLL  ll;
   std::string onestop_id;
   std::string id;
-  std::string code;
   std::string name;
   std::string desc;
   std::string zoneid;
 };
 
 struct Departure {
-  uint32_t key;
+  uint64_t days;
   uint32_t orig_stop;
   uint32_t dest_stop;
   uint32_t trip;
   uint32_t route;
   uint32_t blockid;
-  uint32_t service;
   uint32_t shapeid;
   uint32_t dep_time;
   uint32_t arr_time;
   uint32_t start_date;
   uint32_t end_date;
   uint32_t dow;
-  uint32_t has_subtractions;
+  uint32_t wheelchair_accessible;
   std::string headsign;
+  std::string short_name;
 };
 
 // Unique route and stop
@@ -145,111 +148,102 @@ struct builder_stats {
   }
 };
 
-// Get stops within a tile's bounding box
-std::vector<Stop> GetStops(sqlite3 *db_handle, const AABB2<PointLL>& aabb) {
-  // Form query -- for now ignore egress points
+// Get stops within a tile
+std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb, const std::vector<std::string>& regions) {
 
-  std::string sql = "SELECT stop_key, stop_id, onestop_id, osm_way_id,";
-  sql += "stop_code, stop_name,stop_desc, zone_id, location_type, ";
-  sql += "parent_station_key,stop_lat, stop_lon from stops where location_type <> 2 and ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) ";
-  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'stops' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
-
+  boost::property_tree::ptree pt;
   std::vector<Stop> stops;
-  sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-  if (ret == SQLITE_OK) {
-    uint32_t result = sqlite3_step(stmt);
-    while (result == SQLITE_ROW) {
-      Stop stop;
-      stop.key    = sqlite3_column_int(stmt, 0);
-      stop.id     = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 1))));
-      stop.onestop_id = std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 2))));
-      stop.way_id = sqlite3_column_int64(stmt, 3);
-      stop.code   = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 4))) : "";
-      stop.name   = (sqlite3_column_type(stmt, 5) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 5)))) : "";
-      stop.desc   = (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 6)))) : "";
-      stop.zoneid = (sqlite3_column_type(stmt, 7) == SQLITE_TEXT) ?
-                    std::string( reinterpret_cast< const char* >((sqlite3_column_text(stmt, 7)))) : "";
-      stop.type   = sqlite3_column_int(stmt, 8);
-      stop.parent = sqlite3_column_int(stmt, 9);
-      stop.ll.Set(static_cast<float>(sqlite3_column_double(stmt, 11)),
-                  static_cast<float>(sqlite3_column_double(stmt, 10)));
+
+  // Make sure it exists
+  if (boost::filesystem::exists(file))
+    boost::property_tree::read_json(file, pt);
+  else
+    return stops;
+  std::string timezone;
+
+  for (const auto& s : pt.get_child("stops")){
+
+    Stop stop;
+
+    float lon, lat;
+    uint32_t index = 0;
+    for(auto& coords : s.second.get_child("geometry.coordinates")) {
+      if (index) lat = coords.second.get_value<float>();
+      else lon = coords.second.get_value<float>();
+      index++;
+    }
+
+    stop.key = s.second.get<uint32_t>("key", 0);
+
+    //Hack for now.  transit land has a BoundBox bug.
+    if (aabb.Contains(PointLL(lon,lat))) {
+
+      stop.ll.Set(lon,lat);
+      stop.name = s.second.get<std::string>("name", "");
+
+      if (stop.key == 0) {
+        LOG_ERROR("Key missing for stop (" + stop.name + ") in " + file);
+        continue;
+      }
+
+      stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
+      stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
+      stop.onestop_id = s.second.get<std::string>("tags.onestop_id", "");
+      stop.desc = s.second.get<std::string>("tags.stop_desc", "");
+      stop.zoneid = s.second.get<std::string>("tags.zone_id", "");
+      timezone = s.second.get<std::string>("timezone", "");
+
+      if (!timezone.empty()) {
+        std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), timezone);
+        if (it == regions.end()) {
+          LOG_WARN("Timezone not found for " + timezone);
+          stop.timezone = 0;
+        }
+        else stop.timezone = std::distance(regions.begin(),it);
+      } else {
+        LOG_WARN("Timezone not found for " + timezone);
+        stop.timezone = 0;
+      }
+
+      //TODO: get these from transitland????
+      stop.type = 0;
+      stop.parent = 0;
 
       stops.emplace_back(std::move(stop));
-
-      // TODO - perhaps keep a map of parent/child relations
-
-      result = sqlite3_step(stmt);
     }
+    else
+      LOG_ERROR("GetStops.  Stop should not be in tile: " + file + " " + std::to_string(stop.key));
   }
 
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
-  }
   return stops;
+
 }
 
 // Lock on queue access since we are using it in different threads. No need
 // to lock graphreader since no threads are writing tiles yet.
-void assign_graphids(const boost::property_tree::ptree& pt,
+void assign_graphids(const boost::property_tree::ptree& config_pt,
            boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<stop_results>& stop_res) {
   // Construct the transit database
   stop_results stats{};
-  std::string dir = pt.get<std::string>("transit_dir");
-  std::string db_name = pt.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
+
+  std::string transit_dir = config_pt.get<std::string>("transit_dir");
+  boost::property_tree::ptree pt;
 
   // Make sure it exists
-  sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret;
-    char* err_msg = nullptr;
-    std::string sql;
-    ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                          SQLITE_OPEN_READONLY, NULL);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
-      return;
-    }
-    LOG_INFO("SpatiaLite loaded as an extension");
-  }
-  else {
-    LOG_WARN("Transit db " + database + " not found.  Transit will not be added.");
-    stop_res.set_value(stats);
+  if (!boost::filesystem::exists(transit_dir)) {
+    LOG_INFO("Transit directory " + transit_dir + " not found.  Transit will not be added.");
     return;
   }
+  else transit_dir += "/";
 
   // Local Graphreader. Get tile information so we can find bounding boxes
   GraphReader reader(hierarchy_properties);
   auto tile_hierarchy = reader.GetTileHierarchy();
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
 
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
@@ -264,9 +258,16 @@ void assign_graphids(const boost::property_tree::ptree& pt,
     tilequeue.pop();
     lock.unlock();
 
+    std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), tile_hierarchy);
+
+    boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
+    file_name += ".json";
+    std::string file = transit_dir + file_name;
+
     // Get stops within the tile. If any exist, assign GraphIds and add to
     // the map/list
-    std::vector<Stop> stops = GetStops(db_handle, tiles.TileBounds(id));
+    std::vector<Stop> stops = GetStops(file, tiles.TileBounds(id), regions);
+
     if (stops.size() > 0) {
       LOG_DEBUG("Tile has " + std::to_string(stops.size()) + " stops");
 
@@ -289,211 +290,263 @@ void assign_graphids(const boost::property_tree::ptree& pt,
     }
   }
 
-  if (db_handle)
-    sqlite3_close(db_handle);
-
   // Send back the statistics
   stop_res.set_value(stats);
 }
 
 // Get scheduled departures for a stop
-std::vector<Departure> GetDepartures(sqlite3* db_handle,
-                                     const uint32_t stop_key) {
-  // Form query
-  // TODO - add shape Id
-  std::string sql = "SELECT schedule_key, origin_stop_key, dest_stop_key,";
-  sql += "trip_key, route_key, service_key, shape_key, departure_time, arrival_time,";
-  sql += "start_date, end_date, dow_mask, has_subtractions, headsign from schedule where ";
-  sql += "origin_stop_key = " + std::to_string(stop_key);
+std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
+                                                              std::unordered_map<uint32_t, bool>& stop_access,
+                                                              const std::unordered_map<uint32_t, uint32_t>& stops,
+                                                              GraphTileBuilder& tilebuilder) {
 
-  // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the departures
-  // TODO:  so that costing can be applied for bike and wheelchair accessibility.
-  // TODO:  This will require updates to data structure TransitDeparture.
+  boost::property_tree::ptree pt;
+  std::unordered_multimap<uint32_t, Departure> departures;
 
-  std::vector<Departure> departures;
-  sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-  if (ret == SQLITE_OK) {
-    uint32_t result = sqlite3_step(stmt);
-    while (result == SQLITE_ROW) {
-      Departure dep;
-      dep.key       = sqlite3_column_int(stmt, 0);
-      dep.orig_stop = sqlite3_column_int(stmt, 1);
-      dep.dest_stop = sqlite3_column_int(stmt, 2);
-      dep.trip      = sqlite3_column_int(stmt, 3);
-      dep.route     = sqlite3_column_int(stmt, 4);
-      dep.service   = sqlite3_column_int(stmt, 5);
-      dep.shapeid   = sqlite3_column_int(stmt, 6);
+  // Make sure it exists
+  if (boost::filesystem::exists(file))
+    boost::property_tree::read_json(file, pt);
+  else
+    return departures;
 
-      dep.dep_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 7))));
-      dep.arr_time = DateTime::seconds_from_midnight(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 8))));
-      dep.start_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 9))));
-      dep.end_date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 10))));
+  try
+  {
 
-      dep.dow        = sqlite3_column_int(stmt, 11);
-      dep.has_subtractions = sqlite3_column_int(stmt, 12);
-      dep.blockid    = sqlite3_column_int(stmt, 13);
-      dep.headsign   = (sqlite3_column_type(stmt, 14) == SQLITE_TEXT) ?
-                         std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 14))) : "";
+    for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
 
-      // TODO - configure to reject any where calendar end date is in the past!
-      if (dep.end_date > 500) {
-        departures.emplace_back(std::move(dep));
+      const uint32_t origin_key = stop_pairs.second.get<uint32_t>("origin_key", 0);
+      const uint32_t dest_key = stop_pairs.second.get<uint32_t>("destination_key", 0);
+
+      if (origin_key == 0 || dest_key == 0) {
+        LOG_ERROR("No origin or destination key exists in file " + file);
+        continue;
       }
 
-      result = sqlite3_step(stmt);
+      if (stops.find(origin_key) == stops.end() || stops.find(dest_key) == stops.end()) {
+        LOG_ERROR("No origin_key or destination_key not found in stops.  File: " + file);
+        continue;
+      }
+
+      Departure dep;
+      dep.orig_stop = origin_key;
+      dep.dest_stop = dest_key;
+      dep.route = stop_pairs.second.get<uint32_t>("route_key", 0);
+      dep.trip = stop_pairs.second.get<uint32_t>("trip_key", 0);
+
+      if (dep.trip == 0) {
+        LOG_ERROR("Trip does not exist for route: " +  std::to_string(dep.route) +
+                  " file: " + file);
+        continue;
+      }
+
+      if (dep.route == 0) {
+        LOG_ERROR("Route does not exist for trip: " +  std::to_string(dep.trip) +
+                  " file: " + file);
+        continue;
+      }
+
+      //TODO
+      dep.shapeid = 0;
+
+      dep.blockid = stop_pairs.second.get<uint32_t>("block_key", 0);
+
+      //TODO
+      //wheelchair_accessible
+
+      const std::string origin_time = stop_pairs.second.get<std::string>("origin_departure_time", "");
+      const std::string dest_time = stop_pairs.second.get<std::string>("destination_arrival_time", "");
+
+      // bus hack for now
+      if (origin_time.empty() || dest_time.empty())
+        continue;
+
+      dep.dep_time = DateTime::seconds_from_midnight(origin_time);
+      dep.arr_time = DateTime::seconds_from_midnight(dest_time);
+
+      std::string start_date = stop_pairs.second.get<std::string>("service_start_date", "");
+      std::string end_date = stop_pairs.second.get<std::string>("service_end_date", "");
+
+      uint32_t index = 1;
+      uint32_t dow_mask = kDOWNone;
+
+      for(const auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
+        std::string day = service_days.second.get_value<std::string>();
+        bool dow = (day == "true" ? true : false);
+
+        if (dow) {
+          switch (index) {
+            case 1:
+              dow_mask |= kMonday;
+              break;
+            case 2:
+              dow_mask |= kTuesday;
+              break;
+            case 3:
+              dow_mask |= kWednesday;
+              break;
+            case 4:
+              dow_mask |= kThursday;
+              break;
+            case 5:
+              dow_mask |= kFriday;
+              break;
+            case 6:
+              dow_mask |= kSaturday;
+              break;
+            case 7:
+              dow_mask |= kSunday;
+              break;
+          }
+        }
+        index++;
+      }
+
+      dep.dow = dow_mask;
+
+      std::string tz = stop_pairs.second.get<std::string>("origin_timezone", "");
+
+      //end_date will be updated if greater than 60 days.
+      //start_date will be updated to today if the start date is in the past
+      //the start date to end date or 60 days, whichever is less.
+      //set the bits based on the dow.
+
+      dep.days = DateTime::get_service_days(start_date, end_date, tz, dow_mask);
+      dep.start_date =  DateTime::days_from_pivot_date(start_date);
+      dep.end_date =  DateTime::days_from_pivot_date(end_date);
+
+      std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
+      dep.headsign = (headsign == "null" ? "" : headsign);
+
+      std::string bikes_allowed = stop_pairs.second.get<std::string>("bikes_allowed", "null");
+      uint32_t access = false;
+      if (bikes_allowed == "1")
+        access = true;
+      stop_access[dep.orig_stop] = access;
+      stop_access[dep.dest_stop] = access;
+
+      //if subtractions are between start and end date then turn off bit.
+      const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
+      if (except_dates && !except_dates->empty()) {
+        for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
+          std::string date = service_except_dates.second.get_value<std::string>();
+          dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
+        }
+      }
+
+      //if additions are between start and end date then turn on bit.
+      const auto& added_dates = stop_pairs.second.get_child_optional("service_added_dates");
+      //Add the additions.
+      if (added_dates && !added_dates->empty()) {
+
+        for(const auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
+          std::string date = service_added_dates.second.get_value<std::string>();
+          dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
+        }
+      }
+      departures.emplace(dep.orig_stop,std::move(dep));
     }
   }
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
+  catch (std::exception &e) {
+    LOG_ERROR("ProcessStopPairs.  Exception in json file " + file);
   }
+
   return departures;
 }
 
 // Add routes to the tile. Return a map of route types vs. id/key.
-std::unordered_map<uint32_t, uint32_t> AddRoutes(sqlite3* db_handle,
+std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
                    const std::unordered_set<uint32_t>& keys,
                    GraphTileBuilder& tilebuilder) {
   // Map of route keys vs. types
   std::unordered_map<uint32_t, uint32_t> route_types;
+  boost::property_tree::ptree pt;
 
-  // Iterate through all route keys
+  // Make sure it exists
+  if (boost::filesystem::exists(file))
+    boost::property_tree::read_json(file, pt);
+  else
+    return route_types;
+
   uint32_t n = 0;
-  for (const auto& key : keys) {
-    // Skip (do not need): route_id, route_color, route_text_color, and
-    // route_url
-    std::string sql = "SELECT route_key, agency_key, route_short_name,";
-    sql += "route_long_name, route_desc, route_type from routes where ";
-    sql += "route_key = " + std::to_string(key);
+  try {
 
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-    if (ret == SQLITE_OK) {
-      uint32_t result = sqlite3_step(stmt);
-      while (result == SQLITE_ROW) {
-        uint32_t routeid  = sqlite3_column_int(stmt, 0);
-        uint32_t agencyid = sqlite3_column_int(stmt, 1);
-        std::string tl_routeid = "";  // TODO
-        std::string shortname = (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) ?
-                    (char*)sqlite3_column_text(stmt, 2) : "";
-        std::string longname = (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) ?
-                    (char*)sqlite3_column_text(stmt, 3) : "";
-        std::string desc = (sqlite3_column_type(stmt, 4) == SQLITE_TEXT) ?
-                    (char*)sqlite3_column_text(stmt, 4) : "";
-        uint32_t type = sqlite3_column_int(stmt, 5);
+    for (const auto& routes : pt.get_child("routes")) {
 
-        // Add names and create the transit route
-        TransitRoute route(routeid, agencyid, tl_routeid.c_str(),
-                           tilebuilder.AddName(shortname),
-                           tilebuilder.AddName(longname),
-                           tilebuilder.AddName(desc));
-        tilebuilder.AddTransitRoute(route);
-        n++;
+      uint32_t routeid = routes.second.get<uint32_t>("key", 0);
 
-        // Route type - need this to store in edge?
-        route_types[routeid] = type;
-
-        result = sqlite3_step(stmt);
+      if (routeid == 0) {
+        LOG_ERROR("Route key not found in file " + file);
+        continue;
       }
-    } else {
-      LOG_ERROR("Bad query");
-    }
-    if (stmt) {
-      sqlite3_finalize(stmt);
-      stmt = 0;
+
+      if (keys.find(routeid) == keys.end()) {
+        LOG_WARN("Extra route exists in File: " + file + " route key: " + std::to_string(routeid));
+        continue;
+      }
+
+      std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
+      std::string shortname = routes.second.get<std::string>("name", "");
+      std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
+      std::string desc = routes.second.get<std::string>("tags.route_desc", "");
+      std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
+
+      std::string route_color = routes.second.get<std::string>("tags.route_color", "");
+      std::string route_text_color = routes.second.get<std::string>("tags.route_text_color", "");
+
+      boost::algorithm::trim(route_color);
+      boost::algorithm::trim(route_text_color);
+
+      //default colors based on gtfs specs.
+      route_color = (route_color == "null" || route_color.empty() ? "FFFFFF" : route_color);
+      route_text_color = (route_text_color == "null" ||
+                          route_text_color.empty() ? "000000" : route_text_color);
+      uint32_t type = 0;
+
+      if (vehicle_type == "tram")
+        type = 0;
+      else if (vehicle_type == "metro")
+        type = 1;
+      else if (vehicle_type == "rail")
+        type = 2;
+      else if (vehicle_type == "bus")
+        type = 3;
+      else if (vehicle_type == "ferry")
+        type = 4;
+      else if (vehicle_type == "cablecar")
+        type = 5;
+      else if (vehicle_type == "gondola")
+        type = 6;
+      else if (vehicle_type == "funicular")
+        type = 7;
+      else {
+        LOG_WARN("Unsupported vehicle_type: " + vehicle_type);
+        continue;
+      }
+
+      // Add names and create the transit route
+      // Remove agency?
+      TransitRoute route(routeid, tl_routeid.c_str(),
+                         strtol(route_color.c_str(), NULL, 16),
+                         strtol(route_text_color.c_str(), NULL, 16),
+                         tilebuilder.AddName(shortname == "null" ? "" : shortname),
+                         tilebuilder.AddName(longname == "null" ? "" : longname),
+                         tilebuilder.AddName(desc == "null" ? "" : desc));
+      tilebuilder.AddTransitRoute(route);
+      n++;
+      // Route type - need this to store in edge?
+      route_types[routeid] = type;
     }
   }
+  catch (std::exception &e) {
+    LOG_ERROR("AddRoutes.  Exception in json file " + file + " for transit.  " + e.what());
+  }
+
   LOG_DEBUG("Added " + std::to_string(n) + " routes");
+
   return route_types;
 }
 
-// Get trips
-std::unordered_map<uint32_t, uint32_t> AddTrips(sqlite3* db_handle,
-                   const std::unordered_set<uint32_t>& keys,
-                   GraphTileBuilder& tilebuilder) {
-  // Map of trip keys vs. shape keys
-  std::unordered_map<uint32_t, uint32_t> shape_keys;
-
-  uint32_t n = 0;
-  for (const auto& key : keys) {
-    // Form query. Skip: service_id, trip_id, direction_id
-    std::string sql = "SELECT trip_key, route_key, trip_headsign,";
-    sql += "trip_short_name, shape_key from trips where ";
-    sql += "trip_key = " + std::to_string(key);
-
-    // TODO:  Select wheelchair_accessible and bikes_allowed from the db for the trips
-    // TODO:  so that costing can be applied for bike and wheelchair accessibility.
-    // TODO:  This will require updates to data structure TransitTrip.
-
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-    if (ret == SQLITE_OK) {
-      uint32_t result = sqlite3_step(stmt);
-      while (result == SQLITE_ROW) {
-        uint32_t tripid  = sqlite3_column_int(stmt, 0);
-        uint32_t routeid = sqlite3_column_int(stmt, 1);
-        const char* tl_tripid = "";  // TODO - add to table
-        std::string headsign = (sqlite3_column_type(stmt, 2) == SQLITE_TEXT) ?
-                                    (char*)sqlite3_column_text(stmt, 2) : "";
-        std::string shortname = (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) ?
-                                    (char*)sqlite3_column_text(stmt, 3) : "";
-        uint32_t shapeid = sqlite3_column_int(stmt, 4);
-
-        // Add names and create transit trip
-        TransitTrip trip(tripid, routeid, tl_tripid,
-                         tilebuilder.AddName(shortname),
-                         tilebuilder.AddName(headsign));
-        tilebuilder.AddTransitTrip(trip);
-        n++;
-
-        shape_keys[tripid] = shapeid;
-
-        result = sqlite3_step(stmt);
-      }
-    }
-    if (stmt) {
-      sqlite3_finalize(stmt);
-      stmt = 0;
-    }
-  }
-  LOG_DEBUG("Added " + std::to_string(n) + " trips");
-  return shape_keys;
-}
-
-// Add calendar exceptions
-void AddCalendar(sqlite3* db_handle, const std::unordered_set<uint32_t>& keys,
-                 GraphTileBuilder& tilebuilder) {
-
-  // Query each unique service Id and add any calendar exceptions
-  for (const auto& key : keys) {
-    // Skip service_id
-    std::string sql = "SELECT service_key, date, exception_type from ";
-    sql += "calendar_dates where service_key = " + std::to_string(key);
-
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-    if (ret == SQLITE_OK) {
-      uint32_t result = sqlite3_step(stmt);
-      while (result == SQLITE_ROW) {
-        uint32_t serviceid = sqlite3_column_int(stmt, 0);
-        uint32_t date = DateTime::days_from_pivot_date(std::string( reinterpret_cast< const char* >(sqlite3_column_text(stmt, 1))));
-        uint32_t t = sqlite3_column_int(stmt, 2);
-
-        TransitCalendar calendar(serviceid, date,
-                                 static_cast<CalendarExceptionType>(t));
-        tilebuilder.AddTransitCalendar(calendar);
-
-        result = sqlite3_step(stmt);
-      }
-    }
-    if (stmt) {
-      sqlite3_finalize(stmt);
-      stmt = 0;
-    }
-  }
-}
-
+// Remove transfers?
 // Add transfers from a stop
 void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
                   GraphTileBuilder& tilebuilder) {
@@ -514,7 +567,7 @@ void AddTransfers(sqlite3* db_handle, const uint32_t stop_key,
       uint32_t mintime  = sqlite3_column_int(stmt, 3);
       TransitTransfer transfer(fromstop, tostop,
                  static_cast<TransferType>(type), mintime);
-      tilebuilder.AddTransitTransfer(transfer);
+      //tilebuilder.AddTransitTransfer(transfer);
 
       result = sqlite3_step(stmt);
     }
@@ -544,12 +597,13 @@ Use GetTransitUse(const uint32_t rt) {
   }
 }
 
-std::list<PointLL> GetShape(sqlite3* db_handle,
-                              const PointLL& stop_ll,
-                              const PointLL& endstop_ll,
-                              const uint32_t shapeid) {
+std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, const uint32_t shapeid) {
+
   std::list<PointLL> shape;
 
+  /*
+   * TODO: port to use transit land shape.
+   *
   if (shapeid != 0 && stop_ll != endstop_ll) {
     // Query the shape from the DB based on the shapeid.
     std::string sql = "SELECT shape_pt_lon, shape_pt_lat from shapes ";
@@ -610,15 +664,18 @@ std::list<PointLL> GetShape(sqlite3* db_handle,
   } else {
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
-  }
+  }*/
+
+  shape.push_back(stop_ll);
+  shape.push_back(endstop_ll);
 
   return shape;
 }
 
-void AddToGraph(sqlite3* db_handle,
-                GraphTileBuilder& tilebuilder,
+void AddToGraph(GraphTileBuilder& tilebuilder,
                 std::map<GraphId, StopEdges>& stop_edge_map,
                 std::vector<Stop>& stops,
+                std::unordered_map<uint32_t, bool>& stop_access,
                 std::vector<OSMConnectionEdge>& connection_edges,
                 std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 std::unordered_map<uint32_t, uint32_t>& route_types) {
@@ -721,6 +778,12 @@ void AddToGraph(sqlite3* db_handle,
 
     // Build the node info. Use generic transit stop type
     uint32_t access = kPedestrianAccess;
+    auto s_access = stop_access.find(stop.key);
+    if (s_access != stop_access.end()) {
+      if (s_access->second)
+        access |= kBicycleAccess;
+    }
+
     bool child  = (stop.parent != 0);  // TODO verify if this is sufficient
     bool parent = (stop.type == 1);    // TODO verify if this is sufficient
     NodeInfoBuilder node(stop.ll, RoadClass::kServiceOther, access,
@@ -730,6 +793,7 @@ void AddToGraph(sqlite3* db_handle,
     node.set_mode_change(true);
     node.set_stop_id(stop.key);
     node.set_edge_index(tilebuilder.directededges().size());
+    node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
 
     // Add connections from the stop to the OSM network
@@ -828,9 +892,11 @@ void AddToGraph(sqlite3* db_handle,
       // route within TripPathBuilder.
       bool added = false;
       std::vector<std::string> names;
-      auto shape = GetShape(db_handle, stop.ll, endstop.ll, transitedge.shapeid);
+      auto shape = GetShape(stop.ll, endstop.ll, transitedge.shapeid);
+
       uint32_t edge_info_offset = tilebuilder.AddEdgeInfo(transitedge.routeid,
            stop.graphid, endstop.graphid, 0, shape, names, added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
 
@@ -854,7 +920,7 @@ void AddToGraph(sqlite3* db_handle,
            " done. New directed edge count = " + std::to_string(tilebuilder.directededges().size()));
 }
 
-void AddOSMConnection(Stop& stop, const GraphTile* tile,
+void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& tilehierarchy,
                       std::vector<OSMConnectionEdge>& connection_edges) {
   PointLL ll = stop.ll;
   uint64_t wayid = stop.way_id;
@@ -869,10 +935,13 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
       auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+
       if (edgeinfo->wayid() == wayid) {
+
         // Get shape and find closest point
         auto this_shape = edgeinfo->shape();
         auto this_closest = ll.ClosestPoint(this_shape);
+
         if (std::get<1>(this_closest) < mindist) {
           startnode.Set(tile->header()->graphid().tileid(),
                         tile->header()->graphid().level(), i);
@@ -895,8 +964,10 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
   // Check for invalid tile Ids
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
     stop.conn_count = 0;
-    LOG_ERROR("No closest edge found for this stop: way Id = " +
-              std::to_string(wayid));
+    const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
+    LOG_ERROR("No closest edge found for this stop: " + stop.name + " way Id = " +
+              std::to_string(wayid) + " tile " + std::to_string(aabb.minx()) + ", " + std::to_string(aabb.miny()) + ", " +
+              std::to_string(aabb.maxx()) + ", " +  std::to_string(aabb.maxy()));
     return;
   }
 
@@ -957,47 +1028,20 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile,
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const boost::property_tree::ptree& pt,
+void build(const boost::property_tree::ptree& config_pt,
            boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::vector<Stop>& stops,
            std::mutex& lock, std::promise<builder_stats>& results) {
-  // Construct the transit database
-  std::string dir = pt.get<std::string>("transit_dir");
-  std::string db_name = pt.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
+
+  std::string transit_dir = config_pt.get<std::string>("transit_dir");
+  boost::property_tree::ptree pt;
 
   // Make sure it exists
-  sqlite3* db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret;
-    char* err_msg = nullptr;
-    std::string sql;
-    ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                          SQLITE_OPEN_READONLY, NULL);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-    // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
-    sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("load_extension() error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
-      return;
-    }
-    LOG_INFO("SpatiaLite loaded as an extension");
-  }
-  else {
-    LOG_DEBUG("Transit db " + database + " not found.  Transit will not be added.");
+  if (!boost::filesystem::exists(transit_dir)) {
+    LOG_INFO("Transit directory " + transit_dir + " not found.  Transit will not be added.");
     return;
   }
+  else transit_dir += "/";
 
   // Get some things we need throughout
   builder_stats stats{};
@@ -1016,6 +1060,7 @@ void build(const boost::property_tree::ptree& pt,
     stop_indexes[stop.key] = n;
     n++;
   }
+  std::unordered_map<uint32_t, bool> stop_access;
 
   // Iterate through the tiles in the queue and find any that include stops
   while (true) {
@@ -1046,21 +1091,31 @@ void build(const boost::property_tree::ptree& pt,
       if (stop.graphid.Tile_Base() == tile_id) {
         // Add connections to the OSM network
         if (stop.parent == 0) {
-          AddOSMConnection(stop, tile, connection_edges);
+          AddOSMConnection(stop, tile, tile_hierarchy, connection_edges);
         }
       }
     }
-    LOG_DEBUG("Connection Edges: size= " + std::to_string(connection_edges.size()));
+    LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
 
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
     std::unordered_set<uint32_t> route_keys;
     std::unordered_set<uint32_t> trip_keys;
-    std::unordered_set<uint32_t> service_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
+
+    std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), tile_hierarchy);
+    boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
+    file_name += ".json";
+    const std::string file = transit_dir + file_name;
+
+    std::unordered_multimap<uint32_t, Departure> departures =
+        ProcessStopPairs(file, stop_access,stop_indexes,tilebuilder);
+
+    LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
+
     for (auto& stop : stops) {
       if (stop.graphid.Tile_Base() == tile_id) {
         StopEdges stopedges;
@@ -1080,15 +1135,11 @@ void build(const boost::property_tree::ptree& pt,
         }
 
         std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-        std::vector<Departure> departures = GetDepartures(db_handle, stop.key);
-
-        LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures for "
-          + std::to_string(stop.key) + " location_type = "+ std::to_string(stop.type));
-
-        for (auto& dep : departures) {
+        auto range = departures.equal_range(stop.key);
+        for(auto key = range.first; key != range.second; ++key) {
+          Departure dep = key->second;
           route_keys.insert(dep.route);
           trip_keys.insert(dep.trip);
-          service_keys.insert(dep.service);
 
           // Identify unique route and arrival stop pairs - associate to a
           // unique line Id stored in the directed edge.
@@ -1107,28 +1158,29 @@ void build(const boost::property_tree::ptree& pt,
           // Form transit departures
           uint32_t headsign_offset = tilebuilder.AddName(dep.headsign);
           uint32_t elapsed_time = dep.arr_time - dep.dep_time;
-          TransitDeparture td(lineid, dep.trip, dep.route,
+          TransitDeparture td(lineid, dep.trip,dep.route,
                       dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                      dep.start_date, dep.end_date, dep.dow, dep.service);
+                      dep.start_date, dep.end_date, dep.dow, dep.days);
 
-          LOG_DEBUG("Add departure: " + std::to_string(td.lineid()) +
-                       " trip key = " + std::to_string(td.tripid()) +
+          LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                        " dep time = " + std::to_string(td.departure_time()) +
+                       " arr time = " + std::to_string(dep.arr_time) +
                        " start_date = " + std::to_string(td.start_date()) +
                        " end date = " + std::to_string(td.end_date()));
 
           tilebuilder.AddTransitDeparture(td);
+
         }
 
+        // TODO no Transfers exist in transit.land
         // Get any transfers from this stop
-        AddTransfers(db_handle, stop.key, tilebuilder);
+        // AddTransfers(db_handle, stop.key, tilebuilder);
 
         // Store stop information in TransitStops
-        // TODO - tl_stop_id
         uint32_t name_offset = tilebuilder.AddName(stop.name);
         uint32_t desc_offset = tilebuilder.AddName(stop.desc);
         uint32_t farezone = 0;
-        TransitStop ts(stop.key, "", name_offset, desc_offset,
+        TransitStop ts(stop.key, stop.onestop_id.c_str(), name_offset, desc_offset,
                        stop.parent, farezone);
         tilebuilder.AddTransitStop(ts);
 
@@ -1138,19 +1190,14 @@ void build(const boost::property_tree::ptree& pt,
       }
     }
 
+    LOG_DEBUG("Added " + std::to_string(trip_routes.size()) + " trips");
+
     // Add routes to the tile. Get map of route types.
-    std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(db_handle,
-                              route_keys, tilebuilder);
-
-    // Add trips to the tile. Get map of shape keys.
-    std::unordered_map<uint32_t, uint32_t> shape_keys = AddTrips(db_handle,
-                              trip_keys, tilebuilder);
-
-    // Add calendar exceptions (using service Id)
-    AddCalendar(db_handle, service_keys, tilebuilder);
-
+    std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
+                                                                   route_keys,
+                                                                   tilebuilder);
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(db_handle, tilebuilder, stop_edge_map, stops, connection_edges,
+    AddToGraph(tilebuilder, stop_edge_map, stops, stop_access, connection_edges,
                stop_indexes, route_types);
 
     // Write the new file
@@ -1158,9 +1205,6 @@ void build(const boost::property_tree::ptree& pt,
     tilebuilder.StoreTileData();
     lock.unlock();
   }
-
-  if (db_handle)
-    sqlite3_close(db_handle);
 
   // Send back the statistics
   results.set_value(stats);
@@ -1229,7 +1273,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished with " + std::to_string(all_stops.stops.size()) +
+  LOG_DEBUG("Finished with " + std::to_string(all_stops.stops.size()) +
              " stops in " + std::to_string(all_stops.tiles.size()) + " tiles");
 
   if (all_stops.tiles.size() == 0) {
