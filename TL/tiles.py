@@ -230,7 +230,7 @@ if __name__ == "__main__":
                dictionary = defaultdict(list)
                file = tile.file( row, col, max_tile_id_)
 
-               url = 'http://dev.transit.land/api/v1/stops?per_page=10000&bbox='
+               url = 'http://dev.transit.land/api/v1/stops?per_page=1000&bbox='
                url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
                while url:
                
@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
                stop_pairs = defaultdict(list)
 
-               url = 'http://dev.transit.land/api/v1/schedule_stop_pairs?per_page=10000&bbox='
+               url = 'http://dev.transit.land/api/v1/schedule_stop_pairs?per_page=1000&bbox='
                url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
 
                while url:
@@ -325,12 +325,12 @@ if __name__ == "__main__":
 
                routes = defaultdict(list)
 
-               url = 'http://dev.transit.land/api/v1/routes?per_page=10000&bbox='
+               url = 'http://dev.transit.land/api/v1/routes?per_page=1000&bbox='
                url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
 
 #hack due to BB issue
 #            if (min_x == -121.75 and min_y == 37.0 and max_x == -121.5 and max_y == 37.25):
-#               url = 'http://dev.transit.land/api/v1/routes?per_page=10000'
+#               url = 'http://dev.transit.land/api/v1/routes?per_page=1000'
 
                while url:
                   print(url)
