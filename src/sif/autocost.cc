@@ -15,8 +15,9 @@ namespace sif {
 namespace {
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 600.0f; // Seconds
-constexpr float kDefaultAlleyPenalty            = 30.0f;   // Seconds
+constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
+constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
@@ -173,6 +174,7 @@ class AutoCost : public DynamicCost {
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
   float gate_cost_;                 // Cost (seconds) to go through gate
+  float gate_penalty_;              // Penalty (seconds) to go through gate
   float tollbooth_cost_;            // Cost (seconds) to go through toll booth
   float tollbooth_penalty_;         // Penalty (seconds) to go through a toll booth
   float alley_penalty_;             // Penalty (seconds) to use a alley
@@ -196,6 +198,7 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   destination_only_penalty_ = pt.get<float>("destination_only_penalty",
                                             kDefaultDestinationOnlyPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
+  gate_penalty_ = pt.get<float>("gate_penalty", kDefaultGatePenalty);
   tollbooth_cost_ = pt.get<float>("toll_booth_cost", kDefaultTollBoothCost);
   tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
                                      kDefaultTollBoothPenalty);
@@ -290,6 +293,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
+    penalty += gate_penalty_;
   }
   if (node->type() == NodeType::kTollBooth ||
      (!pred.toll() && edge->toll())) {
@@ -347,6 +351,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
+    penalty += gate_penalty_;
   }
   if (node->type() == NodeType::kTollBooth ||
       (!pred->toll() && edge->toll())) {

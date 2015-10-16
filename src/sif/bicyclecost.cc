@@ -15,6 +15,7 @@ constexpr float kDefaultManeuverPenalty         = 10.0f;  // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
+constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
@@ -255,6 +256,7 @@ class BicycleCost : public DynamicCost {
   float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float destination_only_penalty_;  // Penalty (seconds) using a driveway or parking aisle
   float gate_cost_;                 // Cost (seconds) to go through gate
+  float gate_penalty_;              // Penalty (seconds) to go through gate
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
@@ -347,6 +349,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   destination_only_penalty_ = pt.get<float>("destination_only_penalty",
                                             kDefaultDestinationOnlyPenalty);
   gate_cost_ = pt.get<float>("gate_cost", kDefaultGateCost);
+  gate_penalty_ = pt.get<float>("gate_penalty", kDefaultGatePenalty);
   alley_penalty_ = pt.get<float>("alley_penalty",  kDefaultAlleyPenalty);
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
                                            kDefaultCountryCrossingCost);
@@ -563,6 +566,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
+    penalty += gate_penalty_;
   }
 
   // Additional penalties without any time cost
@@ -615,6 +619,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
   if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
+    penalty += gate_penalty_;
   }
 
   // Additional penalties without any time cost

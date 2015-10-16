@@ -19,6 +19,7 @@ constexpr uint32_t kMaxModeDistance    = 3000;   // 3 km
 // Maximum distance of a walking route
 constexpr uint32_t kMaxDistance        = 100000; // 100 km
 
+constexpr float kDefaultGatePenalty    = 300.0f; // Seconds
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
@@ -160,23 +161,13 @@ class PedestrianCost : public DynamicCost {
   // distance for any single walking portion of the route.
   uint32_t max_mode_distance_;
 
-  // Walking speed (default to 5.1 km / hour)
-  float walking_speed_;
-
-  // Speed factor for costing. Based on walking speed.
-  float speedfactor_;
-
-  // Factor for favoring walkways and paths. Default to 0.9.
-  float walkway_factor_;
-
-  // Avoid alleys. Default to 2.0. Double the cost to traverse an alley.
-  float alley_factor_;
-
-  // Avoid driveways. Default to 5.0. 5x cost to traverse.
-  float driveway_factor_;
-
-  // Avoid stairs/steps. This is a fixed cost in seconds.
-  float step_penalty_;
+  float walking_speed_;   // Walking speed (default to 5.1 km / hour)
+  float speedfactor_;     // Speed factor for costing. Based on walking speed.
+  float walkway_factor_;  // Factor for favoring walkways and paths.
+  float alley_factor_;    // Avoid alleys factor.
+  float driveway_factor_; // Avoid driveways factor.
+  float step_penalty_;    // Penalty applied to steps/stairs (seconds).
+  float gate_penalty_;    // Penalty (seconds) to go through gate
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -191,6 +182,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   alley_factor_      = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
   driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
   step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
+  gate_penalty_      = pt.get<float>("gate_penalty", kDefaultGatePenalty);
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
@@ -301,14 +293,17 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return { 0.0f, 0.0f };
   }
 
+  // Penalty through gates.
+  float penalty =  (node->type() == NodeType::kGate) ? gate_penalty_ : 0.0f;
+
   // Costs for crossing an intersection.
   // TODO - do we want any maneuver penalty?
   uint32_t idx = pred.opp_local_idx();
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
     float sec = edge->stopimpact(idx);
-    return { sec, sec };
+    return { sec + penalty, sec };
   } else {
-    return { 0.0f, 0.0f };
+    return { penalty, 0.0f };
   }
 }
 
@@ -325,13 +320,16 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     return { step_penalty_, 0.0f };
   }
 
+  // Penalty through gates.
+  float penalty =  (node->type() == NodeType::kGate) ? gate_penalty_ : 0.0f;
+
   // Costs for crossing an intersection.
   // TODO - do we want any maneuver penalty?
   if (opp_pred_edge->edge_to_right(idx) && opp_pred_edge->edge_to_left(idx)) {
     float sec = opp_pred_edge->stopimpact(idx);
-    return { sec, sec };
+    return { sec + penalty, sec };
   } else {
-    return { 0.0f, 0.0f };
+    return { penalty, 0.0f };
   }
 }
 
