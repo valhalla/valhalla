@@ -80,7 +80,7 @@ void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
 
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfoBuilder::set_access(const uint32_t access) {
-  access_.v = access;
+  access_.access = access;
 }
 
 // Set the intersection type.
