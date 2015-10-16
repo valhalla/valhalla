@@ -397,7 +397,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
-      uint32_t directededgecount = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
@@ -431,7 +430,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // of outbound edges from this node.
         uint32_t n = 0;
         RoadClass bestclass = RoadClass::kServiceOther;
-        std::vector<DirectedEdgeBuilder> directededges;
         for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
           const Edge& edge = edge_pair.first;
@@ -584,10 +582,10 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             throw std::runtime_error("GeoAttributes cached object should be there!");
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+          graphtile.directededges().emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
                                      speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                      n, has_signal, restrictions, bike_network);
-          DirectedEdgeBuilder& directededge = directededges.back();
+          DirectedEdgeBuilder& directededge = graphtile.directededges().back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
@@ -621,21 +619,18 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        NodeInfoBuilder nodebuilder(node_ll, bestclass, node.access_mask(),
-                                    node.type(), (n == 1), node.traffic_signal());
+        graphtile.nodes().emplace_back(node_ll, bestclass, node.access_mask(),
+                                       node.type(), (n == 1), node.traffic_signal());
+        graphtile.nodes().back().set_edge_index(graphtile.directededges().size() - bundle.node_edges.size());
+        graphtile.nodes().back().set_edge_count(bundle.node_edges.size());
         if (fork) {
-          nodebuilder.set_intersection(IntersectionType::kFork);
+          graphtile.nodes().back().set_intersection(IntersectionType::kFork);
         }
-
-        directededgecount += n;
-
-        // Add node and directed edge information to the tile
-        graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
 
         // Increment the counts in the histogram
         stats.nodecount++;
-        stats.directededge_count += directededges.size();
-        stats.node_counts[directededges.size()]++;
+        stats.directededge_count += bundle.node_edges.size();
+        stats.node_counts[bundle.node_edges.size()]++;
 
         // Next node in the tile
         node_itr += bundle.node_count;

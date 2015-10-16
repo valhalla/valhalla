@@ -408,7 +408,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
 }
 
 // Add a node and list of directed edges
-void GraphTileBuilder::AddNodeAndDirectedEdges(
+/*void GraphTileBuilder::AddNodeAndDirectedEdges(
     NodeInfoBuilder& node,
     const std::vector<DirectedEdgeBuilder>& directededges) {
   // Set the index to the first directed edge from this node and
@@ -421,26 +421,16 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
   for (const auto& directededge : directededges) {
     directededges_builder_.push_back(directededge);
   }
-}
+}*/
 
 // Get the current list of node builders.
-const std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() const {
+std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() {
   return nodes_builder_;
 }
 
 // Gets the current list of directed edge (builders).
-const std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() const {
+std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() {
   return directededges_builder_;
-}
-
-// Clear the current list of nodes (builders).
-void GraphTileBuilder::ClearNodes() {
-  nodes_builder_.clear();
-}
-
-// Clear the current list of directed edges (builders).
-void GraphTileBuilder::ClearDirectedEdges() {
-  directededges_builder_.clear();
 }
 
 // Add a transit departure.
@@ -546,14 +536,21 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Update edge offset for next item
     edge_info_offset_ += edgeinfo.SizeOf();
 
+    // Update the list of ids per bin
+    //TODO:
+    /*for(const auto& index : binner_.intersect(lls)) {
+      bins_[index].push_back();
+    }*/
+
     // Return the offset to this edge info
     added = true;
     return current_edge_offset;
-  } else {
-    // Already have this edge - return the offset
-    added = false;
-    return existing_edge_offset_item->second;
   }
+
+  // Already have this edge - return the offset
+  added = false;
+  return existing_edge_offset_item->second;
+
 }
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,

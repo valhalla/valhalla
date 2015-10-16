@@ -341,7 +341,6 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
 void AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
-    std::vector<DirectedEdgeBuilder>& directededges,
     std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Get the edge pairs for this node (if contracted)
@@ -471,11 +470,11 @@ if (nodea.level() == 0) {
       // Make sure shortcut edge is not marked as internal edge
       newedge.set_internal(false);
 
-      directededges.emplace_back(std::move(newedge));
+      tilebuilder.directededges().emplace_back(std::move(newedge));
+      ++info.shortcutcount_;
       shortcut++;
     }
   }
-  info.shortcutcount_ += directededges.size();
 }
 
 // Form tiles in the new level.
@@ -487,7 +486,6 @@ void FormTilesInNewLevel(
   bool added = false;
   uint32_t tileid = 0;
   uint32_t nodeid = 0;
-  uint32_t edgeindex = 0;
   uint32_t edge_info_offset;
   uint8_t level = new_level.level;
   RoadClass rcc = new_level.importance;
@@ -514,7 +512,6 @@ void FormTilesInNewLevel(
 
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
-    edgeindex = 0;
     GraphId nodea, nodeb;
     for (const auto& newnode : newtile) {
       // Get the node in the base level
@@ -523,18 +520,20 @@ void FormTilesInNewLevel(
       // Copy node information
       nodea.Set(tileid, level, nodeid);
       NodeInfo baseni = *(tile->node(newnode.basenode.id()));
-      NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
-      node.set_edge_index(edgeindex);
+      tilebuilder.nodes().push_back(static_cast<NodeInfoBuilder&>(baseni));
+      NodeInfoBuilder& node = tilebuilder.nodes().back();
+      node.set_edge_index(tilebuilder.directededges().size());
 
       const auto& admin = tile->admininfo(baseni.admin_index());
       node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
                                                 admin.country_iso(), admin.state_iso(),
                                                 admin.start_dst(), admin.end_dst()));
+      // Edge count
+      size_t edge_count = tilebuilder.directededges().size();
+
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      std::vector<DirectedEdgeBuilder> directededges;
-      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                         directededges, shortcuts, info, sample);
+      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder, shortcuts, info, sample);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -564,7 +563,7 @@ void FormTilesInNewLevel(
             if (signs.size() == 0) {
               LOG_ERROR("Base edge should have signs, but none found");
             }
-            tilebuilder.AddSigns(edgeindex + directededges.size(), signs);
+            tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
           }
 
           // Get edge info, shape, and names from the old tile and add
@@ -588,7 +587,7 @@ void FormTilesInNewLevel(
           }
 
           // Add directed edge
-          directededges.emplace_back(std::move(newedge));
+          tilebuilder.directededges().emplace_back(std::move(newedge));
         }
       }
 
@@ -598,17 +597,13 @@ void FormTilesInNewLevel(
       downwardedge.set_endnode(newnode.basenode);
       downwardedge.set_trans_down(true);
       downwardedge.set_all_forward_access();
-      directededges.emplace_back(std::move(downwardedge));
+      tilebuilder.directededges().emplace_back(std::move(downwardedge));
 
       // Set the edge count for the new node
-      node.set_edge_count(directededges.size());
-
-      // Add node and directed edge information to the tile
-      tilebuilder.AddNodeAndDirectedEdges(node, directededges);
+      node.set_edge_count(tilebuilder.directededges().size() - edge_count);
 
       // Increment node Id and edgeindex
       nodeid++;
-      edgeindex += directededges.size();
     }
 
     // Store the new tile

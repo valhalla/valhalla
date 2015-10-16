@@ -622,11 +622,11 @@ void AddToGraph(sqlite3* db_handle,
                 std::vector<OSMConnectionEdge>& connection_edges,
                 std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 std::unordered_map<uint32_t, uint32_t>& route_types) {
-  // Copy existing nodes and directed edge builder vectors and clear the lists
-  std::vector<NodeInfoBuilder> currentnodes(tilebuilder.nodes());
-  tilebuilder.ClearNodes();
-  std::vector<DirectedEdgeBuilder> currentedges(tilebuilder.directededges());
-  tilebuilder.ClearDirectedEdges();
+  // Move existing nodes and directed edge builder vectors and clear the lists
+  std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
+  tilebuilder.nodes().clear();
+  std::vector<DirectedEdgeBuilder> currentedges(std::move(tilebuilder.directededges()));
+  tilebuilder.directededges().clear();
 
   LOG_DEBUG("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
          " current directed edge count = " + std::to_string(currentedges.size()) +
@@ -646,9 +646,9 @@ void AddToGraph(sqlite3* db_handle,
   for (auto& nb : currentnodes) {
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
-    std::vector<DirectedEdgeBuilder> directededges;
+    size_t edge_index = tilebuilder.directededges().size();
     for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
-      directededges.emplace_back(std::move(currentedges[idx]));
+      tilebuilder.directededges().emplace_back(std::move(currentedges[idx]));
 
       // Update any signs that use this idx - increment their index by the
       // number of added edges
@@ -677,7 +677,7 @@ void AddToGraph(sqlite3* db_handle,
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - edge_index);
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
 
@@ -688,7 +688,7 @@ void AddToGraph(sqlite3* db_handle,
                      conn.stop_node, 0, conn.shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
@@ -697,7 +697,9 @@ void AddToGraph(sqlite3* db_handle,
     }
 
     // Add the node and directed edges
-    tilebuilder.AddNodeAndDirectedEdges(nb, directededges);
+    nb.set_edge_index(edge_index);
+    nb.set_edge_count(tilebuilder.directededges().size() - edge_index);
+    tilebuilder.nodes().emplace_back(std::move(nb));
     nodeid++;
   }
 
@@ -727,11 +729,11 @@ void AddToGraph(sqlite3* db_handle,
     node.set_parent(parent);
     node.set_mode_change(true);
     node.set_stop_id(stop.key);
+    node.set_edge_index(tilebuilder.directededges().size());
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
 
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
-    std::vector<DirectedEdgeBuilder> directededges;
     for (auto& conn : connection_edges) {
       if (conn.stop_key == stop.key) {
         DirectedEdgeBuilder directededge;
@@ -740,7 +742,7 @@ void AddToGraph(sqlite3* db_handle,
         directededge.set_use(Use::kTransitConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
-        directededge.set_localedgeidx(directededges.size());
+        directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
         directededge.set_pedestrianaccess(true, true);
         directededge.set_pedestrianaccess(false, true);
 
@@ -754,7 +756,7 @@ void AddToGraph(sqlite3* db_handle,
         directededge.set_forward(added);
 
         // Add to list of directed edges
-        directededges.emplace_back(std::move(directededge));
+        tilebuilder.directededges().emplace_back(std::move(directededge));
 
         nadded++;  // TEMP for error checking
       }
@@ -775,7 +777,7 @@ void AddToGraph(sqlite3* db_handle,
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
 
@@ -794,7 +796,7 @@ void AddToGraph(sqlite3* db_handle,
       directededge.set_forward(added);
 
       // Add to list of directed edges
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
     }
 
     // Add transit lines
@@ -810,7 +812,7 @@ void AddToGraph(sqlite3* db_handle,
       directededge.set_use(use);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
       directededge.set_lineid(transitedge.lineid);
@@ -833,12 +835,15 @@ void AddToGraph(sqlite3* db_handle,
       directededge.set_forward(added);
 
       // Add to list of directed edges
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
     }
-    if (directededges.size() == 0) {
+    if (tilebuilder.directededges().size() - node.edge_index() == 0) {
       LOG_ERROR("No directed edges from this node");
     }
-    tilebuilder.AddNodeAndDirectedEdges(node, directededges);
+
+    // Add the node
+    node.set_edge_count(tilebuilder.directededges().size() - node.edge_index());
+    tilebuilder.nodes().emplace_back(std::move(node));
   }
   if (nadded != connection_edges.size()) {
     LOG_ERROR("Added " + std::to_string(nadded) + " but there are " +
