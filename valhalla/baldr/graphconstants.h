@@ -49,7 +49,7 @@ enum class Traversability {
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
-constexpr uint32_t kMaxSpeedKph = 130;      // ~80 MPH
+constexpr uint32_t kMaxSpeedKph = 140;      // ~85 MPH
 
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
@@ -184,6 +184,7 @@ inline std::string to_string(IntersectionType x) {
 }
 
 // Edge use. Indicates specialized uses.
+// Maximum value that can be stored for a directed edge is 63 - DO NOT EXCEED!
 enum class Use : uint8_t {
   // Road specific uses
   kRoad = 0,
