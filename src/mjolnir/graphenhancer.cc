@@ -787,11 +787,18 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
   const DirectedEdge* edge = &edges[0];
   RoadClass bestrc = RoadClass::kServiceOther;
   for (uint32_t i = 0; i < count; i++, edge++) {
-    // Check the road if it is driveable TO the intersection and not
-    // either of the 2 edges (from or to)
-    if (i != to && i != from && edge->classification() < bestrc &&
-        (edge->reverseaccess() & kAutoAccess)) {
-      bestrc = edge->classification();
+    // Check the road if it is driveable TO the intersection and is neither
+    // the "to" nor "from" edge. Treat roundabout edges as two levels
+    // lower classification (higher value) to reduce the stop impact.
+    if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
+      if (edge->roundabout()) {
+        uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
+        if (c  < static_cast<uint32_t>(bestrc)) {
+          bestrc = static_cast<RoadClass>(c);
+        }
+      } else if (edge->classification() < bestrc) {
+        bestrc = edge->classification();
+      }
     }
   }
 
@@ -805,8 +812,8 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
 
   // TODO:Increase stop level based on classification of edges
 
-  // TODO - clamp to max (create a const)
-  return (stop_impact < 8) ? stop_impact : 7;
+  // Clamp to kMaxStopImpact
+  return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
 }
 
 /**
