@@ -340,6 +340,16 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6
 };
 
+// Access Restriction types.
+enum class AccessType : uint8_t {
+  kHazmat = 0,
+  kMaxHeight = 1,
+  kMaxWidth= 2,
+  kMaxLength = 3,
+  kMaxWeight = 4,
+  kMaxAxleLoad = 5
+};
+
 // ------------------------------- Transit information --------------------- //
 
 constexpr uint32_t kOneStopIdSize = 256;
