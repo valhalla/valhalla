@@ -489,6 +489,17 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
       std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
       std::string desc = routes.second.get<std::string>("tags.route_desc", "");
       std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
+
+      std::string route_color = routes.second.get<std::string>("tags.route_color", "");
+      std::string route_text_color = routes.second.get<std::string>("tags.route_text_color", "");
+
+      boost::algorithm::trim(route_color);
+      boost::algorithm::trim(route_text_color);
+
+      //default colors based on gtfs specs.
+      route_color = (route_color == "null" || route_color.empty() ? "FFFFFF" : route_color);
+      route_text_color = (route_text_color == "null" ||
+                          route_text_color.empty() ? "000000" : route_text_color);
       uint32_t type = 0;
 
       if (vehicle_type == "tram")
@@ -515,6 +526,8 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
       // Add names and create the transit route
       // Remove agency?
       TransitRoute route(routeid, tl_routeid.c_str(),
+                         strtol(route_color.c_str(), NULL, 16),
+                         strtol(route_text_color.c_str(), NULL, 16),
                          tilebuilder.AddName(shortname == "null" ? "" : shortname),
                          tilebuilder.AddName(longname == "null" ? "" : longname),
                          tilebuilder.AddName(desc == "null" ? "" : desc));
