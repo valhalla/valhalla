@@ -202,7 +202,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
     {"administrative", admin_json(tile->admininfo(admin_.admin_index), admin_.timezone)},
     {"child", static_cast<uint64_t>(type_.child)},
     {"density", static_cast<uint64_t>(type_.density)},
-    {"local_edge_count", static_cast<uint64_t>(type_.local_edge_count)},
+    {"local_edge_count", static_cast<uint64_t>(type_.local_edge_count + 1)},
     {"mode_change", static_cast<bool>(type_.mode_change)},
     {"parent", static_cast<bool>(type_.parent)},
     {"traffic_signal", static_cast<bool>(type_.traffic_signal)},
