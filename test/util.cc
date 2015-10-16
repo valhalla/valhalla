@@ -140,6 +140,38 @@ void TestResample() {
   }
 }
 
+void TestIterable() {
+  int a[] = {1,2,3,4,5};
+  char b[] = {'a','b','c','d','e'};
+  std::string c[] = {"one","two","three","four","five"};
+  const size_t d[] = {11,12,13,14,15};
+
+  int sum = 0;
+  for(const auto& i : iterable_t<int>(a, 5))
+   sum += i;
+  if(sum != 15)
+    throw std::logic_error("integer array sum failed");
+
+  std::string concatinated;
+  for(const auto& i : iterable_t<char>(b, 5))
+   concatinated.push_back(i);
+  if(concatinated != "abcde")
+    throw std::logic_error("char concatenation failed");
+
+  concatinated = "";
+  for(const auto& i : iterable_t<std::string>(c, 5))
+    concatinated.append(i);
+  if(concatinated != "onetwothreefourfive")
+    throw std::logic_error("string concatenation failed");
+
+  size_t cumulative_product = 1;
+  iterable_t<const size_t> iterable(d, 5);
+  for(iterable_t<const size_t>::iterator i = iterable.begin(); i != iterable.end(); ++i)
+    cumulative_product *= *i;
+  if(cumulative_product != 360360)
+    throw std::logic_error("cumulative product failed");
+}
+
 }
 
 int main() {
@@ -158,6 +190,8 @@ int main() {
   suite.test(TEST_CASE(TestClamp));
 
   suite.test(TEST_CASE(TestResample));
+
+  suite.test(TEST_CASE(TestIterable));
 
   return suite.tear_down();
 }

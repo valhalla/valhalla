@@ -52,6 +52,7 @@ nobase_include_HEADERS = \
 	valhalla/midgard/distanceapproximator.h \
 	valhalla/midgard/ellipse.h \
 	valhalla/midgard/sequence.h \
+	valhalla/midgard/grid.h \
 	valhalla/midgard/logging.h
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
@@ -66,6 +67,7 @@ libvalhalla_midgard_la_SOURCES = \
 	src/midgard/util.cc \
 	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
+        src/midgard/grid.cc \
 	src/midgard/logging.cc
 libvalhalla_midgard_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)

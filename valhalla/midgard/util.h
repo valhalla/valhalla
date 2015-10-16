@@ -183,10 +183,40 @@ T circular_range_clamp(T value, T lower, T upper) {
 }
 
 /**
+ * standard clamp
+ */
+template <class T>
+T clamp(T value, T lower, T upper) {
+  return std::max(std::min(value, upper), lower);
+}
+
+/**
  * Resample a polyline in spherical coordinates
  */
 template<class container_t>
 container_t resample_spherical_polyline(const container_t& polyline, double resolution);
+
+/**
+ * A class to wrap a primitive array in something iterable which is useful for loops mostly
+ * Basically if you dont have a vector or list, this makes your array a bit more usable in
+ * that it fakes up a container for the purpose of ripping through the array
+ *
+ * TODO: reverse iteration
+ */
+template <class T>
+struct iterable_t {
+ public:
+  using iterator = T*;
+  iterable_t(T* first, size_t size): head(first), tail(first + size), count(size){}
+  iterable_t(T* first, T* end): head(first), tail(end), count(end - first){}
+  T* begin() { return head; }
+  T* end() { return tail; }
+  size_t size() const { return count; }
+ protected:
+  T* head;
+  T* tail;
+  size_t count;
+};
 
 }
 }

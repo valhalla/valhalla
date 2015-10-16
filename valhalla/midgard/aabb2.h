@@ -17,6 +17,9 @@ namespace midgard {
 template <class coord_t>
 class AABB2 {
  public:
+  using x_t = typename coord_t::first_type;
+  using y_t = typename coord_t::second_type;
+
   /**
    * Default constructor.
    */
@@ -36,8 +39,8 @@ class AABB2 {
    * @param   maxx    Maximum x of the bounding box.
    * @param   maxy    Maximum y of the bounding box.
    */
-  AABB2(const float minx, const float miny,
-        const float maxx, const float maxy);
+  AABB2(const x_t minx, const y_t miny,
+        const x_t maxx, const y_t maxy);
 
   /**
    * Construct an AABB given a list of points.
@@ -56,24 +59,25 @@ class AABB2 {
    * Get the minimum x
    * @return  Returns minimum x.
    */
-  float minx() const;
+  x_t minx() const;
+
   /**
    * Get the maximum x
    * @return  Returns maximum x.
    */
-  float maxx() const;
+  x_t maxx() const;
 
   /**
    * Get the minimum y
    * @return  Returns minimum y.
    */
-  float miny() const;
+  y_t miny() const;
 
   /**
    * Get the maximum y
    * @return  Returns maximum y.
    */
-  float maxy() const;
+  y_t maxy() const;
 
   /**
    * Get the point at the minimum x,y.
@@ -131,7 +135,7 @@ class AABB2 {
    * @return  Returns true if the segment intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersect(const LineSegment2<coord_t>& seg) const;
+  bool Intersects(const LineSegment2<coord_t>& seg) const;
 
   /**
    * Tests whether the segment intersects the bounding box.
@@ -140,19 +144,28 @@ class AABB2 {
    * @return  Returns true if the segment intersects (or lies completely
    *          within) the bounding box.
    */
-  bool Intersect(const coord_t& a, const coord_t& b) const;
+  bool Intersects(const coord_t& a, const coord_t& b) const;
+
+  /**
+   * Tests whether the circle intersects the bounding box.
+   * @param   center  center of circle
+   * @param   radius  radius of the circle
+   * @return  Returns true if the circle intersects (or lies completely
+   *          within) the bounding box.
+   */
+  bool Intersects(const coord_t& center, const float radius) const;
 
   /**
    * Gets the width of the bounding box.
    * @return  Returns the width of this bounding box.
    */
-  float Width() const;
+  x_t Width() const;
 
   /**
    * Gets the height of the bounding box.
    * @return  Returns the height of this bounding box.
    */
-  float Height() const;
+  y_t Height() const;
 
   /**
    * Expands (if necessary) the bounding box to include the specified
@@ -164,10 +177,10 @@ class AABB2 {
  protected:
   // Minimum and maximum x,y values (lower left and upper right corners)
   // of a rectangle / bounding box.
-  float minx_;
-  float miny_;
-  float maxx_;
-  float maxy_;
+  x_t minx_;
+  y_t miny_;
+  x_t maxx_;
+  y_t maxy_;
 };
 
 }

@@ -1,5 +1,6 @@
-#include "valhalla/midgard/aabb2.h"
-#include "valhalla/midgard/linesegment2.h"
+#include "midgard/aabb2.h"
+#include "midgard/linesegment2.h"
+#include "midgard/util.h"
 
 namespace valhalla {
 namespace midgard {
@@ -24,8 +25,8 @@ AABB2<coord_t>::AABB2(const coord_t& minpt, const coord_t& maxpt) {
 
 // Constructor with specified bounds.
 template <class coord_t>
-AABB2<coord_t>::AABB2(const float minx, const float miny,
-                      const float maxx, const float maxy) {
+AABB2<coord_t>::AABB2(const x_t minx, const y_t miny,
+                      const x_t maxx, const y_t maxy) {
   minx_ = minx;
   miny_ = miny;
   maxx_ = maxx;
@@ -47,25 +48,25 @@ bool AABB2<coord_t>::operator ==(const AABB2<coord_t>& r2) const {
 
 // Get the minimum x.
 template <class coord_t>
-float AABB2<coord_t>::minx() const {
+typename AABB2<coord_t>::x_t AABB2<coord_t>::minx() const {
   return minx_;
 }
 
 // Get the maximum x.
 template <class coord_t>
-float AABB2<coord_t>::maxx() const {
+typename AABB2<coord_t>::x_t AABB2<coord_t>::maxx() const {
   return maxx_;
 }
 
 // Get the minimum y.
 template <class coord_t>
-float AABB2<coord_t>::miny() const {
+typename AABB2<coord_t>::y_t AABB2<coord_t>::miny() const {
   return miny_;
 }
 
 // Get the maximum y.
 template <class coord_t>
-float AABB2<coord_t>::maxy() const {
+typename AABB2<coord_t>::y_t AABB2<coord_t>::maxy() const {
   return maxy_;
 }
 
@@ -91,12 +92,12 @@ void AABB2<coord_t>::Create(const std::vector<coord_t>& pts) {
   maxy_ = miny_;
   p++;
   for ( ; p < pts.end(); p++) {
-    float x = p->x();
+    x_t x = p->x();
     if (x < minx_)
       minx_ = x;
     else if (x > maxx_)
       maxx_ = x;
-    float y = p->y();
+    y_t y = p->y();
     if (y < miny_)
       miny_ = y;
     else if (y > maxy_)
@@ -140,13 +141,13 @@ bool AABB2<coord_t>::Intersects(const AABB2<coord_t>& r2) const {
 
 // Tests whether the segment intersects the bounding box.
 template <class coord_t>
-bool AABB2<coord_t>::Intersect(const LineSegment2<coord_t>& seg) const {
-  return Intersect(seg.a(), seg.b());
+bool AABB2<coord_t>::Intersects(const LineSegment2<coord_t>& seg) const {
+  return Intersects(seg.a(), seg.b());
 }
 
 // Tests whether the segment intersects the bounding box.
 template <class coord_t>
-bool AABB2<coord_t>::Intersect(const coord_t& a, const coord_t& b) const {
+bool AABB2<coord_t>::Intersects(const coord_t& a, const coord_t& b) const {
   // Trivial case - either point within the bounding box
   if (Contains(a) || Contains(b))
     return true;
@@ -171,15 +172,40 @@ bool AABB2<coord_t>::Intersect(const coord_t& a, const coord_t& b) const {
           (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0f));
 }
 
+template <class coord_t>
+bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
+  // Trivial case - center of circle is within the bounding box
+  if (Contains(c))
+    return true;
+
+  // Trivial rejection - if the center is more than radius away from
+  // from any box edge (in the direction perpendicular to the edge
+  // and away from the box center) it cannot intersect
+  if (c.first < minx_ - r || c.second < miny_ - r ||
+      c.first > maxx_ + r || c.second > maxy_ + r)
+    return false;
+
+  // If closest point on the box to the center is within radius
+  // of the center then we intersected. We just project the center
+  // onto each edge and check the distance
+  r *= r;
+  y_t horizontal = clamp(c.second, miny_, maxy_);
+  x_t vertical = clamp(c.first, minx_, maxx_);
+  return c.DistanceSquared(coord_t{minx_, horizontal}) <= r || //intersects the left side
+         c.DistanceSquared(coord_t{maxx_, horizontal}) <= r || //intersects the right side
+         c.DistanceSquared(coord_t{vertical,   miny_}) <= r || //intersects the bottom side
+         c.DistanceSquared(coord_t{vertical,   maxy_}) <= r;   //intersects the top side
+}
+
 // Gets the width of the bounding box.
 template <class coord_t>
-float AABB2<coord_t>::Width() const {
+typename AABB2<coord_t>::x_t AABB2<coord_t>::Width() const {
   return maxx_ - minx_;
 }
 
 // Gets the height of the bounding box.
 template <class coord_t>
-float AABB2<coord_t>::Height() const {
+typename AABB2<coord_t>::y_t AABB2<coord_t>::Height() const {
   return maxy_ - miny_;
 }
 
