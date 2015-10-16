@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
@@ -227,6 +228,14 @@ class GraphTile {
   TransitTransfer* GetTransfer(const uint32_t from_stopid,
                                const uint32_t to_stopid) const;
 
+  /**
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @return  Returns a list (vector) of AccessRestrictions.
+   */
+  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+
  protected:
 
   // Size of the tile in bytes
@@ -259,6 +268,9 @@ class GraphTile {
 
   // Transit transfers, 1 or more per index (indexed by from stop Id)
   TransitTransfer* transit_transfers_;
+
+  // Access restrictions, 1 or more per edge id
+  AccessRestriction* access_restrictions_;
 
   // Signs (indexed by directed edge index)
   Sign* signs_;

@@ -23,6 +23,7 @@ GraphTileHeader::GraphTileHeader()
       signcount_(0),
       transit1_{},
       transit2_{},
+      restrictioncount_(0),
       admincount_(0),
       edgeinfo_offset_(0),
       textlist_offset_(0),
@@ -113,6 +114,11 @@ uint32_t GraphTileHeader::transfercount() const {
 // Gets the number of transit calendar exceptions in this tile.
 uint32_t GraphTileHeader::calendarcount() const {
   return transit2_.calendarcount;
+}
+
+// Gets the number of restrictions in this tile.
+uint32_t GraphTileHeader::restrictioncount() const {
+  return restrictioncount_;
 }
 
 // Gets the number of admins in the tile.

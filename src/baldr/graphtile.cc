@@ -52,6 +52,7 @@ GraphTile::GraphTile()
       transit_stops_(nullptr),
       transit_routes_(nullptr),
       transit_transfers_(nullptr),
+      access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
       edgeinfo_(nullptr),
@@ -116,6 +117,10 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
    // Set a pointer to the transit transfer list
    transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
    ptr += header_->transfercount() * sizeof(TransitTransfer);
+
+   // Set a pointer access restriction list
+   access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+   ptr += header_->restrictioncount() * sizeof(AccessRestriction);
 
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
@@ -673,6 +678,56 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
               " to stopid " + std::to_string(to_stopid));
     return nullptr;
   }
+}
+
+// Get the transit route given its route Id.
+std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t edgeid) const {
+
+  std::vector<AccessRestriction> restrictions;
+  uint32_t count = header_->restrictioncount();
+   if (count == 0) {
+     return restrictions;
+   }
+
+   // Access restriction are sorted by edge Id.
+   // Binary search to find a access restriction with matching edge Id.
+   int32_t low = 0;
+   int32_t high = count-1;
+   int32_t mid;
+   bool found = false;
+   while (low <= high) {
+     mid = (low + high) / 2;
+     if (access_restrictions_[mid].edgeid() == edgeid) {
+       found = true;
+       break;
+     }
+     if (edgeid < access_restrictions_[mid].edgeid() ) {
+       high = mid - 1;
+     } else {
+       low = mid + 1;
+     }
+   }
+
+   if (!found) {
+     return restrictions;
+   }
+
+   // Back up while prior is equal (or at the beginning)
+   while (mid > 0 && access_restrictions_[mid - 1].edgeid() == edgeid) {
+     mid--;
+   }
+
+   // Add restrictions
+   while (access_restrictions_[mid].edgeid() == edgeid && mid < count) {
+     restrictions.emplace_back(access_restrictions_[mid]);
+     mid++;
+   }
+
+   if (restrictions.size() == 0) {
+     LOG_ERROR("No restrictions found for edgeid = " + std::to_string(edgeid));
+
+     return restrictions;
+   }
 }
 
 }

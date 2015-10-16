@@ -128,6 +128,12 @@ class GraphTileHeader {
   uint32_t calendarcount() const;
 
   /**
+   * Gets the number of restrictions in this tile.
+   * @return  Returns the number of restrictions.
+   */
+  uint32_t restrictioncount() const;
+
+  /**
    * Gets the number of admins in this tile.
    * @return  Returns the number of admins.
    */
@@ -215,6 +221,9 @@ class GraphTileHeader {
     uint64_t spare          : 16;
   };
   Transit2 transit2_;
+
+  // Number of restriction records
+  uint32_t restrictioncount_;
 
   // Number of admin records
   uint32_t admincount_;
