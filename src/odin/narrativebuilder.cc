@@ -1090,12 +1090,12 @@ std::string NarrativeBuilder::FormVerbalBearInstruction(
 
 std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
                                                    Maneuver* prev_maneuver) {
-  //  0 "Make a <FormTurnTypeInstruction> U-turn."
-  //  1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
-  //  2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
-  //  3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
-  //  4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
-  //  5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+  // 0 "Make a <FormTurnTypeInstruction> U-turn."
+  // 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
+  // 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
+  // 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
+  // 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+  // 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
   // TODO: rework with phrase ids
 
   std::string instruction;

@@ -458,6 +458,111 @@ void PopulateBearManeuverList_3(std::list<Maneuver>& maneuvers,
                    { }, { }, 0, 0, 0, 0, 0, 1, "", "", "", 0);
 }
 
+void PopulateUturnManeuverList_0(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnLeft, { }, { }, { }, "",
+                   0.592000, 28, 180, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 76, 76, 3,
+                   4, 24, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 0, 0, "", "", "", 0);
+}
+
+void PopulateUturnManeuverList_1(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnRight, {
+                       "Bunker Hill Road" },
+                   { }, { }, "", 0.592000, 28, 180,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kEast, 76, 76, 3,
+                   4, 24, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 0, 0, "", "", "", 0);
+}
+
+void PopulateUturnManeuverList_2(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kRight, { "Bunker Hill Road" },
+                   { }, { }, "", 0.287000, 28, 81,
+                   Maneuver::RelativeDirection::kRight,
+                   TripDirections_Maneuver_CardinalDirection_kNorthWest, 335,
+                   337, 2, 3, 36, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 1, 0, 0, 0, 1, 1, "", "", "", 0);
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnLeft,
+                   { "Bunker Hill Road" }, { }, { }, "", 0.287000, 25, 180,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouth, 157, 155,
+                   3, 4, 46, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { },
+                   0, 0, 0, 0, 0, 0, "", "", "", 0);
+}
+
+void PopulateUturnManeuverList_3(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnLeft, { }, { }, {
+                       "Devonshire Road" },
+                   "", 0.072697, 47, 180, Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+}
+
+void PopulateUturnManeuverList_4(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver = maneuvers.back();
+  PopulateManeuver(maneuver, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnLeft, { "Jonestown Road",
+                       "US 22" },
+                   { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+}
+
+void PopulateUturnManeuverList_5(std::list<Maneuver>& maneuvers,
+                                const std::string& country_code,
+                                const std::string& state_code) {
+  maneuvers.emplace_back();
+  Maneuver& maneuver1 = maneuvers.back();
+  PopulateManeuver(maneuver1, country_code, state_code,
+                   TripDirections_Maneuver_Type_kStart, { "Jonestown Road",
+                       "US 22" },
+                   { }, { }, "", 0.062923, 0, 0,
+                   Maneuver::RelativeDirection::kNone,
+                   TripDirections_Maneuver_CardinalDirection_kNorthEast, 36, 32,
+                   0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { }, { }, 0,
+                   0, 0, 0, 1, 0, "", "", "", 0);
+  maneuvers.emplace_back();
+  Maneuver& maneuver2 = maneuvers.back();
+  PopulateManeuver(maneuver2, country_code, state_code,
+                   TripDirections_Maneuver_Type_kUturnLeft, { "Jonestown Road",
+                       "US 22" },
+                   { }, { "Devonshire Road" }, "", 0.072697, 47, 180,
+                   Maneuver::RelativeDirection::KReverse,
+                   TripDirections_Maneuver_CardinalDirection_kSouthWest, 212,
+                   221, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, { }, { }, { },
+                   { }, 0, 1, 0, 0, 1, 0, "", "", "", 0);
+}
+
 void SetExpectedManeuverInstructions(
     std::list<Maneuver>& expected_maneuvers,
     const string& instruction,
@@ -1123,6 +1228,204 @@ void TestBuildBearInstructions_3_miles_en_US() {
       "Bear left to stay on U.S. 15 South.",
       "Bear left to stay on U.S. 15 South.",
       "Continue for 2.6 miles.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 0 "Make a <FormTurnTypeInstruction> U-turn."
+// 0 "Make a <FormTurnTypeInstruction> U-turn."
+// 0 "Make a <FormTurnTypeInstruction> U-turn."
+void TestBuildUturnInstructions_0_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_0(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_0(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a left U-turn.",
+      "Make a left U-turn.",
+      "Make a left U-turn.",
+      "Continue for 4 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES>."
+// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(1)>."
+// 1 "Make a <FormTurnTypeInstruction> U-turn onto <STREET_NAMES(2)>."
+void TestBuildUturnInstructions_1_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_1(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_1(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a right U-turn onto Bunker Hill Road.",
+      "Make a right U-turn onto Bunker Hill Road.",
+      "Make a right U-turn onto Bunker Hill Road.",
+      "Continue for 4 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES>."
+// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(1)>."
+// 2 "Make a <FormTurnTypeInstruction> U-turn to stay on <STREET_NAMES(2)>."
+void TestBuildUturnInstructions_2_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_2(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_2(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Turn right onto Bunker Hill Road.",
+      "Turn right onto Bunker Hill Road.",
+      "Turn right onto Bunker Hill Road.",
+      "Continue for 2 tenths of a mile.");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a left U-turn to stay on Bunker Hill Road.",
+      "Make a left U-turn to stay on Bunker Hill Road.",
+      "Make a left U-turn to stay on Bunker Hill Road.",
+      "Continue for 2 tenths of a mile.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES>."
+// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
+// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)>."
+void TestBuildUturnInstructions_3_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_3(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_3(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a left U-turn at Devonshire Road.",
+      "Make a left U-turn at Devonshire Road.",
+      "Make a left U-turn at Devonshire Road.",
+      "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> onto <STREET_NAMES>."
+// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
+// 4 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> onto <STREET_NAMES(2)>."
+void TestBuildUturnInstructions_4_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_4(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_4(expected_maneuvers, country_code, state_code);
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22.",
+      "Make a left U-turn at Devonshire Road.",
+      "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22.",
+      "Continue for 200 feet.");
+
+  TryBuild(directions_options, maneuvers, expected_maneuvers);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FormUturnInstruction
+// 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES> to stay on <STREET_NAMES>."
+// 3 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(1)>."
+// 5 "Make a <FormTurnTypeInstruction> U-turn at <CROSS_STREET_NAMES(2)> to stay on <STREET_NAMES(2)>."
+void TestBuildUturnInstructions_5_miles_en_US() {
+  std::string country_code = "US";
+  std::string state_code = "PA";
+
+  // Configure directions options
+  DirectionsOptions directions_options;
+  directions_options.set_units(DirectionsOptions_Units_kMiles);
+  directions_options.set_language("en-US");
+
+  // Configure maneuvers
+  std::list<Maneuver> maneuvers;
+  PopulateUturnManeuverList_5(maneuvers, country_code, state_code);
+
+  // Configure expected maneuvers based on directions options
+  std::list<Maneuver> expected_maneuvers;
+  PopulateUturnManeuverList_5(expected_maneuvers, country_code, state_code);
+  SetExpectedPreviousManeuverInstructions(
+      expected_maneuvers,
+      "Go northeast on Jonestown Road/US 22.",
+      "",
+      "Go northeast on Jonestown Road, U.S. 22 for 200 feet.",
+      "");
+  SetExpectedManeuverInstructions(
+      expected_maneuvers,
+      "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22.",
+      "Make a left U-turn at Devonshire Road.",
+      "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22.",
+      "Continue for 200 feet.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
 }
@@ -2153,5 +2456,24 @@ int main() {
   // BuildBearInstructions_3_miles_en_US
   suite.test(TEST_CASE(TestBuildBearInstructions_3_miles_en_US));
 
+  // BuildUturnInstructions_0_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_0_miles_en_US));
+
+  // BuildUturnInstructions_1_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_1_miles_en_US));
+
+  // BuildUturnInstructions_2_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_2_miles_en_US));
+
+  // BuildUturnInstructions_3_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_3_miles_en_US));
+
+  // BuildUturnInstructions_4_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_4_miles_en_US));
+
+  // BuildUturnInstructions_5_miles_en_US
+  suite.test(TEST_CASE(TestBuildUturnInstructions_5_miles_en_US));
+
   return suite.tear_down();
 }
+
