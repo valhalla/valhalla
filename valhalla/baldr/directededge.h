@@ -168,7 +168,13 @@ class DirectedEdge {
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
-  uint32_t bikenetwork() const;
+  uint32_t bike_network() const;
+
+  /**
+   * Get the truck route flag for this directed edge.
+   * @return  Returns true if part of a truck network/route, false otherwise.
+   */
+  bool truck_route() const;
 
   /**
    * Get the number of lanes for this directed edge.
@@ -224,6 +230,12 @@ class DirectedEdge {
    * @return  Returns the speed in KPH.
    */
   uint8_t speed() const;
+
+  /**
+   * Gets the truck speed in KPH.
+   * @return  Returns the truck speed in KPH.
+   */
+  uint32_t truck_speed() const;
 
   /**
    * Get the classification (importance) of the road/path.
@@ -380,7 +392,7 @@ class DirectedEdge {
                                               // condition (per mode)
     uint64_t start_complex_restriction  : 12; // Complex restriction (per mode) starts on this directed edge
     uint64_t end_complex_restriction    : 12; // Complex restriction (per mode) starts on this directed edge
-    uint64_t exitsign                   : 1; // Does this directed edge have exit signs
+    uint64_t exitsign                   : 1;  // Does this directed edge have exit signs
     uint64_t spare                      : 2;
   };
   DataOffsets dataoffsets_;
@@ -403,15 +415,17 @@ class DirectedEdge {
     uint64_t not_thru       : 1;  // Edge leads to "no-through" region
     uint64_t opp_index      : 7;  // Opposing directed edge index
     uint64_t cycle_lane     : 2;  // Does this edge have bicycle lanes?
-    uint64_t bikenetwork    : 4;  // Edge that is part of a bicycle network
+    uint64_t bike_network   : 4;  // Edge that is part of a bicycle network
+    uint64_t truck_route    : 1;  // Edge that is part of a truck route/network
 
-    uint32_t lanecount      : 4;  // Number of lanes
+    uint64_t lanecount      : 4;  // Number of lanes
     uint64_t restrictions   : 8;  // Restrictions - mask of local edge indexes
                                   // at the end node that are restricted.
     uint64_t use            : 6;  // Specific use types
     uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
     uint64_t ctry_crossing  : 1;  // Does the edge cross into new country
-    uint64_t spare          : 17;
+
+    uint64_t spare          : 16;
   };
   Attributes attributes_;
 

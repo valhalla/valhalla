@@ -167,8 +167,13 @@ CycleLane DirectedEdge::cyclelane() const {
 }
 
 // Gets the bike network mask
-uint32_t DirectedEdge::bikenetwork() const {
-  return attributes_.bikenetwork;
+uint32_t DirectedEdge::bike_network() const {
+  return attributes_.bike_network;
+}
+
+// Gets the truck network flag
+bool DirectedEdge::truck_route() const {
+  return attributes_.truck_route;
 }
 
 // Gets the lane count
@@ -213,11 +218,16 @@ uint8_t DirectedEdge::reverseaccess() const {
   return access_.reverseaccess;
 }
 
-// -------------------------------- Default speed -------------------------- //
+// -------------------------------- speed -------------------------- //
 
 // Gets the speed in KPH.
 uint8_t DirectedEdge::speed() const {
   return speed_;
+}
+
+// Gets the truck speed in KPH.
+uint32_t DirectedEdge::truck_speed() const {
+  return access_.truck_speed;
 }
 
 // ----------------------------- Classification ---------------------------- //
@@ -344,7 +354,8 @@ json::MapPtr DirectedEdge::json() const {
     {"forward", static_cast<bool>(attributes_.forward)},
     {"not_thru", static_cast<bool>(attributes_.not_thru)},
     {"cycle_lane", to_string(static_cast<CycleLane>(attributes_.cycle_lane))},
-    {"bike_network", bike_network_json(attributes_.bikenetwork)},
+    {"bike_network", bike_network_json(attributes_.bike_network)},
+    {"truck_route", bike_network_json(attributes_.truck_route)},
     {"lane_count", static_cast<uint64_t>(attributes_.lanecount)},
     {"use", to_string(static_cast<Use>(attributes_.use))},
     {"speed_type", to_string(static_cast<SpeedType>(attributes_.speed_type))},
@@ -439,8 +450,10 @@ const uint64_t DirectedEdge::internal_version() {
   boost::hash_combine(seed,ffs(de.attributes_.opp_index+1)-1);
   de.attributes_.cycle_lane = ~de.attributes_.cycle_lane;
   boost::hash_combine(seed,ffs(de.attributes_.cycle_lane+1)-1);
-  de.attributes_.bikenetwork = ~de.attributes_.bikenetwork;
-  boost::hash_combine(seed,ffs(de.attributes_.bikenetwork+1)-1);
+  de.attributes_.bike_network = ~de.attributes_.bike_network;
+  boost::hash_combine(seed,ffs(de.attributes_.bike_network+1)-1);
+  de.attributes_.truck_route = ~de.attributes_.truck_route;
+  boost::hash_combine(seed,ffs(de.attributes_.truck_route+1)-1);
   de.attributes_.lanecount = ~de.attributes_.lanecount;
   boost::hash_combine(seed,ffs(de.attributes_.lanecount+1)-1);
   de.attributes_.restrictions = ~de.attributes_.restrictions;
