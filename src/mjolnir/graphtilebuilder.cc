@@ -72,6 +72,10 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
   }
 
+  for (uint32_t i = 0; i < header_->restrictioncount(); i++) {
+    access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
+  }
+
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     text_offsets.insert(signs_[i].text_offset());
@@ -156,6 +160,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_transfercount(transfer_builder_.size());
+    header_builder_.set_restrictioncount(access_restriction_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
@@ -166,6 +171,7 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (transfer_builder_.size() * sizeof(TransitTransfer))
+            + (access_restriction_builder_.size() * sizeof(AccessRestriction))
             + (signs_builder_.size() * sizeof(SignBuilder))
             + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
 
@@ -203,6 +209,11 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     std::sort(transfer_builder_.begin(), transfer_builder_.end());
     file.write(reinterpret_cast<const char*>(&transfer_builder_[0]),
                transfer_builder_.size() * sizeof(TransitTransfer));
+
+    // Sort and write the access restrictions
+    std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
+    file.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
+               access_restriction_builder_.size() * sizeof(AccessRestriction));
 
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
@@ -283,6 +294,10 @@ void GraphTileBuilder::Update(
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
                hdr.transfercount() * sizeof(TransitTransfer));
 
+    // Write the existing access restrictions
+    file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
+               hdr.restrictioncount() * sizeof(AccessRestriction));
+
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
                hdr.signcount() * sizeof(Sign));
@@ -310,7 +325,8 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                 const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
-                const std::vector<SignBuilder>& signs) {
+                const std::vector<SignBuilder>& signs,
+                const std::vector<AccessRestriction>& restrictions) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
             GraphTile::FileSuffix(hdr.graphid(), hierarchy);
@@ -350,6 +366,10 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     // Write the existing transit transfers
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
                hdr.transfercount() * sizeof(TransitTransfer));
+
+    // Write the updated access restrictions
+    file.write(reinterpret_cast<const char*>(&restrictions[0]),
+               restrictions.size() * sizeof(AccessRestriction));
 
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
@@ -424,6 +444,18 @@ void GraphTileBuilder::AddTransitRoute(const TransitRoute& route)  {
 // Add a transit transfer.
 void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
   transfer_builder_.emplace_back(std::move(transfer));
+}
+
+// Add an access restriction.
+void GraphTileBuilder::AddAccessRestriction(const AccessRestriction& access_restriction) {
+  access_restriction_builder_.emplace_back(std::move(access_restriction));
+}
+
+// Add access restrictions
+void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction>& restrictions) {
+  access_restriction_builder_.clear();
+  // Add restrictions to the list
+  access_restriction_builder_ = restrictions;
 }
 
 // Add signs
@@ -603,6 +635,16 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
   if (idx < header_->directededgecount())
     return directededges_builder_[idx];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
+}
+
+// Gets a non-const access restriction from existing tile data.
+AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
+  if (idx < header_->restrictioncount()) {
+
+
+    return access_restriction_builder_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
 }
 
 // Gets a non-const sign (builder) from existing tile data.

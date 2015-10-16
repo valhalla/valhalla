@@ -107,6 +107,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_transfercount(const uint32_t transfers);
 
   /**
+   * Sets the number of restrictions in this tile.
+   * @param  restrictions   The number of access restrictions.
+   */
+  void set_restrictioncount(const uint32_t restrictions);
+
+  /**
    * Gets the number of transit calendar exceptions in this tile.
    * @param  calendars  The number of transit calendar exceptions.
    */

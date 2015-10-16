@@ -87,6 +87,11 @@ void GraphTileHeaderBuilder::set_transfercount(const uint32_t transfers) {
   transit2_.transfercount = transfers;
 }
 
+// Sets the number of restrictions in this tile.
+void GraphTileHeaderBuilder::set_restrictioncount(const uint32_t restrictions) {
+  restrictioncount_ = restrictions;
+}
+
 // Gets the number of transit calendar exceptions in this tile.
 void GraphTileHeaderBuilder::set_calendarcount(const uint32_t calendars) {
   transit2_.calendarcount = calendars;

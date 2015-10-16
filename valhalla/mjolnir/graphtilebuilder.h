@@ -90,13 +90,14 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  nodes          Update list of nodes
    * @param  directededges  Updated list of edges.
    * @param  signs          Updated list of signs.
-   * @param  trs            Updated list of turn restrictions.
+   * @param  restrictions   Updated list of access restrictions.
    */
   void Update(const baldr::TileHierarchy& hierarchy,
               const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
-              const std::vector<SignBuilder>& signs);
+              const std::vector<SignBuilder>& signs,
+              const std::vector<AccessRestriction>& restrictions);
 
   /**
    * Add a node and its outbound edges. Sets the node's edge index
@@ -160,6 +161,18 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  transfer  Transit transfer record.
    */
   void AddTransitTransfer(const baldr::TransitTransfer& transfer);
+
+  /**
+   * Add an access restriction.
+   * @param  access_restriction  Access Restriction record.
+   */
+  void AddAccessRestriction(const baldr::AccessRestriction& access_restriction);
+
+  /**
+   * Add restriction.
+   * @param  restrictions Access restrictions
+   */
+  void AddAccessRestrictions(const std::vector<AccessRestriction>& restrictions);
 
   /**
    * Add sign information.
@@ -269,6 +282,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   DirectedEdgeBuilder& directededge_builder(const size_t idx);
 
   /**
+   * Gets a non-const access restriction from existing tile data.
+   * @param  idx  Index of the restriction (index in the array, not the
+   *              directed edge index) within the tile.
+   * @return  Returns a reference to the access restriction.
+   */
+  AccessRestriction& accessrestriction(const size_t idx);
+
+  /**
    * Gets a non-const sign (builder) from existing tile data.
    * @param  idx  Index of the sign (index in the array, not the
    *              directed edge index) within the tile.
@@ -341,6 +362,9 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Transit transfers. Sorted by from stop Id.
   std::vector<baldr::TransitTransfer> transfer_builder_;
+
+  // List of restrictions. Sorted by directed edge Id
+  std::vector<baldr::AccessRestriction> access_restriction_builder_;
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
