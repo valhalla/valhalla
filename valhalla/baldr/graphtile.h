@@ -1,16 +1,15 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/transitcalendar.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/transittrip.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
@@ -194,15 +193,6 @@ class GraphTile {
    */
    const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
                                                const uint32_t tripid) const;
-
-  /**
-   * Get the transit trip given its trip Id.
-   * @param   tripid  Trip Id.
-   * @return  Returns a pointer to the transit trip information. Returns
-   *          nullptr if the trip is not found.
-   */
-  const TransitTrip* GetTransitTrip(const uint32_t tripid) const;
-
   /**
    * Get the transit stop given its stop Id.
    * @param   stopid  Stop Id.
@@ -241,15 +231,12 @@ class GraphTile {
                                const uint32_t to_stopid) const;
 
   /**
-   * Get a pointer to the first calendar exception record given the service
-   * Id and compute the number of calendar exception records.
-   * @param   serviceid  Service Id.
-   * @return  Returns a pair with a pointer to the initial calendar exception
-   *          record and a count of calendar exception records for this
-   *          service Id.
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::pair<TransitCalendar*, uint32_t> GetCalendarExceptions(
-                const uint32_t serviceid) const;
+  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
 
   /**
    * Get an iteratable list of GraphIds given a cell in the tile
@@ -283,9 +270,6 @@ class GraphTile {
   // sorted by departure time)
   TransitDeparture* departures_;
 
-  // Transit trips (indexed by trip Id - unique)
-  TransitTrip* transit_trips_;
-
   // Transit stops (indexed by stop Id - unique)
   TransitStop* transit_stops_;
 
@@ -295,8 +279,8 @@ class GraphTile {
   // Transit transfers, 1 or more per index (indexed by from stop Id)
   TransitTransfer* transit_transfers_;
 
-  // Transit calendar exceptions, 1 or more per index (indexed by service Id)
-  TransitCalendar* transit_exceptions_;
+  // Access restrictions, 1 or more per edge id
+  AccessRestriction* access_restrictions_;
 
   // Signs (indexed by directed edge index)
   Sign* signs_;

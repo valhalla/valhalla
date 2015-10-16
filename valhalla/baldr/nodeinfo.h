@@ -17,7 +17,7 @@ class GraphTile;
 constexpr uint32_t kMaxTileEdgeCount    = 4194303;  // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 63;       // Maximum TimeZones per tile
+constexpr uint32_t kMaxTimeZonesPerTile = 511;      // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex   = 7;        // Max. index of edges on
                                                   // local level
 constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
@@ -71,7 +71,7 @@ class NodeInfo {
    * See graphconstants.h
    * @return  Returns the access bit mask indicating allowable modes.
    */
-  uint8_t access() const;
+  uint16_t access() const;
 
   /**
    * Get the intersection type.
@@ -214,7 +214,11 @@ class NodeInfo {
   NodeAttributes attributes_;
 
   // Node access (see graphconstants.h)
-  Access access_;
+  struct AllowedAccess {
+    uint16_t access : 12;
+    uint16_t spare  : 4;
+  };
+  AllowedAccess access_;
 
   // Intersection type. Classification of the intersection.
   // (see graphconstants.h)
@@ -223,9 +227,8 @@ class NodeInfo {
   // Administrative information
   struct NodeAdmin {
     uint16_t admin_index  : 6; // Index into this tile's list of admin data
-    uint16_t timezone     : 6; // Time zone
-    uint16_t dst          : 1; // Is Daylight Saving Time used?
-    uint16_t spare        : 3;
+    uint16_t timezone     : 9; // Time zone
+    uint16_t spare        : 1;
   };
   NodeAdmin admin_;
 

@@ -20,8 +20,15 @@ class TransitDeparture {
                    const uint32_t departure_time,
                    const uint32_t elapsed_time,
                    const uint32_t start_date,
-                   const uint32_t enddate, const uint32_t days,
-                   const uint32_t serviceid);
+                   const uint32_t enddate,
+                   const uint32_t days_of_week,
+                   const uint64_t days);
+
+  /**
+   * Gets the days that this departure is valid.  60 days
+   * @return  Returns the days
+   */
+  uint64_t days() const;
 
   /**
    * Get the line Id - for lookup of all departures along this edge. Each
@@ -82,15 +89,7 @@ class TransitDeparture {
    * Gets the days of the week for this departure.
    * @return  Returns the days of the week (form TODO)
    */
-  uint32_t days() const;
-
-  /**
-   * Get the service Id (internal) for this departure.
-   * Service Ids indicate use of a calendar exception rather
-   * than a regular schedule.
-   * @return  Returns the service Id or 0 if none.
-   */
-  uint32_t serviceid() const;
+  uint32_t days_of_week() const;
 
   /**
    * operator < - for sorting. Sort by line Id and departure time.
@@ -101,6 +100,11 @@ class TransitDeparture {
   bool operator < (const TransitDeparture& other) const;
 
  protected:
+
+  // Stores bits for until the end date.  The end date will be less than or
+  // equal to 60 days.
+  uint64_t days_;
+
   // Line Id - lookup departures by unique line Id (which indicates a unique
   // departure / arrival stop pair.
   uint32_t lineid_;
@@ -125,15 +129,12 @@ class TransitDeparture {
   ScheduleTimes times_;
 
   struct ScheduleDates {
-    uint32_t start   : 12;     // Start date for the scheduled departure
-    uint32_t end     : 12;     // End date for the scheduled departure
-    uint32_t days    : 7;      // Days of the week
-    uint32_t spare   : 1;
+    uint32_t start        : 12;     // Start date for the scheduled departure
+    uint32_t end          : 12;     // End date for the scheduled departure
+    uint32_t days_of_week : 7;      // Days of the week
+    uint32_t spare        : 1;
   };
   ScheduleDates dates_;
-
-  // Service Id (internal) for calendar exceptions (additions and removals)
-  uint32_t serviceid_;
 
   // TODO - fare info, frequencies
 };

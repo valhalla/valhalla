@@ -1,4 +1,5 @@
 #include "baldr/graphtile.h"
+#include "baldr/datetime.h"
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
@@ -48,11 +49,10 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       departures_(nullptr),
-      transit_trips_(nullptr),
       transit_stops_(nullptr),
       transit_routes_(nullptr),
       transit_transfers_(nullptr),
-      transit_exceptions_(nullptr),
+      access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
       edge_cells_(nullptr),
@@ -107,10 +107,6 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     departures_ = reinterpret_cast<TransitDeparture*>(ptr);
     ptr += header_->departurecount() * sizeof(TransitDeparture);
 
-    // Set a pointer to the transit trip list
-    transit_trips_ = reinterpret_cast<TransitTrip*>(ptr);
-    ptr += header_->tripcount() * sizeof(TransitTrip);
-
     // Set a pointer to the transit stop list
     transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
     ptr += header_->stopcount() * sizeof(TransitStop);
@@ -123,14 +119,13 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
     ptr += header_->transfercount() * sizeof(TransitTransfer);
 
-    // Set a pointer to the transit calendar exception list
-    transit_exceptions_ = reinterpret_cast<TransitCalendar*>(ptr);
-    ptr += header_->calendarcount() * sizeof(TransitCalendar);
+    // Set a pointer access restriction list
+    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+    ptr += header_->restrictioncount() * sizeof(AccessRestriction);
 
-    /*
-    LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
-    LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
-         " Trips: " + std::to_string(header_->tripcount()) +
+/*
+LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
+LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
          " Stops: " + std::to_string(header_->stopcount()) +
          " Routes: " + std::to_string(header_->routecount()) +
          " Transfers: " + std::to_string(header_->transfercount()) +
@@ -450,27 +445,15 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
           return &departures_[mid];
         }
       } else if (dep.start_date() <= date && date <= dep.end_date()) {
-        // Within valid date range for departure. Check the day of week mask
-        if ((dep.days() & dow) > 0) {
-          // Check that there are no calendar exceptions
-          if (dep.serviceid() == 0) {
-            return &departures_[mid];
-          } else {
-            // Check if there is a calendar exception for this date.
-            bool except = false;
-            auto exceptions = GetCalendarExceptions(dep.serviceid());
-            TransitCalendar* calendar = exceptions.first;
-            for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
-              if (calendar->date() == date) {
-                except = true;
-                break;
-              }
-            }
-            if (!except) {
-              return &departures_[mid];
-            }
-          }
-        }
+        // Within valid date range for departure. Check the days
+
+        if (DateTime::is_service_available(dep.days(), dep.start_date(), date, dep.end_date()))
+          return &departures_[mid];
+
+      } else if (date > dep.end_date()) {
+
+        if ((dep.days_of_week() & dow) > 0)
+          return &departures_[mid];
       }
     }
 
@@ -541,34 +524,6 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
 
   LOG_INFO("No departures found for lineid = " + std::to_string(lineid) +
            " and tripid = " + std::to_string(tripid));
-  return nullptr;
-}
-
-// Get the transit trip given its trip Id.
-const TransitTrip* GraphTile::GetTransitTrip(const uint32_t tripid) const {
-  uint32_t count = header_->tripcount();
-  if (count == 0) {
-    return nullptr;
-  }
-
-  // Binary search - trip Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_trips_[mid].tripid() == tripid) {
-      return &transit_trips_[mid];
-    }
-    if (tripid < transit_trips_[mid].tripid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No trip found for tripid = " + std::to_string(tripid));
   return nullptr;
 }
 
@@ -731,54 +686,54 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
   }
 }
 
+// Get the transit route given its route Id.
+std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t edgeid) const {
 
-// Get a pointer to the first calendar exception record given the service
-// Id and compute the number of calendar exception records.
-std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
-               const uint32_t serviceid) const {
-  uint32_t count = header_->calendarcount();
-  if (count == 0) {
-    return {nullptr, 0};
-  }
+  std::vector<AccessRestriction> restrictions;
+  uint32_t count = header_->restrictioncount();
+   if (count == 0) {
+     return restrictions;
+   }
 
-  // Binary search
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  bool found = false;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_exceptions_[mid].serviceid() == serviceid) {
-      found = true;
-      break;
-    }
-    if (serviceid < transit_exceptions_[mid].serviceid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
+   // Access restriction are sorted by edge Id.
+   // Binary search to find a access restriction with matching edge Id.
+   int32_t low = 0;
+   int32_t high = count-1;
+   int32_t mid;
+   bool found = false;
+   while (low <= high) {
+     mid = (low + high) / 2;
+     if (access_restrictions_[mid].edgeid() == edgeid) {
+       found = true;
+       break;
+     }
+     if (edgeid < access_restrictions_[mid].edgeid() ) {
+       high = mid - 1;
+     } else {
+       low = mid + 1;
+     }
+   }
 
-  if (found) {
-    // Back up while prior is equal (or at the beginning)
-    while (mid > 0 &&
-          transit_exceptions_[mid-1].serviceid() == serviceid) {
-      mid--;
-    }
+   if (!found) {
+     return restrictions;
+   }
 
-    // Set the start and increment until not equal to get the count
-    uint32_t n = 0;
-    TransitCalendar* start = &transit_exceptions_[mid];
-    while (transit_exceptions_[mid].serviceid() == serviceid && mid < count) {
-      n++;
-      mid++;
-    }
-    return {start, n};
-  } else {
-    LOG_ERROR("No calendar exceptions found for serviceid = " +
-                  std::to_string(serviceid));
-    return {nullptr, 0};
-  }
+   // Back up while prior is equal (or at the beginning)
+   while (mid > 0 && access_restrictions_[mid - 1].edgeid() == edgeid) {
+     mid--;
+   }
+
+   // Add restrictions
+   while (access_restrictions_[mid].edgeid() == edgeid && mid < count) {
+     restrictions.emplace_back(access_restrictions_[mid]);
+     mid++;
+   }
+
+   if (restrictions.size() == 0) {
+     LOG_ERROR("No restrictions found for edgeid = " + std::to_string(edgeid));
+
+     return restrictions;
+   }
 }
 
 // Get the array of graphids for this cell

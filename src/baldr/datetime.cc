@@ -1,8 +1,8 @@
 #include <iostream>
 #include <sstream>
+#include <bitset>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -43,20 +43,175 @@ const tz_db_t& get_tz_db() {
   return tz_db;
 }
 
+//get a formatted date.
+boost::gregorian::date get_formatted_date(const std::string& date) {
+  boost::gregorian::date d;
+  if (date.find("T") != std::string::npos) {
+    std::string dt = date;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+    d = boost::gregorian::date_from_iso_string(dt);
+  } else if (date.find("-") != std::string::npos) {
+    std::string dt = date;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    d = boost::gregorian::from_undelimited_string(dt);
+  } else
+    d = boost::gregorian::from_undelimited_string(date);
+  return d;
+}
+
+//Get service days
+//Start from the start date to end date or 60 days, whichever is less.
+//set the bits based on the dow.
+uint64_t get_service_days(std::string& start_date, std::string& end_date, const std::string& tz, const uint32_t& dow_mask) {
+
+  //start_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date s_date;
+  s_date = get_formatted_date(start_date);
+
+  //end_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date e_date;
+  e_date = get_formatted_date(end_date);
+
+  if (!tz.empty()) {
+    boost::gregorian::date current_date = get_formatted_date(iso_date_time(tz));
+    if (s_date <= current_date && current_date <= e_date) {
+      s_date = current_date;
+      start_date = to_iso_extended_string(s_date);
+    }
+    else if (current_date > e_date) //reject.
+      return 0;
+  }
+
+  // only support 60 days out.  (59 days and include the end_date = 60)
+  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
+  if (enddate <= e_date) {
+    e_date = enddate;
+    end_date = to_iso_extended_string(e_date);
+  }
+
+  boost::gregorian::day_iterator itr(s_date);
+  uint32_t x = 0;
+  std::bitset<64> bit_set;
+
+  while (itr <= e_date) {
+
+    uint8_t dow;
+
+    switch ((*itr).day_of_week().as_enum()) {
+      case boost::date_time::Sunday:
+        dow = kSunday;
+        break;
+      case boost::date_time::Monday:
+        dow = kMonday;
+        break;
+      case boost::date_time::Tuesday:
+        dow = kTuesday;
+        break;
+      case boost::date_time::Wednesday:
+        dow = kWednesday;
+        break;
+      case boost::date_time::Thursday:
+        dow = kThursday;
+        break;
+      case boost::date_time::Friday:
+        dow = kFriday;
+        break;
+      case boost::date_time::Saturday:
+        dow = kSaturday;
+        break;
+    }
+
+    if (dow_mask & dow)
+      bit_set.set(x);
+
+    ++itr;
+    ++x;
+  }
+  return bit_set.to_ulong();
+}
+
+//add a service day to the days if it is in range.
+uint64_t add_service_day(const uint64_t& days, const std::string& start_date,
+                         const std::string& end_date, const std::string& added_date) {
+
+  //start_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date s_date;
+  s_date = get_formatted_date(start_date);
+
+  //end_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date e_date;
+  e_date = get_formatted_date(end_date);
+
+  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
+
+  if (enddate <= e_date)
+    e_date = enddate;
+
+  //added_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date a_date;
+  a_date = get_formatted_date(added_date);
+
+  if (s_date <= a_date && a_date <= e_date) {
+    std::bitset<64> bit_set(days);
+    boost::gregorian::date_period range(s_date, a_date);
+    uint32_t length = range.length().days();
+    bit_set.set(length);
+    return bit_set.to_ulong();
+  }
+  return days;
+}
+
+//remove a service day to the days if it is in range.
+uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
+                            const std::string& end_date, const std::string& removed_date) {
+
+  //start_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date s_date;
+  s_date = get_formatted_date(start_date);
+
+  //end_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date e_date;
+  e_date = get_formatted_date(end_date);
+
+  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
+
+  if (enddate <= e_date)
+    e_date = enddate;
+
+  //removed_date is in the format of 20150516 or 2015-05-06T08:00
+  boost::gregorian::date r_date;
+  r_date = get_formatted_date(removed_date);
+
+  if (s_date <= r_date && r_date <= e_date) {
+    std::bitset<64> bit_set(days);
+    boost::gregorian::date_period range(s_date, r_date);
+    uint32_t length = range.length().days();
+    bit_set.reset(length);
+    return bit_set.to_ulong();
+  }
+  return days;
+}
+
+// check if service is available for a date.
+bool is_service_available(const uint64_t& days, const uint32_t& start_date, const uint32_t& date, const uint32_t& end_date) {
+
+  if (start_date <= date && date <= end_date) {
+    boost::gregorian::date start = pivot_date_ + boost::gregorian::days(start_date);
+    boost::gregorian::date d = pivot_date_ + boost::gregorian::days(date);
+
+    std::bitset<64> bit_set(days);
+    boost::gregorian::date_period range(start, d);
+    uint32_t length = range.length().days();
+    return bit_set.test(length);
+  }
+  return false;
+}
+
 //Get the number of days that have elapsed from the pivot date for the inputed date.
 //date_time is in the format of 20150516 or 2015-05-06T08:00
 uint32_t days_from_pivot_date(const std::string& date_time) {
   boost::gregorian::date e_date;
-  if (date_time.find("T") != std::string::npos) {
-    std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
-    e_date = boost::gregorian::date_from_iso_string(dt);
-  } else if (date_time.find("-") != std::string::npos) {
-    std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
-    e_date = boost::gregorian::from_undelimited_string(dt);
-  } else
-    e_date = boost::gregorian::from_undelimited_string(date_time);
+  e_date = get_formatted_date(date_time);
 
   if (e_date <= pivot_date_)
     return 0;
@@ -193,7 +348,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
   return iso_date_time;
 }
 
-
 //Get the current iso date and time.
 std::string iso_date_time(const std::string& tz) {
   std::string iso_date_time;
@@ -227,17 +381,7 @@ std::string iso_date_time(const std::string& tz) {
 //date_time is in the format of 20150516 or 2015-05-06T08:00
 uint32_t day_of_week_mask(const std::string& date_time) {
   boost::gregorian::date date;
-  if (date_time.find("T") != std::string::npos) {
-    std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
-    date = boost::gregorian::date_from_iso_string(dt);
-  }
-  else if (date_time.find("-") != std::string::npos) {
-    std::string dt = date_time;
-    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
-    date = boost::gregorian::from_undelimited_string(dt);
-  } else
-    date = boost::gregorian::from_undelimited_string(date_time);
+  date = get_formatted_date(date_time);
 
   if (date < pivot_date_)
     return kDOWNone;

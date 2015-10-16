@@ -46,6 +46,7 @@ CLEANFILES = date_time_zonespec.csv valhalla/baldr/date_time_zonespec.h
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
+        valhalla/baldr/accessrestriction.h \
 	valhalla/baldr/admin.h \
         valhalla/baldr/admininfo.h \
 	valhalla/baldr/connectivity_map.h \
@@ -71,12 +72,10 @@ nobase_include_HEADERS = \
 	valhalla/baldr/streetnames_factory.h \
 	valhalla/baldr/streetname_us.h \
 	valhalla/baldr/streetnames_us.h \
-	valhalla/baldr/transitcalendar.h \
 	valhalla/baldr/transitdeparture.h \
 	valhalla/baldr/transitroute.h \
 	valhalla/baldr/transitstop.h \
 	valhalla/baldr/transittransfer.h \
-	valhalla/baldr/transittrip.h \
 	valhalla/baldr/verbal_text_formatter.h \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
@@ -84,6 +83,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_factory.h \
         valhalla/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_SOURCES = \
+        src/baldr/accessrestriction.cc \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
 	src/baldr/connectivity_map.cc \
@@ -107,12 +107,10 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/streetnames_factory.cc \
 	src/baldr/streetname_us.cc \
 	src/baldr/streetnames_us.cc \
-	src/baldr/transitcalendar.cc \
 	src/baldr/transitdeparture.cc \
 	src/baldr/transitroute.cc \
 	src/baldr/transitstop.cc \
 	src/baldr/transittransfer.cc \
-	src/baldr/transittrip.cc \
 	src/baldr/verbal_text_formatter.cc \
 	src/baldr/verbal_text_formatter_us.cc \
 	src/baldr/verbal_text_formatter_us_co.cc \
