@@ -6,10 +6,13 @@ namespace baldr {
 
 // Constructor with arguments
 TransitRoute:: TransitRoute(const uint32_t routeid, const char* tl_routeid,
+                            const uint32_t route_color, const uint32_t route_text_color,
                             const uint32_t short_name_offset,
                             const uint32_t long_name_offset,
                             const uint32_t desc_offset)
     : routeid_(routeid),
+      route_color_(route_color),
+      route_text_color_(route_text_color),
       short_name_offset_(short_name_offset),
       long_name_offset_(long_name_offset),
       desc_offset_(desc_offset) {
@@ -27,6 +30,22 @@ uint32_t TransitRoute::routeid() const {
 */
 const char* TransitRoute::tl_routeid() const {
   return tl_routeid_;
+}
+
+/**
+ * Get the route color route.
+ * @return  Returns the route color.
+ */
+uint32_t TransitRoute::route_color() const {
+  return route_color_;
+}
+
+/**
+ * Get the route text color route.
+ * @return  Returns the route text color.
+ */
+uint32_t TransitRoute::route_text_color() const {
+  return route_text_color_;
 }
 
 /**

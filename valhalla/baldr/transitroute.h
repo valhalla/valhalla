@@ -15,6 +15,7 @@ class TransitRoute {
  public:
   // Constructor with arguments
   TransitRoute(const uint32_t routeid,const char* tl_routeid,
+               const uint32_t route_color, const uint32_t route_text_color,
                const uint32_t short_name_offset, const uint32_t long_name_offset,
                const uint32_t desc_offset);
 
@@ -29,6 +30,18 @@ class TransitRoute {
    * @return  Returns the TransitLand one-stop Id.
    */
   const char* tl_routeid() const;
+
+  /**
+   * Get the route color route.
+   * @return  Returns the route color.
+   */
+  uint32_t route_color() const;
+
+  /**
+   * Get the route text color route.
+   * @return  Returns the route text color.
+   */
+  uint32_t route_text_color() const;
 
   /**
    * Get the text/name offset for the short route name.
@@ -61,6 +74,12 @@ class TransitRoute {
 
   // TransitLand one stop Id for this route.
   char tl_routeid_[kOneStopIdSize];
+
+  // Route color
+  uint32_t route_color_;
+
+  // Route text color
+  uint32_t route_text_color_;
 
   // Short route name offset in the text/name list.
   uint32_t short_name_offset_;
