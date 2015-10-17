@@ -337,7 +337,7 @@ void CheckForIntersectingTiles(const GraphId& tile1, const GraphId& tile2,
             }
 
             // Check if the shape segment intersects the tile
-            if (tiling.TileBounds(tileid).Intersect(*shape1, *shape2)) {
+            if (tiling.TileBounds(tileid).Intersects(*shape1, *shape2)) {
               stats.AddIntersectedTile(id);
             }
           }
