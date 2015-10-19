@@ -28,7 +28,9 @@ namespace {
     {"/route", loki_worker_t::ROUTE},
     {"/viaroute", loki_worker_t::VIAROUTE},
     {"/locate", loki_worker_t::LOCATE},
-    {"/matrix", loki_worker_t::MATRIX}
+    {"/one_to_many", loki_worker_t::ONE_TO_MANY},
+    {"/many_to_one", loki_worker_t::MANY_TO_ONE},
+    {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
@@ -138,7 +140,7 @@ namespace valhalla {
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate' '/matrix'", headers_t{CORS});
+          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate' '/one_to_many' '/many_to_one' or '/many_to_many'", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -153,8 +155,10 @@ namespace valhalla {
             return route(action->second, request_pt);
           case LOCATE:
             return locate(request_pt, info);
-          case MATRIX:
-            return matrix(request_pt);
+          case ONE_TO_MANY:
+          case MANY_TO_ONE:
+          case MANY_TO_MANY:
+            return matrix(action->second, request_pt);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet

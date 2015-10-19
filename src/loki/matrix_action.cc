@@ -12,11 +12,6 @@ using namespace valhalla::baldr;
 
 namespace {
   enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
-  const std::unordered_map<std::string, MATRIX_TYPE> TDMATRIX{
-    {"one_to_many", ONE_TO_MANY},
-    {"many_to_one", MANY_TO_ONE},
-    {"many_to_many", MANY_TO_MANY}
-  };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -55,9 +50,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::matrix(boost::property_tree::ptree& request) {
-
-      auto matrix_type = TDMATRIX.find(request.get<std::string>("matrix_type"));
+    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       auto costing = request.get<std::string>("costing");
       if(costing.empty())
         throw std::runtime_error("No edge/node costing provided");
@@ -86,7 +79,19 @@ namespace valhalla {
 
         LOG_INFO("Location distance::" + std::to_string(path_distance));
       }
-      request.put("matrix_type" , matrix_type->first);
+
+      switch (action) {
+        case ONE_TO_MANY:
+          request.put("matrix_type", "one_to_many");
+          break;
+        case MANY_TO_ONE:
+          request.put("matrix_type", "many_to_one");
+          break;
+        case MANY_TO_MANY:
+          request.put("matrix_type", "many_to_many");
+          break;
+      }
+
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, costing_filter);
