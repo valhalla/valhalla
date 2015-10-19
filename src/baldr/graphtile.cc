@@ -55,6 +55,7 @@ GraphTile::GraphTile()
       access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
+      edge_cells_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -95,32 +96,32 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     }
 
     // Set a pointer to the node list
-   nodes_ = reinterpret_cast<NodeInfo*>(ptr);
-   ptr += header_->nodecount() * sizeof(NodeInfo);
+    nodes_ = reinterpret_cast<NodeInfo*>(ptr);
+    ptr += header_->nodecount() * sizeof(NodeInfo);
 
-   // Set a pointer to the directed edge list
-   directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
-   ptr += header_->directededgecount() * sizeof(DirectedEdge);
+    // Set a pointer to the directed edge list
+    directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
+    ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-   // Set a pointer to the transit departure list
-   departures_ = reinterpret_cast<TransitDeparture*>(ptr);
-   ptr += header_->departurecount() * sizeof(TransitDeparture);
+    // Set a pointer to the transit departure list
+    departures_ = reinterpret_cast<TransitDeparture*>(ptr);
+    ptr += header_->departurecount() * sizeof(TransitDeparture);
 
-   // Set a pointer to the transit stop list
-   transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
-   ptr += header_->stopcount() * sizeof(TransitStop);
+    // Set a pointer to the transit stop list
+    transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
+    ptr += header_->stopcount() * sizeof(TransitStop);
 
-   // Set a pointer to the transit route list
-   transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
-   ptr += header_->routecount() * sizeof(TransitRoute);
+    // Set a pointer to the transit route list
+    transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
+    ptr += header_->routecount() * sizeof(TransitRoute);
 
-   // Set a pointer to the transit transfer list
-   transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
-   ptr += header_->transfercount() * sizeof(TransitTransfer);
+    // Set a pointer to the transit transfer list
+    transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
+    ptr += header_->transfercount() * sizeof(TransitTransfer);
 
-   // Set a pointer access restriction list
-   access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
-   ptr += header_->restrictioncount() * sizeof(AccessRestriction);
+    // Set a pointer access restriction list
+    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+    ptr += header_->restrictioncount() * sizeof(AccessRestriction);
 
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
@@ -129,25 +130,30 @@ LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
          " Routes: " + std::to_string(header_->routecount()) +
          " Transfers: " + std::to_string(header_->transfercount()) +
          " Exceptions: " + std::to_string(header_->calendarcount()));
-*/
-   // Set a pointer to the sign list
-   signs_ = reinterpret_cast<Sign*>(ptr);
-   ptr += header_->signcount() * sizeof(Sign);
+    */
 
-   // Set a pointer to the admininstrative information list
-   admins_ = reinterpret_cast<Admin*>(ptr);
-   ptr += header_->admincount() * sizeof(Admin);
+    // Set a pointer to the sign list
+    signs_ = reinterpret_cast<Sign*>(ptr);
+    ptr += header_->signcount() * sizeof(Sign);
 
-   // Start of edge information and its size
-   edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
-   edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
+    // Set a pointer to the admininstrative information list
+    admins_ = reinterpret_cast<Admin*>(ptr);
+    ptr += header_->admincount() * sizeof(Admin);
 
-   // Start of text list and its size
-   textlist_ = graphtile_.get() + header_->textlist_offset();
-   textlist_size_ = filesize - header_->textlist_offset();
+    // Set a pointer to the edge cell list
+    edge_cells_ = reinterpret_cast<GraphId*>(ptr);
+    ptr += header_->cell_offset(4, 4).second * sizeof(GraphId);
 
-   // Set the size to indicate success
-   size_ = filesize;
+    // Start of edge information and its size
+    edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
+    edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
+
+    // Start of text list and its size
+    textlist_ = graphtile_.get() + header_->textlist_offset();
+    textlist_size_ = filesize - header_->textlist_offset();
+
+    // Set the size to indicate success
+    size_ = filesize;
   }
   else {
     LOG_DEBUG("Tile " + file_location + " was not found");
@@ -728,6 +734,12 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t e
 
      return restrictions;
    }
+}
+
+// Get the array of graphids for this cell
+midgard::iterable_t<GraphId> GraphTile::GetCell(size_t column, size_t row) const {
+  auto offsets = header_->cell_offset(column, row);
+  return iterable_t<GraphId>{edge_cells_ + offsets.first, edge_cells_ + offsets.second};
 }
 
 }

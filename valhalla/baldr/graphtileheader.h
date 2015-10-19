@@ -13,6 +13,9 @@ namespace baldr {
 // character array so the GraphTileHeader size remains fixed).
 constexpr size_t kMaxVersionSize = 16;
 
+// Total number of binned edge cells in the tile
+constexpr size_t kCellCount = 5 * 5;
+
 /**
  * Summary information about the graph tile. Includes version
  * information and offsets to the various types of data.
@@ -172,6 +175,15 @@ class GraphTileHeader {
    */
   uint32_t timedres_offset() const;
 
+  /**
+   * Get the offset to the given cell in the 5x5 grid, the cells contain
+   * graphids for all the edges that intersect the cell
+   * @param  column of the grid
+   * @param  row of the grid
+   * @return the begin and end offset in the list of edge ids
+   */
+  std::pair<uint32_t, uint32_t> cell_offset(size_t column, size_t row) const;
+
  protected:
 
   // Internal version info
@@ -239,6 +251,9 @@ class GraphTileHeader {
 
   // Offset to the timed restriction list
   uint32_t timedres_offset_;
+
+  // Offsets for each cell of the 5x5 grid
+  uint32_t cell_offsets_[kCellCount + 1];
 };
 
 }
