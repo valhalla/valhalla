@@ -537,7 +537,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Favor bicycle networks.
   // TODO - do we need to differentiate between types of network?
-  if (edge->bikenetwork() > 0) {
+  if (edge->bike_network() > 0) {
     factor *= kBicycleNetworkFactor;
   }
 
