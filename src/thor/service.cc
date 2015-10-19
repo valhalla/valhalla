@@ -46,7 +46,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  json::ArrayPtr serialize_locations(const std::vector<PathLocation>& correlated) {
+  json::ArrayPtr locations(const std::vector<PathLocation>& correlated) {
     auto input_locs = json::array({});
     for(size_t i = 0; i < correlated.size(); i++) {
       input_locs->emplace_back(
@@ -65,8 +65,8 @@ namespace {
         row->emplace_back(json::map({
           {"distance", static_cast<uint64_t>(tds[i].dist)},
           {"time", static_cast<uint64_t>(tds[i].time)},
-          {"to_index", std::size_t(i)},
-          {"from_index", std::size_t(origin)}
+          {"to_index", static_cast<uint64_t>(i)},
+          {"from_index", static_cast<uint64_t>(origin)}
         }));
     }
     return row;
@@ -78,8 +78,8 @@ namespace {
       column->emplace_back(json::map({
           {"distance", static_cast<uint64_t>(tds[origin].dist)},
           {"time", static_cast<uint64_t>(tds[origin].time)},
-          {"to_index", std::size_t(i)},
-          {"from_index", std::size_t(origin)}
+          {"to_index", static_cast<uint64_t>(i)},
+          {"from_index", static_cast<uint64_t>(origin)}
         }));
     }
     return column;
@@ -91,8 +91,8 @@ namespace {
       square->emplace_back(json::map({
           {"distance", static_cast<uint64_t>(tds[tdindex].dist)},
           {"time", static_cast<uint64_t>(tds[tdindex].time)},
-          {"to_index", std::size_t(i)},
-          {"from_index", std::size_t(origin)}
+          {"to_index", static_cast<uint64_t>(i)},
+          {"from_index", static_cast<uint64_t>(origin)}
         }));
         tdindex++;
     }
@@ -110,7 +110,7 @@ namespace {
   json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
     return json::map({
       {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size())})},
-      {"input_locations", json::array({serialize_locations(correlated)})}
+      {"input_locations", json::array({locations(correlated)})}
     });
   }
 
@@ -132,7 +132,7 @@ namespace {
     }
     return json::map({
       {"many_to_one", column_matrix},
-      {"input_locations", json::array({serialize_locations(correlated)})}
+      {"input_locations", json::array({locations(correlated)})}
     });
   }
 
@@ -154,7 +154,7 @@ namespace {
     }
     return json::map({
       {"many_to_many", square_matrix},
-      {"input_locations", json::array({serialize_locations(correlated)})}
+      {"input_locations", json::array({locations(correlated)})}
     });
   }
 
@@ -194,13 +194,12 @@ namespace {
         std::string costing = init_request(request);
 
         auto matrix = request.get_optional<std::string>("matrix_type");
-
         if (matrix) {
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
             return get_matrix(matrix_iter->second, costing, request, info);
           }
-          else {
+          else { //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         }
