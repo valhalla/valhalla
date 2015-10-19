@@ -832,15 +832,11 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
       const TransitRoute* transit_route = graphtile->GetTransitRoute(
           transit_departure->routeid());
-      const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
       //use route short name if available otherwise trip short name.
       if (transit_route && transit_route->short_name_offset())
         transit_info->set_short_name(
             graphtile->GetName(transit_route->short_name_offset()));
-      else if (transit_trip && transit_trip->short_name_offset())
-        transit_info->set_short_name(
-            graphtile->GetName(transit_trip->short_name_offset()));
 
       if (transit_route && transit_route->long_name_offset())
         transit_info->set_long_name(
