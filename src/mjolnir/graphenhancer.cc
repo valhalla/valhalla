@@ -1048,25 +1048,22 @@ bool ConsistentNames(const std::string& country_code,
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
-             boost::property_tree::ptree& hierarchy_properties,
+             const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue, std::mutex& lock,
              std::promise<enhancer_stats>& result) {
 
-  boost::property_tree::ptree prop = pt.get_child("admin");
+  auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  std::string dir = prop.get<std::string>("admin_dir");
-  std::string db_name = prop.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
   sqlite3 *admin_db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
+  if (database && boost::filesystem::exists(*database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &admin_db_handle,
+    uint32_t ret = sqlite3_open_v2(database->c_str(), &admin_db_handle,
                         SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
+      LOG_ERROR("cannot open " + *database);
       sqlite3_close(admin_db_handle);
       admin_db_handle = nullptr;
       return;
@@ -1085,23 +1082,20 @@ void enhance(const boost::property_tree::ptree& pt,
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
-    LOG_WARN("Admin db " + database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
 
-  prop = pt.get_child("timezone");
+  database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  dir = prop.get<std::string>("timezone_dir");
-  db_name = prop.get<std::string>("db_name");
-  database = dir + "/" +  db_name;
   sqlite3 *tz_db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
+  if (database && boost::filesystem::exists(*database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &tz_db_handle,
+    uint32_t ret = sqlite3_open_v2(database->c_str(), &tz_db_handle,
                         SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
+      LOG_ERROR("cannot open " + *database);
       sqlite3_close(tz_db_handle);
       admin_db_handle = nullptr;
       return;
@@ -1120,7 +1114,7 @@ void enhance(const boost::property_tree::ptree& pt,
     LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
-    LOG_WARN("Time zone db " + database + " not found.  Not saving time zone information.");
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1395,7 +1389,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Write the new file
     lock.lock();
-    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData();
     LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
 
     // Check if we need to clear the tile cache
@@ -1455,7 +1449,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
-                 std::ref(pt.get_child("mjolnir")),
+                 std::cref(pt.get_child("mjolnir")),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
   }

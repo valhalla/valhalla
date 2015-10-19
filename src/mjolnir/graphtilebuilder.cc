@@ -10,18 +10,19 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+
+  AABB2<PointLL> get_tile_bbox(const TileHierarchy& h, const GraphId g) {
+    auto level = h.levels().find(g.fields.level);
+    if(level == h.levels().cend())
+      throw std::runtime_error("GraphTileBuilder for unsupported level");
+    return level->second.tiles.TileBounds(g.fields.tileid);
+  }
+
+}
+
 namespace valhalla {
 namespace mjolnir {
-
-// Constructor
-GraphTileBuilder::GraphTileBuilder()
-    : GraphTile() {
-  // Add an empty name to the list so offset 0 means blank name
-  std::string str = "";
-  textlistbuilder_.emplace_back(str);
-  text_offset_map_.emplace(str, 0);
-  text_list_offset_ = 1;
-}
 
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
@@ -30,9 +31,17 @@ GraphTileBuilder::GraphTileBuilder()
 // StoreTileData.
 GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid, bool deserialize)
-    : GraphTile(hierarchy, graphid) {
+    : GraphTile(hierarchy, graphid), hierarchy_(hierarchy),
+      binner_(get_tile_bbox(hierarchy, graphid), kCellCount) {
+
+  // Keep the id
+  header_builder_.set_graphid(graphid);
+
+  // Done if not deserializing and creating builders for everything
   if (!deserialize) {
-    // Done if not deserializing and creating builders for everything
+    textlistbuilder_.emplace_back("");
+    text_offset_map_.emplace("", 0);
+    text_list_offset_ = 1;
     return;
   }
 
@@ -138,11 +147,10 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 }
 
 // Output the tile to file. Stores as binary data.
-void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
-                                     const GraphId& graphid) {
+void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
-      + GraphTile::FileSuffix(graphid, hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -153,7 +161,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Configure the header
-    header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_departurecount(departure_builder_.size());
@@ -234,12 +241,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% trips %4% routes = %5%" )
       % admins_builder_.size() % departure_builder_.size() % stop_builder_.size() % trip_builder_.size() % route_builder_.size()).str());
 
-    /*   size_t fsize = file.tellp();
-     if (fsize % 8 != 0) {
-     char empty[8] = {};
-     file.write(empty, (8 - (fsize % 8)));
-     }
-     */
     size_ = file.tellp();
     file.close();
   } else {
@@ -248,14 +249,13 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
 }
 
 // Update a graph tile with new header, nodes, and directed edges.
-void GraphTileBuilder::Update(
-    const baldr::TileHierarchy& hierarchy, const GraphTileHeaderBuilder& hdr,
+void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
     const std::vector<NodeInfoBuilder>& nodes,
     const std::vector<DirectedEdgeBuilder>& directededges) {
 
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
-      + GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(hdr.graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -321,15 +321,14 @@ void GraphTileBuilder::Update(
 }
 
 // Update a graph tile with new header, nodes, directed edges, and signs.
-void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
-                const GraphTileHeaderBuilder& hdr,
+void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
                 const std::vector<SignBuilder>& signs,
                 const std::vector<AccessRestriction>& restrictions) {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
-            GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/' +
+            GraphTile::FileSuffix(hdr.graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -391,7 +390,7 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
 }
 
 // Add a node and list of directed edges
-void GraphTileBuilder::AddNodeAndDirectedEdges(
+/*void GraphTileBuilder::AddNodeAndDirectedEdges(
     NodeInfoBuilder& node,
     const std::vector<DirectedEdgeBuilder>& directededges) {
   // Set the index to the first directed edge from this node and
@@ -404,26 +403,16 @@ void GraphTileBuilder::AddNodeAndDirectedEdges(
   for (const auto& directededge : directededges) {
     directededges_builder_.push_back(directededge);
   }
-}
+}*/
 
 // Get the current list of node builders.
-const std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() const {
+std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() {
   return nodes_builder_;
 }
 
 // Gets the current list of directed edge (builders).
-const std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() const {
+std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() {
   return directededges_builder_;
-}
-
-// Clear the current list of nodes (builders).
-void GraphTileBuilder::ClearNodes() {
-  nodes_builder_.clear();
-}
-
-// Clear the current list of directed edges (builders).
-void GraphTileBuilder::ClearDirectedEdges() {
-  directededges_builder_.clear();
 }
 
 // Add a transit departure.
@@ -531,14 +520,21 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Update edge offset for next item
     edge_info_offset_ += edgeinfo.SizeOf();
 
+    // Update the list of ids per bin
+    //TODO:
+    /*for(const auto& index : binner_.intersect(lls)) {
+      bins_[index].push_back();
+    }*/
+
     // Return the offset to this edge info
     added = true;
     return current_edge_offset;
-  } else {
-    // Already have this edge - return the offset
-    added = false;
-    return existing_edge_offset_item->second;
   }
+
+  // Already have this edge - return the offset
+  added = false;
+  return existing_edge_offset_item->second;
+
 }
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,

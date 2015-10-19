@@ -69,14 +69,6 @@ struct TransitLine {
   uint32_t routeid;
   uint32_t stopid;
   uint32_t shapeid;
-
-  TransitLine(const uint32_t d, const uint32_t r, const uint32_t s,
-              const uint32_t sh)
-      : lineid(d),
-        routeid(r),
-        stopid(s),
-        shapeid(sh) {
-  }
 };
 
 struct StopEdges {
@@ -221,22 +213,12 @@ std::vector<Stop> GetStops(const std::string& file, const AABB2<PointLL>& aabb, 
 
 // Lock on queue access since we are using it in different threads. No need
 // to lock graphreader since no threads are writing tiles yet.
-void assign_graphids(const boost::property_tree::ptree& config_pt,
-           boost::property_tree::ptree& hierarchy_properties,
+void assign_graphids(const std::string& transit_dir,
+           const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::mutex& lock,
            std::promise<stop_results>& stop_res) {
   // Construct the transit database
   stop_results stats{};
-
-  std::string transit_dir = config_pt.get<std::string>("transit_dir");
-  boost::property_tree::ptree pt;
-
-  // Make sure it exists
-  if (!boost::filesystem::exists(transit_dir)) {
-    LOG_INFO("Transit directory " + transit_dir + " not found.  Transit will not be added.");
-    return;
-  }
-  else transit_dir += "/";
 
   // Local Graphreader. Get tile information so we can find bounding boxes
   GraphReader reader(hierarchy_properties);
@@ -297,8 +279,7 @@ void assign_graphids(const boost::property_tree::ptree& config_pt,
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
                                                               std::unordered_map<uint32_t, bool>& stop_access,
-                                                              const std::unordered_map<uint32_t, uint32_t>& stops,
-                                                              GraphTileBuilder& tilebuilder) {
+                                                              const std::unordered_map<uint32_t, uint32_t>& stops) {
 
   boost::property_tree::ptree pt;
   std::unordered_multimap<uint32_t, Departure> departures;
@@ -675,17 +656,17 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, c
 }
 
 void AddToGraph(GraphTileBuilder& tilebuilder,
-                std::map<GraphId, StopEdges>& stop_edge_map,
-                std::vector<Stop>& stops,
-                std::unordered_map<uint32_t, bool>& stop_access,
-                std::vector<OSMConnectionEdge>& connection_edges,
-                std::unordered_map<uint32_t, uint32_t>& stop_indexes,
-                std::unordered_map<uint32_t, uint32_t>& route_types) {
-  // Copy existing nodes and directed edge builder vectors and clear the lists
-  std::vector<NodeInfoBuilder> currentnodes(tilebuilder.nodes());
-  tilebuilder.ClearNodes();
-  std::vector<DirectedEdgeBuilder> currentedges(tilebuilder.directededges());
-  tilebuilder.ClearDirectedEdges();
+                const std::map<GraphId, StopEdges>& stop_edge_map,
+                const std::vector<Stop>& stops,
+                const std::unordered_map<uint32_t, bool>& stop_access,
+                const std::vector<OSMConnectionEdge>& connection_edges,
+                const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
+                const std::unordered_map<uint32_t, uint32_t>& route_types) {
+  // Move existing nodes and directed edge builder vectors and clear the lists
+  std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
+  tilebuilder.nodes().clear();
+  std::vector<DirectedEdgeBuilder> currentedges(std::move(tilebuilder.directededges()));
+  tilebuilder.directededges().clear();
 
   LOG_DEBUG("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
          " current directed edge count = " + std::to_string(currentedges.size()) +
@@ -705,9 +686,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   for (auto& nb : currentnodes) {
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
-    std::vector<DirectedEdgeBuilder> directededges;
+    size_t edge_index = tilebuilder.directededges().size();
     for (uint32_t i = 0, idx = nb.edge_index(); i < nb.edge_count(); i++, idx++) {
-      directededges.emplace_back(std::move(currentedges[idx]));
+      tilebuilder.directededges().emplace_back(std::move(currentedges[idx]));
 
       // Update any signs that use this idx - increment their index by the
       // number of added edges
@@ -729,14 +710,14 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     while (added_edges < connection_edges.size() &&
            connection_edges[added_edges].osm_node.id() == nodeid) {
       DirectedEdgeBuilder directededge;
-      OSMConnectionEdge& conn = connection_edges[added_edges];
-      Stop& stop = stops[stop_indexes[conn.stop_key]];
+      const OSMConnectionEdge& conn = connection_edges[added_edges];
+      const Stop& stop = stops[stop_indexes.find(conn.stop_key)->second];
       directededge.set_endnode(conn.stop_node);
       directededge.set_length(conn.length);
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - edge_index);
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
 
@@ -747,7 +728,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                      conn.stop_node, 0, conn.shape, names, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
 
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
@@ -756,7 +737,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     }
 
     // Add the node and directed edges
-    tilebuilder.AddNodeAndDirectedEdges(nb, directededges);
+    nb.set_edge_index(edge_index);
+    nb.set_edge_count(tilebuilder.directededges().size() - edge_index);
+    tilebuilder.nodes().emplace_back(std::move(nb));
     nodeid++;
   }
 
@@ -771,7 +754,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   for (const auto& stop_edges : stop_edge_map) {
     // Get the stop information
     uint32_t stopkey = stop_edges.second.stop_key;
-    Stop& stop = stops[stop_indexes[stopkey]];
+    const Stop& stop = stops[stop_indexes.find(stopkey)->second];
     if (stop.key != stopkey) {
       LOG_ERROR("Stop key not equal!");
     }
@@ -792,12 +775,12 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_parent(parent);
     node.set_mode_change(true);
     node.set_stop_id(stop.key);
+    node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
 
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
-    std::vector<DirectedEdgeBuilder> directededges;
     for (auto& conn : connection_edges) {
       if (conn.stop_key == stop.key) {
         DirectedEdgeBuilder directededge;
@@ -806,7 +789,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
         directededge.set_use(Use::kTransitConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
-        directededge.set_localedgeidx(directededges.size());
+        directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
         directededge.set_pedestrianaccess(true, true);
         directededge.set_pedestrianaccess(false, true);
 
@@ -820,7 +803,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
         directededge.set_forward(added);
 
         // Add to list of directed edges
-        directededges.emplace_back(std::move(directededge));
+        tilebuilder.directededges().emplace_back(std::move(directededge));
 
         nadded++;  // TEMP for error checking
       }
@@ -829,7 +812,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     // Add any intra-station connections
     for (auto endstopkey : stop_edges.second.intrastation) {
       DirectedEdgeBuilder directededge;
-      Stop& endstop = stops[stop_indexes[endstopkey]];
+      const Stop& endstop = stops[stop_indexes.find(endstopkey)->second];
       if (endstopkey != endstop.key) {
         LOG_ERROR("End stop key not equal");
       }
@@ -841,7 +824,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_use(Use::kTransitConnection);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
 
@@ -860,23 +843,23 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_forward(added);
 
       // Add to list of directed edges
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
     }
 
     // Add transit lines
     for (auto transitedge : stop_edges.second.lines) {
       // Get the end stop of the connection
-      Stop& endstop = stops[stop_indexes[transitedge.stopid]];
+      const Stop& endstop = stops[stop_indexes.find(transitedge.stopid)->second];
 
       // Set Use based on route type...
-      Use use = GetTransitUse(route_types[transitedge.routeid]);
+      Use use = GetTransitUse(route_types.find(transitedge.routeid)->second);
       DirectedEdgeBuilder directededge;
       directededge.set_endnode(endstop.graphid);
       directededge.set_length(stop.ll.Distance(endstop.ll));
       directededge.set_use(use);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
-      directededge.set_localedgeidx(directededges.size());
+      directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
       directededge.set_pedestrianaccess(true, true);
       directededge.set_pedestrianaccess(false, true);
       directededge.set_lineid(transitedge.lineid);
@@ -901,12 +884,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_forward(added);
 
       // Add to list of directed edges
-      directededges.emplace_back(std::move(directededge));
+      tilebuilder.directededges().emplace_back(std::move(directededge));
     }
-    if (directededges.size() == 0) {
+    if (tilebuilder.directededges().size() - node.edge_index() == 0) {
       LOG_ERROR("No directed edges from this node");
     }
-    tilebuilder.AddNodeAndDirectedEdges(node, directededges);
+
+    // Add the node
+    node.set_edge_count(tilebuilder.directededges().size() - node.edge_index());
+    tilebuilder.nodes().emplace_back(std::move(node));
   }
   if (nadded != connection_edges.size()) {
     LOG_ERROR("Added " + std::to_string(nadded) + " but there are " +
@@ -1025,20 +1011,10 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const boost::property_tree::ptree& config_pt,
-           boost::property_tree::ptree& hierarchy_properties,
+void build(const std::string& transit_dir,
+           const boost::property_tree::ptree& hierarchy_properties,
            std::queue<GraphId>& tilequeue, std::vector<Stop>& stops,
            std::mutex& lock, std::promise<builder_stats>& results) {
-
-  std::string transit_dir = config_pt.get<std::string>("transit_dir");
-  boost::property_tree::ptree pt;
-
-  // Make sure it exists
-  if (!boost::filesystem::exists(transit_dir)) {
-    LOG_INFO("Transit directory " + transit_dir + " not found.  Transit will not be added.");
-    return;
-  }
-  else transit_dir += "/";
 
   // Get some things we need throughout
   builder_stats stats{};
@@ -1053,7 +1029,7 @@ void build(const boost::property_tree::ptree& config_pt,
   // Create a map of stop key to index in the stop vector
   uint32_t n = 0;
   std::unordered_map<uint32_t, uint32_t> stop_indexes;
-  for (auto& stop : stops) {
+  for (const auto& stop : stops) {
     stop_indexes[stop.key] = n;
     n++;
   }
@@ -1088,6 +1064,7 @@ void build(const boost::property_tree::ptree& config_pt,
       if (stop.graphid.Tile_Base() == tile_id) {
         // Add connections to the OSM network
         if (stop.parent == 0) {
+          //TODO: multiple threads writing into the stops at once but never the same one, right?
           AddOSMConnection(stop, tile, tile_hierarchy, connection_edges);
         }
       }
@@ -1109,7 +1086,7 @@ void build(const boost::property_tree::ptree& config_pt,
     const std::string file = transit_dir + file_name;
 
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(file, stop_access,stop_indexes,tilebuilder);
+        ProcessStopPairs(file, stop_access,stop_indexes);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
@@ -1147,7 +1124,7 @@ void build(const boost::property_tree::ptree& config_pt,
             lineid = unique_lineid;
             unique_transit_edges[{dep.route, dep.dest_stop}] = unique_lineid;
             unique_lineid++;
-            stopedges.lines.emplace_back(lineid, dep.route, dep.dest_stop, dep.shapeid);
+            stopedges.lines.emplace_back(TransitLine{lineid, dep.route, dep.dest_stop, dep.shapeid});
           } else {
             lineid = m->second;
           }
@@ -1199,7 +1176,7 @@ void build(const boost::property_tree::ptree& config_pt,
 
     // Write the new file
     lock.lock();
-    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData();
     lock.unlock();
   }
 
@@ -1213,6 +1190,26 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
+  // Bail if nothing
+  auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
+  if(!transit_dir || !boost::filesystem::exists(*transit_dir) || !boost::filesystem::is_directory(*transit_dir)) {
+    LOG_INFO("Transit directory not found. Transit will not be added.");
+    return;
+  }
+  // Also bail if nothing inside
+  transit_dir->push_back('/');
+  boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir), end_file_itr;
+  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".json") {
+      //TODO: keep a list of these tiles to send to threads
+      break;
+    }
+  }
+  if(transit_file_itr == end_file_itr) {
+    LOG_INFO("Transit directory " + *transit_dir + " not found.  Transit will not be added.");
+    return;
+  }
+
   // A place to hold worker threads and their results
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<uint32_t>(1),
@@ -1240,7 +1237,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // First pass - find all tiles with stops. Create graphids for each stop
   // Start the threads
-  LOG_INFO("Assign GraphIds to each stop...");
+  LOG_INFO("Assign GraphIds to each transit stop...");
 
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<stop_results> > stop_res;
@@ -1248,8 +1245,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     stop_res.emplace_back();
     thread.reset(new std::thread(assign_graphids,
-                     std::ref(pt.get_child("mjolnir.transit")),
-                     std::ref(hierarchy_properties), std::ref(tilequeue),
+                     *transit_dir,
+                     std::cref(hierarchy_properties), std::ref(tilequeue),
                      std::ref(lock), std::ref(stop_res.back())));
   }
 
@@ -1271,7 +1268,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     }
   }
   LOG_DEBUG("Finished with " + std::to_string(all_stops.stops.size()) +
-             " stops in " + std::to_string(all_stops.tiles.size()) + " tiles");
+             " transit stops in " + std::to_string(all_stops.tiles.size()) + " tiles");
 
   if (all_stops.tiles.size() == 0) {
     return;
@@ -1297,8 +1294,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   LOG_INFO("Add transit to the local graph...");
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(build, std::ref(pt.get_child("mjolnir.transit")),
-                     std::ref(hierarchy_properties), std::ref(transit_tiles),
+    thread.reset(new std::thread(build, *transit_dir,
+                     std::cref(hierarchy_properties), std::ref(transit_tiles),
                      std::ref(all_stops.stops), std::ref(lock),
                      std::ref(results.back())));
   }
