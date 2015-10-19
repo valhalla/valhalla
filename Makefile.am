@@ -87,7 +87,8 @@ check_PROGRAMS = \
 	test/encode \
 	test/tiles \
 	test/sequence \
-	test/util
+	test/util \
+	test/grid
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
@@ -132,6 +133,11 @@ test_sequence_SOURCES = test/sequence.cc test/test.cc
 test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) -DLOGGING_LEVEL_ALL
 test_sequence_LDFLAGS = -pthread
 test_sequence_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
+test_grid_SOURCES = test/grid.cc test/test.cc
+test_grid_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) -DLOGGING_LEVEL_ALL
+test_grid_LDFLAGS = -pthread
+test_grid_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
+
 
 
 
