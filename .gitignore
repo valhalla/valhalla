@@ -55,6 +55,7 @@ test/tilehierarchy
 test/util
 test/logging
 test/sequence
+test/grid
 nodes.nd
 test/*.log
 test/*.trs

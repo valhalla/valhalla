@@ -9,6 +9,15 @@
 namespace valhalla {
 namespace midgard {
 
+/**
+ * A container for a bunch of bounding boxes contained within a larger box
+ * Intersection methods give the index of the sub cell of the larger grid
+ * Note: the grid is oriented such that its origin corresponds with the minimum
+ * coordinate provided and that with increasing coordinates in both dimensions
+ * the sub cell indices increase. In other words the 0th index cell contains
+ * the minimum point of the grid and conversely the (divisions*divisions - 1)th
+ * index cell contains the maximum point.
+ */
 template <class coord_t>
 class grid {
  public:
@@ -33,10 +42,12 @@ class grid {
   /**
    * Intersect the linestring with the grid to see which cells it touches
    * @param line_string  the linestring to be tested against the cells
+   * @param uncontained  a flag indicating that the linestring is not entirely
+   *                     contained within the grid. ie. it intersects adjacent grids
    * @return             the set of cells indices which intersect the linestring
    */
   template <class container_t>
-  std::unordered_set<size_t> intersect(const container_t& linestring) const;
+  std::unordered_set<size_t> intersect(const container_t& linestring, bool& uncontained) const;
 
   /**
    * Intersect a circle with the grid to see which cells it touches
@@ -50,8 +61,8 @@ class grid {
   size_t divisions;
   AABB2<coord_t> super_cell;
   std::vector<AABB2<coord_t> > cells;
-  x_t cell_width_recip;
-  y_t cell_height_recip;
+  x_t x_index_coef;
+  y_t y_index_coef;
 };
 
 }
