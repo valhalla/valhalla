@@ -781,7 +781,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
-    for (auto& conn : connection_edges) {
+    for (const auto& conn : connection_edges) {
       if (conn.stop_key == stop.key) {
         DirectedEdgeBuilder directededge;
         directededge.set_endnode(conn.osm_node);
@@ -810,7 +810,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     }
 
     // Add any intra-station connections
-    for (auto endstopkey : stop_edges.second.intrastation) {
+    for (const auto& endstopkey : stop_edges.second.intrastation) {
       DirectedEdgeBuilder directededge;
       const Stop& endstop = stops[stop_indexes.find(endstopkey)->second];
       if (endstopkey != endstop.key) {
@@ -847,7 +847,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     }
 
     // Add transit lines
-    for (auto transitedge : stop_edges.second.lines) {
+    for (const auto& transitedge : stop_edges.second.lines) {
       // Get the end stop of the connection
       const Stop& endstop = stops[stop_indexes.find(transitedge.stopid)->second];
 
