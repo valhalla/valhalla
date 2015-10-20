@@ -104,6 +104,17 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       }
     }
 
+    // Break out after n iterations if one of the paths is exhausted.
+    // TODO - do we need to continue to expand? How likely is it that
+    // the paths can connect?
+    if (forward_exhausted || reverse_exhausted) {
+      n++;
+      if (n > 5000) {
+        LOG_ERROR("Bi-directional route failure");
+        return { };
+      }
+    }
+
     // Expand from the search direction with lower cost
     if (!forward_exhausted &&
         (reverse_exhausted || pred.cost().cost < pred2.cost().cost)) {
@@ -390,10 +401,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    AddToAdjacencyListReverse(opp_edge_id, sortcost);
-    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id,
-                           opp_dir_edge, cost, sortcost, dist, 0,
-                           opp_dir_edge->opp_local_idx(), mode_);
+    AddToAdjacencyListReverse(edgeid, sortcost);
+    edgelabels_reverse_.emplace_back(kInvalidLabel, edgeid,
+             directededge, cost, sortcost, dist, directededge->restrictions(),
+             directededge->opp_local_idx(), mode_);
   }
 }
 
