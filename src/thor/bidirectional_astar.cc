@@ -104,7 +104,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       }
     }
 
-    // Break out after n iterations if one of the paths is exhausted
+    // Break out after n iterations if one of the paths is exhausted.
+    // TODO - do we need to continue to expand? How likely is it that
+    // the paths can connect?
     if (forward_exhausted || reverse_exhausted) {
       n++;
       if (n > 5000) {
