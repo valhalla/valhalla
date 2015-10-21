@@ -9,6 +9,16 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+if  ! which jq >/dev/null; then
+    echo "jq not found which is required.  Please install via:  sudo apt-get install jq"
+    exit 1
+fi
+
+if  ! which spatialite >/dev/null; then
+    echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
+    exit 1
+fi
+
 rm -rf world
 rm -f ./tz_world_mp.zip
 
