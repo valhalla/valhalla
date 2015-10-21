@@ -117,7 +117,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
     // Get some things we need throughout
     auto tile_hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles<PointLL>> levels;
-    for (auto level : tile_hierarchy.levels()) {
+    for (const auto& level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
     }
     Tiles<PointLL> *tiles;
