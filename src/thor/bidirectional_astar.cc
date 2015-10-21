@@ -82,8 +82,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
   const GraphTile* tile;
   bool expand_forward  = true;
   bool expand_reverse  = true;
-  bool forward_exhausted = false;
-  bool reverse_exhausted = false;
   while (true) {
     // Get the next predecessor and cost (based on which direction was
     // expanded in prior step)
@@ -92,7 +90,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       if (predindex != kInvalidLabel) {
         pred = edgelabels_[predindex];
       } else {
-        forward_exhausted = true;
+        LOG_ERROR("Bi-directional route failure - forward search exhausted");
+        return { };
       }
     }
     if (expand_reverse) {
@@ -100,13 +99,13 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       if (predindex2 != kInvalidLabel) {
         pred2 = edgelabels_reverse_[predindex2];
       } else {
-        reverse_exhausted = true;
+        LOG_ERROR("Bi-directional route failure - reverse search exhausted");
+        return { };
       }
     }
 
     // Expand from the search direction with lower cost
-    if (!forward_exhausted &&
-        (reverse_exhausted || pred.cost().cost < pred2.cost().cost)) {
+    if (pred.cost().cost < pred2.cost().cost) {
       // Expand forward - set to get next edge from forward adj. list
       // on the next pass
       expand_forward = true;
@@ -120,7 +119,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
       GraphId oppedge = graphreader.GetOpposingEdgeId(pred.edgeid());
       EdgeStatusInfo oppedgestatus = edgestatus_reverse_->Get(oppedge);
       if (oppedgestatus.set() == EdgeSet::kPermanent) {
-        return FormPath(predindex,oppedgestatus.status.index, graphreader);
+        return FormPath(predindex, oppedgestatus.status.index, graphreader);
       }
 
       // Get the end node of the prior directed edge. Skip if tile not found
@@ -182,7 +181,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                       newcost, sortcost, dist, directededge->restrictions(),
                       directededge->opp_local_idx(), mode_);
       }
-    } else if (!reverse_exhausted) {
+    } else {
       // Expand reverse - set to get next edge from reverse adj. list
       // on the next pass
       expand_forward = false;
@@ -272,11 +271,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
                      newcost, sortcost, dist, directededge->restrictions(),
                      directededge->opp_local_idx(), mode_);
       }
-    }
-
-    // Break out of loop if neither search can be expanded
-    if (predindex == kInvalidLabel && predindex2 == kInvalidLabel) {
-      break;
     }
   }
 
@@ -390,10 +384,10 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
     // to invalid to indicate the origin of the path.
-    AddToAdjacencyListReverse(opp_edge_id, sortcost);
-    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id,
-                           opp_dir_edge, cost, sortcost, dist, 0,
-                           opp_dir_edge->opp_local_idx(), mode_);
+    AddToAdjacencyListReverse(edgeid, sortcost);
+    edgelabels_reverse_.emplace_back(kInvalidLabel, edgeid,
+             directededge, cost, sortcost, dist, directededge->restrictions(),
+             directededge->opp_local_idx(), mode_);
   }
 }
 
@@ -401,9 +395,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 std::vector<PathInfo> BidirectionalAStar::FormPath(const uint32_t idx1,
               const uint32_t idx2, GraphReader& graphreader) {
   // Metrics (TODO)
-//LOG_INFO("FormPath2: path_cost::" + std::to_string(edgelabels_[dest].cost().cost));
-LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
-		"," + std::to_string(edgelabels_reverse_.size()));
+  LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
+           "," + std::to_string(edgelabels_reverse_.size()));
 
   // Work backwards on the forward path
   std::vector<PathInfo> path;
@@ -417,22 +410,32 @@ LOG_INFO("FormPath path_iterations::" + std::to_string(edgelabels_.size()) +
   // Reverse the list
   std:reverse(path.begin(), path.end());
 
+  // Get the elapsed time at the end of the forward path. NOTE: PathInfo
+  // stores elapsed time as uint32_t but EdgeLabels uses float. Need to
+  // accumulate in float and cast to int so we do not accumulate roundoff
+  // error.
+  float secs = path.back().elapsed_time;
+
   // Append the reverse path from the destination - use opposing edges
-  // Get the elapsed time at the end of the forward path
-  uint32_t elapsed_time = path.back().elapsed_time;
-  uint32_t prior_time = 0;
-  for (auto edgelabel_index = idx2; edgelabel_index != kInvalidLabel;
-      edgelabel_index = edgelabels_reverse_[edgelabel_index].predecessor()) {
+  // The first edge on the reverse path is the same as the last on the forward
+  // path, so get the predecessor.
+  uint32_t edgelabel_index = edgelabels_reverse_[idx2].predecessor();
+  while (edgelabel_index != kInvalidLabel) {
     const EdgeLabel& edgelabel = edgelabels_reverse_[edgelabel_index];
-    if (edgelabel_index != idx2) {
-    	// Add opposing edge to the path, increment cost by delta along
-    	// the reverse path
-    	GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
-    	elapsed_time += (prior_time - edgelabel.cost().secs);
-    	path.emplace_back(edgelabel.mode(), elapsed_time, oppedge,
-    	                  edgelabel.tripid());
+    GraphId oppedge = graphreader.GetOpposingEdgeId(edgelabel.edgeid());
+
+    // Get elapsed time on the edge
+    uint32_t pred = edgelabels_reverse_[edgelabel_index].predecessor();
+    if (pred == kInvalidLabel) {
+      secs += edgelabel.cost().secs;
+    } else {
+      secs += edgelabel.cost().secs - edgelabels_reverse_[pred].cost().secs;
     }
-    prior_time = edgelabel.cost().secs;
+    path.emplace_back(edgelabel.mode(), static_cast<uint32_t>(secs),
+                            oppedge,  edgelabel.tripid());
+
+    // Update edgelabel_index
+    edgelabel_index = pred;
   }
   return path;
 }

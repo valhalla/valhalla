@@ -340,7 +340,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                  path.front().mode, edge, trip_path.add_node(), tile,
                                  end_pct - start_pct);
     trip_edge->set_begin_shape_index(0);
-    trip_edge->set_end_shape_index(shape.size());
+    trip_edge->set_end_shape_index(shape.size()-1);
     auto* node = trip_path.add_node();
     node->set_elapsed_time(path.front().elapsed_time);
 
@@ -392,41 +392,35 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     TripPath_Node* trip_node = trip_path.add_node();
 
     // Set node attributes - only set if they are true since they are optional
-    if (graphtile->node(startnode)->type() == NodeType::kStreetIntersection)
+    const NodeInfo* node = graphtile->node(startnode);
+    if (node->type() == NodeType::kStreetIntersection) {
       trip_node->set_street_intersection(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kGate)
+    } else  if (node->type() == NodeType::kGate) {
       trip_node->set_gate(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kBollard)
+    } else if (node->type() == NodeType::kBollard) {
       trip_node->set_bollard(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kTollBooth)
+    } else if (node->type() == NodeType::kTollBooth) {
       trip_node->set_toll_booth(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kBikeShare)
+    } else if (node->type() == NodeType::kBikeShare) {
       trip_node->set_bike_share(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kParking)
+    } else if (node->type() == NodeType::kParking) {
       trip_node->set_parking(true);
-
-    if (graphtile->node(startnode)->type() == NodeType::kMotorWayJunction)
+    } else if (node->type() == NodeType::kMotorWayJunction) {
       trip_node->set_motorway_junction(true);
-
-    if (graphtile->node(startnode)->intersection() == IntersectionType::kFork)
+    }
+    if (node->intersection() == IntersectionType::kFork)
       trip_node->set_fork(true);
 
     // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
 
     // Add transit information if this is a transit stop
-    if (graphtile->node(startnode)->is_transit()) {
+    if (node->is_transit()) {
       trip_node->set_transit_stop(true);
-      trip_node->set_transit_parent_stop(graphtile->node(startnode)->parent());
+      trip_node->set_transit_parent_stop(node->parent());
 
       // Get the transit stop information and add transit stop info
-      const TransitStop* stop = graphtile->GetTransitStop(
-          graphtile->node(startnode)->stop_id());
+      const TransitStop* stop = graphtile->GetTransitStop(node->stop_id());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
       if (!stop) {
@@ -474,7 +468,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Assign the admin index
     trip_node->set_admin_index(
         GetAdminIndex(
-            graphtile->admininfo(graphtile->node(startnode)->admin_index()),
+            graphtile->admininfo(node->admin_index()),
             admin_info_map, admin_info_list));
 
     // Add edge to the trip node and set its attributes
