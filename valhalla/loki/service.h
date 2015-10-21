@@ -34,6 +34,8 @@ namespace valhalla {
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter costing_filter;
       valhalla::baldr::GraphReader reader;
+      std::unordered_set<std::string> action_set;
+      std::string action_str;
     };
   }
 }

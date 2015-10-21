@@ -2,6 +2,7 @@
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
@@ -110,6 +111,17 @@ namespace valhalla {
           throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
       }
 
+      //load the loki config actions into an array
+      const boost::property_tree::ptree &config_actions = config.get_child("loki.actions");
+      if(config_actions.empty())
+        throw std::runtime_error("The config actions for Loki are incorrectly loaded.");
+
+      //iterate over the array of actions and store into an unordered set
+      for (const auto& kv : config_actions) {
+        action_set.emplace("/" + kv.second.get_value<std::string>());
+        action_str.append("'/" + kv.second.get_value<std::string>() + "' ");
+      }
+
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -136,11 +148,19 @@ namespace valhalla {
           return result;
         }
 
-        //what do they want to do
+        //is the request path action in the action set?
+        if (action_set.find(request.path) == action_set.cend()) {
+            worker_t::result_t result{false};
+            http_response_t response(404, "Not Found", "Try any of: " + action_str, headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
+        }
+
         auto action = ACTION.find(request.path);
         if(action == ACTION.cend()) {
           worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate' '/one_to_many' '/many_to_one' or '/many_to_many'", headers_t{CORS});
+          http_response_t response(404, "Not Found", "Request path action not found.", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;

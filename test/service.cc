@@ -55,8 +55,8 @@ namespace {
     {405, std::string("Try a POST or GET request instead")},
     {405, std::string("Try a POST or GET request instead")},
     {405, std::string("Try a POST or GET request instead")},
-    {404, std::string("Try any of: '/route' '/locate' '/one_to_many' '/many_to_one' or '/many_to_many'")},
-    {404, std::string("Try any of: '/route' '/locate' '/one_to_many' '/many_to_one' or '/many_to_many'")},
+    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' ")},
+    {404, std::string("Try any of: '/locate' '/route' '/one_to_many' '/many_to_one' '/many_to_many' ")},
     {400, std::string("Failed to parse json request")},
     {400, std::string("Failed to parse json request")},
     {400, std::string("Insufficiently specified required parameter 'locations'")},
@@ -98,7 +98,8 @@ namespace {
         {\"name\": \"arterial\", \"level\": 1, \"size\": 1, \"importance_cutoff\": \"Tertiary\"}, \
         {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
       ] } }, \
-      \"loki\": { \"service\": { \"proxy\": \"ipc://test_loki_proxy\" } }, \
+      \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\"], \
+                  \"service\": { \"proxy\": \"ipc://test_loki_proxy\" } }, \
       \"thor\": { \"service\": { \"proxy\": \"ipc://test_thor_proxy\" } }, \
       \"httpd\": { \"service\": { \"loopback\": \"ipc://test_loki_results\" } }, \
       \"service_limits\": { \
