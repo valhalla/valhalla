@@ -14,7 +14,8 @@ namespace baldr {
 constexpr size_t kMaxVersionSize = 16;
 
 // Total number of binned edge cells in the tile
-constexpr size_t kCellCount = 5 * 5;
+constexpr size_t kGridDim = 5;
+constexpr size_t kCellCount = kGridDim * kGridDim;
 
 /**
  * Summary information about the graph tile. Includes version
