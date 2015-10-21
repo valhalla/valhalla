@@ -338,7 +338,7 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * (ramp or turn channel).
    * @param  link  True if the edge is part of a link.
    */
-  void set_link(const uint8_t link);
+  void set_link(const bool link);
 
   /**
    * Sets the intersection internal flag indicating the edge is "internal"
@@ -386,12 +386,6 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    * @param  right     True if there is an edge to the right, false if not.
    */
   void set_edge_to_right(const uint32_t localidx, const bool right);
-
-  /**
-   * Creates the opposite orientation of the directed edge
-   */
-  DirectedEdgeBuilder flipped() const;
-
 
   /** Set the index of the directed edge on the local level of the graph
    * hierarchy. This is used for turn restrictions so the edges can be

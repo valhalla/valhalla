@@ -36,14 +36,12 @@ NodeInfoBuilder::NodeInfoBuilder(const std::pair<float, float>& ll,
                                  const RoadClass rc,
                                  const uint32_t access,
                                  const NodeType type,
-                                 const bool end,
                                  const bool traffic_signal)
     : NodeInfo() {
   set_latlng(ll);
   set_bestrc(rc);
   set_access(access);
   set_type(type);
-  set_end(end);
   set_traffic_signal(traffic_signal);
 }
 
@@ -58,7 +56,7 @@ void NodeInfoBuilder::set_edge_index(const uint32_t edge_index) {
     // Consider this a catastrophic error
     throw std::runtime_error("NodeInfoBuilder: edge index exceeds max");
   }
-  attributes_.edge_index_ = edge_index;
+  edge_index_ = edge_index;
 }
 
 // Set the number of outbound directed edges.
@@ -67,25 +65,25 @@ void NodeInfoBuilder::set_edge_count(const uint32_t edge_count) {
     // Log an error and set count to max.
     LOG_ERROR("NodeInfoBuilder: edge count exceeds max: " +
               std::to_string(edge_count));
-    attributes_.edge_count_ = kMaxEdgesPerNode;
+    edge_count_ = kMaxEdgesPerNode;
   } else {
-    attributes_.edge_count_ = edge_count;
+    edge_count_ = edge_count;
   }
 }
 
 // Set the best road class of the outbound directed edges.
 void NodeInfoBuilder::set_bestrc(const RoadClass bestrc) {
-   attributes_.bestrc_ = static_cast<uint32_t>(bestrc);
+   bestrc_ = static_cast<uint32_t>(bestrc);
 }
 
 // Set the access modes (bit mask) allowed to pass through the node.
 void NodeInfoBuilder::set_access(const uint32_t access) {
-  access_.access = access;
+  access_ = access;
 }
 
 // Set the intersection type.
 void NodeInfoBuilder::set_intersection(const IntersectionType type) {
-  intersection_ = type;
+  intersection_ = static_cast<uint32_t>(type);
 }
 
 // Set the index of the administrative information within this tile.
@@ -94,9 +92,9 @@ void NodeInfoBuilder::set_admin_index(const uint16_t admin_index) {
     // Log an error and set count to max.
     LOG_ERROR("NodeInfoBuilder: admin index exceeds max: " +
               std::to_string(admin_index));
-    admin_.admin_index = kMaxAdminsPerTile;
+    admin_index_ = kMaxAdminsPerTile;
   } else {
-    admin_.admin_index = admin_index;
+    admin_index_ = admin_index;
   }
 }
 
@@ -106,9 +104,9 @@ void NodeInfoBuilder::set_timezone(const uint16_t timezone) {
     // Log an error and set count to max.
     LOG_ERROR("NodeInfoBuilder: timezone index exceeds max: " +
               std::to_string(timezone));
-    admin_.timezone = kMaxTimeZonesPerTile;
+    timezone_ = kMaxTimeZonesPerTile;
   } else {
-    admin_.timezone = timezone;
+    timezone_ = timezone;
   }
 }
 
@@ -119,7 +117,7 @@ void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
   if (localidx > kMaxLocalEdgeIndex) {
     LOG_WARN("Exceeding max local index on set_local_driveability - skip");
   } else {
-    type_.local_driveability = OverwriteBits(type_.local_driveability,
+    local_driveability_ = OverwriteBits(local_driveability_,
                  static_cast<uint32_t>(t), localidx, 2);
   }
 }
@@ -128,15 +126,15 @@ void NodeInfoBuilder::set_local_driveability(const uint32_t localidx,
 void NodeInfoBuilder::set_density(const uint32_t density) {
   if (density > kMaxDensity) {
     LOG_WARN("Exceeding max. density: " + std::to_string(density));
-    type_.density = kMaxDensity;
+    density_ = kMaxDensity;
   } else {
-    type_.density = density;
+    density_ = density;
   }
 }
 
 // Set the node type.
 void NodeInfoBuilder::set_type(const NodeType type) {
-  type_.type =  static_cast<uint8_t>(type);
+  type_ = static_cast<uint32_t>(type);
 }
 
 // Set the number of driveable edges on the local level. Subtract 1 so
@@ -144,39 +142,34 @@ void NodeInfoBuilder::set_type(const NodeType type) {
 void NodeInfoBuilder::set_local_edge_count(const uint32_t n) {
   if (n > kMaxLocalEdgeIndex+1) {
     LOG_INFO("Exceeding max. local edge count: " + std::to_string(n));
-    type_.local_edge_count = kMaxLocalEdgeIndex;
+    local_edge_count_ = kMaxLocalEdgeIndex;
   } else if (n == 0) {
     LOG_ERROR("Node with 0 local edges found");
   } else {
-    type_.local_edge_count = n - 1;
+    local_edge_count_ = n - 1;
   }
-}
-
-// Set the dead-end node flag.
-void NodeInfoBuilder::set_end(const bool end) {
-  type_.end = end;
 }
 
 // Set the parent node flag (e.g. a parent transit stop).
 void NodeInfoBuilder::set_parent(const bool parent) {
-  type_.parent = parent;
+  parent_ = parent;
 }
 
 // Set the child node flag (e.g. a child transit stop).
 void NodeInfoBuilder::set_child(const bool child) {
-  type_.child = child;
+  child_ = child;
 }
 
 // Sets the flag indicating a mode change is allowed at this node.
 // The access data tells which modes are allowed at the node. Examples
 // include transit stops, bike share locations, and parking locations.
 void NodeInfoBuilder::set_mode_change(const bool mc) {
-  type_.mode_change = mc;
+  mode_change_ = mc;
 }
 
 // Set the traffic signal flag.
 void NodeInfoBuilder::set_traffic_signal(const bool traffic_signal) {
-  type_.traffic_signal = traffic_signal;
+  traffic_signal_ = traffic_signal;
 }
 
 // Set the transit stop Id.

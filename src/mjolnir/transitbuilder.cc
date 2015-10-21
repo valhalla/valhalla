@@ -776,7 +776,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     bool child  = (stop.parent != 0);  // TODO verify if this is sufficient
     bool parent = (stop.type == 1);    // TODO verify if this is sufficient
     NodeInfoBuilder node(stop.ll, RoadClass::kServiceOther, access,
-                        NodeType::kMultiUseTransitStop, false, false);
+                        NodeType::kMultiUseTransitStop, false);
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
