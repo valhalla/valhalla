@@ -645,7 +645,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
         graphtile.nodes().emplace_back(node_ll, bestclass, node.access_mask(),
-                                       node.type(), (n == 1), node.traffic_signal());
+                                       node.type(), node.traffic_signal());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() - bundle.node_edges.size());
         graphtile.nodes().back().set_edge_count(bundle.node_edges.size());
         if (fork) {

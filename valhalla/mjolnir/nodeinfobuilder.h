@@ -29,13 +29,11 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  rc             Best road class / importance of outbound edges.
    * @param  access         Access mask at this node.
    * @param  type           The type of node.
-   * @param  end            Is a dead-end node?
    * @param  traffic_signal Has a traffic signal at this node?
-   *
    */
   NodeInfoBuilder(const std::pair<float, float>& ll, const baldr::RoadClass rc,
                   const uint32_t access, const baldr::NodeType type,
-                  const bool end, const bool traffic_signal);
+                  const bool traffic_signal);
 
   /**
    * Sets the latitude and longitude.
@@ -111,12 +109,6 @@ class NodeInfoBuilder : public baldr::NodeInfo {
    * @param  n  Number of edges on the local level.
    */
   void set_local_edge_count(const uint32_t n);
-
-  /**
-   * Set the dead-end node flag.
-   * @param  end  dead-end flag.
-   */
-  void set_end(const bool end);
 
   /**
    * Set the parent node flag (e.g. a parent transit stop).
