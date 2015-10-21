@@ -17,12 +17,11 @@ if [ ! -f $config ]; then
     echo "Config file not found $config"
     exit 1
 fi
-tz_dir=$(jq -r '.mjolnir.timezone.timezone_dir' $config)
-if [ ! -d $tz_dir ]; then
-    echo "Timezone directory not found $tz_dir"
+tz_file=$(jq -r '.mjolnir.timezone' $config)
+if [ ! -d $(dirname $tz_file) ]; then
+    echo "Timezone directory not found $(dirname $tz_file)"
     exit 1
 fi
-tz_file=$tz_dir/$(jq -r '.mjolnir.timezone.db_name' $config)
 rm -f $tz_file
 url="http://efele.net/maps/tz/world/tz_world_mp.zip"
 wget $url || error_exit "wget failed for " $url
@@ -32,4 +31,3 @@ spatialite $tz_file "SELECT CreateSpatialIndex('tz_world', 'geom');" || error_ex
 
 rm -rf world
 rm -f ./tz_world_mp.zip
-
