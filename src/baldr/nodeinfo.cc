@@ -52,15 +52,9 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
 namespace valhalla {
 namespace baldr {
 
-// Default constructor
-NodeInfo::NodeInfo()
-    : latlng_{},
-      attributes_{},
-      intersection_(IntersectionType::kRegular),
-      type_{},
-      admin_{},
-      stop_{},
-      headings_(0) {
+// Default constructor. Initialize to all 0's.
+NodeInfo::NodeInfo() {
+  memset(this, 0, sizeof(NodeInfo));
 }
 
 // Get the latitude, longitude
@@ -70,55 +64,55 @@ const PointLL& NodeInfo::latlng() const {
 
 // Get the index in this tile of the first outbound directed edge
 uint32_t NodeInfo::edge_index() const {
-  return attributes_.edge_index_;
+  return edge_index_;
 }
 
 // Get the number of outbound edges from this node.
 uint32_t NodeInfo::edge_count() const {
-  return attributes_.edge_count_;
+  return edge_count_;
 }
 
 // Get the best road class of any outbound edges.
 RoadClass NodeInfo::bestrc() const {
-  return static_cast<RoadClass>(attributes_.bestrc_);
+  return static_cast<RoadClass>(bestrc_);
 }
 
 // Get the access modes (bit mask) allowed to pass through the node.
 // See graphconstants.h
 uint16_t NodeInfo::access() const {
-  return access_.access;
+  return access_;
 }
 
 // Get the intersection type.
 IntersectionType NodeInfo::intersection() const {
-  return intersection_;
+  return static_cast<IntersectionType>(intersection_);
 }
 
 // Get the index of the administrative information within this tile.
 uint32_t NodeInfo::admin_index() const {
-  return admin_.admin_index;
+  return admin_index_;
 }
 
 // Returns the timezone index.
 uint32_t NodeInfo::timezone() const {
-  return admin_.timezone;
+  return timezone_;
 }
 
 // Get the driveability of the local directed edge given a local
 // edge index.
 Traversability NodeInfo::local_driveability(const uint32_t localidx) const {
   uint32_t s = localidx * 2;     // 2 bits per index
-  return static_cast<Traversability>((type_.local_driveability & (3 << s)) >> s);
+  return static_cast<Traversability>((local_driveability_ & (3 << s)) >> s);
 }
 
 // Get the relative density at the node.
 uint32_t NodeInfo::density() const {
-  return type_.density;
+  return density_;
 }
 
 // Gets the node type. See graphconstants.h for the list of types.
 NodeType NodeInfo::type() const {
-  return static_cast<NodeType>(type_.type);
+  return static_cast<NodeType>(type_);
 }
 
 // Checks if this node is a transit node.
@@ -131,34 +125,29 @@ bool NodeInfo::is_transit() const {
 // Get the number of edges on the local level. We add 1 to allow up to
 // up to kMaxLocalEdgeIndex + 1.
 uint32_t NodeInfo::local_edge_count() const {
-  return type_.local_edge_count + 1;
-}
-
-// Is this a dead-end node that connects to only one edge?
-bool NodeInfo::end() const {
-  return type_.end;
+  return local_edge_count_ + 1;
 }
 
 // Is this a parent node (e.g. a parent transit stop).
 bool NodeInfo::parent() const {
-  return type_.parent;
+  return parent_;
 }
 
 // Is this a child node (e.g. a child transit stop).
 bool NodeInfo::child() const {
-  return type_.child;
+  return child_;
 }
 
 // Is a mode change allowed at this node? The access data tells which
 // modes are allowed at the node. Examples include transit stops, bike
 // share locations, and parking locations.
 bool NodeInfo::mode_change() const {
-  return type_.mode_change;
+  return mode_change_;
 }
 
 // Is there a traffic signal at this node?
 bool NodeInfo::traffic_signal() const {
-  return type_.traffic_signal;
+  return traffic_signal_;
 }
 
 // Gets the transit stop Id. This is used for schedule lookups
@@ -191,94 +180,29 @@ uint32_t NodeInfo::heading(const uint32_t localidx) const {
           * kHeadingExpandFactor));
 }
 
+
 json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
     {"lon", json::fp_t{latlng_.first, 6}},
     {"lat", json::fp_t{latlng_.second, 6}},
-    {"best_road_class", to_string(static_cast<RoadClass>(attributes_.bestrc_))},
-    {"edge_count", static_cast<uint64_t>(attributes_.edge_count_)},
-    {"access", access_json(access_.access)},
+    {"best_road_class", to_string(static_cast<RoadClass>(bestrc_))},
+    {"edge_count", static_cast<uint64_t>(edge_count_)},
+    {"access", access_json(access_)},
     {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
-    {"administrative", admin_json(tile->admininfo(admin_.admin_index), admin_.timezone)},
-    {"child", static_cast<uint64_t>(type_.child)},
-    {"density", static_cast<uint64_t>(type_.density)},
-    {"local_edge_count", static_cast<uint64_t>(type_.local_edge_count + 1)},
-    {"mode_change", static_cast<bool>(type_.mode_change)},
-    {"parent", static_cast<bool>(type_.parent)},
-    {"traffic_signal", static_cast<bool>(type_.traffic_signal)},
-    {"type", to_string(static_cast<NodeType>(type_.type))},
+    {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
+    {"child", static_cast<uint64_t>(child_)},
+    {"density", static_cast<uint64_t>(density_)},
+    {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
+    {"mode_change", static_cast<bool>(mode_change_)},
+    {"parent", static_cast<bool>(parent_)},
+    {"traffic_signal", static_cast<bool>(traffic_signal_)},
+    {"type", to_string(static_cast<NodeType>(type_))},
   });
   if(is_transit())
     m->emplace("stop_id", static_cast<uint64_t>(stop_.stop_id));
   return m;
 }
 
-// Get the hash_value
-const uint64_t NodeInfo::internal_version() {
-
-  NodeInfo ni;
-
-  ni.access_ = {};
-  ni.admin_ = {};
-  ni.attributes_ = {};
-  ni.intersection_ = IntersectionType::kFalse;
-  ni.stop_ = {};
-  ni.type_ = {};
-
-  size_t seed = 0;
-  boost::hash_combine(seed, ni.latlng_);
-
-  //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
-  ni.attributes_.edge_index_ = ~ni.attributes_.edge_index_;
-  boost::hash_combine(seed,ffs(ni.attributes_.edge_index_+1)-1);
-  ni.attributes_.edge_count_ = ~ni.attributes_.edge_count_;
-  boost::hash_combine(seed, ffs(ni.attributes_.edge_count_+1)-1);
-  ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
-  boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
-
-  // Access
-  ni.access_.access  = ~ni.access_.access;
-  boost::hash_combine(seed,ffs(ni.access_.access+1)-1);
-  ni.access_.spare  = ~ni.access_.spare;
-  boost::hash_combine(seed,ffs(ni.access_.spare+1)-1);
-
-  boost::hash_combine(seed,ni.intersection_);
-
-  ni.admin_.admin_index = ~ni.admin_.admin_index;
-  boost::hash_combine(seed,ffs(ni.admin_.admin_index+1)-1);
-  ni.admin_.timezone = ~ni.admin_.timezone;
-  boost::hash_combine(seed, ffs(ni.admin_.timezone+1)-1);
-  ni.admin_.spare = ~ni.admin_.spare;
-  boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
-
-  ni.type_.local_driveability = ~ni.type_.local_driveability;
-  boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
-  ni.type_.density = ~ni.type_.density;
-  boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
-  ni.type_.type = ~ni.type_.type;
-  boost::hash_combine(seed,ffs(ni.type_.type+1)-1);
-  ni.type_.local_edge_count = ~ni.type_.local_edge_count;
-  boost::hash_combine(seed,ffs(ni.type_.local_edge_count+1)-1);
-  ni.type_.end = ~ni.type_.end;
-  boost::hash_combine(seed,ffs(ni.type_.end+1)-1);
-  ni.type_.parent = ~ni.type_.parent;
-  boost::hash_combine(seed,ffs(ni.type_.parent+1)-1);
-  ni.type_.child = ~ni.type_.child;
-  boost::hash_combine(seed,ffs(ni.type_.child+1)-1);
-  ni.type_.mode_change = ~ni.type_.mode_change;
-  boost::hash_combine(seed,ffs(ni.type_.mode_change+1)-1);
-  ni.type_.traffic_signal = ~ni.type_.traffic_signal;
-  boost::hash_combine(seed,ffs(ni.type_.traffic_signal+1)-1);
-
-  boost::hash_combine(seed,ni.stop_.stop_id);
-
-  boost::hash_combine(seed,ni.headings_);
-
-  boost::hash_combine(seed,sizeof(NodeInfo));
-
-  return seed;
-
-}
 
 }
 }

@@ -29,9 +29,7 @@ GraphTileHeader::GraphTileHeader()
       textlist_offset_(0),
       merlist_offset_(0),
       timedres_offset_(0) {
-  internal_version_ = NodeInfo::internal_version() +
-                      DirectedEdge::internal_version() +
-                      GraphId::internal_version();
+  internal_version_ = GraphId::internal_version();
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize-1] = 0;
 }

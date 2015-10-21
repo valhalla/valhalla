@@ -130,12 +130,6 @@ class NodeInfo {
   uint32_t local_edge_count() const;
 
   /**
-   * Is this a dead-end node that connects to only one edge?
-   * @return  Returns true if this is a dead-end node.
-   */
-  bool end() const;
-
-  /**
    * Is this a parent node (e.g. a parent transit stop).
    * @return  Returns true if this is a parent node.
    */
@@ -194,60 +188,32 @@ class NodeInfo {
    */
   json::MapPtr json(const GraphTile* tile) const;
 
-  /**
-   * Get the computed version of NodeInfo attributes.
-   * @return   Returns internal version.
-   */
-  static const uint64_t internal_version();
-
  protected:
   // Latitude, longitude position of the node.
   std::pair<float, float> latlng_;
 
-  // Node attributes.
-  struct NodeAttributes {
-    uint32_t edge_index_  : 22; // Index within the node's tile of its first
+  // Node attributes and admin information
+  uint64_t edge_index_   : 22;  // Index within the node's tile of its first
                                 // outbound directed edge
-    uint32_t edge_count_   : 7; // Number of outbound edges (on this level)
-    uint32_t bestrc_       : 3; // Best directed edge road class
-  };
-  NodeAttributes attributes_;
+  uint64_t access_       : 12;  // Access through the node - bit field
+  uint64_t edge_count_   : 7;   // Number of outbound edges (on this level)
+  uint64_t bestrc_       : 3;   // Best directed edge road class
+  uint64_t admin_index_  : 6;   // Index into this tile's list of admin data
+  uint64_t timezone_     : 9;   // Time zone
+  uint64_t intersection_ : 5;   // Intersection type
 
-  // Node access (see graphconstants.h)
-  struct AllowedAccess {
-    uint16_t access : 12;
-    uint16_t spare  : 4;
-  };
-  AllowedAccess access_;
-
-  // Intersection type. Classification of the intersection.
-  // (see graphconstants.h)
-  IntersectionType intersection_;
-
-  // Administrative information
-  struct NodeAdmin {
-    uint16_t admin_index  : 6; // Index into this tile's list of admin data
-    uint16_t timezone     : 9; // Time zone
-    uint16_t spare        : 1;
-  };
-  NodeAdmin admin_;
-
-  // Node type
-  struct NodeTypeInfo {
-    uint32_t local_driveability : 16; // Driveability for local edges (up to
-                                      // kMaxLocalEdgeIndex+1 edges)
-    uint32_t density            : 4;  // Density (population? edges?)
-    uint32_t type               : 4;  // Node type, see graphconstants NodeType
-    uint32_t local_edge_count   : 3;  // # of edges on local level (up to
-                                      // kMaxLocalEdgeIndex+1)
-    uint32_t end                : 1;  // End node (only connects to 1 edge)
-    uint32_t parent             : 1;  // Is this a parent node
-    uint32_t child              : 1;  // Is this a child node
-    uint32_t mode_change        : 1;  // Mode change allowed?
-    uint32_t traffic_signal     : 1;  // Traffic signal
-
-  };
-  NodeTypeInfo type_;
+  // Node type and additional node attributes
+  uint32_t local_driveability_ : 16; // Driveability for local edges (up to
+                                     // kMaxLocalEdgeIndex+1 edges)
+  uint32_t density_            : 4;  // Relative road density
+  uint32_t type_               : 4;  // NodeType, see graphconstants
+  uint32_t local_edge_count_   : 3;  // # of edges on local level (up to
+                                     // kMaxLocalEdgeIndex+1)
+  uint32_t parent_             : 1;  // Is this a parent node
+  uint32_t child_              : 1;  // Is this a child node
+  uint32_t mode_change_        : 1;  // Mode change allowed?
+  uint32_t traffic_signal_     : 1;  // Traffic signal
+  uint32_t spare1_             : 1;
 
   // Transit stop Id
   union NodeStop {

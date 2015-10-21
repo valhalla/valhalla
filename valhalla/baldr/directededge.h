@@ -217,19 +217,21 @@ class DirectedEdge {
 
   /**
    * Get the access modes in the forward direction (bit field).
+   * @return  Returns the access modes in the forward direction.
    */
-  uint8_t forwardaccess() const;
+  uint32_t forwardaccess() const;
 
   /**
    * Get the access modes in the reverse direction (bit field).
+   * @return  Returns the access modes in the reverse direction.
    */
-  uint8_t reverseaccess() const;
+  uint32_t reverseaccess() const;
 
   /**
    * Gets the speed in KPH.
    * @return  Returns the speed in KPH.
    */
-  uint8_t speed() const;
+  uint32_t speed() const;
 
   /**
    * Gets the truck speed in KPH.
@@ -374,101 +376,69 @@ class DirectedEdge {
    */
   json::MapPtr json() const;
 
-  /**
-   * Get the computed version of DirectedEdge attributes.
-   * @return   Returns internal version.
-   */
-  static const uint64_t internal_version();
-
  protected:
   // End node
   GraphId endnode_;
 
   // Data offsets and flags for extended data. Where a flag exists the actual
   // data can be indexed by the directed edge Id within the tile.
-  struct DataOffsets {
-    uint64_t edgeinfo_offset            : 25; // Offset to edge data.
-    uint64_t access_restriction         : 12; // General restriction or access
-                                              // condition (per mode)
-    uint64_t start_complex_restriction  : 12; // Complex restriction (per mode) starts on this directed edge
-    uint64_t end_complex_restriction    : 12; // Complex restriction (per mode) starts on this directed edge
-    uint64_t exitsign                   : 1;  // Does this directed edge have exit signs
-    uint64_t spare                      : 2;
-  };
-  DataOffsets dataoffsets_;
+  uint64_t edgeinfo_offset_           : 25; // Offset to edge data.
+  uint64_t access_restriction_        : 12; // General restriction or access
+                                            // condition (per mode)
+  uint64_t start_complex_restriction_ : 12; // Complex restriction (per mode)
+                                            // starts on this directed edge
+  uint64_t end_complex_restriction_   : 12; // Complex restriction (per mode)
+                                            // ends on this directed edge
+  uint64_t exitsign_                  : 1;  // Exit signs exist for this edge
+  uint64_t spare1_                    : 2;
 
   // Attributes. Can be used in edge costing methods to favor or avoid edges.
-  struct Attributes {
-    uint64_t drive_on_right : 1;  // Driving side. Right if true (false=left)
-    uint64_t ferry          : 1;  // Ferry (boat)
-    uint64_t railferry      : 1;  // Ferry (rail) - e.g. Euro Rail Tunnel
-    uint64_t toll           : 1;  // Edge is part of a toll road.
-    uint64_t seasonal       : 1;  // Seasonal access (ex. no access in winter)
-    uint64_t dest_only      : 1;  // Access allowed to destination only
-                                  //  (private or no through traffic)
-    uint64_t tunnel         : 1;  // Is this edge part of a tunnel
-    uint64_t bridge         : 1;  // Is this edge part of a bridge?
-    uint64_t roundabout     : 1;  // Edge is part of a roundabout
-    uint64_t unreachable    : 1;  // Edge that is unreachable by driving
-    uint64_t traffic_signal : 1;  // Traffic signal at end of the directed edge
-    uint64_t forward        : 1;  // Is the edge info forward or reverse
-    uint64_t not_thru       : 1;  // Edge leads to "no-through" region
-    uint64_t opp_index      : 7;  // Opposing directed edge index
-    uint64_t cycle_lane     : 2;  // Does this edge have bicycle lanes?
-    uint64_t bike_network   : 4;  // Edge that is part of a bicycle network
-    uint64_t truck_route    : 1;  // Edge that is part of a truck route/network
-
-    uint64_t lanecount      : 4;  // Number of lanes
-    uint64_t restrictions   : 8;  // Restrictions - mask of local edge indexes
-                                  // at the end node that are restricted.
-    uint64_t use            : 6;  // Specific use types
-    uint64_t speed_type     : 2;  // Speed type (tagged vs. categorized)
-    uint64_t ctry_crossing  : 1;  // Does the edge cross into new country
-
-    uint64_t spare          : 16;
-  };
-  Attributes attributes_;
+  // Speed values above 250 used for special cases (closures, construction)
+  uint64_t speed_          : 8; // Speed (kph)
+  uint64_t truck_speed_    : 8; // Truck speed (kph)
+  uint64_t restrictions_   : 8; // Restrictions - mask of local edge indexes
+                                // at the end node that are restricted.
+  uint64_t lanecount_      : 4; // Number of lanes
+  uint64_t bike_network_   : 4; // Edge that is part of a bicycle network
+  uint64_t use_            : 6; // Specific use types
+  uint64_t speed_type_     : 2; // Speed type (tagged vs. categorized)
+  uint64_t opp_index_      : 7; // Opposing directed edge index
+  uint64_t drive_on_right_ : 1; // Driving side. Right if true (false=left)
+  uint64_t ferry_          : 1; // Ferry (boat)
+  uint64_t railferry_      : 1; // Ferry (rail) - e.g. Euro Rail Tunnel
+  uint64_t toll_           : 1; // Edge is part of a toll road.
+  uint64_t seasonal_       : 1; // Seasonal access (ex. no access in winter)
+  uint64_t dest_only_      : 1; // Access allowed to destination only
+                                //  (private or no through traffic)
+  uint64_t tunnel_         : 1; // Is this edge part of a tunnel
+  uint64_t bridge_         : 1; // Is this edge part of a bridge?
+  uint64_t roundabout_     : 1; // Edge is part of a roundabout
+  uint64_t unreachable_    : 1; // Edge that is unreachable by driving
+  uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
+  uint64_t forward_        : 1; // Is the edge info forward or reverse
+  uint64_t not_thru_       : 1; // Edge leads to "no-through" region
+  uint64_t cycle_lane_     : 2; // Does this edge have bicycle lanes?
+  uint64_t truck_route_    : 1; // Edge that is part of a truck route/network
+  uint64_t ctry_crossing_  : 1; // Does the edge cross into new country
 
   // Legal access to the directed link (also include reverse direction access).
   // See graphconstants.h.
-  struct AllowedAccess {
-    uint32_t forwardaccess : 12;
-    uint32_t reverseaccess : 12;
-    uint32_t truck_speed   : 8;
-  };
-  AllowedAccess access_;
-
-  // Speed in kilometers per hour. Range 0-250 KPH. Applies to
-  // "normal vehicles". Save values above 250 as special cases
-  // (closures, construction, // etc.)
-  uint8_t speed_;
-
-  // Classification and use information
-  struct Classification {
-    uint8_t classification : 3;  // Classification/importance of the road/path
-    uint8_t surface        : 3;  // representation of smoothness
-    uint8_t link           : 1;  // *link tag - Ramp or turn channel
-    uint8_t internal       : 1;  // Edge that is internal to an intersection
-  };
-  Classification classification_;
-
-  uint16_t spare;  // 16 bits spare?
+  uint64_t forwardaccess_  : 12;
+  uint64_t reverseaccess_  : 12;
+  uint64_t classification_ : 3;  // Classification/importance of the road/path
+  uint64_t surface_        : 3;  // representation of smoothness
+  uint64_t link_           : 1;  // *link tag - Ramp or turn channel
+  uint64_t internal_       : 1;  // Edge that is internal to an intersection
+  uint64_t spare1          : 32;
 
   // Geometric attributes: length, weighted grade, curvature factor.
-  struct GeoAttributes {
-    uint32_t length             : 24;  // Length in meters
-    uint32_t weighted_grade     :  4;  // Weighted estimate of grade
-    uint32_t curvature          :  4;  // Curvature factor
-  };
-  GeoAttributes geoattributes_;
-
-  // Turn types between edges
-  struct TurnTypes {
-    uint32_t turntype      : 24; // Turn type (see graphconstants.h)
-    uint32_t edge_to_left  :  8; // Is there an edge to the left (between the
-                                 // "from edge" and this edge)
-  };
-  TurnTypes turntypes_;
+  // Turn types between edges.
+  uint64_t turntype_        : 24;   // Turn type (see graphconstants.h)
+  uint64_t edge_to_left_    :  8;   // Is there an edge to the left (between
+                                    // the "from edge" and this edge)
+  uint64_t length_          : 24;   // Length in meters
+  uint64_t weighted_grade_  :  4;   // Weighted estimate of grade
+  uint64_t curvature_       :  4;   // Curvature factor
 
   // Stop impact among edges
   struct StopImpact {
@@ -487,19 +457,16 @@ class DirectedEdge {
   StopOrLine stopimpact_;
 
   // Hierarchy transitions and shortcut information
-  struct Hierarchy {
-    uint32_t localedgeidx   : 7;  // Index of the edge on the local level
-    uint32_t opp_local_idx  : 7;  // Opposing local edge index (for costing
-                                  // and Uturn detection)
-    uint32_t shortcut       : 7;  // Shortcut edge (mask)
-    uint32_t superseded     : 7;  // Edge is superseded by a shortcut (mask)
-    uint32_t trans_up       : 1;  // Edge represents a transition up one
-                                  // level in the hierarchy
-    uint32_t trans_down     : 1;  // Transition down one level
-    uint32_t is_shortcut    : 1;  // True if this edge is a shortcut.
-    uint32_t spare          : 1;
-  };
-  Hierarchy hierarchy_;
+  uint32_t localedgeidx_  : 7;  // Index of the edge on the local level
+  uint32_t opp_local_idx_ : 7;  // Opposing local edge index (for costing
+                                // and Uturn detection)
+  uint32_t shortcut_      : 7;  // Shortcut edge (mask)
+  uint32_t superseded_    : 7;  // Edge is superseded by a shortcut (mask)
+  uint32_t trans_up_      : 1;  // Edge represents a transition up one
+                                // level in the hierarchy
+  uint32_t trans_down_    : 1;  // Transition down one level
+  uint32_t is_shortcut_   : 1;  // True if this edge is a shortcut.
+  uint32_t spare2_        : 1;
 };
 
 }
