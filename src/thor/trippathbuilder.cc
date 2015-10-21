@@ -821,10 +821,9 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       trip_edge->set_transit_type(
           TripPath_TransitType::TripPath_TransitType_kBus);
 
-    trip_edge->set_transit_trip_id(trip_id);
-    trip_edge->set_transit_block_id(block_id);
-
-    TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
+    TripPath_TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
+    transit_route_info->set_trip_id(trip_id);
+    transit_route_info->set_block_id(block_id);
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
 
@@ -835,15 +834,15 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
       //use route short name if available otherwise trip short name.
       if (transit_route && transit_route->short_name_offset())
-        transit_info->set_short_name(
+        transit_route_info->set_short_name(
             graphtile->GetName(transit_route->short_name_offset()));
 
       if (transit_route && transit_route->long_name_offset())
-        transit_info->set_long_name(
+        transit_route_info->set_long_name(
             graphtile->GetName(transit_route->long_name_offset()));
 
       if (transit_departure->headsign_offset())
-        transit_info->set_headsign(
+        transit_route_info->set_headsign(
             graphtile->GetName(transit_departure->headsign_offset()));
     }
   }
