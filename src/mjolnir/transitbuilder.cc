@@ -467,7 +467,11 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
         continue;
       }
 
-      std::string tl_routeid = routes.second.get<std::string>("onestop_id", "");
+
+      std::string onestop_id = routes.second.get<std::string>("onestop_id", "");
+      std::string operated_by_onestop_id = routes.second.get<std::string>("operated_by_onestop_id", "");
+      std::string operated_by_name = routes.second.get<std::string>("operated_by_name", "");
+
       std::string shortname = routes.second.get<std::string>("name", "");
       std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
       std::string desc = routes.second.get<std::string>("tags.route_desc", "");
@@ -507,8 +511,10 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
       }
 
       // Add names and create the transit route
-      // Remove agency?
-      TransitRoute route(routeid, tl_routeid.c_str(),
+      TransitRoute route(routeid,
+                         tilebuilder.AddName(onestop_id == "null" ? "" : onestop_id),
+                         tilebuilder.AddName(operated_by_onestop_id == "null" ? "" : operated_by_onestop_id),
+                         tilebuilder.AddName(operated_by_name == "null" ? "" : operated_by_name),
                          strtol(route_color.c_str(), NULL, 16),
                          strtol(route_text_color.c_str(), NULL, 16),
                          tilebuilder.AddName(shortname == "null" ? "" : shortname),
@@ -1154,7 +1160,7 @@ void build(const std::string& transit_dir,
         uint32_t name_offset = tilebuilder.AddName(stop.name);
         uint32_t desc_offset = tilebuilder.AddName(stop.desc);
         uint32_t farezone = 0;
-        TransitStop ts(stop.key, stop.onestop_id.c_str(), name_offset, desc_offset,
+        TransitStop ts(stop.key, tilebuilder.AddName(stop.onestop_id), name_offset, desc_offset,
                        stop.parent, farezone);
         tilebuilder.AddTransitStop(ts);
 
