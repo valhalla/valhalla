@@ -98,10 +98,18 @@ message TripPath {
     kFenicular = 7;
   }
 
-  message TransitInfo {
-    optional string short_name = 1;
-    optional string long_name = 2;
-    optional string headsign = 3;
+  message TransitRouteInfo {
+    optional uint32 id = 1;
+    optional string onestop_id = 2;
+    optional uint32 block_id = 3;
+    optional uint32 trip_id = 4;
+    optional string short_name = 5;
+    optional string long_name = 6;
+    optional string headsign = 7;
+    optional uint32 color = 8;
+    optional uint32 text_color = 9;
+    optional uint32 operator_id = 10;
+    optional string operator_onestop_id = 11;
   }
 
   message Edge {
@@ -148,9 +156,7 @@ message TripPath {
     optional bool bus = 41;
     optional bool transit_connection = 42;
     optional bool other = 43;
-    optional uint32 transit_block_id = 44;
-    optional uint32 transit_trip_id = 45;
-    optional TransitInfo transit_info = 46;
+    optional TransitRouteInfo transit_route_info = 44;
   }
 
   message IntersectingEdge {
@@ -161,7 +167,12 @@ message TripPath {
     optional Traversability cyclability = 5;
     optional Traversability walkability = 6;
   }
-  
+
+   enum TransitStopType {
+    kStop = 0;
+    kStation = 1;
+  }
+
   message TransitStopInfo {
     optional string name = 1;                // The name of the stop
     optional string arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm

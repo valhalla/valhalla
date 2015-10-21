@@ -2734,9 +2734,9 @@ void NarrativeBuilder::FormTransitInstruction(
   text_instruction += maneuver.GetTransitStops().front().name;
   text_instruction += ". Take the ";
   text_instruction += maneuver.GetTransitName();
-  if (!maneuver.transit_headsign().empty()) {
+  if (!maneuver.transit_route_info().headsign.empty()) {
     text_instruction += " toward ";
-    text_instruction += maneuver.transit_headsign();
+    text_instruction += maneuver.transit_route_info().headsign;
   }
   text_instruction += ". (";
   text_instruction += std::to_string(maneuver.GetTransitStopCount());
@@ -2766,9 +2766,9 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
   text_instruction += maneuver.GetTransitStops().front().name;
   text_instruction += ". Remain on the ";
   text_instruction += maneuver.GetTransitName();
-  if (!maneuver.transit_headsign().empty()) {
+  if (!maneuver.transit_route_info().headsign.empty()) {
     text_instruction += " toward ";
-    text_instruction += maneuver.transit_headsign();
+    text_instruction += maneuver.transit_route_info().headsign;
   }
   text_instruction += ". (";
   text_instruction += std::to_string(maneuver.GetTransitStopCount());
@@ -2798,9 +2798,9 @@ void NarrativeBuilder::FormTransitTransferInstruction(
   text_instruction += maneuver.GetTransitStops().front().name;
   text_instruction += ". Transfer to take the ";
   text_instruction += maneuver.GetTransitName();
-  if (!maneuver.transit_headsign().empty()) {
+  if (!maneuver.transit_route_info().headsign.empty()) {
     text_instruction += " toward ";
-    text_instruction += maneuver.transit_headsign();
+    text_instruction += maneuver.transit_route_info().headsign;
   }
   text_instruction += ". (";
   text_instruction += std::to_string(maneuver.GetTransitStopCount());

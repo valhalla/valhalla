@@ -9,7 +9,7 @@
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
-#include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::odin;
@@ -553,51 +553,19 @@ void Maneuver::set_bus(bool bus) {
   bus_ = bus;
 }
 
-uint32_t Maneuver::transit_block_id() const {
-  return transit_info_.block_id;
+const TransitRouteInfo& Maneuver::transit_route_info() const {
+  return transit_route_info_;
 }
 
-void Maneuver::set_transit_block_id(uint32_t transit_block_id) {
-  transit_info_.block_id = transit_block_id;
-}
-
-uint32_t Maneuver::transit_trip_id() const {
-  return transit_info_.trip_id;
-}
-
-void Maneuver::set_transit_trip_id(uint32_t transit_trip_id) {
-  transit_info_.trip_id = transit_trip_id;
-}
-
-std::string Maneuver::transit_short_name() const {
-  return transit_info_.short_name;
-}
-
-void Maneuver::set_transit_short_name(std::string transit_short_name) {
-  transit_info_.short_name = transit_short_name;
-}
-
-std::string Maneuver::transit_long_name() const {
-  return transit_info_.long_name;
-}
-
-void Maneuver::set_transit_long_name(std::string transit_long_name) {
-  transit_info_.long_name = transit_long_name;
-}
-
-std::string Maneuver::transit_headsign() const {
-  return transit_info_.headsign;
-}
-
-void Maneuver::set_transit_headsign(std::string transit_headsign) {
-  transit_info_.headsign = transit_headsign;
+TransitRouteInfo* Maneuver::mutable_transit_route_info() {
+  return &transit_route_info_;
 }
 
 std::string Maneuver::GetTransitName() const {
-  if (!transit_short_name().empty()) {
-    return transit_short_name();
-  } else if (!transit_long_name().empty()) {
-    return (transit_long_name());
+  if (!transit_route_info_.short_name.empty()) {
+    return transit_route_info_.short_name;
+  } else if (!transit_route_info_.long_name.empty()) {
+    return (transit_route_info_.long_name);
   } else if (bus()) {
     return "bus";
   }
@@ -605,35 +573,35 @@ std::string Maneuver::GetTransitName() const {
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_info_.transit_stops.back().arrival_date_time;
+  return transit_route_info_.transit_stops.back().arrival_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitArrivalTime() const {
-  return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
+  return DateTime::time(transit_route_info_.transit_stops.back().arrival_date_time);
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_info_.transit_stops.front().departure_date_time;
+  return transit_route_info_.transit_stops.front().departure_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitDepartureTime() const {
-  return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
+  return DateTime::time(transit_route_info_.transit_stops.front().departure_date_time);
 }
 
 const std::list<TransitStop>& Maneuver::GetTransitStops() const {
-  return transit_info_.transit_stops;
+  return transit_route_info_.transit_stops;
 }
 
 size_t Maneuver::GetTransitStopCount() const {
   return
-      (transit_info_.transit_stops.size() > 0) ?
-          (transit_info_.transit_stops.size() - 1) : 0;
+      (transit_route_info_.transit_stops.size() > 0) ?
+          (transit_route_info_.transit_stops.size() - 1) : 0;
 }
 
 void Maneuver::InsertTransitStop(std::string name,
                                  std::string arrival_date_time,
                                  std::string departure_date_time) {
-  transit_info_.transit_stops.emplace_front(name, arrival_date_time,
+  transit_route_info_.transit_stops.emplace_front(name, arrival_date_time,
                                             departure_date_time);
 }
 

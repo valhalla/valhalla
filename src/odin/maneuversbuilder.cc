@@ -653,11 +653,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
-    maneuver.set_transit_block_id(prev_edge->transit_block_id());
-    maneuver.set_transit_trip_id(prev_edge->transit_trip_id());
-    maneuver.set_transit_short_name(prev_edge->transit_info().short_name());
-    maneuver.set_transit_long_name(prev_edge->transit_info().long_name());
-    maneuver.set_transit_headsign(prev_edge->transit_info().headsign());
+    maneuver.mutable_transit_route_info()->block_id = prev_edge->transit_route_info().block_id();
+    maneuver.mutable_transit_route_info()->trip_id = prev_edge->transit_route_info().trip_id();
+    maneuver.mutable_transit_route_info()->short_name = prev_edge->transit_route_info().short_name();
+    maneuver.mutable_transit_route_info()->long_name = prev_edge->transit_route_info().long_name();
+    maneuver.mutable_transit_route_info()->headsign = prev_edge->transit_route_info().headsign();
   }
 
   // Transit connection
@@ -892,9 +892,9 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
     if (prev_edge
         && prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
       // Process transit remain on
-      if ((maneuver.transit_block_id() != 0)
-          && (maneuver.transit_block_id() == prev_edge->transit_block_id())
-          && (maneuver.transit_trip_id() != prev_edge->transit_trip_id())) {
+      if ((maneuver.transit_route_info().block_id != 0)
+          && (maneuver.transit_route_info().block_id == prev_edge->transit_route_info().block_id())
+          && (maneuver.transit_route_info().trip_id != prev_edge->transit_route_info().trip_id())) {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransitRemainOn);
       }
       // Process transit transfer at same platform
@@ -1175,8 +1175,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
       && (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
 
     // Both block id and trip id must be the same so we can combine...
-    if ((maneuver.transit_block_id() == prev_edge->transit_block_id())
-        && (maneuver.transit_trip_id() == prev_edge->transit_trip_id())) {
+    if ((maneuver.transit_route_info().block_id == prev_edge->transit_route_info().block_id())
+        && (maneuver.transit_route_info().trip_id == prev_edge->transit_route_info().trip_id())) {
       return true;
     }
     // ...otherwise, it is a transfer or remain on

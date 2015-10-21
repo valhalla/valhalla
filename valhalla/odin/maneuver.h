@@ -12,7 +12,7 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/odin/signs.h>
-#include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::baldr;
@@ -199,20 +199,8 @@ class Maneuver {
   bool bus() const;
   void set_bus(bool bus);
 
-  uint32_t transit_block_id() const;
-  void set_transit_block_id(uint32_t transit_block_id);
-
-  uint32_t transit_trip_id() const;
-  void set_transit_trip_id(uint32_t transit_trip_id);
-
-  std::string transit_short_name() const;
-  void set_transit_short_name(std::string transit_short_name);
-
-  std::string transit_long_name() const;
-  void set_transit_long_name(std::string transit_long_name);
-
-  std::string transit_headsign() const;
-  void set_transit_headsign(std::string transit_headsign);
+  const TransitRouteInfo& transit_route_info() const;
+  TransitRouteInfo* mutable_transit_route_info();
 
   std::string GetTransitName() const;
 
@@ -289,8 +277,8 @@ class Maneuver {
   bool transit_connection_;
   TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
 
-  // The transit info including list of stops
-  TransitInfo transit_info_;
+  // The transit route info including list of stops
+  TransitRouteInfo transit_route_info_;
   ////////////////////////////////////////////////////////////////////////////
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
