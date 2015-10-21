@@ -313,16 +313,16 @@ std::string EnhancedTripPath_Edge::ToString() const {
   // Process transit route info, if needed
   if (has_transit_route_info()) {
     str += " | transit_route_info.id=";
-    str += transit_route_info().id();
+    str += std::to_string(transit_route_info().id());
 
     str += " | transit_route_info.onestop_id=";
     str += transit_route_info().onestop_id();
 
     str += " | transit_route_info.block_id=";
-    str += transit_route_info().block_id();
+    str += std::to_string(transit_route_info().block_id());
 
     str += " | transit_route_info.trip_id=";
-    str += transit_route_info().trip_id();
+    str += std::to_string(transit_route_info().trip_id());
 
     str += " | transit_route_info.short_name=";
     str += transit_route_info().short_name();
@@ -334,13 +334,13 @@ std::string EnhancedTripPath_Edge::ToString() const {
     str += transit_route_info().headsign();
 
     str += " | transit_route_info.color=";
-    str += transit_route_info().color();
+    str += std::to_string(transit_route_info().color());
 
     str += " | transit_route_info.text_color=";
-    str += transit_route_info().text_color();
+    str += std::to_string(transit_route_info().text_color());
 
     str += " | transit_route_info.operator_id=";
-    str += transit_route_info().operator_id();
+    str += std::to_string(transit_route_info().operator_id());
 
     str += " | transit_route_info.operator_onestop_id=";
     str += transit_route_info().operator_onestop_id();
