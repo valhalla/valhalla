@@ -33,6 +33,7 @@ namespace {
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
     {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
+  const std::vector<std::string> matrix_types={"one_to_many","many_to_one","many_to_many"};
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -122,6 +123,15 @@ namespace valhalla {
         action_str.append("'/" + kv.second.get_value<std::string>() + "' ");
       }
 
+      for (const std::string& mtype : matrix_types) {
+        auto matrix_max_area = config.get<float>("service_limits." + mtype + ".max_area");
+        if (!matrix_max_area)
+          throw std::runtime_error("The config max_area for " + mtype + " is not found.");
+        auto matrix_max_locations = config.get<size_t>("service_limits." + mtype + ".max_locations");
+        if (!matrix_max_locations)
+          throw std::runtime_error("The config max_locations for " + mtype + " is not found.");
+      }
+
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -148,22 +158,14 @@ namespace valhalla {
           return result;
         }
 
+        auto action = ACTION.find(request.path);
         //is the request path action in the action set?
-        if (action_set.find(request.path) == action_set.cend()) {
+        if ((action_set.find(request.path) == action_set.cend()) || action == ACTION.cend()) {
             worker_t::result_t result{false};
-            http_response_t response(404, "Not Found", "Try any of: " + action_str, headers_t{CORS});
+            http_response_t response(404, "Action Not Found", "Try any of: " + action_str, headers_t{CORS});
             response.from_info(info);
             result.messages.emplace_back(response.to_string());
             return result;
-        }
-
-        auto action = ACTION.find(request.path);
-        if(action == ACTION.cend()) {
-          worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Request path action not found.", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
         }
 
         //parse the query's json

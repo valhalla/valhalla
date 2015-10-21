@@ -11,7 +11,6 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-  enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -51,32 +50,27 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-       auto matrix_type = "";
-       switch (action) {
-        case ONE_TO_MANY:
-          matrix_type = "one_to_many";
-          break;
-        case MANY_TO_ONE:
-          matrix_type = "many_to_one";
-          break;
-        case MANY_TO_MANY:
-          matrix_type = "many_to_many";
-          break;
-      }
-      auto costing = request.get<std::string>("costing");
-      if(costing.empty())
-        throw std::runtime_error("No edge/node costing provided");
-
-      //see if any locations pairs are unreachable or too far apart
-      auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
+      auto matrix_type = "";
+      switch (action) {
+       case ONE_TO_MANY:
+         matrix_type = "one_to_many";
+         break;
+       case MANY_TO_ONE:
+         matrix_type = "many_to_one";
+         break;
+       case MANY_TO_MANY:
+         matrix_type = "many_to_many";
+         break;
+     }
       auto max_area = config.get<float>("service_limits." + std::string(matrix_type) + ".max_area");
       auto max_locations = config.get<size_t>("service_limits." + std::string(matrix_type) + ".max_locations");
       //check that location size does not exceed max.
       if (locations.size() > max_locations)
         throw std::runtime_error("Number of locations exceeds the max location limit.");
-
       LOG_INFO("Location size::" + std::to_string(locations.size()));
 
+      //see if any locations pairs are unreachable or too far apart
+      auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
