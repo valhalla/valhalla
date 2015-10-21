@@ -11,12 +11,6 @@ using namespace prime_server;
 using namespace valhalla::baldr;
 
 namespace {
-  enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
-  const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
-    {"one_to_many", ONE_TO_MANY},
-    {"many_to_one", MANY_TO_ONE},
-    {"many_to_many", MANY_TO_MANY}
-  };
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -55,23 +49,28 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::time_distance_matrix(boost::property_tree::ptree& request) {
-
-      auto matrix_type = MATRIX.find(request.get<std::string>("matrix_type"));
-      auto costing = request.get<std::string>("costing");
-      if(costing.empty())
-        throw std::runtime_error("No edge/node costing provided");
+    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+      auto matrix_type = "";
+      switch (action) {
+       case ONE_TO_MANY:
+         matrix_type = "one_to_many";
+         break;
+       case MANY_TO_ONE:
+         matrix_type = "many_to_one";
+         break;
+       case MANY_TO_MANY:
+         matrix_type = "many_to_many";
+         break;
+     }
+      auto max_area = config.get<float>("service_limits." + std::string(matrix_type) + ".max_area");
+      auto max_locations = config.get<size_t>("service_limits." + std::string(matrix_type) + ".max_locations");
+      //check that location size does not exceed max.
+      if (locations.size() > max_locations)
+        throw std::runtime_error("Number of locations exceeds the max location limit.");
+      LOG_INFO("Location size::" + std::to_string(locations.size()));
 
       //see if any locations pairs are unreachable or too far apart
       auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
-      auto max_distance = config.get<float>("service_limits." + request.get<std::string>("costing") + ".max_distance");
-      auto max_route_locations = config.get<size_t>("service_limits." + request.get<std::string>("costing") + ".max_locations");
-      //check that location size does not exceed max.
-      if (locations.size() > max_route_locations)
-        throw std::runtime_error("Number of locations exceeds the max location limit.");
-
-      LOG_INFO("Location size::" + std::to_string(locations.size()));
-
       for(auto location = ++locations.cbegin(); location != locations.cend(); ++location) {
         //check connectivity
         uint32_t a_id = lowest_level->second.tiles.TileId(std::prev(location)->latlng_);
@@ -81,17 +80,17 @@ namespace valhalla {
 
         //check if distance between latlngs exceed max distance limit for each mode of travel
         auto path_distance = std::sqrt(midgard::DistanceApproximator::DistanceSquared(std::prev(location)->latlng_, location->latlng_));
-        if (path_distance > max_distance)
-          throw std::runtime_error("Path distance exceeds the max distance limit.");
+        if (path_distance > max_area)
+          throw std::runtime_error("Path distance exceeds the max area limit.");
 
         LOG_INFO("Location distance::" + std::to_string(path_distance));
       }
-      request.put("matrix_type" , matrix_type->first);
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, costing_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
+      request.put("matrix_type", std::string(matrix_type));
 
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);

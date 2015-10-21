@@ -2,6 +2,7 @@
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
@@ -23,11 +24,17 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 
 namespace {
+
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> ACTION{
     {"/route", loki_worker_t::ROUTE},
     {"/viaroute", loki_worker_t::VIAROUTE},
-    {"/locate", loki_worker_t::LOCATE}
+    {"/locate", loki_worker_t::LOCATE},
+    {"/one_to_many", loki_worker_t::ONE_TO_MANY},
+    {"/many_to_one", loki_worker_t::MANY_TO_ONE},
+    {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
+  const std::vector<std::string> matrix_types={"one_to_many","many_to_one","many_to_many"};
+
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -105,6 +112,26 @@ namespace valhalla {
           throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
       }
 
+      //load the loki config actions into an array
+      const boost::property_tree::ptree &config_actions = config.get_child("loki.actions");
+      if(config_actions.empty())
+        throw std::runtime_error("The config actions for Loki are incorrectly loaded.");
+
+      //iterate over the array of actions and store into an unordered set
+      for (const auto& kv : config_actions) {
+        action_set.emplace("/" + kv.second.get_value<std::string>());
+        action_str.append("'/" + kv.second.get_value<std::string>() + "' ");
+      }
+
+      for (const std::string& mtype : matrix_types) {
+        auto matrix_max_area = config.get<float>("service_limits." + mtype + ".max_area");
+        if (!matrix_max_area)
+          throw std::runtime_error("The config max_area for " + mtype + " is not found.");
+        auto matrix_max_locations = config.get<size_t>("service_limits." + mtype + ".max_locations");
+        if (!matrix_max_locations)
+          throw std::runtime_error("The config max_locations for " + mtype + " is not found.");
+      }
+
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -131,14 +158,14 @@ namespace valhalla {
           return result;
         }
 
-        //what do they want to do
         auto action = ACTION.find(request.path);
-        if(action == ACTION.cend()) {
-          worker_t::result_t result{false};
-          http_response_t response(404, "Not Found", "Try any of: '/route' '/locate'", headers_t{CORS});
-          response.from_info(info);
-          result.messages.emplace_back(response.to_string());
-          return result;
+        //is the request path action in the action set?
+        if ((action_set.find(request.path) == action_set.cend()) || action == ACTION.cend()) {
+            worker_t::result_t result{false};
+            http_response_t response(404, "Action Not Found", "Try any of: " + action_str, headers_t{CORS});
+            response.from_info(info);
+            result.messages.emplace_back(response.to_string());
+            return result;
         }
 
         //parse the query's json
@@ -147,9 +174,13 @@ namespace valhalla {
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            return route(action->second, request_pt, info);
+            return route(action->second, request_pt);
           case LOCATE:
             return locate(request_pt, info);
+          case ONE_TO_MANY:
+          case MANY_TO_ONE:
+          case MANY_TO_MANY:
+            return matrix(action->second, request_pt);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -170,7 +201,6 @@ namespace valhalla {
     }
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       auto costing = request.get_optional<std::string>("costing");
-      //using the costing we can determine what type of edge filtering to use
       size_t max_locations = std::numeric_limits<size_t>::max(); //TODO: locate should really have a limit..
       if (costing)
         max_locations = config.get<size_t>("service_limits." + *costing + ".max_locations");
