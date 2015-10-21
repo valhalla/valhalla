@@ -14,7 +14,7 @@ namespace baldr {
 class TransitStop {
  public:
   // Constructor with arguments
-  TransitStop(const uint32_t stopid, const char* tl_stopid,
+  TransitStop(const uint32_t stopid, const uint32_t one_stop_offset,
               const uint32_t name_offset, const uint32_t desc_offset,
               const uint32_t parent_stopid, const uint32_t fare_zoneid);
 
@@ -25,10 +25,10 @@ class TransitStop {
   uint32_t stopid() const;
 
   /**
-   * Get the TransitLand one stop Id for the stop.
-   * @return  Returns the TransitLand one stop Id.
+   * Get the TransitLand one stop Id offset for the stop.
+   * @return  Returns the TransitLand one stop Id offset.
    */
-  const char* tl_stopid() const;
+  uint32_t one_stop_offset() const;
 
   /**
    * Get the text/name offset for the stop name.
@@ -66,8 +66,8 @@ class TransitStop {
   // Internal stop Id. Used to lookup/index stops.
   uint32_t stopid_;
 
-  // TransitLand one stop Id.
-  char tl_stopid_[kOneStopIdSize];
+  // TransitLand one stop Id offset.
+  uint32_t one_stop_offset_;
 
   // Stop name offset in the text/name list.
   uint32_t name_offset_;

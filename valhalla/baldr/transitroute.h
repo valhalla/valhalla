@@ -14,7 +14,8 @@ namespace baldr {
 class TransitRoute {
  public:
   // Constructor with arguments
-  TransitRoute(const uint32_t routeid,const char* tl_routeid,
+  TransitRoute(const uint32_t routeid, const uint32_t one_stop_offset,
+               const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
                const uint32_t route_color, const uint32_t route_text_color,
                const uint32_t short_name_offset, const uint32_t long_name_offset,
                const uint32_t desc_offset);
@@ -26,10 +27,22 @@ class TransitRoute {
   uint32_t routeid() const;
 
   /**
-   * Get the TransitLand one stop Id for this route.
-   * @return  Returns the TransitLand one-stop Id.
+   * Get the TransitLand one stop Id offset for this route.
+   * @return  Returns the TransitLand one-stop Id offset.
    */
-  const char* tl_routeid() const;
+  uint32_t one_stop_offset() const;
+
+  /**
+   * Get the TransitLand operator one stop Id offset for this route.
+   * @return  Returns the TransitLand operator one-stop Id offset.
+   */
+  uint32_t op_by_onestop_id_offset() const;
+
+  /**
+   * Get the TransitLand operator name offset for this route.
+   * @return  Returns the TransitLand operator name offset.
+   */
+  uint32_t op_by_name_offset() const;
 
   /**
    * Get the route color route.
@@ -73,7 +86,13 @@ class TransitRoute {
   uint32_t routeid_;
 
   // TransitLand one stop Id for this route.
-  char tl_routeid_[kOneStopIdSize];
+  uint32_t one_stop_offset_;
+
+  // TransitLand operated by onestop id for this route.
+  uint32_t op_by_onestop_id_offset_;
+
+  // TransitLand operated by name for this route.
+  uint32_t op_by_name_offset_;
 
   // Route color
   uint32_t route_color_;

@@ -5,15 +5,15 @@ namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-TransitStop::TransitStop(const uint32_t stopid, const char* tl_stopid,
+TransitStop::TransitStop(const uint32_t stopid, const uint32_t one_stop_offset,
             const uint32_t name_offset, const uint32_t desc_offset,
             const uint32_t parent_stopid, const uint32_t fare_zoneid)
     : stopid_(stopid),
+      one_stop_offset_(one_stop_offset),
       name_offset_(name_offset),
       desc_offset_(desc_offset),
       parent_stopid_(parent_stopid),
       fare_zoneid_(fare_zoneid) {
-  strncpy(tl_stopid_, tl_stopid, kOneStopIdSize);
 }
 
 // Get the internal stop Id.
@@ -22,8 +22,8 @@ uint32_t TransitStop::stopid() const {
 }
 
 // Get the TransitLand one-stop Id.
-const char* TransitStop::tl_stopid() const {
-  return tl_stopid_;
+uint32_t TransitStop::one_stop_offset() const {
+  return one_stop_offset_;
 }
 
 // Get the text/name offset for the stop name.
