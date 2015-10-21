@@ -8,6 +8,7 @@ import os
 import shutil
 import getopt
 import time
+from datetime import datetime,date
 from collections import defaultdict
 
 
@@ -145,11 +146,7 @@ def check_args(argv):
                else:
                   print('Using default size.')
 
-      transit = valhalla_config['mjolnir']['transit']
-      if 'transit_dir' in transit.keys():
-         output_transit_dir_ = transit['transit_dir']
-      else:
-         print('Using default transit directory.')
+      output_transit_dir_ = valhalla_config['mjolnir']['transit_dir']
 
    print('Level: ' + str(level_))
    print('Size: ' + str(tilesize_))
@@ -165,6 +162,8 @@ if __name__ == "__main__":
 
    directory = output_transit_dir_ + "/" + str(level_)
    shutil.rmtree(directory, ignore_errors=True)
+
+   current_date = datetime.now()
 
    bb_list = []
 
@@ -200,6 +199,9 @@ if __name__ == "__main__":
 #   maxy = 38.2576
 #bb_list.append(Tile(minx,miny,maxx,maxy))
 
+# add your api key here.
+   api_key = '<your key>'
+
 #used to generate unique keys for onestop IDs
    onestop_key = 1
    onestops = dict()
@@ -232,12 +234,15 @@ if __name__ == "__main__":
 
                url = 'http://dev.transit.land/api/v1/stops?per_page=1000&bbox='
                url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
+               url += '&api_key='
+               url += api_key
                while url:
                
                   tl_stops = json_resource_t(url)
                   meta = tl_stops.kv.get('meta', [])
 
                   for tl_s in tl_stops.kv.get('stops', []):
+                     map(tl_s.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','created_at','updated_at','operators_serving_stop','routes_serving_stop'])
                      onestop_id = tl_s['onestop_id']
                      if onestop_id not in onestops:
                         onestops[onestop_id] = onestop_key
@@ -254,6 +259,8 @@ if __name__ == "__main__":
 
                   if 'next' in meta.keys():
                      url = meta['next']
+                     url += '&api_key='
+                     url += api_key
                   else:
                      url = ""
 
@@ -264,6 +271,8 @@ if __name__ == "__main__":
 
                url = 'http://dev.transit.land/api/v1/schedule_stop_pairs?per_page=1000&bbox='
                url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
+               url += '&api_key='
+               url += api_key
 
                while url:
                   print(url) 
@@ -274,40 +283,45 @@ if __name__ == "__main__":
                   dictionary['schedule_stop_pairs_url'].append(url)
 
                   for tl_s_p in tl_stop_pairs.kv.get('schedule_stop_pairs', []):
+                     map(tl_s_p.pop, ['origin_timezone','destination_timezone','pickup_type','drop_off_type', 'shape_dist_traveled','origin_arrival_time','destination_departure_time','window_start','window_end','origin_timepoint_source','destination_timepoint_source','created_at','updated_at'])
 
-                     onestop_id = tl_s_p['origin_onestop_id']
-                     if onestop_id not in onestops:
-                        onestops[onestop_id] = onestop_key
-                        onestop_key = onestop_key + 1
-                     tl_s_p['origin_key'] = onestops[onestop_id]
+                     end_date = datetime.strptime(tl_s_p['service_end_date'],"%Y-%m-%d").date()
+                     
+                     if current_date.date() <= end_date:
+
+                        onestop_id = tl_s_p['origin_onestop_id']
+                        if onestop_id not in onestops:
+                           onestops[onestop_id] = onestop_key
+                           onestop_key = onestop_key + 1
+                        tl_s_p['origin_key'] = onestops[onestop_id]
                 
-                     onestop_id = tl_s_p['destination_onestop_id']
-                     if onestop_id not in onestops:
-                        onestops[onestop_id] = onestop_key
-                        onestop_key = onestop_key + 1
-                     tl_s_p['destination_key'] = onestops[onestop_id] 
+                        onestop_id = tl_s_p['destination_onestop_id']
+                        if onestop_id not in onestops:
+                           onestops[onestop_id] = onestop_key
+                           onestop_key = onestop_key + 1
+                        tl_s_p['destination_key'] = onestops[onestop_id] 
                   
-                     onestop_id = tl_s_p['route_onestop_id']
-                     if onestop_id not in onestops:
-                        onestops[onestop_id] = onestop_key
-                        onestop_key = onestop_key + 1
-                     tl_s_p['route_key'] = onestops[onestop_id]
+                        onestop_id = tl_s_p['route_onestop_id']
+                        if onestop_id not in onestops:
+                           onestops[onestop_id] = onestop_key
+                           onestop_key = onestop_key + 1
+                        tl_s_p['route_key'] = onestops[onestop_id]
                   
-                     block_id = tl_s_p['block_id']
-                     if block_id is not None:
-                        block = block_id + tl_s_p['route_onestop_id']
-                        if block not in blocks:
-                           blocks[block] = block_key
-                           block_key = block_key + 1
-                        tl_s_p['block_key'] = blocks[block]			
+                        block_id = tl_s_p['block_id']
+                        if block_id is not None:
+                           block = block_id + tl_s_p['route_onestop_id']
+                           if block not in blocks:
+                              blocks[block] = block_key
+                              block_key = block_key + 1
+                           tl_s_p['block_key'] = blocks[block]			
 
-                     trip = tl_s_p['trip']
-                     if trip not in trips:
-                        trips[trip] = trip_key
-                        trip_key = trip_key + 1
-                     tl_s_p['trip_key'] = trips[trip]
+                        trip = tl_s_p['trip']
+                        if trip not in trips:
+                           trips[trip] = trip_key
+                           trip_key = trip_key + 1
+                        tl_s_p['trip_key'] = trips[trip]
 
-                     stop_pairs['schedule_stop_pairs'].append(tl_s_p)
+                        stop_pairs['schedule_stop_pairs'].append(tl_s_p)
 
                   #should never happen.  Stops exist, but stop_pairs do not.
                   if not stop_pairs:
@@ -315,6 +329,8 @@ if __name__ == "__main__":
 
                   if 'next' in meta.keys():
                      url = meta['next']
+                     url += '&api_key='
+                     url += api_key
                   else:
                      url = ""
 
@@ -326,8 +342,9 @@ if __name__ == "__main__":
                routes = defaultdict(list)
 
                url = 'http://dev.transit.land/api/v1/routes?per_page=1000&bbox='
-               url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y)
-
+               url += str(min_x) + ',' + str(min_y) + ',' + str(max_x) + ',' + str(max_y) 
+               url += '&api_key='
+               url += api_key
 #hack due to BB issue
 #            if (min_x == -121.75 and min_y == 37.0 and max_x == -121.5 and max_y == 37.25):
 #               url = 'http://dev.transit.land/api/v1/routes?per_page=1000'
@@ -341,6 +358,7 @@ if __name__ == "__main__":
                   routes['route_url'].append(url)
 
                   for tl_r in tl_routes.kv.get('routes', []):
+                     map(tl_r.pop, ['identifiers','imported_from_feed_onestop_ids','created_or_updated_in_changeset_id','geometry','created_at','updated_at'])
 
                      onestop_id = tl_r['onestop_id']
                      if onestop_id not in onestops:
@@ -356,6 +374,8 @@ if __name__ == "__main__":
 
                   if 'next' in meta.keys():
                      url = meta['next']
+                     url += '&api_key='
+                     url += api_key
                   else:
                      url = ""
 
