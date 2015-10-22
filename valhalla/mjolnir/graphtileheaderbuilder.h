@@ -17,10 +17,10 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   GraphTileHeaderBuilder();
 
   /**
-   * Set the internal version
-   * @param  version  Internal version. TODO - describe?
+   * Set the graph Id of this tile.
+   * @param  graphid  GraphId (tileid and level) of this tile.
    */
-  void set_internal_version(const int64_t version);
+  void set_graphid(const baldr::GraphId& graphid);
 
   /**
    * Set the date created.
@@ -57,12 +57,6 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    * @param  exit_quality   Relative exit sign quality for this tile (0-15).
    */
   void set_exit_quality(const uint32_t exit_quality);
-
-  /**
-   * Set the graph Id of this tile.
-   * @param  graphid  GraphId (tileid and level) of this tile.
-   */
-  void set_graphid(const baldr::GraphId& graphid);
 
   /**
    * Sets the number of nodes in this tile.
@@ -107,20 +101,14 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_transfercount(const uint32_t transfers);
 
   /**
-   * Sets the number of restrictions in this tile.
+   * Sets the number of access restrictions in this tile.
    * @param  restrictions   The number of access restrictions.
    */
-  void set_restrictioncount(const uint32_t restrictions);
+  void set_access_restriction_count(const uint32_t restrictions);
 
   /**
-   * Gets the number of transit calendar exceptions in this tile.
-   * @param  calendars  The number of transit calendar exceptions.
-   */
-  void set_calendarcount(const uint32_t calendars);
-
-  /**
-   * Sets the number of admins within this tile.
-   * @param count Number of admins within the tile.
+   * Sets the number of admin records within this tile.
+   * @param count Number of admin records within the tile.
    */
   void set_admincount(const uint32_t count);
 
@@ -137,18 +125,11 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
   void set_textlist_offset(const uint32_t offset);
 
   /**
-   * Sets the offset to the list of Multi-Edge Restrictions.
-   * @param offset Offset in bytes to the start of the Multi-Edge Restriction
+   * Sets the offset to the list of complex restrictions.
+   * @param offset Offset in bytes to the start of the complex restriction
    *               list.
    */
-  void set_merlist_offset(const uint32_t offset);
-
-  /**
-   * Sets the offset to the list of timed restrictions.
-   * @param offset Offset in bytes to the start of the Multi-Edge Restriction
-   *               list.
-   */
-  void set_timedres_offset(const uint32_t offset);
+  void set_complex_restriction_offset(const uint32_t offset);
 };
 
 }
