@@ -88,12 +88,7 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     header_ = reinterpret_cast<GraphTileHeader*>(ptr);
     ptr += sizeof(GraphTileHeader);
 
-    // Check internal version
-    const GraphTileHeader gh;
-    if (header_->internal_version() != gh.internal_version()) {
-      LOG_ERROR("Version of tile is out of date or not supported!");
-      return;
-    }
+    // TODO check version
 
     // Set a pointer to the node list
     nodes_ = reinterpret_cast<NodeInfo*>(ptr);
@@ -121,7 +116,7 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
 
     // Set a pointer access restriction list
     access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
-    ptr += header_->restrictioncount() * sizeof(AccessRestriction);
+    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
 
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
@@ -686,11 +681,11 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
   }
 }
 
-// Get the transit route given its route Id.
+// Get the access restriction given its directed edge Id
 std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t edgeid) const {
 
   std::vector<AccessRestriction> restrictions;
-  uint32_t count = header_->restrictioncount();
+  uint32_t count = header_->access_restriction_count();
    if (count == 0) {
      return restrictions;
    }

@@ -29,10 +29,10 @@ class GraphTileHeader {
   GraphTileHeader();
 
   /**
-   * Gets the internal version
-   * @return  Returns the internal version of this tile.
+   * Get the GraphId (tileid and level) of this tile.
+   * @return  Returns the graph Id.
    */
-  int64_t internal_version() const;
+  const baldr::GraphId& graphid() const;
 
   /**
    * Gets the date when this tile was created. Returns a Unix timestamp
@@ -72,12 +72,6 @@ class GraphTileHeader {
   uint32_t exit_quality() const;
 
   /**
-   * Get the GraphId (tileid and level) of this tile.
-   * @return  Returns the graph Id.
-   */
-  const baldr::GraphId& graphid() const;
-
-  /**
    * Gets the number of nodes in this tile.
    * @return  Returns the number of nodes.
    */
@@ -102,12 +96,6 @@ class GraphTileHeader {
   uint32_t departurecount() const;
 
   /**
-   * Gets the number of transit trips in this tile.
-   * @return  Returns the number of transit trips.
-   */
-   uint32_t tripcount() const;
-
-  /**
    * Gets the number of transit stops in this tile.
    * @return  Returns the number of transit stops.
    */
@@ -126,20 +114,14 @@ class GraphTileHeader {
   uint32_t transfercount() const;
 
   /**
-   * Gets the number of transit calendar exceptions in this tile.
-   * @return  Returns the number of transit calendar exceptions.
-   */
-  uint32_t calendarcount() const;
-
-  /**
-   * Gets the number of restrictions in this tile.
+   * Gets the number of access restrictions in this tile.
    * @return  Returns the number of restrictions.
    */
-  uint32_t restrictioncount() const;
+  uint32_t access_restriction_count() const;
 
   /**
-   * Gets the number of admins in this tile.
-   * @return  Returns the number of admins.
+   * Gets the number of admin records in this tile.
+   * @return  Returns the number of admin records.
    */
   uint32_t admincount() const;
 
@@ -163,18 +145,11 @@ class GraphTileHeader {
   uint32_t admininfo_offset() const;
 
   /**
-   * Get the offset to the Multi-Edge Restriction list. (TODO)
+   * Get the offset to the Complex Restriction list.
    * @return  Returns the number of bytes to offset to the the list of
-   *          Multi-Edge Restrictions.
+   *          complex restrictions.
    */
-  uint32_t merlist_offset() const;
-
-  /**
-   * Get the offset to the timed restriction list. (TODO)
-   * @return  Returns the number of bytes to offset to the the list of
-   *          timed restrictions.
-   */
-  uint32_t timedres_offset() const;
+  uint32_t complex_restriction_offset() const;
 
   /**
    * Get the offset to the given cell in the 5x5 grid, the cells contain
@@ -186,9 +161,8 @@ class GraphTileHeader {
   std::pair<uint32_t, uint32_t> cell_offset(size_t column, size_t row) const;
 
  protected:
-
-  // Internal version info
-  int64_t internal_version_;
+  // GraphId (tileid and level) of this tile
+  GraphId graphid_;
 
   // Date the tile was created. Unix timestamp (seconds since 1/1/1970)
   uint64_t date_created_;
@@ -197,63 +171,31 @@ class GraphTileHeader {
   char version_[kMaxVersionSize];
 
   // Quality metrics. These are 4 bit (0-15) relative quality indicators.
-  struct TileQuality {
-    uint64_t density        : 4;
-    uint64_t name           : 4;
-    uint64_t speed          : 4;
-    uint64_t exit           : 4;
-    uint64_t spare          : 48;
-  };
-  TileQuality quality_;
-
-  // GraphId (tileid and level) of this tile
-  GraphId graphid_;
-
-  // Number of nodes
-  uint32_t nodecount_;
-
-  // Number of directed edges
-  uint32_t directededgecount_;
-
-  // Number of signs
-  uint32_t signcount_;
+  uint64_t density_       : 4;
+  uint64_t name_quality_  : 4;
+  uint64_t speed_quality_ : 4;
+  uint64_t exit_quality_  : 4;
+  uint64_t spare1_        : 48;
 
   // Number of transit departure records
-  struct Transit1 {
-    uint64_t departurecount : 24;
-    uint64_t spare          : 24;
-    uint64_t stopcount      : 16;
-  };
-  Transit1 transit1_;
+  uint64_t departurecount_ : 24;
+  uint64_t stopcount_      : 16;
+  uint64_t routecount_     : 12;
+  uint64_t transfercount_  : 12;
 
-  // Transit information for this tile.
-  struct Transit2 {
-    uint64_t routecount     : 16;
-    uint64_t transfercount  : 16;
-    uint64_t calendarcount  : 16;
-    uint64_t spare          : 16;
-  };
-  Transit2 transit2_;
+  // Record counts (for fixed size records)
+  uint32_t nodecount_;                  // Number of nodes
+  uint32_t directededgecount_;          // Number of directed edges
+  uint32_t signcount_;                  // Number of signs
+  uint32_t access_restriction_count_;   // Number of access restriction records
+  uint32_t admincount_;                 // Number of admin records
 
-  // Number of restriction records
-  uint32_t restrictioncount_;
+  // Offsets to beginning of data (for variable size records)
+  uint32_t edgeinfo_offset_;            // Offset to edge info
+  uint32_t textlist_offset_;            // Offset to text list
+  uint32_t complex_restriction_offset_; // Offset to complex restriction list
 
-  // Number of admin records
-  uint32_t admincount_;
-
-  // Offset to edge info
-  uint32_t edgeinfo_offset_;
-
-  // Offset to text list
-  uint32_t textlist_offset_;
-
-  // Offset to the multi-edge restriction list
-  uint32_t merlist_offset_;
-
-  // Offset to the timed restriction list
-  uint32_t timedres_offset_;
-
-  // Offsets for each cell of the 5x5 grid
+  // Offsets for each cell of the 5x5 grid (for search/lookup)
   uint32_t cell_offsets_[kCellCount + 1];
 };
 

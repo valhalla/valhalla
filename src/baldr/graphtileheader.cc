@@ -14,29 +14,15 @@ namespace baldr {
 // read within GraphTile. Set the version and internal version here so a
 // "default" GraphTileHeader can be used to compare to what is read from
 // a tile.
-GraphTileHeader::GraphTileHeader()
-    : date_created_{},
-      graphid_{},
-      quality_{},
-      nodecount_(0),
-      directededgecount_(0),
-      signcount_(0),
-      transit1_{},
-      transit2_{},
-      restrictioncount_(0),
-      admincount_(0),
-      edgeinfo_offset_(0),
-      textlist_offset_(0),
-      merlist_offset_(0),
-      timedres_offset_(0) {
-  internal_version_ = GraphId::internal_version();
+GraphTileHeader::GraphTileHeader() {
+  memset(this, 0, sizeof(GraphTileHeader));
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize-1] = 0;
 }
 
-// Get the internal version
-int64_t GraphTileHeader::internal_version() const {
-  return internal_version_;
+// Get the GraphId (tileid and level) of this tile.
+const GraphId& GraphTileHeader::graphid() const {
+  return graphid_;
 }
 
 // Get the date created
@@ -51,27 +37,22 @@ std::string GraphTileHeader::version() const {
 
 // Get the relative road density within this tile.
 uint32_t GraphTileHeader::density() const {
-  return static_cast<uint32_t>(quality_.density);
+  return static_cast<uint32_t>(density_);
 }
 
 // Get the relative quality of name assignment for this tile.
 uint32_t GraphTileHeader::name_quality() const {
-  return static_cast<uint32_t>(quality_.name);
+  return static_cast<uint32_t>(name_quality_);
 }
 
 // Get the relative quality of speed assignment for this tile.
 uint32_t GraphTileHeader::speed_quality() const {
-  return static_cast<uint32_t>(quality_.speed);
+  return static_cast<uint32_t>(speed_quality_);
 }
 
 // Get the relative quality of exit signs for this tile.
 uint32_t GraphTileHeader::exit_quality() const {
-  return static_cast<uint32_t>(quality_.exit);
-}
-
-// Get the GraphId (tileid and level) of this tile.
-const GraphId& GraphTileHeader::graphid() const {
-  return graphid_;
+  return static_cast<uint32_t>(exit_quality_);
 }
 
 // Get the count of nodes in the tile.
@@ -91,32 +72,27 @@ uint32_t GraphTileHeader::signcount() const {
 
 // Gets the number of transit departures in this tile.
 uint32_t GraphTileHeader::departurecount() const {
-  return transit1_.departurecount;
+  return departurecount_;
 }
 
 // Gets the number of transit stops in this tile.
 uint32_t GraphTileHeader::stopcount() const {
-  return transit1_.stopcount;
+  return stopcount_;
 }
 
 // Gets the number of transit routes in this tile.
 uint32_t GraphTileHeader::routecount() const {
-  return transit2_.routecount;
+  return routecount_;
 }
 
 // Gets the number of transit transfers in this tile.
 uint32_t GraphTileHeader::transfercount() const {
-  return transit2_.transfercount;
+  return transfercount_;
 }
 
-// Gets the number of transit calendar exceptions in this tile.
-uint32_t GraphTileHeader::calendarcount() const {
-  return transit2_.calendarcount;
-}
-
-// Gets the number of restrictions in this tile.
-uint32_t GraphTileHeader::restrictioncount() const {
-  return restrictioncount_;
+// Gets the number of access restrictions in this tile.
+uint32_t GraphTileHeader::access_restriction_count() const {
+  return access_restriction_count_;
 }
 
 // Gets the number of admins in the tile.
@@ -134,14 +110,9 @@ uint32_t GraphTileHeader::textlist_offset() const {
   return textlist_offset_;
 }
 
-// Get the offset in bytes to the Multi-Edge Restriction list. (TODO)
-uint32_t GraphTileHeader::merlist_offset() const {
-  return merlist_offset_;
-}
-
-// Get the offset to the timed restriction list. (TODO)
-uint32_t GraphTileHeader::timedres_offset() const {
-  return timedres_offset_;
+// Get the offset in bytes to the complex restriction list.
+uint32_t GraphTileHeader::complex_restriction_offset() const {
+  return complex_restriction_offset_;
 }
 
 // Get the offset to the given cell in the 5x5 grid.
