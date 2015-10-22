@@ -421,8 +421,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     // Add transit information if this is a transit stop
     if (graphtile->node(startnode)->is_transit()) {
-      trip_node->set_transit_stop(true);
-      trip_node->set_transit_parent_stop(graphtile->node(startnode)->parent());
 
       // Get the transit stop information and add transit stop info
       const TransitStop* stop = graphtile->GetTransitStop(
@@ -469,6 +467,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         arrival_time = "";
         block_id = 0;
       }
+
+      transit_stop_info->set_is_parent_stop(graphtile->node(startnode)->parent());
     }
 
     // Assign the admin index
