@@ -547,8 +547,8 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return (relative_density < 16) ? relative_density : 15;
 }
 
-// Get admininstrative index
-uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
+// Get polygon index.  Used by tz and admin areas
+uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
@@ -558,21 +558,19 @@ uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys
   return index;
 }
 
-bool TileHasOneTimeZone(sqlite3 *db_handle, const AABB2<PointLL>& aabb,
-                        const std::vector<std::string>& regions, uint32_t& idx) {
-
-  idx = 0;
-
+std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
+                                                             const AABB2<PointLL>& aabb,
+                                                             const std::vector<std::string>& regions) {
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
   if (!db_handle)
-    return false;
+    return polys;
 
   sqlite3_stmt *stmt = 0;
   uint32_t ret;
   char *err_msg = nullptr;
   uint32_t result = 0;
-  std::string tz_id = "";
 
-  std::string sql = "select TZID from tz_world where ";
+  std::string sql = "select TZID, st_astext(geom) from tz_world where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) ";
@@ -581,103 +579,40 @@ bool TileHasOneTimeZone(sqlite3 *db_handle, const AABB2<PointLL>& aabb,
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
 
-  uint32_t count = 0;
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK) {
     result = sqlite3_step(stmt);
 
-    if (result != SQLITE_ROW)
-      return false;
-
     while (result == SQLITE_ROW) {
-
-      if (count == 1) { //bail
-
-        if (stmt) {
-          sqlite3_finalize(stmt);
-          stmt = 0;
-        }
-        idx = 0;
-        return false;
-      }
+      std::string tz_id;
+      std::string geom;
 
       if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
         tz_id = (char*)sqlite3_column_text(stmt, 0);
-      else if (stmt) {
-        sqlite3_finalize(stmt);
-        stmt = 0;
-        return false;
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 1);
+
+      std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
+      if (it == regions.end()) {
+        polys.clear();
+        break;
       }
-      count++;
+
+      uint32_t idx = std::distance(regions.begin(),it);
+
+      multi_polygon_type multi_poly;
+      boost::geometry::read_wkt(geom, multi_poly);
+      polys.emplace(idx, multi_poly);
+
       result = sqlite3_step(stmt);
     }
-  } else return false;
+  }
   if (stmt) {
     sqlite3_finalize(stmt);
     stmt = 0;
   }
-
-  if (tz_id.empty())
-    return false;
-
-  std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
-  if (it == regions.end())
-     return false;
-  idx = std::distance(regions.begin(),it);
-  return true;
-}
-
-uint32_t GetTimeZoneIdx(sqlite3 *db_handle, const PointLL& pt, const std::vector<std::string>& regions) {
-
-  if (!db_handle)
-    return 0;
-
-  sqlite3_stmt *stmt = 0;
-  uint32_t ret;
-  char *err_msg = nullptr;
-  uint32_t result = 0;
-  std::string tz_id = "";
-
-  std::string sql = "select TZID from tz_world where ST_Contains(geom, MakePoint(";
-  sql += std::to_string(pt.x()) + ", " + std::to_string(pt.y());
-  sql += ")) and tz_world.ROWID IN (SELECT rowid FROM idx_tz_world_geom WHERE xmin <= ";
-  sql += std::to_string(pt.x()) + " AND xmax >= " + std::to_string(pt.x());
-  sql += " AND ymin <= " + std::to_string(pt.y()) + " AND ymax >= ";
-  sql += std::to_string(pt.y()) + ") limit 1;";
-
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
-
-  if (ret == SQLITE_OK) {
-    result = sqlite3_step(stmt);
-
-    if (result != SQLITE_ROW)
-      return 0;
-
-    while (result == SQLITE_ROW) {
-      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
-        tz_id = (char*)sqlite3_column_text(stmt, 0);
-      else if (stmt) {
-        sqlite3_finalize(stmt);
-        stmt = 0;
-        return 0;
-      }
-      result = sqlite3_step(stmt);
-    }
-  } else return 0;
-  if (stmt) {
-    sqlite3_finalize(stmt);
-    stmt = 0;
-  }
-
-  if (tz_id.empty())
-    return 0;
-
-  std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
-  if (it == regions.end())
-     return 0;
-  uint32_t idx = std::distance(regions.begin(),it);
-  return idx;
+  return polys;
 }
 
 std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
@@ -1127,8 +1062,6 @@ void enhance(const boost::property_tree::ptree& pt,
   auto tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   lock.unlock();
 
-  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
-
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
 
@@ -1143,7 +1076,10 @@ void enhance(const boost::property_tree::ptree& pt,
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
 
-    std::unordered_map<uint32_t,multi_polygon_type> polys;
+    // index 0 = none.
+    const std::vector<std::string> regions = DateTime::get_tz_db().regions;
+    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
     std::unordered_map<uint32_t,bool> drive_on_right;
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
@@ -1172,18 +1108,20 @@ void enhance(const boost::property_tree::ptree& pt,
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
     if (admin_db_handle) {
-      polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
+      admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
                            tilebuilder);
-      if (polys.size() == 1) {
+      if (admin_polys.size() == 1) {
         // TODO - check if tile bounding box is entirely inside the polygon...
         tile_within_one_admin = true;
       }
     }
 
     bool tile_within_one_tz = false;
-    uint32_t time_zone_idx = 0;
     if (tz_db_handle) {
-      tile_within_one_tz = TileHasOneTimeZone(tz_db_handle, tiles.TileBounds(id), regions, time_zone_idx);
+      tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id), regions);
+      if (tz_polys.size() == 1) {
+        tile_within_one_tz = true;
+      }
     }
 
     // First pass - update links (set use to ramp or turn channel) and
@@ -1240,17 +1178,15 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // Set admin index
       uint32_t admin_index = (tile_within_one_admin) ?
-                    polys.begin()->first :
-                    GetAdminId(polys, nodeinfo.latlng());
+                    admin_polys.begin()->first :
+                    GetMultiPolyId(admin_polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
 
       // Set the time zone index
-      if (tile_within_one_tz)
-        nodeinfo.set_timezone(time_zone_idx);
-      else {
-        uint32_t tz_index = GetTimeZoneIdx(tz_db_handle, nodeinfo.latlng(), regions);
-        nodeinfo.set_timezone(tz_index);
-      }
+      uint32_t tz_index = (tile_within_one_tz) ?
+                    tz_polys.begin()->first :
+                    GetMultiPolyId(tz_polys, nodeinfo.latlng());
+      nodeinfo.set_timezone(tz_index);
 
       // Set the country code
       std::string country_code = "";
