@@ -36,6 +36,13 @@ message TripDirections {
     optional float length = 1;          // kilometers or miles based on units
     optional uint32 time = 2;           // seconds
   }
+
+  message TransitStop {
+    enum Type {
+      kStop = 0;
+      kStation = 1;
+    }
+  }
   
   message Maneuver {
     enum CardinalDirection {

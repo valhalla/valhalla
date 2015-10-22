@@ -216,8 +216,11 @@ class Maneuver {
 
   size_t GetTransitStopCount() const;
 
-  void InsertTransitStop(std::string name, std::string arrival_date_time,
-                         std::string departure_date_time);
+  void InsertTransitStop(TripPath_TransitStopInfo_Type type, uint32_t id,
+                         std::string onestop_id, std::string name,
+                         std::string arrival_date_time,
+                         std::string departure_date_time, uint32_t parent_id,
+                         std::string parent_onestop_id, bool is_parent_stop);
 
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(

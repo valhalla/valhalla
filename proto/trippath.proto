@@ -168,15 +168,21 @@ message TripPath {
     optional Traversability walkability = 6;
   }
 
-   enum TransitStopType {
-    kStop = 0;
-    kStation = 1;
-  }
-
   message TransitStopInfo {
-    optional string name = 1;                // The name of the stop
-    optional string arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
-    optional string departure_date_time = 3; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    enum Type {
+      kStop = 0;
+      kStation = 1;
+    }
+
+    optional Type type = 1;
+    optional uint32 id = 2;
+    optional string onestop_id = 3;
+    optional string name = 4;                // The name of the stop
+    optional string arrival_date_time = 5;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional string departure_date_time = 6; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    optional uint32 parent_id = 7;
+    optional string parent_onestop_id = 8;
+    optional bool is_parent_stop = 9;
   }
 
   message Node {
@@ -188,13 +194,11 @@ message TripPath {
     optional bool gate = 6;                  // Gate or rising bollard
     optional bool bollard = 7;               // Bollard (fixed obstruction)
     optional bool toll_booth = 8;            // toll booth / fare collection
-    optional bool transit_stop = 9;          // Multi-use transit stop (rail and bus)
-    optional bool transit_parent_stop = 10;  // Multi-use transit parent stop
-    optional bool bike_share = 11;           // Bike share location
-    optional bool parking = 12;              // Parking location
+    optional bool bike_share = 9;            // Bike share location
+    optional bool parking = 10;              // Parking location
+    optional bool motorway_junction = 11;    // Motorway junction
+    optional bool fork = 12;                 // Fork
     optional TransitStopInfo transit_stop_info = 13;
-    optional bool motorway_junction = 14;    // Motorway junction
-    optional bool fork = 15;                 // Fork
   }
 
   message Admin {

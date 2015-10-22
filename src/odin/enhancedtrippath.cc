@@ -851,34 +851,45 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | toll_booth=";
   str += std::to_string(toll_booth());
 
-  str += " | transit_stop=";
-  str += std::to_string(transit_stop());
-
-  str += " | transit_parent_stop=";
-  str += std::to_string(transit_parent_stop());
-
   str += " | bike_share=";
   str += std::to_string(bike_share());
 
   str += " | parking=";
   str += std::to_string(parking());
 
-  if (this->has_transit_stop_info()) {
-    str += " | transit_stop_info.name=";
-    str += this->transit_stop_info().name();
-
-    str += " | transit_stop_info.arrival_date_time=";
-    str += this->transit_stop_info().arrival_date_time();
-
-    str += " | transit_stop_info.departure_date_time=";
-    str += this->transit_stop_info().departure_date_time();
-  }
-
   str += " | motorway_junction=";
   str += std::to_string(motorway_junction());
 
   str += " | fork=";
   str += std::to_string(fork());
+
+  if (has_transit_stop_info()) {
+    str += " | transit_stop_info.type=";
+    str += std::to_string(transit_stop_info().type());
+
+    str += " | transit_stop_info.id=";
+    str += std::to_string(transit_stop_info().id());
+
+    str += " | transit_stop_info.onestop_id=";
+    str += transit_stop_info().onestop_id();
+
+    str += " | transit_stop_info.name=";
+    str += transit_stop_info().name();
+
+    str += " | transit_stop_info.arrival_date_time=";
+    str += transit_stop_info().arrival_date_time();
+
+    str += " | transit_stop_info.departure_date_time=";
+    str += transit_stop_info().departure_date_time();
+    str += " | transit_stop_info.parent_id=";
+    str += std::to_string(transit_stop_info().parent_id());
+
+    str += " | transit_stop_info.parent_onestop_id=";
+    str += transit_stop_info().parent_onestop_id();
+
+    str += " | transit_stop_info.is_parent_stop=";
+    str += std::to_string(transit_stop_info().is_parent_stop());
+  }
 
   return str;
 }
