@@ -176,7 +176,7 @@ namespace {
         if (matrix) {
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
-            return get_matrix(matrix_iter->second, request, info);
+            return get_matrix(matrix_iter->second, costing, request, info);
           }
           else { //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
@@ -344,8 +344,7 @@ namespace {
       }
     }
 
-    //TODO: Do we need to pass costing for multimodal?
-    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
       auto units = request.get<std::string>("units", "km");
