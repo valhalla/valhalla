@@ -34,6 +34,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
+
 namespace {
   enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
   const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
@@ -42,6 +43,8 @@ namespace {
     {"many_to_many", MANY_TO_MANY}
   };
   std::size_t tdindex = 0;
+  constexpr double kKmPerMeter = 0.001;
+  constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -59,44 +62,18 @@ namespace {
     return input_locs;
   }
 
-  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds,
+      const size_t origin, const size_t destination, const size_t start, const size_t end, double distance_scale) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
         row->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[i].dist)},
+          {"from_index", static_cast<uint64_t>(origin)},
+          {"to_index", static_cast<uint64_t>(destination + (i - start))},
           {"time", static_cast<uint64_t>(tds[i].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
+          {"distance", json::fp_t{tds[i].dist * distance_scale, 3}},
         }));
     }
     return row;
-  }
-
-  json::ArrayPtr serialize_column(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
-    auto column = json::array({});
-    for(size_t i = start; i < end; i++) {
-      column->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[origin].dist)},
-          {"time", static_cast<uint64_t>(tds[origin].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
-        }));
-    }
-    return column;
-  }
-
-  json::ArrayPtr serialize_square(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
-    auto square = json::array({});
-    for(size_t i = start; i < end; i++) {
-      square->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[tdindex].dist)},
-          {"time", static_cast<uint64_t>(tds[tdindex].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
-        }));
-        tdindex++;
-    }
-    return square;
   }
 
   //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
@@ -107,10 +84,11 @@ namespace {
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
   //   ]
   // }
-  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     return json::map({
-      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size())})},
-      {"input_locations", json::array({locations(correlated)})}
+      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
     });
   }
 
@@ -125,14 +103,14 @@ namespace {
   //     [{origin3,dest0,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr column_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i){
-      column_matrix->emplace_back(serialize_column(correlated, tds, i, correlated.size()-1, correlated.size()));
-    }
+    for(size_t i = 0; i < correlated.size(); ++i)
+      column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1, distance_scale));
     return json::map({
       {"many_to_one", column_matrix},
-      {"input_locations", json::array({locations(correlated)})}
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
     });
   }
 
@@ -147,21 +125,22 @@ namespace {
   //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     json::ArrayPtr square_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i){
-      square_matrix->emplace_back(serialize_square(correlated, tds, i, 0, correlated.size()));
-    }
+    for(size_t i = 0; i < correlated.size(); ++i)
+      square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1), distance_scale));
     return json::map({
       {"many_to_many", square_matrix},
-      {"input_locations", json::array({locations(correlated)})}
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
     });
   }
 
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
-    thor_worker_t(const boost::property_tree::ptree& config): config(config), reader(config.get_child("mjolnir.hierarchy")) {
+    thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
+      config(config), reader(config.get_child("mjolnir.hierarchy")) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -365,20 +344,29 @@ namespace {
       }
     }
 
-    //TODO: Do we need to pass costing for multimodal?
     worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      // Parse out units; if none specified, use kilometers
+      double distance_scale = kKmPerMeter;
+      auto units = request.get<std::string>("units", "km");
+      if (units == "mi")
+        distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
+
+      //do the real work
       json::MapPtr json;
       thor::TimeDistanceMatrix tdmatrix;
-
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode));
+         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size()-1, correlated, reader, mode_costing, mode));
+         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode));
+         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
          break;
       }
 
