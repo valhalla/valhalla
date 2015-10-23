@@ -87,7 +87,7 @@ namespace {
   json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
     return json::map({
       {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
-      {"input_locations", json::array({locations(correlated)})},
+      {"locations", json::array({locations(correlated)})},
       {"units", units},
     });
   }
