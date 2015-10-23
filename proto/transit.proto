@@ -9,36 +9,25 @@ message Transit {
   
   message Stop {
     optional LatLng ll = 1;
-	optional uint32 key = 2;
-	optional string name = 3;
-	optional string onestop_id = 4;
+    optional uint64 graphid = 2;
+    optional string name = 3;
+    optional string onestop_id = 4;
     optional uint64 osm_way_id = 5;
     optional uint32 stop_desc = 6;
-	optional string timezone = 7;
-	optional bool wheelchair_boarding = 8;
-	optional string zone_id = 9;
+    optional string timezone = 7;
+    optional bool wheelchair_boarding = 8;
+    optional string zone_id = 9;
   }
 
-  enum VehicleType {
-    kTram = 0;
-    kSubway = 1;
-    kRail = 2;
-    kBus = 3;
-    kFerry = 4;
-    kCableCar = 5;
-    kGondola = 6;
-    kFenicular = 7;
-  }
-  
   message StopPair {
-  	optional bool bikes_allowed = 1; 
+    optional bool bikes_allowed = 1; 
     optional string block_id = 2; 
     optional string destination_arrival_time = 3;
-    optional uint32 destination_key = 4;
+    optional uint64 destination_graphid = 4;
     optional string destination_onestop_id = 5; 
     optional string operator_onestop_id = 6;
     optional string origin_departure_time = 7;
-    optional uint32 origin_key = 8;
+    optional uint64 origin_graphid = 8;
     optional string origin_onestop_id = 9;
     optional uint32 route_key = 10;
     optional string route_onestop_id = 11;
@@ -53,7 +42,18 @@ message Transit {
     optional string trip_short_name = 20;
     optional bool wheelchair_accessible = 21;
   }
-  
+ 
+  enum VehicleType {
+    kTram = 0;
+    kSubway = 1;
+    kRail = 2;
+    kBus = 3;
+    kFerry = 4;
+    kCableCar = 5;
+    kGondola = 6;
+    kFenicular = 7;
+  }
+ 
   message Route {
     optional uint32 key = 1;
     optional string name = 2;
