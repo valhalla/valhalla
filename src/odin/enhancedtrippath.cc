@@ -312,9 +312,6 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
   // Process transit route info, if needed
   if (has_transit_route_info()) {
-    str += " | transit_route_info.id=";
-    str += std::to_string(transit_route_info().id());
-
     str += " | transit_route_info.onestop_id=";
     str += transit_route_info().onestop_id();
 
@@ -338,9 +335,6 @@ std::string EnhancedTripPath_Edge::ToString() const {
 
     str += " | transit_route_info.text_color=";
     str += std::to_string(transit_route_info().text_color());
-
-    str += " | transit_route_info.operator_id=";
-    str += std::to_string(transit_route_info().operator_id());
 
     str += " | transit_route_info.operator_onestop_id=";
     str += transit_route_info().operator_onestop_id();
@@ -518,9 +512,6 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(other());
 
   str += delim;
-  str += std::to_string(transit_route_info().id());
-
-  str += delim;
   if (transit_route_info().has_onestop_id()) {
     str += "\"";
     str += transit_route_info().onestop_id();
@@ -559,9 +550,6 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
 
   str += delim;
   str += std::to_string(transit_route_info().text_color());
-
-  str += delim;
-  str += std::to_string(transit_route_info().operator_id());
 
   str += delim;
   if (transit_route_info().has_operator_onestop_id()) {
@@ -867,9 +855,6 @@ std::string EnhancedTripPath_Node::ToString() const {
     str += " | transit_stop_info.type=";
     str += std::to_string(transit_stop_info().type());
 
-    str += " | transit_stop_info.id=";
-    str += std::to_string(transit_stop_info().id());
-
     str += " | transit_stop_info.onestop_id=";
     str += transit_stop_info().onestop_id();
 
@@ -881,8 +866,6 @@ std::string EnhancedTripPath_Node::ToString() const {
 
     str += " | transit_stop_info.departure_date_time=";
     str += transit_stop_info().departure_date_time();
-    str += " | transit_stop_info.parent_id=";
-    str += std::to_string(transit_stop_info().parent_id());
 
     str += " | transit_stop_info.parent_onestop_id=";
     str += transit_stop_info().parent_onestop_id();

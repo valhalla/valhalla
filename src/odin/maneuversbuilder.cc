@@ -670,12 +670,10 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
       auto* node = trip_path_->GetEnhancedNode(node_index);
       maneuver.set_transit_connection_stop(
           TransitStop(node->transit_stop_info().type(),
-                      node->transit_stop_info().id(),
                       node->transit_stop_info().onestop_id(),
                       node->transit_stop_info().name(),
                       node->transit_stop_info().arrival_date_time(),
                       node->transit_stop_info().departure_date_time(),
-                      node->transit_stop_info().parent_id(),
                       node->transit_stop_info().parent_onestop_id(),
                       node->transit_stop_info().is_parent_stop()));
     }
@@ -772,12 +770,10 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_stop_info().type(),
-                               node->transit_stop_info().id(),
                                node->transit_stop_info().onestop_id(),
                                node->transit_stop_info().name(),
                                node->transit_stop_info().arrival_date_time(),
                                node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().parent_id(),
                                node->transit_stop_info().parent_onestop_id(),
                                node->transit_stop_info().is_parent_stop());
   }
@@ -852,12 +848,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
     maneuver.set_transit_connection_stop(
         TransitStop(node->transit_stop_info().type(),
-                    node->transit_stop_info().id(),
                     node->transit_stop_info().onestop_id(),
                     node->transit_stop_info().name(),
                     node->transit_stop_info().arrival_date_time(),
                     node->transit_stop_info().departure_date_time(),
-                    node->transit_stop_info().parent_id(),
                     node->transit_stop_info().parent_onestop_id(),
                     node->transit_stop_info().is_parent_stop()));
   }
@@ -866,12 +860,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   if (maneuver.travel_mode() == TripPath_TravelMode_kPublicTransit) {
     auto* node = trip_path_->GetEnhancedNode(node_index);
     maneuver.InsertTransitStop(node->transit_stop_info().type(),
-                               node->transit_stop_info().id(),
                                node->transit_stop_info().onestop_id(),
                                node->transit_stop_info().name(),
                                node->transit_stop_info().arrival_date_time(),
                                node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().parent_id(),
                                node->transit_stop_info().parent_onestop_id(),
                                node->transit_stop_info().is_parent_stop());
   }

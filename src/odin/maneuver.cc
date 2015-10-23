@@ -63,7 +63,7 @@ Maneuver::Maneuver()
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive),
       transit_connection_(false),
-      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, 0, "", "", "", "", 0, "", false),
+      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", "", false),
       rail_(false),
       bus_(false),
       fork_(false),
@@ -599,17 +599,15 @@ size_t Maneuver::GetTransitStopCount() const {
 }
 
 void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
-                                 uint32_t id, std::string onestop_id,
-                                 std::string name,
+                                 std::string onestop_id, std::string name,
                                  std::string arrival_date_time,
                                  std::string departure_date_time,
-                                 uint32_t parent_id,
                                  std::string parent_onestop_id,
                                  bool is_parent_stop) {
-  transit_route_info_.transit_stops.emplace_front(type, id, onestop_id, name,
+  transit_route_info_.transit_stops.emplace_front(type, onestop_id, name,
                                                   arrival_date_time,
                                                   departure_date_time,
-                                                  parent_id, parent_onestop_id,
+                                                  parent_onestop_id,
                                                   is_parent_stop);
 }
 
