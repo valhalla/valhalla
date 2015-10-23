@@ -36,7 +36,7 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto generation etc
-PROTO_FILES = proto/osmformat.proto proto/fileformat.proto
+PROTO_FILES = proto/osmformat.proto proto/fileformat.proto proto/transit.proto
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
@@ -46,6 +46,7 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
+        valhalla/proto/transit.pb.h \
 	valhalla/mjolnir/admininfobuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
@@ -77,6 +78,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
+        src/proto/transit.pb.cc \
 	src/mjolnir/admininfobuilder.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \

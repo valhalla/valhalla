@@ -39,7 +39,6 @@ struct Stop {
   uint32_t timezone;
   PointLL  ll;
   std::string onestop_id;
-  std::string id;
   std::string name;
   std::string desc;
   std::string zoneid;
