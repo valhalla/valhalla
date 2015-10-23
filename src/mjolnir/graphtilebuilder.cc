@@ -80,8 +80,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->transfercount(); i++) {
     transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
   }
-
-  for (uint32_t i = 0; i < header_->restrictioncount(); i++) {
+  for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
     access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
   }
 
@@ -167,7 +166,8 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_transfercount(transfer_builder_.size());
-    header_builder_.set_restrictioncount(access_restriction_builder_.size());
+    header_builder_.set_access_restriction_count(
+                access_restriction_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
@@ -296,7 +296,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
 
     // Write the existing access restrictions
     file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
-               hdr.restrictioncount() * sizeof(AccessRestriction));
+               hdr.access_restriction_count() * sizeof(AccessRestriction));
 
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
@@ -635,9 +635,7 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
 
 // Gets a non-const access restriction from existing tile data.
 AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
-  if (idx < header_->restrictioncount()) {
-
-
+  if (idx < header_->access_restriction_count()) {
     return access_restriction_builder_[idx];
   }
   throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");

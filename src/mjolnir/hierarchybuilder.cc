@@ -661,7 +661,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed
-  hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());
+  hdrbuilder.set_complex_restriction_offset(existinghdr.complex_restriction_offset());
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
@@ -767,10 +767,10 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
               std::to_string(signs.size()) + " Header says: " +
               std::to_string(hdrbuilder.signcount()));
   }
-  if (restrictions.size() != hdrbuilder.restrictioncount()) {
+  if (restrictions.size() != hdrbuilder.access_restriction_count()) {
       LOG_ERROR("AddConnectionsToBaseTile: restriction size = " +
                 std::to_string(restrictions.size()) + " Header says: " +
-                std::to_string(hdrbuilder.restrictioncount()));
+                std::to_string(hdrbuilder.access_restriction_count()));
   }
 
   // Write the new file
