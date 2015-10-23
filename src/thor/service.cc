@@ -349,10 +349,12 @@ namespace {
       // Parse out units; if none specified, use kilometers
       double distance_scale = kKmPerMeter;
       auto units = request.get<std::string>("units", "km");
-      if (units == "km")
-        distance_scale = kKmPerMeter;
-      else if (units == "mi")
+      if (units == "mi")
         distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
 
       //do the real work
       json::MapPtr json;
