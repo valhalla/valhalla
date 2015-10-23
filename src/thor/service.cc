@@ -59,44 +59,18 @@ namespace {
     return input_locs;
   }
 
-  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds,
+      const size_t origin, const size_t destination, const size_t start, const size_t end) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
         row->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[i].dist)},
+          {"from_index", static_cast<uint64_t>(origin)},
+          {"to_index", static_cast<uint64_t>(destination + (i - start))},
           {"time", static_cast<uint64_t>(tds[i].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
+          {"distance", static_cast<uint64_t>(tds[i].dist)},
         }));
     }
     return row;
-  }
-
-  json::ArrayPtr serialize_column(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
-    auto column = json::array({});
-    for(size_t i = start; i < end; i++) {
-      column->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[origin].dist)},
-          {"time", static_cast<uint64_t>(tds[origin].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
-        }));
-    }
-    return column;
-  }
-
-  json::ArrayPtr serialize_square(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
-    auto square = json::array({});
-    for(size_t i = start; i < end; i++) {
-      square->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[tdindex].dist)},
-          {"time", static_cast<uint64_t>(tds[tdindex].time)},
-          {"to_index", static_cast<uint64_t>(i)},
-          {"from_index", static_cast<uint64_t>(origin)}
-        }));
-        tdindex++;
-    }
-    return square;
   }
 
   //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
@@ -109,7 +83,7 @@ namespace {
   // }
   json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
     return json::map({
-      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size())})},
+      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size())})},
       {"input_locations", json::array({locations(correlated)})}
     });
   }
@@ -127,9 +101,8 @@ namespace {
   // }
   json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
     json::ArrayPtr column_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i){
-      column_matrix->emplace_back(serialize_column(correlated, tds, i, correlated.size()-1, correlated.size()));
-    }
+    for(size_t i = 0; i < correlated.size(); ++i)
+      column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1));
     return json::map({
       {"many_to_one", column_matrix},
       {"input_locations", json::array({locations(correlated)})}
@@ -149,9 +122,8 @@ namespace {
   // }
   json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
     json::ArrayPtr square_matrix = json::array({});
-    for(size_t i = 0; i < correlated.size(); ++i){
-      square_matrix->emplace_back(serialize_square(correlated, tds, i, 0, correlated.size()));
-    }
+    for(size_t i = 0; i < correlated.size(); ++i)
+      square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1)));
     return json::map({
       {"many_to_many", square_matrix},
       {"input_locations", json::array({locations(correlated)})}
@@ -161,7 +133,8 @@ namespace {
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
-    thor_worker_t(const boost::property_tree::ptree& config): config(config), reader(config.get_child("mjolnir.hierarchy")) {
+    thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
+      config(config), reader(config.get_child("mjolnir.hierarchy")) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -366,7 +339,7 @@ namespace {
     }
 
     //TODO: Do we need to pass costing for multimodal?
-    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       json::MapPtr json;
       thor::TimeDistanceMatrix tdmatrix;
 
