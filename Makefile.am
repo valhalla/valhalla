@@ -46,7 +46,6 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
-        valhalla/proto/transit.pb.h \
 	valhalla/mjolnir/admininfobuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
@@ -68,7 +67,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
 	valhalla/mjolnir/osmpbfparser.h \
-        valhalla/mjolnir/osmaccessrestriction.h \
+	valhalla/mjolnir/osmaccessrestriction.h \
 	valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
@@ -78,7 +77,7 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
-        src/proto/transit.pb.cc \
+	src/proto/transit.pb.cc \
 	src/mjolnir/admininfobuilder.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
@@ -101,7 +100,7 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmadmin.cc \
 	src/mjolnir/osmnode.cc \
 	src/mjolnir/osmpbfparser.cc \
-        src/mjolnir/osmaccessrestriction.cc \
+	src/mjolnir/osmaccessrestriction.cc \
 	src/mjolnir/osmrestriction.cc \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
