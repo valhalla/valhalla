@@ -168,8 +168,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::OneToMany(
 }
 
 // Many to one time and distance cost matrix. Computes time and distance
-// from many locations to one location. The last location in the locations
-// vector is assumed to be the destination.
+// from many locations to one location.
 std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
             const uint32_t dest_index,
             const std::vector<PathLocation>& locations,
