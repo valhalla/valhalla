@@ -653,11 +653,15 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
+    maneuver.mutable_transit_route_info()->onestop_id = prev_edge->transit_route_info().onestop_id();
     maneuver.mutable_transit_route_info()->block_id = prev_edge->transit_route_info().block_id();
     maneuver.mutable_transit_route_info()->trip_id = prev_edge->transit_route_info().trip_id();
     maneuver.mutable_transit_route_info()->short_name = prev_edge->transit_route_info().short_name();
     maneuver.mutable_transit_route_info()->long_name = prev_edge->transit_route_info().long_name();
     maneuver.mutable_transit_route_info()->headsign = prev_edge->transit_route_info().headsign();
+    maneuver.mutable_transit_route_info()->color = prev_edge->transit_route_info().color();
+    maneuver.mutable_transit_route_info()->text_color = prev_edge->transit_route_info().text_color();
+    maneuver.mutable_transit_route_info()->operator_onestop_id = prev_edge->transit_route_info().operator_onestop_id();
   }
 
   // Transit connection
