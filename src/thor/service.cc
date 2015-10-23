@@ -34,6 +34,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
+
 namespace {
   enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
   const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
@@ -42,6 +43,8 @@ namespace {
     {"many_to_many", MANY_TO_MANY}
   };
   std::size_t tdindex = 0;
+  constexpr double kKmPerMeter = 0.001;
+  constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
@@ -59,11 +62,11 @@ namespace {
     return input_locs;
   }
 
-  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end, double metrics) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
         row->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[i].dist)},
+          {"distance", json::fp_t{tds[i].dist * metrics, 3}},
           {"time", static_cast<uint64_t>(tds[i].time)},
           {"to_index", static_cast<uint64_t>(i)},
           {"from_index", static_cast<uint64_t>(origin)}
@@ -72,11 +75,11 @@ namespace {
     return row;
   }
 
-  json::ArrayPtr serialize_column(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+  json::ArrayPtr serialize_column(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end, double metrics) {
     auto column = json::array({});
     for(size_t i = start; i < end; i++) {
       column->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[origin].dist)},
+          {"distance", json::fp_t{tds[origin].dist * metrics, 3}},
           {"time", static_cast<uint64_t>(tds[origin].time)},
           {"to_index", static_cast<uint64_t>(i)},
           {"from_index", static_cast<uint64_t>(origin)}
@@ -85,11 +88,11 @@ namespace {
     return column;
   }
 
-  json::ArrayPtr serialize_square(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end) {
+  json::ArrayPtr serialize_square(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, const size_t origin, const size_t start, const size_t end, double metrics) {
     auto square = json::array({});
     for(size_t i = start; i < end; i++) {
       square->emplace_back(json::map({
-          {"distance", static_cast<uint64_t>(tds[tdindex].dist)},
+          {"distance", json::fp_t{tds[tdindex].dist * metrics, 3}},
           {"time", static_cast<uint64_t>(tds[tdindex].time)},
           {"to_index", static_cast<uint64_t>(i)},
           {"from_index", static_cast<uint64_t>(origin)}
@@ -107,10 +110,11 @@ namespace {
   //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
   //   ]
   // }
-  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double metrics) {
     return json::map({
-      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size())})},
-      {"input_locations", json::array({locations(correlated)})}
+      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, tds.size(), metrics)})},
+      {"locations", json::array({locations(correlated)})},
+      {"units", units}
     });
   }
 
@@ -125,14 +129,15 @@ namespace {
   //     [{origin3,dest0,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double metrics) {
     json::ArrayPtr column_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i){
-      column_matrix->emplace_back(serialize_column(correlated, tds, i, correlated.size()-1, correlated.size()));
+      column_matrix->emplace_back(serialize_column(correlated, tds, i, correlated.size()-1, correlated.size(), metrics));
     }
     return json::map({
       {"many_to_one", column_matrix},
-      {"input_locations", json::array({locations(correlated)})}
+      {"locations", json::array({locations(correlated)})},
+      {"units", units}
     });
   }
 
@@ -147,14 +152,15 @@ namespace {
   //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
   //   ]
   // }
-  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds) {
+  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double metrics) {
     json::ArrayPtr square_matrix = json::array({});
     for(size_t i = 0; i < correlated.size(); ++i){
-      square_matrix->emplace_back(serialize_square(correlated, tds, i, 0, correlated.size()));
+      square_matrix->emplace_back(serialize_square(correlated, tds, i, 0, correlated.size(), metrics));
     }
     return json::map({
       {"many_to_many", square_matrix},
-      {"input_locations", json::array({locations(correlated)})}
+      {"locations", json::array({locations(correlated)})},
+      {"units", units}
     });
   }
 
@@ -197,7 +203,7 @@ namespace {
         if (matrix) {
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
-            return get_matrix(matrix_iter->second, costing, request, info);
+            return get_matrix(matrix_iter->second, request, info);
           }
           else { //this will never happen since loki formats the request for matrix
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
@@ -366,19 +372,30 @@ namespace {
     }
 
     //TODO: Do we need to pass costing for multimodal?
-    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
       json::MapPtr json;
       thor::TimeDistanceMatrix tdmatrix;
-
+      // Parse out units; if none specified, use kilometers
+      std::string units = "km";
+      double metrics = kKmPerMeter;
+      auto matrix_units = request.get_optional<std::string>("units");
+      if (matrix_units) {
+        units = *matrix_units;
+        if (units == "kilometers" || units == "km")
+          metrics = kKmPerMeter;
+        else if (units == "miles" || units == "mi")
+          metrics = kMilePerMeter;
+        else throw std::runtime_error("Incorrect units specified. Defaulting to kilometers.");
+      }
       switch ( matrix_type) {
        case MATRIX_TYPE::ONE_TO_MANY:
-         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode));
+         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, metrics);
          break;
        case MATRIX_TYPE::MANY_TO_ONE:
-         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size()-1, correlated, reader, mode_costing, mode));
+         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size()-1, correlated, reader, mode_costing, mode), units, metrics);
          break;
        case MATRIX_TYPE::MANY_TO_MANY:
-         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode));
+         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, metrics);
          break;
       }
 
