@@ -13,7 +13,6 @@ struct TransitRouteInfo {
   // TODO: do we need?
   std::string ToParameterString() const;
 
-  uint32_t id;
   std::string onestop_id;
   uint32_t block_id;
   uint32_t trip_id;
@@ -22,7 +21,6 @@ struct TransitRouteInfo {
   std::string headsign;
   uint32_t color;
   uint32_t text_color;
-  uint32_t operator_id;
   std::string operator_onestop_id;
   std::list<TransitStop> transit_stops;
 
