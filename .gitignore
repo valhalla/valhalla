@@ -34,6 +34,7 @@ adminbenchmark
 pbfgraphbuilder
 pbfadminbuilder
 connectivitymap
+transit_fetcher
 *.o
 .deps/
 .dirstamp
