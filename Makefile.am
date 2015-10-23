@@ -116,27 +116,28 @@ bin_PROGRAMS = \
 	adminbenchmark \
 	connectivitymap \
 	pbfgraphbuilder \
-	pbfadminbuilder
+	pbfadminbuilder \
+	transit_fetcher
 
-adminbenchmark_SOURCES = \
-	src/mjolnir/adminbenchmark.cc
+adminbenchmark_SOURCES = src/mjolnir/adminbenchmark.cc
 adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 adminbenchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
-connectivitymap_SOURCES = \
-	src/mjolnir/connectivitymap.cc
+connectivitymap_SOURCES = src/mjolnir/connectivitymap.cc
 connectivitymap_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 connectivitymap_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ libvalhalla_mjolnir.la
 
-pbfgraphbuilder_SOURCES = \
-	src/mjolnir/pbfgraphbuilder.cc 
+pbfgraphbuilder_SOURCES = src/mjolnir/pbfgraphbuilder.cc 
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
-pbfadminbuilder_SOURCES = \
-        src/mjolnir/pbfadminbuilder.cc
+pbfadminbuilder_SOURCES = src/mjolnir/pbfadminbuilder.cc
 pbfadminbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfadminbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite libvalhalla_mjolnir.la
+
+transit_fetcher_SOURCES = src/mjolnir/transit_fetcher.cc
+transit_fetcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+transit_fetcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB)
 
 # tests
 check_PROGRAMS = \
