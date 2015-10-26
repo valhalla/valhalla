@@ -12,7 +12,7 @@ using namespace valhalla::midgard;
 namespace {
 
 void TryGeneralizeAndLength(Polyline2<Point2>& pl, const float& gen, const float& res) {
-  unsigned int size = pl.Generalize(gen);
+  uint32_t size = pl.Generalize(gen);
 
   std::vector<Point2> pts = pl.pts();
 
@@ -76,9 +76,9 @@ void TestClosestPoint() {
   TryClosestPoint(pl, end, d);
 }
 
-void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const unsigned int exp) {
+void TryClip(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
   // Clip and check vertex count and 1st 2 points
-  unsigned int x = pl.Clip(a);
+  uint32_t x = pl.Clip(a);
   if (x != exp)
     throw runtime_error("Clip test failed: count not correct");
 
@@ -99,9 +99,9 @@ void TestClip() {
   TryClip(pl2, AABB2<Point2>(Point2(25.0f, 25.0f), Point2(50.0f, 100.0f)), 4);
 }
 
-void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const unsigned int exp) {
+void TryClippedPolyline(Polyline2<Point2>& pl, const AABB2<Point2>& a, const uint32_t exp) {
   Polyline2<Point2> pl2 = pl.ClippedPolyline(a);
-  unsigned int x = pl2.pts().size();
+  uint32_t x = pl2.pts().size();
   if (x != 2)
     throw runtime_error("ClippedPolyline test failed: count not correct");
 
