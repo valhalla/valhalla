@@ -109,18 +109,14 @@ namespace DateTime {
    * Get the iso date and time from a DOW mask and time.
    * @param   dow_mask  Day of the week mask.
    * @param   time      Time in the format of 08:00
-   * @param   tz        Timezone.  Currently only support 2 timezones.
-   *                    America/New_York and America/Los_Angeles and defaults
-   *                    to America/New_York.
+   * @param   tz        Timezone.  defaults to America/New_York.
    */
   std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                             const std::string& tz = "America/New_York");
 
   /**
    * Get the iso date and time from the current date and time.
-   * @param   tz        Timezone.  Currently only support 2 timezones.
-   *                    America/New_York and America/Los_Angeles and defaults
-   *                    to America/New_York.
+   * @param   tz        Timezone.  defaults to America/New_York.
    */
   std::string iso_date_time(const std::string& tz = "America/New_York");
 
