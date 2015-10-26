@@ -2,21 +2,17 @@ package valhalla.mjolnir;
 
 message Transit {
 
-  message LatLng {
-    optional float lat = 1;
-    optional float lng = 2;
-  }
-  
   message Stop {
-    optional LatLng ll = 1;
-    optional uint64 graphid = 2;
-    optional string name = 3;
-    optional string onestop_id = 4;
-    optional uint64 osm_way_id = 5;
-    optional uint32 stop_desc = 6;
-    optional string timezone = 7;
-    optional bool wheelchair_boarding = 8;
-    optional string zone_id = 9;
+  	optional float lon = 1;
+    optional float lat = 2;    
+    optional uint64 graphid = 3;
+    optional string name = 4;
+    optional string onestop_id = 5;
+    optional uint64 osm_way_id = 6;
+    optional uint32 stop_desc = 7;
+    optional string timezone = 8;
+    optional bool wheelchair_boarding = 9;
+    optional string zone_id = 10;
   }
 
   message StopPair {
@@ -29,7 +25,7 @@ message Transit {
     optional string origin_departure_time = 7;
     optional uint64 origin_graphid = 8;
     optional string origin_onestop_id = 9;
-    optional uint32 route_key = 10;
+    optional uint32 route_index = 10;
     optional string route_onestop_id = 11;
     repeated string service_added_dates = 12;
     repeated bool service_days_of_week = 13;
@@ -55,19 +51,18 @@ message Transit {
   }
  
   message Route {
-    optional uint32 key = 1;
-    optional string name = 2;
-    optional string onestop_id = 3;
-    optional string operated_by_name = 4;
-    optional string operated_by_onestop_id = 5;
-    optional string route_color = 6;
-    optional string route_desc = 7; 
-    optional string route_long_name = 8;
-    optional string route_text_color = 9;
-    optional VehicleType vehicle_type = 10;     
+    optional string name = 1;
+    optional string onestop_id = 2;
+    optional string operated_by_name = 3;
+    optional string operated_by_onestop_id = 4;
+    optional string route_color = 5;
+    optional string route_desc = 6; 
+    optional string route_long_name = 7;
+    optional string route_text_color = 8;
+    optional VehicleType vehicle_type = 9;     
   }
  
-  repeated Stop stop = 1;
-  repeated StopPair stop_pair = 2;
-  repeated Route route = 3; 
+  repeated Stop stops = 1;
+  repeated StopPair stop_pairs = 2;
+  repeated Route routes = 3; 
 }
