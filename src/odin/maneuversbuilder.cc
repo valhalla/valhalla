@@ -914,6 +914,16 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         TripDirections_Maneuver_Type_kPostTransitConnectionDestination);
     LOG_TRACE("ManeuverType=POST_TRANSIT_CONNECTION_DESTINATION");
   }
+  // Process enter roundabout
+  else if (maneuver.roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
+    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
+  }
+  // Process exit roundabout
+  else if (prev_edge && prev_edge->roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
+    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
+  }
   // Process fork
   else if (maneuver.fork()) {
     switch (maneuver.begin_relative_direction()) {
@@ -998,16 +1008,6 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   else if (curr_edge->IsHighway() && prev_edge && prev_edge->ramp()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
     LOG_TRACE("ManeuverType=MERGE");
-  }
-  // Process enter roundabout
-  else if (maneuver.roundabout()) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
-    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
-  }
-  // Process exit roundabout
-  else if (prev_edge && prev_edge->roundabout()) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
-    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
   // Process enter ferry
   else if (maneuver.ferry() || maneuver.rail_ferry()) {
@@ -1205,6 +1205,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Process roundabouts
+  if (maneuver.roundabout() && !prev_edge->roundabout()) {
+    return false;
+  }
+  if (prev_edge->roundabout() && !maneuver.roundabout()) {
+    return false;
+  }
+  if (maneuver.roundabout() && prev_edge->roundabout()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process fork
   if (IsFork(node_index, prev_edge, curr_edge)) {
     maneuver.set_fork(true);
@@ -1272,18 +1284,6 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return false;
   }
   if (maneuver.rail_ferry() && prev_edge->rail_ferry()) {
-    return true;
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Process roundabouts
-  if (maneuver.roundabout() && !prev_edge->roundabout()) {
-    return false;
-  }
-  if (prev_edge->roundabout() && !maneuver.roundabout()) {
-    return false;
-  }
-  if (maneuver.roundabout() && prev_edge->roundabout()) {
     return true;
   }
 
