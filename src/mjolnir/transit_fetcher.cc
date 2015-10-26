@@ -4,9 +4,11 @@
 #include <memory>
 #include <unordered_set>
 #include <thread>
+#include <future>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/format.hpp>
 #include <curl/curl.h>
 
 #include <valhalla/midgard/logging.h>
@@ -39,12 +41,7 @@ struct curler_t {
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
     ptree pt;
-    try {
-      read_json(result, pt);
-    }
-    catch(...){
-      LOG_ERROR("Couldn't parse json: " + result.str());
-    }
+    try { read_json(result, pt); } catch(...) { throw logged_error_t(result.str()); }
     return pt;
   }
 protected:
@@ -98,21 +95,34 @@ std::unordered_set<GraphId> which_tiles(const ptree& pt) {
 }
 
 using fetch_itr_t = std::unordered_set<GraphId>::const_iterator;
-void fetch_tiles(const ptree& pt, const fetch_itr_t& start, const fetch_itr_t& end, std::promise<std::list<GraphId> >& promise) {
+void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   std::list<GraphId> dangling;
+  curler_t curler;
+  auto now = time(nullptr);
+  auto utc = gmtime(&now);
 
   //for each tile
   for(; start != end; ++start) {
-    //TODO: make stops call
-    //TODO: copy stops in, keeping map of stopid to graphid
+    //while there is more to do in this tile
+    bool tile_done = false;
+    while(!tile_done) {
+      //make stops call
+      ptree response;
+      try {
+        response = curler(pt.get<std::string>("base_url") + "/api/v1/stops?per_page=1000&service_from_date=%1%-%2%-%3%&bbox=%4%,%5%,%6%,%7%");
+      }
+      catch(const logged_error_t& e) {
 
-    //TODO: make stop pairs call using service_from_date=2015-10-21
-    //TODO: copy pairs in, noting if any dont have stops
+      }
+      //TODO: copy stops in, keeping map of stopid to graphid
 
-    //TODO: make routes call
-    //TODO: copy routes in
+      //TODO: make stop pairs call using service_from_date=2015-10-21
+      //TODO: copy pairs in, noting if any dont have stops
 
+      //TODO: make routes call
+      //TODO: copy routes in
+    }
     //TODO: write pbf to file
   }
 
@@ -159,8 +169,8 @@ std::list<GraphId> fetch(const ptree& pt, const std::unordered_set<GraphId>& til
   return dangling;
 }
 
-using stitch_itr_t = std::unordered_set<GraphId>::const_iterator;
-void stitch_tiles(const ptree& pt, const stitch_itr_t& start, const stitch_itr_t& end, std::mutex& lock) {
+using stitch_itr_t = std::list<GraphId>::const_iterator;
+void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mutex& lock) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   std::list<GraphId> dangling;
 
