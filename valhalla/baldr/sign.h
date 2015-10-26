@@ -47,15 +47,11 @@ class Sign {
 
  protected:
   // Constructor
-  Sign(const uint32_t idx, const Sign::Type& type,
-           const uint32_t text_offset);
+  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset);
 
-  struct IndexAndType {
-    uint32_t   edgeindex  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
-    Sign::Type type       :  8;
-    uint32_t   spare      :  2;
-  };
-  IndexAndType data_;
+  uint32_t edgeindex_  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
+  uint32_t type_       :  8;
+  uint32_t spare_      :  2;
   uint32_t text_offset_;
 };
 
