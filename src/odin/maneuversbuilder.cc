@@ -791,6 +791,12 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set the begin shape index
   maneuver.set_begin_shape_index(curr_edge->begin_shape_index());
 
+  // Set the time based on the delta of the elapsed time between the begin
+  // and end nodes
+  maneuver.set_time(
+      trip_path_->node(maneuver.end_node_index()).elapsed_time()
+      - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
+
   // if possible, set the turn degree and relative direction
   if (prev_edge) {
     maneuver.set_turn_degree(
@@ -798,12 +804,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Calculate and set the relative direction for the specified maneuver
     DetermineRelativeDirection(maneuver);
-
-    // Set the time based on the delta of the elapsed time between the begin
-    // and end nodes
-    maneuver.set_time(
-        trip_path_->node(maneuver.end_node_index()).elapsed_time()
-            - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
 
     // TODO - determine if we want to count right traversable at entrance node
     // Roundabouts
