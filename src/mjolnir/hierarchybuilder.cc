@@ -509,7 +509,7 @@ void FormTilesInNewLevel(
     GraphTileBuilder tilebuilder(info.graphreader_.GetTileHierarchy(), tile, false);
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
-    tilebuilder.AddAdmin("None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","");
 
 //    std::vector<AccessRestriction> access_restrictions;
 
@@ -530,8 +530,7 @@ void FormTilesInNewLevel(
       node.set_edge_index(tilebuilder.directededges().size());
       node.set_timezone(baseni.timezone());
       node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
-                                                admin.country_iso(), admin.state_iso(),
-                                                admin.start_dst(), admin.end_dst()));
+                                                admin.country_iso(), admin.state_iso()));
 
       // Edge count
       size_t edge_count = tilebuilder.directededges().size();
@@ -923,4 +922,3 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
 }
 }
-
