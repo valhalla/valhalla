@@ -46,7 +46,7 @@ struct curler_t {
   //for now we only need to handle json
   //with templates we could return a string or whatever
   ptree operator()(const std::string& url) {
-    LOG_INFO(url);
+    LOG_DEBUG(url);
     result.str("");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
@@ -109,7 +109,7 @@ std::unordered_set<GraphId> which_tiles(const ptree& pt) {
 
 #define set_no_null(T, pt, path, null_value, set) {\
   auto value = pt.get<T>(path, null_value); \
-  /*if(value != null_value)*/ \
+  if(value != null_value) \
     set(value); \
 }
 
@@ -449,6 +449,8 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       boost::filesystem::create_directories(transit_tile.parent_path());
     std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
     tile.SerializeToOstream(&stream);
+    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
+      std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stops_size()) + " stop pairs");
   }
 
   //give back the work for later
