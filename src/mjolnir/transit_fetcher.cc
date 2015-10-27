@@ -46,6 +46,7 @@ struct curler_t {
   //for now we only need to handle json
   //with templates we could return a string or whatever
   ptree operator()(const std::string& url) {
+    LOG_DEBUG(url);
     result.str("");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
@@ -106,6 +107,192 @@ std::unordered_set<GraphId> which_tiles(const ptree& pt) {
   return tiles;
 }
 
+#define set_no_null(T, pt, path, null_value, set) {\
+  auto value = pt.get<T>(path, null_value); \
+  if(value != null_value) \
+    set(value); \
+}
+
+void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
+    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& bbox) {
+  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
+  for(const auto& stop_pt : response.get_child("stops")) {
+    const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
+    auto lon = ll_pt.front().second.get_value<float>();
+    auto lat = ll_pt.back().second.get_value<float>();
+    if(!bbox.Contains({lon, lat}))
+      continue;
+    auto* stop = tile.add_stops();
+    stop->set_lon(lon);
+    stop->set_lat(lat);
+    set_no_null(std::string, stop_pt.second, "onestop_id", "null", stop->set_onestop_id);
+    set_no_null(std::string, stop_pt.second, "name", "null", stop->set_name);
+    stop->set_wheelchair_boarding(stop_pt.second.get<bool>("tags.wheelchair_boarding", false));
+    set_no_null(uint64_t, stop_pt.second, "tags.osm_way_id", 0, stop->set_osm_way_id);
+    GraphId stop_id = tile_id;
+    stop_id.fields.id = stops.size();
+    stop->set_graphid(stop_id);
+    stop->set_timezone(0);
+    auto timezone = stop_pt.second.get_optional<std::string>("timezone");
+    if (timezone) {
+      std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), *timezone);
+      if (it == regions.end()) {
+        LOG_WARN("Timezone not found for " + *timezone);
+      } else stop->set_timezone(it - regions.cbegin());
+    }
+    else LOG_WARN("Timezone not found for stop " + stop->name());
+    stops.emplace(stop->onestop_id(), stop_id);
+  }
+}
+
+void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes,
+    const std::unordered_map<std::string, std::string>& websites, const ptree& response) {
+  for(const auto& route_pt : response.get_child("routes")) {
+    auto* route = tile.add_routes();
+    set_no_null(std::string, route_pt.second, "onestop_id", "null", route->set_onestop_id);
+    std::string vehicle_type = route_pt.second.get<std::string>("tags.vehicle_type", "");
+    Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
+    if (vehicle_type == "tram")
+      type = Transit_VehicleType::Transit_VehicleType_kTram;
+    else if (vehicle_type == "metro")
+      type = Transit_VehicleType::Transit_VehicleType_kMetro;
+    else if (vehicle_type == "rail")
+      type = Transit_VehicleType::Transit_VehicleType_kRail;
+    else if (vehicle_type == "bus")
+      type = Transit_VehicleType::Transit_VehicleType_kBus;
+    else if (vehicle_type == "ferry")
+      type = Transit_VehicleType::Transit_VehicleType_kFerry;
+    else if (vehicle_type == "cablecar")
+      type = Transit_VehicleType::Transit_VehicleType_kCableCar;
+    else if (vehicle_type == "gondola")
+      type = Transit_VehicleType::Transit_VehicleType_kGondola;
+    else if (vehicle_type == "funicular")
+      type = Transit_VehicleType::Transit_VehicleType_kFunicular;
+    else {
+      LOG_ERROR("Skipping unsupported vehicle_type: " + vehicle_type + " for route " + route->onestop_id());
+      tile.mutable_routes()->RemoveLast();
+      continue;
+    }
+    route->set_vehicle_type(type);
+    set_no_null(std::string, route_pt.second, "operated_by_onestop_id", "null", route->set_operated_by_onestop_id);
+    set_no_null(std::string, route_pt.second, "operated_by_name", "null", route->set_operated_by_name);
+    set_no_null(std::string, route_pt.second, "name", "null", route->set_name);
+    set_no_null(std::string, route_pt.second, "tags.route_long_name", "null", route->set_route_long_name);
+    set_no_null(std::string, route_pt.second, "tags.route_desc", "null", route->set_route_desc);
+    std::string route_color = route_pt.second.get<std::string>("tags.route_color", "FFFFFF");
+    std::string route_text_color = route_pt.second.get<std::string>("tags.route_text_color", "000000");
+    boost::algorithm::trim(route_color);
+    boost::algorithm::trim(route_text_color);
+    route_color = (route_color == "null" ? "FFFFFF" : route_color);
+    route_text_color = (route_text_color == "null" ? "000000" : route_text_color);
+    auto website = websites.find(route->operated_by_onestop_id());
+    if(website != websites.cend())
+      route->set_operated_by_website(website->second);
+    route->set_route_color(strtol(route_color.c_str(), nullptr, 16));
+    route->set_route_text_color(strtol(route_text_color.c_str(), nullptr, 16));
+    route->set_route_index(routes.size());
+    routes.emplace(route->onestop_id(), routes.size());
+  }
+}
+
+bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trips,
+    std::unordered_map<std::string, size_t>& block_ids, const ptree& response,
+    const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
+  bool dangles = false;
+  for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
+    auto* pair = tile.add_stop_pairs();
+    //route
+    auto route = routes.find(pair_pt.second.get<std::string>("route_onestop_id"));
+    if(route == routes.cend()) {
+      LOG_ERROR("No route for pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
+    pair->set_route_index(route->second);
+
+    std::string origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
+    std::string dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
+    if (origin_time == "null" || dest_time == "null") {
+      LOG_ERROR("Origin or destination time not set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
+    pair->set_origin_departure_time(origin_time);
+    pair->set_destination_arrival_time(origin_time);
+
+    //trip
+    std::string t = pair_pt.second.get<std::string>("trip", "null");
+    if (t == "null") {
+      LOG_ERROR("No trip for pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
+    auto trip = trips.find(t);
+    if(trip == trips.cend()) {
+      pair->set_trip_key(trips.size());
+      trips.emplace(t, trips.size());
+    }
+    else pair->set_trip_key(trip->second);
+
+    //origin
+    pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
+    auto origin = stops.find(pair->origin_onestop_id());
+    if(origin != stops.cend())
+      pair->set_origin_graphid(origin->second);
+    else
+      dangles = true;
+
+    //destination
+    pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
+    auto destination = stops.find(pair->destination_onestop_id());
+    if(destination != stops.cend())
+      pair->set_destination_graphid(destination->second);
+    else
+      dangles = true;
+
+    std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
+    if (block_id == "null") {
+      pair->set_block_id(0);
+    } else {
+      auto b_id = block_ids.find(block_id);
+      if (b_id == block_ids.cend()) {
+        pair->set_block_id(block_ids.size());
+        block_ids.emplace(block_id, block_ids.size());
+      }
+      else pair->set_block_id(b_id->second);
+    }
+
+    pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
+
+    set_no_null(std::string, pair_pt.second, "service_start_date", "null", pair->set_service_start_date);
+    set_no_null(std::string, pair_pt.second, "service_end_date", "null", pair->set_service_end_date);
+    for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
+      pair->add_service_added_dates(service_days.second.get_value<std::string>());
+    }
+
+    set_no_null(std::string, pair_pt.second, "origin_timezone", "null", pair->set_origin_timezone);
+    set_no_null(std::string, pair_pt.second, "trip_headsign", "null", pair->set_trip_headsign);
+    pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
+
+    const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
+    if (except_dates && !except_dates->empty()) {
+      for(const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
+        pair->add_service_except_dates(service_except_dates.second.get_value<std::string>());
+      }
+    }
+
+    const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
+    if (added_dates && !added_dates->empty()) {
+      for(const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
+        pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
+      }
+    }
+
+    //TODO: copy rest of attributes
+  }
+  return dangles;
+}
+
 using fetch_itr_t = std::unordered_set<GraphId>::const_iterator;
 void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
@@ -125,7 +312,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
     //pull out all the STOPS
     std::unordered_map<std::string, uint64_t> stops;
-
     auto extra_params = (boost::format("&service_from_date=%1%-%2%-%3%&api_key=%4%")
       % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
     boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
@@ -134,7 +320,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     while(request) {
       //grab some stuff
       try {
-        LOG_INFO(*request + extra_params);
         response = curler(*request + extra_params);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
@@ -143,36 +328,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         continue;
       }
 
-      const std::vector<std::string> regions = DateTime::get_tz_db().regions;
       //copy stops in, keeping map of stopid to graphid
       try {
-        for(const auto& stop_pt : response.get_child("stops")) {
-          const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
-          auto lon = ll_pt.front().second.get_value<float>();
-          auto lat = ll_pt.back().second.get_value<float>();
-          if(!bbox.Contains({lon, lat}))
-            continue;
-          auto* stop = tile.add_stops();
-          stop->set_lon(lon);
-          stop->set_lat(lat);
-          stop->set_onestop_id(stop_pt.second.get<std::string>("onestop_id", ""));
-          stop->set_name(stop_pt.second.get<std::string>("name", ""));
-
-          auto timezone = stop_pt.second.get_optional<std::string>("timezone");
-          stop->set_timezone(0);
-          if (timezone) {
-            std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), *timezone);
-            if (it == regions.end()) {
-              LOG_WARN("Timezone not found for " + *timezone);
-            } else stop->set_timezone(std::distance(regions.begin(),it));
-          }
-          else LOG_WARN("Timezone not found for stop " + stop->name());
-
-          stop->set_wheelchair_boarding(stop_pt.second.get<bool>("tags.wheelchair_boarding", false));
-          stop->set_osm_way_id(stop_pt.second.get<uint64_t>("tags.osm_way_id", 0));
-          stop->set_graphid(*start + stops.size());
-          stops.emplace(stop->onestop_id(), stop->graphid());
-        }
+        get_stops(tile, stops, *start, response, bbox);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -181,22 +339,19 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
         continue;
       }
-      //break; //TODO: testing, remove
     }
     //um yeah.. we need these
     if(stops.size() == 0)
       continue;
 
-    //pull out all operator web sites
+    //pull out all operator WEBSITES
     request = (boost::format(pt.get<std::string>("base_url") +
-                             "/api/v1/operators?per_page=1000&bbox=%1%,%2%,%3%,%4%")
-    % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+      "/api/v1/operators?per_page=5000&bbox=%1%,%2%,%3%,%4%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, std::string> websites;
-
     while(request) {
       //grab some stuff
       try {
-        LOG_INFO(*request + extra_params);
         response = curler(*request + extra_params);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
@@ -210,12 +365,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         for(const auto& operators_pt : response.get_child("operators")) {
           std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
           std::string website = operators_pt.second.get<std::string>("website", "");
-          onestop_id = (onestop_id == "null" ? "" : onestop_id);
-          website = (website == "null" ? "" : website);
-          if (!onestop_id.empty())
+          if(!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
             websites.emplace(onestop_id, website);
         }
-
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -224,7 +376,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
         continue;
       }
-      //break; //TODO: testing, remove
     }
 
     //pull out all ROUTES
@@ -232,11 +383,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       "/api/v1/routes?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, size_t> routes;
-
     while(request) {
       //grab some stuff
       try {
-        LOG_INFO(*request + extra_params);
         response = curler(*request + extra_params);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
@@ -247,68 +396,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
       //copy routes in, keeping track of routeid to route index
       try {
-        for(const auto& route_pt : response.get_child("routes")) {
-          auto* route = tile.add_routes();
-
-          std::string onestop_id = route_pt.second.get<std::string>("onestop_id", "");
-          std::string operated_by_onestop_id = route_pt.second.get<std::string>("operated_by_onestop_id", "");
-          std::string operated_by_name = route_pt.second.get<std::string>("operated_by_name", "");
-
-          std::string shortname = route_pt.second.get<std::string>("name", "");
-          std::string longname = route_pt.second.get<std::string>("tags.route_long_name", "");
-          std::string desc = route_pt.second.get<std::string>("tags.route_desc", "");
-          std::string vehicle_type = route_pt.second.get<std::string>("tags.vehicle_type", "");
-
-          std::string route_color = route_pt.second.get<std::string>("tags.route_color", "");
-          std::string route_text_color = route_pt.second.get<std::string>("tags.route_text_color", "");
-          boost::algorithm::trim(route_color);
-          boost::algorithm::trim(route_text_color);
-          route_color = (route_color == "null" || route_color.empty() ? "FFFFFF" : route_color);
-          route_text_color = (route_text_color == "null" ||
-                              route_text_color.empty() ? "000000" : route_text_color);
-
-          route->set_name(shortname == "null" ? "" : shortname);
-          route->set_onestop_id(onestop_id == "null" ? "" : onestop_id);
-          route->set_operated_by_name(operated_by_name == "null" ? "" : operated_by_name);
-          route->set_operated_by_onestop_id(operated_by_onestop_id == "null" ? "" : operated_by_onestop_id);
-
-          auto website = websites.find(route->operated_by_onestop_id());
-          if(website != websites.cend()) {
-            route->set_operated_by_website(website->second);
-          }
-
-          route->set_route_color(strtol(route_color.c_str(), nullptr, 16));
-          route->set_route_desc(desc == "null" ? "" : desc);
-          route->set_route_long_name(longname == "null" ? "" : longname);
-          route->set_route_text_color(strtol(route_text_color.c_str(), nullptr, 16));
-
-          Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
-
-          if (vehicle_type == "tram")
-            type = Transit_VehicleType::Transit_VehicleType_kTram;
-          else if (vehicle_type == "metro")
-            type = Transit_VehicleType::Transit_VehicleType_kMetro;
-          else if (vehicle_type == "rail")
-            type = Transit_VehicleType::Transit_VehicleType_kRail;
-          else if (vehicle_type == "bus")
-            type = Transit_VehicleType::Transit_VehicleType_kBus;
-          else if (vehicle_type == "ferry")
-            type = Transit_VehicleType::Transit_VehicleType_kFerry;
-          else if (vehicle_type == "cablecar")
-            type = Transit_VehicleType::Transit_VehicleType_kCableCar;
-          else if (vehicle_type == "gondola")
-            type = Transit_VehicleType::Transit_VehicleType_kGondola;
-          else if (vehicle_type == "funicular")
-            type = Transit_VehicleType::Transit_VehicleType_kFunicular;
-          else {
-            LOG_ERROR("Unsupported vehicle_type: " + vehicle_type + " for " + onestop_id);
-            continue;
-          }
-          route->set_vehicle_type(type);
-          route->set_route_index(routes.size());
-          routes.emplace(route->onestop_id(), routes.size());
-        }
-
+        get_routes(tile, routes, websites, response);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -317,20 +405,18 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
         continue;
       }
-      //break; //TODO: testing, remove
     }
 
     //pull out all SCHEDULE_STOP_PAIRS
     std::unordered_map<std::string, size_t> trips;
     std::unordered_map<std::string, size_t> block_ids;
-
+    bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
       try {
-        LOG_INFO(*request + extra_params);
         response = curler(*request + extra_params);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
@@ -341,107 +427,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
       //copy pairs in, noting if any dont have stops
       try {
-        for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
-          auto* pair = tile.add_stop_pairs();
-          //origin
-          pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
-          auto origin = stops.find(pair->origin_onestop_id());
-          if(origin != stops.cend())
-            pair->set_origin_graphid(origin->second);
-          else if(dangling.size() && dangling.back() != *start)
-            dangling.push_back(*start);
-          //destination
-          pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
-          auto destination = stops.find(pair->destination_onestop_id());
-          if(destination != stops.cend())
-            pair->set_destination_graphid(destination->second);
-          else if(dangling.size() && dangling.back() != *start)
-            dangling.push_back(*start);
-          //route
-          auto route = routes.find(pair_pt.second.get<std::string>("route_onestop_id"));
-          if(route == routes.cend()) {
-            LOG_ERROR("No route for pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
-            tile.mutable_stop_pairs()->RemoveLast();
-            continue;
-          }
-          pair->set_route_index(route->second);
-
-          std::string t = pair_pt.second.get<std::string>("trip");
-          t = (t == "null" ? "" : t);
-
-          if (t.empty()) {
-            LOG_ERROR("No trip set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
-            tile.mutable_stop_pairs()->RemoveLast();
-            continue;
-          }
-
-          auto trip = trips.find(t);
-          if(trip == trips.cend()) {
-            pair->set_trip_key(trips.size());
-            trips.emplace(t, trips.size());
-          }
-          else pair->set_trip_key(trip->second);
-
-          std::string block_id = pair_pt.second.get<std::string>("block_id");
-          block_id = (block_id == "null" ? "" : block_id);
-
-          if (block_id.empty()) {
-            pair->set_block_id(0);
-          } else {
-            auto b_id = block_ids.find(block_id);
-            if (b_id == block_ids.cend()) {
-              pair->set_block_id(block_ids.size());
-              block_ids.emplace(block_id, block_ids.size());
-            }
-            else pair->set_block_id(b_id->second);
-          }
-
-          pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
-
-          std::string origin_time = pair_pt.second.get<std::string>("origin_departure_time", "");
-          std::string dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "");
-          if (origin_time.empty() || dest_time.empty()) {
-            LOG_ERROR("Origin or destination time not set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
-            tile.mutable_stop_pairs()->RemoveLast();
-            continue;
-          }
-          pair->set_origin_departure_time(origin_time);
-          pair->set_destination_arrival_time(origin_time);
-
-          std::string start_date = pair_pt.second.get<std::string>("service_start_date", "");
-          std::string end_date = pair_pt.second.get<std::string>("service_end_date", "");
-          pair->set_service_start_date(start_date);
-          pair->set_service_end_date(end_date);
-
-          for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
-            pair->add_service_added_dates(service_days.second.get_value<std::string>());
-          }
-
-          std::string tz = pair_pt.second.get<std::string>("origin_timezone", "");
-          pair->set_origin_timezone(tz == "null" ? "" : tz);
-
-          std::string headsign = pair_pt.second.get<std::string>("trip_headsign", "");
-          pair->set_trip_headsign(headsign == "null" ? "" : headsign);
-
-          pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
-
-          const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
-          if (except_dates && !except_dates->empty()) {
-            for(const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
-              pair->add_service_except_dates(service_except_dates.second.get_value<std::string>());
-            }
-          }
-
-          const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
-          if (added_dates && !added_dates->empty()) {
-            for(const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
-              pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
-            }
-          }
-
-          //TODO: copy rest of attributes
-        }
-
+        dangles = dangles && get_stop_pairs(tile, trips, block_ids, response, stops, routes);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -450,8 +436,11 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
         continue;
       }
-      //break; //TODO: testing, remove
     }
+
+    //remember who dangles
+    if(dangles)
+      dangling.emplace_back(*start);
 
     //write pbf to file
     auto file_name = GraphTile::FileSuffix(*start, hierarchy);
@@ -461,6 +450,8 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       boost::filesystem::create_directories(transit_tile.parent_path());
     std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
     tile.SerializeToOstream(&stream);
+    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
+      std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stops_size()) + " stop pairs");
   }
 
   //give back the work for later
