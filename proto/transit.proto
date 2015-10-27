@@ -9,7 +9,7 @@ message Transit {
     optional string name = 4;
     optional string onestop_id = 5;
     optional uint64 osm_way_id = 6;
-    optional string timezone = 8;
+    optional uint32 timezone = 8;
     optional bool wheelchair_boarding = 9;
   }
 
@@ -41,13 +41,12 @@ message Transit {
   enum VehicleType {
     kTram = 0;
     kMetro = 1;
-    kSubway = 2;
-    kRail = 3;
-    kBus = 4;
-    kFerry = 5;
-    kCableCar = 6;
-    kGondola = 7;
-    kFunicular = 8;
+    kRail = 2;
+    kBus = 3;
+    kFerry = 4;
+    kCableCar = 5;
+    kGondola = 6;
+    kFunicular = 7;
   }
  
   message Route {
