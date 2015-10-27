@@ -169,3 +169,4 @@
 -j '{"locations":[{"lat":41.388786,"lon":2.158985,"city":"Barcelona"},{"lat":37.666668,"lon":-1.700000,"city":"Lorca"}],"costing":"auto","directions_options":{"units":"kilometers"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":41.388786,"lon":2.158985,"city":"Barcelona"},{"lat":41.349998,"lon":2.083333,"city":"Cornella de Llobregat"}],"costing":"auto","directions_options":{"units":"kilometers"}}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":41.388786,"lon":2.158985,"city":"Barcelona"},{"lat":43.556946,"lon":-5.924722,"city":"Aviles"}],"costing":"auto","directions_options":{"units":"kilometers"}}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":43.306357,"lon":-5.688225},{"lat":43.532201,"lon":-5.66112}],"costing":"auto","directions_options":{"units":"kilometers"}}' --config ../conf/valhalla.json
