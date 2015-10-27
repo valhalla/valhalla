@@ -109,7 +109,7 @@ std::unordered_set<GraphId> which_tiles(const ptree& pt) {
 
 #define set_no_null(T, pt, path, null_value, set) {\
   auto value = pt.get<T>(path, null_value); \
-  if(value != null_value) \
+  /*if(value != null_value)*/ \
     set(value); \
 }
 
@@ -130,7 +130,7 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     stop->set_wheelchair_boarding(stop_pt.second.get<bool>("tags.wheelchair_boarding", false));
     set_no_null(uint64_t, stop_pt.second, "tags.osm_way_id", 0, stop->set_osm_way_id);
     GraphId stop_id = tile_id;
-    stop_id.id = stops.size();
+    stop_id.fields.id = stops.size();
     stop->set_graphid(stop_id);
     stop->set_timezone(0);
     auto timezone = stop_pt.second.get_optional<std::string>("timezone");
