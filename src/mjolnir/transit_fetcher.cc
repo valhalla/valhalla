@@ -113,7 +113,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
   std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
-  std::uniform_int_distribution<size_t> distribution(static_cast<size_t>(100), static_cast<size_t>(300));
+  std::uniform_int_distribution<size_t> distribution(static_cast<size_t>(50), static_cast<size_t>(250));
 
   //for each tile
   for(; start != end; ++start) {
@@ -126,7 +126,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     auto extra_params = (boost::format("&service_from_date=%1%-%2%-%3%&api_key=%4%")
       % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
     boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/stops?per_page=1000&bbox=%1%,%2%,%3%,%4%")
+      "/api/v1/stops?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
@@ -167,9 +167,13 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       //break; //TODO: testing, remove
     }
 
+    //um yeah.. we need these
+    if(stops.size() == 0)
+      continue;
+
     //pull out all ROUTES
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/routes?per_page=1000&bbox=%1%,%2%,%3%,%4%")
+      "/api/v1/routes?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, size_t> routes;
     while(request) {
@@ -206,7 +210,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
     //pull out all SCHEDULE_STOP_PAIRS
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=1000&bbox=%1%,%2%,%3%,%4%")
+      "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
