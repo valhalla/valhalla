@@ -192,10 +192,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
       //save the websites to a map
       try {
-        for(const auto& route_pt : response.get_child("operators")) {
-          auto* route = tile.add_routes();
-          std::string onestop_id = route_pt.second.get<std::string>("onestop_id", "");
-          std::string website = route_pt.second.get<std::string>("website", "");
+        for(const auto& operators_pt : response.get_child("operators")) {
+          std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
+          std::string website = operators_pt.second.get<std::string>("website", "");
           onestop_id = (onestop_id == "null" ? "" : onestop_id);
           website = (website == "null" ? "" : website);
           if (!onestop_id.empty())
@@ -294,8 +293,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
             continue;
           }
           route->set_vehicle_type(type);
-
-
           routes.emplace(route->onestop_id(), routes.size());
         }
 
