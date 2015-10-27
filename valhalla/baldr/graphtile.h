@@ -194,12 +194,12 @@ class GraphTile {
    const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
                                                const uint32_t tripid) const;
   /**
-   * Get the transit stop given its stop Id.
-   * @param   stopid  Stop Id.
+   * Get the transit stop given its graph/stop Id.
+   * @param   id  graph/stop Id.
    * @return  Returns a pointer to the transit stop information. Returns
    *          nullptr if the stop is not found.
    */
-  const TransitStop* GetTransitStop(const uint32_t stopid) const;
+  const TransitStop* GetTransitStop(const GraphId& id) const;
 
   /**
    * Get the transit route given its route Id.
