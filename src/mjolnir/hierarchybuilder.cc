@@ -98,6 +98,11 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
     return false;
   }
 
+  // Neither directed edge can be a roundabout.
+  if (edge1->roundabout() || edge2->roundabout()) {
+    return false;
+  }
+
   // classification, link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
