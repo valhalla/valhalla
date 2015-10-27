@@ -101,6 +101,11 @@ union GraphId {
   void operator ++(int);
 
   /**
+   * Advances the id
+   */
+  GraphId operator+(uint64_t offset) const;
+
+  /**
    * Less than operator for sorting.
    * @param  rhs  Right hand side graph Id for comparison.
    * @return  Returns true if this GraphId is less than the right hand side.

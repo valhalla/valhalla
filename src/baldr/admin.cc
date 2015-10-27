@@ -5,8 +5,7 @@ namespace baldr {
 
 // Constructor given parameters.
 Admin::Admin(const uint32_t country_offset, const uint32_t state_offset,
-             const std::string& country_iso, const std::string& state_iso,
-             const std::string& start_dst, const std::string& end_dst)
+             const std::string& country_iso, const std::string& state_iso)
     : country_offset_(country_offset), state_offset_(state_offset){
 
   std::size_t length = 0;
@@ -24,16 +23,6 @@ Admin::Admin(const uint32_t country_offset, const uint32_t state_offset,
   else if (state_iso.size() == kStateIso)
     length = state_iso.copy(state_iso_,kStateIso);
   else state_iso_[0]= '\0';
-
-  // YYYYMMDD
-  if (end_dst.size() == kDst)
-    length = end_dst.copy(end_dst_,kDst);
-  else end_dst_[0]= '\0';
-
-  // YYYYMMDD
-  if (start_dst.size() == kDst)
-    length = start_dst.copy(start_dst_,kDst);
-  else start_dst_[0]= '\0';
 }
 
 // Get the offset within the text/names list for the state text.
@@ -64,28 +53,6 @@ const std::string Admin::state_iso() const {
     if (state_iso_[i] == '\0')
       break;
     str.append(1,state_iso_[i]);
-  }
-  return str;
-}
-
-// When does daylight saving time start?
-const std::string Admin::start_dst() const {
-  std::string str;
-  for(int i=0; i<kDst; i++) {
-    if (start_dst_[i] == '\0')
-      break;
-    str.append(1,start_dst_[i]);
-  }
-  return str;
-}
-
-// When does daylight saving time end?
-const std::string Admin::end_dst() const {
-  std::string str;
-  for(int i=0; i<kDst; i++) {
-    if (end_dst_[i] == '\0')
-      break;
-    str.append(1,end_dst_[i]);
   }
   return str;
 }

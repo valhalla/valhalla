@@ -310,8 +310,7 @@ AdminInfo GraphTile::admininfo(const size_t idx) const {
     const Admin& admin = admins_[idx];
     return AdminInfo(textlist_ + admin.country_offset(),
                      textlist_ + admin.state_offset(),
-                     admin.country_iso(), admin.state_iso(),
-                     admin.start_dst(), admin.end_dst());
+                     admin.country_iso(), admin.state_iso());
   }
   throw std::runtime_error("GraphTile AdminInfo index out of bounds");
 }
