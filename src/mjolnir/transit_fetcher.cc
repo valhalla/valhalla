@@ -12,6 +12,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/format.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
 #include <curl/curl.h>
 
 #include <valhalla/midgard/logging.h>
@@ -123,6 +124,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
     //pull out all the STOPS
     std::unordered_map<std::string, uint64_t> stops;
+
     auto extra_params = (boost::format("&service_from_date=%1%-%2%-%3%&api_key=%4%")
       % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
     boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
@@ -151,11 +153,55 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
           auto* stop = tile.add_stops();
           stop->set_lon(lon);
           stop->set_lat(lat);
-          stop->set_onestop_id(stop_pt.second.get<std::string>("onestop_id"));
+          stop->set_onestop_id(stop_pt.second.get<std::string>("onestop_id", ""));
+          stop->set_name(stop_pt.second.get<std::string>("name", ""));
+          stop->set_timezone(stop_pt.second.get<std::string>("timezone", ""));
+          stop->set_wheelchair_boarding(stop_pt.second.get<bool>("tags.wheelchair_boarding", false));
+          stop->set_osm_way_id(stop_pt.second.get<uint64_t>("tags.osm_way_id", 0));
           stop->set_graphid(*start + stops.size());
           stops.emplace(stop->onestop_id(), stop->graphid());
-          //TODO: copy rest of attributes
         }
+        //please sir may i have some more?
+        request = response.get_optional<std::string>("meta.next");
+      }//if it doesnt come back, take a rest and try again
+      catch(const std::exception& e) {
+        LOG_WARN(curler.last());
+        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
+        continue;
+      }
+      //break; //TODO: testing, remove
+    }
+
+    //pull out all operator web sites
+    request = (boost::format(pt.get<std::string>("base_url") +
+                             "/api/v1/operators?per_page=1000&bbox=%1%,%2%,%3%,%4%")
+    % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+    std::unordered_map<std::string, std::string> websites;
+
+    while(request) {
+      //grab some stuff
+      try {
+        LOG_INFO(*request + extra_params);
+        response = curler(*request + extra_params);
+      }//if it doesnt come back, take a rest and try again
+      catch(const std::exception& e) {
+        LOG_WARN(e.what());
+        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
+        continue;
+      }
+
+      //save the websites to a map
+      try {
+        for(const auto& route_pt : response.get_child("operators")) {
+          auto* route = tile.add_routes();
+          std::string onestop_id = route_pt.second.get<std::string>("onestop_id", "");
+          std::string website = route_pt.second.get<std::string>("website", "");
+          onestop_id = (onestop_id == "null" ? "" : onestop_id);
+          website = (website == "null" ? "" : website);
+          if (!onestop_id.empty())
+            websites.emplace(onestop_id, website);
+        }
+
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -172,6 +218,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       "/api/v1/routes?per_page=1000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, size_t> routes;
+
     while(request) {
       //grab some stuff
       try {
@@ -188,9 +235,65 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       try {
         for(const auto& route_pt : response.get_child("routes")) {
           auto* route = tile.add_routes();
-          route->set_onestop_id(route_pt.second.get<std::string>("onestop_id"));
+
+          std::string onestop_id = route_pt.second.get<std::string>("onestop_id", "");
+          std::string operated_by_onestop_id = route_pt.second.get<std::string>("operated_by_onestop_id", "");
+          std::string operated_by_name = route_pt.second.get<std::string>("operated_by_name", "");
+
+          std::string shortname = route_pt.second.get<std::string>("name", "");
+          std::string longname = route_pt.second.get<std::string>("tags.route_long_name", "");
+          std::string desc = route_pt.second.get<std::string>("tags.route_desc", "");
+          std::string vehicle_type = route_pt.second.get<std::string>("tags.vehicle_type", "");
+
+          std::string route_color = route_pt.second.get<std::string>("tags.route_color", "");
+          std::string route_text_color = route_pt.second.get<std::string>("tags.route_text_color", "");
+          boost::algorithm::trim(route_color);
+          boost::algorithm::trim(route_text_color);
+          route_color = (route_color == "null" || route_color.empty() ? "FFFFFF" : route_color);
+          route_text_color = (route_text_color == "null" ||
+                              route_text_color.empty() ? "000000" : route_text_color);
+
+          route->set_name(shortname == "null" ? "" : shortname);
+          route->set_onestop_id(onestop_id == "null" ? "" : onestop_id);
+          route->set_operated_by_name(operated_by_name == "null" ? "" : operated_by_name);
+          route->set_operated_by_onestop_id(operated_by_onestop_id == "null" ? "" : operated_by_onestop_id);
+
+          auto website = websites.find(route->operated_by_onestop_id());
+          if(website != websites.cend()) {
+            route->set_operated_by_website(website->second);
+          }
+
+          route->set_route_color(strtol(route_color.c_str(), nullptr, 16));
+          route->set_route_desc(desc == "null" ? "" : desc);
+          route->set_route_long_name(longname == "null" ? "" : longname);
+          route->set_route_text_color(strtol(route_text_color.c_str(), nullptr, 16));
+
+          Transit_VehicleType type = Transit_VehicleType::Transit_VehicleType_kRail;
+
+          if (vehicle_type == "tram")
+            type = Transit_VehicleType::Transit_VehicleType_kTram;
+          else if (vehicle_type == "metro")
+            type = Transit_VehicleType::Transit_VehicleType_kMetro;
+          else if (vehicle_type == "rail")
+            type = Transit_VehicleType::Transit_VehicleType_kRail;
+          else if (vehicle_type == "bus")
+            type = Transit_VehicleType::Transit_VehicleType_kBus;
+          else if (vehicle_type == "ferry")
+            type = Transit_VehicleType::Transit_VehicleType_kFerry;
+          else if (vehicle_type == "cablecar")
+            type = Transit_VehicleType::Transit_VehicleType_kCableCar;
+          else if (vehicle_type == "gondola")
+            type = Transit_VehicleType::Transit_VehicleType_kGondola;
+          else if (vehicle_type == "funicular")
+            type = Transit_VehicleType::Transit_VehicleType_kFunicular;
+          else {
+            LOG_ERROR("Unsupported vehicle_type: " + vehicle_type + " for " + onestop_id);
+            continue;
+          }
+          route->set_vehicle_type(type);
+
+
           routes.emplace(route->onestop_id(), routes.size());
-          //TODO: copy rest of attributes
         }
 
         //please sir may i have some more?
@@ -205,6 +308,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     }
 
     //pull out all SCHEDULE_STOP_PAIRS
+    std::unordered_map<std::string, size_t> trips;
+    std::unordered_map<std::string, size_t> block_ids;
+
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=1000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
@@ -246,6 +352,80 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
             continue;
           }
           pair->set_route_index(route->second);
+
+          std::string t = pair_pt.second.get<std::string>("trip");
+          t = (t == "null" ? "" : t);
+
+          if (t.empty()) {
+            LOG_ERROR("No trip set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+            tile.mutable_stop_pairs()->RemoveLast();
+            continue;
+          }
+
+          auto trip = trips.find(t);
+          if(trip == trips.cend()) {
+            pair->set_trip_key(trips.size());
+            trips.emplace(t, trips.size());
+          }
+          else pair->set_trip_key(trip->second);
+
+          std::string block_id = pair_pt.second.get<std::string>("block_id");
+          block_id = (block_id == "null" ? "" : block_id);
+
+          if (block_id.empty()) {
+            pair->set_block_id(0);
+          } else {
+            auto b_id = block_ids.find(block_id);
+            if (b_id == block_ids.cend()) {
+              pair->set_block_id(block_ids.size());
+              block_ids.emplace(block_id, block_ids.size());
+            }
+            else pair->set_block_id(b_id->second);
+          }
+
+          pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
+
+          std::string origin_time = pair_pt.second.get<std::string>("origin_departure_time", "");
+          std::string dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "");
+          if (origin_time.empty() || dest_time.empty()) {
+            LOG_ERROR("Origin or destination time not set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+            tile.mutable_stop_pairs()->RemoveLast();
+            continue;
+          }
+          pair->set_origin_departure_time(origin_time);
+          pair->set_destination_arrival_time(origin_time);
+
+          std::string start_date = pair_pt.second.get<std::string>("service_start_date", "");
+          std::string end_date = pair_pt.second.get<std::string>("service_end_date", "");
+          pair->set_service_start_date(start_date);
+          pair->set_service_end_date(end_date);
+
+          for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
+            pair->add_service_added_dates(service_days.second.get_value<std::string>());
+          }
+
+          std::string tz = pair_pt.second.get<std::string>("origin_timezone", "");
+          pair->set_origin_timezone(tz == "null" ? "" : tz);
+
+          std::string headsign = pair_pt.second.get<std::string>("trip_headsign", "");
+          pair->set_trip_headsign(headsign == "null" ? "" : headsign);
+
+          pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
+
+          const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
+          if (except_dates && !except_dates->empty()) {
+            for(const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
+              pair->add_service_except_dates(service_except_dates.second.get_value<std::string>());
+            }
+          }
+
+          const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
+          if (added_dates && !added_dates->empty()) {
+            for(const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
+              pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
+            }
+          }
+
           //TODO: copy rest of attributes
         }
 
