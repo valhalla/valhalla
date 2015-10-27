@@ -183,6 +183,9 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       }
       //break; //TODO: testing, remove
     }
+    //um yeah.. we need these
+    if(stops.size() == 0)
+      continue;
 
     //pull out all operator web sites
     request = (boost::format(pt.get<std::string>("base_url") +
@@ -223,9 +226,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       }
       //break; //TODO: testing, remove
     }
-    //um yeah.. we need these
-    if(stops.size() == 0)
-      continue;
 
     //pull out all ROUTES
     request = (boost::format(pt.get<std::string>("base_url") +
