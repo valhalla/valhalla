@@ -19,6 +19,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/datetime.h>
 
 #include "proto/transit.pb.h"
 
@@ -142,6 +143,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
         continue;
       }
 
+      const std::vector<std::string> regions = DateTime::get_tz_db().regions;
       //copy stops in, keeping map of stopid to graphid
       try {
         for(const auto& stop_pt : response.get_child("stops")) {
@@ -155,7 +157,17 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
           stop->set_lat(lat);
           stop->set_onestop_id(stop_pt.second.get<std::string>("onestop_id", ""));
           stop->set_name(stop_pt.second.get<std::string>("name", ""));
-          stop->set_timezone(stop_pt.second.get<std::string>("timezone", ""));
+
+          auto timezone = stop_pt.second.get_optional<std::string>("timezone");
+          stop->set_timezone(0);
+          if (timezone) {
+            std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), *timezone);
+            if (it == regions.end()) {
+              LOG_WARN("Timezone not found for " + *timezone);
+            } else stop->set_timezone(std::distance(regions.begin(),it));
+          }
+          else LOG_WARN("Timezone not found for stop " + stop->name());
+
           stop->set_wheelchair_boarding(stop_pt.second.get<bool>("tags.wheelchair_boarding", false));
           stop->set_osm_way_id(stop_pt.second.get<uint64_t>("tags.osm_way_id", 0));
           stop->set_graphid(*start + stops.size());
