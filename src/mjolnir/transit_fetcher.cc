@@ -305,6 +305,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
             continue;
           }
           route->set_vehicle_type(type);
+          route->set_route_index(routes.size());
           routes.emplace(route->onestop_id(), routes.size());
         }
 
