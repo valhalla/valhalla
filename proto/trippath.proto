@@ -89,13 +89,13 @@ message TripPath {
   // TODO: review and update as needed
   enum TransitType {
     kTram = 0;
-    kSubway = 1;
+    kMetro = 1;
     kRail = 2;
     kBus = 3;
     kFerry = 4;
     kCableCar = 5;
     kGondola = 6;
-    kFenicular = 7;
+    kFunicular = 7;
   }
 
   message TransitRouteInfo {
