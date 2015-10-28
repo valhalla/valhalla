@@ -876,14 +876,13 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
     // Form all tiles in new level
     FormTilesInNewLevel(base_level->second, new_level->second, info, sample);
-    LOG_INFO((boost::format("Created %1% shortcuts") % info.shortcutcount_).str());
 
     // Form connections (directed edges) in the base level tiles to
     // the new level. Note that the new tiles are created before adding
     // connections to base tiles. That way all access to old tiles is
     // complete and the base tiles can be updated.
     ConnectBaseLevelToNewLevel(base_level->second, new_level->second, info);
-    LOG_INFO("Finished");
+    LOG_INFO("Finished with " + std::to_string(info.shortcutcount_) + " shortcuts");
   }
 }
 
