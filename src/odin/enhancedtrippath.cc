@@ -896,12 +896,6 @@ std::string EnhancedTripPath_Admin::ToString() const {
   str += " | state_text=";
   str += state_text();
 
-  str += " | start_dst=";
-  str += start_dst();
-
-  str += " | end_dst=";
-  str += end_dst();
-
   return str;
 }
 

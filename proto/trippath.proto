@@ -202,8 +202,6 @@ message TripPath {
     optional string country_text = 2;
     optional string state_code = 3;
     optional string state_text = 4;
-    optional string start_dst = 5;
-    optional string end_dst = 6;
   }
   
   optional uint64 trip_id = 1;
