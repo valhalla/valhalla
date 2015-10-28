@@ -44,6 +44,17 @@ namespace {
     }
     return array;
   }
+
+  void check_distance(const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float max_distance) {
+    //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
+    for(size_t i = start; i < end; ++i) {
+      //check if distance between latlngs exceed max distance limit the chosen matrix type
+      auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
+
+      if (path_distance > max_distance)
+        throw std::runtime_error("Path distance exceeds the max distance limit.");
+    }
+  }
 }
 
 namespace valhalla {
@@ -66,18 +77,18 @@ namespace valhalla {
        case ONE_TO_MANY:
          matrix_type = "one_to_many";
          max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
-         check_distance(0,0,locations.size(),max_distance);
+         check_distance(locations,0,0,locations.size(),max_distance);
          break;
        case MANY_TO_ONE:
          matrix_type = "many_to_one";
          max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
-         check_distance(locations.size()-1,0,locations.size()-1,max_distance);
+         check_distance(locations,locations.size()-1,0,locations.size()-1,max_distance);
          break;
        case MANY_TO_MANY:
          matrix_type = "many_to_many";
          max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
          for(size_t i = 0; i < locations.size()-1; ++i)
-            check_distance(i,(i+1),locations.size(),max_distance);
+            check_distance(locations,i,(i+1),locations.size(),max_distance);
          break;
      }
 
@@ -99,17 +110,6 @@ namespace valhalla {
       worker_t::result_t result{true};
       result.messages.emplace_back(stream.str());
       return result;
-    }
-
-    void loki_worker_t::check_distance(const size_t origin, const size_t start, const size_t end, float max_distance) {
-      //one to many should be distance between:a,b a,c ; many to one: a,c b,c ; many to many should be all pairs
-      for(size_t i = start; i < end; ++i) {
-        //check if distance between latlngs exceed max distance limit the chosen matrix type
-        auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
-
-        if (path_distance > max_distance)
-          throw std::runtime_error("Path distance exceeds the max distance limit.");
-      }
     }
   }
 }
