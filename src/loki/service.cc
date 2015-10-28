@@ -124,9 +124,9 @@ namespace valhalla {
       }
 
       for (const std::string& mtype : matrix_types) {
-        auto matrix_max_area = config.get<float>("service_limits." + mtype + ".max_area");
-        if (!matrix_max_area)
-          throw std::runtime_error("The config max_area for " + mtype + " is not found.");
+        auto matrix_max_distance = config.get<float>("service_limits." + mtype + ".max_distance");
+        if (!matrix_max_distance)
+          throw std::runtime_error("The config max_distance for " + mtype + " is not found.");
         auto matrix_max_locations = config.get<size_t>("service_limits." + mtype + ".max_locations");
         if (!matrix_max_locations)
           throw std::runtime_error("The config max_locations for " + mtype + " is not found.");
