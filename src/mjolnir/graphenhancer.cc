@@ -696,7 +696,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
         geom = (char*)sqlite3_column_text(stmt, 6);
 
       uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
-                                            country_iso,state_iso,"","");
+                                            country_iso,state_iso);
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
@@ -1097,7 +1097,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Create a dummy admin record at index 0. Used if admin records
     // are not used/created or if none is found.
-    tilebuilder.AddAdmin("None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","");
 
     // this will be our updated list of restictions.
     // need to do some conversions on weights; therefore, we must update
