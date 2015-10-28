@@ -120,8 +120,6 @@ void AssignAdmins(TripPath& trip_path,
     trip_admin->set_country_text(admin_info.country_text());
     trip_admin->set_state_code(admin_info.state_iso());
     trip_admin->set_state_text(admin_info.state_text());
-    trip_admin->set_start_dst(admin_info.start_dst());
-    trip_admin->set_end_dst(admin_info.end_dst());
   }
 }
 
