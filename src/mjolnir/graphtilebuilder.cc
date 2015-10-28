@@ -68,8 +68,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   }
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     stop_builder_.emplace_back(std::move(transit_stops_[i]));
+    text_offsets.insert(transit_stops_[i].one_stop_offset());
     text_offsets.insert(transit_stops_[i].name_offset());
-    text_offsets.insert(transit_stops_[i].desc_offset());
   }
   for (uint32_t i = 0; i < header_->routecount(); i++) {
     route_builder_.emplace_back(std::move(transit_routes_[i]));
@@ -95,8 +95,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->admincount(); i++) {
     admins_builder_.emplace_back(admins_[i].country_offset(),
                 admins_[i].state_offset(), admins_[i].country_iso(),
-                admins_[i].state_iso(),admins_[i].start_dst(),
-                admins_[i].end_dst());
+                admins_[i].state_iso());
     text_offsets.insert(admins_[i].country_offset());
     text_offsets.insert(admins_[i].state_offset());
   }
@@ -570,8 +569,7 @@ uint32_t GraphTileBuilder::AddName(const std::string& name) {
 // Add admin
 uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
             const std::string& state_name, const std::string& country_iso,
-            const std::string& state_iso,const std::string& start_dst,
-            const std::string& end_dst) {
+            const std::string& state_iso) {
   // Check if admin already exists
   auto existing_admin_info_offset_item = admin_info_offset_map_.find(country_iso+state_name);
   if (existing_admin_info_offset_item == admin_info_offset_map_.end()) {
@@ -579,8 +577,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
     uint32_t country_offset = AddName(country_name);
     uint32_t state_offset   = AddName(state_name);
     admins_builder_.emplace_back(country_offset, state_offset,
-                                 country_iso, state_iso,
-                                 start_dst, end_dst);
+                                 country_iso, state_iso);
 
     // Add to the map
     admin_info_offset_map_.emplace(country_iso+state_name, admins_builder_.size()-1);

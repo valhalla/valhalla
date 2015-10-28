@@ -222,14 +222,10 @@ class GraphTileBuilder : public baldr::GraphTile {
    *                        Prince Edward Island = PE
    *                        Country ISO + dash + state ISO will give
    *                        you ISO3166-2 for state.
-   * @param  start_dst      Date when daylight savings time starts.
-   * @param  end_dst        Date when daylight savings time ends.
-   *
    * @return  The admin offset that will be stored on the node.
    */
   uint32_t AddAdmin(const std::string& country_name, const std::string& state_name,
-                    const std::string& country_iso, const std::string& state_iso,
-                    const std::string& start_dst, const std::string& end_dst);
+                    const std::string& country_iso, const std::string& state_iso);
 
   /**
    * Gets a builder for a node from an existing tile.
