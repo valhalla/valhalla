@@ -270,7 +270,7 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     set_no_null(std::string, pair_pt.second, "service_start_date", "null", pair->set_service_start_date);
     set_no_null(std::string, pair_pt.second, "service_end_date", "null", pair->set_service_end_date);
     for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
-      pair->add_service_added_dates(service_days.second.get_value<std::string>());
+      pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
 
     set_no_null(std::string, pair_pt.second, "origin_timezone", "null", pair->set_origin_timezone);
