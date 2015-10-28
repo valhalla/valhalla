@@ -318,7 +318,7 @@ enum class DOW : uint8_t {
 //This is our pivot date for transit.  No dates will be older than this date.
 const std::string kPivotDate = "20140101";  //January 1, 2014
 
-// Used for transit DOW mask.
+// Used for day of week mask.
 constexpr uint8_t kDOWNone    = 0;
 constexpr uint8_t kSunday     = 1;
 constexpr uint8_t kMonday     = 2;
@@ -327,6 +327,7 @@ constexpr uint8_t kWednesday  = 8;
 constexpr uint8_t kThursday   = 16;
 constexpr uint8_t kFriday     = 32;
 constexpr uint8_t kSaturday   = 64;
+constexpr uint8_t kAllDaysOfWeek = 127;
 
 // Restriction types. If a restriction exists this value will be set.
 // Restrictions with "Only" will restrict all turns not adhering to the
@@ -341,7 +342,7 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6
 };
 
-// Access Restriction types.
+// Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
 enum class AccessType : uint8_t {
   kHazmat = 0,
   kMaxHeight = 1,
