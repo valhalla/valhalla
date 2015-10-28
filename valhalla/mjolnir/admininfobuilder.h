@@ -11,8 +11,7 @@ class AdminInfoBuilder : public baldr::Admin {
 
 
   AdminInfoBuilder(const uint32_t country_offset, const uint32_t state_offset,
-                   const std::string& country_iso, const std::string& state_iso,
-                   const std::string& start_dst, const std::string& end_dst);
+                   const std::string& country_iso, const std::string& state_iso);
 };
 
 }
