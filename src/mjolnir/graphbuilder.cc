@@ -306,6 +306,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   return mask;
 }
 
+// Add an access restriction
 void AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
                         const OSMData& osmdata, GraphTileBuilder& graphtile) {
 
@@ -314,8 +315,13 @@ void AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
     return;
   }
 
+  // TODO - support modes, days of week, 64 bit values (with different
+  // meanings based on restriction type).
+  uint32_t modes;  // TODO!!!
+  uint32_t days_of_week = kAllDaysOfWeek;
   for (auto r = res.first; r != res.second; ++r) {
-    AccessRestriction access_restriction(edgeid, r->second.type(),  r->second.value());
+    AccessRestriction access_restriction(edgeid, r->second.type(), modes,
+                                         days_of_week, r->second.value());
     graphtile.AddAccessRestriction(access_restriction);
   }
 }
