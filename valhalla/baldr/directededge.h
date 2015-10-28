@@ -371,6 +371,13 @@ class DirectedEdge {
   bool is_shortcut() const;
 
   /**
+   * Does this directed edge end in a different tile.
+   * @return  Returns true if the end node of this directed edge
+   *          is in a different tile.
+   */
+  bool leaves_tile() const;
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
@@ -466,7 +473,8 @@ class DirectedEdge {
                                 // level in the hierarchy
   uint32_t trans_down_    : 1;  // Transition down one level
   uint32_t is_shortcut_   : 1;  // True if this edge is a shortcut.
-  uint32_t spare2_        : 1;
+  uint32_t leaves_tile_   : 1;  // True if the end node of this directed edge
+                                // is in a different tile.
 };
 
 }
