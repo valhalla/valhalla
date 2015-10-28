@@ -8,12 +8,11 @@ TransitStop::TransitStop(TripPath_TransitStopInfo_Type type,
                          std::string onestop_id, std::string name,
                          std::string arrival_date_time,
                          std::string departure_date_time,
-                         std::string parent_onestop_id, bool is_parent_stop)
+                         bool is_parent_stop)
     : onestop_id(onestop_id),
       name(name),
       arrival_date_time(arrival_date_time),
       departure_date_time(departure_date_time),
-      parent_onestop_id(onestop_id),
       is_parent_stop(is_parent_stop) {
   set_type(type);
 }

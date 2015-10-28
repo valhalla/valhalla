@@ -177,8 +177,7 @@ message TripPath {
     optional string name = 3;                // The name of the stop
     optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
     optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
-    optional string parent_onestop_id = 6;
-    optional bool is_parent_stop = 7;
+    optional bool is_parent_stop = 6;
   }
 
   message Node {

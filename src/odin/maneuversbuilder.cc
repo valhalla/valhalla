@@ -678,7 +678,6 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
                       node->transit_stop_info().name(),
                       node->transit_stop_info().arrival_date_time(),
                       node->transit_stop_info().departure_date_time(),
-                      node->transit_stop_info().parent_onestop_id(),
                       node->transit_stop_info().is_parent_stop()));
     }
     // else mark it as transit connection destination
@@ -778,7 +777,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
                                node->transit_stop_info().name(),
                                node->transit_stop_info().arrival_date_time(),
                                node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().parent_onestop_id(),
                                node->transit_stop_info().is_parent_stop());
   }
 
@@ -856,7 +854,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
                     node->transit_stop_info().name(),
                     node->transit_stop_info().arrival_date_time(),
                     node->transit_stop_info().departure_date_time(),
-                    node->transit_stop_info().parent_onestop_id(),
                     node->transit_stop_info().is_parent_stop()));
   }
 
@@ -868,7 +865,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
                                node->transit_stop_info().name(),
                                node->transit_stop_info().arrival_date_time(),
                                node->transit_stop_info().departure_date_time(),
-                               node->transit_stop_info().parent_onestop_id(),
                                node->transit_stop_info().is_parent_stop());
   }
 

@@ -867,9 +867,6 @@ std::string EnhancedTripPath_Node::ToString() const {
     str += " | transit_stop_info.departure_date_time=";
     str += transit_stop_info().departure_date_time();
 
-    str += " | transit_stop_info.parent_onestop_id=";
-    str += transit_stop_info().parent_onestop_id();
-
     str += " | transit_stop_info.is_parent_stop=";
     str += std::to_string(transit_stop_info().is_parent_stop());
   }
