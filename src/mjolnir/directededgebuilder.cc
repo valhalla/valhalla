@@ -530,5 +530,11 @@ void DirectedEdgeBuilder::set_trans_down(const bool trans_down) {
   trans_down_ = trans_down;
 }
 
+// Set the flag indicating whether the end node of this directed edge is in
+// a different tile
+void DirectedEdgeBuilder::set_leaves_tile(const bool leaves_tile) {
+  leaves_tile_ = leaves_tile;
+}
+
 }
 }

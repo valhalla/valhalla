@@ -442,6 +442,15 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
    */
   void set_trans_down(const bool trans_down);
 
+  /**
+   * Set the flag indicating whether the end node of this directed edge is in
+   * a different tile
+   * @param  leaves_tile  True if the end node of this edge is in a different
+   *                      tile than the start node (and the directed edge
+   *                      itself).
+   */
+  void set_leaves_tile(const bool leaves_tile);
+
 };
 
 }
