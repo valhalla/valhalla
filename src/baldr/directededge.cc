@@ -321,6 +321,11 @@ bool DirectedEdge::is_shortcut() const {
   return is_shortcut_;
 }
 
+// Does this directed edge end in a different tile.
+bool DirectedEdge::leaves_tile() const {
+  return leaves_tile_;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   return json::map({
