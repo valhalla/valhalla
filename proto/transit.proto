@@ -51,15 +51,16 @@ message Transit {
  
   message Route {
     optional string name = 1;
-    optional string onestop_id = 2;
-    optional string operated_by_name = 3;
-    optional string operated_by_onestop_id = 4;
-    optional string operated_by_website = 5;
-    optional uint32 route_color = 6;
-    optional string route_desc = 7; 
-    optional string route_long_name = 8;
-    optional uint32 route_text_color = 9;
-    optional VehicleType vehicle_type = 10;     
+    optional uint32 route_index = 2;
+    optional string onestop_id = 3;
+    optional string operated_by_name = 4;
+    optional string operated_by_onestop_id = 5;
+    optional string operated_by_website = 6;
+    optional uint32 route_color = 7;
+    optional string route_desc = 8; 
+    optional string route_long_name = 9;
+    optional uint32 route_text_color = 10;
+    optional VehicleType vehicle_type = 11;     
   }
  
   repeated Stop stops = 1;
