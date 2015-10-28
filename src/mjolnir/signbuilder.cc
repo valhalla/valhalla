@@ -7,14 +7,14 @@ namespace mjolnir {
 
 // Constructor with arguments
 SignBuilder::SignBuilder(const uint32_t idx,
-                                 const Sign::Type& type,
-                                 const uint32_t text_offset)
+                         const Sign::Type& type,
+                         const uint32_t text_offset)
     : Sign(idx, type, text_offset) {
 }
 
 // Set the directed edge index.
 void SignBuilder::set_edgeindex(const uint32_t idx) {
-  data_.edgeindex = idx;
+  edgeindex_ = idx;
 }
 
 }
