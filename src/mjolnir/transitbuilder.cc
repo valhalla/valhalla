@@ -1,5 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "proto/transit.pb.h"
 
 #include <list>
 #include <future>
@@ -10,6 +11,8 @@
 #include <unordered_map>
 #include <sqlite3.h>
 #include <spatialite.h>
+#include <fstream>
+#include <iostream>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
@@ -32,7 +35,6 @@ struct Stop {
   // Need to add onestop Id, connections (wayid, lat,lon)
   GraphId graphid;
   uint64_t way_id;
-  uint32_t key;
   uint32_t type;
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
@@ -40,16 +42,13 @@ struct Stop {
   uint32_t timezone;
   float lon;
   float lat;
-  uint32_t onestop_id_offset;
-  uint32_t name_offset;
-  uint32_t desc_offset;
   PointLL ll() const { return {lon, lat}; }
 };
 
 struct Departure {
   uint64_t days;
-  uint32_t orig_stop;
-  uint32_t dest_stop;
+  GraphId orig_stop;
+  GraphId dest_stop;
   uint32_t trip;
   uint32_t route;
   uint32_t blockid;
@@ -73,7 +72,7 @@ struct TransitLine {
 };
 
 struct StopEdges {
-  uint32_t stop_key;                    // Stop key
+  GraphId graphid;                     // Stop key
   std::vector<uint32_t> intrastation;   // List of intra-station connections
   std::vector<TransitLine> lines;       // Set of unique route/stop pairs
 };
@@ -81,15 +80,13 @@ struct StopEdges {
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
-  uint32_t stop_key;   // Transit stop key (the to node)
   float length;
   std::list<PointLL> shape;
 
-  OSMConnectionEdge(const GraphId& f, const GraphId& t, const uint32_t k,
+  OSMConnectionEdge(const GraphId& f, const GraphId& t,
                     const float l, const std::list<PointLL>& s)
       :  osm_node(f),
          stop_node(t),
-         stop_key(k),
          length(l),
          shape(s) {
   }
@@ -115,202 +112,178 @@ struct builder_stats {
 };
 
 // Write stops within a tile to the sequence
-std::vector<Stop> GetStops(GraphTileBuilder tb, const GraphId& graph_tile_id, const size_t node_size, const std::vector<std::string>& regions) {
-  boost::property_tree::ptree pt;
+std::vector<Stop> AddStops(const std::string& file, GraphTileBuilder tilebuilder,
+                           const size_t node_size, const std::vector<std::string>& regions) {
 
   std::vector<Stop> stops;
+  Transit transit;
 
-  uint64_t idx = 0;
-  // For each stop
-  for (const auto& s : pt.get_child("stops")){
+  // Make sure it exists
+  if (boost::filesystem::exists(file)) {
+    std::fstream input(file, std::ios::in | std::ios::binary);
+
+    if (!input) {
+      LOG_ERROR("Error opening file:  " + file);
+      return stops;
+    } else if (!transit.ParseFromIstream(&input)) {
+      LOG_ERROR("Failed to parse file: " + file);
+        return stops;
+    }
+  }
+  else
+  {
+    LOG_ERROR("File not found.  " + file);
+    return stops;
+  }
+
+  for (int i = 0; i < transit.stops_size(); i++) {
+    const Transit_Stop& s = transit.stops(i);
+
     // Get the coordinates of the stop as transit land has a BoundBox bug
     Stop stop;
-    // We need linkage between stops and stop pairs
-    stop.key = s.second.get<uint32_t>("key", 0);
-    if (stop.key == 0) {
-      LOG_ERROR("Key missing for stop (" + s.second.get<std::string>("name", "None") + ")");
-      continue;
-    }
     // Strings to be added to the tile
-    stop.onestop_id_offset = tb.AddName(s.second.get<std::string>("tags.onestop_id", ""));
-    stop.name_offset = tb.AddName(s.second.get<std::string>("name", ""));
-    stop.desc_offset = tb.AddName(s.second.get<std::string>("tags.stop_desc", ""));
+    const std::string onestop_id = s.onestop_id();
+    const std::string name = s.name();
 
     // Get the rest of the fixed sized data
-    stop.lon = s.second.get_child("geometry.coordinates").front().second.get_value<float>();
-    stop.lat = s.second.get_child("geometry.coordinates").back().second.get_value<float>();
-    stop.way_id = s.second.get<uint64_t>("tags.osm_way_id", 0);
-    stop.wheelchair_boarding = s.second.get<bool>("tags.wheelchair_boarding", false);
-    auto timezone = s.second.get_optional<std::string>("timezone");
-    stop.timezone = 0;
-    if (timezone) {
-      std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), *timezone);
-      if (it == regions.end()) {
-        LOG_WARN("Timezone not found for " + *timezone);
-      } else stop.timezone = std::distance(regions.begin(),it);
-    }
-    else LOG_WARN("Timezone not found for stop " + std::to_string(stop.key));
+    stop.lon = s.lon();
+    stop.lat = s.lat();
+    stop.way_id = s.osm_way_id();
+    stop.wheelchair_boarding = s.wheelchair_boarding();
+    stop.timezone = s.timezone();
+
     //TODO: get these from transitland????
     stop.type = 0;
-    stop.parent = 0;
-    stop.graphid = graph_tile_id;
-    stop.graphid.fields.id = node_size + idx++;
+    stop.graphid = GraphId(s.graphid()) + node_size;
+
     // Add the stop to the list
     stops.emplace_back(std::move(stop));
 
+    // Store stop information in TransitStops
+    TransitStop ts(stop.graphid, tilebuilder.AddName(onestop_id),
+                   tilebuilder.AddName(name));
+    tilebuilder.AddTransitStop(ts);
   }
 
-  // Finish off the tile with new strings
-  tb.StoreTileData();
+  LOG_INFO("Added " + std::to_string(stops.size()) + " stops");
+
   return stops;
 }
 
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
-                                                              std::unordered_map<uint32_t, bool>& stop_access) {
+                                                              const size_t node_size,
+                                                              std::unordered_map<uint64_t,bool>& stop_access) {
 
-  boost::property_tree::ptree pt;
+  Transit transit;
   std::unordered_multimap<uint32_t, Departure> departures;
 
   // Make sure it exists
-  if (boost::filesystem::exists(file))
-    boost::property_tree::read_json(file, pt);
-  else
-    return departures;
+  if (boost::filesystem::exists(file)) {
+    std::fstream input(file, std::ios::in | std::ios::binary);
 
-  uint32_t key = 0;
-  try
-  {
-    for (const auto& stop_pairs : pt.get_child("schedule_stop_pairs")) {
-      auto origin_key = stop_pairs.second.get_optional<uint32_t>("origin_key");
-      auto dest_key = stop_pairs.second.get_optional<uint32_t>("destination_key");
-      if(!origin_key || !dest_key)
-        LOG_ERROR("No origin_key or destination_key not found in stops.  File: " + file);
-      key = *origin_key;
-
-      Departure dep;
-      dep.orig_stop = *origin_key;
-      dep.dest_stop = *dest_key;
-      dep.route = stop_pairs.second.get<uint32_t>("route_key", 0);
-      dep.trip = stop_pairs.second.get<uint32_t>("trip_key", 0);
-
-      if (dep.trip == 0) {
-        LOG_ERROR("Trip does not exist for route: " +  std::to_string(dep.route) +
-                  " file: " + file);
-        continue;
-      }
-
-      if (dep.route == 0) {
-        LOG_ERROR("Route does not exist for trip: " +  std::to_string(dep.trip) +
-                  " file: " + file);
-        continue;
-      }
-
-      //TODO
-      dep.shapeid = 0;
-
-      dep.blockid = stop_pairs.second.get<uint32_t>("block_key", 0);
-
-      //TODO
-      //wheelchair_accessible
-
-      const std::string origin_time = stop_pairs.second.get<std::string>("origin_departure_time", "");
-      const std::string dest_time = stop_pairs.second.get<std::string>("destination_arrival_time", "");
-
-      // bus hack for now
-      if (origin_time.empty() || dest_time.empty())
-        continue;
-
-      dep.dep_time = DateTime::seconds_from_midnight(origin_time);
-      dep.arr_time = DateTime::seconds_from_midnight(dest_time);
-
-      std::string start_date = stop_pairs.second.get<std::string>("service_start_date", "");
-      std::string end_date = stop_pairs.second.get<std::string>("service_end_date", "");
-
-      uint32_t index = 1;
-      uint32_t dow_mask = kDOWNone;
-
-      for(const auto& service_days : stop_pairs.second.get_child("service_days_of_week")) {
-        std::string day = service_days.second.get_value<std::string>();
-        bool dow = (day == "true" ? true : false);
-
-        if (dow) {
-          switch (index) {
-            case 1:
-              dow_mask |= kMonday;
-              break;
-            case 2:
-              dow_mask |= kTuesday;
-              break;
-            case 3:
-              dow_mask |= kWednesday;
-              break;
-            case 4:
-              dow_mask |= kThursday;
-              break;
-            case 5:
-              dow_mask |= kFriday;
-              break;
-            case 6:
-              dow_mask |= kSaturday;
-              break;
-            case 7:
-              dow_mask |= kSunday;
-              break;
-          }
-        }
-        index++;
-      }
-
-      dep.dow = dow_mask;
-
-      std::string tz = stop_pairs.second.get<std::string>("origin_timezone", "");
-
-      //end_date will be updated if greater than 60 days.
-      //start_date will be updated to today if the start date is in the past
-      //the start date to end date or 60 days, whichever is less.
-      //set the bits based on the dow.
-
-      dep.days = DateTime::get_service_days(start_date, end_date, tz, dow_mask);
-      dep.start_date =  DateTime::days_from_pivot_date(start_date);
-      dep.end_date =  DateTime::days_from_pivot_date(end_date);
-
-      std::string headsign = stop_pairs.second.get<std::string>("trip_headsign", "");
-      dep.headsign = (headsign == "null" ? "" : headsign);
-
-      std::string bikes_allowed = stop_pairs.second.get<std::string>("bikes_allowed", "null");
-      uint32_t access = false;
-      if (bikes_allowed == "1")
-        access = true;
-      stop_access[dep.orig_stop] = access;
-      stop_access[dep.dest_stop] = access;
-
-      //if subtractions are between start and end date then turn off bit.
-      const auto& except_dates = stop_pairs.second.get_child_optional("service_except_dates");
-      if (except_dates && !except_dates->empty()) {
-        for(const auto& service_except_dates : stop_pairs.second.get_child("service_except_dates")) {
-          std::string date = service_except_dates.second.get_value<std::string>();
-          dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
-        }
-      }
-
-      //if additions are between start and end date then turn on bit.
-      const auto& added_dates = stop_pairs.second.get_child_optional("service_added_dates");
-      //Add the additions.
-      if (added_dates && !added_dates->empty()) {
-
-        for(const auto& service_added_dates : stop_pairs.second.get_child("service_added_dates")) {
-          std::string date = service_added_dates.second.get_value<std::string>();
-          dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
-        }
-      }
-      departures.emplace(dep.orig_stop,std::move(dep));
+    if (!input) {
+      LOG_ERROR("Error opening file:  " + file);
+      return departures;
+    } else if (!transit.ParseFromIstream(&input)) {
+      LOG_ERROR("Failed to parse file: " + file);
+        return departures;
     }
   }
-  catch (std::exception &e) {
-    LOG_ERROR("ProcessStopPairs.  origin_key = " + std::to_string(key) + " Exception in json file " + file);
+  else
+  {
+    LOG_ERROR("File not found.  " + file);
+    return departures;
   }
 
+  LOG_INFO("Stop pairs " + std::to_string(transit.stop_pairs_size()) + " size");
+
+  for (int i = 0; i < transit.stop_pairs_size(); i++) {
+    const Transit_StopPair& sp = transit.stop_pairs(i);
+
+    Departure dep;
+    dep.orig_stop = GraphId(sp.origin_graphid()) + node_size;
+    dep.dest_stop = GraphId(sp.destination_graphid()) + node_size;
+    dep.route = sp.route_index();
+    dep.trip = sp.trip_key();
+
+    //TODO
+    dep.shapeid = 0;
+    dep.blockid = sp.block_id();
+
+    //TODO
+    //wheelchair_accessible
+
+    const std::string origin_time = sp.origin_departure_time();
+    const std::string dest_time = sp.destination_arrival_time();
+    dep.dep_time = DateTime::seconds_from_midnight(origin_time);
+    dep.arr_time = DateTime::seconds_from_midnight(dest_time);
+    std::string start_date = sp.service_start_date();
+    std::string end_date = sp.service_end_date();
+
+    uint32_t dow_mask = kDOWNone;
+    for (int x = 0; x < sp.service_days_of_week_size(); x++) {
+      bool dow = sp.service_days_of_week(x);
+      if (dow) {
+        switch (x) {
+          case 0:
+            dow_mask |= kMonday;
+            break;
+          case 1:
+            dow_mask |= kTuesday;
+            break;
+          case 2:
+            dow_mask |= kWednesday;
+            break;
+          case 3:
+            dow_mask |= kThursday;
+            break;
+          case 4:
+            dow_mask |= kFriday;
+            break;
+          case 5:
+            dow_mask |= kSaturday;
+            break;
+          case 6:
+            dow_mask |= kSunday;
+            break;
+        }
+      }
+    }
+
+    dep.dow = dow_mask;
+
+    std::string tz = sp.origin_timezone();
+
+    //end_date will be updated if greater than 60 days.
+    //start_date will be updated to today if the start date is in the past
+    //the start date to end date or 60 days, whichever is less.
+    //set the bits based on the dow.
+
+    dep.days = DateTime::get_service_days(start_date, end_date, tz, dow_mask);
+    dep.start_date =  DateTime::days_from_pivot_date(start_date);
+    dep.end_date =  DateTime::days_from_pivot_date(end_date);
+    dep.headsign = sp.trip_headsign();
+
+    bool bikes_allowed = sp.bikes_allowed();
+    stop_access[dep.orig_stop.id()] = bikes_allowed;
+    stop_access[dep.dest_stop.id()] = bikes_allowed;
+
+    //if subtractions are between start and end date then turn off bit.
+    for (int x = 0; x < sp.service_except_dates_size(); x++) {
+      std::string date = sp.service_except_dates(x);
+      dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
+    }
+
+    //if additions are between start and end date then turn on bit.
+    for (int x = 0; x < sp.service_added_dates_size(); x++) {
+      std::string date = sp.service_added_dates(x);
+      dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
+    }
+    departures.emplace(dep.orig_stop.id(),std::move(dep));
+  }
+
+  LOG_INFO("Added " + std::to_string(departures.size()) + " departures");
   return departures;
 }
 
@@ -318,97 +291,44 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
 std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
                    const std::unordered_set<uint32_t>& keys,
                    GraphTileBuilder& tilebuilder) {
+  Transit transit;
   // Map of route keys vs. types
   std::unordered_map<uint32_t, uint32_t> route_types;
-  boost::property_tree::ptree pt;
-
   // Make sure it exists
-  if (boost::filesystem::exists(file))
-    boost::property_tree::read_json(file, pt);
-  else
-    return route_types;
+  if (boost::filesystem::exists(file)) {
+    std::fstream input(file, std::ios::in | std::ios::binary);
 
-  uint32_t n = 0;
-  try {
-
-    for (const auto& routes : pt.get_child("routes")) {
-
-      uint32_t routeid = routes.second.get<uint32_t>("key", 0);
-
-      if (routeid == 0) {
-        LOG_ERROR("Route key not found in file " + file);
-        continue;
-      }
-
-      if (keys.find(routeid) == keys.end()) {
-        LOG_WARN("Extra route exists in File: " + file + " route key: " + std::to_string(routeid));
-        continue;
-      }
-
-      std::string onestop_id = routes.second.get<std::string>("onestop_id", "");
-      std::string operated_by_onestop_id = routes.second.get<std::string>("operated_by_onestop_id", "");
-      std::string operated_by_name = routes.second.get<std::string>("operated_by_name", "");
-
-      std::string shortname = routes.second.get<std::string>("name", "");
-      std::string longname = routes.second.get<std::string>("tags.route_long_name", "");
-      std::string desc = routes.second.get<std::string>("tags.route_desc", "");
-      std::string vehicle_type = routes.second.get<std::string>("tags.vehicle_type", "");
-
-      std::string route_color = routes.second.get<std::string>("tags.route_color", "");
-      std::string route_text_color = routes.second.get<std::string>("tags.route_text_color", "");
-
-      boost::algorithm::trim(route_color);
-      boost::algorithm::trim(route_text_color);
-
-      //default colors based on gtfs specs.
-      route_color = (route_color == "null" || route_color.empty() ? "FFFFFF" : route_color);
-      route_text_color = (route_text_color == "null" ||
-                          route_text_color.empty() ? "000000" : route_text_color);
-      uint32_t type = 0;
-
-      if (vehicle_type == "tram")
-        type = 0;
-      else if (vehicle_type == "metro")
-        type = 1;
-      else if (vehicle_type == "rail")
-        type = 2;
-      else if (vehicle_type == "bus")
-        type = 3;
-      else if (vehicle_type == "ferry")
-        type = 4;
-      else if (vehicle_type == "cablecar")
-        type = 5;
-      else if (vehicle_type == "gondola")
-        type = 6;
-      else if (vehicle_type == "funicular")
-        type = 7;
-      else {
-        LOG_WARN("Unsupported vehicle_type: " + vehicle_type);
-        continue;
-      }
-
-      // Add names and create the transit route
-      // Remove agency?
-      TransitRoute route(routeid,
-                         tilebuilder.AddName(onestop_id == "null" ? "" : onestop_id),
-                         tilebuilder.AddName(operated_by_onestop_id == "null" ? "" : operated_by_onestop_id),
-                         tilebuilder.AddName(operated_by_name == "null" ? "" : operated_by_name),
-                         strtol(route_color.c_str(), NULL, 16),
-                         strtol(route_text_color.c_str(), NULL, 16),
-                         tilebuilder.AddName(shortname == "null" ? "" : shortname),
-                         tilebuilder.AddName(longname == "null" ? "" : longname),
-                         tilebuilder.AddName(desc == "null" ? "" : desc));
-      tilebuilder.AddTransitRoute(route);
-      n++;
-      // Route type - need this to store in edge?
-      route_types[routeid] = type;
+    if (!input) {
+      LOG_ERROR("Error opening file:  " + file);
+      return route_types;
+    } else if (!transit.ParseFromIstream(&input)) {
+      LOG_ERROR("Failed to parse file: " + file);
+        return route_types;
     }
   }
-  catch (std::exception &e) {
-    LOG_ERROR("AddRoutes.  Exception in json file " + file + " for transit.  " + e.what());
+  else
+  {
+    LOG_ERROR("File not found.  " + file);
+    return route_types;
   }
 
-  LOG_DEBUG("Added " + std::to_string(n) + " routes");
+  for (int i = 0; i < transit.routes_size(); i++) {
+    const Transit_Route& r = transit.routes(i);
+      TransitRoute route(r.route_index(),
+                         tilebuilder.AddName(r.onestop_id()),
+                         tilebuilder.AddName(r.operated_by_onestop_id()),
+                         tilebuilder.AddName(r.operated_by_name()),
+                         r.route_color(),
+                         r.route_text_color(),
+                         tilebuilder.AddName(r.name()),
+                         tilebuilder.AddName(r.route_long_name()),
+                         tilebuilder.AddName(r.route_desc()));
+      tilebuilder.AddTransitRoute(route);
+      // Route type - need this to store in edge?
+      route_types[r.route_index()] = r.vehicle_type();
+  }
+
+  LOG_INFO("Added " + std::to_string(route_types.size()) + " routes");
 
   return route_types;
 }
@@ -542,9 +462,9 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, c
 void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::vector<Stop>& stops,
-                const std::unordered_map<uint32_t, bool>& stop_access,
+                const std::unordered_map<uint64_t, bool>& stop_access,
                 const std::vector<OSMConnectionEdge>& connection_edges,
-                const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
+                const std::unordered_map<uint64_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
@@ -595,7 +515,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
            connection_edges[added_edges].osm_node.id() == nodeid) {
       DirectedEdgeBuilder directededge;
       const OSMConnectionEdge& conn = connection_edges[added_edges];
-      const Stop& stop = stops[stop_indexes.find(conn.stop_key)->second];
+      const Stop& stop = stops[stop_indexes.find(conn.stop_node)->second];
       directededge.set_endnode(conn.stop_node);
       directededge.set_length(conn.length);
       directededge.set_use(Use::kTransitConnection);
@@ -637,15 +557,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   uint32_t nadded = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the stop information
-    uint32_t stopkey = stop_edges.second.stop_key;
+    uint64_t stopkey = stop_edges.second.graphid.id();
     const Stop& stop = stops[stop_indexes.find(stopkey)->second];
-    if (stop.key != stopkey) {
+    if (stop.graphid.id() != stopkey) {
       LOG_ERROR("Stop key not equal!");
     }
 
     // Build the node info. Use generic transit stop type
     uint32_t access = kPedestrianAccess;
-    auto s_access = stop_access.find(stop.key);
+    auto s_access = stop_access.find(stop.graphid.id());
     if (s_access != stop_access.end()) {
       if (s_access->second)
         access |= kBicycleAccess;
@@ -658,7 +578,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
-    node.set_stop_id(stop.key);
+    node.set_stop_id(stop.graphid);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
@@ -666,7 +586,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
     for (const auto& conn : connection_edges) {
-      if (conn.stop_key == stop.key) {
+      if (conn.stop_node == stop.graphid) {
         DirectedEdgeBuilder directededge;
         directededge.set_endnode(conn.osm_node);
         directededge.set_length(conn.length);
@@ -697,7 +617,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     for (const auto& endstopkey : stop_edges.second.intrastation) {
       DirectedEdgeBuilder directededge;
       const Stop& endstop = stops[stop_indexes.find(endstopkey)->second];
-      if (endstopkey != endstop.key) {
+      if (endstopkey != endstop.graphid) {
         LOG_ERROR("End stop key not equal");
       }
       directededge.set_endnode(endstop.graphid);
@@ -832,7 +752,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
   if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
     stop.conn_count = 0;
     const AABB2<PointLL>& aabb = tile->BoundingBox(tilehierarchy);
-    LOG_ERROR("No closest edge found for this stop: " + std::to_string(stop.key) + " way Id = " +
+    LOG_ERROR("No closest edge found for this stop: " + std::to_string(stop.graphid) + " way Id = " +
               std::to_string(wayid) + " tile " + std::to_string(aabb.minx()) + ", " + std::to_string(aabb.miny()) + ", " +
               std::to_string(aabb.maxx()) + ", " +  std::to_string(aabb.maxy()));
     return;
@@ -853,7 +773,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
     length = std::max(1.0f, valhalla::midgard::length(shape));
 
     // Add connection to start node
-    connection_edges.push_back({startnode, stop.graphid, stop.key, length, shape});
+    connection_edges.push_back({startnode, stop.graphid, length, shape});
     stop.conn_count++;
   }
 
@@ -872,7 +792,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
       length2 = std::max(1.0f, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
-      connection_edges.push_back({endnode, stop.graphid, stop.key, length2, shape2});
+      connection_edges.push_back({endnode, stop.graphid, length2, shape2});
       stop.conn_count++;
     }
   }
@@ -881,7 +801,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
       (length + length2) < edgelength-1) {
     LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop "
-             + std::to_string(stop.key));
+             + std::to_string(stop.graphid));
   }
 
   if (stop.conn_count == 0) {
@@ -920,7 +840,7 @@ void build(const std::string& transit_dir,
 
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), hierarchy);
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
-    file_name += ".json";
+    file_name += ".pbf";
     const std::string file = transit_dir + file_name;
 
     // Iterate through stops and form connections to OSM network. Each
@@ -930,13 +850,12 @@ void build(const std::string& transit_dir,
     // iteration...?
     // TODO - handle a list of connections/egrees points
     // TODO - what if we split the edge and insert a node?
-    std::vector<Stop> stops = GetStops(tilebuilder,tile_id,tile_start->second,DateTime::get_tz_db().regions);
+    std::vector<Stop> stops = AddStops(file,tilebuilder,tile_start->second,DateTime::get_tz_db().regions);
 
     std::vector<OSMConnectionEdge> connection_edges;
-    auto stop_itr = stops[tile_start->second];
     Stop stop;
-    std::unordered_map<uint32_t, uint32_t> stop_indexes;
-    std::unordered_multimap<uint32_t, size_t> children;
+    std::unordered_map<uint64_t, uint32_t> stop_indexes;
+    std::unordered_multimap<uint64_t, uint64_t> children;
 
     // Create a map of stop key to index in the stop vector
     uint32_t n = 0;
@@ -945,11 +864,11 @@ void build(const std::string& transit_dir,
       if (stop.parent == 0) {
         //TODO: multiple threads writing into the stops at once but never the same one, right?
         AddOSMConnection(stop, tile, hierarchy, connection_edges);
-        stop_indexes[stop.key] = n;
+        stop_indexes[stop.graphid.id()] = n;
       }
       // Do we have have a parent
       if (stop.type == 0 && stop.parent != 0) {
-        children.emplace(stop.parent, stop.key);
+        children.emplace(stop.parent, stop.graphid);
       }
 
       n++;
@@ -967,21 +886,20 @@ void build(const std::string& transit_dir,
     std::vector<TransitDeparture> transit_departures;
 
     // Create a map of stop key to index in the stop vector
-    std::unordered_map<uint32_t, bool> stop_access;
+    std::unordered_map<uint64_t, bool> stop_access;
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(file, stop_access);
+        ProcessStopPairs(file, tile_start->second, stop_access);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
-    stop_itr = stops[tile_start->second];
     for (auto& stop : stops) {
       StopEdges stopedges;
-      stopedges.stop_key = stop.key;
+      stopedges.graphid = stop.graphid;
 
       // Identify any parent-child edge connections (to add later)
       if (stop.type == 1) {
         // Station - identify any children.
-        auto range = children.equal_range(stop.key);
+        auto range = children.equal_range(stop.graphid.id());
         for(auto kv = range.first; kv != range.second; ++kv)
           stopedges.intrastation.push_back(kv->second);
       } else if (stop.parent != 0) {
@@ -989,7 +907,7 @@ void build(const std::string& transit_dir,
       }
 
       std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
-      auto range = departures.equal_range(stop.key);
+      auto range = departures.equal_range(stop.graphid.id());
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
         route_keys.insert(dep.route);
@@ -1030,27 +948,18 @@ void build(const std::string& transit_dir,
       // Get any transfers from this stop
       // AddTransfers(db_handle, stop.key, tilebuilder);
 
-      // Store stop information in TransitStops
-      uint32_t farezone = 0;
-      //TODO: use onestop id offset instead of fixed size string
-      TransitStop ts(stop.key, stop.onestop_id_offset, stop.name_offset, stop.desc_offset, stop.parent, farezone);
-      tilebuilder.AddTransitStop(ts);
-
       // Add to stop edge map - track edges that need to be added. This is
       // sorted by graph Id so the stop nodes are added in proper order
       stop_edge_map.insert({stop.graphid, stopedges});
     }
-
-
-    LOG_DEBUG("Added " + std::to_string(trip_routes.size()) + " trips");
 
     // Add routes to the tile. Get map of route types.
     const std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
                                                                    route_keys,
                                                                    tilebuilder);
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(tilebuilder, stop_edge_map, stops, stop_access, connection_edges,
-               stop_indexes, route_types);
+    //AddToGraph(tilebuilder, stop_edge_map, stops, stop_access, connection_edges,
+     //          stop_indexes, route_types);
 
     // Write the new file
     lock.lock();
@@ -1066,7 +975,7 @@ GraphId TransitToTile(const boost::property_tree::ptree& pt, const std::string& 
   auto tile_dir = pt.get<std::string>("mjolnir.hierarchy.tile_dir");
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
-  boost::algorithm::trim_if(graph_tile, boost::is_any_of(".json"));
+  boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
   graph_tile += ".gph";
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   return GraphTile::GetTileId(graph_tile, hierarchy);
@@ -1095,7 +1004,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   auto local_level = hierarchy.levels().rbegin()->first;
   boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level) + "/"), end_file_itr;
   for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".json") {
+    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf") {
       auto graph_id = TransitToTile(pt, transit_file_itr->path().string());
       //TODO: this precludes a transit only network, which kind of sucks but
       //right now we are assuming that we have to connect stops to the OSM
