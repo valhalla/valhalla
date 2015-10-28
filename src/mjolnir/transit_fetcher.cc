@@ -190,7 +190,6 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
       route->set_operated_by_website(website->second);
     route->set_route_color(strtol(route_color.c_str(), nullptr, 16));
     route->set_route_text_color(strtol(route_text_color.c_str(), nullptr, 16));
-    route->set_route_index(routes.size());
     routes.emplace(route->onestop_id(), routes.size());
   }
 }
@@ -199,8 +198,28 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     std::unordered_map<std::string, size_t>& block_ids, const ptree& response,
     const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
+  int count = 0;
+
   for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
+
     auto* pair = tile.add_stop_pairs();
+
+    //origin
+    pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
+    auto origin = stops.find(pair->origin_onestop_id());
+    if(origin != stops.cend())
+      pair->set_origin_graphid(origin->second);
+    else
+      dangles = true;
+
+    //destination
+    pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
+    auto destination = stops.find(pair->destination_onestop_id());
+    if(destination != stops.cend())
+      pair->set_destination_graphid(destination->second);
+    else
+      dangles = true;
+
     //route
     auto route = routes.find(pair_pt.second.get<std::string>("route_onestop_id"));
     if(route == routes.cend()) {
@@ -233,22 +252,6 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
       trips.emplace(t, trips.size());
     }
     else pair->set_trip_key(trip->second);
-
-    //origin
-    pair->set_origin_onestop_id(pair_pt.second.get<std::string>("origin_onestop_id"));
-    auto origin = stops.find(pair->origin_onestop_id());
-    if(origin != stops.cend())
-      pair->set_origin_graphid(origin->second);
-    else
-      dangles = true;
-
-    //destination
-    pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
-    auto destination = stops.find(pair->destination_onestop_id());
-    if(destination != stops.cend())
-      pair->set_destination_graphid(destination->second);
-    else
-      dangles = true;
 
     std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
     if (block_id == "null") {
@@ -287,9 +290,10 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
         pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
       }
     }
-
+    count++;
     //TODO: copy rest of attributes
   }
+
   return dangles;
 }
 
@@ -414,6 +418,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+
     while(request) {
       //grab some stuff
       try {
@@ -427,7 +432,8 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
       //copy pairs in, noting if any dont have stops
       try {
-        dangles = dangles && get_stop_pairs(tile, trips, block_ids, response, stops, routes);
+
+        dangles = get_stop_pairs(tile, trips, block_ids, response, stops, routes);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
@@ -451,7 +457,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
     tile.SerializeToOstream(&stream);
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stops_size()) + " stops " +
-      std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stops_size()) + " stop pairs");
+      std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
   }
 
   //give back the work for later
