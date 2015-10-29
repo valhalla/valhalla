@@ -206,16 +206,24 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     auto origin = stops.find(pair->origin_onestop_id());
     if(origin != stops.cend())
       pair->set_origin_graphid(origin->second);
-    else
+    else {
       dangles = true;
+      //TODO: remove this
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
 
     //destination
     pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
     auto destination = stops.find(pair->destination_onestop_id());
     if(destination != stops.cend())
       pair->set_destination_graphid(destination->second);
-    else
+    else {
       dangles = true;
+      //TODO: remove this
+      tile.mutable_stop_pairs()->RemoveLast();
+      continue;
+    }
 
     //route
     auto route = routes.find(pair_pt.second.get<std::string>("route_onestop_id"));
