@@ -46,6 +46,28 @@ class EdgeLabel {
             const TravelMode mode);
 
   /**
+   * Constructor with values - used in bidrectional A*.
+   * @param predecessor Index into the edge label list for the predecessor
+   *                       directed edge in the shortest path.
+   * @param edgeid    Directed edge.
+   * @param oppedgeid Opposing directed edge Id.
+   * @param endnode   End node of the directed edge.
+   * @param cost      True cost (cost and elapsed time in seconds) to the edge.
+   * @param sortcost  Cost for sorting (includes A* heuristic)
+   * @param dist      Distance meters to the destination
+   * @param restrictions Restriction mask from prior edge - this is used
+   *                  if edge is a transition edge. This allows restrictions
+   *                  to be carried across different hierarchy levels.
+   * @param mode      Mode of travel along this edge.
+   */
+  EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
+            const baldr::GraphId& oppedgeid,
+            const baldr::DirectedEdge* edge, const Cost& cost,
+            const float sortcost, const float dist,
+            const uint32_t restrictions, const uint32_t opp_local_idx,
+            const TravelMode mode);
+
+  /**
    * Constructor with values.  Used for multi-modal path.
    * @param predecessor Index into the edge label list for the predecessor
    *                       directed edge in the shortest path.
@@ -71,11 +93,6 @@ class EdgeLabel {
             const TravelMode mode, const uint32_t walking_distance,
             const uint32_t tripid, const uint32_t prior_stopid,
             const uint32_t blockid, const bool has_transit);
-
-  /**
-   * Destructor.
-   */
-  virtual ~EdgeLabel();
 
   /**
    * Update an existing edge label with new predecessor and cost information.
@@ -117,6 +134,12 @@ class EdgeLabel {
   const baldr::GraphId& edgeid() const;
 
   /**
+   * Get the GraphId of the opposing directed edge.
+   * @return  Returns the GraphId of the opposing directed edge.
+   */
+  const baldr::GraphId& opp_edgeid() const;
+
+  /**
    * Get the end node of this directed edge. Allows the A* algorithm
    * to expand the search from this end node, without having to read
    * the directed edge again.
@@ -156,6 +179,12 @@ class EdgeLabel {
    * @return  Returns edge use.
    */
   baldr::Use use() const;
+
+  /**
+   * Get the opposing index - for bidirectional A*.
+   * @return  Returns the opposing directed edge index to the incoming edge.
+   */
+  uint32_t opp_index() const;
 
   /**
    * Get the opposing local index. This is the index of the incoming edge
@@ -260,6 +289,9 @@ class EdgeLabel {
   // Graph Id of the edge.
   baldr::GraphId edgeid_;
 
+  // Graph Id of the opposing edge (for bidirectional A*).
+  baldr::GraphId opp_edgeid_;
+
   // GraphId of the end node of the edge. This allows the expansion
   // to occur by reading the node and not having to re-read the directed
   // edge
@@ -267,9 +299,6 @@ class EdgeLabel {
 
   // Cost and elapsed time along the path
   Cost cost_;
-
-  // Index to the predecessor edge label information.
-  uint32_t predecessor_;
 
   // Sort cost - includes A* heuristic
   float sortcost_;
@@ -279,7 +308,9 @@ class EdgeLabel {
 
   /**
    * Attributes to carry along with the edge label.
+   * walking_distance: Current walking distance.
    * use:           Use of the prior edge.
+   * opp_index:     Index at the end node of the opposing directed edge.
    * opp_local_idx: Index at the end node of the opposing local edge. This
    *                value can be compared to the directed edge local_edge_idx
    *                for edge transition costing and Uturn detection.
@@ -293,24 +324,22 @@ class EdgeLabel {
    * origin         True if this is an origin edge.
    * toll           Edge is toll.
    */
-  struct Attributes {
-    uint32_t use           : 6;
-    uint32_t opp_local_idx : 7;
-    uint32_t restrictions  : 7;
-    uint32_t trans_up      : 1;
-    uint32_t trans_down    : 1;
-    uint32_t shortcut      : 1;
-    uint32_t mode          : 4;
-    uint32_t dest_only     : 1;
-    uint32_t has_transit   : 1;
-    uint32_t origin        : 1;
-    uint32_t toll          : 1;
-    uint32_t spare         : 1;
-  };
-  Attributes attributes_;
+  uint64_t walking_distance_ : 26;
+  uint64_t use_              : 6;
+  uint64_t opp_index_        : 7;
+  uint64_t opp_local_idx_    : 7;
+  uint64_t restrictions_     : 7;
+  uint64_t trans_up_         : 1;
+  uint64_t trans_down_       : 1;
+  uint64_t shortcut_         : 1;
+  uint64_t mode_             : 4;
+  uint64_t dest_only_        : 1;
+  uint64_t has_transit_      : 1;
+  uint64_t origin_           : 1;
+  uint64_t toll_             : 1;
 
-  // Current walking distance
-  uint32_t walking_distance_;
+  // Index to the predecessor edge label information.
+  uint32_t predecessor_;
 
   // Transit trip Id
   uint32_t tripid_;

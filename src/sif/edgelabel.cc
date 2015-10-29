@@ -1,3 +1,4 @@
+#include <string.h>
 #include "sif/edgelabel.h"
 
 using namespace valhalla::baldr;
@@ -5,18 +6,10 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace sif {
 
+
 // Default constructor
-EdgeLabel::EdgeLabel()
-    : predecessor_(kInvalidLabel),
-      edgeid_(GraphId()),
-      cost_{0.0f, 0.0f},
-      sortcost_(0.0f),
-      distance_(0.0f),
-      attributes_{},
-      walking_distance_(0.0f),
-      tripid_(0),
-      prior_stopid_(0),
-      blockid_(0) {
+EdgeLabel::EdgeLabel() {
+  memset(this, 0, sizeof(EdgeLabel));
 }
 
 // Constructor with values.
@@ -26,25 +19,61 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
                      const uint32_t restrictions,
                      const uint32_t opp_local_idx,
                      const TravelMode mode)
-    : predecessor_(predecessor),
-      edgeid_(edgeid),
+    : edgeid_(edgeid),
+      opp_edgeid_ {},
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
       distance_(dist),
       walking_distance_(0),
+      use_(static_cast<uint32_t>(edge->use())),
+      opp_index_(edge->opp_index()),
+      opp_local_idx_(opp_local_idx),
+      restrictions_(restrictions),
+      trans_up_(edge->trans_up()),
+      trans_down_(edge->trans_down()),
+      shortcut_(edge->shortcut()),
+      mode_(static_cast<uint32_t>(mode)),
+      dest_only_(edge->destonly()),
+      has_transit_(0),
+      origin_(0),
+      toll_(edge->toll()),
+      predecessor_(predecessor) ,
       tripid_(0),
       prior_stopid_(0),
       blockid_(0) {
-  attributes_.use           = static_cast<uint32_t>(edge->use());
-  attributes_.opp_local_idx = opp_local_idx;
-  attributes_.restrictions  = restrictions;
-  attributes_.trans_up      = edge->trans_up();
-  attributes_.trans_down    = edge->trans_down();
-  attributes_.shortcut      = edge->shortcut();
-  attributes_.mode          = static_cast<uint32_t>(mode);
-  attributes_.dest_only     = edge->destonly();
-  attributes_.toll          = edge->toll();
+}
+
+// Constructor with values - used in bidirectional A*
+EdgeLabel::EdgeLabel(const uint32_t predecessor, const GraphId& edgeid,
+                     const GraphId& oppedgeid, const DirectedEdge* edge,
+                     const Cost& cost, const float sortcost, const float dist,
+                     const uint32_t restrictions,
+                     const uint32_t opp_local_idx,
+                     const TravelMode mode)
+    : edgeid_(edgeid),
+      opp_edgeid_(oppedgeid),
+      endnode_(edge->endnode()),
+      cost_(cost),
+      sortcost_(sortcost),
+      distance_(dist),
+      walking_distance_(0),
+      use_(static_cast<uint32_t>(edge->use())),
+      opp_index_(edge->opp_index()),
+      opp_local_idx_(opp_local_idx),
+      restrictions_(restrictions),
+      trans_up_(edge->trans_up()),
+      trans_down_(edge->trans_down()),
+      shortcut_(edge->shortcut()),
+      mode_(static_cast<uint32_t>(mode)),
+      dest_only_(edge->destonly()),
+      has_transit_(0),
+      origin_(0),
+      toll_(edge->toll()),
+      predecessor_(predecessor) ,
+      tripid_(0),
+      prior_stopid_(0),
+      blockid_(0) {
 }
 
 // Constructor with values.  Used for multi-modal path.
@@ -55,30 +84,29 @@ EdgeLabel::EdgeLabel(const uint32_t predecessor, const baldr::GraphId& edgeid,
           const TravelMode mode, const uint32_t walking_distance,
           const uint32_t tripid, const uint32_t prior_stopid,
           const uint32_t blockid, const bool has_transit)
-    : predecessor_(predecessor),
-      edgeid_(edgeid),
+    : edgeid_(edgeid),
+      opp_edgeid_ {},
       endnode_(edge->endnode()),
       cost_(cost),
       sortcost_(sortcost),
       distance_(dist),
-      walking_distance_(walking_distance),
+      walking_distance_(0),
+      use_(static_cast<uint32_t>(edge->use())),
+      opp_index_(edge->opp_index()),
+      opp_local_idx_(opp_local_idx),
+      restrictions_(restrictions),
+      trans_up_(edge->trans_up()),
+      trans_down_(edge->trans_down()),
+      shortcut_(edge->shortcut()),
+      mode_(static_cast<uint32_t>(mode)),
+      dest_only_(edge->destonly()),
+      has_transit_(has_transit),
+      origin_(0),
+      toll_(edge->toll()),
+      predecessor_(predecessor) ,
       tripid_(tripid),
       prior_stopid_(prior_stopid),
       blockid_(blockid) {
-  attributes_.use           = static_cast<uint32_t>(edge->use());
-  attributes_.opp_local_idx = opp_local_idx;
-  attributes_.restrictions  = restrictions;
-  attributes_.trans_up      = edge->trans_up();
-  attributes_.trans_down    = edge->trans_down();
-  attributes_.shortcut      = edge->shortcut();
-  attributes_.mode          = static_cast<uint32_t>(mode);
-  attributes_.dest_only     = edge->destonly();
-  attributes_.toll          = edge->toll();
-  attributes_.has_transit   = has_transit;
-}
-
-// Destructor
-EdgeLabel::~EdgeLabel() {
 }
 
 // Update predecessor and cost values in the label.
@@ -114,6 +142,11 @@ const baldr::GraphId& EdgeLabel::edgeid() const {
   return edgeid_;
 }
 
+// Get the GraphId of the opposing directed edge.
+const baldr::GraphId& EdgeLabel::opp_edgeid() const {
+  return opp_edgeid_;
+}
+
 // Get the end node of the predecessor edge.
 const baldr::GraphId& EdgeLabel::endnode() const {
   return endnode_;
@@ -141,65 +174,70 @@ float EdgeLabel::distance() const {
 
 // Get the use of the directed edge.
 Use EdgeLabel::use() const {
-  return static_cast<Use>(attributes_.use);
+  return static_cast<Use>(use_);
 }
 
 // Get the opposing local index. This is the index of the incoming edge
 // (on the local hierarchy) at the end node of the predecessor directed
 // edge. This is used for edge transition costs and Uturn detection.
 uint32_t EdgeLabel::opp_local_idx() const {
-  return attributes_.opp_local_idx;
+  return opp_local_idx_;
 }
 
 // Get the restriction mask at the end node. Each bit set to 1 indicates a
 // turn restriction onto the directed edge with matching local edge index.
 uint32_t EdgeLabel::restrictions() const {
-  return attributes_.restrictions;
+  return restrictions_;
 }
 
 // Get the transition up flag.
 bool EdgeLabel::trans_up() const {
-  return attributes_.trans_up;
+  return trans_up_;
 }
 
 // Get the transition down flag.
 bool EdgeLabel::trans_down() const {
-  return attributes_.trans_down;
+  return trans_down_;
 }
 
 // Get the shortcut flag.
 bool EdgeLabel::shortcut() const {
-  return attributes_.shortcut;
+  return shortcut_;
 }
 
 // Get the travel mode along this edge.
 TravelMode EdgeLabel::mode() const {
-  return static_cast<TravelMode>(attributes_.mode);
+  return static_cast<TravelMode>(mode_);
 }
 
 // Get the destination only flag.
 bool EdgeLabel::destonly() const {
-  return attributes_.dest_only;
+  return dest_only_;
 }
 
 // Has any transit been taken up to this point on the path.
 bool EdgeLabel::has_transit() const {
-  return attributes_.has_transit;
+  return has_transit_;
 }
 
 // Is this edge an origin edge?
 bool EdgeLabel::origin() const {
-  return attributes_.origin;
+  return origin_;
 }
 
 // Sets this edge as an origin.
 void EdgeLabel::set_origin() {
-  attributes_.origin = true;
+  origin_ = true;
 }
 
 // Does this edge have a toll.
 bool EdgeLabel::toll() const {
-  return attributes_.toll;
+  return toll_;
+}
+
+// Get the opposing index - for bidirectional A*.
+uint32_t EdgeLabel::opp_index() const {
+  return opp_index_;
 }
 
 // Get the current walking distance in meters.
