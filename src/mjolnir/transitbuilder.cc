@@ -16,6 +16,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+#include <google/protobuf/io/coded_stream.h>
 
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphtile.h>
@@ -787,23 +789,27 @@ void build(const std::string& transit_dir,
     file_name += ".pbf";
     const std::string file = transit_dir + file_name;
 
-    Transit transit;
-
     // Make sure it exists
-     if (!boost::filesystem::exists(file)) {
-         LOG_ERROR("File not found.  " + file);
-         return;
-     }
+    if (!boost::filesystem::exists(file)) {
+      LOG_ERROR("File not found.  " + file);
+      return;
+    }
 
-     std::fstream input(file, std::ios::in | std::ios::binary);
-
-     if (!input) {
-       LOG_ERROR("Error opening file:  " + file);
-       return;
-     } else if (!transit.ParseFromIstream(&input)) {
-       LOG_ERROR("Failed to parse file: " + file);
-         return;
-     }
+    Transit transit; {
+      std::fstream input(file, std::ios::in | std::ios::binary);
+      if (!input) {
+        LOG_ERROR("Error opening file:  " + file);
+        return;
+      }
+      std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+      google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+      google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+      cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
+      if (!transit.ParseFromCodedStream(&cs)) {
+        LOG_ERROR("Failed to parse file: " + file);
+        return;
+      }
+    }
 
     // Iterate through stops and form connections to OSM network. Each
     // stop connects to 1 or 2 OSM nodes along the closest OSM way.
@@ -927,8 +933,6 @@ void build(const std::string& transit_dir,
     lock.lock();
     tilebuilder.StoreTileData();
     lock.unlock();
-
-    input.close();
   }
 
   // Send back the statistics
