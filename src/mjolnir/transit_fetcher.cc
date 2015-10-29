@@ -46,7 +46,7 @@ struct curler_t {
   //for now we only need to handle json
   //with templates we could return a string or whatever
   ptree operator()(const std::string& url) {
-    LOG_DEBUG(url);
+    LOG_INFO(url);
     result.str("");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
@@ -198,10 +198,7 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     std::unordered_map<std::string, size_t>& block_ids, const ptree& response,
     const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
-  int count = 0;
-
   for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
-
     auto* pair = tile.add_stop_pairs();
 
     //origin
@@ -290,7 +287,6 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
         pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
       }
     }
-    count++;
     //TODO: copy rest of attributes
   }
 
@@ -418,7 +414,6 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
-
     while(request) {
       //grab some stuff
       try {
@@ -433,7 +428,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       //copy pairs in, noting if any dont have stops
       try {
 
-        dangles = get_stop_pairs(tile, trips, block_ids, response, stops, routes);
+        dangles = dangles || get_stop_pairs(tile, trips, block_ids, response, stops, routes);
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again

@@ -35,17 +35,15 @@ namespace {
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-                              GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_, std::mutex& lock) {
+                              const GraphTile* tile, uint32_t& dupcount_,
+                              std::string& endnodeiso) {
 
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
-  lock.lock();
-  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
-  lock.unlock();
   const NodeInfo* nodeinfo = tile->node(endnode.id());
 
   // Set the end node iso.  Used for country crossings.
-  endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
+  endnodeiso = tile->admin(nodeinfo->admin_index())->country_iso();
 
   // TODO - check if more than 1 edge has matching startnode and
   // distance!
@@ -154,6 +152,11 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       std::vector<NodeInfoBuilder> nodes;
       std::vector<DirectedEdgeBuilder> directededges;
 
+      // Get this tile
+      lock.lock();
+      const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+      lock.unlock();
+
       // Iterate through the nodes and the directed edges
       float roadlength = 0.0f;
       uint32_t nodecount = tilebuilder.header()->nodecount();
@@ -161,10 +164,6 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       for (uint32_t i = 0; i < nodecount; i++, node++) {
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
         const NodeInfo* signnodeinfo = signtile.node(i);
-
-        lock.lock();
-        const GraphTile* tile = graph_reader.GetGraphTile(node);
-        lock.unlock();
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
         // Go through directed edges and update data
@@ -189,11 +188,26 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             roadlength += tempLength;
             validLength = true;
           }
+
+          // Check if end node is in a different tile
+          const GraphTile* endnode_tile;
+          if (tile_id != directededge.endnode().Tile_Base()) {
+            directededge.set_leaves_tile(true);
+
+            // Get the end node tile
+            lock.lock();
+            endnode_tile = graph_reader.GetGraphTile(directededge.endnode());
+            lock.unlock();
+          } else {
+            endnode_tile = tile;
+          }
+
           // Set the opposing edge index and get the country ISO at the
           // end node)
           std::string end_node_iso;
           directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                                                          graph_reader, dupcount, end_node_iso, lock));
+                         endnode_tile, dupcount, end_node_iso));
+
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
               begin_node_iso != end_node_iso)
