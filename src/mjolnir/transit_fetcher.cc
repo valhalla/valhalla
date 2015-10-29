@@ -46,7 +46,7 @@ struct curler_t {
   //for now we only need to handle json
   //with templates we could return a string or whatever
   ptree operator()(const std::string& url) {
-    LOG_INFO(url);
+    LOG_DEBUG(url);
     result.str("");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
@@ -427,8 +427,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
       //copy pairs in, noting if any dont have stops
       try {
-
-        dangles = dangles || get_stop_pairs(tile, trips, block_ids, response, stops, routes);
+        dangles = get_stop_pairs(tile, trips, block_ids, response, stops, routes) || dangles;
         //please sir may i have some more?
         request = response.get_optional<std::string>("meta.next");
       }//if it doesnt come back, take a rest and try again
