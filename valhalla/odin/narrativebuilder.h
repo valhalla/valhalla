@@ -297,7 +297,19 @@ class NarrativeBuilder {
   static void FormTransitConnectionDestinationInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitInstruction(Maneuver& maneuver);
+  static std::string FormDepartInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalDepartInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormArriveInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalArriveInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormTransitInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormTransitRemainOnInstruction(Maneuver& maneuver);
@@ -332,6 +344,12 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormOrdinalValue(uint32_t value);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormStopCountLabel(size_t stop_count);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormTransitName(Maneuver& maneuver);
 
 };
 

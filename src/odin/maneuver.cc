@@ -561,17 +561,6 @@ TransitRouteInfo* Maneuver::mutable_transit_route_info() {
   return &transit_route_info_;
 }
 
-std::string Maneuver::GetTransitName() const {
-  if (!transit_route_info_.short_name.empty()) {
-    return transit_route_info_.short_name;
-  } else if (!transit_route_info_.long_name.empty()) {
-    return (transit_route_info_.long_name);
-  } else if (bus()) {
-    return "bus";
-  }
-  return "train";
-}
-
 std::string Maneuver::GetTransitArrivalTime() const {
   return transit_route_info_.transit_stops.back().arrival_date_time;
 }
@@ -607,6 +596,54 @@ void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
                                                   arrival_date_time,
                                                   departure_date_time,
                                                   is_parent_stop);
+}
+
+const std::string& Maneuver::depart_instruction() const {
+  return depart_instruction_;
+}
+
+void Maneuver::set_depart_instruction(const std::string& depart_instruction) {
+  depart_instruction_ = depart_instruction;
+}
+
+void Maneuver::set_depart_instruction(std::string&& depart_instruction) {
+  depart_instruction_ = std::move(depart_instruction);
+}
+
+const std::string& Maneuver::verbal_depart_instruction() const {
+  return verbal_depart_instruction_;
+}
+
+void Maneuver::set_verbal_depart_instruction(const std::string& verbal_depart_instruction) {
+  verbal_depart_instruction_ = verbal_depart_instruction;
+}
+
+void Maneuver::set_verbal_depart_instruction(std::string&& verbal_depart_instruction) {
+  verbal_depart_instruction_ = std::move(verbal_depart_instruction);
+}
+
+const std::string& Maneuver::arrive_instruction() const {
+  return arrive_instruction_;
+}
+
+void Maneuver::set_arrive_instruction(const std::string& arrive_instruction) {
+  arrive_instruction_ = arrive_instruction;
+}
+
+void Maneuver::set_arrive_instruction(std::string&& arrive_instruction) {
+  arrive_instruction_ = std::move(arrive_instruction);
+}
+
+const std::string& Maneuver::verbal_arrive_instruction() const {
+  return verbal_arrive_instruction_;
+}
+
+void Maneuver::set_verbal_arrive_instruction(const std::string& verbal_arrive_instruction) {
+  verbal_arrive_instruction_ = verbal_arrive_instruction;
+}
+
+void Maneuver::set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction) {
+  verbal_arrive_instruction_ = std::move(verbal_arrive_instruction);
 }
 
 const VerbalTextFormatter* Maneuver::verbal_formatter() const {
@@ -744,7 +781,12 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(transit_connection_);
 
   // TODO: transit_connection_stop
-  // TODO: transit_info
+  // TODO: transit_route_info
+//TODO
+//  std::string depart_instruction_;
+//  std::string verbal_depart_instruction_;
+//  std::string arrive_instruction_;
+//  std::string verbal_arrive_instruction_;
 
   return man_str;
 }
@@ -889,6 +931,10 @@ std::string Maneuver::ToParameterString() const {
 
   // The transit info including list of stops
 //  TransitInfo transit_info_;
+//  std::string depart_instruction_;
+//  std::string verbal_depart_instruction_;
+//  std::string arrive_instruction_;
+//  std::string verbal_arrive_instruction_;
 
   return man_str;
 }

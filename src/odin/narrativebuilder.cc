@@ -382,7 +382,29 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kTransit: {
-        FormTransitInstruction(maneuver);
+        // Set depart instruction
+        maneuver.set_depart_instruction(
+            std::move(FormDepartInstruction(maneuver)));
+
+        // Set verbal depart instruction
+        maneuver.set_verbal_depart_instruction(
+            std::move(FormVerbalDepartInstruction(maneuver)));
+
+        // Set instruction
+        maneuver.set_instruction(std::move(FormTransitInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalTransitInstruction(maneuver)));
+
+        // Set arrive instruction
+        maneuver.set_arrive_instruction(
+            std::move(FormArriveInstruction(maneuver)));
+
+        // Set verbal arrive instruction
+        maneuver.set_verbal_arrive_instruction(
+            std::move(FormVerbalArriveInstruction(maneuver)));
+
         break;
       }
       case TripDirections_Maneuver_Type_kTransitRemainOn: {
@@ -2723,36 +2745,201 @@ void NarrativeBuilder::FormTransitConnectionDestinationInstruction(
   maneuver.set_instruction(std::move(text_instruction));
 }
 
-void NarrativeBuilder::FormTransitInstruction(
-    Maneuver& maneuver) {
-  // TODO - refactor transit instructions
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "DEPART: ";
-  text_instruction += maneuver.GetFormattedTransitDepartureTime();
-  text_instruction += " from ";
-  text_instruction += maneuver.GetTransitStops().front().name;
-  text_instruction += ". Take the ";
-  text_instruction += maneuver.GetTransitName();
-  if (!maneuver.transit_route_info().headsign.empty()) {
-    text_instruction += " toward ";
-    text_instruction += maneuver.transit_route_info().headsign;
-  }
-  text_instruction += ". (";
-  text_instruction += std::to_string(maneuver.GetTransitStopCount());
-  if (maneuver.GetTransitStopCount() > 1) {
-    text_instruction += " stops";
-  } else {
-    text_instruction += " stop";
-  }
-  text_instruction += ").";
-  text_instruction += " ARRIVE: ";
-  text_instruction += maneuver.GetFormattedTransitArrivalTime();
-  text_instruction += " at ";
-  text_instruction += maneuver.GetTransitStops().back().name;
-  text_instruction += ".";
+std::string NarrativeBuilder::FormDepartInstruction(Maneuver& maneuver) {
+  // 0 "Depart: <GetFormattedTransitDepartureTime>.
+  // 1 "Depart: <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
 
-  maneuver.set_instruction(std::move(text_instruction));
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_stop_name = maneuver.GetTransitStops().front().name;
+
+  if (!transit_stop_name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Depart: <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
+    case 1: {
+      instruction =
+          (boost::format("Depart: %1% from %2%.")
+              % maneuver.GetFormattedTransitDepartureTime() % transit_stop_name)
+              .str();
+      break;
+    }
+    // 0 "Depart: <GetFormattedTransitDepartureTime>.
+    default: {
+      instruction = (boost::format("Depart: %1%.")
+          % maneuver.GetFormattedTransitDepartureTime()).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalDepartInstruction(Maneuver& maneuver) {
+  // 0 "Depart at <GetFormattedTransitDepartureTime>.
+  // 1 "Depart at <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_stop_name = maneuver.GetTransitStops().front().name;
+
+  if (!transit_stop_name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Depart at <GetFormattedTransitDepartureTime> from <FIRST_TRANSIT_STOP>.
+    case 1: {
+      instruction =
+          (boost::format("Depart at %1% from %2%.")
+              % maneuver.GetFormattedTransitDepartureTime() % transit_stop_name)
+              .str();
+      break;
+    }
+    // 0 "Depart at <GetFormattedTransitDepartureTime>.
+    default: {
+      instruction = (boost::format("Depart at %1%.")
+          % maneuver.GetFormattedTransitDepartureTime()).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormArriveInstruction(Maneuver& maneuver) {
+  // 0 "Arrive: <GetFormattedTransitArrivalTime>.
+  // 1 "Arrive: <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_stop_name = maneuver.GetTransitStops().back().name;
+
+  if (!transit_stop_name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Arrive: <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+    case 1: {
+      instruction =
+          (boost::format("Arrive: %1% at %2%.")
+              % maneuver.GetFormattedTransitArrivalTime() % transit_stop_name)
+              .str();
+      break;
+    }
+    // 0 "Arrive: <GetFormattedTransitArrivalTime>.
+    default: {
+      instruction = (boost::format("Arrive: %1%.")
+          % maneuver.GetFormattedTransitArrivalTime()).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalArriveInstruction(Maneuver& maneuver) {
+  // 0 "Arrive at <GetFormattedTransitArrivalTime>.
+  // 1 "Arrive at <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_stop_name = maneuver.GetTransitStops().back().name;
+
+  if (!transit_stop_name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Arrive at <GetFormattedTransitArrivalTime> at <LAST_TRANSIT_STOP>.
+    case 1: {
+      instruction =
+          (boost::format("Arrive at %1% at %2%.")
+              % maneuver.GetFormattedTransitArrivalTime() % transit_stop_name)
+              .str();
+      break;
+    }
+    // 0 "Arrive at <GetFormattedTransitArrivalTime>.
+    default: {
+      instruction = (boost::format("Arrive at %1%.")
+          % maneuver.GetFormattedTransitArrivalTime()).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormTransitInstruction(
+    Maneuver& maneuver) {
+  // 0 "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+  // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_headsign = maneuver.transit_route_info().headsign;
+
+  if (!transit_headsign.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+    case 1: {
+      instruction = (boost::format("Take the %1% toward %2%. (%3% %4%)")
+          % FormTransitName(maneuver) % transit_headsign
+          % maneuver.GetTransitStopCount()
+          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
+      break;
+    }
+    // 0 "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+    default: {
+      (boost::format("Take the %1%. (%2% %3%)") % FormTransitName(maneuver)
+          % maneuver.GetTransitStopCount()
+          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
+  // 0 "Take the <TRANSIT_NAME>."
+  // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_headsign = maneuver.transit_route_info().headsign;
+
+  if (!transit_headsign.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Take the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+    case 1: {
+      instruction = (boost::format("Take the %1% toward %2%.")
+          % FormTransitName(maneuver) % transit_headsign).str();
+      break;
+    }
+    // 0 "Take the <TRANSIT_NAME>."
+    default: {
+      (boost::format("Take the %1%.") % FormTransitName(maneuver)).str();
+      break;
+    }
+  }
+
+  return instruction;
 }
 
 void NarrativeBuilder::FormTransitRemainOnInstruction(
@@ -2765,7 +2952,7 @@ void NarrativeBuilder::FormTransitRemainOnInstruction(
   text_instruction += " from ";
   text_instruction += maneuver.GetTransitStops().front().name;
   text_instruction += ". Remain on the ";
-  text_instruction += maneuver.GetTransitName();
+  text_instruction += FormTransitName(maneuver);
   if (!maneuver.transit_route_info().headsign.empty()) {
     text_instruction += " toward ";
     text_instruction += maneuver.transit_route_info().headsign;
@@ -2797,7 +2984,7 @@ void NarrativeBuilder::FormTransitTransferInstruction(
   text_instruction += " from ";
   text_instruction += maneuver.GetTransitStops().front().name;
   text_instruction += ". Transfer to take the ";
-  text_instruction += maneuver.GetTransitName();
+  text_instruction += FormTransitName(maneuver);
   if (!maneuver.transit_route_info().headsign.empty()) {
     text_instruction += " toward ";
     text_instruction += maneuver.transit_route_info().headsign;
@@ -3066,6 +3253,28 @@ std::string NarrativeBuilder::FormOrdinalValue(uint32_t value) {
     }
   }
 
+}
+
+std::string NarrativeBuilder::FormStopCountLabel(size_t stop_count) {
+  switch (stop_count) {
+    case 1: {
+      return "stop";
+    }
+    default: {
+      return "stops";
+    }
+  }
+}
+
+std::string NarrativeBuilder::FormTransitName(Maneuver& maneuver) {
+  if (!maneuver.transit_route_info().short_name.empty()) {
+    return maneuver.transit_route_info().short_name;
+  } else if (!maneuver.transit_route_info().long_name.empty()) {
+    return (maneuver.transit_route_info().long_name);
+  } else if (maneuver.bus()) {
+    return "bus";
+  }
+  return "train";
 }
 
 }

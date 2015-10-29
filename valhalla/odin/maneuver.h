@@ -202,8 +202,6 @@ class Maneuver {
   const TransitRouteInfo& transit_route_info() const;
   TransitRouteInfo* mutable_transit_route_info();
 
-  std::string GetTransitName() const;
-
   std::string GetTransitArrivalTime() const;
 
   std::string GetFormattedTransitArrivalTime() const;
@@ -221,6 +219,22 @@ class Maneuver {
                          std::string arrival_date_time,
                          std::string departure_date_time,
                          bool is_parent_stop);
+
+  const std::string& depart_instruction() const;
+  void set_depart_instruction(const std::string& depart_instruction);
+  void set_depart_instruction(std::string&& depart_instruction);
+
+  const std::string& verbal_depart_instruction() const;
+  void set_verbal_depart_instruction(const std::string& verbal_depart_instruction);
+  void set_verbal_depart_instruction(std::string&& verbal_depart_instruction);
+
+  const std::string& arrive_instruction() const;
+  void set_arrive_instruction(const std::string& arrive_instruction);
+  void set_arrive_instruction(std::string&& arrive_instruction);
+
+  const std::string& verbal_arrive_instruction() const;
+  void set_verbal_arrive_instruction(const std::string& verbal_arrive_instruction);
+  void set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction);
 
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(
@@ -282,6 +296,11 @@ class Maneuver {
 
   // The transit route info including list of stops
   TransitRouteInfo transit_route_info_;
+
+  std::string depart_instruction_;
+  std::string verbal_depart_instruction_;
+  std::string arrive_instruction_;
+  std::string verbal_arrive_instruction_;
   ////////////////////////////////////////////////////////////////////////////
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
