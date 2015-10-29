@@ -112,31 +112,12 @@ struct builder_stats {
 };
 
 // Write stops within a tile to the sequence
-std::vector<Stop> AddStops(const std::string& file, GraphTileBuilder tilebuilder,
+std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder tilebuilder,
                            const size_t node_size, const std::vector<std::string>& regions) {
 
   std::vector<Stop> stops;
-  Transit transit;
 
-  // Make sure it exists
-  if (boost::filesystem::exists(file)) {
-    std::fstream input(file, std::ios::in | std::ios::binary);
-
-    if (!input) {
-      LOG_ERROR("Error opening file:  " + file);
-      return stops;
-    } else if (!transit.ParseFromIstream(&input)) {
-      LOG_ERROR("Failed to parse file: " + file);
-        return stops;
-    }
-  }
-  else
-  {
-    LOG_ERROR("File not found.  " + file);
-    return stops;
-  }
-
-  for (int i = 0; i < transit.stops_size(); i++) {
+  for (uint32_t i = 0; i < transit.stops_size(); i++) {
     const Transit_Stop& s = transit.stops(i);
 
     // Get the coordinates of the stop as transit land has a BoundBox bug
@@ -171,34 +152,15 @@ std::vector<Stop> AddStops(const std::string& file, GraphTileBuilder tilebuilder
 }
 
 // Get scheduled departures for a stop
-std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string& file,
+std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& transit,
                                                               const size_t node_size,
                                                               std::unordered_map<uint64_t,bool>& stop_access) {
 
-  Transit transit;
   std::unordered_multimap<uint32_t, Departure> departures;
-
-  // Make sure it exists
-  if (boost::filesystem::exists(file)) {
-    std::fstream input(file, std::ios::in | std::ios::binary);
-
-    if (!input) {
-      LOG_ERROR("Error opening file:  " + file);
-      return departures;
-    } else if (!transit.ParseFromIstream(&input)) {
-      LOG_ERROR("Failed to parse file: " + file);
-        return departures;
-    }
-  }
-  else
-  {
-    LOG_ERROR("File not found.  " + file);
-    return departures;
-  }
 
   LOG_INFO("Stop pairs " + std::to_string(transit.stop_pairs_size()) + " size");
 
-  for (int i = 0; i < transit.stop_pairs_size(); i++) {
+  for (uint32_t i = 0; i < transit.stop_pairs_size(); i++) {
     const Transit_StopPair& sp = transit.stop_pairs(i);
 
     Departure dep;
@@ -222,7 +184,7 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
     std::string end_date = sp.service_end_date();
 
     uint32_t dow_mask = kDOWNone;
-    for (int x = 0; x < sp.service_days_of_week_size(); x++) {
+    for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
       bool dow = sp.service_days_of_week(x);
       if (dow) {
         switch (x) {
@@ -270,13 +232,13 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
     stop_access[dep.dest_stop.id()] = bikes_allowed;
 
     //if subtractions are between start and end date then turn off bit.
-    for (int x = 0; x < sp.service_except_dates_size(); x++) {
+    for (uint32_t x = 0; x < sp.service_except_dates_size(); x++) {
       std::string date = sp.service_except_dates(x);
       dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
     }
 
     //if additions are between start and end date then turn on bit.
-    for (int x = 0; x < sp.service_added_dates_size(); x++) {
+    for (uint32_t x = 0; x < sp.service_added_dates_size(); x++) {
       std::string date = sp.service_added_dates(x);
       dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
     }
@@ -288,33 +250,15 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const std::string&
 }
 
 // Add routes to the tile. Return a map of route types vs. id/key.
-std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
+std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
                    const std::unordered_set<uint32_t>& keys,
                    GraphTileBuilder& tilebuilder) {
-  Transit transit;
   // Map of route keys vs. types
   std::unordered_map<uint32_t, uint32_t> route_types;
-  // Make sure it exists
-  if (boost::filesystem::exists(file)) {
-    std::fstream input(file, std::ios::in | std::ios::binary);
 
-    if (!input) {
-      LOG_ERROR("Error opening file:  " + file);
-      return route_types;
-    } else if (!transit.ParseFromIstream(&input)) {
-      LOG_ERROR("Failed to parse file: " + file);
-        return route_types;
-    }
-  }
-  else
-  {
-    LOG_ERROR("File not found.  " + file);
-    return route_types;
-  }
-
-  for (int i = 0; i < transit.routes_size(); i++) {
+  for (uint32_t i = 0; i < transit.routes_size(); i++) {
     const Transit_Route& r = transit.routes(i);
-      TransitRoute route(r.route_index(),
+      TransitRoute route(i,
                          tilebuilder.AddName(r.onestop_id()),
                          tilebuilder.AddName(r.operated_by_onestop_id()),
                          tilebuilder.AddName(r.operated_by_name()),
@@ -325,7 +269,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const std::string& file,
                          tilebuilder.AddName(r.route_desc()));
       tilebuilder.AddTransitRoute(route);
       // Route type - need this to store in edge?
-      route_types[r.route_index()] = r.vehicle_type();
+      route_types[i] = r.vehicle_type();
   }
 
   LOG_INFO("Added " + std::to_string(route_types.size()) + " routes");
@@ -843,6 +787,24 @@ void build(const std::string& transit_dir,
     file_name += ".pbf";
     const std::string file = transit_dir + file_name;
 
+    Transit transit;
+
+    // Make sure it exists
+     if (!boost::filesystem::exists(file)) {
+         LOG_ERROR("File not found.  " + file);
+         return;
+     }
+
+     std::fstream input(file, std::ios::in | std::ios::binary);
+
+     if (!input) {
+       LOG_ERROR("Error opening file:  " + file);
+       return;
+     } else if (!transit.ParseFromIstream(&input)) {
+       LOG_ERROR("Failed to parse file: " + file);
+         return;
+     }
+
     // Iterate through stops and form connections to OSM network. Each
     // stop connects to 1 or 2 OSM nodes along the closest OSM way.
     // TODO - future - how to handle connections that reach nodes
@@ -850,7 +812,7 @@ void build(const std::string& transit_dir,
     // iteration...?
     // TODO - handle a list of connections/egrees points
     // TODO - what if we split the edge and insert a node?
-    std::vector<Stop> stops = AddStops(file,tilebuilder,tile_start->second,DateTime::get_tz_db().regions);
+    std::vector<Stop> stops = AddStops(transit,tilebuilder,tile_start->second,DateTime::get_tz_db().regions);
 
     std::vector<OSMConnectionEdge> connection_edges;
     Stop stop;
@@ -888,7 +850,7 @@ void build(const std::string& transit_dir,
     // Create a map of stop key to index in the stop vector
     std::unordered_map<uint64_t, bool> stop_access;
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(file, tile_start->second, stop_access);
+        ProcessStopPairs(transit, tile_start->second, stop_access);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
@@ -954,17 +916,19 @@ void build(const std::string& transit_dir,
     }
 
     // Add routes to the tile. Get map of route types.
-    const std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(file,
+    const std::unordered_map<uint32_t, uint32_t> route_types = AddRoutes(transit,
                                                                    route_keys,
                                                                    tilebuilder);
     // Add nodes, directededges, and edgeinfo
-    //AddToGraph(tilebuilder, stop_edge_map, stops, stop_access, connection_edges,
-     //          stop_indexes, route_types);
+    AddToGraph(tilebuilder, stop_edge_map, stops, stop_access, connection_edges,
+               stop_indexes, route_types);
 
     // Write the new file
     lock.lock();
     tilebuilder.StoreTileData();
     lock.unlock();
+
+    input.close();
   }
 
   // Send back the statistics
