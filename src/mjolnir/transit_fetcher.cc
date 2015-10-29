@@ -226,9 +226,10 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     }
 
     //route
-    auto route = routes.find(pair_pt.second.get<std::string>("route_onestop_id"));
+    auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
+    auto route = routes.find(route_id);
     if(route == routes.cend()) {
-      LOG_ERROR("No route for pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      LOG_ERROR("No route " + route_id + " for pair " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
@@ -320,15 +321,14 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
 
     //pull out all the STOPS
     std::unordered_map<std::string, uint64_t> stops;
-    auto extra_params = (boost::format("&service_from_date=%1%-%2%-%3%&api_key=%4%")
-      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+    auto key_param = "&api_key=" + pt.get<std::string>("api_key");
     boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/stops?per_page=5000&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
       try {
-        response = curler(*request + extra_params);
+        response = curler(*request + key_param);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
         LOG_WARN(e.what());
@@ -360,7 +360,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     while(request) {
       //grab some stuff
       try {
-        response = curler(*request + extra_params);
+        response = curler(*request + key_param);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
         LOG_WARN(e.what());
@@ -394,7 +394,7 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     while(request) {
       //grab some stuff
       try {
-        response = curler(*request + extra_params);
+        response = curler(*request + key_param);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
         LOG_WARN(e.what());
@@ -420,12 +420,12 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     std::unordered_map<std::string, size_t> block_ids;
     bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+      "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
     while(request) {
       //grab some stuff
       try {
-        response = curler(*request + extra_params);
+        response = curler(*request + key_param);
       }//if it doesnt come back, take a rest and try again
       catch(const std::exception& e) {
         LOG_WARN(e.what());
