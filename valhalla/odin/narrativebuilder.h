@@ -327,6 +327,9 @@ class NarrativeBuilder {
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
 
+  static std::string FormVerbalPostTransitionTransitInstruction(
+      Maneuver& maneuver);
+
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormDistance(Maneuver& maneuver,
                                   DirectionsOptions_Units units);

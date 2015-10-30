@@ -397,6 +397,10 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         maneuver.set_verbal_pre_transition_instruction(
             std::move(FormVerbalTransitInstruction(maneuver)));
 
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+
         // Set arrive instruction
         maneuver.set_arrive_instruction(
             std::move(FormArriveInstruction(maneuver)));
@@ -2902,8 +2906,8 @@ std::string NarrativeBuilder::FormTransitInstruction(
     }
     // 0 "Take the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
     default: {
-      (boost::format("Take the %1%. (%2% %3%)") % FormTransitName(maneuver)
-          % maneuver.GetTransitStopCount()
+      instruction = (boost::format("Take the %1%. (%2% %3%)")
+          % FormTransitName(maneuver) % maneuver.GetTransitStopCount()
           % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
       break;
     }
@@ -2934,7 +2938,8 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
     }
     // 0 "Take the <TRANSIT_NAME>."
     default: {
-      (boost::format("Take the %1%.") % FormTransitName(maneuver)).str();
+      instruction = (boost::format("Take the %1%.") % FormTransitName(maneuver))
+          .str();
       break;
     }
   }
@@ -3048,6 +3053,27 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
   instruction += " for ";
   instruction += FormDistance(maneuver, units);
   instruction += ".";
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalPostTransitionTransitInstruction(
+    Maneuver& maneuver) {
+  // 0 "Travel <TRANSIT_STOP_COUNT> <FormStopCountLabel>"
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  switch (phrase_id) {
+    // 0 "Travel <TRANSIT_STOP_COUNT> <FormStopCountLabel>"
+    default: {
+      instruction = (boost::format("Travel %1% %2%.")
+          % maneuver.GetTransitStopCount()
+          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
+      break;
+    }
+  }
 
   return instruction;
 }
