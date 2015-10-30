@@ -6,7 +6,11 @@ LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_loki -lvalhalla_sif
 .PHONY: compile_tests
 
 
-compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search test_grid_range_query test_sp
+compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search test_grid_range_query test_sp test_service
+
+
+test_service: service.cc
+	$(CC) $(FLAGS) $(LIBS) -lprime_server -lpthread $< -o $@
 
 
 test_sp: test_sp.cc sp.h
