@@ -249,6 +249,24 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
     }
 
+    // Depart instructions
+    if (!maneuver.depart_instruction().empty()) {
+      trip_maneuver->set_depart_instruction(maneuver.depart_instruction());
+    }
+    if (!maneuver.verbal_depart_instruction().empty()) {
+      trip_maneuver->set_verbal_depart_instruction(
+          maneuver.verbal_depart_instruction());
+    }
+
+    // Arrive instructions
+    if (!maneuver.arrive_instruction().empty()) {
+      trip_maneuver->set_arrive_instruction(maneuver.arrive_instruction());
+    }
+    if (!maneuver.verbal_arrive_instruction().empty()) {
+      trip_maneuver->set_verbal_arrive_instruction(
+          maneuver.verbal_arrive_instruction());
+    }
+
   }
 
   // Populate summary
