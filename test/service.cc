@@ -105,9 +105,9 @@ namespace {
       \"service_limits\": { \
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
         \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50 }, \
-        \"one_to_many\": { \"max_area\": 5000000.0, \"max_locations\": 20 }, \
-        \"many_to_one\": { \"max_area\": 5000000.0, \"max_locations\": 20 }, \
-        \"many_to_many\": { \"max_area\": 5000000.0, \"max_locations\": 20}, \
+        \"one_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
+        \"many_to_one\": { \"max_distance\": 200000.0, \"max_locations\": 50 }, \
+        \"many_to_many\": { \"max_distance\": 200000.0, \"max_locations\": 50}, \
         \"max_shape\": 750000,\
         \"min_resample\": 10.0 \
       }, \
