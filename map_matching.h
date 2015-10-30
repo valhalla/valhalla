@@ -39,10 +39,13 @@ class MapMatching: public ViterbiSearch<Candidate>
               const std::shared_ptr<sif::DynamicCost>* mode_costing,
               const sif::TravelMode mode)
       : sigma_z_(sigma_z),
+        double_sq_sigma_z_(sigma_z_ * sigma_z_ * 2.f),
         beta_(beta),
+        measurements_(),
         graphreader_(graphreader),
         mode_costing_(mode_costing),
-        mode_(mode)
+        mode_(mode),
+        transition_cache_()
   {
     if (sigma_z_ < 0.f) {
       throw std::invalid_argument("sigma_z must be non-negative");
@@ -51,8 +54,6 @@ class MapMatching: public ViterbiSearch<Candidate>
     if (beta_ < 0.f) {
       throw std::invalid_argument("beta must be non-negative");
     }
-
-    double_sq_sigma_z_ = sigma_z_ * sigma_z_ * 2.f;
   }
 
   ~MapMatching()
@@ -98,7 +99,6 @@ class MapMatching: public ViterbiSearch<Candidate>
   double double_sq_sigma_z_;  // equals to sigma_z_ * sigma_z_ * 2.f
   float beta_;
   std::vector<Measurement> measurements_;
-
   baldr::GraphReader& graphreader_;
   const std::shared_ptr<DynamicCost>* mode_costing_;
   const TravelMode mode_;
