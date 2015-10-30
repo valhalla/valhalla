@@ -970,24 +970,25 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   std::map<GraphId, std::string> transit_tiles;
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   auto local_level = hierarchy.levels().rbegin()->first;
-  boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level) + "/"), end_file_itr;
-  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf") {
-      auto graph_id = TransitToTile(pt, transit_file_itr->path().string());
-      //TODO: this precludes a transit only network, which kind of sucks but
-      //right now we are assuming that we have to connect stops to the OSM
-      //road network so if that assumption goes away this can too
-      if(GraphReader::DoesTileExist(hierarchy, graph_id)) {
+  if(boost::filesystem::is_directory(*transit_dir + std::to_string(local_level) + "/")) {
+    boost::filesystem::recursive_directory_iterator transit_file_itr(*transit_dir + std::to_string(local_level) + "/"), end_file_itr;
+    for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
+      if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf") {
+        auto graph_id = TransitToTile(pt, transit_file_itr->path().string());
+        //TODO: this precludes a transit only network, which kind of sucks but
+        //right now we are assuming that we have to connect stops to the OSM
+        //road network so if that assumption goes away this can too
+        if(GraphReader::DoesTileExist(hierarchy, graph_id)) {
+          GraphTileBuilder tb(hierarchy, graph_id, true);
+          tiles.emplace(graph_id, tb.nodes().size());
+          transit_tiles.emplace(graph_id, transit_file_itr->path().string());
 
-        GraphTileBuilder tb(hierarchy, graph_id, true);
-        tiles.emplace(graph_id, tb.nodes().size());
-        transit_tiles.emplace(graph_id, transit_file_itr->path().string());
-
+        }
       }
     }
   }
   if(!transit_tiles.size()) {
-    LOG_INFO("Transit directory " + *transit_dir + " not found.  Transit will not be added.");
+    LOG_INFO("No transit tiles found. Transit will not be added.");
     return;
   }
 
