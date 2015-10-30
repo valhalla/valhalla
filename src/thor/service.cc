@@ -66,7 +66,7 @@ namespace {
       const size_t origin, const size_t destination, const size_t start, const size_t end, double distance_scale) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
-      //check to make sure that data exists; if not, return nullptr for distance & time in matrix result
+      //check to make sure a route was found; if not, return null for distance & time in matrix result
       if (tds[i].time != kMaxCost) {
         row->emplace_back(json::map({
           {"from_index", static_cast<uint64_t>(origin)},
