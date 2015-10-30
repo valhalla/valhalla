@@ -11,12 +11,18 @@
 using namespace valhalla;
 
 
-using MeasurementId = uint32_t;
+class Measurement {
+ public:
+  Measurement(const PointLL& lnglat)
+      : lnglat_(lnglat) {
+  }
 
+  const PointLL& lnglat() const {
+    return lnglat_;
+  };
 
-struct Measurement {
-  MeasurementId id;
-  PointLL lnglat;
+ private:
+  PointLL lnglat_;
 };
 
 
@@ -110,7 +116,7 @@ class MapMatching: public ViterbiSearch<Candidate>
   inline float GreatCircleDistance(const Measurement& left,
                                    const Measurement& right) const
   {
-    return left.lnglat.Distance(right.lnglat);
+    return left.lnglat().Distance(right.lnglat());
   }
 
   float TransitionCost(const CandidateWrapper<Candidate>& left,
@@ -190,13 +196,13 @@ OfflineMatch(MapMatching& mm,
              const std::vector<Measurement>& measurements,
              float sq_search_radius)
 {
+  mm.Clear();
   if (measurements.empty()) {
     return {};
   }
-  mm.Clear();
   Time time;
   for (const auto& measurement : measurements) {
-    const auto& candidates = cq.Query(measurement.lnglat,
+    const auto& candidates = cq.Query(measurement.lnglat(),
                                       sq_search_radius,
                                       mm.costing()->GetFilter());
     time = mm.AppendState(measurement, candidates);
