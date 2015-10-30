@@ -257,6 +257,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
   for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);
 
+    // Depart instruction
     if (maneuver.has_depart_instruction()) {
       valhalla::midgard::logging::Log(
           (boost::format("   %s")
@@ -264,11 +265,21 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
           " [NARRATIVE] ");
     }
 
+    // Verbal depart instruction
+    if (maneuver.has_verbal_depart_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_DEPART: %s")
+              % maneuver.verbal_depart_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    // Instruction
     valhalla::midgard::logging::Log(
         (boost::format("%d: %s | %.1f %s") % m++ % maneuver.text_instruction()
             % maneuver.length() % units).str(),
         " [NARRATIVE] ");
 
+    // Verbal transition alert instruction
     if (maneuver.has_verbal_transition_alert_instruction()) {
       valhalla::midgard::logging::Log(
           (boost::format("   VERBAL_ALERT: %s")
@@ -276,6 +287,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
           " [NARRATIVE] ");
     }
 
+    // Verbal pre transition instruction
     if (maneuver.has_verbal_pre_transition_instruction()) {
       valhalla::midgard::logging::Log(
           (boost::format("   VERBAL_PRE: %s")
@@ -283,10 +295,27 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
           " [NARRATIVE] ");
     }
 
+    // Verbal post transition instruction
     if (maneuver.has_verbal_post_transition_instruction()) {
       valhalla::midgard::logging::Log(
           (boost::format("   VERBAL_POST: %s")
               % maneuver.verbal_post_transition_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    // Arrive instruction
+    if (maneuver.has_arrive_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   %s")
+              % maneuver.arrive_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
+    // Verbal arrive instruction
+    if (maneuver.has_verbal_arrive_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   VERBAL_DEPART: %s")
+              % maneuver.verbal_arrive_instruction()).str(),
           " [NARRATIVE] ");
     }
 
