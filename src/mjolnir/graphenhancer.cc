@@ -1014,7 +1014,6 @@ void enhance(const boost::property_tree::ptree& pt,
       sqlite3_close(admin_db_handle);
       return;
     }
-    LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
@@ -1046,7 +1045,6 @@ void enhance(const boost::property_tree::ptree& pt,
       sqlite3_close(tz_db_handle);
       return;
     }
-    LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
