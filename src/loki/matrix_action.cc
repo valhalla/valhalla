@@ -61,7 +61,7 @@ namespace {
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
       if (path_distance > max_distance)
-        throw std::runtime_error("The path distance of " + std::to_string(path_distance) + " exceeds the max distance limit of " + std::to_string(max_distance) + " at from_index[" + std::to_string(origin) + "], to_index[" + std::to_string(i) +"].");
+        throw std::runtime_error("Path distance exceeds the max distance limit.");
     }
   }
 }
