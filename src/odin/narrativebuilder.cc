@@ -412,7 +412,34 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kTransitRemainOn: {
-        FormTransitRemainOnInstruction(maneuver);
+        // Set depart instruction
+        maneuver.set_depart_instruction(
+            std::move(FormDepartInstruction(maneuver)));
+
+        // Set verbal depart instruction
+        maneuver.set_verbal_depart_instruction(
+            std::move(FormVerbalDepartInstruction(maneuver)));
+
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormTransitRemainOnInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalTransitRemainOnInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+
+        // Set arrive instruction
+        maneuver.set_arrive_instruction(
+            std::move(FormArriveInstruction(maneuver)));
+
+        // Set verbal arrive instruction
+        maneuver.set_verbal_arrive_instruction(
+            std::move(FormVerbalArriveInstruction(maneuver)));
+
         break;
       }
       case TripDirections_Maneuver_Type_kTransitTransfer: {
@@ -2947,36 +2974,73 @@ std::string NarrativeBuilder::FormVerbalTransitInstruction(Maneuver& maneuver) {
   return instruction;
 }
 
-void NarrativeBuilder::FormTransitRemainOnInstruction(
+std::string NarrativeBuilder::FormTransitRemainOnInstruction(
     Maneuver& maneuver) {
-  // TODO - refactor transit instructions
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "DEPART: ";
-  text_instruction += maneuver.GetFormattedTransitDepartureTime();
-  text_instruction += " from ";
-  text_instruction += maneuver.GetTransitStops().front().name;
-  text_instruction += ". Remain on the ";
-  text_instruction += FormTransitName(maneuver);
-  if (!maneuver.transit_route_info().headsign.empty()) {
-    text_instruction += " toward ";
-    text_instruction += maneuver.transit_route_info().headsign;
-  }
-  text_instruction += ". (";
-  text_instruction += std::to_string(maneuver.GetTransitStopCount());
-  if (maneuver.GetTransitStopCount() > 1) {
-    text_instruction += " stops";
-  } else {
-    text_instruction += " stop";
-  }
-  text_instruction += ").";
-  text_instruction += " ARRIVE: ";
-  text_instruction += maneuver.GetFormattedTransitArrivalTime();
-  text_instruction += " at ";
-  text_instruction += maneuver.GetTransitStops().back().name;
-  text_instruction += ".";
+  // 0 Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+  // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
 
-  maneuver.set_instruction(std::move(text_instruction));
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_headsign = maneuver.transit_route_info().headsign;
+
+  if (!transit_headsign.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+    case 1: {
+      instruction = (boost::format("Remain on the %1% toward %2%. (%3% %4%)")
+          % FormTransitName(maneuver) % transit_headsign
+          % maneuver.GetTransitStopCount()
+          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
+      break;
+    }
+    // 0 Remain on the <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <FormStopCountLabel>)"
+    default: {
+      instruction = (boost::format("Remain on the %1%. (%2% %3%)")
+          % FormTransitName(maneuver) % maneuver.GetTransitStopCount()
+          % FormStopCountLabel(maneuver.GetTransitStopCount())).str();
+      break;
+    }
+  }
+
+  return instruction;
+
+}
+
+std::string NarrativeBuilder::FormVerbalTransitRemainOnInstruction(
+    Maneuver& maneuver) {
+  // 0 Remain on the <TRANSIT_NAME>."
+  // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string transit_headsign = maneuver.transit_route_info().headsign;
+
+  if (!transit_headsign.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 Remain on the <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+    case 1: {
+      instruction = (boost::format("Remain on the %1% toward %2%.")
+          % FormTransitName(maneuver) % transit_headsign).str();
+      break;
+    }
+    // 0 Remain on the <TRANSIT_NAME>."
+    default: {
+      instruction = (boost::format("Remain on the %1%.")
+          % FormTransitName(maneuver)).str();
+      break;
+    }
+  }
+
+  return instruction;
+
 }
 
 void NarrativeBuilder::FormTransitTransferInstruction(

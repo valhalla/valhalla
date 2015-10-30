@@ -312,7 +312,9 @@ class NarrativeBuilder {
   static std::string FormVerbalTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitRemainOnInstruction(Maneuver& maneuver);
+  static std::string FormTransitRemainOnInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitRemainOnInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormTransitTransferInstruction(Maneuver& maneuver);
