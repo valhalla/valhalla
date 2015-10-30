@@ -314,7 +314,7 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
     // Verbal arrive instruction
     if (maneuver.has_verbal_arrive_instruction()) {
       valhalla::midgard::logging::Log(
-          (boost::format("   VERBAL_DEPART: %s")
+          (boost::format("   VERBAL_ARRIVE: %s")
               % maneuver.verbal_arrive_instruction()).str(),
           " [NARRATIVE] ");
     }
