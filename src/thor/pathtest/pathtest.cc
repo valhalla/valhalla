@@ -256,6 +256,14 @@ TripDirections DirectionsTest(const DirectionsOptions& directions_options,
       "==============================================", " [NARRATIVE] ");
   for (int i = 0; i < trip_directions.maneuver_size(); ++i) {
     const auto& maneuver = trip_directions.maneuver(i);
+
+    if (maneuver.has_depart_instruction()) {
+      valhalla::midgard::logging::Log(
+          (boost::format("   %s")
+              % maneuver.depart_instruction()).str(),
+          " [NARRATIVE] ");
+    }
+
     valhalla::midgard::logging::Log(
         (boost::format("%d: %s | %.1f %s") % m++ % maneuver.text_instruction()
             % maneuver.length() % units).str(),
