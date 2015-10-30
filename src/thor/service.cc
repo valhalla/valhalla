@@ -66,12 +66,22 @@ namespace {
       const size_t origin, const size_t destination, const size_t start, const size_t end, double distance_scale) {
     auto row = json::array({});
     for(size_t i = start; i < end; i++) {
+      //check to make sure that data exists; if not, return nullptr for distance & time in matrix result
+      if (tds[i].time != kMaxCost) {
         row->emplace_back(json::map({
           {"from_index", static_cast<uint64_t>(origin)},
           {"to_index", static_cast<uint64_t>(destination + (i - start))},
           {"time", static_cast<uint64_t>(tds[i].time)},
-          {"distance", json::fp_t{tds[i].dist * distance_scale, 3}},
+          {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
         }));
+      } else {
+        row->emplace_back(json::map({
+          {"from_index", static_cast<uint64_t>(origin)},
+          {"to_index", static_cast<uint64_t>(destination + (i - start))},
+          {"time", static_cast<nullptr_t>(nullptr)},
+          {"distance", static_cast<nullptr_t>(nullptr)}
+        }));
+      }
     }
     return row;
   }
