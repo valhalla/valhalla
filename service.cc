@@ -146,6 +146,7 @@ class mm_worker_t {
     } catch(const std::runtime_error& ex) {
       worker_t::result_t result{false};
       auto response = RESPONSE_400;
+      response.body = ex.what();
       response.from_info(info);
       result.messages.emplace_back(response.to_string());
       return result;
@@ -159,6 +160,7 @@ class mm_worker_t {
       } catch (const SequenceParseError& ex) {
         worker_t::result_t result{false};
         auto response = RESPONSE_400;
+        response.body = ex.what();
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
         return result;
