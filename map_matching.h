@@ -75,9 +75,10 @@ class MapMatching: public ViterbiSearch<Candidate>
   }
 
   Time AppendState(const Measurement& measurement,
-                   const std::vector<Candidate>& candidates)
+                   const std::vector<Candidate>::const_iterator begin,
+                   const std::vector<Candidate>::const_iterator end)
   {
-    auto time = ViterbiSearch<Candidate>::AppendState(candidates.begin(), candidates.end());
+    auto time = ViterbiSearch<Candidate>::AppendState(begin, end);
     assert(time == measurements_.size());
     measurements_.push_back(measurement);
     states_.emplace_back(unreached_states(time));
@@ -246,7 +247,7 @@ OfflineMatch(MapMatching& mm,
     const auto& candidates = cq.Query(measurement.lnglat(),
                                       sq_search_radius,
                                       mm.costing()->GetFilter());
-    time = mm.AppendState(measurement, candidates);
+    time = mm.AppendState(measurement, candidates.begin(), candidates.end());
   }
   auto path = mm.SearchPath(time);
   std::reverse(path.begin(), path.end());
