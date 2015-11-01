@@ -46,7 +46,10 @@ class MapMatching: public ViterbiSearch<Candidate>
         graphreader_(graphreader),
         mode_costing_(mode_costing),
         mode_(mode),
-        transition_cache_()
+        states_(),
+        transition_cache_(),
+        labelset_cache_(),
+        label_idx_cache_()
   {
     if (sigma_z_ < 0.f) {
       throw std::invalid_argument("sigma_z must be non-negative");
@@ -64,10 +67,10 @@ class MapMatching: public ViterbiSearch<Candidate>
 
   void Clear() {
     measurements_.clear();
-    // TODO do we need clear this?
-    // const std::shared_ptr<DynamicCost>* mode_costing_;
+    states_.clear();
     transition_cache_.clear();
-    // TODO avoid this?
+    labelset_cache_.clear();
+    label_idx_cache_.clear();
     ViterbiSearch<Candidate>::Clear();
   }
 
@@ -77,7 +80,13 @@ class MapMatching: public ViterbiSearch<Candidate>
     auto time = ViterbiSearch<Candidate>::AppendState(candidates.begin(), candidates.end());
     assert(time == measurements_.size());
     measurements_.push_back(measurement);
+    states_.emplace_back(unreached_states(time));
     return time;
+  }
+
+  const std::vector<const CandidateWrapper<Candidate>*> states(Time time) const
+  {
+    return states_[time];
   }
 
   const std::shared_ptr<sif::DynamicCost> costing() const
@@ -95,6 +104,31 @@ class MapMatching: public ViterbiSearch<Candidate>
     return measurements_[time];
   }
 
+  std::vector<Measurement>::size_type size() const
+  {
+    return measurements_.size();
+  }
+
+  const LabelSet& labelset(CandidateId id) const
+  {
+    return labelset_cache_.at(id);
+  }
+
+  bool has_labelset(CandidateId id) const
+  {
+    return labelset_cache_.find(id) != labelset_cache_.end();
+  }
+
+  uint32_t label_idx(CandidateId left, CandidateId right) const
+  {
+    auto p = candidateid_make_pair(left, right);
+    auto it = label_idx_cache_.find(p);
+    if (it != label_idx_cache_.end()) {
+      return it->second;
+    }
+    return kInvalidLabelIndex;
+  }
+
  private:
   float sigma_z_;
   double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)
@@ -104,7 +138,12 @@ class MapMatching: public ViterbiSearch<Candidate>
   baldr::GraphReader& graphreader_;
   const std::shared_ptr<DynamicCost>* mode_costing_;
   const TravelMode mode_;
+  std::vector<std::vector<const CandidateWrapper<Candidate>*>> states_;
+
+  // Caches
   mutable std::unordered_map<CandidatePairId, float> transition_cache_;
+  mutable std::unordered_map<CandidateId, LabelSet> labelset_cache_;
+  mutable std::unordered_map<CandidatePairId, uint32_t> label_idx_cache_;
 
  protected:
   inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
@@ -160,22 +199,22 @@ class MapMatching: public ViterbiSearch<Candidate>
     }
 
     // Route and cache results
-    LabelSet labelset(std::ceil(max_route_distance));
-    auto results = find_shortest_path(graphreader_, locations, 0, labelset);
+    const auto& result = labelset_cache_.emplace(left.id(), std::ceil(max_route_distance));
+    assert(result.second);  // Must be new insertion
+    auto& labelset = result.first->second;
+    const auto& results = find_shortest_path(graphreader_, locations, 0, labelset);
     auto candidate_itr = candidates.begin();
     for (uint16_t dest = 1; dest < locations.size(); dest++, candidate_itr++) {
       float cost = -1.f;
+      auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
       auto it = results.find(dest);
       if (it != results.end()) {
         auto route_distance = labelset.label(it->second).cost;
         cost = std::abs(route_distance - mmt_distance) * inv_beta_;
+        label_idx_cache_[p] = it->second;
       }
-      auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
       transition_cache_[p] = cost;
     }
-
-    // Must be there
-    assert(transition_cache_.find(pair) != transition_cache_.end());
 
     return transition_cache_[pair];
   }
