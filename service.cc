@@ -23,22 +23,33 @@ using namespace prime_server;
 using namespace valhalla;
 
 
+namespace {
+constexpr float kDefaultSigmaZ = 4.07;
+constexpr float kDefaultBeta = 5;
+constexpr float kDefaultSquaredSearchRadius = 40 * 40;  // 40 meters
+constexpr float kMaxSearchRadius = 200;                // 200 meters
+}
+
+
 class SequenceParseError: public std::runtime_error {
   // Need its constructor
   using std::runtime_error::runtime_error;
 };
 
 
-std::vector<Measurement> parse_sequence(const char* text)
+void jsonify(Document& document, const char* text)
 {
-  Document document;
   document.Parse(text);
 
   if (document.HasParseError()) {
     auto message = GetParseError_En(document.GetParseError());
     throw SequenceParseError(message);
   }
+}
 
+
+std::vector<Measurement> read_sequence(const Document& document)
+{
   // Parse coordinates
   if (!document.HasMember("coordinates")) {
     throw SequenceParseError("coordinates not found");
@@ -70,43 +81,136 @@ std::vector<Measurement> parse_sequence(const char* text)
   return measurements;
 }
 
-
-Document serialize_path(const std::vector<const CandidateWrapper<Candidate>*>& path,
-                        const std::vector<Measurement>&  measurements)
+template <typename T>
+void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 {
-  Document document(kObjectType);
-  auto& allocator = document.GetAllocator();
+  writer.StartArray();
+  writer.Double(coord.lng());
+  writer.Double(coord.lat());
+  writer.EndArray();
+}
 
-  Value matched_coordinates(kArrayType);
-  matched_coordinates.Reserve(path.size(), allocator);
 
-  for (decltype(path.size()) i = 0; i < path.size(); i++) {
-    Value matched_coordinate(kArrayType);
-    matched_coordinate.Reserve(2, allocator);
-    if (path[i]) {
-      const auto& vertex = path[i]->candidate().pathlocation().vertex();
-      matched_coordinate.PushBack(vertex.lng(), allocator);
-      matched_coordinate.PushBack(vertex.lat(), allocator);
-    } else {
-      const auto& lnglat = measurements[i].lnglat();
-      matched_coordinate.PushBack(lnglat.lng(), allocator);
-      matched_coordinate.PushBack(lnglat.lat(), allocator);
-    }
-    matched_coordinates.PushBack(matched_coordinate, allocator);
+template <typename T>
+void serialize_geometry(const std::vector<const CandidateWrapper<Candidate>*>& path,
+                        const MapMatching&mm,
+                        Writer<T>& writer)
+{
+  writer.StartObject();
+  writer.String("type");
+  writer.String("MultiPoint");
+  writer.String("coordinates");
+  writer.StartArray();
+  for (Time t = 0; t < path.size(); t++) {
+    const auto& vertex = path[t]? path[t]->candidate().pathlocation().vertex() : mm.measurement(t).lnglat();
+    serialize_coordinate(vertex, writer);
+  }
+  writer.EndArray();
+  writer.EndObject();
+}
+
+
+template <typename T>
+void serialize_labels(const CandidateWrapper<Candidate>& state,
+                      const MapMatching&mm,
+                      Writer<T>& writer)
+{
+  if (!mm.has_labelset(state.id())) {
+    writer.StartArray();
+    writer.EndArray();
+    return;
   }
 
-  Value geometry(kObjectType);
-  geometry.AddMember("type", "MultiPoint", allocator);
-  geometry.AddMember("coordinates", matched_coordinates, allocator);
+  const auto& labelset = mm.labelset(state.id());
+  writer.StartArray();
+  if (state.time() + 1 < mm.size()) {
+    for (const auto& next_state_ptr : mm.states(state.time() + 1)) {
+      auto idx = mm.label_idx(state.id(), next_state_ptr->id());
+      if (idx != kInvalidLabelIndex) {
+        const auto& label = labelset.label(idx);
+        writer.StartObject();
 
-  // TODO add edge id associated with each matched point
-  Value properties(kObjectType);
+        writer.String("state");
+        writer.Uint(next_state_ptr->id());
 
-  document.AddMember("type", "Feature", allocator);
-  document.AddMember("geometry", geometry, allocator);
-  document.AddMember("properties", properties, allocator);
+        writer.String("edge_id");
+        writer.Uint(label.edgeid.id());
 
-  return document;
+        writer.String("route_distance");
+        writer.Double(label.cost);
+
+        writer.EndObject();
+      }
+    }
+  }
+  writer.EndArray();
+}
+
+
+template <typename T>
+void serialize_state(const CandidateWrapper<Candidate>& state,
+                     const MapMatching&mm,
+                     Writer<T>& writer)
+{
+  writer.StartObject();
+
+  writer.String("id");
+  writer.Uint(state.id());
+
+  writer.String("time");
+  writer.Uint(state.time());
+
+  writer.String("distance");
+  writer.Double(state.candidate().distance());
+
+  writer.String("coordinate");
+  serialize_coordinate(state.candidate().pathlocation().vertex(), writer);
+
+  writer.String("labels");
+  serialize_labels(state, mm, writer);
+
+  writer.EndObject();
+}
+
+
+template <typename T>
+void serialize_properties(const std::vector<const CandidateWrapper<Candidate>*>& path,
+                          const MapMatching&mm,
+                          Writer<T>& writer)
+{
+  writer.StartObject();
+
+  writer.String("states");
+  writer.StartArray();
+  for (Time t = 0; t < path.size(); t++) {
+    writer.StartArray();
+    for (const auto& state_ptr : mm.states(t)) {
+      serialize_state(*state_ptr, mm, writer);
+    }
+    writer.EndArray();
+  }
+  writer.EndArray();
+  writer.EndObject();
+}
+
+
+template <typename T>
+void serialize_path(const std::vector<const CandidateWrapper<Candidate>*>& path,
+                    const MapMatching& mm,
+                    Writer<T>& writer)
+{
+  writer.StartObject();
+
+  writer.String("type");
+  writer.String("Feature");
+
+  writer.String("geometry");
+  serialize_geometry(path, mm, writer);
+
+  writer.String("properties");
+  serialize_properties(path, mm, writer);
+
+  writer.EndObject();
 }
 
 
@@ -155,8 +259,10 @@ class mm_worker_t {
     if (request.method == method_t::POST) {
       std::vector<Measurement> measurements;
       // Parse sequence
+      Document json;
       try {
-        measurements = parse_sequence(request.body.c_str());
+        jsonify(json, request.body.c_str());
+        measurements = read_sequence(json);
       } catch (const SequenceParseError& ex) {
         worker_t::result_t result{false};
         auto response = RESPONSE_400;
@@ -166,17 +272,46 @@ class mm_worker_t {
         return result;
       }
 
+      float sigma_z = kDefaultSigmaZ;
+      if (json.HasMember("sigma_z")) {
+        const auto& v = json["sigma_z"];
+        if (v.IsNumber()) {
+          sigma_z = static_cast<float>(v.GetDouble());
+        }
+      }
+
+      float beta = kDefaultBeta;
+      if (json.HasMember("beta")) {
+        const auto& v = json["beta"];
+        if (v.IsNumber()) {
+          beta = static_cast<float>(v.GetDouble());
+        }
+      }
+
+      LOG_INFO("Using sigma_z: " + std::to_string(sigma_z));
+      LOG_INFO("Using beta: " + std::to_string(beta));
+
       // Match
-      // TODO read params from config or request
-      MapMatching mm(4.07, 5, reader, mode_costing, static_cast<sif::TravelMode>(3));
-      auto path = OfflineMatch(mm, grid, measurements, 1600);
+      MapMatching mm(sigma_z, beta, reader, mode_costing, static_cast<sif::TravelMode>(3));
+
+      float sq_search_radius = kDefaultSquaredSearchRadius;
+      if (json.HasMember("radius")) {
+        const auto& v = json["radius"];
+        if (v.IsNumber()) {
+          auto radius = std::max(0.f, std::min(static_cast<float>(v.GetDouble()), kMaxSearchRadius));
+          sq_search_radius = radius * radius;
+        }
+      }
+
+      LOG_INFO("Using search radius: " + std::to_string(std::sqrt(sq_search_radius)));
+
+      auto path = OfflineMatch(mm, grid, measurements, sq_search_radius);
       assert(path.size() == measurements.size());
 
       // Serialize path
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      const auto& document = serialize_path(path, measurements);
-      document.Accept(writer);
+      serialize_path(path, mm, writer);
 
       worker_t::result_t result{false};
       http_response_t response(200, "OK", sb.GetString(), headers_t{CORS, JS_MIME});
