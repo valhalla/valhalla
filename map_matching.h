@@ -136,13 +136,13 @@ class MapMatching: public ViterbiSearch<Candidate>
               &right_mmt = measurements_[right.time()];
     auto mmt_distance = GreatCircleDistance(left_mmt, right_mmt);
     if (mmt_distance > kBreakageDistance) {
-      for (const auto& candidate_ptr : state(right.time())) {
+      for (const auto& candidate_ptr : unreached_states(right.time())) {
         auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
         transition_cache_[p] = -1.f;
       }
       return -1.f;
     } else if (mmt_distance <= kClosestDistance) {
-      for (const auto& candidate_ptr : state(right.time())) {
+      for (const auto& candidate_ptr : unreached_states(right.time())) {
         auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
         transition_cache_[p] = 0.f;
       }
@@ -151,7 +151,7 @@ class MapMatching: public ViterbiSearch<Candidate>
     auto max_route_distance = std::min(mmt_distance * 2, kBreakageDistance);
 
     // Prepare locations
-    const auto& candidates = state(right.time());
+    const auto& candidates = unreached_states(right.time());
     std::vector<PathLocation> locations;
     locations.reserve(1 + candidates.size());
     locations.push_back(left.candidate().pathlocation());
