@@ -37,6 +37,7 @@ class BucketQueue
 
     auto idx = bucket_idx(cost);
 
+    // TODO split them into add and update two functions
     auto it = costmap_.find(key);
     if (it == costmap_.end()) {
       if (idx < bucket_count_) {
@@ -99,6 +100,12 @@ class BucketQueue
 
   inline size_t size() const {
     return costmap_.size();
+  }
+
+  void clear() {
+    buckets_.clear();
+    costmap_.clear();
+    top_ = 0;
   }
 
  private:
@@ -254,15 +261,16 @@ class LabelSet
   }
 
   inline const Label& label(uint32_t label_idx) const {
-    return labels_.at(label_idx);
+    return labels_[label_idx];
   }
 
-  inline const Status& status(uint16_t dest) const {
-    return dest_status_.at(dest);
+  inline void clear_queue() {
+    queue_.clear();
   }
 
-  inline const Status& status(const GraphId& nodeid) const {
-    return node_status_.at(nodeid);
+  inline void clear_status() {
+    node_status_.clear();
+    dest_status_.clear();
   }
 
  private:
@@ -443,21 +451,8 @@ find_shortest_path(GraphReader& reader,
     }
   }
 
+  labelset.clear_queue();
+  labelset.clear_status();
+
   return results;
-}
-
-
-std::vector<Label>
-reconstruct_path(uint16_t dest, const LabelSet& labelset)
-{
-  std::vector<Label> path;
-
-  auto idx = labelset.status(dest).label_idx;
-  while (idx != kInvalidLabelIndex) {
-    const auto& label = labelset.label(idx);
-    path.push_back(label);
-    idx = label.predecessor;
-  }
-
-  return path;
 }
