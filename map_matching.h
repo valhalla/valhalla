@@ -39,8 +39,9 @@ class MapMatching: public ViterbiSearch<Candidate>
               const std::shared_ptr<sif::DynamicCost>* mode_costing,
               const sif::TravelMode mode)
       : sigma_z_(sigma_z),
-        double_sq_sigma_z_(sigma_z_ * sigma_z_ * 2.f),
+        inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f)),
         beta_(beta),
+        inv_beta_(1.f / beta_),
         measurements_(),
         graphreader_(graphreader),
         mode_costing_(mode_costing),
@@ -96,8 +97,9 @@ class MapMatching: public ViterbiSearch<Candidate>
 
  private:
   float sigma_z_;
-  double double_sq_sigma_z_;  // equals to sigma_z_ * sigma_z_ * 2.f
+  double inv_double_sq_sigma_z_;  // equals to 1.f / (sigma_z_ * sigma_z_ * 2.f)
   float beta_;
+  float inv_beta_;  // equals to 1.f / beta_
   std::vector<Measurement> measurements_;
   baldr::GraphReader& graphreader_;
   const std::shared_ptr<DynamicCost>* mode_costing_;
@@ -166,7 +168,7 @@ class MapMatching: public ViterbiSearch<Candidate>
       auto it = results.find(dest);
       if (it != results.end()) {
         auto route_distance = labelset.label(it->second).cost;
-        cost = std::abs(route_distance - mmt_distance) / beta_;
+        cost = std::abs(route_distance - mmt_distance) * inv_beta_;
       }
       auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
       transition_cache_[p] = cost;
@@ -180,7 +182,7 @@ class MapMatching: public ViterbiSearch<Candidate>
 
   inline float EmissionCost(const CandidateWrapper<Candidate>& candidate) const override
   {
-    return candidate.candidate().sq_distance() / double_sq_sigma_z_;
+    return candidate.candidate().sq_distance() * inv_double_sq_sigma_z_;
   }
 
   inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
