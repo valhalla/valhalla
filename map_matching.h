@@ -188,7 +188,7 @@ class MapMatching: public ViterbiSearch<Candidate>
       }
       return 0.f;
     }
-    auto max_route_distance = std::min(mmt_distance * 2, kBreakageDistance);
+    auto max_route_distance = std::min(mmt_distance * 3, kBreakageDistance);
 
     // Prepare locations
     const auto& candidates = unreached_states(right.time());
