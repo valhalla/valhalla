@@ -51,12 +51,12 @@ class MapMatching: public ViterbiSearch<Candidate>
         labelset_cache_(),
         label_idx_cache_()
   {
-    if (sigma_z_ < 0.f) {
-      throw std::invalid_argument("sigma_z must be non-negative");
+    if (sigma_z_ <= 0.f) {
+      throw std::invalid_argument("expect sigma_z to be positive");
     }
 
-    if (beta_ < 0.f) {
-      throw std::invalid_argument("beta must be non-negative");
+    if (beta_ <= 0.f) {
+      throw std::invalid_argument("expect beta to be positive");
     }
   }
 
