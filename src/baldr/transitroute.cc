@@ -7,14 +7,14 @@ namespace baldr {
 // Constructor with arguments
 TransitRoute:: TransitRoute(const uint32_t routeid, uint32_t one_stop_offset,
                             const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
-                            const uint32_t route_color, const uint32_t route_text_color,
-                            const uint32_t short_name_offset,
-                            const uint32_t long_name_offset,
-                            const uint32_t desc_offset)
+                            const uint32_t op_by_website_offset, const uint32_t route_color,
+                            const uint32_t route_text_color, const uint32_t short_name_offset,
+                            const uint32_t long_name_offset, const uint32_t desc_offset)
     : routeid_(routeid),
       one_stop_offset_(one_stop_offset),
       op_by_onestop_id_offset_(op_by_onestop_id_offset),
       op_by_name_offset_(op_by_name_offset),
+      op_by_website_offset_(op_by_website_offset),
       route_color_(route_color),
       route_text_color_(route_text_color),
       short_name_offset_(short_name_offset),
@@ -39,6 +39,11 @@ uint32_t TransitRoute::op_by_onestop_id_offset() const {
 // Get the TransitLand operator name offset for this route.
 uint32_t TransitRoute::op_by_name_offset() const {
   return op_by_name_offset_;
+}
+
+// Get the TransitLand operator website offset for this route.
+uint32_t TransitRoute::op_by_website_offset() const {
+  return op_by_website_offset_;
 }
 
 // Get the route color route.

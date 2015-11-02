@@ -16,9 +16,9 @@ class TransitRoute {
   // Constructor with arguments
   TransitRoute(const uint32_t routeid, const uint32_t one_stop_offset,
                const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
-               const uint32_t route_color, const uint32_t route_text_color,
-               const uint32_t short_name_offset, const uint32_t long_name_offset,
-               const uint32_t desc_offset);
+               const uint32_t op_by_website_offset, const uint32_t route_color,
+               const uint32_t route_text_color, const uint32_t short_name_offset,
+               const uint32_t long_name_offset, const uint32_t desc_offset);
 
   /**
    * Get the internal route Id.
@@ -43,6 +43,12 @@ class TransitRoute {
    * @return  Returns the TransitLand operator name offset.
    */
   uint32_t op_by_name_offset() const;
+
+  /**
+   * Get the TransitLand operator website offset for this route.
+   * @return  Returns the TransitLand operator website offset.
+   */
+  uint32_t op_by_website_offset() const;
 
   /**
    * Get the route color route.
@@ -93,6 +99,9 @@ class TransitRoute {
 
   // TransitLand operated by name for this route.
   uint32_t op_by_name_offset_;
+
+  // TransitLand operated by website for this route.
+  uint32_t op_by_website_offset_;
 
   // Route color
   uint32_t route_color_;
