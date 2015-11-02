@@ -20,6 +20,7 @@ class PedestrianCost : public DynamicCost {
   }
 
   bool AllowedReverse(const DirectedEdge* edge,
+                      const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
                       const DirectedEdge* opp_pred_edge) const
   {
