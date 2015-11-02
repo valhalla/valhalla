@@ -155,12 +155,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
-                                      nodeinfo->stop_id()));
+                                      nodeinfo->stop_index()));
       }
 
       // Update prior stop.
       // TODO - parent/child stop info?
-      prior_stop = nodeinfo->stop_id();
+      prior_stop = nodeinfo->stop_index();
     }
 
     // Set local time. TODO: adjust for time zone. Add true transfer time.
@@ -303,7 +303,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       const NodeInfo* endnode = endtile->node(directededge->endnode());
       if (directededge->use() == Use::kTransitConnection &&
           endnode->is_transit() &&
-          endnode->stop_id() == pred.prior_stopid()) {
+          endnode->stop_index() == pred.prior_stopid()) {
         continue;
       }
 

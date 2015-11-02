@@ -421,7 +421,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (graphtile->node(startnode)->is_transit()) {
 
       // Get the transit stop information and add transit stop info
-      const TransitStop* stop = graphtile->GetTransitStop(startnode);
+      const TransitStop* stop = graphtile->GetTransitStop(graphtile->node(startnode)->stop_index());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
       if (!stop)
