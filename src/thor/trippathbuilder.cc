@@ -421,15 +421,13 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (graphtile->node(startnode)->is_transit()) {
 
       // Get the transit stop information and add transit stop info
-      const TransitStop* stop = graphtile->GetTransitStop(
-          graphtile->node(startnode)->stop_id());
+      const TransitStop* stop = graphtile->GetTransitStop(startnode);
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
-      if (!stop) {
+      if (!stop)
     	  transit_stop_info->set_name("");
-      } else {
+      else
         transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
-      }
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure)
