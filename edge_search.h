@@ -358,10 +358,14 @@ class CandidateGridQuery: public CandidateQuery
         if (grid) {
           return grid->Query(range);
         } else {
-          return {};
+          // g++-4.9 can't convert {} to empty unordered_set
+          // return {};
+          return std::unordered_set<GraphId>();
         }
       }
-      return {};
+      // g++-4.9 can't convert {} to empty unordered_set
+      // return {};
+      return std::unordered_set<GraphId>();
     }
 
     // Otherwise this range intersects with multiple tiles:
