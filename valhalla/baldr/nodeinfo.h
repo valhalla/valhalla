@@ -156,11 +156,11 @@ class NodeInfo {
   bool traffic_signal() const;
 
   /**
-   * Gets the transit stop Id. This is used for schedule lookups
+   * Gets the transit stop index. This is used for schedule lookups
    * and possibly queries to a transit service.
-   * @return  Returns the transit stop Id or 0 if this is not a transit node.
+   * @return  Returns the transit stop index.
    */
-  uint32_t stop_id() const;
+  uint32_t stop_index() const;
 
   /**
    * Get the name consistency between a pair of local edges. This is limited
@@ -215,9 +215,9 @@ class NodeInfo {
   uint32_t traffic_signal_     : 1;  // Traffic signal
   uint32_t spare1_             : 1;
 
-  // Transit stop Id
+  // Transit stop index
   union NodeStop {
-    uint32_t stop_id;
+    uint32_t stop_index;
     uint32_t name_consistency;
   };
   NodeStop stop_;

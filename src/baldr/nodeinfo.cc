@@ -150,10 +150,10 @@ bool NodeInfo::traffic_signal() const {
   return traffic_signal_;
 }
 
-// Gets the transit stop Id. This is used for schedule lookups
+// Gets the transit stop index. This is used for schedule lookups
 // and possibly queries to a transit service.
-uint32_t NodeInfo::stop_id() const {
-  return (is_transit()) ? stop_.stop_id : 0;
+uint32_t NodeInfo::stop_index() const {
+  return stop_.stop_index;
 }
 
 // Get the name consistency between a pair of local edges. This is limited
@@ -199,7 +199,7 @@ json::MapPtr NodeInfo::json(const GraphTile* tile) const {
     {"type", to_string(static_cast<NodeType>(type_))},
   });
   if(is_transit())
-    m->emplace("stop_id", static_cast<uint64_t>(stop_.stop_id));
+    m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));
   return m;
 }
 
