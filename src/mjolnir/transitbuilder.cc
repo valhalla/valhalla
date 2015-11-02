@@ -37,6 +37,7 @@ struct Stop {
   // Need to add onestop Id, connections (wayid, lat,lon)
   GraphId graphid;
   uint64_t way_id;
+  uint32_t index;
   uint32_t type;
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
@@ -139,6 +140,7 @@ std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder& tilebuilder
     stop.parent = 0;
     stop.type = 0;
     stop.graphid = GraphId(s.graphid()) + node_size;
+    stop.index = i;
 
     // Add the stop to the list
     stops.emplace_back(std::move(stop));
@@ -418,9 +420,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::vector<OSMConnectionEdge>& connection_edges,
                 const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
-
-  const size_t node_size = tilebuilder.nodes().size();
-
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
   tilebuilder.nodes().clear();
@@ -532,7 +531,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
-    node.set_stop_index(GraphId(stop.graphid) - node_size);
+    node.set_stop_index(stop.index);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
