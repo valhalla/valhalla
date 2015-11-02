@@ -1,4 +1,4 @@
-CC=clang++
+CC=g++
 FLAGS=-std=c++11 -O3 -DNDEBUG
 LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
 
