@@ -37,7 +37,6 @@ struct Stop {
   // Need to add onestop Id, connections (wayid, lat,lon)
   GraphId graphid;
   uint64_t way_id;
-  uint32_t index;
   uint32_t type;
   uint32_t parent;
   uint32_t conn_count;     // Number of connections to OSM nodes
@@ -114,51 +113,10 @@ struct builder_stats {
   }
 };
 
-// Write stops within a tile to the sequence
-std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder& tilebuilder,
-                           const size_t node_size, const std::vector<std::string>& regions) {
-
-  std::vector<Stop> stops;
-
-  for (uint32_t i = 0; i < transit.stops_size(); i++) {
-    const Transit_Stop& s = transit.stops(i);
-
-    // Get the coordinates of the stop as transit land has a BoundBox bug
-    Stop stop;
-    // Strings to be added to the tile
-    const std::string onestop_id = s.onestop_id();
-    const std::string name = s.name();
-
-    // Get the rest of the fixed sized data
-    stop.lon = s.lon();
-    stop.lat = s.lat();
-    stop.way_id = s.osm_way_id();
-    stop.wheelchair_boarding = s.wheelchair_boarding();
-    stop.timezone = s.timezone();
-
-    //TODO: get these from transitland????
-    stop.parent = 0;
-    stop.type = 0;
-    stop.graphid = GraphId(s.graphid()) + node_size;
-    stop.index = i;
-
-    // Add the stop to the list
-    stops.emplace_back(std::move(stop));
-
-    // Store stop information in TransitStops
-    TransitStop ts( tilebuilder.AddName(onestop_id),
-                   tilebuilder.AddName(name));
-    tilebuilder.AddTransitStop(ts);
-  }
-
-  LOG_INFO("Added " + std::to_string(stops.size()) + " stops");
-
-  return stops;
-}
-
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& transit,
                                                               const size_t node_size,
+                                                              const std::unordered_map<uint32_t, uint32_t> stop_indexes,
                                                               std::unordered_map<uint32_t,bool>& stop_access) {
 
   std::unordered_multimap<uint32_t, Departure> departures;
@@ -175,6 +133,11 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
 
     dep.orig_stop = orig.id();
     dep.dest_stop = dest.id();
+
+    if (stop_indexes.find(dep.orig_stop) == stop_indexes.end() ||
+        stop_indexes.find(dep.dest_stop) == stop_indexes.end())
+      continue;
+
     dep.route = sp.route_index();
     dep.trip = sp.trip_key();
 
@@ -511,7 +474,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   for (const auto& stop_edges : stop_edge_map) {
     // Get the stop information
     uint32_t stopkey = stop_edges.second.stop_key;
-    const Stop& stop = stops[stop_indexes.find(stopkey)->second];
+    const auto& stop_index = stop_indexes.find(stopkey)->second;
+    const Stop& stop = stops[stop_index];
     if (stop.graphid.id() != stopkey) {
       LOG_ERROR("Stop key not equal!");
     }
@@ -531,7 +495,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
-    node.set_stop_index(stop.index);
+    node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
@@ -660,7 +624,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
            " done. New directed edge count = " + std::to_string(tilebuilder.directededges().size()));
 }
 
-void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& tilehierarchy,
+bool AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& tilehierarchy,
                       std::vector<OSMConnectionEdge>& connection_edges) {
   PointLL ll = stop.ll();
   uint64_t wayid = stop.way_id;
@@ -708,7 +672,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
     LOG_ERROR("No closest edge found for this stop: " + std::to_string(stop.graphid) + " way Id = " +
               std::to_string(wayid) + " tile " + std::to_string(aabb.minx()) + ", " + std::to_string(aabb.miny()) + ", " +
               std::to_string(aabb.maxx()) + ", " +  std::to_string(aabb.maxy()));
-    return;
+    return false;
   }
 
   LOG_DEBUG("edge found for this stop: " + std::to_string(stop.graphid.id()) + " way Id = " +
@@ -758,6 +722,7 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
     LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop "
              + std::to_string(stop.graphid));
+    return false;
   }
 
   if (stop.conn_count == 0) {
@@ -765,7 +730,10 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
               std::to_string(stop.graphid.tileid()) + " Start Node Tile: " +
               std::to_string(startnode.tileid()) + " End Node Tile: " +
               std::to_string(endnode.tileid()));
+    return false;
   }
+
+  return true;
 
 }
 
@@ -828,29 +796,56 @@ void build(const std::string& transit_dir,
     // iteration...?
     // TODO - handle a list of connections/egrees points
     // TODO - what if we split the edge and insert a node?
-    std::vector<Stop> stops = AddStops(transit,tilebuilder,tile_start->second,DateTime::get_tz_db().regions);
-
     std::vector<OSMConnectionEdge> connection_edges;
-    Stop stop;
-    std::unordered_map<uint32_t, uint32_t> stop_indexes;
     std::unordered_multimap<uint32_t, uint32_t> children;
+    std::unordered_map<uint32_t, uint32_t> stop_indexes;
+    std::vector<Stop> stops;
 
-    // Create a map of stop key to index in the stop vector
     uint32_t n = 0;
-    for (auto& stop : stops) {
+
+    for (uint32_t i = 0; i < transit.stops_size(); i++) {
+      const Transit_Stop& s = transit.stops(i);
+
+      // Get the coordinates of the stop as transit land has a BoundBox bug
+      Stop stop;
+      // Strings to be added to the tile
+      const std::string onestop_id = s.onestop_id();
+      const std::string name = s.name();
+
+      // Get the rest of the fixed sized data
+      stop.lon = s.lon();
+      stop.lat = s.lat();
+      stop.way_id = s.osm_way_id();
+      stop.wheelchair_boarding = s.wheelchair_boarding();
+      stop.timezone = s.timezone();
+
+      //TODO: get these from transitland????
+      stop.parent = 0;
+      stop.type = 0;
+      stop.graphid = GraphId(s.graphid()) + tile_start->second;
 
       if (stop.parent == 0) {
         //TODO: multiple threads writing into the stops at once but never the same one, right?
-        AddOSMConnection(stop, tile, hierarchy, connection_edges);
-        stop_indexes[stop.graphid.id()] = n;
+        if (AddOSMConnection(stop, tile, hierarchy, connection_edges)) {
+          stop_indexes[stop.graphid.id()] = n;
+          n++;
+
+          // Add the stop to the list
+          stops.emplace_back(std::move(stop));
+
+          // Store stop information in TransitStops
+          TransitStop ts( tilebuilder.AddName(onestop_id),
+                         tilebuilder.AddName(name));
+          tilebuilder.AddTransitStop(ts);
+        }
       }
       // Do we have have a parent
       if (stop.type == 0 && stop.parent != 0) {
         children.emplace(stop.parent, stop.graphid.id());
       }
-
-      n++;
     }
+
+    LOG_INFO("Added " + std::to_string(stops.size()) + " stops");
 
     LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
     std::sort(connection_edges.begin(), connection_edges.end());
@@ -866,7 +861,7 @@ void build(const std::string& transit_dir,
     // Create a map of stop key to index in the stop vector
     std::unordered_map<uint32_t, bool> stop_access;
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(transit, tile_start->second, stop_access);
+        ProcessStopPairs(transit, tile_start->second, stop_indexes, stop_access);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
