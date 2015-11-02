@@ -71,12 +71,14 @@ class PedestrianCost : public DynamicCost {
    * (from destination towards origin). Both opposing edges are
    * provided.
    * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge) const;
 
@@ -241,6 +243,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
 bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
+               const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge) const {
   // Disallow if no pedestrian access, surface marked as impassible, Uturn,
@@ -249,7 +252,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // walking distance and assume we are not allowing transit connections.
   // Assume this method is never used in multimodal routes).
   if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
-       (opp_pred_edge->localedgeidx() == edge->localedgeidx()) ||
+       (pred.opp_local_idx() == edge->localedgeidx()) ||
         opp_edge->surface() == Surface::kImpassable ||
         edge->not_thru() || opp_edge->use() == Use::kTransitConnection) {
     return false;
