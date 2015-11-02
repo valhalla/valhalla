@@ -13,6 +13,16 @@ namespace valhalla {
 namespace thor {
 
 /**
+ * Candidate connections - a directed edge and its opposing directed edge
+ * are both temporarily labeled. Store the edge Ids and its cost.
+ */
+struct CandidateConnection {
+  baldr::GraphId edgeid;
+  baldr::GraphId opp_edgeid;
+  float cost;
+};
+
+/**
  * Bidirectional A* algorithm. Use for pedestrian routes (and bicycle?) only
  * at this time due to probable difficulties joining whe highway hierarchies
  * and shortcuts are used.
@@ -53,9 +63,13 @@ class BidirectionalAStar : public PathAlgorithm {
  protected:
   // A*, edge labels, adjacency list, and edge status for the reverse path
   AStarHeuristic astarheuristic_reverse_;
+  std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
   std::vector<sif::EdgeLabel> edgelabels_reverse_;
   std::shared_ptr<AdjacencyList> adjacencylist_reverse_;
   std::shared_ptr<EdgeStatus> edgestatus_reverse_;
+
+  // Best candidate connection
+  CandidateConnection best_connection_;
 
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
@@ -87,6 +101,17 @@ class BidirectionalAStar : public PathAlgorithm {
                        const std::shared_ptr<sif::DynamicCost>& costing);
 
   /**
+   * Modify hierarchy limits based on distance between origin and destination
+   * and the relative road density at the destination. For shorter routes
+   * we stay on arterial roads further from the destination. Also for lower
+   * road densities near the destination the hierarchy transition distances
+   * are increased.
+   * @param   dist     Distance between origin and destination.
+   * @param   density  Relative road density near the destination.
+   */
+  void ModifyHierarchyLimitsReverse(const float dist, const uint32_t density);
+
+  /**
    * Convenience method to add an edge to the adjacency list and temporarily
    * label it. This must be called before adding the edge label (so it uses
    * the correct index). Adds to the reverse path from destination towards
@@ -109,6 +134,20 @@ class BidirectionalAStar : public PathAlgorithm {
    void CheckIfLowerCostPathReverse(const uint32_t idx,
                              const uint32_t predindex,
                              const sif::Cost& newcost);
+
+   /**
+    * Handle transition edges. Will add any that are allowed to the
+    * adjacency list.
+    * @param level      Current hierarchy level
+    * @param edge       Directed edge (a transition edge)
+    * @param pred       Predecessor information
+    * @param predindex  Predecessor index in the edge labels.
+    * @param dist       Distance to the destination.
+    */
+   void HandleTransitionEdgeReverse(const uint32_t level,const baldr::GraphId& edgeid,
+                       const baldr::DirectedEdge* edge,
+                       const sif::EdgeLabel& pred, const uint32_t predindex,
+                       const float dist);
 
    /**
      * Form the path from the adjacency lists. Recovers the path from the
