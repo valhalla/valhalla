@@ -232,8 +232,14 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
   }
 }
 
-bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trips,
-    std::unordered_map<std::string, size_t>& block_ids, std::unordered_set<std::string>& missing_routes, const ptree& response,
+struct unique_transit_t {
+  std::mutex lock;
+  std::unordered_map<std::string, size_t> trips;
+  std::unordered_map<std::string, size_t> block_ids;
+  std::unordered_set<std::string> missing_routes;
+};
+
+bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& response,
     const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
   for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
@@ -267,10 +273,12 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
     auto route = routes.find(route_id);
     if(route == routes.cend()) {
-      if(missing_routes.find(route_id) == missing_routes.cend()) {
+      uniques.lock.lock();
+      if(uniques.missing_routes.find(route_id) == uniques.missing_routes.cend()) {
         LOG_ERROR("No route " + route_id);
-        missing_routes.emplace(route_id);
+        uniques.missing_routes.emplace(route_id);
       }
+      uniques.lock.unlock();
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
@@ -293,23 +301,28 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
-    auto trip = trips.find(t);
-    if(trip == trips.cend()) {
-      pair->set_trip_key(trips.size());
-      trips.emplace(t, trips.size());
+    uniques.lock.lock();
+    auto trip = uniques.trips.find(t);
+    if(trip == uniques.trips.cend()) {
+      pair->set_trip_key(uniques.trips.size());
+      uniques.trips.emplace(t, uniques.trips.size());
     }
     else pair->set_trip_key(trip->second);
+    uniques.lock.unlock();
 
     std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
     if (block_id == "null") {
       pair->set_block_id(0);
-    } else {
-      auto b_id = block_ids.find(block_id);
-      if (b_id == block_ids.cend()) {
-        pair->set_block_id(block_ids.size());
-        block_ids.emplace(block_id, block_ids.size());
+    }
+    else {
+      uniques.lock.lock();
+      auto b_id = uniques.block_ids.find(block_id);
+      if (b_id == uniques.block_ids.cend()) {
+        pair->set_block_id(uniques.block_ids.size());
+        uniques.block_ids.emplace(block_id, uniques.block_ids.size());
       }
       else pair->set_block_id(b_id->second);
+      uniques.lock.unlock();
     }
 
     pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
@@ -342,7 +355,7 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
   return dangles;
 }
 
-void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, std::mutex& lock, std::promise<std::list<GraphId> >& promise) {
+void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, unique_transit_t& uniques, std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
@@ -353,14 +366,14 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, s
   //for each tile
   while(true) {
     GraphId current;
-    lock.lock();
+    uniques.lock.lock();
     if(queue.empty()) {
-      lock.unlock();
+      uniques.lock.unlock();
       break;
     }
     current = queue.top().t;
     queue.pop();
-    lock.unlock();
+    uniques.lock.unlock();
     auto bbox = tiles.TileBounds(current.tileid());
     ptree response;
     Transit tile;
@@ -421,10 +434,6 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, s
     }
 
     //pull out all SCHEDULE_STOP_PAIRS
-    //TODO: these must be global maps and we'll need to synchronize getting them
-    std::unordered_map<std::string, size_t> trips;
-    std::unordered_map<std::string, size_t> block_ids;
-    std::unordered_set<std::string> missing_routes;
     bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
@@ -433,7 +442,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, s
       //grab some stuff
       response = curler(*request + key_param, "schedule_stop_pairs");
       //copy pairs in, noting if any dont have stops
-      dangles = get_stop_pairs(tile, trips, block_ids, missing_routes, response, stops, routes) || dangles;
+      dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
     }
@@ -461,11 +470,11 @@ std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& 
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //schedule some work
-  std::mutex lock;
+  unique_transit_t uniques;
   std::vector<std::shared_ptr<std::thread> > threads(thread_count);
   std::vector<std::promise<std::list<GraphId> > > promises(threads.size());
   for (size_t i = 0; i < threads.size(); ++i)
-    threads[i].reset(new std::thread(fetch_tiles, std::cref(pt), std::ref(tiles), std::ref(lock), std::ref(promises[i])));
+    threads[i].reset(new std::thread(fetch_tiles, std::cref(pt), std::ref(tiles), std::ref(uniques), std::ref(promises[i])));
 
   //let the threads finish and get the dangling list
   for (auto& thread : threads)
