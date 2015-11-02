@@ -73,6 +73,9 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   }
   for (uint32_t i = 0; i < header_->routecount(); i++) {
     route_builder_.emplace_back(std::move(transit_routes_[i]));
+    text_offsets.insert(transit_routes_[i].one_stop_offset());
+    text_offsets.insert(transit_routes_[i].op_by_onestop_id_offset());
+    text_offsets.insert(transit_routes_[i].op_by_name_offset());
     text_offsets.insert(transit_routes_[i].short_name_offset());
     text_offsets.insert(transit_routes_[i].long_name_offset());
     text_offsets.insert(transit_routes_[i].desc_offset());
