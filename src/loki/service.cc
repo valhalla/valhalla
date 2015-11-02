@@ -33,7 +33,11 @@ namespace {
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
     {"/many_to_many", loki_worker_t::MANY_TO_MANY}
   };
-  const std::vector<std::string> matrix_types={"one_to_many","many_to_one","many_to_many"};
+  const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> MATRIX {
+    {"one_to_many",loki_worker_t::ONE_TO_MANY},
+    {"many_to_one",loki_worker_t::MANY_TO_ONE},
+    {"many_to_many",loki_worker_t::MANY_TO_MANY}
+  };
 
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
@@ -101,17 +105,6 @@ namespace {
 namespace valhalla {
   namespace loki {
     loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config):config(config), reader(config.get_child("mjolnir.hierarchy")) {
-      auto costing_options = config.get_child("costing_options");
-      for (const auto& kv : costing_options) {
-        auto max_locations = config.get_optional<std::string>("service_limits." + kv.first + ".max_locations");
-        if (!max_locations)
-          throw std::runtime_error("The config costing options for max_locations are incorrectly loaded.");
-
-        auto max_distance = config.get_optional<std::string>("service_limits." + kv.first + ".max_distance");
-        if (!max_distance)
-          throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
-      }
-
       //load the loki config actions into an array
       const boost::property_tree::ptree &config_actions = config.get_child("loki.actions");
       if(config_actions.empty())
@@ -123,14 +116,25 @@ namespace valhalla {
         action_str.append("'/" + kv.second.get_value<std::string>() + "' ");
       }
 
-      for (const std::string& mtype : matrix_types) {
-        auto matrix_max_distance = config.get<float>("service_limits." + mtype + ".max_distance");
-        if (!matrix_max_distance)
-          throw std::runtime_error("The config max_distance for " + mtype + " is not found.");
-        auto matrix_max_locations = config.get<size_t>("service_limits." + mtype + ".max_locations");
-        if (!matrix_max_locations)
-          throw std::runtime_error("The config max_locations for " + mtype + " is not found.");
+      //Build max_locations and max_distance maps
+      auto &costing_options = config.get_child("costing_options");
+      for (const auto& kv : costing_options) {
+        max_locations.emplace(kv.first, config.get_optional<size_t>("service_limits." + kv.first + ".max_locations"));
+        max_distance.emplace(kv.first, config.get_optional<float>("service_limits." + kv.first + ".max_distance"));
       }
+      if (max_locations.empty())
+        throw std::runtime_error("The config costing options for max_locations are incorrectly loaded.");
+      if (max_distance.empty())
+        throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
+
+      for (auto& it : MATRIX){
+        matrix_max_locations.emplace(it.first, config.get_optional<size_t>("service_limits." + it.first + ".max_locations"));
+        matrix_max_distance.emplace(it.first, config.get_optional<float>("service_limits." + it.first + ".max_distance"));
+      }
+      if (matrix_max_locations.empty())
+        throw std::runtime_error("The config matrix_max_locations are incorrectly loaded.");
+      if (matrix_max_distance.empty())
+        throw std::runtime_error("The config matrix_max_distance are incorrectly loaded.");
 
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);

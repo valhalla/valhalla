@@ -36,6 +36,11 @@ namespace valhalla {
       valhalla::baldr::GraphReader reader;
       std::unordered_set<std::string> action_set;
       std::string action_str;
+      std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> MATRIX;
+      std::unordered_map<std::string, size_t> max_locations;
+      std::unordered_map<std::string, float> max_distance;
+      std::unordered_map<std::string, size_t> matrix_max_locations;
+      std::unordered_map<std::string, float> matrix_max_distance;
     };
   }
 }

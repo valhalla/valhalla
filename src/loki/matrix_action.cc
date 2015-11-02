@@ -1,6 +1,7 @@
 #include "loki/service.h"
 #include "loki/search.h"
 
+#include <unordered_map>
 #include <boost/property_tree/info_parser.hpp>
 
 #include <valhalla/baldr/json.h>
@@ -45,7 +46,14 @@ namespace {
     return array;
   }
 
-  void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float max_distance) {
+  void check_locations(const std::vector<Location>& locations, const size_t matrix_max_locations) {
+      //check that location size does not exceed max.
+      if (locations.size() > matrix_max_locations)
+        throw std::runtime_error("Number of locations exceeds the max location limit.");
+      LOG_INFO("Location size::" + std::to_string(locations.size()));
+   }
+
+  void check_distance(const GraphReader& reader, const std::vector<Location>& locations, const size_t origin, const size_t start, const size_t end, float matrix_max_distance) {
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
 
@@ -60,7 +68,7 @@ namespace {
       //check if distance between latlngs exceed max distance limit the chosen matrix type
       auto path_distance = locations[origin].latlng_.Distance(locations[i].latlng_);
 
-      if (path_distance > max_distance)
+      if (path_distance > matrix_max_distance)
         throw std::runtime_error("Path distance exceeds the max distance limit.");
     }
   }
@@ -70,39 +78,35 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      auto matrix_type = "";
-      auto max_distance = 200000.0;
-      switch (action) {
-       case ONE_TO_MANY:
-         matrix_type = "one_to_many";
-         max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
-         check_distance(reader,locations,0,0,locations.size(),max_distance);
-         break;
-       case MANY_TO_ONE:
-         matrix_type = "many_to_one";
-         max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
-         check_distance(reader,locations,locations.size()-1,0,locations.size()-1,max_distance);
-         break;
-       case MANY_TO_MANY:
-         matrix_type = "many_to_many";
-         max_distance = config.get<float>("service_limits." + std::string(matrix_type) + ".max_distance");
-         for(size_t i = 0; i < locations.size()-1; ++i)
-            check_distance(reader,locations,i,(i+1),locations.size(),max_distance);
-         break;
-     }
+      for (auto& it : MATRIX){
+        if (action == it.second) {
+          switch (it.second) {
+            case ONE_TO_MANY:
+              check_locations(locations,(matrix_max_locations.find(it.first))->second);
+              check_distance(reader,locations,0,0,locations.size(),(matrix_max_distance.find(it.first))->second);
+              request.put("matrix_type", std::string(it.first));
+              break;
+            case MANY_TO_ONE:
+              check_locations(locations,(matrix_max_locations.find(it.first))->second);
+              check_distance(reader,locations,locations.size()-1,0,locations.size()-1,(matrix_max_distance.find(it.first))->second);
+              request.put("matrix_type", std::string(it.first));
+              break;
+            case MANY_TO_MANY:
+              check_locations(locations,(matrix_max_locations.find(it.first))->second);
+              for(size_t i = 0; i < locations.size()-1; ++i)
+                check_distance(reader,locations,i,(i+1),locations.size(),(matrix_max_distance.find(it.first))->second);
 
-      auto max_locations = config.get<size_t>("service_limits." + std::string(matrix_type) + ".max_locations");
-      //check that location size does not exceed max.
-      if (locations.size() > max_locations)
-        throw std::runtime_error("Number of locations exceeds the max location limit.");
-      LOG_INFO("Location size::" + std::to_string(locations.size()));
+              request.put("matrix_type", std::string(it.first));
+              break;
+          }
+        }
+      }
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {
         auto correlated = loki::Search(locations[i], reader, costing_filter);
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
-      request.put("matrix_type", std::string(matrix_type));
 
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
