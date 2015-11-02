@@ -7,6 +7,7 @@
 #include <thread>
 #include <future>
 #include <random>
+#include <queue>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -14,6 +15,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <curl/curl.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+#include <google/protobuf/io/coded_stream.h>
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphid.h>
@@ -35,7 +38,9 @@ struct logged_error_t: public std::runtime_error {
 };
 
 struct curler_t {
-  curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}) {
+  curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}),
+    generator(std::chrono::system_clock::now().time_since_epoch().count()),
+    distribution(static_cast<size_t>(50), static_cast<size_t>(250)) {
     if(connection.get() == nullptr)
       throw logged_error_t("Failed to created CURL connection");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error), "Failed to set error buffer");
@@ -45,13 +50,27 @@ struct curler_t {
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url) {
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "", size_t timeout = 200) {
     LOG_DEBUG(url);
     result.str("");
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
-    assert_curl(curl_easy_perform(connection.get()), "Failed to fetch url");
     ptree pt;
-    try { read_json(result, pt); } catch(...) { throw logged_error_t(result.str()); }
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
+    auto sleep_or_not = [this, &url, &retry_if_no, &pt]() {
+      if(!retry_if_no.empty() && !pt.get_child_optional(retry_if_no)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
+        LOG_WARN("Retrying " + url)
+        return true;
+      }
+      return false;
+    };
+
+    do {
+      try {
+        if(curl_easy_perform(connection.get()) == CURLE_OK)
+          read_json(result, pt);
+      }
+      catch(...) { /*swallow for retry */ }
+    } while(sleep_or_not());
     return pt;
   }
   std::string last() const {
@@ -70,17 +89,20 @@ protected:
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE];
   std::stringstream result;
+  std::default_random_engine generator;
+  std::uniform_int_distribution<size_t> distribution;
 };
 
 //TODO: update this call to get only the tiles that have changed since last time
-std::unordered_set<GraphId> which_tiles(const ptree& pt) {
+struct weighted_tile_t { GraphId t; size_t w; bool operator<(const weighted_tile_t& o) const { return w == o.w ? t < o.t : w < o.w; } };
+std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   //now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
-  std::unordered_set<GraphId> tiles;
+  std::set<GraphId> tiles;
   const auto& tile_level = hierarchy.levels().rbegin()->second;
   curler_t curler;
-  auto feeds = curler(pt.get<std::string>("base_url") + "/api/v1/feeds.geojson");
+  auto feeds = curler(pt.get<std::string>("base_url") + "/api/v1/feeds.geojson", "features");
   for(const auto& feature : feeds.get_child("features")) {
     //should be a polygon
     auto type = feature.second.get_optional<std::string>("geometry.type");
@@ -98,13 +120,29 @@ std::unordered_set<GraphId> which_tiles(const ptree& pt) {
       if(r < min_r) min_r = r;
       if(r > max_r) max_r = r;
     }
+    //for each tile in the polygon figure out how heavy it is and keep track of it
     for(auto i = min_c; i <= max_c; ++i)
       for(auto j = min_r; j <= min_r; ++j)
         tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
   }
-  LOG_INFO("Finished with " + std::to_string(tiles.size()) + " expected transit tiles in " +
+  //we want hardest tiles first
+  std::priority_queue<weighted_tile_t> prioritized;
+  auto now = time(nullptr);
+  auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon;
+  for(const auto& tile : tiles) {
+    auto bbox = tile_level.tiles.TileBounds(tile.tileid());
+    auto request = (boost::format(pt.get<std::string>("base_url") +
+      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+    auto total = curler(request, "meta.total").get<size_t>("meta.total");
+    if(total > 0) {
+      prioritized.push(weighted_tile_t{tile, total});
+      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + ":" + std::to_string(total));
+    }
+  }
+  LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " expected transit tiles in " +
            std::to_string(feeds.get_child("features").size()) + " feeds");
-  return tiles;
+  return prioritized;
 }
 
 #define set_no_null(T, pt, path, null_value, set) {\
@@ -195,7 +233,7 @@ void get_routes(Transit& tile, std::unordered_map<std::string, uint64_t>& routes
 }
 
 bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trips,
-    std::unordered_map<std::string, size_t>& block_ids, const ptree& response,
+    std::unordered_map<std::string, size_t>& block_ids, std::unordered_set<std::string>& missing_routes, const ptree& response,
     const std::unordered_map<std::string, uint64_t>& stops, const std::unordered_map<std::string, size_t>& routes) {
   bool dangles = false;
   for(const auto& pair_pt : response.get_child("schedule_stop_pairs")) {
@@ -208,7 +246,7 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
       pair->set_origin_graphid(origin->second);
     else {
       dangles = true;
-      //TODO: remove this
+      //TODO: remove this when stitching is proven to work
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
@@ -220,7 +258,7 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
       pair->set_destination_graphid(destination->second);
     else {
       dangles = true;
-      //TODO: remove this
+      //TODO: remove this when stitching is proven to work
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
@@ -229,7 +267,10 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
     auto route = routes.find(route_id);
     if(route == routes.cend()) {
-      LOG_ERROR("No route " + route_id + " for pair " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+      if(missing_routes.find(route_id) == missing_routes.cend()) {
+        LOG_ERROR("No route " + route_id);
+        missing_routes.emplace(route_id);
+      }
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
@@ -298,26 +339,35 @@ bool get_stop_pairs(Transit& tile, std::unordered_map<std::string, size_t>& trip
     }
     //TODO: copy rest of attributes
   }
-
   return dangles;
 }
 
-using fetch_itr_t = std::unordered_set<GraphId>::const_iterator;
-void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promise<std::list<GraphId> >& promise) {
+void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, std::mutex& lock, std::promise<std::list<GraphId> >& promise) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   const auto& tiles = hierarchy.levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
   curler_t curler;
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon; //TODO: use timezone code?
-  std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
-  std::uniform_int_distribution<size_t> distribution(static_cast<size_t>(50), static_cast<size_t>(250));
 
   //for each tile
-  for(; start != end; ++start) {
-    auto bbox = tiles.TileBounds(start->fields.tileid);
+  while(true) {
+    GraphId current;
+    lock.lock();
+    if(queue.empty()) {
+      lock.unlock();
+      break;
+    }
+    current = queue.top().t;
+    queue.pop();
+    lock.unlock();
+    auto bbox = tiles.TileBounds(current.tileid());
     ptree response;
     Transit tile;
+    auto file_name = GraphTile::FileSuffix(current, hierarchy);
+    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
+    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+    LOG_INFO("Fetching " + transit_tile.string());
 
     //pull out all the STOPS
     std::unordered_map<std::string, uint64_t> stops;
@@ -327,26 +377,11 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
-      try {
-        response = curler(*request + key_param);
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(e.what());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
-
+      response = curler(*request + key_param, "stops");
       //copy stops in, keeping map of stopid to graphid
-      try {
-        get_stops(tile, stops, *start, response, bbox);
-        //please sir may i have some more?
-        request = response.get_optional<std::string>("meta.next");
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(curler.last());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
+      get_stops(tile, stops, current, response, bbox);
+      //please sir may i have some more?
+      request = response.get_optional<std::string>("meta.next");
     }
     //um yeah.. we need these
     if(stops.size() == 0)
@@ -359,31 +394,16 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     std::unordered_map<std::string, std::string> websites;
     while(request) {
       //grab some stuff
-      try {
-        response = curler(*request + key_param);
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(e.what());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
-
+      response = curler(*request + key_param, "operators");
       //save the websites to a map
-      try {
-        for(const auto& operators_pt : response.get_child("operators")) {
-          std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
-          std::string website = operators_pt.second.get<std::string>("website", "");
-          if(!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
-            websites.emplace(onestop_id, website);
-        }
-        //please sir may i have some more?
-        request = response.get_optional<std::string>("meta.next");
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(curler.last());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
+      for(const auto& operators_pt : response.get_child("operators")) {
+        std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
+        std::string website = operators_pt.second.get<std::string>("website", "");
+        if(!onestop_id.empty() && onestop_id != "null" && !website.empty() && website != "null")
+          websites.emplace(onestop_id, website);
       }
+      //please sir may i have some more?
+      request = response.get_optional<std::string>("meta.next");
     }
 
     //pull out all ROUTES
@@ -393,67 +413,36 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
-      try {
-        response = curler(*request + key_param);
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(e.what());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
-
+      response = curler(*request + key_param, "routes");
       //copy routes in, keeping track of routeid to route index
-      try {
-        get_routes(tile, routes, websites, response);
-        //please sir may i have some more?
-        request = response.get_optional<std::string>("meta.next");
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(curler.last());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
+      get_routes(tile, routes, websites, response);
+      //please sir may i have some more?
+      request = response.get_optional<std::string>("meta.next");
     }
 
     //pull out all SCHEDULE_STOP_PAIRS
+    //TODO: these must be global maps and we'll need to synchronize getting them
     std::unordered_map<std::string, size_t> trips;
     std::unordered_map<std::string, size_t> block_ids;
+    std::unordered_set<std::string> missing_routes;
     bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
     while(request) {
       //grab some stuff
-      try {
-        response = curler(*request + key_param);
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(e.what());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
-
+      response = curler(*request + key_param, "schedule_stop_pairs");
       //copy pairs in, noting if any dont have stops
-      try {
-        dangles = get_stop_pairs(tile, trips, block_ids, response, stops, routes) || dangles;
-        //please sir may i have some more?
-        request = response.get_optional<std::string>("meta.next");
-      }//if it doesnt come back, take a rest and try again
-      catch(const std::exception& e) {
-        LOG_WARN(curler.last());
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        continue;
-      }
+      dangles = get_stop_pairs(tile, trips, block_ids, missing_routes, response, stops, routes) || dangles;
+      //please sir may i have some more?
+      request = response.get_optional<std::string>("meta.next");
     }
 
     //remember who dangles
     if(dangles)
-      dangling.emplace_back(*start);
+      dangling.emplace_back(current);
 
     //write pbf to file
-    auto file_name = GraphTile::FileSuffix(*start, hierarchy);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
     if (!boost::filesystem::exists(transit_tile.parent_path()))
       boost::filesystem::create_directories(transit_tile.parent_path());
     std::fstream stream(transit_tile.string(), std::ios::out | std::ios::trunc | std::ios::binary);
@@ -466,27 +455,17 @@ void fetch_tiles(const ptree& pt, fetch_itr_t start, fetch_itr_t end, std::promi
   promise.set_value(dangling);
 }
 
-std::list<GraphId> fetch(const ptree& pt, const std::unordered_set<GraphId>& tiles) {
+std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& tiles) {
   unsigned int thread_count = std::max(static_cast<unsigned int>(1),
                                   pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
-  //figure out where the work should go
+  //schedule some work
+  std::mutex lock;
   std::vector<std::shared_ptr<std::thread> > threads(thread_count);
   std::vector<std::promise<std::list<GraphId> > > promises(threads.size());
-  size_t floor = tiles.size() / threads.size();
-  size_t at_ceiling = tiles.size() - (threads.size() * floor);
-  fetch_itr_t tile_start, tile_end = tiles.begin();
-
-  //make let them rip
-  for (size_t i = 0; i < threads.size(); ++i) {
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    tile_start = tile_end;
-    std::advance(tile_end, tile_count);
-    threads[i].reset(
-      new std::thread(fetch_tiles, std::cref(pt), tile_start, tile_end, std::ref(promises[i]))
-    );
-  }
+  for (size_t i = 0; i < threads.size(); ++i)
+    threads[i].reset(new std::thread(fetch_tiles, std::cref(pt), std::ref(tiles), std::ref(lock), std::ref(promises[i])));
 
   //let the threads finish and get the dangling list
   for (auto& thread : threads)
@@ -505,28 +484,131 @@ std::list<GraphId> fetch(const ptree& pt, const std::unordered_set<GraphId>& til
   return dangling;
 }
 
+Transit read_pbf(const std::string& file_name, std::mutex& lock) {
+  lock.lock();
+  std::fstream file(file_name, std::ios::in | std::ios::binary);
+  if(!file) {
+    throw std::runtime_error("Couldn't load " + file_name);
+    lock.unlock();
+  }
+  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  lock.unlock();
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+  google::protobuf::io::CodedInputStream cs(static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+  cs.SetTotalBytesLimit(buffer.size() * 2, buffer.size() * 2);
+  Transit transit;
+  if(!transit.ParseFromCodedStream(&cs))
+    throw std::runtime_error("Couldn't load " + file_name);
+  return transit;
+}
+
+//the tiles object didnt seem to jive with this notion of a neighbor
+//so instead of implement this there its here.. maybe we can reevaluate later
+std::list<GraphId> neighborhood(const Tiles<PointLL>& tiles, const GraphId& id) {
+  auto uv = tiles.GetRowColumn(id.tileid());
+  uv.first += tiles.ncolumns();
+  std::list<GraphId> ids;
+  for(auto x = uv.first - 1; x < uv.first + 1; ++x) {
+    for(auto y = uv.second - 1; y < uv.second + 1; ++y) {
+      if(x != uv.first && y != uv.second) {
+        if(y < 0)
+          ids.push_back(GraphId(tiles.TileId(x + tiles.ncolumns() / 2, tiles.nrows() + y), id.level(), 0));
+        else if(tiles.nrows() - 1 < y)
+          ids.push_back(GraphId(tiles.TileId(x + tiles.ncolumns() / 2, y - tiles.nrows()), id.level(), 0));
+        else
+          ids.push_back(GraphId(tiles.TileId(x % tiles.ncolumns(), y), id.level(), 0));
+      }
+    }
+  }
+  return ids;
+}
+
 using stitch_itr_t = std::list<GraphId>::const_iterator;
 void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mutex& lock) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+  auto grid = hierarchy.levels().rbegin()->second.tiles;
   std::list<GraphId> dangling;
+  auto tile_name = [&hierarchy, &pt](const GraphId& id){
+    auto file_name = GraphTile::FileSuffix(id, hierarchy);
+    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
+    return pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
+  };
 
   //for each tile
   for(; start != end; ++start) {
-    //TODO: open tile make a hash of missing stop to invalid graphid
+    //open tile make a hash of missing stop to invalid graphid
+    auto file_name = tile_name(*start);
+    auto tile = read_pbf(file_name, lock);
+    std::unordered_map<std::string, GraphId> needed;
+    for(int i = 0; i < tile.stop_pairs_size(); ++i) {
+      const auto& stop_pair = tile.stop_pairs(i);
+      if(!stop_pair.has_origin_graphid())
+        needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
+      if(!stop_pair.has_destination_onestop_id())
+        needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
+    }
 
-    //TODO: add this tile to checked set
-    //TODO: do while we have more to find or arent sick of searching
-    //        for each tile in checked set add all neighbors not in checked set to temp set
-    //        for each tile in temp set
-    //          open tile, loop over stops, if stop in hash, update hash value
+    //do while we have more to find and arent sick of searching
+    std::unordered_set<GraphId> checked, last_round { *start };
+    size_t found = 0;
+    while(needed.size() != found) {
+      //get the neighbors of the ones we just checked that havent been checked before
+      std::unordered_set<GraphId> next_round;
+      for(const auto& l : last_round) {
+        checked.emplace(l);
+        auto neighbors = neighborhood(grid, l);
+        for(const auto& n : neighbors)
+          if(checked.find(n) != checked.cend())
+            next_round.emplace(n);
+      }
 
-    //TODO: write pbf to file
+      //crack each one open to see if it has anything we need
+      for(const auto& neighbor_id : next_round) {
+        auto neighbor_file_name = tile_name(neighbor_id);
+        auto neighbor = read_pbf(neighbor_file_name, lock);
+        for(int i = 0; i < neighbor.stops_size(); ++i) {
+          const auto& stop = neighbor.stops(i);
+          auto stop_itr = needed.find(stop.onestop_id());
+          if(stop_itr != needed.cend()) {
+            stop_itr->second = neighbor_id;
+            ++found;
+          }
+        }
+      }
+
+      //next round
+      last_round.swap(next_round);
+    }
+
+    //get the ids fixed up and write pbf to file
+    for(int i = 0; i < tile.stop_pairs_size(); ++i) {
+      auto* stop_pair = tile.mutable_stop_pairs(i);
+      if(!stop_pair->has_origin_graphid()) {
+        auto found = needed.find(stop_pair->origin_onestop_id())->second;
+        if(found.Is_Valid())
+          stop_pair->set_origin_graphid(found);
+        else
+          LOG_ERROR("Stop not found: " + stop_pair->origin_onestop_id());
+      }
+      if(!stop_pair->has_destination_onestop_id()) {
+        auto found = needed.find(stop_pair->destination_onestop_id())->second;
+        if(found.Is_Valid())
+          stop_pair->set_destination_graphid(found);
+        else
+          LOG_ERROR("Stop not found: " + stop_pair->destination_onestop_id());
+      }
+    }
+    lock.lock();
+    std::fstream stream(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
+    tile.SerializeToOstream(&stream);
+    lock.unlock();
+    LOG_INFO(file_name + " had " + std::to_string(needed.size()) + " stitched stops");
   }
 }
 
 void stitch(const ptree& pt, const std::list<GraphId>& tiles) {
   unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                  pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+    pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   LOG_INFO("Stitching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //figure out where the work should go
@@ -577,8 +659,8 @@ int main(int argc, char** argv) {
   auto dangling_tiles = fetch(pt, transit_tiles);
   curl_global_cleanup();
 
-  //TODO: spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  stitch(pt, dangling_tiles);
+  //spawn threads to connect dangling stop pairs to adjacent tiles' stops
+  //stitch(pt, dangling_tiles);
 
   //TODO: show some summary informant?
   return 0;

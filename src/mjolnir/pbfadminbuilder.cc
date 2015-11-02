@@ -277,7 +277,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     sqlite3_close(db_handle);
     return;
   }
-  LOG_INFO("SpatiaLite loaded as an extension");
 
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(); CREATE TABLE admins (";

@@ -220,7 +220,6 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
-  LOG_INFO("SpatiaLite loaded as an extension");
   LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys
