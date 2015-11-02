@@ -172,9 +172,9 @@ void NodeInfoBuilder::set_traffic_signal(const bool traffic_signal) {
   traffic_signal_ = traffic_signal;
 }
 
-// Set the transit stop Id.
-void NodeInfoBuilder::set_stop_id(const uint32_t stop_id) {
-  stop_.stop_id = stop_id;
+// Set the transit stop index.
+void NodeInfoBuilder::set_stop_index(const uint32_t stop_index) {
+  stop_.stop_index = stop_index;
 }
 
 /**

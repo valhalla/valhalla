@@ -144,7 +144,7 @@ std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder& tilebuilder
     stops.emplace_back(std::move(stop));
 
     // Store stop information in TransitStops
-    TransitStop ts(stop.graphid.id(), tilebuilder.AddName(onestop_id),
+    TransitStop ts( tilebuilder.AddName(onestop_id),
                    tilebuilder.AddName(name));
     tilebuilder.AddTransitStop(ts);
   }
@@ -269,6 +269,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
                          tilebuilder.AddName(r.onestop_id()),
                          tilebuilder.AddName(r.operated_by_onestop_id()),
                          tilebuilder.AddName(r.operated_by_name()),
+                         tilebuilder.AddName(r.operated_by_website()),
                          r.route_color(),
                          r.route_text_color(),
                          tilebuilder.AddName(r.name()),
@@ -417,6 +418,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::vector<OSMConnectionEdge>& connection_edges,
                 const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
+
+  const size_t node_size = tilebuilder.nodes().size();
+
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
   tilebuilder.nodes().clear();
@@ -528,7 +532,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
-    node.set_stop_id(stop.graphid.id());
+    node.set_stop_index(GraphId(stop.graphid) - node_size);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));

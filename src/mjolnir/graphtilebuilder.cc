@@ -76,6 +76,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(transit_routes_[i].one_stop_offset());
     text_offsets.insert(transit_routes_[i].op_by_onestop_id_offset());
     text_offsets.insert(transit_routes_[i].op_by_name_offset());
+    text_offsets.insert(transit_routes_[i].op_by_website_offset());
     text_offsets.insert(transit_routes_[i].short_name_offset());
     text_offsets.insert(transit_routes_[i].long_name_offset());
     text_offsets.insert(transit_routes_[i].desc_offset());
@@ -204,8 +205,7 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&departure_builder_[0]),
                departure_builder_.size() * sizeof(TransitDeparture));
 
-    // Sort and write the transit stops
-    std::sort(stop_builder_.begin(), stop_builder_.end());
+    // Sort write the transit stops
     file.write(reinterpret_cast<const char*>(&stop_builder_[0]),
                stop_builder_.size() * sizeof(TransitStop));
 
