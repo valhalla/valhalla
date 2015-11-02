@@ -275,7 +275,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToOne(
       // Get opposing edge and check if allowed.
       const DirectedEdge* opp_edge = graphreader.GetOpposingEdge(edgeid);
       if (opp_edge == nullptr ||
-         !costing->AllowedReverse(directededge, opp_edge, opp_pred_edge)) {
+         !costing->AllowedReverse(directededge, pred, opp_edge, opp_pred_edge)) {
         continue;
       }
 
