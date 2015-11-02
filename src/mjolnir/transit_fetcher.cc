@@ -292,7 +292,7 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
       continue;
     }
     pair->set_origin_departure_time(origin_time);
-    pair->set_destination_arrival_time(origin_time);
+    pair->set_destination_arrival_time(dest_time);
 
     //trip
     std::string t = pair_pt.second.get<std::string>("trip", "null");
