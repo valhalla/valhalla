@@ -85,7 +85,8 @@ class MapMatching: public ViterbiSearch<Candidate>
     return time;
   }
 
-  const std::vector<const CandidateWrapper<Candidate>*> states(Time time) const
+  const std::vector<const CandidateWrapper<Candidate>*>&
+  states(Time time) const
   {
     return states_[time];
   }
