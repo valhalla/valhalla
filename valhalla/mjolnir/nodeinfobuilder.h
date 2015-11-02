@@ -137,10 +137,10 @@ class NodeInfoBuilder : public baldr::NodeInfo {
   void set_traffic_signal(const bool traffic_signal);
 
   /**
-   * Set the transit stop Id.
-   * @param  stop_id  transit stop id.
+   * Set the transit stop index.
+   * @param  stop_index  transit stop index.
    */
-  void set_stop_id(const uint32_t stop_id);
+  void set_stop_index(const uint32_t stop_index);
 
   /**
    * Set the name consistency between a pair of local edges. This is limited

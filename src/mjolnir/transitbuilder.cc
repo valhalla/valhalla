@@ -49,8 +49,8 @@ struct Stop {
 
 struct Departure {
   uint64_t days;
-  GraphId orig_stop;
-  GraphId dest_stop;
+  uint32_t orig_stop;
+  uint32_t dest_stop;
   uint32_t trip;
   uint32_t route;
   uint32_t blockid;
@@ -74,7 +74,7 @@ struct TransitLine {
 };
 
 struct StopEdges {
-  GraphId graphid;                     // Stop key
+  uint32_t stop_key;                     // Stop key
   std::vector<uint32_t> intrastation;   // List of intra-station connections
   std::vector<TransitLine> lines;       // Set of unique route/stop pairs
 };
@@ -114,7 +114,7 @@ struct builder_stats {
 };
 
 // Write stops within a tile to the sequence
-std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder tilebuilder,
+std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder& tilebuilder,
                            const size_t node_size, const std::vector<std::string>& regions) {
 
   std::vector<Stop> stops;
@@ -136,6 +136,7 @@ std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder tilebuilder,
     stop.timezone = s.timezone();
 
     //TODO: get these from transitland????
+    stop.parent = 0;
     stop.type = 0;
     stop.graphid = GraphId(s.graphid()) + node_size;
 
@@ -143,7 +144,7 @@ std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder tilebuilder,
     stops.emplace_back(std::move(stop));
 
     // Store stop information in TransitStops
-    TransitStop ts(stop.graphid, tilebuilder.AddName(onestop_id),
+    TransitStop ts( tilebuilder.AddName(onestop_id),
                    tilebuilder.AddName(name));
     tilebuilder.AddTransitStop(ts);
   }
@@ -156,7 +157,7 @@ std::vector<Stop> AddStops(const Transit& transit, GraphTileBuilder tilebuilder,
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& transit,
                                                               const size_t node_size,
-                                                              std::unordered_map<uint64_t,bool>& stop_access) {
+                                                              std::unordered_map<uint32_t,bool>& stop_access) {
 
   std::unordered_multimap<uint32_t, Departure> departures;
 
@@ -166,8 +167,12 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     const Transit_StopPair& sp = transit.stop_pairs(i);
 
     Departure dep;
-    dep.orig_stop = GraphId(sp.origin_graphid()) + node_size;
-    dep.dest_stop = GraphId(sp.destination_graphid()) + node_size;
+
+    GraphId orig = GraphId(sp.origin_graphid()) + node_size;
+    GraphId dest = GraphId(sp.destination_graphid()) + node_size;
+
+    dep.orig_stop = orig.id();
+    dep.dest_stop = dest.id();
     dep.route = sp.route_index();
     dep.trip = sp.trip_key();
 
@@ -230,8 +235,8 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     dep.headsign = sp.trip_headsign();
 
     bool bikes_allowed = sp.bikes_allowed();
-    stop_access[dep.orig_stop.id()] = bikes_allowed;
-    stop_access[dep.dest_stop.id()] = bikes_allowed;
+    stop_access[dep.orig_stop] = bikes_allowed;
+    stop_access[dep.dest_stop] = bikes_allowed;
 
     //if subtractions are between start and end date then turn off bit.
     for (uint32_t x = 0; x < sp.service_except_dates_size(); x++) {
@@ -244,7 +249,7 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
       std::string date = sp.service_added_dates(x);
       dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
     }
-    departures.emplace(dep.orig_stop.id(),std::move(dep));
+    departures.emplace(dep.orig_stop,std::move(dep));
   }
 
   LOG_INFO("Added " + std::to_string(departures.size()) + " departures");
@@ -264,6 +269,7 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
                          tilebuilder.AddName(r.onestop_id()),
                          tilebuilder.AddName(r.operated_by_onestop_id()),
                          tilebuilder.AddName(r.operated_by_name()),
+                         tilebuilder.AddName(r.operated_by_website()),
                          r.route_color(),
                          r.route_text_color(),
                          tilebuilder.AddName(r.name()),
@@ -408,10 +414,13 @@ std::list<PointLL> GetShape(const PointLL& stop_ll, const PointLL& endstop_ll, c
 void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::vector<Stop>& stops,
-                const std::unordered_map<uint64_t, bool>& stop_access,
+                const std::unordered_map<uint32_t, bool>& stop_access,
                 const std::vector<OSMConnectionEdge>& connection_edges,
-                const std::unordered_map<uint64_t, uint32_t>& stop_indexes,
+                const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
+
+  const size_t node_size = tilebuilder.nodes().size();
+
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
   tilebuilder.nodes().clear();
@@ -461,7 +470,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
            connection_edges[added_edges].osm_node.id() == nodeid) {
       DirectedEdgeBuilder directededge;
       const OSMConnectionEdge& conn = connection_edges[added_edges];
-      const Stop& stop = stops[stop_indexes.find(conn.stop_node)->second];
       directededge.set_endnode(conn.stop_node);
       directededge.set_length(conn.length);
       directededge.set_use(Use::kTransitConnection);
@@ -503,7 +511,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   uint32_t nadded = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the stop information
-    uint64_t stopkey = stop_edges.second.graphid.id();
+    uint32_t stopkey = stop_edges.second.stop_key;
     const Stop& stop = stops[stop_indexes.find(stopkey)->second];
     if (stop.graphid.id() != stopkey) {
       LOG_ERROR("Stop key not equal!");
@@ -524,7 +532,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_child(child);
     node.set_parent(parent);
     node.set_mode_change(true);
-    node.set_stop_id(stop.graphid);
+    node.set_stop_index(GraphId(stop.graphid) - node_size);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone);
     LOG_DEBUG("Add node for stop id = " + std::to_string(stop.key));
@@ -704,6 +712,9 @@ void AddOSMConnection(Stop& stop, const GraphTile* tile, const TileHierarchy& ti
     return;
   }
 
+  LOG_DEBUG("edge found for this stop: " + std::to_string(stop.graphid.id()) + " way Id = " +
+            std::to_string(wayid));
+
   // Check if stop is in same tile as the start node
   stop.conn_count = 0;
   float length = 0.0f;
@@ -822,8 +833,8 @@ void build(const std::string& transit_dir,
 
     std::vector<OSMConnectionEdge> connection_edges;
     Stop stop;
-    std::unordered_map<uint64_t, uint32_t> stop_indexes;
-    std::unordered_multimap<uint64_t, uint64_t> children;
+    std::unordered_map<uint32_t, uint32_t> stop_indexes;
+    std::unordered_multimap<uint32_t, uint32_t> children;
 
     // Create a map of stop key to index in the stop vector
     uint32_t n = 0;
@@ -836,7 +847,7 @@ void build(const std::string& transit_dir,
       }
       // Do we have have a parent
       if (stop.type == 0 && stop.parent != 0) {
-        children.emplace(stop.parent, stop.graphid);
+        children.emplace(stop.parent, stop.graphid.id());
       }
 
       n++;
@@ -854,7 +865,7 @@ void build(const std::string& transit_dir,
     std::vector<TransitDeparture> transit_departures;
 
     // Create a map of stop key to index in the stop vector
-    std::unordered_map<uint64_t, bool> stop_access;
+    std::unordered_map<uint32_t, bool> stop_access;
     std::unordered_multimap<uint32_t, Departure> departures =
         ProcessStopPairs(transit, tile_start->second, stop_access);
 
@@ -862,7 +873,7 @@ void build(const std::string& transit_dir,
 
     for (auto& stop : stops) {
       StopEdges stopedges;
-      stopedges.graphid = stop.graphid;
+      stopedges.stop_key = stop.graphid.id();
 
       // Identify any parent-child edge connections (to add later)
       if (stop.type == 1) {
@@ -1010,7 +1021,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   std::list<std::promise<builder_stats> > results;
 
   // Start the threads
-  LOG_INFO("Add transit to the local graph...");
+  LOG_INFO("Adding " + std::to_string(transit_tiles.size()) + " transit tiles to the local graph...");
   // Divvy up the work
   size_t floor = tiles.size() / threads.size();
   size_t at_ceiling = tiles.size() - (threads.size() * floor);

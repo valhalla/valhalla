@@ -74,7 +74,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       // TODO - verify if we need opposing directed edges for transit lines
       if (edge.use() == Use::kTransitConnection)
         LOG_ERROR("No opposing transit connection edge: endstop = " +
-                  std::to_string(nodeinfo->stop_id()) + " has " +
+                  std::to_string(nodeinfo->stop_index()) + " has " +
                   std::to_string(nodeinfo->edge_count()));
     } else {
       bool sc = edge.shortcut();
