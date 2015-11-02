@@ -521,33 +521,16 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   return nullptr;
 }
 
-// Get the transit stop given its stop Id.
-const TransitStop* GraphTile::GetTransitStop(const GraphId& id) const {
+// Get the transit stop given its GraphId.
+const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
 
   uint32_t count = header_->stopcount();
-  if (!node(id)->is_transit() || count == 0) {
+  if (count == 0)
     return nullptr;
-  }
 
-  // Binary search - stop Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_stops_[mid].stopid() == id.id()) {
-      return &transit_stops_[mid];
-    }
-    if (id.id() < transit_stops_[mid].stopid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No trip found for stopid = " + std::to_string(id.id()));
-  return nullptr;
+  if (idx < count)
+    return &transit_stops_[idx];
+  throw std::runtime_error("GraphTile Transit Stop index out of bounds");
 }
 
 // Get the transit route given its route Id.
@@ -574,7 +557,7 @@ const TransitRoute* GraphTile::GetTransitRoute(const uint32_t routeid) const {
   }
 
   // Not found
-  LOG_ERROR("No trip found for routeid = " + std::to_string(routeid));
+  LOG_ERROR("No route found for routeid = " + std::to_string(routeid));
   return nullptr;
 }
 

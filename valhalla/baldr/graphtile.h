@@ -155,11 +155,11 @@ class GraphTile {
    */
   const Admin* admin(const size_t idx) const;
 
- /**
-  * Convenience method to get the text/name for a given offset to the textlist
-  * @param   textlist_offset  offset into the text list.
-  * @return  Returns the desired string
-  */
+  /**
+   * Convenience method to get the text/name for a given offset to the textlist
+   * @param   textlist_offset  offset into the text list.
+   * @return  Returns the desired string
+   */
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
@@ -181,8 +181,8 @@ class GraphTile {
    *          Returns nullptr if no departures are found.
    */
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
-              const uint32_t current_time, const uint32_t date,
-              const uint32_t dow) const;
+                                           const uint32_t current_time, const uint32_t date,
+                                           const uint32_t dow) const;
 
   /**
    * Get the departure given the directed edge Id and tripid
@@ -191,15 +191,14 @@ class GraphTile {
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departure is found.
    */
-   const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
-                                               const uint32_t tripid) const;
+  const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
+                                              const uint32_t tripid) const;
   /**
-   * Get the transit stop given its graph/stop Id.
-   * @param   id  graph/stop Id.
-   * @return  Returns a pointer to the transit stop information. Returns
-   *          nullptr if the stop is not found.
+   * Get the transit stop given its index
+   * @param   idx  stop index.
+   * @return  Returns a pointer to the transit stop information.
    */
-  const TransitStop* GetTransitStop(const GraphId& id) const;
+  const TransitStop* GetTransitStop(const uint32_t idx) const;
 
   /**
    * Get the transit route given its route Id.
@@ -217,7 +216,7 @@ class GraphTile {
    *          and a count of transfer records from the given stop Id.
    */
   std::pair<TransitTransfer*, uint32_t> GetTransfers(
-                const uint32_t stopid) const;
+      const uint32_t stopid) const;
 
   /**
    * Get a pointer to the transfer record given the from stop Id and
