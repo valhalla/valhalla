@@ -414,7 +414,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all ROUTES
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/routes?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      "/api/v1/routes?per_page=5&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, size_t> routes;
     while(request) {
