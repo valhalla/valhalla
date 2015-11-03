@@ -92,7 +92,7 @@ void TryIsoDateTime() {
 
 void TryGetServiceDays(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
 
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
 
   if (value != days)
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
@@ -102,7 +102,7 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
 
   std::string edate = end_date;
   std::string bdate = begin_date;
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
 
   if (check_b_date) {
     if (value != days && begin_date != date && end_date != edate)
@@ -115,7 +115,7 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
 
 void TryRejectFeed(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
 
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
 
   if (value != days)
     throw std::runtime_error("Feed should of been rejected. " + begin_date + " " + end_date + " " + std::to_string(days));
@@ -137,11 +137,20 @@ void TryRemoveServiceDays(uint64_t days, std::string begin_date, std::string end
 
 void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::string new_end_date, std::string tz, uint32_t dow_mask) {
 
-  DateTime::get_service_days(begin_date, end_date, "", dow_mask);
+  DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),"", dow_mask);
 
   if (end_date != new_end_date)
     throw std::runtime_error("End date not cut off at 60 days.");
 
+}
+
+void TryTestEpoch() {
+
+  uint64_t sec =  DateTime::seconds_since_epoch();
+  std::string today = DateTime::seconds_to_date(sec);
+
+  if (today != DateTime::iso_date_time())
+    throw std::runtime_error("Test Epoch failed.");
 }
 
 }
@@ -308,6 +317,10 @@ void TestServiceDays() {
 
 }
 
+void TestEpoch() {
+  TryTestEpoch();
+}
+
 int main(void) {
   test::suite suite("datetime");
 
@@ -319,6 +332,7 @@ int main(void) {
   suite.test(TEST_CASE(TestDate));
   suite.test(TEST_CASE(TestIsoDateTime));
   suite.test(TEST_CASE(TestServiceDays));
+  suite.test(TEST_CASE(TestEpoch));
 
   return suite.tear_down();
 }

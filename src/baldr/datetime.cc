@@ -60,9 +60,12 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 }
 
 //Get service days
-//Start from the start date to end date or 60 days, whichever is less.
+//Start from the tile_date or start date to end date or 60 days (whichever is less)
+//start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
-uint64_t get_service_days(std::string& start_date, std::string& end_date, const std::string& tz, const uint32_t& dow_mask) {
+uint64_t get_service_days(std::string& start_date, std::string& end_date,
+                          const uint64_t tile_date, const std::string& tz,
+                          const uint32_t& dow_mask) {
 
   //start_date is in the format of 20150516 or 2015-05-06T08:00
   boost::gregorian::date s_date;
@@ -73,12 +76,12 @@ uint64_t get_service_days(std::string& start_date, std::string& end_date, const 
   e_date = get_formatted_date(end_date);
 
   if (!tz.empty()) {
-    boost::gregorian::date current_date = get_formatted_date(iso_date_time(tz));
-    if (s_date <= current_date && current_date <= e_date) {
-      s_date = current_date;
+    boost::gregorian::date tile_header_date = get_formatted_date(seconds_to_date(tile_date));
+    if (s_date <= tile_header_date && tile_header_date <= e_date) {
+      s_date = tile_header_date;
       start_date = to_iso_extended_string(s_date);
     }
-    else if (current_date > e_date) //reject.
+    else if (tile_header_date > e_date) //reject.
       return 0;
   }
 
@@ -376,6 +379,58 @@ std::string iso_date_time(const std::string& tz) {
   return iso_date_time;
 }
 
+// Get the seconds since epoch based on timezone.  Defaults to NY timezone.
+uint64_t seconds_since_epoch(const std::string& tz) {
+
+    if (tz.empty())
+      return 0;
+
+    try {
+      boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
+      std::string tz_string;
+      boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
+      boost::local_time::local_date_time local_date_time(pt,time_zone);
+
+      boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
+      boost::posix_time::time_duration diff = local_date_time.utc_time() - time_epoch;
+
+      return diff.total_seconds();
+
+    } catch (std::exception& e){}
+    return 0;
+}
+
+// Get the date from seconds and timezone.  Defaults to NY timezone.
+std::string seconds_to_date(uint64_t seconds, const std::string& tz) {
+
+  std::string iso_date_time;
+    if (tz.empty())
+      return iso_date_time;
+
+    try {
+      std::string tz_string;
+      boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
+
+      boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
+      boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
+      boost::local_time::local_date_time local_date_time(pt,time_zone);
+
+      pt = local_date_time.local_time();
+      boost::gregorian::date date = pt.date();
+
+      std::stringstream ss_time;
+      ss_time << pt.time_of_day();
+      std::string time = ss_time.str();
+
+      std::size_t found = time.find_last_of(":"); // remove seconds.
+      if (found != std::string::npos)
+       time = time.substr(0,found);
+
+      iso_date_time = to_iso_extended_string(date) + "T" + time;
+
+    } catch (std::exception& e){}
+    return iso_date_time;
+}
 
 //Get the dow mask
 //date_time is in the format of 20150516 or 2015-05-06T08:00

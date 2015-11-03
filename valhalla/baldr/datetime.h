@@ -40,12 +40,14 @@ namespace DateTime {
    * Get the days that this transit service is running in 60 days or less
    * @param   start_date in the format of 20150516 or 2015-05-06T08:00
    * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   tile_date seconds from epoch
    * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
   uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                            const std::string& tz, const uint32_t& dow_mask);
+                            const uint64_t tile_date, const std::string& tz,
+                            const uint32_t& dow_mask);
 
   /**
    * Adds a service day to the days.
@@ -110,6 +112,7 @@ namespace DateTime {
    * @param   dow_mask  Day of the week mask.
    * @param   time      Time in the format of 08:00
    * @param   tz        Timezone.  defaults to America/New_York.
+   * @return  Returns the formated date 2015-05-06.
    */
   std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
                             const std::string& tz = "America/New_York");
@@ -117,8 +120,25 @@ namespace DateTime {
   /**
    * Get the iso date and time from the current date and time.
    * @param   tz        Timezone.  defaults to America/New_York.
+   * @return  Returns the formated date 2015-05-06.
+   *
    */
   std::string iso_date_time(const std::string& tz = "America/New_York");
+
+  /**
+   * Get the seconds from epoch based on timezone.
+   * @param   tz        Timezone.  defaults to America/New_York.
+   * @return  Returns the seconds from epoch based on timezone.
+   */
+  uint64_t seconds_since_epoch(const std::string& tz = "America/New_York");
+
+  /**
+   * Get the iso date time from seconds since epoch and timezone.
+   * @param   seconds   seconds since epoch
+   * @param   tz        Timezone.  defaults to America/New_York.
+   * @return  Returns the formated date 2015-05-06.
+   */
+  std::string seconds_to_date(uint64_t seconds, const std::string& tz = "America/New_York");
 
   /**
    * Get the dow mask.

@@ -3,6 +3,7 @@
 #include "baldr/nodeinfo.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/datetime.h"
 #include "config.h"
 
 using namespace valhalla::baldr;
@@ -18,6 +19,8 @@ GraphTileHeader::GraphTileHeader() {
   memset(this, 0, sizeof(GraphTileHeader));
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize-1] = 0;
+  date_created_ = DateTime::seconds_since_epoch();
+
 }
 
 // Get the GraphId (tileid and level) of this tile.
