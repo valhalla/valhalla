@@ -391,22 +391,6 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
   }
 }
 
-// Add a node and list of directed edges
-/*void GraphTileBuilder::AddNodeAndDirectedEdges(
-    NodeInfoBuilder& node,
-    const std::vector<DirectedEdgeBuilder>& directededges) {
-  // Set the index to the first directed edge from this node and
-  // set its count. Add the node to the list
-  node.set_edge_index(directededges_builder_.size());
-  node.set_edge_count(directededges.size());
-  nodes_builder_.push_back(node);
-
-  // Add directed edges to the list
-  for (const auto& directededge : directededges) {
-    directededges_builder_.push_back(directededge);
-  }
-}*/
-
 // Get the current list of node builders.
 std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() {
   return nodes_builder_;
@@ -660,6 +644,13 @@ const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
   if (idx < admins_builder_.size())
     return admins_builder_.at(idx);
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
+}
+
+// Bin the edges in this tile and return which ones shape leaves
+std::list<GraphId> GraphTileBuilder::Bin() {
+  std::list<GraphId> strays;
+
+  return strays;
 }
 
 }

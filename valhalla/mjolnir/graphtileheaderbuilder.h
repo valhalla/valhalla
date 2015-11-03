@@ -130,6 +130,12 @@ class GraphTileHeaderBuilder : public baldr::GraphTileHeader {
    *               list.
    */
   void set_complex_restriction_offset(const uint32_t offset);
+
+  /**
+   * Sets the edge cell offsets
+   * @param the offsets
+   */
+  void set_edge_cell_offsets(const uint32_t (&offsets)[baldr::kCellCount + 1]);
 };
 
 }

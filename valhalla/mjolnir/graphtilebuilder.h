@@ -94,17 +94,6 @@ class GraphTileBuilder : public baldr::GraphTile {
               const std::vector<AccessRestriction>& restrictions);
 
   /**
-   * Add a node and its outbound edges. Sets the node's edge index
-   * and edge count.
-   * @param  node   Node information builder.
-   * @param  directededges  List of directed edges (builders) outbound
-   *                        from the node.
-   */
-  /*void AddNodeAndDirectedEdges(
-      NodeInfoBuilder& node,
-      const std::vector<DirectedEdgeBuilder>& directededges);*/
-
-  /**
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
@@ -284,6 +273,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   const AdminInfoBuilder& admins_builder(size_t idx);
 
+  /**
+   * Bins the non shortcut non transition edges into the header
+   * @return returns edges that bin into other tiles
+   */
+  std::list<GraphId> Bin();
+
  protected:
 
   struct EdgeTupleHasher {
@@ -370,7 +365,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Cells of the tile to intersect with the edges' shapes
   grid<PointLL> binner_;
-  std::array<std::list<GraphId>, kCellCount> bins_;
+  std::array<std::vector<GraphId>, kCellCount> bins_;
 };
 
 }
