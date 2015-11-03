@@ -115,6 +115,7 @@ struct builder_stats {
 
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& transit,
+                                                              const uint64_t tile_date,
                                                               const size_t node_size,
                                                               const std::unordered_map<uint32_t, uint32_t> stop_indexes,
                                                               std::unordered_map<uint32_t,bool>& stop_access) {
@@ -190,11 +191,11 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     std::string tz = sp.origin_timezone();
 
     //end_date will be updated if greater than 60 days.
-    //start_date will be updated to today if the start date is in the past
+    //start_date will be updated to the tile creation date if the start date is in the past
     //the start date to end date or 60 days, whichever is less.
     //set the bits based on the dow.
 
-    dep.days = DateTime::get_service_days(start_date, end_date, tz, dow_mask);
+    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, tz, dow_mask);
     dep.start_date =  DateTime::days_from_pivot_date(start_date);
     dep.end_date =  DateTime::days_from_pivot_date(end_date);
     dep.headsign = sp.trip_headsign();
@@ -838,6 +839,7 @@ void build(const std::string& transit_dir,
                          tilebuilder.AddName(name));
           tilebuilder.AddTransitStop(ts);
         }
+        else std::cout << stop.graphid.id() << std::endl;
       }
       // Do we have have a parent
       if (stop.type == 0 && stop.parent != 0) {
@@ -861,7 +863,7 @@ void build(const std::string& transit_dir,
     // Create a map of stop key to index in the stop vector
     std::unordered_map<uint32_t, bool> stop_access;
     std::unordered_multimap<uint32_t, Departure> departures =
-        ProcessStopPairs(transit, tile_start->second, stop_indexes, stop_access);
+        ProcessStopPairs(transit, tilebuilder.header()->date_created(), tile_start->second, stop_indexes, stop_access);
 
     LOG_DEBUG("Got " + std::to_string(departures.size()) + " departures.");
 
@@ -1006,7 +1008,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // A place to hold worker threads and their results
   std::vector<std::shared_ptr<std::thread> > threads(
     std::max(static_cast<uint32_t>(1),
-      pt.get<uint32_t>("concurrency", std::thread::hardware_concurrency())));
+      pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
