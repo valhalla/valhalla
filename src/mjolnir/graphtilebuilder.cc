@@ -662,6 +662,13 @@ const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
 }
 
+// Bin the edges in this tile and return which ones shape leaves
+std::list<GraphId> GraphTileBuilder::Bin() {
+  std::list<GraphId> strays;
+
+  return strays;
+}
+
 }
 }
 

@@ -284,6 +284,12 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   const AdminInfoBuilder& admins_builder(size_t idx);
 
+  /**
+   * Bins the non shortcut non transition edges into the header
+   * @return returns edges that bin into other tiles
+   */
+  std::list<GraphId> Bin();
+
  protected:
 
   struct EdgeTupleHasher {
@@ -370,7 +376,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Cells of the tile to intersect with the edges' shapes
   grid<PointLL> binner_;
-  std::array<std::list<GraphId>, kCellCount> bins_;
+  std::array<std::vector<GraphId>, kCellCount> bins_;
 };
 
 }

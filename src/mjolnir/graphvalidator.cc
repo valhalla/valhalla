@@ -143,6 +143,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
       const GraphTile signtile(tile_hierarchy, tile_id);
 
+      // Bin the edges keeping a list of ones that need to go to other tiles
+      auto unbinned = tilebuilder.Bin();
+
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
       const GraphTileHeaderBuilder hdrbuilder =
@@ -190,7 +193,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
           }
 
           // Check if end node is in a different tile
-          const GraphTile* endnode_tile;
+          const GraphTile* endnode_tile = tile;
           if (tile_id != directededge.endnode().Tile_Base()) {
             directededge.set_leaves_tile(true);
 
@@ -198,8 +201,6 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             lock.lock();
             endnode_tile = graph_reader.GetGraphTile(directededge.endnode());
             lock.unlock();
-          } else {
-            endnode_tile = tile;
           }
 
           // Set the opposing edge index and get the country ISO at the
