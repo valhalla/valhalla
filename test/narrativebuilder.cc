@@ -607,9 +607,9 @@ void TestBuildStartInstructions_0_miles_en_US() {
   PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go east.",
+      "Head east.",
       "",
-      "Go east for a half mile.",
+      "Head east for a half mile.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -633,9 +633,9 @@ void TestBuildStartInstructions_1_miles_en_US() {
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go southwest on 5th Avenue.",
+      "Head southwest on 5th Avenue.",
       "",
-      "Go southwest on 5th Avenue for 1 tenth of a mile.",
+      "Head southwest on 5th Avenue for 1 tenth of a mile.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -659,9 +659,9 @@ void TestBuildStartInstructions_2_miles_en_US() {
   PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
       "",
-      "Go south on North Prince Street, U.S. 2 22.",
+      "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 3.2 miles.");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -685,9 +685,9 @@ void TestBuildStartInstructions_0_kilometers_en_US() {
   PopulateStartManeuverList_0(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go east.",
+      "Head east.",
       "",
-      "Go east for 800 meters.",
+      "Head east for 800 meters.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -711,9 +711,9 @@ void TestBuildStartInstructions_1_kilometers_en_US() {
   PopulateStartManeuverList_1(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go southwest on 5th Avenue.",
+      "Head southwest on 5th Avenue.",
       "",
-      "Go southwest on 5th Avenue for 200 meters.",
+      "Head southwest on 5th Avenue for 200 meters.",
       "");
 
   TryBuild(directions_options, maneuvers, expected_maneuvers);
@@ -737,9 +737,9 @@ void TestBuildStartInstructions_2_kilometers_en_US() {
   PopulateStartManeuverList_2(expected_maneuvers, country_code, state_code);
   SetExpectedManeuverInstructions(
       expected_maneuvers,
-      "Go south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
+      "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272.",
       "",
-      "Go south on North Prince Street, U.S. 2 22.",
+      "Head south on North Prince Street, U.S. 2 22.",
       "Continue on U.S. 2 22, Pennsylvania 2 72 for 5.1 kilometers.");
 
 
@@ -1416,9 +1416,9 @@ void TestBuildUturnInstructions_5_miles_en_US() {
   PopulateUturnManeuverList_5(expected_maneuvers, country_code, state_code);
   SetExpectedPreviousManeuverInstructions(
       expected_maneuvers,
-      "Go northeast on Jonestown Road/US 22.",
+      "Head northeast on Jonestown Road/US 22.",
       "",
-      "Go northeast on Jonestown Road, U.S. 22 for 200 feet.",
+      "Head northeast on Jonestown Road, U.S. 22 for 200 feet.",
       "");
   SetExpectedManeuverInstructions(
       expected_maneuvers,

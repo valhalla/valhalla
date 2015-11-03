@@ -801,6 +801,12 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set the begin shape index
   maneuver.set_begin_shape_index(curr_edge->begin_shape_index());
 
+  // Set the time based on the delta of the elapsed time between the begin
+  // and end nodes
+  maneuver.set_time(
+      trip_path_->node(maneuver.end_node_index()).elapsed_time()
+      - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
+
   // if possible, set the turn degree and relative direction
   if (prev_edge) {
     maneuver.set_turn_degree(
@@ -808,12 +814,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Calculate and set the relative direction for the specified maneuver
     DetermineRelativeDirection(maneuver);
-
-    // Set the time based on the delta of the elapsed time between the begin
-    // and end nodes
-    maneuver.set_time(
-        trip_path_->node(maneuver.end_node_index()).elapsed_time()
-            - trip_path_->node(maneuver.begin_node_index()).elapsed_time());
 
     // TODO - determine if we want to count right traversable at entrance node
     // Roundabouts
@@ -930,6 +930,16 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
         TripDirections_Maneuver_Type_kPostTransitConnectionDestination);
     LOG_TRACE("ManeuverType=POST_TRANSIT_CONNECTION_DESTINATION");
   }
+  // Process enter roundabout
+  else if (maneuver.roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
+    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
+  }
+  // Process exit roundabout
+  else if (prev_edge && prev_edge->roundabout()) {
+    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
+    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
+  }
   // Process fork
   else if (maneuver.fork()) {
     switch (maneuver.begin_relative_direction()) {
@@ -1014,16 +1024,6 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
   else if (curr_edge->IsHighway() && prev_edge && prev_edge->ramp()) {
     maneuver.set_type(TripDirections_Maneuver_Type_kMerge);
     LOG_TRACE("ManeuverType=MERGE");
-  }
-  // Process enter roundabout
-  else if (maneuver.roundabout()) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutEnter);
-    LOG_TRACE("ManeuverType=ROUNDABOUT_ENTER");
-  }
-  // Process exit roundabout
-  else if (prev_edge && prev_edge->roundabout()) {
-    maneuver.set_type(TripDirections_Maneuver_Type_kRoundaboutExit);
-    LOG_TRACE("ManeuverType=ROUNDABOUT_EXIT");
   }
   // Process enter ferry
   else if (maneuver.ferry() || maneuver.rail_ferry()) {
@@ -1221,6 +1221,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
+  // Process roundabouts
+  if (maneuver.roundabout() && !prev_edge->roundabout()) {
+    return false;
+  }
+  if (prev_edge->roundabout() && !maneuver.roundabout()) {
+    return false;
+  }
+  if (maneuver.roundabout() && prev_edge->roundabout()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
   // Process fork
   if (IsFork(node_index, prev_edge, curr_edge)) {
     maneuver.set_fork(true);
@@ -1288,18 +1300,6 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     return false;
   }
   if (maneuver.rail_ferry() && prev_edge->rail_ferry()) {
-    return true;
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Process roundabouts
-  if (maneuver.roundabout() && !prev_edge->roundabout()) {
-    return false;
-  }
-  if (prev_edge->roundabout() && !maneuver.roundabout()) {
-    return false;
-  }
-  if (maneuver.roundabout() && prev_edge->roundabout()) {
     return true;
   }
 

@@ -433,9 +433,9 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
 // dictionary
 
 std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
-  // 0 "Go <FormCardinalDirection>."
-  // 1 "Go <FormCardinalDirection> on <STREET_NAMES>."
-  // 2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  // 0 "Head <FormCardinalDirection>."
+  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -456,21 +456,21 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
   }
 
   switch (phrase_id) {
-    // 1 "Go <FormCardinalDirection> on <STREET_NAMES>."
+    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
     case 1: {
-      instruction = (boost::format("Go %1% on %2%.")
+      instruction = (boost::format("Head %1% on %2%.")
           % cardinal_direction % street_names).str();
       break;
     }
-    // 2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
     case 2: {
-      instruction = (boost::format("Go %1% on %2%. Continue on %3%.")
+      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
           % cardinal_direction % begin_street_names % street_names).str();
       break;
     }
-    // 0 "Go <FormCardinalDirection>."
+    // 0 "Head <FormCardinalDirection>."
     default: {
-      instruction = (boost::format("Go %1%.") % cardinal_direction).str();
+      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
       break;
     }
   }
@@ -482,9 +482,9 @@ std::string NarrativeBuilder::FormStartInstruction(Maneuver& maneuver) {
 std::string NarrativeBuilder::FormVerbalStartInstruction(
     Maneuver& maneuver, DirectionsOptions_Units units,
     uint32_t element_max_count, std::string delim) {
-  // 0 "Go <FormCardinalDirection> for <DISTANCE>."
-  // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
-  // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
+  // 0 "Head <FormCardinalDirection> for <DISTANCE>."
+  // 1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
+  // 2 "Head <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
@@ -505,22 +505,22 @@ std::string NarrativeBuilder::FormVerbalStartInstruction(
   }
 
   switch (phrase_id) {
-    // 1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
+    // 1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>."
     case 1: {
-      instruction = (boost::format("Go %1% on %2%.")
+      instruction = (boost::format("Head %1% on %2%.")
           % cardinal_direction % street_names).str();
       break;
     }
-    // 2 "Go <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
+    // 2 "Head <FormCardinalDirection> on <STREET_NAMES> for <DISTANCE>."
     case 2: {
-      instruction = (boost::format("Go %1% on %2% for %3%.")
+      instruction = (boost::format("Head %1% on %2% for %3%.")
           % cardinal_direction % street_names % FormDistance(maneuver, units))
           .str();
       break;
     }
-    // 0 "Go <FormCardinalDirection> for <DISTANCE>."
+    // 0 "Head <FormCardinalDirection> for <DISTANCE>."
     default: {
-      instruction = (boost::format("Go %1% for %2%.") % cardinal_direction
+      instruction = (boost::format("Head %1% for %2%.") % cardinal_direction
           % FormDistance(maneuver, units)).str();
       break;
     }
@@ -2650,13 +2650,13 @@ std::string NarrativeBuilder::FormVerbalEnterFerryInstruction(
 }
 
 std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
-  //  0 "Go <FormCardinalDirection>."
-  //  1 "Go <FormCardinalDirection> on <STREET_NAMES>."
-  //  2 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+  //  0 "Head <FormCardinalDirection>."
+  //  1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+  //  2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Go ";
+  instruction += "Head ";
   instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
 
@@ -2676,20 +2676,20 @@ std::string NarrativeBuilder::FormExitFerryInstruction(Maneuver& maneuver) {
 
 std::string NarrativeBuilder::FormVerbalAlertExitFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Go <FormCardinalDirection>."
-  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(1)>."
+  //  0 "Head <FormCardinalDirection>."
+  //  1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(1)>."
 
   return FormVerbalExitFerryInstruction(maneuver, element_max_count, delim);
 }
 
 std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
     Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
-  //  0 "Go <FormCardinalDirection>."
-  //  1 "Go <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
+  //  0 "Head <FormCardinalDirection>."
+  //  1 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES|STREET_NAMES(2)>."
 
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
-  instruction += "Go ";
+  instruction += "Head ";
   instruction += FormCardinalDirection(maneuver.begin_cardinal_direction());
 
   if (maneuver.HasBeginStreetNames()) {
@@ -3011,7 +3011,7 @@ void NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
     Maneuver& maneuver) {
   std::string text_instruction;
   text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Go ";
+  text_instruction += "Head ";
   text_instruction += FormCardinalDirection(
       maneuver.begin_cardinal_direction());
 
