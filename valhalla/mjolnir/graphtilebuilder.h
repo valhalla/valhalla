@@ -94,17 +94,6 @@ class GraphTileBuilder : public baldr::GraphTile {
               const std::vector<AccessRestriction>& restrictions);
 
   /**
-   * Add a node and its outbound edges. Sets the node's edge index
-   * and edge count.
-   * @param  node   Node information builder.
-   * @param  directededges  List of directed edges (builders) outbound
-   *                        from the node.
-   */
-  /*void AddNodeAndDirectedEdges(
-      NodeInfoBuilder& node,
-      const std::vector<DirectedEdgeBuilder>& directededges);*/
-
-  /**
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
