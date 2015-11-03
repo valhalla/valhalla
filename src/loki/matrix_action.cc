@@ -88,25 +88,20 @@ namespace valhalla {
     worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       for (auto& it : MATRIX){
         if (action == it.second) {
+          check_locations(locations,(matrix_max_locations.find(it.first))->second);
           switch (it.second) {
             case ONE_TO_MANY:
-              check_locations(locations,(matrix_max_locations.find(it.first))->second);
               check_distance(reader,locations,0,0,locations.size(),(matrix_max_distance.find(it.first))->second);
-              request.put("matrix_type", std::string(it.first));
               break;
             case MANY_TO_ONE:
-              check_locations(locations,(matrix_max_locations.find(it.first))->second);
               check_distance(reader,locations,locations.size()-1,0,locations.size()-1,(matrix_max_distance.find(it.first))->second);
-              request.put("matrix_type", std::string(it.first));
               break;
             case MANY_TO_MANY:
-              check_locations(locations,(matrix_max_locations.find(it.first))->second);
               for(size_t i = 0; i < locations.size()-1; ++i)
                 check_distance(reader,locations,i,(i+1),locations.size(),(matrix_max_distance.find(it.first))->second);
-
-              request.put("matrix_type", std::string(it.first));
               break;
           }
+          request.put("matrix_type", std::string(it.first));
         }
       }
 
