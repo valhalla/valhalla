@@ -343,6 +343,7 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
 // Add shortcut edges (if they should exist) from the specified node
 // Should never combine 2 directed edges with different exit information so
 // no need to worry about it here.
+// TODO - need to add access restrictions?
 void AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
@@ -516,11 +517,10 @@ void FormTilesInNewLevel(
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
     tilebuilder.AddAdmin("None","None","","");
 
-//    std::vector<AccessRestriction> access_restrictions;
-
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
     GraphId nodea, nodeb;
+    std::vector<AccessRestriction> access_restrictions;
     for (const auto& newnode : newtile) {
       // Get the node in the base level
       const GraphTile* tile = info.graphreader_.GetGraphTile(newnode.basenode);
@@ -542,7 +542,8 @@ void FormTilesInNewLevel(
 
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder, shortcuts, info, sample);
+      AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
+                       shortcuts, info, sample);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -575,15 +576,16 @@ void FormTilesInNewLevel(
             tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
           }
 
-          // Get the restrictions from the base directed edge
-/*          std::vector<AccessRestriction> restrictions =
+          // Get the restrictions from the base directed edge - update the
+          // edge index to be the current directed edge Id
+          std::vector<AccessRestriction> restrictions =
               tile->GetAccessRestrictions(oldedgeid.id());
           if (restrictions.size()) {
             for (const auto& res : restrictions)
-              access_restrictions.emplace_back(edgeindex + directededges.size(),
-                                               res.type(), res.value());
+              access_restrictions.emplace_back(tilebuilder.directededges().size(),
+                  res.type(), res.modes(), res.days_of_week(), res.value());
           }
-*/
+
           // Get edge info, shape, and names from the old tile and add
           // to the new. Use edge length to protect against
           // edges that have same end nodes but different lengths
@@ -624,7 +626,8 @@ void FormTilesInNewLevel(
       nodeid++;
     }
 
-//    tilebuilder.AddAccessRestrictions(access_restrictions);
+    // Add access restrictions
+    tilebuilder.AddAccessRestrictions(access_restrictions);
 
     // Store the new tile
     tilebuilder.StoreTileData();
