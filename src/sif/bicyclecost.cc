@@ -19,14 +19,14 @@ constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
-// Default turn costs.
-constexpr float kTCStraight         = 0.25f;
-constexpr float kTCSlight           = 0.5f;
-constexpr float kTCFavorable        = 0.75f;
-constexpr float kTCFavorableSharp   = 1.0f;
-constexpr float kTCCrossing         = 1.5f;
-constexpr float kTCUnfavorable      = 2.0f;
-constexpr float kTCUnfavorableSharp = 2.5f;
+// Default turn costs - modified by the stop impact.
+constexpr float kTCStraight         = 0.15f;
+constexpr float kTCSlight           = 0.25f;
+constexpr float kTCFavorable        = 0.4f;
+constexpr float kTCFavorableSharp   = 0.5f;
+constexpr float kTCCrossing         = 0.75f;
+constexpr float kTCUnfavorable      = 1.0f;
+constexpr float kTCUnfavorableSharp = 1.5f;
 constexpr float kTCReverse          = 5.0f;
 
 // Turn costs based on side of street driving
@@ -177,12 +177,14 @@ class BicycleCost : public DynamicCost {
    * (from destination towards origin). Both opposing edges are
    * provided.
    * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge) const;
 
@@ -339,10 +341,10 @@ class BicycleCost : public DynamicCost {
 // Constructor
 BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
     : DynamicCost(pt, TravelMode::kBicycle),
-      trans_density_factor_{ 1.0f, 1.0f, 1.0f, 1.0f,
-                             1.0f, 1.0f, 1.1f, 1.1f,
-                             1.2f, 1.3f, 1.4f, 1.5f,
-                             1.6f, 1.7f, 1.8f, 2.0f } {
+      trans_density_factor_{ 1.0f,  1.0f, 1.0f,  1.0f,
+                             1.0f,  1.0f, 1.0f,  1.0f,
+                             1.05f, 1.1f, 1.15f, 1.2f,
+                             1.25f, 1.3f, 1.4f,  1.5f } {
   // Transition penalties (similar to auto)
   maneuver_penalty_ = pt.get<float>("maneuver_penalty",
                                     kDefaultManeuverPenalty);
@@ -408,8 +410,9 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Set the road classification factor. use_roads factors above 0.5 start to
   // reduce the weight difference between road classes while factors below 0.5
   // start to increase the differences.
-  road_factor_ = (useroads_ > 0.5f) ?
-                 (useroads_ - 0.5f) * 0.5f : (0.5f - useroads_) * 5.0f;
+  road_factor_ = (useroads_ >= 0.5f) ?
+                 1.0f - (useroads_ - 0.5f) :
+                 1.0f + (0.5f - useroads_) * 3.0f;
 
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
@@ -455,13 +458,14 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
 bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
+               const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
                const baldr::DirectedEdge* opp_pred_edge) const {
   // Check access, U-turn, and simple turn restriction.
   // Check if edge is not-thru (no need to check distance from destination
   // since the search is heading out of any not_thru regions)
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
-       (opp_pred_edge->localedgeidx() == edge->localedgeidx()) ||
+       (pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
         edge->not_thru()) {
     return false;
@@ -502,7 +506,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Special use cases: cycleway and footway
   if (edge->use() == Use::kCycleway) {
     // Experienced cyclists might not favor cycleways, but most do...
-    factor = (0.5f + useroads_ * 0.65f);
+    factor = (0.5f + useroads_ * 0.5f);
   } else if (edge->use() == Use::kFootway) {
     // Cyclists who favor using roads may want to avoid paths with pedestrian
     // traffic. Most cyclists would use them though.

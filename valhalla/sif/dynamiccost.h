@@ -87,12 +87,14 @@ class DynamicCost {
    * (from destination towards origin). Both opposing edges are
    * provided.
    * @param  edge  Pointer to a directed edge.
+   * @param  pred  Predecessor edge information.
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
+                 const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
                  const baldr::DirectedEdge* opp_pred_edge) const = 0;
 
