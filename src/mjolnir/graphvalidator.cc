@@ -114,7 +114,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
     GraphReader graph_reader(hierarchy_properties);
     // Get some things we need throughout
     auto tile_hierarchy = graph_reader.GetTileHierarchy();
-    std::vector<Tiles<PointLL>> levels;
+    std::vector<Tiles<PointLL> > levels;
     for (const auto& level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
     }
@@ -144,7 +144,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       const GraphTile signtile(tile_hierarchy, tile_id);
 
       // Bin the edges keeping a list of ones that need to go to other tiles
-      auto unbinned = tilebuilder.Bin();
+      /*if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
+        auto unbinned = tilebuilder.Bin();*/
 
       // Copy existing header. No need to update any counts or offsets.
       GraphTileHeader existinghdr = *(tilebuilder.header());
