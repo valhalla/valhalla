@@ -312,10 +312,14 @@ class NarrativeBuilder {
   static std::string FormVerbalTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitRemainOnInstruction(Maneuver& maneuver);
+  static std::string FormTransitRemainOnInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitRemainOnInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitTransferInstruction(Maneuver& maneuver);
+  static std::string FormTransitTransferInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitTransferInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static void FormPostTransitConnectionDestinationInstruction(Maneuver& maneuver);
@@ -326,6 +330,9 @@ class NarrativeBuilder {
       bool include_street_names = false,
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalPostTransitionTransitInstruction(
+      Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormDistance(Maneuver& maneuver,
