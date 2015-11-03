@@ -125,23 +125,27 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
       for(auto j = min_r; j <= min_r; ++j)
         tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
   }
-  //we want hardest tiles first
+  //we want slowest to build tiles first, routes query is slowest so we weight by that
+  //stop pairs is most numerous so that might want to be factored in as well
   std::priority_queue<weighted_tile_t> prioritized;
   auto now = time(nullptr);
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon;
   for(const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
+    /*auto request = (boost::format(pt.get<std::string>("base_url") +
+      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
+      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();*/
     auto request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%&api_key=%9%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
-      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+      "/api/v1/routes?per_page=0&bbox=%1%,%2%,%3%,%4%&api_key=%5%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % pt.get<std::string>("api_key")).str();
     auto total = curler(request, "meta.total").get<size_t>("meta.total");
     if(total > 0) {
       prioritized.push(weighted_tile_t{tile, total});
       LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + ":" + std::to_string(total));
     }
   }
-  LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " expected transit tiles in " +
+  LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " transit tiles in " +
            std::to_string(feeds.get_child("features").size()) + " feeds");
   return prioritized;
 }
@@ -419,7 +423,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
+      uniques.lock.lock(); //TODO: remove this once we can ask for routes in parallel
       response = curler(*request + key_param, "routes");
+      uniques.lock.unlock();
       //copy routes in, keeping track of routeid to route index
       get_routes(tile, routes, websites, response);
       //please sir may i have some more?
