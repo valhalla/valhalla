@@ -132,8 +132,9 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   for(const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
     auto request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%&api_key=%9%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
+      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
     auto total = curler(request, "meta.total").get<size_t>("meta.total");
     if(total > 0) {
       prioritized.push(weighted_tile_t{tile, total});
@@ -250,24 +251,16 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     auto origin = stops.find(pair->origin_onestop_id());
     if(origin != stops.cend())
       pair->set_origin_graphid(origin->second);
-    else {
+    else
       dangles = true;
-      //TODO: remove this when stitching is proven to work
-      tile.mutable_stop_pairs()->RemoveLast();
-      continue;
-    }
 
     //destination
     pair->set_destination_onestop_id(pair_pt.second.get<std::string>("destination_onestop_id"));
     auto destination = stops.find(pair->destination_onestop_id());
     if(destination != stops.cend())
       pair->set_destination_graphid(destination->second);
-    else {
+    else
       dangles = true;
-      //TODO: remove this when stitching is proven to work
-      tile.mutable_stop_pairs()->RemoveLast();
-      continue;
-    }
 
     //route
     auto route_id = pair_pt.second.get<std::string>("route_onestop_id");
@@ -386,8 +379,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, uint64_t> stops;
     auto key_param = "&api_key=" + pt.get<std::string>("api_key");
     boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/stops?per_page=5000&bbox=%1%,%2%,%3%,%4%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+      "/api/v1/stops?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     while(request) {
       //grab some stuff
       response = curler(*request + key_param, "stops");
@@ -402,8 +395,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all operator WEBSITES
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/operators?per_page=5000&bbox=%1%,%2%,%3%,%4%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+      "/api/v1/operators?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, std::string> websites;
     while(request) {
       //grab some stuff
@@ -421,8 +414,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all ROUTES
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/routes?per_page=5000&bbox=%1%,%2%,%3%,%4%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+      "/api/v1/routes?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
@@ -436,8 +429,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=5000&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
+      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
+      % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
     while(request) {
       //grab some stuff
       response = curler(*request + key_param, "schedule_stop_pairs");
@@ -445,6 +439,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
+      if(tile.stop_pairs_size() > 100000)
+        break;
     }
 
     //remember who dangles
@@ -646,8 +642,8 @@ void stitch(const ptree& pt, const std::list<GraphId>& tiles) {
 
 int main(int argc, char** argv) {
   if(argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url transit_land_api_key " << std::endl;
-    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ transitland-YOUR_KEY_SUFFIX" << std::endl;
+    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url transit_land_api_key per_page" << std::endl;
+    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ transitland-YOUR_KEY_SUFFIX 1000" << std::endl;
     return 1;
   }
 
@@ -656,6 +652,10 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(std::string(argv[1]), pt);
   pt.add("base_url", std::string(argv[2]));
   pt.add("api_key", std::string(argv[3]));
+  if(argc > 4)
+    pt.add("per_page", std::string(argv[4]));
+  else
+    pt.add("per_page", "1000");
 
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
