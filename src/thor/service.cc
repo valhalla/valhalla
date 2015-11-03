@@ -26,20 +26,131 @@ using namespace prime_server;
 #include "thor/trippathbuilder.h"
 #include "thor/pathalgorithm.h"
 #include "thor/bidirectional_astar.h"
+#include "thor/timedistancematrix.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
+using namespace valhalla::thor;
+
 
 namespace {
+  enum MATRIX_TYPE {  ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY };
+  const std::unordered_map<std::string, MATRIX_TYPE> MATRIX{
+    {"one_to_many", ONE_TO_MANY},
+    {"many_to_one", MANY_TO_ONE},
+    {"many_to_many", MANY_TO_MANY}
+  };
+  std::size_t tdindex = 0;
+  constexpr double kKmPerMeter = 0.001;
+  constexpr double kMilePerMeter = 0.000621371;
   const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
+  const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
+  const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
+
+  json::ArrayPtr locations(const std::vector<PathLocation>& correlated) {
+    auto input_locs = json::array({});
+    for(size_t i = 0; i < correlated.size(); i++) {
+      input_locs->emplace_back(
+        json::map({
+          {"lat", json::fp_t{correlated[i].latlng_.lat(), 6}},
+          {"lon", json::fp_t{correlated[i].latlng_.lng(), 6}}
+        })
+      );
+    }
+    return input_locs;
+  }
+
+  json::ArrayPtr serialize_row(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds,
+      const size_t origin, const size_t destination, const size_t start, const size_t end, double distance_scale) {
+    auto row = json::array({});
+    for(size_t i = start; i < end; i++) {
+      //check to make sure a route was found; if not, return null for distance & time in matrix result
+      if (tds[i].time != kMaxCost) {
+        row->emplace_back(json::map({
+          {"from_index", static_cast<uint64_t>(origin)},
+          {"to_index", static_cast<uint64_t>(destination + (i - start))},
+          {"time", static_cast<uint64_t>(tds[i].time)},
+          {"distance", json::fp_t{tds[i].dist * distance_scale, 3}}
+        }));
+      } else {
+        row->emplace_back(json::map({
+          {"from_index", static_cast<uint64_t>(origin)},
+          {"to_index", static_cast<uint64_t>(destination + (i - start))},
+          {"time", static_cast<nullptr_t>(nullptr)},
+          {"distance", static_cast<nullptr_t>(nullptr)}
+        }));
+      }
+    }
+    return row;
+  }
+
+  //Returns a row vector of computed time and distance from the first (origin) location to each additional location provided.
+  // {
+  //   input_locations: [{},{},{}],
+  //   one_to_many:
+  //   [
+  //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}]
+  //   ]
+  // }
+  json::MapPtr serialize_one_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+    return json::map({
+      {"one_to_many", json::array({serialize_row(correlated, tds, 0, 0, 0, tds.size(), distance_scale)})},
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
+    });
+  }
+
+  //Returns a column vector of computed time and distance from each location to the last (destination) location provided.
+  // {
+  //   input_locations: [{},{},{}],
+  //   many_to_one:
+  //   [
+  //     [{origin0,dest0,x,x}],
+  //     [{origin1,dest0,x,x}],
+  //     [{origin2,dest0,x,x}],
+  //     [{origin3,dest0,0,0}]
+  //   ]
+  // }
+  json::MapPtr serialize_many_to_one(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+    json::ArrayPtr column_matrix = json::array({});
+    for(size_t i = 0; i < correlated.size(); ++i)
+      column_matrix->emplace_back(serialize_row(correlated, tds, i, correlated.size() - 1, i, i + 1, distance_scale));
+    return json::map({
+      {"many_to_one", column_matrix},
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
+    });
+  }
+
+  //Returns a square matrix of computed time and distance from each location to every other location.
+  // {
+  //   input_locations: [{},{},{}],
+  //   many_to_many:
+  //   [
+  //     [{origin0,dest0,0,0},{origin0,dest1,x,x},{origin0,dest2,x,x},{origin0,dest3,x,x}],
+  //     [{origin1,dest0,x,x},{origin1,dest1,0,0},{origin1,dest2,x,x},{origin1,dest3,x,x}],
+  //     [{origin2,dest0,x,x},{origin2,dest1,x,x},{origin2,dest2,0,0},{origin2,dest3,x,x}],
+  //     [{origin3,dest0,x,x},{origin3,dest1,x,x},{origin3,dest2,x,x},{origin3,dest3,0,0}]
+  //   ]
+  // }
+  json::MapPtr serialize_many_to_many(const std::vector<PathLocation>& correlated, const std::vector<TimeDistance>& tds, std::string& units, double distance_scale) {
+    json::ArrayPtr square_matrix = json::array({});
+    for(size_t i = 0; i < correlated.size(); ++i)
+      square_matrix->emplace_back(serialize_row(correlated, tds, i, 0, correlated.size() * i, correlated.size() * (i + 1), distance_scale));
+    return json::map({
+      {"many_to_many", square_matrix},
+      {"locations", json::array({locations(correlated)})},
+      {"units", units},
+    });
+  }
 
   //TODO: throw this in the header to make it testable?
   class thor_worker_t {
    public:
-    thor_worker_t(const boost::property_tree::ptree& config): config(config),
-				  reader(config.get_child("mjolnir.hierarchy")) {
+    thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
+      config(config), reader(config.get_child("mjolnir.hierarchy")) {
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -52,19 +163,17 @@ namespace {
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
       auto& info = *static_cast<http_request_t::info_t*>(request_info);
       LOG_INFO("Got Thor Request " + std::to_string(info.id));
-      try {
+      try{
         //get some info about what we need to do
         boost::property_tree::ptree request;
-        std::string request_str(static_cast<const char*>(job.front().data()),
-        					job.front().size());
+        std::string request_str(static_cast<const char*>(job.front().data()), job.front().size());
         std::stringstream stream(request_str);
         try {
           boost::property_tree::read_info(stream, request);
         }
         catch(...) {
           worker_t::result_t result{false};
-          http_response_t response(500, "Internal Server Error",
-             "Failed to parse intermediate request format", headers_t{CORS});
+          http_response_t response(500, "Internal Server Error", "Failed to parse intermediate request format", headers_t{CORS});
           response.from_info(info);
           result.messages.emplace_back(response.to_string());
           return result;
@@ -72,95 +181,19 @@ namespace {
 
         // Initialize request - get the PathALgorithm to use
         std::string costing = init_request(request);
-        worker_t::result_t result{true};
 
-        // Forward the original request
-        result.messages.emplace_back(std::move(request_str));
-
-        // For each pair of origin/destination
-        bool prior_is_node = false;
-        baldr::GraphId through_edge;
-        baldr::PathLocation& last_break_origin = correlated[0];
-        std::vector<baldr::PathLocation> through_loc;
-        std::vector<thor::PathInfo> path_edges;
-        for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
-          auto origin = *std::prev(path_location);
-          auto destination = *path_location;
-
-          // Through edge is valid if last destination was "through"
-          if (through_edge.Is_Valid()) {
-            UpdateOrigin(origin, prior_is_node, through_edge);
-          } else {
-            last_break_origin = origin;
+        auto matrix = request.get_optional<std::string>("matrix_type");
+        if (matrix) {
+          auto matrix_iter = MATRIX.find(*matrix);
+          if (matrix_iter != MATRIX.cend()) {
+            return get_matrix(matrix_iter->second, costing, request, info);
           }
-
-          // Get the algorithm type for this location pair
-          thor::PathAlgorithm* path_algorithm;
-          if (costing == "multimodal") {
-            path_algorithm = &multi_modal_astar;
-          } else if (costing == "pedestrian" || costing == "bicycle") {
-            // Use bidirectional A* for pedestrian and bicycle if over 10km
-            float dist = origin.latlng_.Distance(destination.latlng_);
-            path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
-          } else {
-            path_algorithm = &astar;
+          else { //this will never happen since loki formats the request for matrix
+            throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
-
-          // Get best path
-          if (path_edges.size() == 0) {
-            GetPath(path_algorithm, origin, destination, path_edges);
-            if (path_edges.size() == 0) {
-              throw std::runtime_error("No path could be found for input");
-            }
-          } else {
-            // Get the path in a temporary vector
-            std::vector<thor::PathInfo> temp_path;
-            GetPath(path_algorithm, origin, destination, temp_path);
-            if (temp_path.size() == 0) {
-              throw std::runtime_error("No path could be found for input");
-            }
-
-            // Append the temp_path edges to path_edges, adding the elapsed
-            // time from the end of the current path. If continuing along the
-            // same edge, remove the prior so we do not get a duplicate edge.
-            uint32_t t = path_edges.back().elapsed_time;
-            if (temp_path.front().edgeid == path_edges.back().edgeid) {
-              path_edges.pop_back();
-            }
-            for (auto edge : temp_path) {
-              edge.elapsed_time += t;
-              path_edges.emplace_back(edge);
-            }
-          }
-
-          // Build trip path for this leg and add to the result if this
-          // location is a BREAK or if this is the last location
-          if (destination.stoptype_ == Location::StopType::BREAK ||
-              path_location == --correlated.cend()) {
-            // Form output information based on path edges
-            auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                last_break_origin, destination, through_loc);
-
-            // The protobuf path
-            result.messages.emplace_back(trip_path.SerializeAsString());
-
-            // Clear path edges and set through edge to invalid
-            path_edges.clear();
-            through_edge = baldr::GraphId();
-          } else {
-            // This is a through location. Save last edge as the through_edge
-            prior_is_node = destination.IsNode();
-            through_edge = path_edges.back().edgeid;
-
-            // Add to list of through locations for this leg
-            through_loc.emplace_back(destination);
-          }
-
-          // If we have another one coming we need to clear
-          if (--correlated.cend() != path_location)
-            path_algorithm->Clear();
         }
-        return result;
+        return get_trip_path(costing, request_str);
+
       }
       catch(const std::exception& e) {
         worker_t::result_t result{false};
@@ -169,6 +202,99 @@ namespace {
         result.messages.emplace_back(response.to_string());
         return result;
       }
+    }
+
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str){
+      worker_t::result_t result{true};
+
+      // Forward the original request
+      result.messages.emplace_back(std::move(request_str));
+
+      // For each pair of origin/destination
+      bool prior_is_node = false;
+      baldr::GraphId through_edge;
+      baldr::PathLocation& last_break_origin = correlated[0];
+      std::vector<baldr::PathLocation> through_loc;
+      std::vector<thor::PathInfo> path_edges;
+      for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
+        auto origin = *std::prev(path_location);
+        auto destination = *path_location;
+
+        // Through edge is valid if last destination was "through"
+        if (through_edge.Is_Valid()) {
+          UpdateOrigin(origin, prior_is_node, through_edge);
+        } else {
+          last_break_origin = origin;
+        }
+
+        // Get the algorithm type for this location pair
+        thor::PathAlgorithm* path_algorithm;
+        if (costing == "multimodal") {
+          path_algorithm = &multi_modal_astar;
+        } else if (costing == "pedestrian" || costing == "bicycle") {
+          // Use bidirectional A* for pedestrian and bicycle if over 10km
+          float dist = origin.latlng_.Distance(destination.latlng_);
+          path_algorithm = (dist > 10000.0f) ? &bidir_astar : &astar;
+        } else {
+          path_algorithm = &astar;
+        }
+
+        // Get best path
+        if (path_edges.size() == 0) {
+          GetPath(path_algorithm, origin, destination, path_edges);
+          if (path_edges.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
+        } else {
+          // Get the path in a temporary vector
+          std::vector<thor::PathInfo> temp_path;
+          GetPath(path_algorithm, origin, destination, temp_path);
+          if (temp_path.size() == 0) {
+            throw std::runtime_error("No path could be found for input");
+          }
+
+          // Append the temp_path edges to path_edges, adding the elapsed
+          // time from the end of the current path. If continuing along the
+          // same edge, remove the prior so we do not get a duplicate edge.
+          uint32_t t = path_edges.back().elapsed_time;
+          if (temp_path.front().edgeid == path_edges.back().edgeid) {
+            path_edges.pop_back();
+          }
+          for (auto edge : temp_path) {
+            edge.elapsed_time += t;
+            path_edges.emplace_back(edge);
+          }
+        }
+
+        // Build trip path for this leg and add to the result if this
+        // location is a BREAK or if this is the last location
+        if (destination.stoptype_ == Location::StopType::BREAK ||
+            path_location == --correlated.cend()) {
+          // Form output information based on path edges
+          auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                              last_break_origin, destination, through_loc);
+
+          // The protobuf path
+          result.messages.emplace_back(trip_path.SerializeAsString());
+
+          // Clear path edges and set through edge to invalid
+          path_edges.clear();
+          through_edge = baldr::GraphId();
+        } else {
+          // This is a through location. Save last edge as the through_edge
+          prior_is_node = destination.IsNode();
+          through_edge = path_edges.back().edgeid;
+
+          // Add to list of through locations for this leg
+          through_loc.emplace_back(destination);
+        }
+
+        // If we have another one coming we need to clear
+        if (--correlated.cend() != path_location)
+          path_algorithm->Clear();
+        }
+
+        return result;
     }
 
     /**
@@ -226,6 +352,48 @@ namespace {
           }
         }
       }
+    }
+
+    worker_t::result_t  get_matrix(const MATRIX_TYPE matrix_type, const std::string &costing, const boost::property_tree::ptree &request, http_request_t::info_t& request_info) {
+      // Parse out units; if none specified, use kilometers
+      double distance_scale = kKmPerMeter;
+      auto units = request.get<std::string>("units", "km");
+      if (units == "mi")
+        distance_scale = kMilePerMeter;
+      else {
+        units = "km";
+        distance_scale = kKmPerMeter;
+      }
+
+      //do the real work
+      json::MapPtr json;
+      thor::TimeDistanceMatrix tdmatrix;
+      switch ( matrix_type) {
+       case MATRIX_TYPE::ONE_TO_MANY:
+         json = serialize_one_to_many(correlated, tdmatrix.OneToMany(0, correlated, reader, mode_costing, mode), units, distance_scale);
+         break;
+       case MATRIX_TYPE::MANY_TO_ONE:
+         json = serialize_many_to_one(correlated, tdmatrix.ManyToOne(correlated.size() - 1, correlated, reader, mode_costing, mode), units, distance_scale);
+         break;
+       case MATRIX_TYPE::MANY_TO_MANY:
+         json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
+         break;
+      }
+
+      //jsonp callback if need be
+      std::ostringstream stream;
+      auto jsonp = request.get_optional<std::string>("jsonp");
+      if(jsonp)
+        stream << *jsonp << '(';
+      stream << *json;
+      if(jsonp)
+        stream << ')';
+
+      http_response_t response(200, "OK", stream.str(), headers_t{CORS, jsonp ? JS_MIME : JSON_MIME});
+      response.from_info(request_info);
+      worker_t::result_t result{false};
+      result.messages.emplace_back(response.to_string());
+      return result;
     }
 
     // Get the costing options. Get the base options from the config and the

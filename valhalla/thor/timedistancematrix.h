@@ -89,6 +89,7 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
+   * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance> OneToMany(const uint32_t origin_index,
           const std::vector<baldr::PathLocation>& locations,
@@ -104,6 +105,7 @@ class TimeDistanceMatrix : public PathAlgorithm {
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  costing       Costing methods.
    * @param  mode          Travel mode to use.
+   * @return time/distance to the destination index from all other locations
    */
   std::vector<TimeDistance> ManyToOne(const uint32_t dest_index,
           const std::vector<baldr::PathLocation>& locations,
@@ -112,8 +114,13 @@ class TimeDistanceMatrix : public PathAlgorithm {
           const sif::TravelMode mode);
 
   /**
-   * Many to one time and distance cost matrix. Computes time and distance
+   * Many to many time and distance cost matrix. Computes time and distance
    * matrix from many locations to many locations.
+   * @param  locations     List of locations.
+   * @param  graphreader   Graph reader for accessing routing graph.
+   * @param  costing       Costing methods.
+   * @param  mode          Travel mode to use.
+   * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance> ManyToMany(
           const std::vector<baldr::PathLocation>& locations,
