@@ -18,6 +18,13 @@ namespace {
   //TODO: move json header to baldr
   //TODO: make objects serialize themselves
 
+  void check_locations(const std::vector<Location>& locations, const size_t max_locations) {
+    //check that location size does not exceed max.
+    if (locations.size() > max_locations)
+      throw std::runtime_error("Number of locations exceeds the max location limit.");
+    LOG_INFO("Location size::" + std::to_string(locations.size()));
+  }
+
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, float max_distance){
     //see if any locations pairs are unreachable or too far apart
     auto lowest_level = reader.GetTileHierarchy().levels().rbegin();
@@ -44,9 +51,9 @@ namespace valhalla {
   namespace loki {
 
     worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
-      auto &costing_options = config.get_child("costing_options");
-      for (auto& it : costing_options)
-        check_distance(reader,locations,(max_distance.find(it.first))->second);
+      auto costing = request.get_optional<std::string>("costing");
+      check_locations(locations, (max_locations.find(*costing))->second);
+      check_distance(reader,locations,(max_distance.find(*costing))->second);
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {

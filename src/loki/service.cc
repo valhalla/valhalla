@@ -117,24 +117,24 @@ namespace valhalla {
       }
 
       //Build max_locations and max_distance maps
-      auto &costing_options = config.get_child("costing_options");
+      const boost::property_tree::ptree &costing_options = config.get_child("costing_options");
       for (const auto& kv : costing_options) {
-        max_locations.emplace(kv.first, config.get_optional<size_t>("service_limits." + kv.first + ".max_locations"));
-        max_distance.emplace(kv.first, config.get_optional<float>("service_limits." + kv.first + ".max_distance"));
+        max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
+        max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
       if (max_locations.empty())
         throw std::runtime_error("The config costing options for max_locations are incorrectly loaded.");
       if (max_distance.empty())
         throw std::runtime_error("The config costing options for max_distance are incorrectly loaded.");
 
-      for (auto& it : MATRIX){
-        matrix_max_locations.emplace(it.first, config.get_optional<size_t>("service_limits." + it.first + ".max_locations"));
-        matrix_max_distance.emplace(it.first, config.get_optional<float>("service_limits." + it.first + ".max_distance"));
+      for (const auto& it : MATRIX){
+        matrix_max_locations.emplace(it.first, config.get<size_t>("service_limits." + it.first + ".max_locations"));
+        matrix_max_distance.emplace(it.first, config.get<float>("service_limits." + it.first + ".max_distance"));
       }
       if (matrix_max_locations.empty())
-        throw std::runtime_error("The config matrix_max_locations are incorrectly loaded.");
+        throw std::runtime_error("The config matrix types for matrix_max_locations are incorrectly loaded.");
       if (matrix_max_distance.empty())
-        throw std::runtime_error("The config matrix_max_distance are incorrectly loaded.");
+        throw std::runtime_error("The config matrix types for matrix_max_distance are incorrectly loaded.");
 
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
@@ -205,9 +205,6 @@ namespace valhalla {
     }
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
       auto costing = request.get_optional<std::string>("costing");
-      size_t max_locations = std::numeric_limits<size_t>::max(); //TODO: locate should really have a limit..
-      if (costing)
-        max_locations = config.get<size_t>("service_limits." + *costing + ".max_locations");
 
       //we require locations
       auto request_locations = request.get_child_optional("locations");
@@ -220,8 +217,6 @@ namespace valhalla {
         catch (...) {
           throw std::runtime_error("Failed to parse location");
         }
-        if(action != LOCATE && locations.size() > max_locations)
-          throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations));
       }
       if(locations.size() < (action == LOCATE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
