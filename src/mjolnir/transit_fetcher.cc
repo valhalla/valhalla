@@ -429,7 +429,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
     request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
+      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
       % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
     while(request) {
