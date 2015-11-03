@@ -26,6 +26,38 @@ class Measurement {
 };
 
 
+inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
+                                 const CandidateWrapper<Candidate>& right)
+{
+  const auto &left_pt = left.candidate().pathlocation().vertex(),
+            &right_pt = right.candidate().pathlocation().vertex();
+  return left_pt.Distance(right_pt);
+}
+
+
+inline float GreatCircleDistanceSquared(const CandidateWrapper<Candidate>& left,
+                                        const CandidateWrapper<Candidate>& right)
+{
+  const auto &left_pt = left.candidate().pathlocation().vertex(),
+            &right_pt = right.candidate().pathlocation().vertex();
+  return left_pt.DistanceSquared(right_pt);
+}
+
+
+inline float GreatCircleDistance(const Measurement& left,
+                                 const Measurement& right)
+{
+  return left.lnglat().Distance(right.lnglat());
+}
+
+
+inline float GreatCircleDistanceSquared(const Measurement& left,
+                                        const Measurement& right)
+{
+  return left.lnglat().DistanceSquared(right.lnglat());
+}
+
+
 constexpr float kBreakageDistance = 2000.f;  // meters
 constexpr float kClosestDistance = 0.f;  // meters
 
@@ -148,20 +180,6 @@ class MapMatching: public ViterbiSearch<Candidate>
   mutable std::unordered_map<CandidatePairId, uint32_t> label_idx_cache_;
 
  protected:
-  inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
-                                   const CandidateWrapper<Candidate>& right) const
-  {
-    const auto &left_pt = left.candidate().pathlocation().vertex(),
-              &right_pt = right.candidate().pathlocation().vertex();
-    return left_pt.Distance(right_pt);
-  }
-
-  inline float GreatCircleDistance(const Measurement& left,
-                                   const Measurement& right) const
-  {
-    return left.lnglat().Distance(right.lnglat());
-  }
-
   float TransitionCost(const CandidateWrapper<Candidate>& left,
                        const CandidateWrapper<Candidate>& right) const override
   {
