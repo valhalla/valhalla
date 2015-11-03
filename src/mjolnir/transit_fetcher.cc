@@ -423,8 +423,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
-      uniques.lock.lock(); //TODO: remove this once we can ask for routes in parallel
-      response = curler(*request + key_param, "routes");
+      //TODO: remove this once we can ask for routes in parallel and dont need a heinously large return timeout
+      uniques.lock.lock();
+      response = curler(*request + key_param, "routes", 120000);
       uniques.lock.unlock();
       //copy routes in, keeping track of routeid to route index
       get_routes(tile, routes, websites, response);
