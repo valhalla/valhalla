@@ -142,6 +142,81 @@ void Benchmark()
 }
 
 
+void TestRoutePathIterator()
+{
+  LabelSet labelset(100);
+  // Construct two poor trees:
+  //  0         1
+  //         3     4
+  //        5
+  labelset.put(0);
+  labelset.put(1);
+  labelset.put(2);
+  labelset.put(3, GraphId(), 0.f, 1.f, 0.f, 1);
+  labelset.put(4, GraphId(), 0.f, 1.f, 0.f, 1);
+  labelset.put(5, GraphId(), 0.f, 1.f, 0.f, 3);
+  labelset.put(6, GraphId(), 0.f, 1.f, 0.f, 3);
+
+  RoutePathIterator the_end(&labelset, kInvalidLabelIndex),
+      it0(&labelset, 0),
+      it1(&labelset, 1),
+      it2(&labelset, 2),
+      it3(&labelset, 3),
+      it4(&labelset, 4),
+      it5(&labelset, 5),
+      it6(&labelset, 6);
+
+  if (it0 == the_end) {
+    throw std::runtime_error("TestRoutePathIterator: wrong equality testing");
+  }
+
+  if (&(*it0) != &labelset.label(0)) {
+    throw std::runtime_error("TestRoutePathIterator: wrong dereferencing");
+  }
+
+  if (it0->predecessor != kInvalidLabelIndex) {
+    throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer");
+  }
+
+  if (++it0 != the_end) {
+    throw std::runtime_error("TestRoutePathIterator: wrong prefix increment");
+  }
+
+  if (std::next(it3) != it1) {
+    throw std::runtime_error("TestRoutePathIterator: wrong forwarding");
+  }
+
+  if (std::next(it3, 2) != the_end) {
+    throw std::runtime_error("TestRoutePathIterator: wrong forwarding 2");
+  }
+
+  if (std::next(it4) != it1) {
+    throw std::runtime_error("TestRoutePathIterator: wrong forwarding 3");
+  }
+
+  if (std::next(it4, 2) != the_end) {
+    throw std::runtime_error("TestRoutePathIterator: wrong forwarding 4");
+  }
+
+  if (it4->predecessor != 1) {
+    throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer 2");
+  }
+
+  if (it5++ != it5) {
+    throw std::runtime_error("TestRoutePathIterator: wrong postfix increment");
+  }
+
+  if (++it5 != it1) {
+    throw std::runtime_error("TestRoutePathIterator: wrong prefix increment");
+  }
+
+  std::advance(it5, 1);
+  if (it5 != the_end) {
+    throw std::runtime_error("TestRoutePathIterator: wrong advance");
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   TestAddRemove();
@@ -149,6 +224,8 @@ int main(int argc, char *argv[])
   TestSimulation();
 
   Benchmark();
+
+  TestRoutePathIterator();
 
   return 0;
 }

@@ -456,3 +456,81 @@ find_shortest_path(GraphReader& reader,
 
   return results;
 }
+
+
+class RoutePathIterator:
+    public std::iterator<std::forward_iterator_tag,
+                         const Label>
+{
+ public:
+  RoutePathIterator(const LabelSet* labelset,
+                    uint32_t label_idx)
+      : labelset_(labelset),
+        label_idx_(label_idx)
+  {
+  }
+
+  // Construct a tail iterator
+  RoutePathIterator(const LabelSet* labelset)
+      : labelset_(labelset),
+        label_idx_(kInvalidLabelIndex)
+  {
+  }
+
+  // Construct an invalid iterator
+  RoutePathIterator()
+      : labelset_(nullptr),
+        label_idx_(kInvalidLabelIndex)
+  {
+  }
+
+  // Postfix increment
+  RoutePathIterator& operator++(int)
+  {
+    if (label_idx_ != kInvalidLabelIndex) {
+      label_idx_ = labelset_->label(label_idx_).predecessor;
+    }
+    return *this;
+  }
+
+  // Prefix increment
+  RoutePathIterator operator++()
+  {
+    operator++(1);  // Call postfix increment
+    return RoutePathIterator(labelset_, label_idx_);
+  }
+
+  bool operator==(const RoutePathIterator& other) const
+  {
+    return labelset_ == other.labelset_
+        && label_idx_ == other.label_idx_;
+  }
+
+  bool operator!=(const RoutePathIterator& other) const
+  {
+    return !(*this == other);
+  }
+
+  // Derefrencnce
+  std::iterator_traits<RoutePathIterator>::reference
+  operator*() const
+  {
+    return labelset_->label(label_idx_);
+  }
+
+  // Pointer dereference
+  std::iterator_traits<RoutePathIterator>::pointer
+  operator->() const
+  {
+    return &(labelset_->label(label_idx_));
+  }
+
+  bool is_valid() const
+  {
+    return labelset_ != nullptr;
+  }
+
+ private:
+  const LabelSet* labelset_;
+  uint32_t label_idx_;
+};
