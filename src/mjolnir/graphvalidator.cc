@@ -141,7 +141,6 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Get the tile
       GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
-      const GraphTile signtile(tile_hierarchy, tile_id);
 
       // Bin the edges keeping a list of ones that need to go to other tiles
       /*if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
@@ -167,17 +166,34 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, node++) {
         NodeInfoBuilder nodeinfo = tilebuilder.node(i);
-        const NodeInfo* signnodeinfo = signtile.node(i);
+        auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
-        // Go through directed edges and update data
-        uint32_t idx = signnodeinfo->edge_index();
+        // Go through directed edges and validate/update data
+        uint32_t idx = ni->edge_index();
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
-          const DirectedEdge* signdirectededge = signtile.directededge(idx);
+          auto de = tile->directededge(idx);
+
           // Validate signs
-          if (signdirectededge->exitsign()) {
-            if (signtile.GetSigns(idx).size() == 0) {
+          if (de->exitsign()) {
+            if (tile->GetSigns(idx).size() == 0) {
               LOG_ERROR("Directed edge marked as having signs but none found");
+            }
+          }
+
+          // Validate access restrictions. TODO - should check modes as well
+          uint32_t ar_modes = de->access_restriction();
+          if (ar_modes) {
+            auto res = tile->GetAccessRestrictions(idx);
+            if (res.size() == 0) {
+              LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
+                        std::to_string(tile_id.level()));
+            } else {
+              for (auto r : res) {
+                if (r.edgeindex() != idx) {
+                  LOG_ERROR("Access restriction edge index does not match idx");
+                }
+              }
             }
           }
 
