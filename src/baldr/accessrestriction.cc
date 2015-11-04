@@ -5,12 +5,12 @@ namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-AccessRestriction::AccessRestriction(const uint32_t edgeid,
+AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
                                      const uint32_t dow,
                                      const uint64_t value)
-  : edgeid_(edgeid),
+  : edgeindex_(edgeindex),
     type_(static_cast<uint32_t>(type)),
     modes_(modes),
     days_of_week_(dow),
@@ -18,8 +18,8 @@ AccessRestriction::AccessRestriction(const uint32_t edgeid,
 }
 
 // Get the internal edge Id.
-uint32_t AccessRestriction::edgeid() const {
-  return edgeid_;
+uint32_t AccessRestriction::edgeindex() const {
+  return edgeindex_;
 }
 
 // Get the type
@@ -44,7 +44,7 @@ uint64_t AccessRestriction::value() const {
 
 // operator < - for sorting. Sort by route Id.
 bool AccessRestriction::operator < (const AccessRestriction& other) const {
-  return edgeid() < other.edgeid();
+  return edgeindex() < other.edgeindex();
 }
 
 }

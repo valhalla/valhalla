@@ -664,54 +664,53 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
   }
 }
 
-// Get the access restriction given its directed edge Id
-std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t edgeid) const {
+// Get the access restriction given its directed edge index
+std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
 
   std::vector<AccessRestriction> restrictions;
   uint32_t count = header_->access_restriction_count();
-   if (count == 0) {
-     return restrictions;
-   }
+  if (count == 0) {
+    return restrictions;
+  }
 
-   // Access restriction are sorted by edge Id.
-   // Binary search to find a access restriction with matching edge Id.
-   int32_t low = 0;
-   int32_t high = count-1;
-   int32_t mid;
-   bool found = false;
-   while (low <= high) {
-     mid = (low + high) / 2;
-     if (access_restrictions_[mid].edgeid() == edgeid) {
-       found = true;
-       break;
-     }
-     if (edgeid < access_restrictions_[mid].edgeid() ) {
-       high = mid - 1;
-     } else {
-       low = mid + 1;
-     }
-   }
+  // Access restriction are sorted by edge Id.
+  // Binary search to find a access restriction with matching edge Id.
+  int32_t low = 0;
+  int32_t high = count-1;
+  int32_t mid;
+  bool found = false;
+  while (low <= high) {
+    mid = (low + high) / 2;
+    if (access_restrictions_[mid].edgeindex() == idx) {
+      found = true;
+      break;
+    }
+    if (idx < access_restrictions_[mid].edgeindex() ) {
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
 
-   if (!found) {
-     return restrictions;
-   }
+  if (!found) {
+    return restrictions;
+  }
 
-   // Back up while prior is equal (or at the beginning)
-   while (mid > 0 && access_restrictions_[mid - 1].edgeid() == edgeid) {
-     mid--;
-   }
+  // Back up while prior is equal (or at the beginning)
+  while (mid > 0 && access_restrictions_[mid - 1].edgeindex() == idx) {
+    mid--;
+  }
 
-   // Add restrictions
-   while (access_restrictions_[mid].edgeid() == edgeid && mid < count) {
-     restrictions.emplace_back(access_restrictions_[mid]);
-     mid++;
-   }
+  // Add restrictions
+  while (access_restrictions_[mid].edgeindex() == idx && mid < count) {
+    restrictions.emplace_back(access_restrictions_[mid]);
+    mid++;
+  }
 
-   if (restrictions.size() == 0) {
-     LOG_ERROR("No restrictions found for edgeid = " + std::to_string(edgeid));
-
-     return restrictions;
-   }
+  if (restrictions.size() == 0) {
+    LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
+    return restrictions;
+  }
 }
 
 // Get the array of graphids for this cell

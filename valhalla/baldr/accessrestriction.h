@@ -12,17 +12,17 @@ namespace baldr {
 class AccessRestriction {
  public:
   // Constructor with arguments
-  AccessRestriction(const uint32_t edgeid,
+  AccessRestriction(const uint32_t edgeindex,
                     const AccessType type,
                     const uint32_t modes,
                     const uint32_t dow,
                     const uint64_t value);
 
   /**
-   * Get the internal edge Id.
-   * @return  Returns the internal edge Id.
+   * Get the internal edge index to which this access restriction applies.
+   * @return  Returns the internal edge index.
    */
-  uint32_t edgeid() const;
+  uint32_t edgeindex() const;
 
   /**
    * Get the type of the restriction.  See graphconstants.h
@@ -57,7 +57,8 @@ class AccessRestriction {
 
  protected:
 
-  uint64_t edgeid_      : 22;  // Directed edge Id.
+  uint64_t edgeindex_   : 22;  // Directed edge index. Max index is:
+                               // kMaxTileEdgeCount in nodeinfo.h: 22 bits.
   uint64_t type_        : 6;   // Access type
   uint64_t modes_       : 12;  // Mode(s) this access restriction applies to
   uint64_t days_of_week_ : 7;  // Days of week this access restriction applies
