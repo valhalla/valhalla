@@ -446,8 +446,6 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
-      if(tile.stop_pairs_size() > 100000)
-        break;
     }
 
     //remember who dangles
