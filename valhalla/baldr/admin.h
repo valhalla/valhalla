@@ -13,11 +13,20 @@ constexpr size_t kCountryIso = 2;
 
 /**
  * Holds a generic admin with state and country iso and text. Text is stored
- * in the GraphTile text list and the offset is stored within the admin.  This
- * is a read only base class.
+ * in the GraphTile text list and the offset is stored within the admin.
  */
 class Admin {
  public:
+
+  /**
+   * Constructor.
+   * @param  country_offset  Offset to country name in text records.
+   * @param  state_offset    Offset to state name in text records.
+   * @param  country_iso     Country ISO string.
+   * @param  state_iso       State ISO string.
+   */
+  Admin(const uint32_t country_offset, const uint32_t state_offset,
+        const std::string& country_iso, const std::string& state_iso);
 
   /**
    * Get the country ISO3166-1 code.
@@ -47,10 +56,6 @@ class Admin {
   uint32_t country_offset() const;
 
  protected:
-  // Constructor
-  Admin(const uint32_t country_offset, const uint32_t state_offset,
-        const std::string& country_iso, const std::string& state_iso);
-
   uint32_t country_offset_;         // country name offset
   uint32_t state_offset_;           // state name offset
   char country_iso_[kCountryIso];   // country ISO3166-1

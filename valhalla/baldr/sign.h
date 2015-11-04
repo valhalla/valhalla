@@ -11,7 +11,7 @@ namespace baldr {
  * Holds a generic sign with type and text. Text is stored in the GraphTile
  * text list and the offset is stored within the sign. The directed edge index
  * within the tile is also stored so that signs can be found via the directed
- * edge index. This is a read only base class.
+ * edge index.
  */
 class Sign {
  public:

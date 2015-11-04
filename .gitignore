@@ -41,6 +41,7 @@ valhalla/baldr/date_time_zonespec.h
 test-suite.log
 test-driver
 test/location
+test/admin
 test/datetime
 test/directededge
 test/graphid

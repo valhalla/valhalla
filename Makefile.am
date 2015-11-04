@@ -126,6 +126,7 @@ bin_PROGRAMS =
 # tests
 check_PROGRAMS = \
 	test/location \
+	test/admin \
 	test/datetime \
 	test/directededge \
 	test/graphid \
@@ -147,6 +148,9 @@ check_PROGRAMS = \
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_admin_SOURCES = test/admin.cc test/test.cc
+test_admin_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_admin_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
 test_datetime_SOURCES = test/datetime.cc test/test.cc
 test_datetime_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_datetime_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
