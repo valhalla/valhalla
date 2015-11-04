@@ -109,8 +109,8 @@ void DirectedEdgeBuilder::set_edgeinfo_offset(const uint32_t offset) {
   }
 }
 
-// Set the access.
-void DirectedEdgeBuilder::set_access(const uint32_t access) {
+// Set the modes which have access restrictions on this edge.
+void DirectedEdgeBuilder::set_access_restriction(const uint32_t access) {
   access_restriction_ = access;
 }
 

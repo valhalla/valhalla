@@ -84,6 +84,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->transfercount(); i++) {
     transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
   }
+
+  // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
     access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
   }
@@ -628,8 +630,15 @@ DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
 // Gets a non-const access restriction from existing tile data.
 AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
   if (idx < header_->access_restriction_count()) {
-    return access_restriction_builder_[idx];
+    return access_restrictions_[idx];
   }
+  throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
+}
+
+// Gets an access restriction builder at the specified index.
+AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx) {
+  if (idx < header_->access_restriction_count())
+     return access_restriction_builder_[idx];
   throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
 }
 

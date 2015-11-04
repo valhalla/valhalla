@@ -306,24 +306,25 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
   return mask;
 }
 
-// Add an access restriction
-void AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
+// Add an access restriction. Returns the mode(s) that have access
+// restrictions on this edge.
+uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
                         const OSMData& osmdata, GraphTileBuilder& graphtile) {
-
   auto res = osmdata.access_restrictions.equal_range(wayid);
   if (res.first == osmdata.access_restrictions.end()) {
-    return;
+    return 0;
   }
 
-  // TODO - support modes, days of week, 64 bit values (with different
-  // meanings based on restriction type).
-  uint32_t modes;  // TODO!!!
+  // TODO - support modes (for now is just truck), days of week,
+  // 64 bit values (with different meanings based on restriction type).
+  uint32_t modes = kTruckAccess;
   uint32_t days_of_week = kAllDaysOfWeek;
   for (auto r = res.first; r != res.second; ++r) {
     AccessRestriction access_restriction(edgeid, r->second.type(), modes,
                                          days_of_week, r->second.value());
     graphtile.AddAccessRestriction(access_restriction);
   }
+  return modes;
 }
 
 // Walk the shape and look for any empty tiles that the shape intersects
@@ -638,9 +639,16 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             directededge.set_exitsign(true);
           }
 
-          //add restrictions..For now only storing access restrictions for trucks
-//          if (directededge.forwardaccess() & kTruckAccess)
-//            AddAccessRestrictions(idx, w.way_id(), osmdata, graphtile);
+          // Add restrictions..For now only storing access restrictions for trucks
+          // TODO - support more than one mode
+          uint32_t ar_modes = kTruckAccess;
+          if (directededge.forwardaccess() & kTruckAccess) {
+            uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(),
+                                      osmdata, graphtile);
+            if (ar_modes) {
+              directededge.set_access_restriction(ar_modes);
+            }
+          }
 
           // Increment the directed edge index within the tile
           idx++;

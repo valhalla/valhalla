@@ -253,6 +253,14 @@ class GraphTileBuilder : public baldr::GraphTile {
   AccessRestriction& accessrestriction(const size_t idx);
 
   /**
+   * Gets an access restriction builder at the specified index.
+   * @param  idx  Index of the restriction (index in the array, not the
+   *              directed edge index) within the tile.
+   * @return  Returns a reference to the access restriction (builder).
+   */
+  AccessRestriction& accessrestriction_builder(const size_t idx);
+
+  /**
    * Gets a non-const sign (builder) from existing tile data.
    * @param  idx  Index of the sign (index in the array, not the
    *              directed edge index) within the tile.

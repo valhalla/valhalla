@@ -401,7 +401,16 @@ void AddShortcutEdges(
       std::vector<std::string> names = tile->GetNames(
           directededge->edgeinfo_offset());
 
-      // TODO - should not be any signs
+      // Add any access restriction records. TODO - make sure we don't contract
+      // across edges with different restrictions.
+      if (newedge.access_restriction()) {
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
+        for (const auto& res : restrictions) {
+          tilebuilder.AddAccessRestriction(
+              AccessRestriction(tilebuilder.directededges().size(),
+                  res.type(), res.modes(), res.days_of_week(), res.value()));
+        }
+      }
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -520,7 +529,6 @@ void FormTilesInNewLevel(
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
     GraphId nodea, nodeb;
-    std::vector<AccessRestriction> access_restrictions;
     for (const auto& newnode : newtile) {
       // Get the node in the base level
       const GraphTile* tile = info.graphreader_.GetGraphTile(newnode.basenode);
@@ -576,14 +584,16 @@ void FormTilesInNewLevel(
             tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
           }
 
-          // Get the restrictions from the base directed edge - update the
-          // edge index to be the current directed edge Id
-          std::vector<AccessRestriction> restrictions =
-              tile->GetAccessRestrictions(oldedgeid.id());
-          if (restrictions.size()) {
-            for (const auto& res : restrictions)
-              access_restrictions.emplace_back(tilebuilder.directededges().size(),
-                  res.type(), res.modes(), res.days_of_week(), res.value());
+          // Get access restrictions from the base directed edge. Add these to
+          // the list of access restrictions in the new tile. Update the
+          // edge index in the restriction to be the current directed edge Id
+          if (oldedge.access_restriction()) {
+            auto restrictions = tile->GetAccessRestrictions(oldedgeid.id());
+            for (const auto& res : restrictions) {
+              tilebuilder.AddAccessRestriction(
+                  AccessRestriction(tilebuilder.directededges().size(),
+                     res.type(), res.modes(), res.days_of_week(), res.value()));
+            }
           }
 
           // Get edge info, shape, and names from the old tile and add
@@ -625,9 +635,6 @@ void FormTilesInNewLevel(
       // Increment node Id and edgeindex
       nodeid++;
     }
-
-    // Add access restrictions
-    tilebuilder.AddAccessRestrictions(access_restrictions);
 
     // Store the new tile
     tilebuilder.StoreTileData();
@@ -672,28 +679,25 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
+  uint32_t signidx = 0;
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
+  uint32_t signcount = existinghdr.signcount();
 
-//  uint32_t nextresidx = (tilebuilder.header()->restrictioncount() > 0) ?
-//      tilebuilder.accessrestriction(0).edgeid() : existinghdr.directededgecount() + 1;
+  // Get the directed edge index of the first access restriction.
+  uint32_t residx = 0;
+  uint32_t nextresidx = (tilebuilder.header()->access_restriction_count() > 0) ?
+      tilebuilder.accessrestriction(0).edgeindex() : existinghdr.directededgecount() + 1;
+  uint32_t rescount = existinghdr.access_restriction_count();
 
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
-
-  uint32_t signidx = 0;
-  uint32_t signcount = existinghdr.signcount();
-
-//  uint32_t residx = 0;
-//  uint32_t rescount = existinghdr.restrictioncount();
-
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
   std::vector<SignBuilder> signs;
   std::vector<AccessRestriction> restrictions;
-
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
 
@@ -721,18 +725,18 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
       // Add any restrictions that use this idx - increment their index by the
       // number of added edges
-/*      while (idx == nextresidx && residx < rescount) {
-
+      while (idx == nextresidx && residx < rescount) {
         AccessRestriction res = tilebuilder.accessrestriction(residx);
-        AccessRestriction r(idx+n,res.type(),res.value());
+        AccessRestriction r(idx+n, res.type(), res.modes(),
+                            res.days_of_week(), res.value());
         restrictions.emplace_back(std::move(r));
 
         // Increment to the next restriction and update nextresidx
         residx++;
         nextresidx = (residx >= rescount) ?
-              0 : tilebuilder.accessrestriction(residx).edgeid();
+              0 : tilebuilder.accessrestriction(residx).edgeindex();
       }
-*/
+
       // Increment index
       idx++;
     }
