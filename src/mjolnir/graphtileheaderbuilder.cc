@@ -108,7 +108,7 @@ void GraphTileHeaderBuilder::set_complex_restriction_offset(const uint32_t offse
 }
 
 // Sets the edge bin offsets
-void GraphTileHeaderBuilder::set_edge_cell_offsets(const uint32_t (&offsets)[kCellCount + 1]) {
+void GraphTileHeaderBuilder::set_edge_cell_offsets(const uint32_t (&offsets)[kCellCount]) {
   memcpy(cell_offsets_, offsets, sizeof(cell_offsets_));
 }
 

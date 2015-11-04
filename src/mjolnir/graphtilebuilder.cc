@@ -104,6 +104,8 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(admins_[i].state_offset());
   }
 
+  //TODO: get the edge cells
+
   // Create an ordered set of edge info offsets
   std::set<uint32_t> edge_info_offsets;
   for (auto& diredge : directededges_builder_) {
@@ -232,6 +234,8 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
                admins_builder_.size() * sizeof(AdminInfoBuilder));
 
+    //TODO: write the edge cells
+
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
 
@@ -308,6 +312,8 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
 
+    //TODO: write the edge cells
+
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
 
@@ -379,6 +385,8 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
     // Write the existing admins
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
+
+    //TODO: write the edge cells
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
@@ -680,6 +688,14 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   }
 
   //TODO: worry about edges in the builder?
+
+  //throw the binned edge offsets back into the header
+  uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
+  for(size_t i = 1 ; i < kCellCount; ++i)
+    offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
+  auto hdr = static_cast<const GraphTileHeaderBuilder&>(*header_);
+  hdr.set_edge_cell_offsets(offsets);
+  memcpy(header_, reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeaderBuilder));
 
   return strays;
 }
