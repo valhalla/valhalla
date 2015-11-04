@@ -443,7 +443,33 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kTransitTransfer: {
-        FormTransitTransferInstruction(maneuver);
+        // Set depart instruction
+        maneuver.set_depart_instruction(
+            std::move(FormDepartInstruction(maneuver)));
+
+        // Set verbal depart instruction
+        maneuver.set_verbal_depart_instruction(
+            std::move(FormVerbalDepartInstruction(maneuver)));
+
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormTransitTransferInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalTransitTransferInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(FormVerbalPostTransitionTransitInstruction(maneuver)));
+
+        // Set arrive instruction
+        maneuver.set_arrive_instruction(
+            std::move(FormArriveInstruction(maneuver)));
+
+        // Set verbal arrive instruction
+        maneuver.set_verbal_arrive_instruction(
+            std::move(FormVerbalArriveInstruction(maneuver)));
         break;
       }
       case TripDirections_Maneuver_Type_kPostTransitConnectionDestination: {

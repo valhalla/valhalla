@@ -552,14 +552,17 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
   switch (trip_path_->GetDestination().side_of_street()) {
     case TripPath_Location_SideOfStreet_kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationLeft);
+      LOG_TRACE("ManeuverType=DESTINATION_LEFT");
       break;
     }
     case TripPath_Location_SideOfStreet_kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestinationRight);
+      LOG_TRACE("ManeuverType=DESTINATION_RIGHT");
       break;
     }
     default: {
       maneuver.set_type(TripDirections_Maneuver_Type_kDestination);
+      LOG_TRACE("ManeuverType=DESTINATION");
     }
   }
 
@@ -587,14 +590,17 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   switch (trip_path_->GetOrigin().side_of_street()) {
     case TripPath_Location_SideOfStreet_kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartLeft);
+      LOG_TRACE("ManeuverType=START_LEFT");
       break;
     }
     case TripPath_Location_SideOfStreet_kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStartRight);
+      LOG_TRACE("ManeuverType=START_RIGHT");
       break;
     }
     default: {
       maneuver.set_type(TripDirections_Maneuver_Type_kStart);
+      LOG_TRACE("ManeuverType=START");
     }
   }
 
@@ -671,6 +677,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     if (curr_edge
         && (curr_edge->travel_mode() == TripPath_TravelMode_kPublicTransit)) {
       maneuver.set_type(TripDirections_Maneuver_Type_kTransitConnectionStart);
+      LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_START");
       auto* node = trip_path_->GetEnhancedNode(node_index);
       maneuver.set_transit_connection_stop(
           TransitStop(node->transit_stop_info().type(),
@@ -912,15 +919,18 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
           && (maneuver.transit_route_info().block_id == prev_edge->transit_route_info().block_id())
           && (maneuver.transit_route_info().trip_id != prev_edge->transit_route_info().trip_id())) {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransitRemainOn);
+        LOG_TRACE("ManeuverType=TRANSIT_REMAIN_ON");
       }
       // Process transit transfer at same platform
       else {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransitTransfer);
+        LOG_TRACE("ManeuverType=TRANSIT_TRANSFER");
       }
     }
     // Process simple transit
     else {
         maneuver.set_type(TripDirections_Maneuver_Type_kTransit);
+        LOG_TRACE("ManeuverType=TRANSIT");
     }
   }
   // Process post transit connection destination
@@ -946,18 +956,20 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
         maneuver.set_type(TripDirections_Maneuver_Type_kStayRight);
+        LOG_TRACE("ManeuverType=FORK_STAY_RIGHT");
         break;
       }
       case Maneuver::RelativeDirection::kKeepLeft:
       case Maneuver::RelativeDirection::kLeft: {
         maneuver.set_type(TripDirections_Maneuver_Type_kStayLeft);
+        LOG_TRACE("ManeuverType=FORK_STAY_LEFT");
         break;
       }
       default: {
         maneuver.set_type(TripDirections_Maneuver_Type_kStayStraight);
+        LOG_TRACE("ManeuverType=FORK_STAY_STRAIGHT");
       }
     }
-    LOG_TRACE("ManeuverType=FORK");
   }
   // Process Internal Intersection
   else if (maneuver.internal_intersection()) {
@@ -976,11 +988,13 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
+        LOG_TRACE("ManeuverType=EXIT_RIGHT");
         break;
       }
       case Maneuver::RelativeDirection::kKeepLeft:
       case Maneuver::RelativeDirection::kLeft: {
         maneuver.set_type(TripDirections_Maneuver_Type_kExitLeft);
+        LOG_TRACE("ManeuverType=EXIT_LEFT");
         break;
       }
       default: {
@@ -990,8 +1004,9 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
                     static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kExitRight);
+        LOG_TRACE("ManeuverType=EXIT_RIGHT");
       }
-    }LOG_TRACE("ManeuverType=EXIT");
+    }
   }
   // Process on ramp
   else if (maneuver.ramp() && prev_edge && !prev_edge->IsHighway()) {
@@ -999,15 +1014,18 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
       case Maneuver::RelativeDirection::kKeepRight:
       case Maneuver::RelativeDirection::kRight: {
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
+        LOG_TRACE("ManeuverType=RAMP_RIGHT");
         break;
       }
       case Maneuver::RelativeDirection::kKeepLeft:
       case Maneuver::RelativeDirection::kLeft: {
         maneuver.set_type(TripDirections_Maneuver_Type_kRampLeft);
+        LOG_TRACE("ManeuverType=RAMP_LEFT");
         break;
       }
       case Maneuver::RelativeDirection::kKeepStraight: {
         maneuver.set_type(TripDirections_Maneuver_Type_kRampStraight);
+        LOG_TRACE("ManeuverType=RAMP_STRAIGHT");
         break;
       }
       default: {
@@ -1017,8 +1035,9 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver) {
                     static_cast<int>(maneuver.begin_relative_direction())));
         // TODO: determine how to handle, for now set to right
         maneuver.set_type(TripDirections_Maneuver_Type_kRampRight);
+        LOG_TRACE("ManeuverType=RAMP_RIGHT");
       }
-    }LOG_TRACE("ManeuverType=RAMP");
+    }
   }
   // Process merge
   else if (curr_edge->IsHighway() && prev_edge && prev_edge->ramp()) {
@@ -1048,6 +1067,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
   switch (Turn::GetType(maneuver.turn_degree())) {
     case Turn::Type::kStraight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kContinue);
+      LOG_TRACE("ManeuverType=CONTINUE");
       if (trip_path_) {
         auto* man_begin_edge = trip_path_->GetCurrEdge(
             maneuver.begin_node_index());
@@ -1065,9 +1085,11 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
           if (maneuver.begin_relative_direction()
               == Maneuver::RelativeDirection::kKeepRight) {
             maneuver.set_type(TripDirections_Maneuver_Type_kSlightRight);
+            LOG_TRACE("ManeuverType=SLIGHT_RIGHT");
           } else if (maneuver.begin_relative_direction()
               == Maneuver::RelativeDirection::kKeepLeft) {
             maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+            LOG_TRACE("ManeuverType=SLIGHT_LEFT");
           }
         }
         ////////////////////////////////////////////////////////////////////
@@ -1095,6 +1117,7 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
 //          LOG_INFO("common_base_names->size()=" + std::to_string(common_base_names->size()));
 //          if (common_base_names->empty()) {
 //            maneuver.set_type(TripDirections_Maneuver_Type_kBecomes);
+//            LOG_TRACE("ManeuverType=BECOMES");
 //          }
 //        }
       }
@@ -1106,45 +1129,56 @@ void ManeuversBuilder::SetSimpleDirectionalManeuverType(
     }
     case Turn::Type::kRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kRight);
+      LOG_TRACE("ManeuverType=RIGHT");
       break;
     }
     case Turn::Type::kSharpRight: {
       maneuver.set_type(TripDirections_Maneuver_Type_kSharpRight);
+      LOG_TRACE("ManeuverType=SHARP_RIGHT");
       break;
     }
     case Turn::Type::kReverse: {
       if (maneuver.internal_left_turn_count()
           > maneuver.internal_right_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+        LOG_TRACE("ManeuverType=UTURN_LEFT");
       } else if (maneuver.internal_right_turn_count()
           > maneuver.internal_left_turn_count()) {
         maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+        LOG_TRACE("ManeuverType=UTURN_RIGHT");
       } else if (trip_path_->GetCurrEdge(maneuver.begin_node_index())
           ->drive_on_right()) {
         if (maneuver.turn_degree() < 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+          LOG_TRACE("ManeuverType=UTURN_RIGHT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+          LOG_TRACE("ManeuverType=UTURN_LEFT");
         }
       } else {
         if (maneuver.turn_degree() > 180) {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+          LOG_TRACE("ManeuverType=UTURN_LEFT");
         } else {
           maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+          LOG_TRACE("ManeuverType=UTURN_RIGHT");
         }
       }
       break;
     }
     case Turn::Type::kSharpLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kSharpLeft);
+      LOG_TRACE("ManeuverType=SHARP_LEFT");
       break;
     }
     case Turn::Type::kLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kLeft);
+      LOG_TRACE("ManeuverType=LEFT");
       break;
     }
     case Turn::Type::kSlightLeft: {
       maneuver.set_type(TripDirections_Maneuver_Type_kSlightLeft);
+      LOG_TRACE("ManeuverType=SLIGHT_LEFT");
       break;
     }
   }
@@ -1309,8 +1343,10 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
     // If drive on right then left u-turn
     if (prev_edge->drive_on_right()) {
       maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+      LOG_TRACE("ManeuverType=SIMPLE_UTURN_LEFT");
     } else {
       maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+      LOG_TRACE("ManeuverType=SIMPLE_UTURN_RIGHT");
     }
     return false;
   }
@@ -1319,10 +1355,12 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   // Process pencil point u-turns
   if (IsLeftPencilPointUturn(node_index, prev_edge, curr_edge)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kUturnLeft);
+    LOG_TRACE("ManeuverType=PENCIL_POINT_UTURN_LEFT");
     return false;
   }
   if (IsRightPencilPointUturn(node_index, prev_edge, curr_edge)) {
     maneuver.set_type(TripDirections_Maneuver_Type_kUturnRight);
+    LOG_TRACE("ManeuverType=PENCIL_POINT_UTURN_RIGHT");
     return false;
   }
 
