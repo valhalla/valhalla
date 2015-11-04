@@ -696,7 +696,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfoBuilder> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
-  std::vector<SignBuilder> signs;
+  std::vector<Sign> signs;
   std::vector<AccessRestriction> restrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
     NodeInfoBuilder node = tilebuilder.node(id);
@@ -713,7 +713,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
         if (!has_sign) {
           LOG_ERROR("Signs for this index but directededge says no sign");
         }
-        SignBuilder sign = tilebuilder.sign(signidx);
+        Sign sign = tilebuilder.sign(signidx);
         sign.set_edgeindex(idx + n);
         signs.emplace_back(std::move(sign));
 
@@ -727,9 +727,8 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
       // number of added edges
       while (idx == nextresidx && residx < rescount) {
         AccessRestriction res = tilebuilder.accessrestriction(residx);
-        AccessRestriction r(idx+n, res.type(), res.modes(),
-                            res.days_of_week(), res.value());
-        restrictions.emplace_back(std::move(r));
+        res.set_edgeindex(idx + n);
+        restrictions.emplace_back(std::move(res));
 
         // Increment to the next restriction and update nextresidx
         residx++;

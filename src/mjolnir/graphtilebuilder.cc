@@ -186,7 +186,7 @@ void GraphTileBuilder::StoreTileData() {
             + (route_builder_.size() * sizeof(TransitRoute))
             + (transfer_builder_.size() * sizeof(TransitTransfer))
             + (access_restriction_builder_.size() * sizeof(AccessRestriction))
-            + (signs_builder_.size() * sizeof(SignBuilder))
+            + (signs_builder_.size() * sizeof(Sign))
             + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
 
     header_builder_.set_textlist_offset(
@@ -230,7 +230,7 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
-               signs_builder_.size() * sizeof(SignBuilder));
+               signs_builder_.size() * sizeof(Sign));
 
     // Write the admins
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
@@ -334,7 +334,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
 void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
-                const std::vector<SignBuilder>& signs,
+                const std::vector<Sign>& signs,
                 const std::vector<AccessRestriction>& restrictions) {
   // Get the name of the file
   boost::filesystem::path filename = hierarchy_.tile_dir() + '/' +
@@ -382,7 +382,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
 
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
-               signs.size() * sizeof(SignBuilder));
+               signs.size() * sizeof(Sign));
 
     // Write the existing admins
     file.write(reinterpret_cast<const char*>(&admins_[0]),
@@ -642,15 +642,15 @@ AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx)
   throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
 }
 
-// Gets a non-const sign (builder) from existing tile data.
-SignBuilder& GraphTileBuilder::sign(const size_t idx) {
+// Gets a non-const sign from existing tile data.
+Sign& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
-    return static_cast<SignBuilder&>(signs_[idx]);
+    return signs_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
 // Gets a sign builder at the specified index.
-SignBuilder& GraphTileBuilder::sign_builder(const size_t idx) {
+Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   if (idx < header_->signcount())
     return signs_builder_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
