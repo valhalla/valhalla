@@ -47,7 +47,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 
   // Copy tile header to a builder
   GraphTileHeader existinghdr = *(header_);
-  header_builder_ = static_cast<GraphTileHeaderBuilder&>(existinghdr);
+  header_builder_ = static_cast<GraphTileHeader&>(existinghdr);
 
   // Unique set of offsets into the text list
   std::set<uint32_t> text_offsets;
@@ -178,7 +178,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
-        (sizeof(GraphTileHeaderBuilder))
+        (sizeof(GraphTileHeader))
             + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
             + (departure_builder_.size() * sizeof(TransitDeparture))
@@ -194,7 +194,7 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
-               sizeof(GraphTileHeaderBuilder));
+               sizeof(GraphTileHeader));
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
@@ -257,7 +257,7 @@ void GraphTileBuilder::StoreTileData() {
 }
 
 // Update a graph tile with new header, nodes, and directed edges.
-void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
+void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     const std::vector<NodeInfoBuilder>& nodes,
     const std::vector<DirectedEdgeBuilder>& directededges) {
 
@@ -275,8 +275,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
   if (file.is_open()) {
 
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(&hdr),
-               sizeof(GraphTileHeaderBuilder));
+    file.write(reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
@@ -331,7 +330,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
 }
 
 // Update a graph tile with new header, nodes, directed edges, and signs.
-void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
+void GraphTileBuilder::Update(const GraphTileHeader& hdr,
                 const std::vector<NodeInfoBuilder>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
                 const std::vector<Sign>& signs,
@@ -349,8 +348,7 @@ void GraphTileBuilder::Update(const GraphTileHeaderBuilder& hdr,
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(&hdr),
-               sizeof(GraphTileHeaderBuilder));
+    file.write(reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
@@ -702,9 +700,9 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
   for(size_t i = 1 ; i < kCellCount; ++i)
     offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
-  auto hdr = static_cast<const GraphTileHeaderBuilder&>(*header_);
+  auto hdr = *header_;
   hdr.set_edge_cell_offsets(offsets);
-  memcpy(header_, reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeaderBuilder));
+  memcpy(header_, reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
 
   return strays;
 }

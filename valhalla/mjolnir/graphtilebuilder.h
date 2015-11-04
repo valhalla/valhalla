@@ -17,6 +17,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
@@ -26,7 +27,6 @@
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
-#include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
@@ -71,7 +71,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const GraphTileHeaderBuilder& hdr,
+  void Update(const GraphTileHeader& hdr,
             const std::vector<NodeInfoBuilder>& nodes,
             const std::vector<DirectedEdgeBuilder>& directededges);
 
@@ -85,7 +85,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  signs          Updated list of signs.
    * @param  restrictions   Updated list of access restrictions.
    */
-  void Update(const GraphTileHeaderBuilder& hdr,
+  void Update(const GraphTileHeader& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
               const std::vector<Sign>& signs,
@@ -318,7 +318,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   TileHierarchy hierarchy_;
 
   // Header information for the tile
-  GraphTileHeaderBuilder header_builder_;
+  GraphTileHeader header_builder_;
 
   // List of nodes. This is a fixed size structure so it can be
   // indexed directly.

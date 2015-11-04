@@ -666,16 +666,14 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
   // Copy existing header and update directed edge count and some offsets
   GraphTileHeader existinghdr = *(tilebuilder.header());
-  GraphTileHeaderBuilder hdrbuilder =
-        static_cast<GraphTileHeaderBuilder&>(existinghdr);
-  hdrbuilder.set_directededgecount(
-      existinghdr.directededgecount() + connections.size());
+  GraphTileHeader hdr = existinghdr;
+  hdr.set_directededgecount( existinghdr.directededgecount() + connections.size());
   std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
-  hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
-  hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
+  hdr.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
+  hdr.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed
-  hdrbuilder.set_complex_restriction_offset(existinghdr.complex_restriction_offset());
+  hdr.set_complex_restriction_offset(existinghdr.complex_restriction_offset());
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
@@ -772,19 +770,19 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
     LOG_ERROR("Added " + std::to_string(n) + " directed edges. connections size = " +
               std::to_string(connections.size()));
   }
-  if (signs.size() != hdrbuilder.signcount()) {
+  if (signs.size() != hdr.signcount()) {
     LOG_ERROR("AddConnectionsToBaseTile: sign size = " +
               std::to_string(signs.size()) + " Header says: " +
-              std::to_string(hdrbuilder.signcount()));
+              std::to_string(hdr.signcount()));
   }
-  if (restrictions.size() != hdrbuilder.access_restriction_count()) {
+  if (restrictions.size() != hdr.access_restriction_count()) {
       LOG_ERROR("AddConnectionsToBaseTile: restriction size = " +
                 std::to_string(restrictions.size()) + " Header says: " +
-                std::to_string(hdrbuilder.access_restriction_count()));
+                std::to_string(hdr.access_restriction_count()));
   }
 
   // Write the new file
-  tilebuilder.Update(hdrbuilder, nodes, directededges, signs, restrictions);
+  tilebuilder.Update(hdr, nodes, directededges, signs, restrictions);
 
   LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());

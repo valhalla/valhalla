@@ -49,7 +49,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
-	valhalla/mjolnir/graphtileheaderbuilder.h \
 	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
 	valhalla/mjolnir/uniquenames.h \
@@ -79,7 +78,6 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
-	src/mjolnir/graphtileheaderbuilder.cc \
 	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
 	src/mjolnir/uniquenames.cc \
