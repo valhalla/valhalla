@@ -46,7 +46,6 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
-	valhalla/mjolnir/admininfobuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
@@ -77,7 +76,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
 	src/proto/transit.pb.cc \
-	src/mjolnir/admininfobuilder.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
@@ -140,7 +138,6 @@ transit_fetcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST
 
 # tests
 check_PROGRAMS = \
-	test/admininfobuilder \
 	test/directededgebuilder \
 	test/edgeinfobuilder \
 	test/uniquenames \
@@ -151,9 +148,6 @@ check_PROGRAMS = \
 	test/nodeinfobuilder \
 	test/refs \
 	test/signinfo
-test_admininfobuilder_SOURCES = test/admininfobuilder.cc test/test.cc
-test_admininfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_admininfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
 test_directededgebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

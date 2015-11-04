@@ -17,6 +17,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -29,7 +30,6 @@
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/admininfobuilder.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -277,7 +277,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Gets a const admin builder at specified index.
    * @param  idx  Index of the admin builder in the list.
    */
-  const AdminInfoBuilder& admins_builder(size_t idx);
+  const Admin& admins_builder(size_t idx);
 
   /**
    * Bins the non shortcut non transition edges into the header
@@ -350,7 +350,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<AdminInfoBuilder> admins_builder_;
+  std::vector<Admin> admins_builder_;
 
   // Admin info offset
   std::unordered_map<std::string,size_t> admin_info_offset_map_;

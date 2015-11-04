@@ -187,7 +187,7 @@ void GraphTileBuilder::StoreTileData() {
             + (transfer_builder_.size() * sizeof(TransitTransfer))
             + (access_restriction_builder_.size() * sizeof(AccessRestriction))
             + (signs_builder_.size() * sizeof(Sign))
-            + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
+            + (admins_builder_.size() * sizeof(Admin)));
 
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
@@ -234,7 +234,7 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the admins
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
-               admins_builder_.size() * sizeof(AdminInfoBuilder));
+               admins_builder_.size() * sizeof(Admin));
 
     //TODO: write the edge cells
 
@@ -657,7 +657,7 @@ Sign& GraphTileBuilder::sign_builder(const size_t idx) {
 }
 
 // Gets a const admin builder at specified index.
-const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
+const Admin& GraphTileBuilder::admins_builder(size_t idx) {
   if (idx < admins_builder_.size())
     return admins_builder_.at(idx);
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
