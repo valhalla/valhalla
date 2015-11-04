@@ -20,7 +20,7 @@ namespace valhalla {
 
     class loki_worker_t {
      public:
-      enum ACTION_TYPE {ROUTE, VIAROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY};
+      enum ACTION_TYPE {ROUTE, LOCATE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY};
       loki_worker_t(const boost::property_tree::ptree& config);
       prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info);
       void init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request);
@@ -34,8 +34,9 @@ namespace valhalla {
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter costing_filter;
       valhalla::baldr::GraphReader reader;
-      std::unordered_set<std::string> action_set;
       std::string action_str;
+      std::unordered_map<std::string, size_t> max_locations;
+      std::unordered_map<std::string, float> max_distance;
     };
   }
 }
