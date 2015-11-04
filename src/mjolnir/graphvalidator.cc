@@ -147,9 +147,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
         auto unbinned = tilebuilder.Bin();*/
 
       // Copy existing header. No need to update any counts or offsets.
-      GraphTileHeader existinghdr = *(tilebuilder.header());
       const GraphTileHeaderBuilder hdrbuilder =
-          static_cast<const GraphTileHeaderBuilder&>(existinghdr);
+          static_cast<const GraphTileHeaderBuilder&>(*tilebuilder.header());
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfoBuilder> nodes;
