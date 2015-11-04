@@ -79,23 +79,6 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
                     maneuver.HasBeginStreetNames())));
         break;
       }
-      case TripDirections_Maneuver_Type_kContinue: {
-        // Set instruction
-        maneuver.set_instruction(std::move(FormContinueInstruction(maneuver)));
-
-        // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            std::move(FormVerbalAlertContinueInstruction(maneuver)));
-
-        // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(
-            std::move(
-                FormVerbalContinueInstruction(maneuver,
-                                              directions_options.units())));
-
-        // NOTE: No verbal post transition instruction
-        break;
-      }
       case TripDirections_Maneuver_Type_kSlightRight:
       case TripDirections_Maneuver_Type_kSlightLeft: {
         // Set instruction
@@ -476,11 +459,27 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         FormPostTransitConnectionDestinationInstruction(maneuver);
         break;
       }
+      case TripDirections_Maneuver_Type_kContinue:
       default: {
-        FormContinueInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(std::move(FormContinueInstruction(maneuver)));
+
+        // Set verbal transition alert instruction
+        maneuver.set_verbal_transition_alert_instruction(
+            std::move(FormVerbalAlertContinueInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(
+                FormVerbalContinueInstruction(maneuver,
+                                              directions_options.units())));
+
+        // NOTE: No verbal post transition instruction
         break;
       }
+
     }
+
     // Update previous maneuver
     prev_maneuver = &maneuver;
   }
