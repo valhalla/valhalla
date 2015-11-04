@@ -353,7 +353,19 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionStart: {
-        FormTransitConnectionStartInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormTransitConnectionStartInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(FormVerbalTransitConnectionStartInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
@@ -2762,17 +2774,64 @@ std::string NarrativeBuilder::FormVerbalExitFerryInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormTransitConnectionStartInstruction(
+std::string NarrativeBuilder::FormTransitConnectionStartInstruction(
     Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Enter";
+  // 0 "Enter station."
+  // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
   if (!maneuver.transit_connection_stop().name.empty()) {
-    text_instruction += " the ";
-    text_instruction += maneuver.transit_connection_stop().name;
+    phrase_id = 1;
   }
-  text_instruction += " station.";
-  maneuver.set_instruction(std::move(text_instruction));
+
+  switch (phrase_id) {
+    // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+    case 1: {
+      instruction = (boost::format("Enter the %1% station.")
+          % maneuver.transit_connection_stop().name).str();
+      break;
+    }
+    // 0 "Enter station."
+    default: {
+      instruction = "Enter station.";
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
+    Maneuver& maneuver) {
+  // 0 "Enter station."
+  // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  if (!maneuver.transit_connection_stop().name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Enter the <TRANSIT_CONNECTION_STOP> station."
+    case 1: {
+      instruction = (boost::format("Enter the %1% station.")
+          % maneuver.transit_connection_stop().name).str();
+      break;
+    }
+    // 0 "Enter station."
+    default: {
+      instruction = "Enter station.";
+      break;
+    }
+  }
+
+  return instruction;
 }
 
 void NarrativeBuilder::FormTransitConnectionTransferInstruction(
