@@ -396,15 +396,21 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
+  uint32_t signidx = 0;
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
     tilebuilder.sign(0).edgeindex() : currentedges.size() + 1;
+  uint32_t signcount = tilebuilder.header()->signcount();
+
+  // Get the directed edge index of the first access restriction.
+  uint32_t residx = 0;
+  uint32_t nextresidx = (tilebuilder.header()->access_restriction_count() > 0) ?
+      tilebuilder.accessrestriction(0).edgeindex() : currentedges.size() + 1;;
+  uint32_t rescount = tilebuilder.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
   // connections from a node to a transit stop. Update each nodes edge index.
   uint32_t nodeid = 0;
   uint32_t added_edges = 0;
-  uint32_t signidx = 0;
-  uint32_t signcount = tilebuilder.header()->signcount();
   for (auto& nb : currentnodes) {
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
@@ -424,6 +430,20 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
         signidx++;
         nextsignidx = (signidx >= signcount) ?
              0 : tilebuilder.sign(signidx).edgeindex();
+      }
+
+      // Add any restrictions that use this idx - increment their index by the
+      // number of added edges
+      while (idx == nextresidx && residx < rescount) {
+        if (!currentedges[idx].access_restriction()) {
+          LOG_ERROR("Access restrictions for this index but directededge says none");
+        }
+        tilebuilder.accessrestriction_builder(residx).set_edgeindex(idx + added_edges);
+
+        // Increment to the next restriction and update nextresidx
+        residx++;
+        nextresidx = (residx >= rescount) ?
+              0 : tilebuilder.accessrestriction(residx).edgeindex();
       }
     }
 

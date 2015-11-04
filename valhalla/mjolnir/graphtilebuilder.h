@@ -17,6 +17,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
@@ -24,14 +25,11 @@
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
-
 #include <valhalla/mjolnir/graphtileheaderbuilder.h>
 #include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 #include <valhalla/mjolnir/admininfobuilder.h>
-
-#include "signbuilder.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -90,7 +88,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   void Update(const GraphTileHeaderBuilder& hdr,
               const std::vector<NodeInfoBuilder>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
-              const std::vector<SignBuilder>& signs,
+              const std::vector<Sign>& signs,
               const std::vector<AccessRestriction>& restrictions);
 
   /**
@@ -266,14 +264,14 @@ class GraphTileBuilder : public baldr::GraphTile {
    *              directed edge index) within the tile.
    * @return  Returns a reference to the sign builder.
    */
-  SignBuilder& sign(const size_t idx);
+  Sign& sign(const size_t idx);
 
   /**
    * Get the sign builder at the specified index.
    * @param  idx  Index of the sign builder.
    * @return  Returns a reference to the sign builder.
    */
-  SignBuilder& sign_builder(const size_t idx);
+  Sign& sign_builder(const size_t idx);
 
   /**
    * Gets a const admin builder at specified index.
@@ -348,7 +346,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<SignBuilder> signs_builder_;
+  std::vector<Sign> signs_builder_;
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
