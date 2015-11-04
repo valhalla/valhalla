@@ -659,6 +659,37 @@ const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
 std::list<GraphId> GraphTileBuilder::Bin() {
   std::list<GraphId> strays;
 
+  //each edge please
+  std::unordered_set<uint64_t> ids;
+  for(const DirectedEdge* edge = directededges_; edge < directededges_ + header_->directededgecount(); ++edge) {
+    //dont bin these
+    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
+      continue;
+
+    //already binned this
+    auto id = ids.find(edge->edgeinfo_offset());
+    if(id != ids.cend())
+      continue;
+
+    //crack open that shape
+    ids.emplace(edge->edgeinfo_offset());
+    auto info = edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = info->shape();
+    bool uncontained;
+    auto intersected_bins = binner_.intersect(shape, uncontained);
+    GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
+
+    //was it outside this tile
+    if(uncontained)
+      strays.emplace_back(edge_id);
+
+    //add keep the bin information
+    for(const auto& bin : intersected_bins)
+      bins_[bin].push_back(edge_id);
+  }
+
+  //TODO: worry about edges in the builder?
+
   return strays;
 }
 
