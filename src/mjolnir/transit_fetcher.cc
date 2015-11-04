@@ -122,7 +122,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     }
     //for each tile in the polygon figure out how heavy it is and keep track of it
     for(auto i = min_c; i <= max_c; ++i)
-      for(auto j = min_r; j <= min_r; ++j)
+      for(auto j = min_r; j <= max_r; ++j)
         tiles.emplace(GraphId(tile_level.tiles.TileId(i,j), tile_level.level, 0));
   }
   //we want slowest to build tiles first, routes query is slowest so we weight by that
@@ -142,7 +142,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     auto total = curler(request, "meta.total").get<size_t>("meta.total");
     if(total > 0) {
       prioritized.push(weighted_tile_t{tile, total});
-      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + ":" + std::to_string(total));
+      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " has " + std::to_string(total) +  " routes");
     }
   }
   LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " transit tiles in " +
