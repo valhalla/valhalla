@@ -27,7 +27,6 @@ namespace {
 
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> PATH_TO_ACTION{
     {"/route", loki_worker_t::ROUTE},
-    {"/viaroute", loki_worker_t::VIAROUTE},
     {"/locate", loki_worker_t::LOCATE},
     {"/one_to_many", loki_worker_t::ONE_TO_MANY},
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
