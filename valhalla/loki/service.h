@@ -34,12 +34,9 @@ namespace valhalla {
       sif::CostFactory<sif::DynamicCost> factory;
       sif::EdgeFilter costing_filter;
       valhalla::baldr::GraphReader reader;
-      std::unordered_set<std::string> action_set;
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
-      std::unordered_map<std::string, size_t> matrix_max_locations;
-      std::unordered_map<std::string, float> matrix_max_distance;
     };
   }
 }
