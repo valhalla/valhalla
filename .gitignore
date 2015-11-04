@@ -28,7 +28,6 @@ m4/lt~obsolete.m4
 libtool
 
 # built objects
-srtmtest
 *.o
 .deps/
 .dirstamp
