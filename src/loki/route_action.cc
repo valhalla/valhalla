@@ -15,10 +15,10 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  void check_locations(const std::vector<Location>& locations, const size_t max_locations) {
+  void check_locations(const size_t location_count, const size_t max_locations) {
     //check that location size does not exceed max.
-    if (locations.size() > max_locations)
-      throw std::runtime_error("Number of locations exceeds the max location limit.");
+    if (location_count > max_locations)
+      throw std::runtime_error("Exceeded max locations of " + std::to_string(max_locations) + ".");
   }
 
   void check_distance(const GraphReader& reader, const std::vector<Location>& locations, float max_distance){
@@ -48,7 +48,7 @@ namespace valhalla {
 
     worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
       auto costing = request.get<std::string>("costing");
-      check_locations(locations, max_locations.find(costing)->second);
+      check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);
 
       //correlate the various locations to the underlying graph

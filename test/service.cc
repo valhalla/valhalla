@@ -73,8 +73,8 @@ namespace {
     {400, std::string("Locations are in unconnected regions. Go check/edit the map at osm.org")},
     {400, std::string("No costing method found for 'yak'")},
     {400, std::string("No costing method found for 'yak'")},
-    {400, std::string("Number of locations exceeds the max location limit.")},
-    {400, std::string("Number of locations exceeds the max location limit.")}
+    {400, std::string("Exceeded max locations of 20.")},
+    {400, std::string("Exceeded max locations of 20.")}
   };
 
 
