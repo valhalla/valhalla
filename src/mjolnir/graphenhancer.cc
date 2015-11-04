@@ -1100,6 +1100,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // this will be our updated list of restrictions.
     // need to do some conversions on weights; therefore, we must update
     // the restriction list.
+    uint32_t ar_before = tilebuilder.header()->access_restriction_count();
     std::vector<AccessRestriction> access_restrictions;
 
     // Get the admin polygons. If only one exists for the tile check if the
@@ -1205,25 +1206,27 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdgeBuilder& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        std::vector<AccessRestriction> restrictions =
-            tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
+        // Update access restrictions
+        if (directededge.access_restriction()) {
+          auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
 
-        // must convert US weight values from short ton (U.S. customary) to metric
-        if (country_code == "US" || country_code == "MM" || country_code == "LR") {
-          for (const auto& res : restrictions) {
-            if (res.type() == AccessType::kMaxWeight ||
-                res.type() == AccessType::kMaxAxleLoad) {
-              access_restrictions.emplace_back(nodeinfo.edge_index()+j,
-                                               res.type(), res.modes(),
-                                               res.days_of_week(),
-                                               std::round(res.value()/1.10231));
-            } else {
-              access_restrictions.emplace_back(res);
+          // Convert US weight values from short ton (U.S. customary) to metric
+          if (country_code == "US" || country_code == "MM" || country_code == "LR") {
+            for (const auto& res : restrictions) {
+              if (res.type() == AccessType::kMaxWeight ||
+                  res.type() == AccessType::kMaxAxleLoad) {
+                access_restrictions.emplace_back(nodeinfo.edge_index()+j,
+                                                 res.type(), res.modes(),
+                                                 res.days_of_week(),
+                                                 std::round(res.value()/1.10231));
+              } else {
+                access_restrictions.emplace_back(res);
+              }
             }
+          } else {
+            for (const auto& res : restrictions)
+              access_restrictions.emplace_back(res);
           }
-        } else {
-          for (const auto& res : restrictions)
-            access_restrictions.emplace_back(res);
         }
 
         auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
@@ -1324,7 +1327,11 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
-//    tilebuilder.AddAccessRestrictions(access_restrictions);
+    // Replace access restrictions
+    if (ar_before != access_restrictions.size()) {
+      LOG_ERROR("Mismatch in access restriction count before and after!");
+    }
+    tilebuilder.AddAccessRestrictions(access_restrictions);
 
     // Write the new file
     lock.lock();
