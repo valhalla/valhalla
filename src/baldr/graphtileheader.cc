@@ -120,10 +120,10 @@ uint32_t GraphTileHeader::complex_restriction_offset() const {
 
 // Get the offset to the given cell in the 5x5 grid.
 std::pair<uint32_t, uint32_t> GraphTileHeader::cell_offset(size_t column, size_t row) const {
-  auto i = row * 5 + column;
-  if(i > kCellCount)
-    throw std::runtime_error("Cell out of bounds");
-  return std::make_pair(cell_offsets_[i], cell_offsets_[i + 1]);
+  auto i = row * kGridDim + column;
+  if(i < kCellCount)
+    return std::make_pair(i == 0 ? 0 : cell_offsets_[i], cell_offsets_[i]);
+  throw std::runtime_error("Cell out of bounds");
 }
 
 }

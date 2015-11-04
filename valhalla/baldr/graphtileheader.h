@@ -196,7 +196,7 @@ class GraphTileHeader {
   uint32_t complex_restriction_offset_; // Offset to complex restriction list
 
   // Offsets for each cell of the 5x5 grid (for search/lookup)
-  uint32_t cell_offsets_[kCellCount + 1];
+  uint32_t cell_offsets_[kCellCount];
 };
 
 }
