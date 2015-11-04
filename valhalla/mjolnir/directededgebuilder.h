@@ -57,10 +57,10 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
   void set_edgeinfo_offset(const uint32_t offset);
 
   /**
-   * Set the restriction or access condition per mode
-   * @param  access  General access conditions
+   * Set the modes which have access restrictions on this edge.
+   * @param  access  Modes with access restrictions.
    */
-  void set_access(const uint32_t access);
+  void set_access_restriction(const uint32_t access);
 
   /**
    * Sets the exit sign flag.
