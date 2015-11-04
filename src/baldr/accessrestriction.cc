@@ -22,6 +22,11 @@ uint32_t AccessRestriction::edgeindex() const {
   return edgeindex_;
 }
 
+// Set the internal edge index to which this access restriction applies.
+void AccessRestriction::set_edgeindex(const uint32_t edgeindex) {
+  edgeindex_ = edgeindex;
+}
+
 // Get the type
 AccessType AccessRestriction::type() const {
   return static_cast<AccessType>(type_);

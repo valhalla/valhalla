@@ -20,9 +20,15 @@ class AccessRestriction {
 
   /**
    * Get the internal edge index to which this access restriction applies.
-   * @return  Returns the internal edge index.
+   * @return  Returns the directed edge index within the tile.
    */
   uint32_t edgeindex() const;
+
+  /**
+   * Set the directed edge index to which this access restriction applies.
+   * @param edgeindex   Edge index.
+   */
+  void set_edgeindex(const uint32_t edgeindex);
 
   /**
    * Get the type of the restriction.  See graphconstants.h

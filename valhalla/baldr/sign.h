@@ -2,10 +2,7 @@
 #define VALHALLA_BALDR_SIGN_H_
 
 #include <stdint.h>
-
 #include <valhalla/midgard/util.h>
-
-using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
@@ -26,6 +23,14 @@ class Sign {
   };
 
   /**
+   * Constructor given arguments.
+   * @param  idx  Directed edge index to which this sign applies.
+   * @param  type Sign type.
+   * @param  text_offset  Offset to text in the names/text table.
+   */
+  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset);
+
+  /**
    * Get the index of the directed edge this sign applies to.
    * @return  Returns the directed edge index (within the same tile
    *          as the sign information).
@@ -33,8 +38,14 @@ class Sign {
   uint32_t edgeindex() const;
 
   /**
+   * Set the directed edge index.
+   * @param  idx  Directed edge index.
+   */
+  void set_edgeindex(const uint32_t idx);
+
+  /**
    * Get the sign type.
-   * @return  Returns the sign type
+   * @return  Returns the sign type.
    */
   Sign::Type type() const;
 
@@ -46,9 +57,6 @@ class Sign {
   uint32_t text_offset() const;
 
  protected:
-  // Constructor
-  Sign(const uint32_t idx, const Sign::Type& type, const uint32_t text_offset);
-
   uint32_t edgeindex_  : 22;     // kMaxTileEdgeCount in nodeinfo.h: 22 bits
   uint32_t type_       :  8;
   uint32_t spare_      :  2;
