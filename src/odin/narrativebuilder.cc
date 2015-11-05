@@ -369,7 +369,20 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionTransfer: {
-        FormTransitConnectionTransferInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(FormTransitConnectionTransferInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(
+                FormVerbalTransitConnectionTransferInstruction(maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kTransitConnectionDestination: {
@@ -2834,17 +2847,64 @@ std::string NarrativeBuilder::FormVerbalTransitConnectionStartInstruction(
   return instruction;
 }
 
-void NarrativeBuilder::FormTransitConnectionTransferInstruction(
+std::string NarrativeBuilder::FormTransitConnectionTransferInstruction(
     Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Transfer at";
+  // 0 "Transfer at station."
+  // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
   if (!maneuver.transit_connection_stop().name.empty()) {
-    text_instruction += " the ";
-    text_instruction += maneuver.transit_connection_stop().name;
+    phrase_id = 1;
   }
-  text_instruction += " station.";
-  maneuver.set_instruction(std::move(text_instruction));
+
+  switch (phrase_id) {
+    // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
+    case 1: {
+      instruction = (boost::format("Transfer at the %1% station.")
+          % maneuver.transit_connection_stop().name).str();
+      break;
+    }
+    // 0 "Transfer at station."
+    default: {
+      instruction = "Transfer at station.";
+      break;
+    }
+  }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormVerbalTransitConnectionTransferInstruction(
+    Maneuver& maneuver) {
+  // 0 "Transfer at station."
+  // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+
+  if (!maneuver.transit_connection_stop().name.empty()) {
+    phrase_id = 1;
+  }
+
+  switch (phrase_id) {
+    // 1 "Transfer at the <TRANSIT_CONNECTION_STOP> station."
+    case 1: {
+      instruction = (boost::format("Transfer at the %1% station.")
+          % maneuver.transit_connection_stop().name).str();
+      break;
+    }
+    // 0 "Transfer at station."
+    default: {
+      instruction = "Transfer at station.";
+      break;
+    }
+  }
+
+  return instruction;
 }
 
 void NarrativeBuilder::FormTransitConnectionDestinationInstruction(
