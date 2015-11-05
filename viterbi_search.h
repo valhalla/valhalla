@@ -146,7 +146,7 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   std::vector<std::vector<Label>> history_;
 
   using State = std::vector<const CANDIDATE_TYPE*>;
-  std::vector<State> unreached_states_;
+  std::vector<State> states_;
 
   std::vector<const CANDIDATE_TYPE*> candidates_;
   std::vector<const CANDIDATE_TYPE*> winners_;
@@ -273,13 +273,13 @@ Time NaiveViterbiSearch<T, Maximize>::AppendState(typename std::vector<T>::const
                                                   typename std::vector<T>::const_iterator end)
 {
   State state;
-  Time time = unreached_states_.size();
+  Time time = states_.size();
   for (auto candidate = begin; candidate != end; candidate++) {
     auto candidate_id = candidates_.size();
     candidates_.push_back(new CANDIDATE_TYPE(candidate_id, time, *candidate));
     state.push_back(candidates_.back());
   }
-  unreached_states_.push_back(state);
+  states_.push_back(state);
   return time;
 }
 
@@ -288,7 +288,7 @@ template <typename T, bool Maximize>
 void NaiveViterbiSearch<T, Maximize>::Clear()
 {
   history_.clear();
-  unreached_states_.clear();
+  states_.clear();
   winners_.clear();
   for (auto candidate_ptr : candidates_) {
     delete candidate_ptr;
@@ -301,7 +301,7 @@ template <typename T, bool Maximize>
 const CANDIDATE_TYPE*
 NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
 {
-  if (unreached_states_.size() <= target) {
+  if (states_.size() <= target) {
     return nullptr;
   }
 
@@ -311,7 +311,7 @@ NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
   }
 
   for (Time time = winners_.size(); time <= target; ++time) {
-    const auto& state = unreached_states_[time];
+    const auto& state = states_[time];
     std::vector<Label> labels;
 
     // Update labels
@@ -348,7 +348,7 @@ NaiveViterbiSearch<T, Maximize>::SearchPath(Time target)
 
   while (path.size() < count) {
     Time time = target - path.size();
-    if (unreached_states_.size() <= time) {
+    if (states_.size() <= time) {
       path.push_back(nullptr);
       continue;
     }
