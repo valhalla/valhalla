@@ -26,8 +26,29 @@ class Measurement {
 };
 
 
-inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
-                                 const CandidateWrapper<Candidate>& right)
+class State
+{
+ public:
+  State(const CandidateId id,
+        const Time time,
+        const Candidate& candidate)
+      : id_(id),
+        time_(time),
+        candidate_(candidate) {
+  }
+  const CandidateId id() const {return id_;}
+  const Time time() const {return time_;}
+  const Candidate& candidate() const {return candidate_;}
+
+ private:
+  const CandidateId id_;
+  const Time time_;
+  const Candidate candidate_;
+};
+
+
+inline float GreatCircleDistance(const State& left,
+                                 const State& right)
 {
   const auto &left_pt = left.candidate().pathlocation().vertex(),
             &right_pt = right.candidate().pathlocation().vertex();
@@ -35,8 +56,8 @@ inline float GreatCircleDistance(const CandidateWrapper<Candidate>& left,
 }
 
 
-inline float GreatCircleDistanceSquared(const CandidateWrapper<Candidate>& left,
-                                        const CandidateWrapper<Candidate>& right)
+inline float GreatCircleDistanceSquared(const State& left,
+                                        const State& right)
 {
   const auto &left_pt = left.candidate().pathlocation().vertex(),
             &right_pt = right.candidate().pathlocation().vertex();
@@ -62,7 +83,7 @@ constexpr float kBreakageDistance = 2000.f;  // meters
 constexpr float kClosestDistance = 0.f;  // meters
 
 
-class MapMatching: public ViterbiSearch<Candidate>
+class MapMatching: public ViterbiSearch<State>
 {
  public:
   MapMatching(float sigma_z,
@@ -103,21 +124,32 @@ class MapMatching: public ViterbiSearch<Candidate>
     transition_cache_.clear();
     labelset_cache_.clear();
     label_idx_cache_.clear();
-    ViterbiSearch<Candidate>::Clear();
+    ViterbiSearch<State>::Clear();
   }
 
+  template <typename candidate_iterator_t>
   Time AppendState(const Measurement& measurement,
-                   const std::vector<Candidate>::const_iterator begin,
-                   const std::vector<Candidate>::const_iterator end)
+                   candidate_iterator_t begin,
+                   candidate_iterator_t end)
   {
-    auto time = ViterbiSearch<Candidate>::AppendState(begin, end);
-    assert(time == measurements_.size());
+    Time time = states_.size();
+
+    // Append to base class
+    std::vector<const State*> column;
+    for (candidate_iterator_t it = begin; it != end; it++) {
+      CandidateId state_id = candidates_.size();
+      candidates_.push_back(new State(state_id, time, *it));
+      column.push_back(candidates_.back());
+    }
+    unreached_states_.push_back(column);
+
+    states_.push_back(column);
     measurements_.push_back(measurement);
-    states_.emplace_back(unreached_states(time));
+
     return time;
   }
 
-  const std::vector<const CandidateWrapper<Candidate>*>&
+  const std::vector<const State*>&
   states(Time time) const
   {
     return states_[time];
@@ -172,7 +204,7 @@ class MapMatching: public ViterbiSearch<Candidate>
   baldr::GraphReader& graphreader_;
   const std::shared_ptr<DynamicCost>* mode_costing_;
   const TravelMode mode_;
-  std::vector<std::vector<const CandidateWrapper<Candidate>*>> states_;
+  std::vector<std::vector<const State*>> states_;
 
   // Caches
   mutable std::unordered_map<CandidatePairId, float> transition_cache_;
@@ -180,8 +212,8 @@ class MapMatching: public ViterbiSearch<Candidate>
   mutable std::unordered_map<CandidatePairId, uint32_t> label_idx_cache_;
 
  protected:
-  float TransitionCost(const CandidateWrapper<Candidate>& left,
-                       const CandidateWrapper<Candidate>& right) const override
+  float TransitionCost(const State& left,
+                       const State& right) const override
   {
     // Use cache
     auto pair = candidateid_make_pair(left.id(), right.id());
@@ -239,9 +271,9 @@ class MapMatching: public ViterbiSearch<Candidate>
     return transition_cache_[pair];
   }
 
-  inline float EmissionCost(const CandidateWrapper<Candidate>& candidate) const override
+  inline float EmissionCost(const State& state) const override
   {
-    return candidate.candidate().sq_distance() * inv_double_sq_sigma_z_;
+    return state.candidate().sq_distance() * inv_double_sq_sigma_z_;
   }
 
   inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
@@ -251,7 +283,7 @@ class MapMatching: public ViterbiSearch<Candidate>
 };
 
 
-std::vector<const CandidateWrapper<Candidate>*>
+std::vector<const State*>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,

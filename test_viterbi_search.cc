@@ -54,17 +54,54 @@ bool operator==(const Candidate& lhs, const Candidate& rhs)
 }
 
 
-class SimpleViterbiSearch: public ViterbiSearch<Candidate>
+class State
 {
+ public:
+  State(CandidateId id,
+        Time time,
+        const Candidate& candidate)
+      : id_(id),
+        time_(time),
+        candidate_(candidate) {
+  }
+  const Time time() const {return time_;}
+  const CandidateId id() const {return id_;}
+  const Candidate& candidate() const {return candidate_;}
+
+ private:
+  const CandidateId id_;
+  const Time time_;
+  const Candidate candidate_;
+};
+
+
+class SimpleViterbiSearch: public ViterbiSearch<State>
+{
+ public:
+  template <typename candidate_iterator_t>
+  Time AppendState(candidate_iterator_t begin, candidate_iterator_t end)
+  {
+    std::vector<const State*> column;
+    Time time = unreached_states_.size();
+    for (auto candidate = begin; candidate != end; candidate++) {
+      auto candidate_id = candidates_.size();
+      candidates_.push_back(new State(candidate_id, time, *candidate));
+      column.push_back(candidates_.back());
+    }
+    unreached_states_.push_back(column);
+    return time;
+  }
+
  protected:
-  float TransitionCost(const CandidateWrapper<Candidate>& left,
-                       const CandidateWrapper<Candidate>& right) const {
+  float TransitionCost(const State& left,
+                       const State& right) const
+  {
     assert(left.time() + 1 == right.time());
     auto right_id = right.candidate().id();
     return left.candidate().transition_cost(right_id);
   }
 
-  float EmissionCost(const CandidateWrapper<Candidate>& candidate) const {
+  float EmissionCost(const State& candidate) const {
     return candidate.candidate().emission_cost();
   }
 
@@ -76,11 +113,26 @@ class SimpleViterbiSearch: public ViterbiSearch<Candidate>
 };
 
 
-class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<Candidate, false>
+class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
 {
+ public:
+  template <typename candidate_iterator_t>
+  Time AppendState(candidate_iterator_t begin, candidate_iterator_t end)
+  {
+    std::vector<const State*> column;
+    Time time = states_.size();
+    for (auto candidate = begin; candidate != end; candidate++) {
+      auto candidate_id = candidates_.size();
+      candidates_.push_back(new State(candidate_id, time, *candidate));
+      column.push_back(candidates_.back());
+    }
+    states_.push_back(column);
+    return time;
+  }
+
  protected:
-  float TransitionCost(const CandidateWrapper<Candidate>& left,
-                       const CandidateWrapper<Candidate>& right) const
+  float TransitionCost(const State& left,
+                       const State& right) const
   {
     assert(left.time() + 1 == right.time());
     auto right_id = right.candidate().id();
@@ -88,7 +140,7 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<Candidate, false>
     return cost < 0.f? kInvalidCost : cost;
   }
 
-  float EmissionCost(const CandidateWrapper<Candidate>& candidate) const
+  float EmissionCost(const State& candidate) const
   {
     auto cost = candidate.candidate().emission_cost();
     return cost < 0.f? kInvalidCost : cost;
@@ -170,7 +222,7 @@ void print_trellis_diagram_vertically(const std::vector<std::vector<Candidate>>&
 }
 
 
-void print_path(const std::vector<const CandidateWrapper<Candidate>*>& path)
+void print_path(const std::vector<const State*>& path)
 {
   for (const auto candidate_ptr : path) {
     if (candidate_ptr) {

@@ -92,7 +92,7 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 
 
 template <typename T>
-void serialize_geometry(const std::vector<const CandidateWrapper<Candidate>*>& path,
+void serialize_geometry(const std::vector<const State*>& path,
                         const MapMatching&mm,
                         Writer<T>& writer)
 {
@@ -111,7 +111,7 @@ void serialize_geometry(const std::vector<const CandidateWrapper<Candidate>*>& p
 
 
 template <typename T>
-void serialize_labels(const CandidateWrapper<Candidate>& state,
+void serialize_labels(const State& state,
                       const MapMatching&mm,
                       Writer<T>& writer)
 {
@@ -148,7 +148,7 @@ void serialize_labels(const CandidateWrapper<Candidate>& state,
 
 
 template <typename T>
-void serialize_state(const CandidateWrapper<Candidate>& state,
+void serialize_state(const State& state,
                      const MapMatching&mm,
                      Writer<T>& writer)
 {
@@ -174,7 +174,7 @@ void serialize_state(const CandidateWrapper<Candidate>& state,
 
 
 template <typename T>
-void serialize_properties(const std::vector<const CandidateWrapper<Candidate>*>& path,
+void serialize_properties(const std::vector<const State*>& path,
                           const MapMatching&mm,
                           Writer<T>& writer)
 {
@@ -195,7 +195,7 @@ void serialize_properties(const std::vector<const CandidateWrapper<Candidate>*>&
 
 
 template <typename T>
-void serialize_path(const std::vector<const CandidateWrapper<Candidate>*>& path,
+void serialize_path(const std::vector<const State*>& path,
                     const MapMatching& mm,
                     Writer<T>& writer)
 {

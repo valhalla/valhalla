@@ -31,24 +31,7 @@ inline CandidateId candidateid_right(CandidatePairId pair)
 }
 
 
-template <typename T>
-class CandidateWrapper final
-{
- public:
-  CandidateWrapper(const CandidateId id, const Time time, const T& candidate)
-      : id_(id), time_(time), candidate_(candidate) {}
-  inline const Time time() const {return time_;}
-  inline const CandidateId id() const {return id_;}
-  inline const T& candidate() const {return candidate_;}
-
- private:
-  Time time_;
-  CandidateId id_;
-  T candidate_;
-};
-
-
-#define CANDIDATE_TYPE CandidateWrapper<T>
+#define CANDIDATE_TYPE T
 
 
 template <typename T>
@@ -113,8 +96,6 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 {
  public:
   ~NaiveViterbiSearch();
-  Time AppendState(typename std::vector<T>::const_iterator begin,
-                   typename std::vector<T>::const_iterator end);
   const CANDIDATE_TYPE* SearchWinner(Time target) override;
   std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
 
@@ -137,6 +118,10 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   }
 
  protected:
+  std::vector<std::vector<const CANDIDATE_TYPE*>> states_;
+  std::vector<const CANDIDATE_TYPE*> candidates_;
+  std::vector<const CANDIDATE_TYPE*> winners_;
+
   virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const override = 0;
   virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const override = 0;
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
@@ -144,12 +129,6 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
  private:
   using Label = LabelTemplate<T>;
   std::vector<std::vector<Label>> history_;
-
-  using State = std::vector<const CANDIDATE_TYPE*>;
-  std::vector<State> states_;
-
-  std::vector<const CANDIDATE_TYPE*> candidates_;
-  std::vector<const CANDIDATE_TYPE*> winners_;
 
   // TODO move it outside?
   void UpdateLabels(std::vector<Label>& labels,
@@ -191,7 +170,7 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   }
 
   // TODO move it outside?
-  std::vector<Label> InitLabels(const State& state,
+  std::vector<Label> InitLabels(const std::vector<const CANDIDATE_TYPE*>& state,
                                 bool use_emission_cost) const
   {
     std::vector<Label> labels;
@@ -265,22 +244,6 @@ template <typename T, bool Maximize>
 NaiveViterbiSearch<T, Maximize>::~NaiveViterbiSearch()
 {
   Clear();
-}
-
-
-template <typename T, bool Maximize>
-Time NaiveViterbiSearch<T, Maximize>::AppendState(typename std::vector<T>::const_iterator begin,
-                                                  typename std::vector<T>::const_iterator end)
-{
-  State state;
-  Time time = states_.size();
-  for (auto candidate = begin; candidate != end; candidate++) {
-    auto candidate_id = candidates_.size();
-    candidates_.push_back(new CANDIDATE_TYPE(candidate_id, time, *candidate));
-    state.push_back(candidates_.back());
-  }
-  states_.push_back(state);
-  return time;
 }
 
 
@@ -394,9 +357,6 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 {
  public:
   ~ViterbiSearch();
-
-  virtual Time AppendState(typename std::vector<T>::const_iterator begin,
-                           typename std::vector<T>::const_iterator end);
   const CANDIDATE_TYPE* SearchWinner(Time time) override;
   const CANDIDATE_TYPE* SearchWinner();
   const CANDIDATE_TYPE* SearchLastWinner(Time time);
@@ -427,14 +387,24 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   const CANDIDATE_TYPE* state(CandidateId id) const;
 
  protected:
+  // candidate id => candidate
+  // Invariant: for each candidate: assert(candidate == candidates_[candidate.id]);
+  std::vector<const CANDIDATE_TYPE*> candidates_;
+
+  // time => winner
+  std::vector<const CANDIDATE_TYPE*> winners_;
+
+  // time => state
+  std::vector<std::vector<const CANDIDATE_TYPE*>> unreached_states_;
+
+  // TODO remove it
+  const std::vector<const CANDIDATE_TYPE*>& unreached_states(Time time) const;
+
   virtual float TransitionCost(const CANDIDATE_TYPE& left, const CANDIDATE_TYPE& right) const override = 0;
   virtual float EmissionCost(const CANDIDATE_TYPE& candidate) const override = 0;
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
-  const std::vector<const CANDIDATE_TYPE*>& unreached_states(Time time) const;
 
  private:
-  using State = std::vector<const CANDIDATE_TYPE*>;
-
   struct Label: public LabelTemplate<T> {
     Label()
         : LabelTemplate<T>(-1.f, nullptr, nullptr) {
@@ -449,18 +419,8 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   // candidate id => label
   std::unordered_map<CandidateId, Label> scanned_labels_;
 
-  // candidate id => candidate
-  // Invariant: for each candidate: assert(candidate == candidates_[candidate.id]);
-  std::vector<const CANDIDATE_TYPE*> candidates_;
-
-  // time => state
-  std::vector<State> unreached_states_;
-
-  // time => winner
-  std::vector<const CANDIDATE_TYPE*> winners_;
-
   // Initialize labels from state and push them into priority queue
-  void InitQueue(const State& state);
+  void InitQueue(const std::vector<const CANDIDATE_TYPE*>& state);
 
   void AddSuccessorsToQueue(const CANDIDATE_TYPE* candidate_ptr);
 
@@ -477,22 +437,6 @@ template <typename T>
 ViterbiSearch<T>::~ViterbiSearch()
 {
   Clear();
-}
-
-
-template <typename T>
-Time ViterbiSearch<T>::AppendState(typename std::vector<T>::const_iterator begin,
-                                   typename std::vector<T>::const_iterator end)
-{
-  State state;
-  Time time = unreached_states_.size();
-  for (auto candidate = begin; candidate != end; candidate++) {
-    auto candidate_id = candidates_.size();
-    candidates_.push_back(new CANDIDATE_TYPE(candidate_id, time, *candidate));
-    state.push_back(candidates_.back());
-  }
-  unreached_states_.push_back(state);
-  return time;
 }
 
 
@@ -554,7 +498,7 @@ ViterbiSearch<T>::SearchLastWinner(Time time)
   if (unreached_states_.empty()) {
     return nullptr;
   }
-  time = std::min(time, unreached_states_.size() - 1);
+  time = std::min(time, static_cast<Time>(unreached_states_.size()) - 1);
   auto candidate = SearchWinner(time);
   return candidate? candidate : FindLastWinner(time);
 }
@@ -613,7 +557,7 @@ void ViterbiSearch<T>::Clear()
 
 
 template <typename T>
-void ViterbiSearch<T>::InitQueue(const ViterbiSearch<T>::State& state)
+void ViterbiSearch<T>::InitQueue(const std::vector<const CANDIDATE_TYPE*>& state)
 {
   queue_.clear();
   for (const auto& candidate_ptr : state) {
