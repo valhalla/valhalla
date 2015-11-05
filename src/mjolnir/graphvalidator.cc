@@ -150,7 +150,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       auto hdrbuilder = *(tilebuilder.header());
 
       // Update nodes and directed edges as needed
-      std::vector<NodeInfoBuilder> nodes;
+      std::vector<NodeInfo> nodes;
       std::vector<DirectedEdgeBuilder> directededges;
 
       // Get this tile
@@ -163,7 +163,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, node++) {
-        NodeInfoBuilder nodeinfo = tilebuilder.node(i);
+        NodeInfo nodeinfo = tilebuilder.node(i);
         auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 

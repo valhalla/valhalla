@@ -385,7 +385,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
   // Move existing nodes and directed edge builder vectors and clear the lists
-  std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
+  std::vector<NodeInfo> currentnodes(std::move(tilebuilder.nodes()));
   tilebuilder.nodes().clear();
   std::vector<DirectedEdgeBuilder> currentedges(std::move(tilebuilder.directededges()));
   tilebuilder.directededges().clear();
@@ -511,7 +511,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
     bool child  = (stop.parent != 0);  // TODO verify if this is sufficient
     bool parent = (stop.type == 1);    // TODO verify if this is sufficient
-    NodeInfoBuilder node(stop.ll(), RoadClass::kServiceOther, access,
+    NodeInfo node(stop.ll(), RoadClass::kServiceOther, access,
                         NodeType::kMultiUseTransitStop, false);
     node.set_child(child);
     node.set_parent(parent);

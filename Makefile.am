@@ -49,7 +49,6 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
-	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
 	valhalla/mjolnir/uniquenames.h \
 	valhalla/mjolnir/ferry_connections.h \
@@ -78,7 +77,6 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
-	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
 	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
@@ -143,7 +141,6 @@ check_PROGRAMS = \
 	test/graphtilebuilder \
 	test/graphbuilder \
 	test/graphparser \
-	test/nodeinfobuilder \
 	test/refs \
 	test/signinfo
 test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
@@ -152,9 +149,6 @@ test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_nodeinfobuilder_SOURCES = test/nodeinfobuilder.cc test/test.cc
-test_nodeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_nodeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
 test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

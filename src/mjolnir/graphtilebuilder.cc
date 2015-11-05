@@ -179,7 +179,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeader))
-            + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
+            + (nodes_builder_.size() * sizeof(NodeInfo))
             + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
             + (departure_builder_.size() * sizeof(TransitDeparture))
             + (stop_builder_.size() * sizeof(TransitStop))
@@ -198,7 +198,7 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
-               nodes_builder_.size() * sizeof(NodeInfoBuilder));
+               nodes_builder_.size() * sizeof(NodeInfo));
 
     // Write the directed edges
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
@@ -258,7 +258,7 @@ void GraphTileBuilder::StoreTileData() {
 
 // Update a graph tile with new header, nodes, and directed edges.
 void GraphTileBuilder::Update(const GraphTileHeader& hdr,
-    const std::vector<NodeInfoBuilder>& nodes,
+    const std::vector<NodeInfo>& nodes,
     const std::vector<DirectedEdgeBuilder>& directededges) {
 
   // Get the name of the file
@@ -279,7 +279,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
-               nodes.size() * sizeof(NodeInfoBuilder));
+               nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
@@ -331,7 +331,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
 // Update a graph tile with new header, nodes, directed edges, and signs.
 void GraphTileBuilder::Update(const GraphTileHeader& hdr,
-                const std::vector<NodeInfoBuilder>& nodes,
+                const std::vector<NodeInfo>& nodes,
                 const std::vector<DirectedEdgeBuilder>& directededges,
                 const std::vector<Sign>& signs,
                 const std::vector<AccessRestriction>& restrictions) {
@@ -352,7 +352,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
-               nodes.size() * sizeof(NodeInfoBuilder));
+               nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
@@ -400,7 +400,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 }
 
 // Get the current list of node builders.
-std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() {
+std::vector<NodeInfo>& GraphTileBuilder::nodes() {
   return nodes_builder_;
 }
 
@@ -597,15 +597,15 @@ void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
   }
 }
 
-// Gets a non-const node (builder) from existing tile data.
-NodeInfoBuilder& GraphTileBuilder::node(const size_t idx) {
+// Gets a non-const node from existing tile data.
+NodeInfo& GraphTileBuilder::node(const size_t idx) {
   if (idx < header_->nodecount())
-    return static_cast<NodeInfoBuilder&>(nodes_[idx]);
+    return nodes_[idx];
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
 // Get the node builder at the specified index.
-NodeInfoBuilder& GraphTileBuilder::node_builder(const size_t idx) {
+NodeInfo& GraphTileBuilder::node_builder(const size_t idx) {
   if (idx < header_->nodecount())
     return nodes_builder_[idx];
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");

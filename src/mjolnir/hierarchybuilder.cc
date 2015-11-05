@@ -536,10 +536,10 @@ void FormTilesInNewLevel(
       // Copy node information
       nodea.Set(tileid, level, nodeid);
       NodeInfo baseni = *(tile->node(newnode.basenode.id()));
-      tilebuilder.nodes().push_back(static_cast<NodeInfoBuilder&>(baseni));
+      tilebuilder.nodes().push_back(baseni);
       const auto& admin = tile->admininfo(baseni.admin_index());
 
-      NodeInfoBuilder& node = tilebuilder.nodes().back();
+      NodeInfo& node = tilebuilder.nodes().back();
       node.set_edge_index(tilebuilder.directededges().size());
       node.set_timezone(baseni.timezone());
       node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
@@ -692,12 +692,12 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
   uint32_t nextconnectionid = connections[0].basenode.id();
-  std::vector<NodeInfoBuilder> nodes;
+  std::vector<NodeInfo> nodes;
   std::vector<DirectedEdgeBuilder> directededges;
   std::vector<Sign> signs;
   std::vector<AccessRestriction> restrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
-    NodeInfoBuilder node = tilebuilder.node(id);
+    NodeInfo node = tilebuilder.node(id);
 
     // Add existing directed edges
     uint32_t idx = node.edge_index();

@@ -198,7 +198,7 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
  */
 void UpdateLinkUse(const GraphTile* tile,
                    const GraphTile* endnodetile,
-                   const NodeInfoBuilder& nodeinfo,
+                   const NodeInfo& nodeinfo,
                    DirectedEdgeBuilder& directededge) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength or there is an exit
@@ -364,7 +364,7 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 // Test if the edge is internal to an intersection.
 bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
                             const GraphId& startnode,
-                            NodeInfoBuilder& startnodeinfo,
+                            NodeInfo& startnodeinfo,
                             DirectedEdgeBuilder& directededge,
                             const uint32_t idx) {
   // Internal intersection edges must be short and cannot be a roundabout
@@ -732,7 +732,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
 bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
                         const DirectedEdgeBuilder& directededge,
                         const DirectedEdge* edges,
-                        const NodeInfoBuilder& node_info,
+                        const NodeInfo& node_info,
                         uint32_t turn_degree) {
   // Logic for drive on right
   if (directededge.drive_on_right()) {
@@ -816,7 +816,7 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
 uint32_t GetStopImpact(uint32_t from, uint32_t to,
                        const DirectedEdgeBuilder& directededge,
                        const DirectedEdge* edges, const uint32_t count,
-                       const NodeInfoBuilder& nodeinfo, uint32_t turn_degree,
+                       const NodeInfo& nodeinfo, uint32_t turn_degree,
                        enhancer_stats& stats) {
 
   ///////////////////////////////////////////////////////////////////////////
@@ -886,7 +886,7 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
 void ProcessEdgeTransitions(const uint32_t idx,
           DirectedEdgeBuilder& directededge, const DirectedEdge* edges,
           const uint32_t ntrans, uint32_t* headings,
-          const NodeInfoBuilder& nodeinfo,
+          const NodeInfo& nodeinfo,
           enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
@@ -1127,7 +1127,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
-      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
+      NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
@@ -1169,7 +1169,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // Second pass - add admin information and edge transition information.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
-      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
+      NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),

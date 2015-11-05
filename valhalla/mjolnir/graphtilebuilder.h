@@ -27,7 +27,6 @@
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
-#include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
 
@@ -72,7 +71,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param directededges Updated list of edges.
    */
   void Update(const GraphTileHeader& hdr,
-            const std::vector<NodeInfoBuilder>& nodes,
+            const std::vector<NodeInfo>& nodes,
             const std::vector<DirectedEdgeBuilder>& directededges);
 
   /**
@@ -86,7 +85,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  restrictions   Updated list of access restrictions.
    */
   void Update(const GraphTileHeader& hdr,
-              const std::vector<NodeInfoBuilder>& nodes,
+              const std::vector<NodeInfo>& nodes,
               const std::vector<DirectedEdgeBuilder>& directededges,
               const std::vector<Sign>& signs,
               const std::vector<AccessRestriction>& restrictions);
@@ -95,7 +94,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
-  std::vector<NodeInfoBuilder>& nodes();
+  std::vector<NodeInfo>& nodes();
 
   /**
    * Gets the current list of directed edge (builders).
@@ -215,18 +214,18 @@ class GraphTileBuilder : public baldr::GraphTile {
                     const std::string& country_iso, const std::string& state_iso);
 
   /**
-   * Gets a builder for a node from an existing tile.
+   * Gets a node from an existing tile.
    * @param  idx  Index of the node within the tile.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfoBuilder& node(const size_t idx);
+  NodeInfo& node(const size_t idx);
 
   /**
-   * Get the node builder at the specified index.
+   * Get the node at the specified index.
    * @param  idx  Index of the node builder.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfoBuilder& node_builder(const size_t idx);
+  NodeInfo& node_builder(const size_t idx);
 
   /**
    * Gets a builder for a directed edge from existing tile data.
@@ -322,7 +321,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of nodes. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<NodeInfoBuilder> nodes_builder_;
+  std::vector<NodeInfo> nodes_builder_;
 
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
