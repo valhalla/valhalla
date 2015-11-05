@@ -50,6 +50,24 @@ void TestAddRemove()
   if (!adjlist2.empty()) {
     throw std::runtime_error("TestAddRemove: expect list to be empty");
   }
+
+  AdjacencyList adjlist3(10);
+  adjlist3.add(1, 100);
+  if (!adjlist3.empty()) {
+    throw std::runtime_error("TestAddRemove: 100 should be added");
+  }
+  adjlist3.add(1, 10);
+  if (!adjlist3.empty()) {
+    throw std::runtime_error("TestAddRemove: 10 shouldn't be added");
+  }
+  adjlist3.add(1, 9.99);
+  if (adjlist3.empty()) {
+    throw std::runtime_error("TestAddRemove: 9.99 should be added");
+  }
+  adjlist3.add(1, 9);
+  if (adjlist3.empty()) {
+    throw std::runtime_error("TestAddRemove: 9 should be added");
+  }
 }
 
 
