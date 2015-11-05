@@ -39,18 +39,18 @@ namespace {
   void start_service(zmq::context_t& context) {
     //server
     std::thread server(std::bind(&http_server_t::serve,
-      http_server_t(context, "ipc://test_skadi_server", "ipc://test_skadi_proxy_upstream", "ipc://test_skadi_results")));
+      http_server_t(context, "ipc:///tmp/test_skadi_server", "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_results")));
     server.detach();
 
     //load balancer
     std::thread proxy(std::bind(&proxy_t::forward,
-      proxy_t(context, "ipc://test_skadi_proxy_upstream", "ipc://test_skadi_proxy_out")));
+      proxy_t(context, "ipc:///tmp/test_skadi_proxy_upstream", "ipc:///tmp/test_skadi_proxy_out")));
     proxy.detach();
 
     //service worker
     boost::property_tree::ptree config;
-    config.add("skadi.service.proxy", "ipc://test_skadi_proxy");
-    config.add("httpd.service.loopback", "ipc://test_skadi_results");
+    config.add("skadi.service.proxy", "ipc:///tmp/test_skadi_proxy");
+    config.add("httpd.service.loopback", "ipc:///tmp/test_skadi_results");
     config.add("additional_data.elevation", "test/data/");
     config.add("service_limits.max_shape", "100");
     config.add("service_limits.min_resample", "10");
@@ -67,7 +67,7 @@ namespace {
     //client makes requests and gets back responses in a batch fashion
     auto request = requests.cbegin();
     std::string request_str;
-    http_client_t client(context, "ipc://test_skadi_server",
+    http_client_t client(context, "ipc:///tmp/test_skadi_server",
       [&request, &request_str]() {
         //we dont have any more requests so bail
         if(request == requests.cend())
