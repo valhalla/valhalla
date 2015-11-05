@@ -180,7 +180,7 @@ void GraphTileBuilder::StoreTileData() {
     header_builder_.set_edgeinfo_offset(
         (sizeof(GraphTileHeader))
             + (nodes_builder_.size() * sizeof(NodeInfo))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+            + (directededges_builder_.size() * sizeof(DirectedEdge))
             + (departure_builder_.size() * sizeof(TransitDeparture))
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
@@ -202,7 +202,7 @@ void GraphTileBuilder::StoreTileData() {
 
     // Write the directed edges
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
-               directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
+               directededges_builder_.size() * sizeof(DirectedEdge));
 
     // Sort and write the transit departures
     std::sort(departure_builder_.begin(), departure_builder_.end());
@@ -259,7 +259,7 @@ void GraphTileBuilder::StoreTileData() {
 // Update a graph tile with new header, nodes, and directed edges.
 void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     const std::vector<NodeInfo>& nodes,
-    const std::vector<DirectedEdgeBuilder>& directededges) {
+    const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
   boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
@@ -283,7 +283,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
-               directededges.size() * sizeof(DirectedEdgeBuilder));
+               directededges.size() * sizeof(DirectedEdge));
 
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
@@ -332,7 +332,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 // Update a graph tile with new header, nodes, directed edges, and signs.
 void GraphTileBuilder::Update(const GraphTileHeader& hdr,
                 const std::vector<NodeInfo>& nodes,
-                const std::vector<DirectedEdgeBuilder>& directededges,
+                const std::vector<DirectedEdge>& directededges,
                 const std::vector<Sign>& signs,
                 const std::vector<AccessRestriction>& restrictions) {
   // Get the name of the file
@@ -356,7 +356,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
-               directededges.size() * sizeof(DirectedEdgeBuilder));
+               directededges.size() * sizeof(DirectedEdge));
 
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
@@ -405,7 +405,7 @@ std::vector<NodeInfo>& GraphTileBuilder::nodes() {
 }
 
 // Gets the current list of directed edge (builders).
-std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() {
+std::vector<DirectedEdge>& GraphTileBuilder::directededges() {
   return directededges_builder_;
 }
 
@@ -611,15 +611,15 @@ NodeInfo& GraphTileBuilder::node_builder(const size_t idx) {
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
-// Gets a non-const directed edge (builder) from existing tile data.
-DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
+// Gets a non-const directed edge from existing tile data.
+DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
   if (idx < header_->directededgecount())
-    return static_cast<DirectedEdgeBuilder&>(directededges_[idx]);
+    return directededges_[idx];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Get the directed edge builder at the specified index.
-DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
+DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
   if (idx < header_->directededgecount())
     return directededges_builder_[idx];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");

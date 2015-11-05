@@ -610,10 +610,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             throw std::runtime_error("GeoAttributes cached object should be there!");
 
           // Add a directed edge and get a reference to it
-          graphtile.directededges().emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
-                                                speed, truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                                n, has_signal, restrictions, bike_network);
-          DirectedEdgeBuilder& directededge = graphtile.directededges().back();
+          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                        speed, truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                        n, has_signal, restrictions, bike_network);
+          graphtile.directededges().emplace_back(de);
+          DirectedEdge& directededge = graphtile.directededges().back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));

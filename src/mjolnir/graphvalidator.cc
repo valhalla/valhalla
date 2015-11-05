@@ -151,7 +151,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
-      std::vector<DirectedEdgeBuilder> directededges;
+      std::vector<DirectedEdge> directededges;
 
       // Get this tile
       lock.lock();
@@ -195,8 +195,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             }
           }
 
-          DirectedEdgeBuilder& directededge = tilebuilder.directededge(
-              nodeinfo.edge_index() + j);
+          DirectedEdge& directededge = tilebuilder.directededge(
+                    nodeinfo.edge_index() + j);
+
           // Road Length and some variables for statistics
           float tempLength;
           bool validLength = false;

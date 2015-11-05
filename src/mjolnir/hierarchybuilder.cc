@@ -384,9 +384,7 @@ void AddShortcutEdges(
         IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
 
       // Form a shortcut edge.
-      //TODO: this seems really dangerous, we need a virtual destructor in directededge
-      //then we need to do dynamic_cast<const DirectedEdgeBuilder&>(*directededge);
-      DirectedEdgeBuilder newedge = static_cast<const DirectedEdgeBuilder&>(*directededge);
+      DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
       // Get the shape for this edge. If this initial directed edge is not
@@ -565,9 +563,7 @@ void FormTilesInNewLevel(
             && !directededge->is_shortcut()) {
           // Copy the directed edge information and update end node,
           // edge data offset, and opp_index
-          DirectedEdge oldedge = *directededge;
-          DirectedEdgeBuilder newedge =
-              static_cast<DirectedEdgeBuilder&>(oldedge);
+          DirectedEdge newedge = *directededge;
 
           // Set the end node for this edge. Opposing edge indexes
           // get set in graph optimizer so set to 0 here.
@@ -576,7 +572,7 @@ void FormTilesInNewLevel(
           newedge.set_opp_index(0);
 
           // Get signs from the base directed edge
-          if (oldedge.exitsign()) {
+          if (directededge->exitsign()) {
             std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
             if (signs.size() == 0) {
               LOG_ERROR("Base edge should have signs, but none found");
@@ -587,7 +583,7 @@ void FormTilesInNewLevel(
           // Get access restrictions from the base directed edge. Add these to
           // the list of access restrictions in the new tile. Update the
           // edge index in the restriction to be the current directed edge Id
-          if (oldedge.access_restriction()) {
+          if (directededge->access_restriction()) {
             auto restrictions = tile->GetAccessRestrictions(oldedgeid.id());
             for (const auto& res : restrictions) {
               tilebuilder.AddAccessRestriction(
@@ -623,7 +619,7 @@ void FormTilesInNewLevel(
 
       // Add the downward transition edge.
       // TODO - what access for downward transitions
-      DirectedEdgeBuilder downwardedge;
+      DirectedEdge downwardedge;
       downwardedge.set_endnode(newnode.basenode);
       downwardedge.set_trans_down(true);
       downwardedge.set_all_forward_access();
@@ -668,7 +664,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   GraphTileHeader existinghdr = *(tilebuilder.header());
   GraphTileHeader hdr = existinghdr;
   hdr.set_directededgecount( existinghdr.directededgecount() + connections.size());
-  std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
+  std::size_t addedsize = connections.size() * sizeof(DirectedEdge);
   hdr.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
   hdr.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
@@ -693,7 +689,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
   uint32_t n = 0;
   uint32_t nextconnectionid = connections[0].basenode.id();
   std::vector<NodeInfo> nodes;
-  std::vector<DirectedEdgeBuilder> directededges;
+  std::vector<DirectedEdge> directededges;
   std::vector<Sign> signs;
   std::vector<AccessRestriction> restrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
@@ -749,7 +745,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
       // Append a new directed edge that forms the connection.
       // TODO - what access do we allow on upward transitions?
-      DirectedEdgeBuilder edgeconnection;
+      DirectedEdge edgeconnection;
       edgeconnection.set_trans_up(true);
       edgeconnection.set_endnode(connections[n].newnode);
       edgeconnection.set_all_forward_access();

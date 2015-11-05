@@ -72,7 +72,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void Update(const GraphTileHeader& hdr,
             const std::vector<NodeInfo>& nodes,
-            const std::vector<DirectedEdgeBuilder>& directededges);
+            const std::vector<DirectedEdge>& directededges);
 
   /**
    * Update a graph tile with new header, nodes, directed edges, signs,
@@ -86,7 +86,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    */
   void Update(const GraphTileHeader& hdr,
               const std::vector<NodeInfo>& nodes,
-              const std::vector<DirectedEdgeBuilder>& directededges,
+              const std::vector<DirectedEdge>& directededges,
               const std::vector<Sign>& signs,
               const std::vector<AccessRestriction>& restrictions);
 
@@ -100,7 +100,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Gets the current list of directed edge (builders).
    * @return  Returns the directed edge builders.
    */
-  std::vector<DirectedEdgeBuilder>& directededges();
+  std::vector<DirectedEdge>& directededges();
 
   /**
    * Add a transit departure.
@@ -232,14 +232,14 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a reference to the directed edge builder.
    */
-  DirectedEdgeBuilder& directededge(const size_t idx);
+  DirectedEdge& directededge(const size_t idx);
 
   /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
    */
-  DirectedEdgeBuilder& directededge_builder(const size_t idx);
+  DirectedEdge& directededge_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -325,7 +325,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<DirectedEdgeBuilder> directededges_builder_;
+  std::vector<DirectedEdge> directededges_builder_;
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time

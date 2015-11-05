@@ -134,7 +134,6 @@ transit_fetcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST
 
 # tests
 check_PROGRAMS = \
-	test/directededgebuilder \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
@@ -143,9 +142,6 @@ check_PROGRAMS = \
 	test/graphparser \
 	test/refs \
 	test/signinfo
-test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
-test_directededgebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
