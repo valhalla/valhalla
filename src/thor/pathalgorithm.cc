@@ -174,7 +174,6 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
-    GraphId current_tile = node.Tile_Base();
 
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
@@ -259,18 +258,13 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float dist = 0.0f;
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
-        if (directededge->endnode().Tile_Base() == current_tile) {
-          sortcost += astarheuristic_.Get(
-              tile->node(directededge->endnode())->latlng(), dist);
-        } else {
-          // Get tile at the end node. Skip if tile not found.
-          const GraphTile* t2 = graphreader.GetGraphTile(directededge->endnode());
-          if (t2 == nullptr) {
-            continue;
-          }
-          sortcost += astarheuristic_.Get(
-                    t2->node(directededge->endnode())->latlng(), dist);
+        const GraphTile* t2 = directededge->leaves_tile() ?
+            graphreader.GetGraphTile(directededge->endnode()) : tile;
+        if (t2 == nullptr) {
+          continue;
         }
+        sortcost += astarheuristic_.Get(
+                    t2->node(directededge->endnode())->latlng(), dist);
       }
 
       // Add to the adjacency list and edge labels.

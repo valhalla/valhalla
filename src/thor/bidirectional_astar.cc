@@ -181,9 +181,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
       }
 
-      // TODO - remove when leaves_tile is ready
-      GraphId current_tile = node.Tile_Base();
-
       // Expand from end node in forward direction.
       uint32_t shortcuts = 0;
       GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -229,9 +226,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
 
         // Get end node tile (skip if tile is not found) and opposing edge Id
-        // TODO - replace with directededge leaves_tile
-        // const GraphTile* t2 = directededge->leaves_tile() ?
-        const GraphTile* t2 = (directededge->endnode().Tile_Base() != current_tile) ?
+        const GraphTile* t2 = directededge->leaves_tile() ?
             graphreader.GetGraphTile(directededge->endnode()) : tile;
         if (t2 == nullptr) {
           continue;
@@ -311,9 +306,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
       }
 
-      // TODO - remove when leaves_tile is ready
-      GraphId current_tile2 = node.Tile_Base();
-
       // Get the opposing predecessor directed edge
       const DirectedEdge* opp_pred_edge = tile2->directededge(
               nodeinfo->edge_index() + pred2.opp_index());
@@ -345,9 +337,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
 
         // Get opposing edge Id and end node tile
-        // TODO - replace with directededge leaves_tile when ready
-        // const GraphTile* t2 = directededge->leaves_tile() ?
-        const GraphTile* t2 = (directededge->endnode().Tile_Base() != current_tile2) ?
+        const GraphTile* t2 = directededge->leaves_tile() ?
              graphreader.GetGraphTile(directededge->endnode()) : tile2;
         if (t2 == nullptr) {
           continue;

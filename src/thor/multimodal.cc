@@ -292,9 +292,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         newcost -= p->second;
       }
 
-      // Skip if the end node tile is not found
-      const GraphTile* endtile;
-      if ((endtile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+      // Get the end node, skip if the end node tile is not found
+      const GraphTile* endtile = (directededge->leaves_tile()) ?
+          graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (endtile == nullptr) {
         continue;
       }
 
