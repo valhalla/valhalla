@@ -220,12 +220,20 @@ void TestRoutePathIterator()
     throw std::runtime_error("TestRoutePathIterator: wrong dereferencing pointer 2");
   }
 
-  if (it5++ != it5) {
+  if ((it5++)->predecessor != 3) {
     throw std::runtime_error("TestRoutePathIterator: wrong postfix increment");
+  }
+
+  if (it5 != it3) {
+    throw std::runtime_error("TestRoutePathIterator: wrong after postfix increment");
   }
 
   if (++it5 != it1) {
     throw std::runtime_error("TestRoutePathIterator: wrong prefix increment");
+  }
+
+  if (it5 != it1) {
+    throw std::runtime_error("TestRoutePathIterator: wrong after prefix increment");
   }
 
   std::advance(it5, 1);

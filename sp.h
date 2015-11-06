@@ -485,7 +485,18 @@ class RoutePathIterator:
   }
 
   // Postfix increment
-  RoutePathIterator& operator++(int)
+  RoutePathIterator operator++(int)
+  {
+    if (label_idx_ != kInvalidLabelIndex) {
+      auto clone = *this;
+      label_idx_ = labelset_->label(label_idx_).predecessor;
+      return clone;
+    }
+    return *this;
+  }
+
+  // Prefix increment
+  RoutePathIterator& operator++()
   {
     if (label_idx_ != kInvalidLabelIndex) {
       label_idx_ = labelset_->label(label_idx_).predecessor;
@@ -493,17 +504,10 @@ class RoutePathIterator:
     return *this;
   }
 
-  // Prefix increment
-  RoutePathIterator operator++()
-  {
-    operator++(1);  // Call postfix increment
-    return RoutePathIterator(labelset_, label_idx_);
-  }
-
   bool operator==(const RoutePathIterator& other) const
   {
-    return labelset_ == other.labelset_
-        && label_idx_ == other.label_idx_;
+    return label_idx_ == other.label_idx_
+        && labelset_ == other.labelset_;
   }
 
   bool operator!=(const RoutePathIterator& other) const
