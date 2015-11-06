@@ -17,6 +17,8 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -25,11 +27,8 @@
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/tilehierarchy.h>
 
-#include <valhalla/mjolnir/graphtileheaderbuilder.h>
-#include <valhalla/mjolnir/nodeinfobuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/admininfobuilder.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -71,9 +70,9 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const GraphTileHeaderBuilder& hdr,
-            const std::vector<NodeInfoBuilder>& nodes,
-            const std::vector<DirectedEdgeBuilder>& directededges);
+  void Update(const GraphTileHeader& hdr,
+            const std::vector<NodeInfo>& nodes,
+            const std::vector<DirectedEdge>& directededges);
 
   /**
    * Update a graph tile with new header, nodes, directed edges, signs,
@@ -85,9 +84,9 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param  signs          Updated list of signs.
    * @param  restrictions   Updated list of access restrictions.
    */
-  void Update(const GraphTileHeaderBuilder& hdr,
-              const std::vector<NodeInfoBuilder>& nodes,
-              const std::vector<DirectedEdgeBuilder>& directededges,
+  void Update(const GraphTileHeader& hdr,
+              const std::vector<NodeInfo>& nodes,
+              const std::vector<DirectedEdge>& directededges,
               const std::vector<Sign>& signs,
               const std::vector<AccessRestriction>& restrictions);
 
@@ -95,13 +94,13 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
-  std::vector<NodeInfoBuilder>& nodes();
+  std::vector<NodeInfo>& nodes();
 
   /**
    * Gets the current list of directed edge (builders).
    * @return  Returns the directed edge builders.
    */
-  std::vector<DirectedEdgeBuilder>& directededges();
+  std::vector<DirectedEdge>& directededges();
 
   /**
    * Add a transit departure.
@@ -215,32 +214,32 @@ class GraphTileBuilder : public baldr::GraphTile {
                     const std::string& country_iso, const std::string& state_iso);
 
   /**
-   * Gets a builder for a node from an existing tile.
+   * Gets a node from an existing tile.
    * @param  idx  Index of the node within the tile.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfoBuilder& node(const size_t idx);
+  NodeInfo& node(const size_t idx);
 
   /**
-   * Get the node builder at the specified index.
+   * Get the node at the specified index.
    * @param  idx  Index of the node builder.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfoBuilder& node_builder(const size_t idx);
+  NodeInfo& node_builder(const size_t idx);
 
   /**
    * Gets a builder for a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a reference to the directed edge builder.
    */
-  DirectedEdgeBuilder& directededge(const size_t idx);
+  DirectedEdge& directededge(const size_t idx);
 
   /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
    */
-  DirectedEdgeBuilder& directededge_builder(const size_t idx);
+  DirectedEdge& directededge_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -277,7 +276,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * Gets a const admin builder at specified index.
    * @param  idx  Index of the admin builder in the list.
    */
-  const AdminInfoBuilder& admins_builder(size_t idx);
+  const Admin& admins_builder(size_t idx);
 
   /**
    * Bins the non shortcut non transition edges into the header
@@ -318,15 +317,15 @@ class GraphTileBuilder : public baldr::GraphTile {
   TileHierarchy hierarchy_;
 
   // Header information for the tile
-  GraphTileHeaderBuilder header_builder_;
+  GraphTileHeader header_builder_;
 
   // List of nodes. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<NodeInfoBuilder> nodes_builder_;
+  std::vector<NodeInfo> nodes_builder_;
 
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<DirectedEdgeBuilder> directededges_builder_;
+  std::vector<DirectedEdge> directededges_builder_;
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time
@@ -350,7 +349,7 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<AdminInfoBuilder> admins_builder_;
+  std::vector<Admin> admins_builder_;
 
   // Admin info offset
   std::unordered_map<std::string,size_t> admin_info_offset_map_;

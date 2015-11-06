@@ -47,9 +47,7 @@ libvalhalla_mjolnir.la
 test-suite.log
 test-driver
 test/test_config
-test/directededgebuilder
 test/edgeinfobuilder
-test/nodeinfobuilder
 test/uniquenames
 test/idtable
 test/graphtilebuilder

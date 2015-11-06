@@ -385,9 +385,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::unordered_map<uint32_t, uint32_t>& stop_indexes,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
   // Move existing nodes and directed edge builder vectors and clear the lists
-  std::vector<NodeInfoBuilder> currentnodes(std::move(tilebuilder.nodes()));
+  std::vector<NodeInfo> currentnodes(std::move(tilebuilder.nodes()));
   tilebuilder.nodes().clear();
-  std::vector<DirectedEdgeBuilder> currentedges(std::move(tilebuilder.directededges()));
+  std::vector<DirectedEdge> currentedges(std::move(tilebuilder.directededges()));
   tilebuilder.directededges().clear();
 
   LOG_DEBUG("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
@@ -451,7 +451,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     // to a transit stop
     while (added_edges < connection_edges.size() &&
            connection_edges[added_edges].osm_node.id() == nodeid) {
-      DirectedEdgeBuilder directededge;
+      DirectedEdge directededge;
       const OSMConnectionEdge& conn = connection_edges[added_edges];
       directededge.set_endnode(conn.stop_node);
       directededge.set_length(conn.length);
@@ -459,8 +459,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder.directededges().size() - edge_index);
-      directededge.set_pedestrianaccess(true, true);
-      directededge.set_pedestrianaccess(false, true);
+      directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
+      directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
@@ -511,7 +511,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
     bool child  = (stop.parent != 0);  // TODO verify if this is sufficient
     bool parent = (stop.type == 1);    // TODO verify if this is sufficient
-    NodeInfoBuilder node(stop.ll(), RoadClass::kServiceOther, access,
+    NodeInfo node(stop.ll(), RoadClass::kServiceOther, access,
                         NodeType::kMultiUseTransitStop, false);
     node.set_child(child);
     node.set_parent(parent);
@@ -525,15 +525,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     // TODO - change from linear search for better performance
     for (const auto& conn : connection_edges) {
       if (conn.stop_node == stop.graphid) {
-        DirectedEdgeBuilder directededge;
+        DirectedEdge directededge;
         directededge.set_endnode(conn.osm_node);
         directededge.set_length(conn.length);
         directededge.set_use(Use::kTransitConnection);
         directededge.set_speed(5);
         directededge.set_classification(RoadClass::kServiceOther);
         directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
-        directededge.set_pedestrianaccess(true, true);
-        directededge.set_pedestrianaccess(false, true);
+        directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
+        directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
@@ -553,7 +553,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
     // Add any intra-station connections
     for (const auto& endstopkey : stop_edges.second.intrastation) {
-      DirectedEdgeBuilder directededge;
+      DirectedEdge directededge;
       const Stop& endstop = stops[stop_indexes.find(endstopkey)->second];
       if (endstopkey != endstop.graphid) {
         LOG_ERROR("End stop key not equal");
@@ -567,8 +567,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
-      directededge.set_pedestrianaccess(true, true);
-      directededge.set_pedestrianaccess(false, true);
+      directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
+      directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
 
       LOG_DEBUG("Add parent/child directededge - endnode stop id = " +
                std::to_string(endstop.key) + " GraphId: " +
@@ -595,15 +595,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
       // Set Use based on route type...
       Use use = GetTransitUse(route_types.find(transitedge.routeid)->second);
-      DirectedEdgeBuilder directededge;
+      DirectedEdge directededge;
       directededge.set_endnode(endstop.graphid);
       directededge.set_length(stop.ll().Distance(endstop.ll()));
       directededge.set_use(use);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder.directededges().size() - node.edge_index());
-      directededge.set_pedestrianaccess(true, true);
-      directededge.set_pedestrianaccess(false, true);
+      directededge.set_forwardaccess(kPedestrianAccess);  // TODO - bikes?
+      directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
       directededge.set_lineid(transitedge.lineid);
 
       LOG_DEBUG("Add directededge - lineId = " + std::to_string(transitedge.lineid) +
