@@ -494,7 +494,22 @@ void NarrativeBuilder::Build(const DirectionsOptions& directions_options,
         break;
       }
       case TripDirections_Maneuver_Type_kPostTransitConnectionDestination: {
-        FormPostTransitConnectionDestinationInstruction(maneuver);
+        // Set instruction
+        maneuver.set_instruction(
+            std::move(
+                FormPostTransitConnectionDestinationInstruction(maneuver)));
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(
+            std::move(
+                FormVerbalPostTransitConnectionDestinationInstruction(
+                    maneuver)));
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            std::move(
+                FormVerbalPostTransitionInstruction(
+                    maneuver, directions_options.units())));
         break;
       }
       case TripDirections_Maneuver_Type_kContinue:
@@ -3319,26 +3334,98 @@ std::string NarrativeBuilder::FormVerbalTransitTransferInstruction(
 
 }
 
-void NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
+std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
     Maneuver& maneuver) {
-  std::string text_instruction;
-  text_instruction.reserve(kTextInstructionInitialCapacity);
-  text_instruction += "Head ";
-  text_instruction += FormCardinalDirection(
-      maneuver.begin_cardinal_direction());
+  // 0 "Head <FormCardinalDirection>."
+  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string street_names;
+  std::string begin_street_names;
+  std::string cardinal_direction = FormCardinalDirection(
+        maneuver.begin_cardinal_direction());
 
   if (maneuver.HasBeginStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.begin_street_names().ToString();
-    text_instruction += ". Continue on ";
-    text_instruction += maneuver.street_names().ToString();
+    phrase_id = 2;
+    begin_street_names = maneuver.begin_street_names().ToString();
   } else if (maneuver.HasStreetNames()) {
-    text_instruction += " on ";
-    text_instruction += maneuver.street_names().ToString();
+    phrase_id = 1;
+    street_names = maneuver.street_names().ToString();
   }
 
-  text_instruction += ".";
-  maneuver.set_instruction(std::move(text_instruction));
+  switch (phrase_id) {
+    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+    case 1: {
+      instruction = (boost::format("Head %1% on %2%.") % cardinal_direction
+          % street_names).str();
+      break;
+    }
+    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    case 2: {
+      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
+          % cardinal_direction % begin_street_names % street_names).str();
+      break;
+    }
+    // 0 "Head <FormCardinalDirection>."
+    default: {
+      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
+      break;
+    }
+  }
+
+  return instruction;
+
+}
+
+std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruction(
+    Maneuver& maneuver, uint32_t element_max_count, std::string delim) {
+  // 0 "Head <FormCardinalDirection>."
+  // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+  // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kTextInstructionInitialCapacity);
+  uint8_t phrase_id = 0;
+  std::string street_names;
+  std::string begin_street_names;
+  std::string cardinal_direction = FormCardinalDirection(
+        maneuver.begin_cardinal_direction());
+
+  if (maneuver.HasBeginStreetNames()) {
+    phrase_id = 2;
+    begin_street_names = maneuver.begin_street_names().ToString(
+        element_max_count, delim, maneuver.verbal_formatter());
+  } else if (maneuver.HasStreetNames()) {
+    phrase_id = 1;
+    street_names = maneuver.street_names().ToString(
+        element_max_count, delim, maneuver.verbal_formatter());
+  }
+
+  switch (phrase_id) {
+    // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
+    case 1: {
+      instruction = (boost::format("Head %1% on %2%.") % cardinal_direction
+          % street_names).str();
+      break;
+    }
+    // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
+    case 2: {
+      instruction = (boost::format("Head %1% on %2%. Continue on %3%.")
+          % cardinal_direction % begin_street_names % street_names).str();
+      break;
+    }
+    // 0 "Head <FormCardinalDirection>."
+    default: {
+      instruction = (boost::format("Head %1%.") % cardinal_direction).str();
+      break;
+    }
+  }
+
+  return instruction;
+
 }
 
 std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(

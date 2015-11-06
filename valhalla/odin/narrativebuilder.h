@@ -331,7 +331,13 @@ class NarrativeBuilder {
   static std::string FormVerbalTransitTransferInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormPostTransitConnectionDestinationInstruction(Maneuver& maneuver);
+  static std::string FormPostTransitConnectionDestinationInstruction(
+      Maneuver& maneuver);
+
+  static std::string FormVerbalPostTransitConnectionDestinationInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormVerbalPostTransitionInstruction(
