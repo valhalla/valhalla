@@ -132,17 +132,27 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon;
   for(const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
-    /*auto request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
-      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();*/
+    //stop count
     auto request = (boost::format(pt.get<std::string>("base_url") +
+      "/api/v1/stops?per_page=0&bbox=%1%,%2%,%3%,%4%&api_key=%5%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % pt.get<std::string>("api_key")).str();
+    auto stops_total = curler(request, "meta.total").get<size_t>("meta.total");
+    //route count
+    request = (boost::format(pt.get<std::string>("base_url") +
       "/api/v1/routes?per_page=0&bbox=%1%,%2%,%3%,%4%&api_key=%5%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % pt.get<std::string>("api_key")).str();
-    auto total = curler(request, "meta.total").get<size_t>("meta.total");
-    if(total > 0) {
-      prioritized.push(weighted_tile_t{tile, total});
-      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " has " + std::to_string(total) +  " routes");
+    auto routes_total = curler(request, "meta.total").get<size_t>("meta.total");
+    //pair count
+    request = (boost::format(pt.get<std::string>("base_url") +
+      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
+      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+    auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
+    //we have anything we want it
+    if(stops_total > 0 || routes_total > 0|| pairs_total > 0) {
+      prioritized.push(weighted_tile_t{tile, routes_total}); //TODO: factor in stop pairs as well
+      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " should have " + std::to_string(stops_total) +  " stops " +
+          std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs");
     }
   }
   LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " transit tiles in " +
@@ -674,11 +684,9 @@ int main(int argc, char** argv) {
   boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' + std::to_string(hierarchy.levels().rbegin()->first));
   boost::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
-  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf") {
+  for(; transit_file_itr != end_file_itr; ++transit_file_itr)
+    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf")
       all_tiles.emplace(id(pt, transit_file_itr->path().string()));
-    }
-  }
 
   //spawn threads to connect dangling stop pairs to adjacent tiles' stops
   stitch(pt, all_tiles, dangling_tiles);
