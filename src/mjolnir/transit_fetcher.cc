@@ -51,7 +51,7 @@ struct curler_t {
   //for now we only need to handle json
   //with templates we could return a string or whatever
   ptree operator()(const std::string& url, const std::string& retry_if_no = "", size_t timeout = 200) {
-    LOG_INFO(url);
+    LOG_DEBUG(url);
     result.str("");
     ptree pt;
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
@@ -494,6 +494,16 @@ std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& 
   return dangling;
 }
 
+GraphId id(const boost::property_tree::ptree& pt, const std::string& transit_tile) {
+  auto tile_dir = pt.get<std::string>("mjolnir.hierarchy.tile_dir");
+  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
+  auto graph_tile = tile_dir + transit_tile.substr(transit_dir.size());
+  boost::algorithm::trim_if(graph_tile, boost::is_any_of(".pbf"));
+  graph_tile += ".gph";
+  TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+  return GraphTile::GetTileId(graph_tile, hierarchy);
+}
+
 Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
@@ -512,32 +522,20 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   return transit;
 }
 
-//the tiles object didnt seem to jive with this notion of a neighbor
-//so instead of implement this there its here.. maybe we can reevaluate later
-std::list<GraphId> neighborhood(const Tiles<PointLL>& tiles, const GraphId& id) {
-  auto uv = tiles.GetRowColumn(id.tileid());
-  uv.first += tiles.ncolumns();
-  std::list<GraphId> ids;
-  for(auto x = uv.first - 1; x < uv.first + 1; ++x) {
-    for(auto y = uv.second - 1; y < uv.second + 1; ++y) {
-      if(x != uv.first && y != uv.second) {
-        if(y < 0)
-          ids.push_back(GraphId(tiles.TileId(x + tiles.ncolumns() / 2, tiles.nrows() + y), id.level(), 0));
-        else if(tiles.nrows() - 1 < y)
-          ids.push_back(GraphId(tiles.TileId(x + tiles.ncolumns() / 2, y - tiles.nrows()), id.level(), 0));
-        else
-          ids.push_back(GraphId(tiles.TileId(x % tiles.ncolumns(), y), id.level(), 0));
-      }
-    }
+struct dist_sort_t {
+  PointLL center;
+  Tiles<PointLL> grid;
+  dist_sort_t(const GraphId& center, const Tiles<PointLL>& grid):grid(grid) {
+    this->center = grid.TileBounds(center.tileid()).Center();
   }
-  return ids;
-}
+  bool operator()(const GraphId& a, const GraphId& b) const {
+    return center.Distance(grid.TileBounds(a.tileid()).Center()) < center.Distance(grid.TileBounds(a.tileid()).Center());
+  }
+};
 
-using stitch_itr_t = std::list<GraphId>::const_iterator;
-void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mutex& lock) {
+void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& tiles, std::mutex& lock) {
   TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
   auto grid = hierarchy.levels().rbegin()->second.tiles;
-  std::list<GraphId> dangling;
   auto tile_name = [&hierarchy, &pt](const GraphId& id){
     auto file_name = GraphTile::FileSuffix(id, hierarchy);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
@@ -545,39 +543,39 @@ void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mu
   };
 
   //for each tile
-  for(; start != end; ++start) {
+  while(true) {
+    GraphId current;
+    lock.lock();
+    if(tiles.empty()) {
+      lock.unlock();
+      break;
+    }
+    current = tiles.front();
+    tiles.pop_front();
+    lock.unlock();
+
     //open tile make a hash of missing stop to invalid graphid
-    auto file_name = tile_name(*start);
+    auto file_name = tile_name(current);
     auto tile = read_pbf(file_name, lock);
     std::unordered_map<std::string, GraphId> needed;
-    for(int i = 0; i < tile.stop_pairs_size(); ++i) {
-      const auto& stop_pair = tile.stop_pairs(i);
+    for(const auto& stop_pair : tile.stop_pairs()) {
       if(!stop_pair.has_origin_graphid())
         needed.emplace(stop_pair.origin_onestop_id(), GraphId{});
-      if(!stop_pair.has_destination_onestop_id())
+      if(!stop_pair.has_destination_graphid())
         needed.emplace(stop_pair.destination_onestop_id(), GraphId{});
     }
 
     //do while we have more to find and arent sick of searching
-    std::unordered_set<GraphId> checked, last_round { *start };
+    std::set<GraphId, dist_sort_t> unchecked(all_tiles.cbegin(), all_tiles.cend(), dist_sort_t(current, grid));
     size_t found = 0;
-    while(needed.size() != found) {
-      //get the neighbors of the ones we just checked that havent been checked before
-      std::unordered_set<GraphId> next_round;
-      for(const auto& l : last_round) {
-        checked.emplace(l);
-        auto neighbors = neighborhood(grid, l);
-        for(const auto& n : neighbors)
-          if(checked.find(n) != checked.cend())
-            next_round.emplace(n);
-      }
-
-      //crack each one open to see if it has anything we need
-      for(const auto& neighbor_id : next_round) {
+    while(found < needed.size() && unchecked.size()) {
+      //crack it open to see if it has what we want
+      auto neighbor_id = *unchecked.cbegin();
+      unchecked.erase(unchecked.begin());
+      if(neighbor_id != current) {
         auto neighbor_file_name = tile_name(neighbor_id);
         auto neighbor = read_pbf(neighbor_file_name, lock);
-        for(int i = 0; i < neighbor.stops_size(); ++i) {
-          const auto& stop = neighbor.stops(i);
+        for(const auto& stop : neighbor.stops()) {
           auto stop_itr = needed.find(stop.onestop_id());
           if(stop_itr != needed.cend()) {
             stop_itr->second = neighbor_id;
@@ -585,27 +583,30 @@ void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mu
           }
         }
       }
-
-      //next round
-      last_round.swap(next_round);
     }
 
     //get the ids fixed up and write pbf to file
-    for(int i = 0; i < tile.stop_pairs_size(); ++i) {
-      auto* stop_pair = tile.mutable_stop_pairs(i);
-      if(!stop_pair->has_origin_graphid()) {
-        auto found = needed.find(stop_pair->origin_onestop_id())->second;
+    std::unordered_set<std::string> not_found;
+    for(auto& stop_pair : *tile.mutable_stop_pairs()) {
+      if(!stop_pair.has_origin_graphid()) {
+        auto found = needed.find(stop_pair.origin_onestop_id())->second;
         if(found.Is_Valid())
-          stop_pair->set_origin_graphid(found);
-        else
-          LOG_ERROR("Stop not found: " + stop_pair->origin_onestop_id());
+          stop_pair.set_origin_graphid(found);
+        else if(not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
+          LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
+          not_found.emplace(stop_pair.origin_onestop_id());
+        }
+        //else{ TODO: we could delete this stop pair }
       }
-      if(!stop_pair->has_destination_onestop_id()) {
-        auto found = needed.find(stop_pair->destination_onestop_id())->second;
+      if(!stop_pair.has_destination_graphid()) {
+        auto found = needed.find(stop_pair.destination_onestop_id())->second;
         if(found.Is_Valid())
-          stop_pair->set_destination_graphid(found);
-        else
-          LOG_ERROR("Stop not found: " + stop_pair->destination_onestop_id());
+          stop_pair.set_destination_graphid(found);
+        else if(not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
+          LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
+          not_found.emplace(stop_pair.destination_onestop_id());
+        }
+        //else{ TODO: we could delete this stop pair }
       }
     }
     lock.lock();
@@ -616,27 +617,18 @@ void stitch_tiles(const ptree& pt, stitch_itr_t start, stitch_itr_t end, std::mu
   }
 }
 
-void stitch(const ptree& pt, const std::list<GraphId>& tiles) {
+void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& dangling_tiles) {
   unsigned int thread_count = std::max(static_cast<unsigned int>(1),
     pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  LOG_INFO("Stitching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
+  LOG_INFO("Stitching " + std::to_string(dangling_tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //figure out where the work should go
   std::vector<std::shared_ptr<std::thread> > threads(thread_count);
-  size_t floor = tiles.size() / threads.size();
-  size_t at_ceiling = tiles.size() - (threads.size() * floor);
-  stitch_itr_t tile_start, tile_end = tiles.begin();
   std::mutex lock;
 
   //make let them rip
-  for (size_t i = 0; i < threads.size(); ++i) {
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    tile_start = tile_end;
-    std::advance(tile_end, tile_count);
-    threads[i].reset(
-      new std::thread(stitch_tiles, std::cref(pt), tile_start, tile_end, std::ref(lock))
-    );
-  }
+  for (size_t i = 0; i < threads.size(); ++i)
+    threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles), std::ref(dangling_tiles), std::ref(lock)));
 
   //wait for them to finish
   for (auto& thread : threads)
@@ -673,9 +665,19 @@ int main(int argc, char** argv) {
   auto dangling_tiles = fetch(pt, transit_tiles);
   curl_global_cleanup();
 
-  //spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  //stitch(pt, dangling_tiles);
+  //figure out which transit tiles even exist
+  TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
+  boost::filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.transit_dir") + '/' + std::to_string(hierarchy.levels().rbegin()->first));
+  boost::filesystem::recursive_directory_iterator end_file_itr;
+  std::unordered_set<GraphId> all_tiles;
+  for(; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if(boost::filesystem::is_regular(transit_file_itr->path()) && transit_file_itr->path().extension() == ".pbf") {
+      all_tiles.emplace(id(pt, transit_file_itr->path().string()));
+    }
+  }
 
-  //TODO: show some summary informant?
+  //spawn threads to connect dangling stop pairs to adjacent tiles' stops
+  stitch(pt, all_tiles, dangling_tiles);
+
   return 0;
 }
