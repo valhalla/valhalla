@@ -529,7 +529,11 @@ struct dist_sort_t {
     this->center = grid.TileBounds(center.tileid()).Center();
   }
   bool operator()(const GraphId& a, const GraphId& b) const {
-    return center.Distance(grid.TileBounds(a.tileid()).Center()) < center.Distance(grid.TileBounds(a.tileid()).Center());
+    auto a_dist = center.Distance(grid.TileBounds(a.tileid()).Center());
+    auto b_dist = center.Distance(grid.TileBounds(b.tileid()).Center());
+    if(a_dist == b_dist)
+      return a.tileid() < b.tileid();
+    return a_dist < b_dist;
   }
 };
 
@@ -578,7 +582,7 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
         for(const auto& stop : neighbor.stops()) {
           auto stop_itr = needed.find(stop.onestop_id());
           if(stop_itr != needed.cend()) {
-            stop_itr->second = neighbor_id;
+            stop_itr->second.value = stop.graphid();
             ++found;
           }
         }
@@ -613,7 +617,7 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
     std::fstream stream(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
     tile.SerializeToOstream(&stream);
     lock.unlock();
-    LOG_INFO(file_name + " had " + std::to_string(needed.size()) + " stitched stops");
+    LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " + std::to_string(needed.size()) + " stops");
   }
 }
 
