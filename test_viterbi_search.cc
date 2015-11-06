@@ -49,7 +49,6 @@ class Candidate
 
 bool operator==(const Candidate& lhs, const Candidate& rhs)
 {
-  // TODO test internal members also? how?
   return lhs.id() == rhs.id() && lhs.emission_cost() == rhs.emission_cost();
 }
 
@@ -159,8 +158,7 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
 
 
 unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-std::default_random_engine transition_cost_generator(seed),
-  emission_cost_generator(seed);
+std::default_random_engine transition_cost_generator(seed), emission_cost_generator(seed);
 
 
 std::vector<Candidate>
@@ -262,8 +260,10 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
         snvs_time = snvs.AppendState(state.cbegin(), state.cend());
     assert(svs_time == snvs_time);
 
-    auto snvs_winner = snvs.SearchWinner(snvs_time);
-    auto svs_winner = svs.SearchWinner(svs_time);
+    auto snvs_id = snvs.SearchWinner(snvs_time);
+    const State* snvs_winner = snvs_id == kInvalidStateId? nullptr : &snvs.state(snvs_id);
+    auto svs_id = svs.SearchWinner(svs_time);
+    const State* svs_winner = svs_id == kInvalidStateId? nullptr : &svs.state(svs_id);
 
     if (svs_winner) {
       assert(svs_winner->time() == svs_time &&
@@ -278,14 +278,6 @@ void test_viterbi_search(std::uniform_int_distribution<int> transition_cost_dist
     } else {
       assert(!snvs_winner);
     }
-
-    auto svs_path = svs.SearchPath(svs_time);
-    auto snvs_path = snvs.SearchPath(snvs_time);
-
-    assert(svs_path.size() == snvs_path.size());
-    assert(svs_path.size() == svs_time + 1);
-    // print_path(svs_path);
-    // print_path(snvs_path);
 
     // TODO verify if their costs
   }

@@ -13,6 +13,10 @@ using CandidateId = uint32_t;
 using CandidatePairId = uint64_t;
 
 
+constexpr Time kInvalidTime = std::numeric_limits<Time>::max();
+constexpr CandidateId kInvalidStateId = std::numeric_limits<CandidateId>::max();
+
+
 inline CandidatePairId candidateid_make_pair(CandidateId left, CandidateId right)
 {
   return (static_cast<CandidatePairId>(left) << 32) + right;
@@ -42,16 +46,13 @@ struct LabelTemplate: public LabelInterface<CandidateId>
                 const CANDIDATE_TYPE* p)
       : costsofar(c),
         candidate(a),
-        predecessor(p) {
-  }
+        predecessor(p) {}
 
-  inline CandidateId id() const override {
-    return candidate->id();
-  }
+  CandidateId id() const override
+  { return candidate->id(); }
 
-  inline double sortcost() const override {
-    return costsofar;
-  }
+  double sortcost() const override
+  { return costsofar; }
 
   // Accumulated cost since time = 0
   double costsofar;
@@ -62,19 +63,118 @@ struct LabelTemplate: public LabelInterface<CandidateId>
 };
 
 
-// TODO interfaces to confidence of a path and costsofar of a candidate??
 template <typename T>
-class ViterbiSearchInterface
+class IViterbiSearch;
+
+
+template <typename state_t>
+class ViterbiPathIterator:
+    public std::iterator<std::forward_iterator_tag, state_t>
 {
  public:
-  // Search the winner at a specific time
-  virtual const T* SearchWinner(Time target) = 0;
+  ViterbiPathIterator(IViterbiSearch<state_t>* vs, CandidateId id)
+      : vs_(vs),
+        id_(id),
+        time_(vs->state(id).time()) {}
 
-  // Search the optimal path from the initial time to the target time
-  virtual std::vector<const T*> SearchPath(Time target) = 0;
+  ViterbiPathIterator(IViterbiSearch<state_t>* vs): vs_(vs)
+  { set_end(); }
 
-  virtual ~ViterbiSearchInterface() {
+  // Postfix increment
+  ViterbiPathIterator operator++(int)
+  {
+    if (!is_end()) {
+      auto copy = *this;
+      goback();
+      return copy;
+    }
+    return *this;
   }
+
+  // Prefix increment
+  ViterbiPathIterator<state_t> operator++()
+  {
+    if (!is_end()) {
+      goback();
+    }
+    return *this;
+  }
+
+  bool operator==(const ViterbiPathIterator<state_t>& other) const
+  { return id_ == other.id_ && time_ == other.time_ && vs_ == other.vs_; }
+
+  bool operator!=(const ViterbiPathIterator<state_t>& other) const
+  { return !(*this == other); }
+
+  // Derefrencnce
+  const state_t& operator*() const
+  { return vs_->state(id_); }
+
+  // Pointer dereference
+  const state_t* operator->() const
+  { return &(vs_->state(id_)); }
+
+  Time time() const
+  { return time_; }
+
+  // Invalid iterator can't be dereferenced
+  bool IsValid() const
+  { return id_ == kInvalidStateId; }
+
+ private:
+  IViterbiSearch<state_t>* vs_;
+  CandidateId id_;
+  Time time_;
+
+  bool is_end() const
+  { return id_ == kInvalidStateId && time_ == kInvalidTime; }
+
+  void set_end()
+  {
+    id_ = kInvalidStateId;
+    time_ = kInvalidTime;
+  }
+
+  void goback()
+  {
+    if (time_ > 0) {
+      id_ = vs_->predecessor(id_);
+      time_ --;
+      if (id_ == kInvalidStateId) {
+        id_ = vs_->SearchWinner(time_);
+      }
+    } else {
+      set_end();
+    }
+  }
+};
+
+
+template <typename T>
+class IViterbiSearch
+{
+  friend class ViterbiPathIterator<T>;
+
+ public:
+  using iterator = ViterbiPathIterator<T>;
+
+  IViterbiSearch(): path_end_(iterator(this)) {};
+
+  virtual ~IViterbiSearch() {};
+
+  virtual CandidateId SearchWinner(Time time) = 0;
+
+  virtual CandidateId predecessor(CandidateId id) const = 0;
+
+  // Get the state reference given its ID
+  virtual const T& state(CandidateId id) const = 0;
+
+  iterator SearchPath(Time time)
+  { return iterator(this, SearchWinner(time)); }
+
+  iterator PathEnd() const
+  { return path_end_; }
+
  protected:
   // Calculate transition cost from left candidate to right candidate
   virtual float TransitionCost(const T& left, const T& right) const = 0;
@@ -88,29 +188,33 @@ class ViterbiSearchInterface
   virtual double CostSofar(double prev_costsofar,
                            float transition_cost,
                            float emission_cost) const = 0;
+
+ private:
+  const iterator path_end_;
 };
 
 
 template <typename T, bool Maximize>
-class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
+class NaiveViterbiSearch: public IViterbiSearch<CANDIDATE_TYPE>
 {
  public:
-  ~NaiveViterbiSearch();
-  const CANDIDATE_TYPE* SearchWinner(Time target) override;
-  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
-
   // An invalid costsofar indicates that candiadte is unreachable from
   // previous candidates
   static constexpr double
   kInvalidCost = Maximize? -std::numeric_limits<double>::infinity()
       : std::numeric_limits<double>::infinity();
 
-  // Clear everything
+  ~NaiveViterbiSearch();
+
   void Clear();
 
-  double costsofar(const CANDIDATE_TYPE& candidate) const;
+  CandidateId SearchWinner(Time time) override;
 
-  const CANDIDATE_TYPE* predecessor(const CANDIDATE_TYPE& candidate) const;
+  CandidateId predecessor(CandidateId id) const override;
+
+  const T& state(CandidateId id) const override;
+
+  double costsofar(const CANDIDATE_TYPE& candidate) const;
 
  protected:
   std::vector<std::vector<const CANDIDATE_TYPE*>> states_;
@@ -123,6 +227,7 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 
  private:
   using label_type = LabelTemplate<T>;
+
   std::vector<std::vector<label_type>> history_;
 
   void UpdateLabels(std::vector<label_type>& labels,
@@ -142,7 +247,7 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 
 
 template <typename T, bool Maximize>
-NaiveViterbiSearch<T, Maximize>::~NaiveViterbiSearch()
+inline NaiveViterbiSearch<T, Maximize>::~NaiveViterbiSearch()
 {
   Clear();
 }
@@ -162,32 +267,22 @@ void NaiveViterbiSearch<T, Maximize>::Clear()
 
 
 template <typename T, bool Maximize>
-inline double
-NaiveViterbiSearch<T, Maximize>::costsofar(const CANDIDATE_TYPE& candidate) const
+inline double NaiveViterbiSearch<T, Maximize>::costsofar(const CANDIDATE_TYPE& candidate) const
 {
   return label(candidate).costsofar;
 }
 
 
 template <typename T, bool Maximize>
-inline const CANDIDATE_TYPE*
-NaiveViterbiSearch<T, Maximize>::predecessor(const CANDIDATE_TYPE& candidate) const
-{
-  return label(candidate).predecessor;
-}
-
-
-template <typename T, bool Maximize>
-const CANDIDATE_TYPE*
-NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
+CandidateId NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
 {
   if (states_.size() <= target) {
-    return nullptr;
+    return kInvalidStateId;
   }
 
   // Use the cache
   if (target < winners_.size()) {
-    return winners_[target];
+    return winners_[target]? winners_[target]->id() : kInvalidStateId;
   }
 
   for (Time time = winners_.size(); time <= target; ++time) {
@@ -214,58 +309,27 @@ NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
     history_.push_back(labels);
   }
 
-  return winners_[target];
+  return winners_[target]? winners_[target]->id() : kInvalidStateId;
 }
 
 
 template <typename T, bool Maximize>
-std::vector<const CANDIDATE_TYPE*>
-NaiveViterbiSearch<T, Maximize>::SearchPath(Time target)
+inline CandidateId
+NaiveViterbiSearch<T, Maximize>::predecessor(CandidateId id) const
 {
-  std::vector<const CANDIDATE_TYPE*> path;
-  // Need add this number of candidates to the path
-  auto count = target + 1;
-
-  while (path.size() < count) {
-    Time time = target - path.size();
-    if (states_.size() <= time) {
-      path.push_back(nullptr);
-      continue;
-    }
-
-    auto winner_ptr = time < winners_.size()? winners_[time] : SearchWinner(time);
-    if (!winner_ptr) {
-      path.push_back(nullptr);
-      continue;
-    }
-
-    auto segment = FormPathSegment(winner_ptr);
-    assert(segment.front() == winner_ptr);
-    for (const auto& candidate_ptr : segment) {
-      path.push_back(candidate_ptr);
-    }
+  if (id != kInvalidStateId) {
+    const auto& predecessor = label(state(id)).predecessor;
+    return predecessor? predecessor->id() : kInvalidStateId;
   }
-
-  assert(path.size() == count);
-
-  return path;
+  return kInvalidStateId;
 }
 
 
 template <typename T, bool Maximize>
-const std::vector<const CANDIDATE_TYPE*>
-NaiveViterbiSearch<T, Maximize>::FormPathSegment(const CANDIDATE_TYPE* candidate_ptr) const
+inline const T&
+NaiveViterbiSearch<T, Maximize>::state(CandidateId id) const
 {
-  Time target = candidate_ptr->time();
-  const auto count = target + 1;
-
-  std::vector<const CANDIDATE_TYPE*> path;
-  while (candidate_ptr && path.size() < count) {
-    path.push_back(candidate_ptr);
-    candidate_ptr = predecessor(*candidate_ptr);
-  }
-
-  return path;
+  return *candidates_[id];
 }
 
 
@@ -387,22 +451,18 @@ NaiveViterbiSearch<T, Maximize>::label(const CANDIDATE_TYPE& candidate) const
 
 
 template <typename T>
-class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
+class ViterbiSearch: public IViterbiSearch<CANDIDATE_TYPE>
 {
  public:
   ~ViterbiSearch();
-  const CANDIDATE_TYPE* SearchWinner(Time time) override;
-  const CANDIDATE_TYPE* SearchWinner();
-  const CANDIDATE_TYPE* SearchLastWinner(Time time);
-  const CANDIDATE_TYPE* SearchLastWinner();
-
-  std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
-
-  const CANDIDATE_TYPE* previous(const CANDIDATE_TYPE& candidate) const;
-
-  const CANDIDATE_TYPE* predecessor(const CANDIDATE_TYPE& candidate) const;
 
   void Clear();
+
+  CandidateId SearchWinner(Time time) override;
+
+  const T& state(CandidateId id) const override;
+
+  CandidateId predecessor(CandidateId id) const override;
 
   virtual bool IsInvalidCost(double cost) {
     return cost < 0.f;
@@ -417,8 +477,6 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
       return itr->second.costsofar;
     }
   }
-
-  const CANDIDATE_TYPE* state(CandidateId id) const;
 
  protected:
   // candidate id => candidate
@@ -458,7 +516,7 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 
   void AddSuccessorsToQueue(const CANDIDATE_TYPE* candidate_ptr);
 
-  Time IterativeSearch(Time target, bool new_start);
+  Time IterativeSearch(Time target, bool request_new_start);
 
   const CANDIDATE_TYPE* FindLastWinner(Time time) const;
 
@@ -468,22 +526,22 @@ class ViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
 
 
 template <typename T>
-ViterbiSearch<T>::~ViterbiSearch()
+inline ViterbiSearch<T>::~ViterbiSearch()
 {
   Clear();
 }
 
 
 template <typename T>
-const CANDIDATE_TYPE* ViterbiSearch<T>::SearchWinner(Time time)
+CandidateId ViterbiSearch<T>::SearchWinner(Time time)
 {
   // Use the cache
   if (time < winners_.size()) {
-    return winners_[time];
+    return winners_[time]? winners_[time]->id() : kInvalidStateId;
   }
 
   if (unreached_states_.empty()) {
-    return nullptr;
+    return kInvalidStateId;
   }
 
   Time target = std::min(time, static_cast<Time>(unreached_states_.size()) - 1);
@@ -492,87 +550,30 @@ const CANDIDATE_TYPE* ViterbiSearch<T>::SearchWinner(Time time)
     searched_time = IterativeSearch(target, true);
   }
 
-  return time < winners_.size()? winners_[time] : nullptr;
-}
-
-
-// Search the winner at the latest time
-template <typename T>
-inline const CANDIDATE_TYPE*
-ViterbiSearch<T>::SearchWinner()
-{
-  if (unreached_states_.empty()) {
-    return nullptr;
+  if (time < winners_.size() && winners_[time]) {
+    return winners_[time]->id();
   }
-  return SearchWinner(unreached_states_.size() - 1);
-}
-
-
-// Find the last winner during [0, time)
-template <typename T>
-const CANDIDATE_TYPE*
-ViterbiSearch<T>::FindLastWinner(Time time) const
-{
-  assert(0 <= time && time < winners_.size());
-  if (time == 0) {
-    return nullptr;
-  }
-  time -= 1;
-  while (!winners_[time] && time > 0) {
-    time -= 1;
-  }
-  return winners_[time]? winners_[time] : nullptr;
+  return kInvalidStateId;
 }
 
 
 template <typename T>
-inline const CANDIDATE_TYPE*
-ViterbiSearch<T>::SearchLastWinner(Time time)
+inline CandidateId
+ViterbiSearch<T>::predecessor(CandidateId id) const
 {
-  if (unreached_states_.empty()) {
-    return nullptr;
-  }
-  time = std::min(time, static_cast<Time>(unreached_states_.size()) - 1);
-  auto candidate = SearchWinner(time);
-  return candidate? candidate : FindLastWinner(time);
-}
-
-
-template <typename T>
-inline const CANDIDATE_TYPE*
-ViterbiSearch<T>::SearchLastWinner()
-{
-  if (unreached_states_.empty()) {
-    return nullptr;
-  }
-  return SearchLastWinner(unreached_states_.size() - 1);
-}
-
-
-template <typename T>
-const CANDIDATE_TYPE*
-ViterbiSearch<T>::previous(const CANDIDATE_TYPE& candidate) const
-{
-  auto time = candidate.time();
-  auto predecessor_ptr = predecessor(candidate);
-  if (predecessor_ptr) {
-    assert(predecessor_ptr->time() + 1 == time);
-    return predecessor_ptr;
-  }
-  return FindLastWinner(time);
-}
-
-
-template <typename T>
-inline const CANDIDATE_TYPE*
-ViterbiSearch<T>::predecessor(const CANDIDATE_TYPE& candidate) const
-{
-  auto itr = scanned_labels_.find(candidate.id());
-  if (itr == scanned_labels_.end()) {
-    return nullptr;
+  auto it = scanned_labels_.find(id);
+  if (it != scanned_labels_.end()) {
+    return (it->second).predecessor->id();
   } else {
-    return itr->second.predecessor;
+    return kInvalidStateId;
   }
+}
+
+
+template <typename T>
+inline const T& ViterbiSearch<T>::state(CandidateId id) const
+{
+  return *candidates_[id];
 }
 
 
@@ -601,14 +602,6 @@ void ViterbiSearch<T>::InitQueue(const std::vector<const CANDIDATE_TYPE*>& state
     }
     queue_.push(Label(emission_cost, candidate_ptr, nullptr));
   }
-}
-
-
-// TODO rename CandidateWrapper to State, which contains a candidate
-template <typename T>
-const CANDIDATE_TYPE*
-ViterbiSearch<T>::state(CandidateId id) const {
-  return candidates_[id];
 }
 
 
@@ -675,7 +668,7 @@ bool state_remove(T* state, const U& candidate)
 
 
 template <typename T>
-Time ViterbiSearch<T>::IterativeSearch(Time target, bool new_start)
+Time ViterbiSearch<T>::IterativeSearch(Time target, bool request_new_start)
 {
   assert(!unreached_states_.empty() && target < unreached_states_.size());
   if (unreached_states_.empty()) {
@@ -691,7 +684,7 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool new_start)
   Time source;
 
   // Initialize queue
-  if (!new_start && !winners_.empty() && winners_.back()) {
+  if (!request_new_start && !winners_.empty() && winners_.back()) {
     source = winners_.size() - 1;
     AddSuccessorsToQueue(winners_[source]);
   } else {
@@ -743,57 +736,4 @@ Time ViterbiSearch<T>::IterativeSearch(Time target, bool new_start)
   assert(searched_time < winners_.size());
 
   return searched_time;
-}
-
-
-// Copy from NaiveViterbiSearch
-template <typename T>
-std::vector<const CANDIDATE_TYPE*>
-ViterbiSearch<T>::SearchPath(Time target)
-{
-  std::vector<const CANDIDATE_TYPE*> path;
-
-  // We need add this number of candidates to the path
-  auto count = target + 1;
-
-  while (path.size() < count) {
-    Time time = target - path.size();
-    if (unreached_states_.size() <= time) {
-      path.push_back(nullptr);
-      continue;
-    }
-
-    auto winner_ptr = time < winners_.size()? winners_[time] : SearchWinner(time);
-    if (!winner_ptr) {
-      path.push_back(nullptr);
-      continue;
-    }
-
-    auto segment = FormPathSegment(winner_ptr);
-    assert(segment.front() == winner_ptr);
-    for (const auto& candidate_ptr : segment) {
-      path.push_back(candidate_ptr);
-    }
-  }
-
-  assert(path.size() == count);
-
-  return path;
-}
-
-
-template <typename T>
-const std::vector<const CANDIDATE_TYPE*>
-ViterbiSearch<T>::FormPathSegment(const CANDIDATE_TYPE* candidate_ptr) const
-{
-  Time target = candidate_ptr->time();
-  const auto count = target + 1;
-
-  std::vector<const CANDIDATE_TYPE*> path;
-  while (candidate_ptr && path.size() < count) {
-    path.push_back(candidate_ptr);
-    candidate_ptr = predecessor(*candidate_ptr);
-  }
-
-  return path;
 }

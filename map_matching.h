@@ -300,7 +300,10 @@ OfflineMatch(MapMatching& mm,
                                       mm.costing()->GetFilter());
     time = mm.AppendState(measurement, candidates.begin(), candidates.end());
   }
-  auto path = mm.SearchPath(time);
+  std::vector<const State*> path;
+  for (auto state = mm.SearchPath(time); state != mm.PathEnd(); state++) {
+    path.push_back(&(*state));
+  }
   std::reverse(path.begin(), path.end());
   return path;
 }
