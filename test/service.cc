@@ -81,12 +81,12 @@ namespace {
   void start_service(zmq::context_t& context) {
     //server
     std::thread server(std::bind(&http_server_t::serve,
-      http_server_t(context, "ipc://test_loki_server", "ipc://test_loki_proxy_in", "ipc://test_loki_results")));
+      http_server_t(context, "ipc:///tmp/test_loki_server", "ipc:///tmp/test_loki_proxy_in", "ipc:///tmp/test_loki_results")));
     server.detach();
 
     //load balancer
     std::thread proxy(std::bind(&proxy_t::forward,
-      proxy_t(context, "ipc://test_loki_proxy_in", "ipc://test_loki_proxy_out")));
+      proxy_t(context, "ipc:///tmp/test_loki_proxy_in", "ipc:///tmp/test_loki_proxy_out")));
     proxy.detach();
 
     //make the config file
@@ -99,9 +99,9 @@ namespace {
         {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
       ] } }, \
       \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\"], \
-                  \"service\": { \"proxy\": \"ipc://test_loki_proxy\" } }, \
-      \"thor\": { \"service\": { \"proxy\": \"ipc://test_thor_proxy\" } }, \
-      \"httpd\": { \"service\": { \"loopback\": \"ipc://test_loki_results\" } }, \
+                  \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
+      \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
+      \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\" } }, \
       \"service_limits\": { \
         \"auto\": { \"max_distance\": 5000000.0, \"max_locations\": 20 }, \
         \"pedestrian\": { \"max_distance\": 250000.0, \"max_locations\": 50 }, \
@@ -128,7 +128,7 @@ namespace {
     //client makes requests and gets back responses in a batch fashion
     auto request = requests.cbegin();
     std::string request_str;
-    http_client_t client(context, "ipc://test_loki_server",
+    http_client_t client(context, "ipc:///tmp/test_loki_server",
       [&request, &request_str]() {
         //we dont have any more requests so bail
         if(request == requests.cend())
