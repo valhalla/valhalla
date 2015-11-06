@@ -99,23 +99,18 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   const CANDIDATE_TYPE* SearchWinner(Time target) override;
   std::vector<const CANDIDATE_TYPE*> SearchPath(Time target) override;
 
-  // TODO in-class initilization well supported?
   // An invalid costsofar indicates that candiadte is unreachable from
   // previous candidates
-  const double kInvalidCost = Maximize? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
+  static constexpr double
+  kInvalidCost = Maximize? -std::numeric_limits<double>::infinity()
+      : std::numeric_limits<double>::infinity();
 
   // Clear everything
   void Clear();
 
-  inline double costsofar(const CANDIDATE_TYPE& candidate) const
-  {
-    return label(candidate).costsofar;
-  }
+  double costsofar(const CANDIDATE_TYPE& candidate) const;
 
-  inline const CANDIDATE_TYPE* predecessor(const CANDIDATE_TYPE& candidate) const
-  {
-    return label(candidate).predecessor;
-  }
+  const CANDIDATE_TYPE* predecessor(const CANDIDATE_TYPE& candidate) const;
 
  protected:
   std::vector<std::vector<const CANDIDATE_TYPE*>> states_;
@@ -127,113 +122,19 @@ class NaiveViterbiSearch: public ViterbiSearchInterface<CANDIDATE_TYPE>
   virtual double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override = 0;
 
  private:
-  using Label = LabelTemplate<T>;
-  std::vector<std::vector<Label>> history_;
+  using label_type = LabelTemplate<T>;
+  std::vector<std::vector<label_type>> history_;
 
-  // TODO move it outside?
-  void UpdateLabels(std::vector<Label>& labels,
-                    const std::vector<Label>& prev_labels) const
-  {
-    for (const auto& prev_label : prev_labels) {
-      auto prev_candidate_ptr = prev_label.candidate;
+  void UpdateLabels(std::vector<label_type>& labels,
+                    const std::vector<label_type>& prev_labels) const;
 
-      auto prev_costsofar = prev_label.costsofar;
-      if (kInvalidCost == prev_costsofar) {
-        continue;
-      }
+  std::vector<label_type> InitLabels(const std::vector<const CANDIDATE_TYPE*>& state,
+                                     bool use_emission_cost) const;
 
-      for (auto& label : labels) {
-        auto candidate_ptr = label.candidate;
-
-        auto emission_cost = EmissionCost(*candidate_ptr);
-        if (kInvalidCost == emission_cost) {
-          continue;
-        };
-
-        auto transition_cost = TransitionCost(*prev_candidate_ptr, *candidate_ptr);
-        if (kInvalidCost == transition_cost) {
-          continue;
-        }
-
-        auto costsofar = CostSofar(prev_costsofar, transition_cost, emission_cost);
-        if (kInvalidCost == costsofar) {
-          continue;
-        }
-
-        if (Maximize) {
-          label = std::max(Label(costsofar, candidate_ptr, prev_candidate_ptr), label);
-        } else {
-          label = std::min(Label(costsofar, candidate_ptr, prev_candidate_ptr), label);
-        }
-      }
-    }
-  }
-
-  // TODO move it outside?
-  std::vector<Label> InitLabels(const std::vector<const CANDIDATE_TYPE*>& state,
-                                bool use_emission_cost) const
-  {
-    std::vector<Label> labels;
-    for (const auto& candidate_ptr : state) {
-      auto initial_cost = use_emission_cost? EmissionCost(*candidate_ptr) : kInvalidCost;
-      labels.emplace_back(initial_cost, candidate_ptr, nullptr);
-    }
-    return labels;
-  }
-
-  template <typename U>
-  U FindExtremeElement(U begin, U end) const
-  {
-    U extreme_itr = end;
-
-    for (U itr = begin; itr != end; itr++) {
-      // Filter out invalid costs
-      if (kInvalidCost == itr->costsofar) {
-        continue;
-      }
-
-      // Find the first extreme element
-      if (Maximize) {
-        if (extreme_itr == end || extreme_itr->costsofar < itr->costsofar) {
-          extreme_itr = itr;
-        }
-      } else {
-        if (extreme_itr == end || itr->costsofar < extreme_itr->costsofar) {
-          extreme_itr = itr;
-        }
-      }
-    }
-
-    return extreme_itr;
-  }
-
-  const CANDIDATE_TYPE* FindWinner(const std::vector<Label>& labels) const
-  {
-    if (labels.empty()) {
-      return nullptr;
-    }
-    auto itr = FindExtremeElement(labels.cbegin(), labels.cend());
-    if (itr == labels.cend()) {
-      return nullptr;
-    }
-    assert(kInvalidCost != itr->costsofar);
-    return itr->candidate;
-  }
+  const CANDIDATE_TYPE* FindWinner(const std::vector<label_type>& labels) const;
 
   // Linear search the label of a candidate
-  Label label(const CANDIDATE_TYPE& candidate) const
-  {
-    auto time = candidate.time();
-
-    for (const auto& label : history_[time]) {
-      if (label.candidate->id() == candidate.id()) {
-        return label;
-      }
-    }
-
-    assert(false);
-    throw std::runtime_error("impossible that label not found; if it happened, check SearchWinner");
-  }
+  label_type label(const CANDIDATE_TYPE& candidate) const;
 
   const std::vector<const CANDIDATE_TYPE*>
   FormPathSegment(const CANDIDATE_TYPE* candidate_ptr) const;
@@ -261,6 +162,22 @@ void NaiveViterbiSearch<T, Maximize>::Clear()
 
 
 template <typename T, bool Maximize>
+inline double
+NaiveViterbiSearch<T, Maximize>::costsofar(const CANDIDATE_TYPE& candidate) const
+{
+  return label(candidate).costsofar;
+}
+
+
+template <typename T, bool Maximize>
+inline const CANDIDATE_TYPE*
+NaiveViterbiSearch<T, Maximize>::predecessor(const CANDIDATE_TYPE& candidate) const
+{
+  return label(candidate).predecessor;
+}
+
+
+template <typename T, bool Maximize>
 const CANDIDATE_TYPE*
 NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
 {
@@ -275,7 +192,7 @@ NaiveViterbiSearch<T, Maximize>::SearchWinner(Time target)
 
   for (Time time = winners_.size(); time <= target; ++time) {
     const auto& state = states_[time];
-    std::vector<Label> labels;
+    std::vector<label_type> labels;
 
     // Update labels
     if (time == 0) {
@@ -349,6 +266,123 @@ NaiveViterbiSearch<T, Maximize>::FormPathSegment(const CANDIDATE_TYPE* candidate
   }
 
   return path;
+}
+
+
+template <typename T, bool Maximize>
+void NaiveViterbiSearch<T, Maximize>::UpdateLabels(
+    std::vector<label_type>& labels,
+    const std::vector<label_type>& prev_labels) const
+{
+  for (const auto& prev_label : prev_labels) {
+    auto prev_candidate_ptr = prev_label.candidate;
+
+    auto prev_costsofar = prev_label.costsofar;
+    if (kInvalidCost == prev_costsofar) {
+      continue;
+    }
+
+    for (auto& label : labels) {
+      auto candidate_ptr = label.candidate;
+
+      auto emission_cost = EmissionCost(*candidate_ptr);
+      if (kInvalidCost == emission_cost) {
+        continue;
+      };
+
+      auto transition_cost = TransitionCost(*prev_candidate_ptr, *candidate_ptr);
+      if (kInvalidCost == transition_cost) {
+        continue;
+      }
+
+      auto costsofar = CostSofar(prev_costsofar, transition_cost, emission_cost);
+      if (kInvalidCost == costsofar) {
+        continue;
+      }
+
+      if (Maximize) {
+        label = std::max(label_type(costsofar, candidate_ptr, prev_candidate_ptr), label);
+      } else {
+        label = std::min(label_type(costsofar, candidate_ptr, prev_candidate_ptr), label);
+      }
+    }
+  }
+}
+
+
+template <typename T, bool Maximize>
+std::vector<typename NaiveViterbiSearch<T, Maximize>::label_type>
+NaiveViterbiSearch<T, Maximize>::InitLabels(
+    const std::vector<const CANDIDATE_TYPE*>& state,
+    bool use_emission_cost) const
+{
+  std::vector<label_type> labels;
+  for (const auto& candidate_ptr : state) {
+    auto initial_cost = use_emission_cost? EmissionCost(*candidate_ptr) : kInvalidCost;
+    labels.emplace_back(initial_cost, candidate_ptr, nullptr);
+  }
+  return labels;
+}
+
+
+template <typename U, bool Maximize>
+U FindExtremeElement(U begin, U end, double invalid_cost)
+{
+  U extreme_itr = end;
+
+  for (U itr = begin; itr != end; itr++) {
+    // Filter out invalid costs
+    if (invalid_cost == itr->costsofar) {
+      continue;
+    }
+
+    // Find the first extreme element
+    if (Maximize) {
+      if (extreme_itr == end || extreme_itr->costsofar < itr->costsofar) {
+        extreme_itr = itr;
+      }
+    } else {
+      if (extreme_itr == end || itr->costsofar < extreme_itr->costsofar) {
+        extreme_itr = itr;
+      }
+    }
+  }
+
+  return extreme_itr;
+}
+
+
+template <typename T, bool Maximize>
+const CANDIDATE_TYPE*
+NaiveViterbiSearch<T, Maximize>::FindWinner(const std::vector<label_type>& labels) const
+{
+  if (labels.empty()) {
+    return nullptr;
+  }
+  auto itr = FindExtremeElement<decltype(labels.cbegin()), Maximize>(labels.cbegin(), labels.cend(), kInvalidCost);
+  if (itr == labels.cend()) {
+    return nullptr;
+  }
+  assert(kInvalidCost != itr->costsofar);
+  return itr->candidate;
+}
+
+
+// Linear search a candidate's label
+template <typename T, bool Maximize>
+typename NaiveViterbiSearch<T, Maximize>::label_type
+NaiveViterbiSearch<T, Maximize>::label(const CANDIDATE_TYPE& candidate) const
+{
+  auto time = candidate.time();
+
+  for (const auto& label : history_[time]) {
+    if (label.candidate->id() == candidate.id()) {
+      return label;
+    }
+  }
+
+  assert(false);
+  throw std::runtime_error("impossible that label not found; if it happened, check SearchWinner");
 }
 
 
