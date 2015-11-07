@@ -56,7 +56,7 @@ bool operator==(const Candidate& lhs, const Candidate& rhs)
 class State
 {
  public:
-  State(CandidateId id,
+  State(StateId id,
         Time time,
         const Candidate& candidate)
       : id_(id),
@@ -64,11 +64,11 @@ class State
         candidate_(candidate) {
   }
   const Time time() const {return time_;}
-  const CandidateId id() const {return id_;}
+  const StateId id() const {return id_;}
   const Candidate& candidate() const {return candidate_;}
 
  private:
-  const CandidateId id_;
+  const StateId id_;
   const Time time_;
   const Candidate candidate_;
 };
@@ -83,9 +83,9 @@ class SimpleViterbiSearch: public ViterbiSearch<State>
     std::vector<const State*> column;
     Time time = unreached_states_.size();
     for (auto candidate = begin; candidate != end; candidate++) {
-      auto candidate_id = candidates_.size();
-      candidates_.push_back(new State(candidate_id, time, *candidate));
-      column.push_back(candidates_.back());
+      auto candidate_id = state_.size();
+      state_.push_back(new State(candidate_id, time, *candidate));
+      column.push_back(state_.back());
     }
     unreached_states_.push_back(column);
     return time;
@@ -121,9 +121,9 @@ class SimpleNaiveViterbiSearch: public NaiveViterbiSearch<State, false>
     std::vector<const State*> column;
     Time time = states_.size();
     for (auto candidate = begin; candidate != end; candidate++) {
-      auto candidate_id = candidates_.size();
-      candidates_.push_back(new State(candidate_id, time, *candidate));
-      column.push_back(candidates_.back());
+      auto candidate_id = state_.size();
+      state_.push_back(new State(candidate_id, time, *candidate));
+      column.push_back(state_.back());
     }
     states_.push_back(column);
     return time;
@@ -312,32 +312,32 @@ void TestViterbiSearch()
 }
 
 
-void TestCandidatePair()
+void TestStatePair()
 {
-  CandidatePairId pair;
-  pair = candidateid_make_pair(0, 1);
+  StatePairId pair;
+  pair = stateid_make_pair(0, 1);
   assert(pair == 1);
-  assert(candidateid_left(pair) == 0);
-  assert(candidateid_right(pair) == 1);
+  assert(stateid_left(pair) == 0);
+  assert(stateid_right(pair) == 1);
 
-  pair = candidateid_make_pair(1, 0);
-  assert(pair == static_cast<CandidatePairId>(1) << 32);
-  assert(candidateid_left(pair) == 1);
-  assert(candidateid_right(pair) == 0);
+  pair = stateid_make_pair(1, 0);
+  assert(pair == static_cast<StatePairId>(1) << 32);
+  assert(stateid_left(pair) == 1);
+  assert(stateid_right(pair) == 0);
 
-  pair = candidateid_make_pair(12, 30);
-  assert(candidateid_left(pair) == 12);
-  assert(candidateid_right(pair) == 30);
+  pair = stateid_make_pair(12, 30);
+  assert(stateid_left(pair) == 12);
+  assert(stateid_right(pair) == 30);
 
   pair = ~0;
-  assert(candidateid_left(pair) == ~0);
-  assert(candidateid_right(pair) == ~0);
+  assert(stateid_left(pair) == ~0);
+  assert(stateid_right(pair) == ~0);
 }
 
 
 int main(int argc, char *argv[])
 {
   TestViterbiSearch();
-  TestCandidatePair();
+  TestStatePair();
   return 0;
 }

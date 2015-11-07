@@ -29,20 +29,32 @@ class Measurement {
 class State
 {
  public:
-  State(const CandidateId id,
+  State(const StateId id,
         const Time time,
         const Candidate& candidate)
       : id_(id),
         time_(time),
-        candidate_(candidate) {
-  }
-  const CandidateId id() const {return id_;}
-  const Time time() const {return time_;}
-  const Candidate& candidate() const {return candidate_;}
+        candidate_(candidate) {}
+
+  State(const Time time, const Candidate& candidate)
+      : id_(kInvalidStateId),
+        time_(time),
+        candidate_(candidate) {}
+
+  const StateId id() const
+  { return id_; }
+
+  const Time time() const
+  { return time_; }
+
+  const Candidate& candidate() const
+  { return candidate_; }
 
  private:
-  const CandidateId id_;
+  const StateId id_;
+
   const Time time_;
+
   const Candidate candidate_;
 };
 
@@ -67,16 +79,12 @@ inline float GreatCircleDistanceSquared(const State& left,
 
 inline float GreatCircleDistance(const Measurement& left,
                                  const Measurement& right)
-{
-  return left.lnglat().Distance(right.lnglat());
-}
+{ return left.lnglat().Distance(right.lnglat()); }
 
 
 inline float GreatCircleDistanceSquared(const Measurement& left,
                                         const Measurement& right)
-{
-  return left.lnglat().DistanceSquared(right.lnglat());
-}
+{ return left.lnglat().DistanceSquared(right.lnglat()); }
 
 
 constexpr float kBreakageDistance = 2000.f;  // meters
@@ -114,11 +122,10 @@ class MapMatching: public ViterbiSearch<State>
   }
 
   ~MapMatching()
-  {
-    Clear();
-  }
+  { Clear(); }
 
-  void Clear() {
+  void Clear()
+  {
     measurements_.clear();
     states_.clear();
     transition_cache_.clear();
@@ -137,9 +144,9 @@ class MapMatching: public ViterbiSearch<State>
     // Append to base class
     std::vector<const State*> column;
     for (candidate_iterator_t it = begin; it != end; it++) {
-      CandidateId state_id = candidates_.size();
-      candidates_.push_back(new State(state_id, time, *it));
-      column.push_back(candidates_.back());
+      StateId id = state_.size();
+      state_.push_back(new State(id, time, *it));
+      column.push_back(state_.back());
     }
     unreached_states_.push_back(column);
 
@@ -151,43 +158,29 @@ class MapMatching: public ViterbiSearch<State>
 
   const std::vector<const State*>&
   states(Time time) const
-  {
-    return states_[time];
-  }
+  { return states_[time]; }
 
   const std::shared_ptr<sif::DynamicCost> costing() const
-  {
-    return mode_costing_[static_cast<uint32_t>(mode_)];
-  }
+  { return mode_costing_[static_cast<uint32_t>(mode_)]; }
 
   baldr::GraphReader& graphreader() const
-  {
-    return graphreader_;
-  }
+  { return graphreader_; }
 
   const Measurement& measurement(Time time) const
-  {
-    return measurements_[time];
-  }
+  { return measurements_[time]; }
 
   std::vector<Measurement>::size_type size() const
-  {
-    return measurements_.size();
-  }
+  { return measurements_.size(); }
 
-  const LabelSet& labelset(CandidateId id) const
-  {
-    return labelset_cache_.at(id);
-  }
+  const LabelSet& labelset(StateId id) const
+  { return labelset_cache_.at(id); }
 
-  bool has_labelset(CandidateId id) const
-  {
-    return labelset_cache_.find(id) != labelset_cache_.end();
-  }
+  bool has_labelset(StateId id) const
+  { return labelset_cache_.find(id) != labelset_cache_.end(); }
 
-  uint32_t label_idx(CandidateId left, CandidateId right) const
+  uint32_t label_idx(StateId left, StateId right) const
   {
-    auto p = candidateid_make_pair(left, right);
+    auto p = stateid_make_pair(left, right);
     auto it = label_idx_cache_.find(p);
     if (it != label_idx_cache_.end()) {
       return it->second;
@@ -207,16 +200,16 @@ class MapMatching: public ViterbiSearch<State>
   std::vector<std::vector<const State*>> states_;
 
   // Caches
-  mutable std::unordered_map<CandidatePairId, float> transition_cache_;
-  mutable std::unordered_map<CandidateId, LabelSet> labelset_cache_;
-  mutable std::unordered_map<CandidatePairId, uint32_t> label_idx_cache_;
+  mutable std::unordered_map<StatePairId, float> transition_cache_;
+  mutable std::unordered_map<StateId, LabelSet> labelset_cache_;
+  mutable std::unordered_map<StatePairId, uint32_t> label_idx_cache_;
 
  protected:
   float TransitionCost(const State& left,
                        const State& right) const override
   {
     // Use cache
-    auto pair = candidateid_make_pair(left.id(), right.id());
+    auto pair = stateid_make_pair(left.id(), right.id());
     auto cached = transition_cache_.find(pair);
     if (cached != transition_cache_.end()) {
       return cached->second;
@@ -227,14 +220,14 @@ class MapMatching: public ViterbiSearch<State>
               &right_mmt = measurements_[right.time()];
     auto mmt_distance = GreatCircleDistance(left_mmt, right_mmt);
     if (mmt_distance > kBreakageDistance) {
-      for (const auto& candidate_ptr : unreached_states(right.time())) {
-        auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
+      for (const auto state : unreached_states_[right.time()]) {
+        auto p = stateid_make_pair(left.id(), state->id());
         transition_cache_[p] = -1.f;
       }
       return -1.f;
     } else if (mmt_distance <= kClosestDistance) {
-      for (const auto& candidate_ptr : unreached_states(right.time())) {
-        auto p = candidateid_make_pair(left.id(), candidate_ptr->id());
+      for (const auto& state : unreached_states_[right.time()]) {
+        auto p = stateid_make_pair(left.id(), state->id());
         transition_cache_[p] = 0.f;
       }
       return 0.f;
@@ -242,12 +235,12 @@ class MapMatching: public ViterbiSearch<State>
     auto max_route_distance = std::min(mmt_distance * 3, kBreakageDistance);
 
     // Prepare locations
-    const auto& candidates = unreached_states(right.time());
+    const auto& candidates = unreached_states_[right.time()];
     std::vector<PathLocation> locations;
     locations.reserve(1 + candidates.size());
     locations.push_back(left.candidate().pathlocation());
-    for (const auto& candidate_ptr : candidates) {
-      locations.push_back(candidate_ptr->candidate().pathlocation());
+    for (const auto state : candidates) {
+      locations.push_back(state->candidate().pathlocation());
     }
 
     // Route and cache results
@@ -258,7 +251,7 @@ class MapMatching: public ViterbiSearch<State>
     auto candidate_itr = candidates.begin();
     for (uint16_t dest = 1; dest < locations.size(); dest++, candidate_itr++) {
       float cost = -1.f;
-      auto p = candidateid_make_pair(left.id(), (*candidate_itr)->id());
+      auto p = stateid_make_pair(left.id(), (*candidate_itr)->id());
       auto it = results.find(dest);
       if (it != results.end()) {
         auto route_distance = labelset.label(it->second).cost;
