@@ -115,29 +115,27 @@ void serialize_labels(const State& state,
                       const MapMatching&mm,
                       Writer<T>& writer)
 {
-  if (!mm.has_labelset(state.id())) {
+  if (!state.routed()) {
     writer.StartArray();
     writer.EndArray();
     return;
   }
 
-  const auto& labelset = mm.labelset(state.id());
   writer.StartArray();
   if (state.time() + 1 < mm.size()) {
-    for (const auto& next_state_ptr : mm.states(state.time() + 1)) {
-      auto idx = mm.label_idx(state.id(), next_state_ptr->id());
-      if (idx != kInvalidLabelIndex) {
-        const auto& label = labelset.label(idx);
+    for (const auto& next_state : mm.states(state.time() + 1)) {
+      auto label = state.RouteBegin(*next_state);
+      if (label != state.RouteEnd(*next_state)) {
         writer.StartObject();
 
         writer.String("state");
-        writer.Uint(next_state_ptr->id());
+        writer.Uint(next_state->id());
 
         writer.String("edge_id");
-        writer.Uint(label.edgeid.id());
+        writer.Uint(label->edgeid.id());
 
         writer.String("route_distance");
-        writer.Double(label.cost);
+        writer.Double(state.route_distance(*next_state));
 
         writer.EndObject();
       }

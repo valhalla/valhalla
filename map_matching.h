@@ -14,12 +14,10 @@ using namespace valhalla;
 class Measurement {
  public:
   Measurement(const PointLL& lnglat)
-      : lnglat_(lnglat) {
-  }
+      : lnglat_(lnglat) {}
 
-  const PointLL& lnglat() const {
-    return lnglat_;
-  };
+  const PointLL& lnglat() const
+  { return lnglat_; };
 
  private:
   PointLL lnglat_;
@@ -34,12 +32,16 @@ class State
         const Candidate& candidate)
       : id_(id),
         time_(time),
-        candidate_(candidate) {}
+        candidate_(candidate),
+        labelset_(nullptr),
+        label_idx_() {}
 
   State(const Time time, const Candidate& candidate)
       : id_(kInvalidStateId),
         time_(time),
-        candidate_(candidate) {}
+        candidate_(candidate),
+        labelset_(nullptr),
+        label_idx_() {}
 
   const StateId id() const
   { return id_; }
@@ -50,12 +52,74 @@ class State
   const Candidate& candidate() const
   { return candidate_; }
 
+  bool interpolated() const
+  { return id_ == kInvalidStateId; }
+
+  bool routed() const
+  { return labelset_ != nullptr; }
+
+  void route(const std::vector<const State*>& states,
+             GraphReader& graphreader,
+             float max_route_distance) const
+  {
+    // TODO disable routing to interpolated states
+
+    // Prepare locations
+    std::vector<PathLocation> locations;
+    locations.reserve(1 + states.size());
+    locations.push_back(candidate_.pathlocation());
+    for (const auto state : states) {
+      locations.push_back(state->candidate().pathlocation());
+    }
+
+    // Route
+    labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
+    // TODO pass labelset_ as shared_ptr
+    const auto& results = find_shortest_path(graphreader, locations, 0, *labelset_);
+
+    // Cache results
+    label_idx_.clear();
+    uint16_t dest = 1;  // dest at 0 is remained for the origin
+    for (const auto state : states) {
+      const auto it = results.find(dest);
+      if (it != results.end()) {
+        label_idx_[state->id()] = it->second;
+      }
+      dest++;
+    }
+  }
+
+  float route_distance(const State& state) const
+  {
+    const auto it = label_idx_.find(state.id());
+    if (it != label_idx_.end()) {
+      return labelset_->label(it->second).cost;
+    }
+    return -1.f;
+  }
+
+  RoutePathIterator RouteBegin(const State& state) const
+  {
+    const auto it = label_idx_.find(state.id());
+    if (it != label_idx_.end()) {
+      return RoutePathIterator(labelset_.get(), it->second);
+    }
+    return RoutePathIterator(labelset_.get());
+  }
+
+  RoutePathIterator RouteEnd(const State& state) const
+  { return RoutePathIterator(labelset_.get()); }
+
  private:
   const StateId id_;
 
   const Time time_;
 
   const Candidate candidate_;
+
+  mutable std::shared_ptr<LabelSet> labelset_;
+
+  mutable std::unordered_map<StateId, uint32_t> label_idx_;
 };
 
 
@@ -107,10 +171,7 @@ class MapMatching: public ViterbiSearch<State>
         graphreader_(graphreader),
         mode_costing_(mode_costing),
         mode_(mode),
-        states_(),
-        transition_cache_(),
-        labelset_cache_(),
-        label_idx_cache_()
+        states_()
   {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("expect sigma_z to be positive");
@@ -128,9 +189,6 @@ class MapMatching: public ViterbiSearch<State>
   {
     measurements_.clear();
     states_.clear();
-    transition_cache_.clear();
-    labelset_cache_.clear();
-    label_idx_cache_.clear();
     ViterbiSearch<State>::Clear();
   }
 
@@ -169,24 +227,11 @@ class MapMatching: public ViterbiSearch<State>
   const Measurement& measurement(Time time) const
   { return measurements_[time]; }
 
+  const Measurement& measurement(const State& state) const
+  { return measurements_[state.time()]; }
+
   std::vector<Measurement>::size_type size() const
   { return measurements_.size(); }
-
-  const LabelSet& labelset(StateId id) const
-  { return labelset_cache_.at(id); }
-
-  bool has_labelset(StateId id) const
-  { return labelset_cache_.find(id) != labelset_cache_.end(); }
-
-  uint32_t label_idx(StateId left, StateId right) const
-  {
-    auto p = stateid_make_pair(left, right);
-    auto it = label_idx_cache_.find(p);
-    if (it != label_idx_cache_.end()) {
-      return it->second;
-    }
-    return kInvalidLabelIndex;
-  }
 
  private:
   float sigma_z_;
@@ -199,80 +244,30 @@ class MapMatching: public ViterbiSearch<State>
   const TravelMode mode_;
   std::vector<std::vector<const State*>> states_;
 
-  // Caches
-  mutable std::unordered_map<StatePairId, float> transition_cache_;
-  mutable std::unordered_map<StateId, LabelSet> labelset_cache_;
-  mutable std::unordered_map<StatePairId, uint32_t> label_idx_cache_;
-
  protected:
   float TransitionCost(const State& left,
                        const State& right) const override
   {
-    // Use cache
-    auto pair = stateid_make_pair(left.id(), right.id());
-    auto cached = transition_cache_.find(pair);
-    if (cached != transition_cache_.end()) {
-      return cached->second;
-    }
-
-    // Handle cases when two measurements are too far or too close
-    const auto &left_mmt = measurements_[left.time()],
-              &right_mmt = measurements_[right.time()];
-    auto mmt_distance = GreatCircleDistance(left_mmt, right_mmt);
-    if (mmt_distance > kBreakageDistance) {
-      for (const auto state : unreached_states_[right.time()]) {
-        auto p = stateid_make_pair(left.id(), state->id());
-        transition_cache_[p] = -1.f;
-      }
-      return -1.f;
-    } else if (mmt_distance <= kClosestDistance) {
-      for (const auto& state : unreached_states_[right.time()]) {
-        auto p = stateid_make_pair(left.id(), state->id());
-        transition_cache_[p] = 0.f;
-      }
-      return 0.f;
-    }
+    auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
     auto max_route_distance = std::min(mmt_distance * 3, kBreakageDistance);
+    if (!left.routed()) {
+      left.route(unreached_states_[right.time()], graphreader_, max_route_distance);
+    }
+    assert(left.routed());
 
-    // Prepare locations
-    const auto& candidates = unreached_states_[right.time()];
-    std::vector<PathLocation> locations;
-    locations.reserve(1 + candidates.size());
-    locations.push_back(left.candidate().pathlocation());
-    for (const auto state : candidates) {
-      locations.push_back(state->candidate().pathlocation());
+    auto route_distance = left.route_distance(right);
+    if (route_distance >= 0.f) {
+      return std::abs(route_distance - mmt_distance) * inv_beta_;
     }
 
-    // Route and cache results
-    const auto& result = labelset_cache_.emplace(left.id(), std::ceil(max_route_distance));
-    assert(result.second);  // Must be new insertion
-    auto& labelset = result.first->second;
-    const auto& results = find_shortest_path(graphreader_, locations, 0, labelset);
-    auto candidate_itr = candidates.begin();
-    for (uint16_t dest = 1; dest < locations.size(); dest++, candidate_itr++) {
-      float cost = -1.f;
-      auto p = stateid_make_pair(left.id(), (*candidate_itr)->id());
-      auto it = results.find(dest);
-      if (it != results.end()) {
-        auto route_distance = labelset.label(it->second).cost;
-        cost = std::abs(route_distance - mmt_distance) * inv_beta_;
-        label_idx_cache_[p] = it->second;
-      }
-      transition_cache_[p] = cost;
-    }
-
-    return transition_cache_[pair];
+    return -1.f;
   }
 
   inline float EmissionCost(const State& state) const override
-  {
-    return state.candidate().sq_distance() * inv_double_sq_sigma_z_;
-  }
+  { return state.candidate().sq_distance() * inv_double_sq_sigma_z_; }
 
   inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
-  {
-    return prev_costsofar + transition_cost + emission_cost;
-  }
+  { return prev_costsofar + transition_cost + emission_cost; }
 };
 
 
