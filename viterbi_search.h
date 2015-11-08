@@ -72,10 +72,10 @@ class ViterbiPathIterator:
     public std::iterator<std::forward_iterator_tag, state_t>
 {
  public:
-  ViterbiPathIterator(IViterbiSearch<state_t>* vs, CandidateId id)
+  ViterbiPathIterator(IViterbiSearch<state_t>* vs, CandidateId id, Time time)
       : vs_(vs),
         id_(id),
-        time_(vs->state(id).time()) {}
+        time_(time) {}
 
   ViterbiPathIterator(IViterbiSearch<state_t>* vs): vs_(vs)
   { set_end(); }
@@ -114,12 +114,15 @@ class ViterbiPathIterator:
   const state_t* operator->() const
   { return &(vs_->state(id_)); }
 
+  CandidateId id() const
+  { return id_; }
+
   Time time() const
   { return time_; }
 
   // Invalid iterator can't be dereferenced
   bool IsValid() const
-  { return id_ == kInvalidStateId; }
+  { return id_ != kInvalidStateId; }
 
  private:
   IViterbiSearch<state_t>* vs_;
@@ -143,6 +146,7 @@ class ViterbiPathIterator:
       if (id_ == kInvalidStateId) {
         id_ = vs_->SearchWinner(time_);
       }
+      assert(id_ == kInvalidStateId || vs_->state(id_).time() == time_);
     } else {
       set_end();
     }
@@ -170,7 +174,7 @@ class IViterbiSearch
   virtual const T& state(CandidateId id) const = 0;
 
   iterator SearchPath(Time time)
-  { return iterator(this, SearchWinner(time)); }
+  { return iterator(this, SearchWinner(time), time); }
 
   iterator PathEnd() const
   { return path_end_; }
@@ -318,7 +322,7 @@ inline CandidateId
 NaiveViterbiSearch<T, Maximize>::predecessor(CandidateId id) const
 {
   if (id != kInvalidStateId) {
-    const auto& predecessor = label(state(id)).predecessor;
+    const auto predecessor = label(state(id)).predecessor;
     return predecessor? predecessor->id() : kInvalidStateId;
   }
   return kInvalidStateId;
@@ -563,7 +567,7 @@ ViterbiSearch<T>::predecessor(CandidateId id) const
 {
   auto it = scanned_labels_.find(id);
   if (it != scanned_labels_.end()) {
-    return (it->second).predecessor->id();
+    return (it->second).predecessor? (it->second).predecessor->id() : kInvalidStateId;
   } else {
     return kInvalidStateId;
   }
