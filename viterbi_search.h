@@ -59,10 +59,8 @@ class ViterbiPathIterator:
     public std::iterator<std::forward_iterator_tag, T>
 {
  public:
-  ViterbiPathIterator(IViterbiSearch<T>* vs, StateId id)
-      : vs_(vs),
-        id_(id),
-        time_(vs->state(id).time()) {}
+  ViterbiPathIterator(IViterbiSearch<T>* vs, StateId id, Time time)
+      : vs_(vs), id_(id), time_(time) {}
 
   ViterbiPathIterator(IViterbiSearch<T>* vs): vs_(vs)
   { set_end(); }
@@ -101,12 +99,15 @@ class ViterbiPathIterator:
   const T* operator->() const
   { return &(vs_->state(id_)); }
 
+  StateId id() const
+  { return id_; }
+
   Time time() const
   { return time_; }
 
   // Invalid iterator can't be dereferenced
   bool IsValid() const
-  { return id_ == kInvalidStateId; }
+  { return id_ != kInvalidStateId; }
 
  private:
   IViterbiSearch<T>* vs_;
@@ -132,6 +133,7 @@ class ViterbiPathIterator:
       if (id_ == kInvalidStateId) {
         id_ = vs_->SearchWinner(time_);
       }
+      assert(id_ == kInvalidStateId || vs_->state(id_).time() == time_);
     } else {
       set_end();
     }
@@ -159,7 +161,7 @@ class IViterbiSearch
   virtual const T& state(StateId id) const = 0;
 
   iterator SearchPath(Time time)
-  { return iterator(this, SearchWinner(time)); }
+  { return iterator(this, SearchWinner(time), time); }
 
   iterator PathEnd() const
   { return path_end_; }
@@ -523,7 +525,7 @@ ViterbiSearch<T>::predecessor(StateId id) const
 {
   auto it = scanned_labels_.find(id);
   if (it != scanned_labels_.end()) {
-    return (it->second).predecessor->id();
+    return (it->second).predecessor? (it->second).predecessor->id() : kInvalidStateId;
   } else {
     return kInvalidStateId;
   }
