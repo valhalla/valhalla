@@ -99,6 +99,14 @@ protected:
   std::uniform_int_distribution<size_t> distribution;
 };
 
+std::string url(const std::string& path, const ptree& pt) {
+  auto url = pt.get<std::string>("base_url") + path;
+  auto key = pt.get_optional<std::string>("api_key");
+  if(key)
+    url += "&api_key=" + *key;
+  return url;
+}
+
 //TODO: update this call to get only the tiles that have changed since last time
 struct weighted_tile_t { GraphId t; size_t w; bool operator<(const weighted_tile_t& o) const { return w == o.w ? t < o.t : w < o.w; } };
 std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
@@ -139,20 +147,16 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   for(const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
     //stop count
-    auto request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/stops?per_page=0&bbox=%1%,%2%,%3%,%4%&api_key=%5%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % pt.get<std::string>("api_key")).str();
+    auto request = url((boost::format("/api/v1/stops?per_page=0&bbox=%1%,%2%,%3%,%4%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     auto stops_total = curler(request, "meta.total").get<size_t>("meta.total");
     //route count
-    request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/routes?per_page=0&bbox=%1%,%2%,%3%,%4%&api_key=%5%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % pt.get<std::string>("api_key")).str();
+    request = url((boost::format("/api/v1/routes?per_page=0&bbox=%1%,%2%,%3%,%4%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     auto routes_total = curler(request, "meta.total").get<size_t>("meta.total");
     //pair count
-    request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%&api_key=%8%")
-      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
-      % utc->tm_year % utc->tm_mon % utc->tm_mday % pt.get<std::string>("api_key")).str();
+    request = url((boost::format("/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
+      % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
     auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
     //we have anything we want it
     if(stops_total > 0 || routes_total > 0|| pairs_total > 0) {
@@ -397,13 +401,11 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all the STOPS
     std::unordered_map<std::string, uint64_t> stops;
-    auto key_param = "&api_key=" + pt.get<std::string>("api_key");
-    boost::optional<std::string> request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/stops?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+    boost::optional<std::string> request = url((boost::format("/api/v1/stops?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     while(request) {
       //grab some stuff
-      response = curler(*request + key_param, "stops");
+      response = curler(*request, "stops");
       //copy stops in, keeping map of stopid to graphid
       get_stops(tile, stops, current, response, bbox);
       //please sir may i have some more?
@@ -414,13 +416,12 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       continue;
 
     //pull out all operator WEBSITES
-    request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/operators?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+    request = url((boost::format("/api/v1/operators?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, std::string> websites;
     while(request) {
       //grab some stuff
-      response = curler(*request + key_param, "operators");
+      response = curler(*request, "operators");
       //save the websites to a map
       for(const auto& operators_pt : response.get_child("operators")) {
         std::string onestop_id = operators_pt.second.get<std::string>("onestop_id", "");
@@ -433,15 +434,14 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     }
 
     //pull out all ROUTES
-    request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/routes?per_page=10&bbox=%2%,%3%,%4%,%5%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str();
+    request = url((boost::format("/api/v1/routes?per_page=10&bbox=%2%,%3%,%4%,%5%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
       //TODO: remove this once we can ask for routes in parallel
       uniques.lock.lock();
-      response = curler(*request + key_param, "routes");
+      response = curler(*request, "routes");
       uniques.lock.unlock();
       //copy routes in, keeping track of routeid to route index
       get_routes(tile, routes, websites, response);
@@ -451,13 +451,11 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
-    request = (boost::format(pt.get<std::string>("base_url") +
-      "/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()
-      % utc->tm_year % utc->tm_mon % utc->tm_mday).str();
+    request = url((boost::format("/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
+      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
     while(request) {
       //grab some stuff
-      response = curler(*request + key_param, "schedule_stop_pairs");
+      response = curler(*request, "schedule_stop_pairs");
       //copy pairs in, noting if any dont have stops
       dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
       //please sir may i have some more?
@@ -668,7 +666,8 @@ int main(int argc, char** argv) {
   ptree pt;
   boost::property_tree::read_json(std::string(argv[1]), pt);
   pt.add("base_url", std::string(argv[2]));
-  pt.add("api_key", std::string(argv[3]));
+  if(argc > 3)
+    pt.add("api_key", std::string(argv[3]));
   if(argc > 4)
     pt.add("per_page", std::string(argv[4]));
   else
