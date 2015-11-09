@@ -94,6 +94,7 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 template <typename T>
 void serialize_geometry(const std::vector<const State*>& path,
                         const MapMatching&mm,
+                        const std::vector<Measurement>& measurements,
                         Writer<T>& writer)
 {
   writer.StartObject();
@@ -101,8 +102,9 @@ void serialize_geometry(const std::vector<const State*>& path,
   writer.String("MultiPoint");
   writer.String("coordinates");
   writer.StartArray();
-  for (Time t = 0; t < path.size(); t++) {
-    const auto& vertex = path[t]? path[t]->candidate().pathlocation().vertex() : mm.measurement(t).lnglat();
+  for (decltype(path.size()) idx = 0; idx < path.size(); idx++) {
+    const auto& vertex = path[idx]? path[idx]->candidate().pathlocation().vertex()
+                         : measurements[idx].lnglat();
     serialize_coordinate(vertex, writer);
   }
   writer.EndArray();
@@ -128,7 +130,7 @@ void serialize_labels(const State& state,
       if (label != state.RouteEnd(*next_state)) {
         writer.StartObject();
 
-        writer.String("state");
+        writer.String("next_state");
         writer.Uint(next_state->id());
 
         writer.String("edge_id");
@@ -136,6 +138,40 @@ void serialize_labels(const State& state,
 
         writer.String("route_distance");
         writer.Double(state.route_distance(*next_state));
+
+        writer.String("route");
+        writer.StartArray();
+        for (auto label = state.RouteBegin(*next_state);
+             label != state.RouteEnd(*next_state);
+             label++) {
+          writer.StartObject();
+
+          writer.String("edge_id");
+          if (label->edgeid.Is_Valid()) {
+            writer.Uint(label->edgeid.id());
+          } else {
+            writer.Null();
+          }
+
+          writer.String("node_id");
+          if (label->nodeid.Is_Valid()) {
+            writer.Uint(label->nodeid.id());
+          } else {
+            writer.Null();
+          }
+
+          writer.String("source");
+          writer.Double(label->source);
+
+          writer.String("target");
+          writer.Double(label->target);
+
+          writer.String("cost");
+          writer.Double(label->cost);
+
+          writer.EndObject();
+        }
+        writer.EndArray();
 
         writer.EndObject();
       }
@@ -154,6 +190,9 @@ void serialize_state(const State& state,
 
   writer.String("id");
   writer.Uint(state.id());
+
+  writer.String("interpolated");
+  writer.Bool(state.interpolated());
 
   writer.String("time");
   writer.Uint(state.time());
@@ -180,10 +219,16 @@ void serialize_properties(const std::vector<const State*>& path,
 
   writer.String("states");
   writer.StartArray();
-  for (Time t = 0; t < path.size(); t++) {
+  for (const auto state : path) {
     writer.StartArray();
-    for (const auto& state_ptr : mm.states(t)) {
-      serialize_state(*state_ptr, mm, writer);
+    if (state) {
+      if (!state->interpolated()) {
+        for (const auto timed_state : mm.states(state->time())) {
+          serialize_state(*timed_state, mm, writer);
+        }
+      } else {
+        serialize_state(*state, mm, writer);
+      }
     }
     writer.EndArray();
   }
@@ -195,6 +240,7 @@ void serialize_properties(const std::vector<const State*>& path,
 template <typename T>
 void serialize_path(const std::vector<const State*>& path,
                     const MapMatching& mm,
+                    const std::vector<Measurement>& measurements,
                     Writer<T>& writer)
 {
   writer.StartObject();
@@ -203,7 +249,7 @@ void serialize_path(const std::vector<const State*>& path,
   writer.String("Feature");
 
   writer.String("geometry");
-  serialize_geometry(path, mm, writer);
+  serialize_geometry(path, mm, measurements, writer);
 
   writer.String("properties");
   serialize_properties(path, mm, writer);
@@ -309,7 +355,10 @@ class mm_worker_t {
       // Serialize path
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      serialize_path(path, mm, writer);
+      serialize_path(path, mm, measurements, writer);
+
+      // Clean up
+      DeleteInterpolatedStates(path);
 
       worker_t::result_t result{false};
       http_response_t response(200, "OK", sb.GetString(), headers_t{CORS, JS_MIME});

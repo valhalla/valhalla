@@ -44,27 +44,34 @@ int main(int argc, char *argv[])
     if (std::cin.eof() || line.empty()) {
       std::cout << "============================" << std::endl;
       std::cout << index++ << " id: " << std::endl;
+
       const auto& path = OfflineMatch(mm, grid, measurements, sq_search_radius);
       size_t mmt_id = 0, count = 0;
-      for (const auto candidate_ptr : path) {
-        if (candidate_ptr) {
-          auto& candidate = candidate_ptr->candidate();
-          auto measurement = mm.measurement(candidate_ptr->time());
+      for (const auto state : path) {
+        if (state) {
           std::cout << mmt_id << " ";
-          std::cout << candidate_ptr->id() << " ";
-          std::cout << candidate.distance() << std::endl;
-          count ++;
+          std::cout << state->id() << " ";
+          std::cout << state->candidate().distance() << std::endl;
+          count++;
         }
         mmt_id++;
       }
+
+      // Summary
       std::cout << count << "/" << measurements.size() << std::endl;
+
+      // Clean up
+      DeleteInterpolatedStates(path);
       measurements.clear();
+
       if (std::cin.eof()) {
         break;
       } else {
         continue;
       }
     }
+
+    // Load coordinates from the input line
     float lng, lat;
     std::stringstream stream(line);
     stream >> lng; stream >> lat;
