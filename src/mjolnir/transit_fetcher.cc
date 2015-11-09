@@ -40,7 +40,7 @@ struct logged_error_t: public std::runtime_error {
 struct curler_t {
   curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}),
     generator(std::chrono::system_clock::now().time_since_epoch().count()),
-    distribution(static_cast<size_t>(50), static_cast<size_t>(250)) {
+    distribution(static_cast<size_t>(500), static_cast<size_t>(1000)) {
     if(connection.get() == nullptr)
       throw logged_error_t("Failed to created CURL connection");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error), "Failed to set error buffer");
@@ -50,27 +50,33 @@ struct curler_t {
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url, const std::string& retry_if_no = "", size_t timeout = 200) {
-    LOG_DEBUG(url);
-    result.str("");
-    ptree pt;
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "") {
+    //set the url
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
-    auto sleep_or_not = [this, &url, &retry_if_no, &pt]() {
-      if(!retry_if_no.empty() && !pt.get_child_optional(retry_if_no)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
-        LOG_WARN("Retrying " + url)
-        return true;
+    //dont stop until we have something useful!
+    ptree pt;
+    while(true) {
+      result.str("");
+      long http_code = 0;
+      std::string log_extra = "Couldn't fetch url ";
+      //can we fetch this url
+      LOG_DEBUG(url);
+      if(curl_easy_perform(connection.get()) == CURLE_OK) {
+        curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &http_code);
+        log_extra = std::to_string(http_code) + "'d ";
+        //it should be 200 OK
+        if(http_code == 200) {
+          bool threw = false;
+          try { read_json(result, pt); } catch (...) { threw = true; }
+          //has to parse and have required info
+          if(!threw && (retry_if_no.empty() || pt.get_child_optional(retry_if_no)))
+            break;
+          log_extra = "Unusable response ";
+        }
       }
-      return false;
+      std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
+      LOG_WARN(log_extra + "retrying " + url);
     };
-
-    do {
-      try {
-        if(curl_easy_perform(connection.get()) == CURLE_OK)
-          read_json(result, pt);
-      }
-      catch(...) { /*swallow for retry */ }
-    } while(sleep_or_not());
     return pt;
   }
   std::string last() const {
