@@ -102,6 +102,10 @@ namespace valhalla {
         max_locations.emplace(kv.first, config.get<size_t>("service_limits." + kv.first + ".max_locations"));
         max_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first + ".max_distance"));
       }
+      for(const auto& matrix_type : std::list<std::string>{"one_to_many","many_to_one","many_to_many"}) {
+        max_locations.emplace(matrix_type, config.get<size_t>("service_limits." + matrix_type + ".max_locations"));
+        max_distance.emplace(matrix_type, config.get<float>("service_limits." + matrix_type + ".max_distance"));
+      }
       if (max_locations.empty())
         throw std::runtime_error("Missing max_locations configuration.");
       if (max_distance.empty())
