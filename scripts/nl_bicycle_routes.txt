@@ -7,4 +7,3 @@
 -j '{"locations":[{"lat":52.067606279497674,"lon":5.112613141645852,"type":"break"},{"lat":52.067606279497674,"lon":5.113305151571694,"type":"break"}],"costing":"bicycle"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":52.06635314529967,"lon":5.106025636305276,"type":"break"},{"lat":52.067230342930564,"lon":5.0997707248825455,"type":"break"}],"costing":"bicycle"}' --config ../conf/valhalla.json
 -j '{"locations":[{"lat":52.067230342930564,"lon":5.0997707248825455,"type":"break"},{"lat":52.06635314529967,"lon":5.106025636305276,"type":"break"}],"costing":"bicycle"}' --config ../conf/valhalla.json
-
