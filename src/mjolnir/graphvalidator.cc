@@ -280,10 +280,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       // Write the new tile
       lock.lock();
       tilebuilder.Update(hdrbuilder, nodes, directededges);
-      lock.unlock();
 
       // Check if we need to clear the tile cache
-      lock.lock();
       if (graph_reader.OverCommitted())
         graph_reader.Clear();
       lock.unlock();

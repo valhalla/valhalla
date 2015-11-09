@@ -32,7 +32,7 @@ namespace mjolnir {
 GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid, bool deserialize)
     : GraphTile(hierarchy, graphid), hierarchy_(hierarchy),
-      binner_(get_tile_bbox(hierarchy, graphid), kCellCount) {
+      binner_(get_tile_bbox(hierarchy, graphid), kGridDim) {
 
   // Keep the id
   header_builder_.set_graphid(graphid);
@@ -42,6 +42,7 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     textlistbuilder_.emplace_back("");
     text_offset_map_.emplace("", 0);
     text_list_offset_ = 1;
+    write_bins_ = false;
     return;
   }
 
@@ -106,7 +107,12 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     text_offsets.insert(admins_[i].state_offset());
   }
 
-  //TODO: get the edge cells
+  //get the edge cells
+  write_bins_ = true;
+  for(size_t i = 0; i < kCellCount; ++i) {
+    auto cell = GetCell(i % kGridDim, i / kGridDim);
+    bins_[i].assign(cell.begin(), cell.end());
+  }
 
   // Create an ordered set of edge info offsets
   std::set<uint32_t> edge_info_offsets;
@@ -236,7 +242,8 @@ void GraphTileBuilder::StoreTileData() {
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
                admins_builder_.size() * sizeof(Admin));
 
-    //TODO: write the edge cells
+    // Write the edge cells
+    SerializeEdgeCellsToOstream(file);
 
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
@@ -313,7 +320,13 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
 
-    //TODO: write the edge cells
+    // Write the edge cells
+    if(write_bins_)
+      SerializeEdgeCellsToOstream(file);
+    else {
+      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
+    }
 
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
@@ -386,7 +399,13 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
 
-    //TODO: write the edge cells
+    // Write the edge cells
+    if(write_bins_)
+      SerializeEdgeCellsToOstream(file);
+    else {
+      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
+    }
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
@@ -514,12 +533,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Update edge offset for next item
     edge_info_offset_ += edgeinfo.SizeOf();
 
-    // Update the list of ids per bin
-    //TODO:
-    /*for(const auto& index : binner_.intersect(lls)) {
-      bins_[index].push_back();
-    }*/
-
     // Return the offset to this edge info
     added = true;
     return current_edge_offset;
@@ -583,15 +596,22 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
   }
 }
 
+// Write all edge cells to specified stream
+void GraphTileBuilder::SerializeEdgeCellsToOstream(std::ostream& out) const {
+  for (const auto& bin : bins_) {
+    out.write(static_cast<const char*>(static_cast<const void*>(bin.data())), sizeof(GraphId) * bin.size());
+  }
+}
+
 // Serialize the edge info list
-void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
+void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) const {
   for (const auto& edgeinfo : edgeinfo_list_) {
     out << edgeinfo;
   }
 }
 
 // Serialize the text list
-void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
+void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) const {
   for (const auto& text : textlistbuilder_) {
     out << text << '\0';
   }
@@ -664,6 +684,7 @@ const Admin& GraphTileBuilder::admins_builder(size_t idx) {
 // Bin the edges in this tile and return which ones shape leaves
 std::list<GraphId> GraphTileBuilder::Bin() {
   std::list<GraphId> strays;
+  write_bins_ = true;
 
   //each edge please
   std::unordered_set<uint64_t> ids;

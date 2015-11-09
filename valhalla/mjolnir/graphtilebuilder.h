@@ -307,11 +307,14 @@ class GraphTileBuilder : public baldr::GraphTile {
         std::make_tuple(edgeindex, nodeb, nodea);
   }
 
+  // Write all edge cells to specified stream
+  void SerializeEdgeCellsToOstream(std::ostream& out) const;
+
   // Write all edgeinfo items to specified stream
-  void SerializeEdgeInfosToOstream(std::ostream& out);
+  void SerializeEdgeInfosToOstream(std::ostream& out) const;
 
   // Write all textlist items to specified stream
-  void SerializeTextListToOstream(std::ostream& out);
+  void SerializeTextListToOstream(std::ostream& out) const;
 
   // Tile hierarchy for disk access location
   TileHierarchy hierarchy_;
@@ -369,6 +372,7 @@ class GraphTileBuilder : public baldr::GraphTile {
   std::list<std::string> textlistbuilder_;
 
   // Cells of the tile to intersect with the edges' shapes
+  bool write_bins_;
   grid<PointLL> binner_;
   std::array<std::vector<GraphId>, kCellCount> bins_;
 };
