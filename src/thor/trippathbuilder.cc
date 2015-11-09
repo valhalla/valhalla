@@ -120,8 +120,6 @@ void AssignAdmins(TripPath& trip_path,
     trip_admin->set_country_text(admin_info.country_text());
     trip_admin->set_state_code(admin_info.state_iso());
     trip_admin->set_state_text(admin_info.state_text());
-    trip_admin->set_start_dst(admin_info.start_dst());
-    trip_admin->set_end_dst(admin_info.end_dst());
   }
 }
 
@@ -416,18 +414,14 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
 
     // Add transit information if this is a transit stop
     if (node->is_transit()) {
-      trip_node->set_transit_stop(true);
-      trip_node->set_transit_parent_stop(node->parent());
-
       // Get the transit stop information and add transit stop info
-      const TransitStop* stop = graphtile->GetTransitStop(node->stop_id());
+      const TransitStop* stop = graphtile->GetTransitStop(graphtile->node(startnode)->stop_index());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
-      if (!stop) {
+      if (!stop)
     	  transit_stop_info->set_name("");
-      } else {
+      else
         transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
-      }
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure)
@@ -463,6 +457,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         arrival_time = "";
         block_id = 0;
       }
+
+      transit_stop_info->set_is_parent_stop(graphtile->node(startnode)->parent());
     }
 
     // Assign the admin index
@@ -809,16 +805,15 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     // TODO: Need to set based on GTFS values
     if (directededge->use() == Use::kRail)
       trip_edge->set_transit_type(
-          TripPath_TransitType::TripPath_TransitType_kSubway);
+          TripPath_TransitType::TripPath_TransitType_kMetro);
 
     if (directededge->use() == Use::kBus)
       trip_edge->set_transit_type(
           TripPath_TransitType::TripPath_TransitType_kBus);
 
-    trip_edge->set_transit_trip_id(trip_id);
-    trip_edge->set_transit_block_id(block_id);
-
-    TripPath_TransitInfo* transit_info = trip_edge->mutable_transit_info();
+    TripPath_TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
+    transit_route_info->set_trip_id(trip_id);
+    transit_route_info->set_block_id(block_id);
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
 
@@ -826,22 +821,18 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
 
       const TransitRoute* transit_route = graphtile->GetTransitRoute(
           transit_departure->routeid());
-      const TransitTrip* transit_trip = graphtile->GetTransitTrip(trip_id);
 
       //use route short name if available otherwise trip short name.
       if (transit_route && transit_route->short_name_offset())
-        transit_info->set_short_name(
+        transit_route_info->set_short_name(
             graphtile->GetName(transit_route->short_name_offset()));
-      else if (transit_trip && transit_trip->short_name_offset())
-        transit_info->set_short_name(
-            graphtile->GetName(transit_trip->short_name_offset()));
 
       if (transit_route && transit_route->long_name_offset())
-        transit_info->set_long_name(
+        transit_route_info->set_long_name(
             graphtile->GetName(transit_route->long_name_offset()));
 
       if (transit_departure->headsign_offset())
-        transit_info->set_headsign(
+        transit_route_info->set_headsign(
             graphtile->GetName(transit_departure->headsign_offset()));
     }
   }

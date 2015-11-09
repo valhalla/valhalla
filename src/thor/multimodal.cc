@@ -155,12 +155,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
-                                      nodeinfo->stop_id()));
+                                      nodeinfo->stop_index()));
       }
 
       // Update prior stop.
       // TODO - parent/child stop info?
-      prior_stop = nodeinfo->stop_id();
+      prior_stop = nodeinfo->stop_index();
     }
 
     // Set local time. TODO: adjust for time zone. Add true transfer time.
@@ -292,9 +292,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         newcost -= p->second;
       }
 
-      // Skip if the end node tile is not found
-      const GraphTile* endtile;
-      if ((endtile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+      // Get the end node, skip if the end node tile is not found
+      const GraphTile* endtile = (directededge->leaves_tile()) ?
+          graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (endtile == nullptr) {
         continue;
       }
 
@@ -303,7 +304,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       const NodeInfo* endnode = endtile->node(directededge->endnode());
       if (directededge->use() == Use::kTransitConnection &&
           endnode->is_transit() &&
-          endnode->stop_id() == pred.prior_stopid()) {
+          endnode->stop_index() == pred.prior_stopid()) {
         continue;
       }
 
