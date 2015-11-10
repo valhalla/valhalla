@@ -264,13 +264,13 @@ void GraphTileBuilder::StoreTileData() {
 }
 
 // Update a graph tile with new header, nodes, and directed edges.
-void GraphTileBuilder::Update(const GraphTileHeader& hdr,
+void GraphTileBuilder::Update(
     const std::vector<NodeInfo>& nodes,
     const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
   boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
-      + GraphTile::FileSuffix(hdr.graphid(), hierarchy_);
+      + GraphTile::FileSuffix(header_->graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -282,7 +282,7 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
   if (file.is_open()) {
 
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
+    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
@@ -294,38 +294,38 @@ void GraphTileBuilder::Update(const GraphTileHeader& hdr,
 
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
-               hdr.departurecount() * sizeof(TransitDeparture));
+        header_->departurecount() * sizeof(TransitDeparture));
 
     // Write the existing transit stops
     file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
-               hdr.stopcount() * sizeof(TransitStop));
+        header_->stopcount() * sizeof(TransitStop));
 
     // Write the existing transit routes
     file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
-               hdr.routecount() * sizeof(TransitRoute));
+        header_->routecount() * sizeof(TransitRoute));
 
     // Write the existing transit transfers
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
-               hdr.transfercount() * sizeof(TransitTransfer));
+        header_->transfercount() * sizeof(TransitTransfer));
 
     // Write the existing access restrictions
     file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
-               hdr.access_restriction_count() * sizeof(AccessRestriction));
+        header_->access_restriction_count() * sizeof(AccessRestriction));
 
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
-               hdr.signcount() * sizeof(Sign));
+        header_->signcount() * sizeof(Sign));
 
     // Write the existing admins
     file.write(reinterpret_cast<const char*>(&admins_[0]),
-               hdr.admincount() * sizeof(Admin));
+        header_->admincount() * sizeof(Admin));
 
     // Write the edge cells
     if(write_bins_)
       SerializeEdgeCellsToOstream(file);
     else {
       file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
-        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
+        sizeof(GraphId) * header_->cell_offset(kGridDim - 1, kGridDim - 1).second);
     }
 
     // Write the existing edgeinfo
@@ -599,7 +599,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
 // Write all edge cells to specified stream
 void GraphTileBuilder::SerializeEdgeCellsToOstream(std::ostream& out) const {
   for (const auto& bin : bins_) {
-    out.write(static_cast<const char*>(static_cast<const void*>(bin.data())), sizeof(GraphId) * bin.size());
+    out.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
   }
 }
 
@@ -721,9 +721,7 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
   for(size_t i = 1 ; i < kCellCount; ++i)
     offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
-  auto hdr = *header_;
-  hdr.set_edge_cell_offsets(offsets);
-  memcpy(header_, reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
+  header_->set_edge_cell_offsets(offsets);
 
   return strays;
 }

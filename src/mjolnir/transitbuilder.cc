@@ -149,10 +149,8 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     //TODO
     //wheelchair_accessible
 
-    const std::string origin_time = sp.origin_departure_time();
-    const std::string dest_time = sp.destination_arrival_time();
-    dep.dep_time = DateTime::seconds_from_midnight(origin_time);
-    dep.arr_time = DateTime::seconds_from_midnight(dest_time);
+    dep.dep_time = sp.origin_departure_time();
+    dep.arr_time = sp.destination_arrival_time();
     std::string start_date = sp.service_start_date();
     std::string end_date = sp.service_end_date();
 
@@ -188,14 +186,12 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
 
     dep.dow = dow_mask;
 
-    std::string tz = sp.origin_timezone();
-
     //end_date will be updated if greater than 60 days.
     //start_date will be updated to the tile creation date if the start date is in the past
     //the start date to end date or 60 days, whichever is less.
     //set the bits based on the dow.
 
-    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, tz, dow_mask);
+    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, sp.origin_timezone(), dow_mask);
     dep.start_date =  DateTime::days_from_pivot_date(start_date);
     dep.end_date =  DateTime::days_from_pivot_date(end_date);
     dep.headsign = sp.trip_headsign();

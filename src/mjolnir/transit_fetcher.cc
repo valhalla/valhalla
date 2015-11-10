@@ -178,7 +178,6 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
 
 void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& bbox) {
-  const std::vector<std::string> regions = DateTime::get_tz_db().regions;
   for(const auto& stop_pt : response.get_child("stops")) {
     const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
@@ -196,14 +195,10 @@ void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
     stop_id.fields.id = stops.size();
     stop->set_graphid(stop_id);
     stop->set_timezone(0);
-    auto timezone = stop_pt.second.get_optional<std::string>("timezone");
-    if (timezone) {
-      std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), *timezone);
-      if (it == regions.end()) {
-        LOG_WARN("Timezone not found for " + *timezone);
-      } else stop->set_timezone(it - regions.cbegin());
-    }
-    else LOG_WARN("Timezone not found for stop " + stop->name());
+    uint32_t timezone = DateTime::get_tz_db().to_index(stop_pt.second.get<std::string>("timezone", ""));
+    if (timezone == 0)
+      LOG_WARN("Timezone not found for stop " + stop->name());
+    stop->set_timezone(timezone);
     stops.emplace(stop->onestop_id(), stop_id);
   }
 }
@@ -308,8 +303,8 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
-    pair->set_origin_departure_time(origin_time);
-    pair->set_destination_arrival_time(dest_time);
+    pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
+    pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
 
     //trip
     std::string t = pair_pt.second.get<std::string>("trip", "null");
@@ -350,7 +345,11 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
       pair->add_service_days_of_week(service_days.second.get_value<bool>());
     }
 
-    set_no_null(std::string, pair_pt.second, "origin_timezone", "null", pair->set_origin_timezone);
+    uint32_t timezone = DateTime::get_tz_db().to_index(pair_pt.second.get<std::string>("origin_timezone", ""));
+    if (timezone == 0)
+      LOG_WARN("Timezone not found for stop_pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+    pair->set_origin_timezone(timezone);
+
     set_no_null(std::string, pair_pt.second, "trip_headsign", "null", pair->set_trip_headsign);
     pair->set_bikes_allowed(pair_pt.second.get<bool>("bikes_allowed", false));
 

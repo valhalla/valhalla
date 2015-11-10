@@ -146,9 +146,6 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       /*if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
         auto unbinned = tilebuilder.Bin();*/
 
-      // Copy existing header. No need to update any counts or offsets.
-      auto hdrbuilder = *(tilebuilder.header());
-
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
       std::vector<DirectedEdge> directededges;
@@ -279,7 +276,7 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Write the new tile
       lock.lock();
-      tilebuilder.Update(hdrbuilder, nodes, directededges);
+      tilebuilder.Update(nodes, directededges);
 
       // Check if we need to clear the tile cache
       if (graph_reader.OverCommitted())

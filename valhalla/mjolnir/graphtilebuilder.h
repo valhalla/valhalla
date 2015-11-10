@@ -70,7 +70,7 @@ class GraphTileBuilder : public baldr::GraphTile {
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const GraphTileHeader& hdr,
+  void Update(
             const std::vector<NodeInfo>& nodes,
             const std::vector<DirectedEdge>& directededges);
 

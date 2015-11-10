@@ -559,8 +559,7 @@ uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& p
 }
 
 std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
-                                                             const AABB2<PointLL>& aabb,
-                                                             const std::vector<std::string>& regions) {
+                                                             const AABB2<PointLL>& aabb) {
   std::unordered_map<uint32_t,multi_polygon_type> polys;
   if (!db_handle)
     return polys;
@@ -593,13 +592,11 @@ std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
       if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
         geom = (char*)sqlite3_column_text(stmt, 1);
 
-      std::vector<std::string>::const_iterator it = std::find(regions.begin(), regions.end(), tz_id);
-      if (it == regions.end()) {
+      uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
+      if (idx == 0) {
         polys.clear();
         break;
       }
-
-      uint32_t idx = std::distance(regions.begin(),it);
 
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
@@ -1074,8 +1071,6 @@ void enhance(const boost::property_tree::ptree& pt,
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
 
-    // index 0 = none.
-    const std::vector<std::string> regions = DateTime::get_tz_db().regions;
     std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
     std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
     std::unordered_map<uint32_t,bool> drive_on_right;
@@ -1117,7 +1112,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
     bool tile_within_one_tz = false;
     if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id), regions);
+      tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id));
       if (tz_polys.size() == 1) {
         tile_within_one_tz = true;
       }

@@ -16,14 +16,14 @@ message Transit {
   message StopPair {
     optional bool bikes_allowed = 1; 
     optional uint32 block_id = 2; 
-    optional string destination_arrival_time = 3;
+    optional uint32 destination_arrival_time = 3;
     optional uint64 destination_graphid = 4;
     optional string destination_onestop_id = 5; 
     optional string operated_by_onestop_id = 6;
-    optional string origin_departure_time = 7;
+    optional uint32 origin_departure_time = 7;
     optional uint64 origin_graphid = 8;
     optional string origin_onestop_id = 9;
-    optional string origin_timezone = 10;
+    optional uint32 origin_timezone = 10;
     optional uint32 route_index = 11;
     optional string route_onestop_id = 12;
     repeated string service_added_dates = 13;
