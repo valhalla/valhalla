@@ -72,7 +72,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   // Set route start time (seconds from midnight), date, and day of week
   uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
   uint32_t localtime = start_time;
-  uint32_t date = DateTime::days_from_pivot_date(*origin.date_time_);
+  uint32_t date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
   uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
