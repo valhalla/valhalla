@@ -8,6 +8,7 @@
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
 
 namespace valhalla {
 namespace odin {
@@ -332,6 +333,13 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormOrdinalValue(uint32_t value);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormStreetNames(
+      const Maneuver& maneuver, const StreetNames& street_names,
+      bool enhance_blank_street_names = false, uint32_t max_count = 0,
+      std::string delim = "/",
+      const VerbalTextFormatter* verbal_formatter = nullptr);
 
 };
 
