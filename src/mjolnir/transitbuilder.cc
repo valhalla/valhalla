@@ -923,16 +923,13 @@ void build(const std::string& transit_dir,
         uint32_t elapsed_time = dep.arr_time - dep.dep_time;
         TransitDeparture td(lineid, dep.trip,dep.route,
                     dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                    dep.start_date, dep.end_date, dep.dow, dep.days);
+                    dep.dow, dep.days);
 
         LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                      " dep time = " + std::to_string(td.departure_time()) +
-                     " arr time = " + std::to_string(dep.arr_time) +
-                     " start_date = " + std::to_string(td.start_date()) +
-                     " end date = " + std::to_string(td.end_date()));
+                     " arr time = " + std::to_string(dep.arr_time));
 
-        tilebuilder.AddTransitDeparture(td);
-
+        tilebuilder.AddTransitDeparture(std::move(td));
       }
 
       // TODO no Transfers exist in transit.land
