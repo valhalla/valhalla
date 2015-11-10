@@ -5,7 +5,6 @@
 #include <memory>
 #include <vector>
 #include <boost/date_time/gregorian/gregorian.hpp>
-
 #include <boost/date_time/local_time/tz_database.hpp>
 
 namespace valhalla {
@@ -14,6 +13,9 @@ namespace DateTime {
 
   struct tz_db_t : public boost::local_time::tz_database {
     tz_db_t();
+    size_t to_index(const std::string& region) const;
+    boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
+   protected:
     std::vector<std::string> regions;
   };
 
@@ -22,12 +24,6 @@ namespace DateTime {
    * @return  timezone database
    */
   const tz_db_t& get_tz_db();
-
-  /**
-   *
-   * Get the list of regions.
-   */
-  std::vector<std::string> get_region_list();
 
   /**
    * Get a formatted date from a string.
@@ -46,8 +42,7 @@ namespace DateTime {
    * @return  Returns the number of days.
    */
   uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                            const uint64_t tile_date, const std::string& tz,
-                            const uint32_t& dow_mask);
+                            uint64_t tile_date, uint32_t tz, uint32_t dow_mask);
 
   /**
    * Adds a service day to the days.

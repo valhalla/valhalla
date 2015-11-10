@@ -92,7 +92,7 @@ void TryIsoDateTime() {
 
 void TryGetServiceDays(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
 
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(), DateTime::get_tz_db().to_index(tz), dow_mask);
 
   if (value != days)
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
@@ -102,7 +102,7 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
 
   std::string edate = end_date;
   std::string bdate = begin_date;
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(tz), dow_mask);
 
   if (check_b_date) {
     if (value != days && begin_date != date && end_date != edate)
@@ -115,7 +115,7 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
 
 void TryRejectFeed(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
 
-  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),tz, dow_mask);
+  uint64_t days = DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(tz), dow_mask);
 
   if (value != days)
     throw std::runtime_error("Feed should of been rejected. " + begin_date + " " + end_date + " " + std::to_string(days));
@@ -135,9 +135,9 @@ void TryRemoveServiceDays(uint64_t days, std::string begin_date, std::string end
     throw std::runtime_error("Invalid bits set for added service day. " + removed_date);
 }
 
-void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::string new_end_date, std::string tz, uint32_t dow_mask) {
+void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::string new_end_date, uint32_t dow_mask) {
 
-  DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),"", dow_mask);
+  DateTime::get_service_days(begin_date, end_date, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(""), dow_mask);
 
   if (end_date != new_end_date)
     throw std::runtime_error("End date not cut off at 60 days.");
@@ -313,7 +313,7 @@ void TestServiceDays() {
   TryGetServiceDays("2015-09-25", "2017-09-28", "", dow_mask, 717171644597959929);
 
   //Test to confirm that enddate is cut off at 60 days
-  TryTestServiceEndDate("2015-09-25", "2017-09-28", "2015-11-23", "", dow_mask);
+  TryTestServiceEndDate("2015-09-25", "2017-09-28", "2015-11-23", dow_mask);
 
 }
 

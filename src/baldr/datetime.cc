@@ -32,9 +32,21 @@ tz_db_t::tz_db_t() {
   std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
   std::stringstream ss(tz_data);
   load_from_stream(ss);
-  //cache the regions and add our own unclassified one
-  regions = boost::local_time::tz_database::region_list();
-  regions.insert(regions.begin(), "None");
+  //unfortunately boosts object has its map marked as private... so we have to keep our own
+  regions = region_list();
+}
+
+size_t tz_db_t::to_index(const std::string& region) const {
+  auto it = std::find(regions.cbegin(), regions.cend(), region);
+  if(it == regions.cend())
+    return 0;
+  return (it - regions.cbegin()) + 1;
+}
+
+boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type> tz_db_t::from_index(size_t index) const {
+  if(index < 1 || index > regions.size())
+    return {};
+  return time_zone_from_region(regions[index - 1]);
 }
 
 const tz_db_t& get_tz_db() {
@@ -64,8 +76,8 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
 uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                          const uint64_t tile_date, const std::string& tz,
-                          const uint32_t& dow_mask) {
+                          uint64_t tile_date, uint32_t tz,
+                          uint32_t dow_mask) {
 
   //start_date is in the format of 20150516 or 2015-05-06T08:00
   boost::gregorian::date s_date;
@@ -75,7 +87,7 @@ uint64_t get_service_days(std::string& start_date, std::string& end_date,
   boost::gregorian::date e_date;
   e_date = get_formatted_date(end_date);
 
-  if (!tz.empty()) {
+  if (tz != 0) {
     boost::gregorian::date tile_header_date = get_formatted_date(seconds_to_date(tile_date));
     if (s_date <= tile_header_date && tile_header_date <= e_date) {
       s_date = tile_header_date;
