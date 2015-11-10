@@ -51,42 +51,60 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   set_speed_type(way.tagged_speed() ?
         SpeedType::kTagged : SpeedType::kClassified);
 
-  // Set forward flag and access (based on direction)
+  // Set forward flag and access modes (based on direction)
   set_forward(forward);
-
-  // Set access flags in the forward direction
   uint32_t forward_access = 0;
-  if (way.auto_forward())
-    forward_access |= kAutoAccess;
-  if (way.truck_forward())
-    forward_access |= kTruckAccess;
-  if (way.bus_forward())
-    forward_access |= kBusAccess;
-  if (way.bike_forward())
-    forward_access |= kBicycleAccess;
-  if (way.emergency_forward())
-    forward_access |= kEmergencyAccess;
-  if (way.pedestrian())
-    forward_access |= kPedestrianAccess;
-  set_forwardaccess(forward_access);
-
-  // TODO: HOV, Taxi
-
-  // Access for opposite direction
   uint32_t reverse_access = 0;
-  if (way.auto_backward())
+  if ((way.auto_forward()  &&  forward) ||
+      (way.auto_backward() && !forward)) {
+    forward_access |= kAutoAccess;
+  }
+  if ((way.auto_forward()  && !forward) ||
+      (way.auto_backward() &&  forward)) {
     reverse_access |= kAutoAccess;
-  if (way.truck_backward())
+  }
+  if ((way.truck_forward()  &&  forward) ||
+      (way.truck_backward() && !forward)) {
+    forward_access |= kTruckAccess;
+  }
+  if ((way.truck_forward()  && !forward) ||
+      (way.truck_backward() &&  forward)) {
     reverse_access |= kTruckAccess;
-  if (way.bus_backward())
+  }
+  if ((way.bus_forward()  &&  forward) ||
+      (way.bus_backward() && !forward)) {
+    forward_access |= kBusAccess;
+  }
+  if ((way.bus_forward()  && !forward) ||
+      (way.bus_backward() &&  forward)) {
     reverse_access |= kBusAccess;
-  if (way.bike_backward())
+  }
+  if ((way.bike_forward()  &&  forward) ||
+      (way.bike_backward() && !forward)) {
+    forward_access |= kBicycleAccess;
+  }
+  if ((way.bike_forward()  && !forward) ||
+      (way.bike_backward() &&  forward)) {
     reverse_access |= kBicycleAccess;
-  if (way.emergency_backward())
+  }
+  if ((way.emergency_forward()  &&  forward) ||
+      (way.emergency_backward() && !forward)) {
+    forward_access |= kEmergencyAccess;
+  }
+  if ((way.emergency_forward()  && !forward) ||
+      (way.emergency_backward() &&  forward)) {
     reverse_access |= kEmergencyAccess;
-  if (way.pedestrian())
+  }
+  if (way.pedestrian()) {
+    forward_access |= kPedestrianAccess;
     reverse_access |= kPedestrianAccess;
+  }
+
+  // Set access modes
+  set_forwardaccess(forward_access);
   set_reverseaccess(reverse_access);
+
+  // TODO: HOV, Taxi?
 }
 
 }
