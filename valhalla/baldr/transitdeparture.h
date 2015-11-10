@@ -86,31 +86,23 @@ class TransitDeparture {
   bool operator < (const TransitDeparture& other) const;
 
  protected:
+  uint64_t days_;                // Days this departure is active relative to
+                                 // the tile's creation date. Stores bit field
+                                 // with 1's meaning the departure applies
+                                 // to the day.
+  uint32_t lineid_;              // Line Id - lookup departures by unique line
+                                 // Id (which indicates a unique departure /
+                                 // arrival stop pair.
+  uint32_t tripid_;              // TripId (internal).
+  uint32_t routeid_;             // Route Id (internal).
+  uint32_t headsign_offset_;     // Headsign offset into the names/text list.
 
-  // Stores bits for until the end date.  The end date will be less than or
-  // equal to 60 days.
-  uint64_t days_;
+  uint32_t blockid_      : 25;   // Block Id
+  uint32_t days_of_week_ : 7;    // Days of the week
 
-  // Line Id - lookup departures by unique line Id (which indicates a unique
-  // departure / arrival stop pair.
-  uint32_t lineid_;
-
-  // TripId (internal).
-  uint32_t tripid_;
-
-  // Route Id (internal).
-  uint32_t routeid_;
-
-  // Block Id
-  uint32_t blockid_      : 25;
-  uint32_t days_of_week_ : 7;      // Days of the week
-
-  // Headsign offset into the names/text list.
-  uint32_t headsign_offset_;
-
-  // Departure time (seconds from midnight)
-  uint32_t departure_time_ : 17;   // Seconds from midnight (86400 secs per day)
-  uint32_t elapsed_time_   : 15;   // Time until arrival at next stop
+  uint32_t departure_time_ : 17; // Departure time (seconds from midnight)
+                                 // (86400 secs per day)
+  uint32_t elapsed_time_   : 15; // Time (secs) until arrival at next stop
 
   // TODO - fare info, frequencies
 };
