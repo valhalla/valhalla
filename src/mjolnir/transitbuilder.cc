@@ -151,8 +151,8 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
 
     dep.dep_time = sp.origin_departure_time();
     dep.arr_time = sp.destination_arrival_time();
-    std::string start_date = sp.service_start_date();
-    std::string end_date = sp.service_end_date();
+    boost::gregorian::date start_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_start_date()));
+    boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
 
     uint32_t dow_mask = kDOWNone;
     for (uint32_t x = 0; x < sp.service_days_of_week_size(); x++) {
@@ -202,14 +202,14 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
 
     //if subtractions are between start and end date then turn off bit.
     for (uint32_t x = 0; x < sp.service_except_dates_size(); x++) {
-      std::string date = sp.service_except_dates(x);
-      dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, date);
+      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_except_dates(x)));
+      dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, d);
     }
 
     //if additions are between start and end date then turn on bit.
     for (uint32_t x = 0; x < sp.service_added_dates_size(); x++) {
-      std::string date = sp.service_added_dates(x);
-      dep.days = DateTime::add_service_day(dep.days, start_date, end_date, date);
+      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_added_dates(x)));
+      dep.days = DateTime::add_service_day(dep.days, start_date, end_date, d);
     }
     departures.emplace(dep.orig_stop,std::move(dep));
   }
