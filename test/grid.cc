@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include <random>
 
 using namespace valhalla::midgard;
 
@@ -33,6 +34,27 @@ namespace {
     //TODO:
   }
 
+  void test_random_linestring() {
+    grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
+    std::default_random_engine generator;
+    std::uniform_real_distribution<> distribution(-10, 10);
+    for(int i = 0; i < 10000; ++i) {
+      std::vector<Point2> linestring;
+      for(int j = 0; j < 100; ++j)
+        linestring.emplace_back(PointLL(distribution(generator), distribution(generator)));
+      bool leaves;
+      auto answer = g.intersect(linestring, leaves);
+      for(auto a : answer)
+        if(a > 24)
+          throw std::runtime_error("Non-existant cell!");
+    }
+  }
+
+  void test_random_circle() {
+    grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
+    //TODO:
+  }
+
 }
 
 int main() {
@@ -40,6 +62,8 @@ int main() {
 
   suite.test(TEST_CASE(test_intersect_linestring));
   suite.test(TEST_CASE(test_intersect_circle));
+  suite.test(TEST_CASE(test_random_linestring));
+  suite.test(TEST_CASE(test_random_circle));
 
   return suite.tear_down();
 }
