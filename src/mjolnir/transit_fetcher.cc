@@ -296,15 +296,23 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
     pair->set_route_index(route->second);
 
-    std::string origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
-    std::string dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
-    if (origin_time == "null" || dest_time == "null") {
-      LOG_ERROR("Origin or destination time not set: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
+    auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
+    auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
+    auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
+    auto end_date = pair_pt.second.get<std::string>("service_end_date", "null");
+    if (origin_time == "null" || dest_time == "null" || start_date == "null" || end_date == "null") {
+      LOG_ERROR("Missing timing information: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
     pair->set_origin_departure_time(DateTime::seconds_from_midnight(origin_time));
     pair->set_destination_arrival_time(DateTime::seconds_from_midnight(dest_time));
+    pair->set_service_start_date(DateTime::get_formatted_date(start_date).julian_day());
+    pair->set_service_end_date(DateTime::get_formatted_date(end_date).julian_day());
+    for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
+      pair->add_service_days_of_week(service_days.second.get_value<bool>());
+      //TODO: if none of these were true we should skip
+    }
 
     //trip
     std::string t = pair_pt.second.get<std::string>("trip", "null");
@@ -338,13 +346,6 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
 
     pair->set_wheelchair_accessible(pair_pt.second.get<bool>("wheelchair_accessible", false));
-
-    set_no_null(std::string, pair_pt.second, "service_start_date", "null", pair->set_service_start_date);
-    set_no_null(std::string, pair_pt.second, "service_end_date", "null", pair->set_service_end_date);
-    for(const auto& service_days : pair_pt.second.get_child("service_days_of_week")) {
-      pair->add_service_days_of_week(service_days.second.get_value<bool>());
-    }
-
     uint32_t timezone = DateTime::get_tz_db().to_index(pair_pt.second.get<std::string>("origin_timezone", ""));
     if (timezone == 0)
       LOG_WARN("Timezone not found for stop_pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
@@ -356,14 +357,16 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     const auto& except_dates = pair_pt.second.get_child_optional("service_except_dates");
     if (except_dates && !except_dates->empty()) {
       for(const auto& service_except_dates : pair_pt.second.get_child("service_except_dates")) {
-        pair->add_service_except_dates(service_except_dates.second.get_value<std::string>());
+        auto d = DateTime::get_formatted_date(service_except_dates.second.get_value<std::string>());
+        pair->add_service_except_dates(d.julian_day());
       }
     }
 
     const auto& added_dates = pair_pt.second.get_child_optional("service_added_dates");
     if (added_dates && !added_dates->empty()) {
       for(const auto& service_added_dates : pair_pt.second.get_child("service_added_dates")) {
-        pair->add_service_added_dates(service_added_dates.second.get_value<std::string>());
+        auto d = DateTime::get_formatted_date(service_added_dates.second.get_value<std::string>());
+        pair->add_service_added_dates(d.julian_day());
       }
     }
     //TODO: copy rest of attributes

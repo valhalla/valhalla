@@ -26,11 +26,11 @@ message Transit {
     optional uint32 origin_timezone = 10;
     optional uint32 route_index = 11;
     optional string route_onestop_id = 12;
-    repeated string service_added_dates = 13;
+    repeated uint32 service_added_dates = 13;
     repeated bool service_days_of_week = 14;
-    optional string service_end_date = 15;
-    repeated string service_except_dates = 16;
-    optional string service_start_date = 17;
+    optional uint32 service_end_date = 15;
+    repeated uint32 service_except_dates = 16;
+    optional uint32 service_start_date = 17;
     optional string trip = 18;
     optional string trip_headsign = 19;
     optional uint32 trip_key = 20; 
