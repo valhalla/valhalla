@@ -27,46 +27,46 @@ namespace DateTime {
 
   /**
    * Get a formatted date from a string.
-   * @param date
+   * @param date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the formatted date.
    */
   boost::gregorian::date get_formatted_date(const std::string& date);
 
   /**
    * Get the days that this transit service is running in 60 days or less
-   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
-   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   start_date
+   * @param   end_date
    * @param   tile_date seconds from epoch
    * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
-  uint64_t get_service_days(std::string& start_date, std::string& end_date,
+  uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
                             uint64_t tile_date, uint32_t tz, uint32_t dow_mask);
 
   /**
    * Adds a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
-   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   start_date
+   * @param   end_date
    * @param   added_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the added date
    *          is in the start and end date range.
    */
-  uint64_t add_service_day(const uint64_t& days, const std::string& start_date,
-                           const std::string& end_date, const std::string& added_date);
+  uint64_t add_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                           const boost::gregorian::date& end_date, const boost::gregorian::date& added_date);
 
   /**
    * Removes a service day to the days.
    * @param   days supported by the gtfs feed/service
-   * @param   start_date in the format of 20150516 or 2015-05-06T08:00
-   * @param   end_date in the format of 20150516 or 2015-05-06T08:00
+   * @param   start_date
+   * @param   end_date
    * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
    * @return  Returns the updated days.  Days will only be updated if the removed date
    *          is in the start and end date range.
    */
-  uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
-                              const std::string& end_date, const std::string& removed_date);
+  uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                              const boost::gregorian::date& end_date, const boost::gregorian::date& removed_date);
 
   /**
    * Check if service is available for a date.
@@ -81,10 +81,10 @@ namespace DateTime {
   /**
    * Get the number of days elapsed from the pivot date until
    * inputed date.
-   * @param   date_time in the format of 20150516 or 2015-05-06T08:00
+   * @param   date_time
    * @return  Returns the number of days.
    */
-  uint32_t days_from_pivot_date(const std::string& date_time);
+  uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
 
   /**
    * Get the time from the inputed date.
