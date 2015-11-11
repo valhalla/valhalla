@@ -303,6 +303,16 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
         curr_man = next_man;
         ++next_man;
       }
+      // Do not combine
+      // if travel type is different (unnamed pedestrian/bike)
+      else if ((curr_man->unnamed_walkway() != next_man->unnamed_walkway())
+          || (curr_man->unnamed_cycleway() != next_man->unnamed_cycleway())
+          || (curr_man->unnamed_mountain_bike_trail() != next_man->unnamed_mountain_bike_trail())) {
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
       // NOTE: Logic may have to be adjusted depending on testing
       // Maybe not intersecting forward link
       // Maybe first edge in next is internal
@@ -648,6 +658,15 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Travel mode
   maneuver.set_travel_mode(prev_edge->travel_mode());
+
+  // Unnamed walkway
+  maneuver.set_unnamed_walkway(prev_edge->IsUnnamedWalkway());
+
+  // Unnamed cycleway
+  maneuver.set_unnamed_cycleway(prev_edge->IsUnnamedCycleway());
+
+  // Unnamed mountain bike trail
+  maneuver.set_unnamed_mountain_bike_trail(prev_edge->IsUnnamedMountainBikeTrail());
 
   // Transit info
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
@@ -1199,8 +1218,17 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver,
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // Process travel mode
+  // Process travel mode and travel types (unnamed pedestrian and bike)
   if (maneuver.travel_mode() != prev_edge->travel_mode()) {
+    return false;
+  }
+  if (maneuver.unnamed_walkway() != prev_edge->IsUnnamedWalkway()) {
+    return false;
+  }
+  if (maneuver.unnamed_cycleway() != prev_edge->IsUnnamedCycleway()) {
+    return false;
+  }
+  if (maneuver.unnamed_mountain_bike_trail() != prev_edge->IsUnnamedMountainBikeTrail()) {
     return false;
   }
 

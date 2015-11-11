@@ -3204,18 +3204,25 @@ std::string NarrativeBuilder::FormStreetNames(
   // then determine if walkway or bike path
   if (enhance_blank_street_names && street_names_string.empty()) {
 
-    // If pedestrian travel mode on footway
+    // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway
-    // TODO: add footway to maneuver
-    if (maneuver.travel_mode() ==  TripPath_TravelMode_kPedestrian) {
+    if ((maneuver.travel_mode() ==  TripPath_TravelMode_kPedestrian)
+        && maneuver.unnamed_walkway()) {
       street_names_string = "walkway";
     }
 
-    // If bicycle travel mode on cycleway
+    // If bicycle travel mode on unnamed cycleway
     // then set street names string to cycleway
-    // TODO: add cycleway to maneuver
-    if (maneuver.travel_mode() ==  TripPath_TravelMode_kBicycle) {
+    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle)
+        && maneuver.unnamed_cycleway()) {
       street_names_string = "cycleway";
+    }
+
+    // If bicycle travel mode on unnamed mountain bike trail
+    // then set street names string to mountain bike trail
+    if ((maneuver.travel_mode() == TripPath_TravelMode_kBicycle)
+        && maneuver.unnamed_mountain_bike_trail()) {
+      street_names_string = "mountain bike trail";
     }
   }
 
