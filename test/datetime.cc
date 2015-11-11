@@ -90,23 +90,25 @@ void TryIsoDateTime() {
   }
 }
 
-void TryGetServiceDays(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
+void TryGetServiceDays(std::string begin_date, std::string end_date, uint32_t dow_mask, uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
-  uint64_t days = DateTime::get_service_days(b, e, DateTime::seconds_since_epoch(), DateTime::get_tz_db().to_index(tz), dow_mask);
+  uint64_t days = DateTime::get_service_days(b, e, DateTime::days_from_pivot_date(b), dow_mask);
 
   if (value != days)
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
 }
 
-void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
+void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string date, std::string end_date, uint32_t dow_mask, uint64_t value) {
 
   std::string edate = end_date;
   std::string bdate = begin_date;
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
-  uint64_t days = DateTime::get_service_days(b, e, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(tz), dow_mask);
+  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+
+  uint64_t days = DateTime::get_service_days(b, e, tile_date, dow_mask);
 
   if (check_b_date) {
     if (value != days && begin_date != date && end_date != edate)
@@ -117,11 +119,14 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
   }
 }
 
-void TryRejectFeed(std::string begin_date, std::string end_date, std::string tz, uint32_t dow_mask, uint64_t value) {
+void TryRejectFeed(std::string begin_date, std::string end_date, uint32_t dow_mask, uint64_t value) {
 
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
-  uint64_t days = DateTime::get_service_days(b, e, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(tz), dow_mask);
+
+  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+
+  uint64_t days = DateTime::get_service_days(b, e, tile_date, dow_mask);
 
   if (value != days)
     throw std::runtime_error("Feed should of been rejected. " + begin_date + " " + end_date + " " + std::to_string(days));
@@ -152,7 +157,10 @@ void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::st
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
   auto n = DateTime::get_formatted_date(new_end_date);
-  DateTime::get_service_days(b, e, DateTime::seconds_since_epoch(),DateTime::get_tz_db().to_index(""), dow_mask);
+
+  auto tile_date = DateTime::days_from_pivot_date(b);
+
+  DateTime::get_service_days(b, e, tile_date, dow_mask);
 
   if (e != n)
     throw std::runtime_error("End date not cut off at 60 days.");
@@ -259,31 +267,31 @@ void TestServiceDays() {
   //bits 2 and 3
   dow_mask |= kSaturday;
   dow_mask |= kSunday;
-  TryGetServiceDays("2015-09-25", "2015-09-28", "", dow_mask, 6);
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 6);
 
   //Test just the weekend and Friday for 4 days.
   //bits 2 and 3
   dow_mask |= kFriday;
-  TryGetServiceDays("2015-09-25", "2015-09-28", "", dow_mask, 7);
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 7);
 
   //Test just the weekend and Friday and Monday for 4 days.
   //bits 2 and 3
   dow_mask |= kMonday;
-  TryGetServiceDays("2015-09-25", "2015-09-28", "", dow_mask, 15);
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 15);
 
   //Test just the weekend and Friday and Monday for 4 days.
   //Add Tuesday; however, result should be still 15 as we are only testing 4 days.
   //bits 2 and 3
   dow_mask |= kTuesday;
-  TryGetServiceDays("2015-09-25", "2015-09-28", "", dow_mask, 15);
+  TryGetServiceDays("2015-09-25", "2015-09-28", dow_mask, 15);
 
   //Test everyday for 60 days.
   dow_mask |= kWednesday;
   dow_mask |= kThursday;
-  TryGetServiceDays("2015-09-25", "2017-09-28", "", dow_mask, 1152921504606846975);
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 1152921504606846975);
 
   //Test using a date far in the past.  Feed will be rejected.
-  TryRejectFeed("2014-09-25", "2014-09-28", "America/New_York", dow_mask, 0);
+  TryRejectFeed("2014-09-25", "2014-09-28", dow_mask, 0);
 
   boost::gregorian::date today =  DateTime::get_formatted_date(
       DateTime::iso_date_time("America/New_York"));
@@ -292,19 +300,19 @@ void TestServiceDays() {
   boost::gregorian::date enddate = today + boost::gregorian::days(59);
   //Test getting the service days from today - 30 days.  Start date should change to today's date.
   TryGetServiceDays(true,to_iso_extended_string(startdate),to_iso_extended_string(today),
-                    to_iso_extended_string(enddate),"America/New_York", dow_mask, 1152921504606846975);
+                    to_iso_extended_string(enddate), dow_mask, 1152921504606846975);
 
   startdate = today;
   enddate = today + boost::gregorian::days(100);
   //Test getting the service days from today.  end date should change to today's date + 59.
   TryGetServiceDays(false,to_iso_extended_string(startdate),to_iso_extended_string(today + boost::gregorian::days(59)),
-                    to_iso_extended_string(enddate),"America/New_York", dow_mask, 1152921504606846975);
+                    to_iso_extended_string(enddate), dow_mask, 1152921504606846975);
 
   //Test weekends for 60 days.
   dow_mask = kDOWNone;
   dow_mask |= kSaturday;
   dow_mask |= kSunday;
-  TryGetServiceDays("2015-09-25", "2017-09-28", "", dow_mask, 435749860008887046);
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 435749860008887046);
 
   //Test weekends for 60 days plus Columbus Day
   TryAddServiceDays(435749860008887046,"2015-09-25", "2017-09-28", "2015-10-12", 435749860009018118);
@@ -325,7 +333,7 @@ void TestServiceDays() {
   dow_mask |= kWednesday;
   dow_mask |= kThursday;
   dow_mask |= kFriday;
-  TryGetServiceDays("2015-09-25", "2017-09-28", "", dow_mask, 717171644597959929);
+  TryGetServiceDays("2015-09-25", "2017-09-28", dow_mask, 717171644597959929);
 
   //Test to confirm that enddate is cut off at 60 days
   TryTestServiceEndDate("2015-09-25", "2017-09-28", "2015-11-23", dow_mask);
