@@ -316,7 +316,7 @@ enum class DOW : uint8_t {
 };
 
 //This is our pivot date for transit.  No dates will be older than this date.
-const std::string kPivotDate = "20140101";  //January 1, 2014
+const std::string kPivotDate = "20150101";  //January 1, 2015
 
 // Used for day of week mask.
 constexpr uint8_t kDOWNone    = 0;
