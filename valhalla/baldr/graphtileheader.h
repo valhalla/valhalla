@@ -41,17 +41,16 @@ class GraphTileHeader {
   void set_graphid(const baldr::GraphId& graphid);
 
   /**
-   * Gets the date when this tile was created. Returns a Unix timestamp
-   * (seconds since 1/1/1970)
+   * Gets the date when this tile was created. Days since pivot date.
    * @return  Returns the date this tile was created.
    */
-  uint64_t date_created() const;
+  uint32_t date_created() const;
 
   /**
    * Set the date created.
-   * @param  date  Unix timestamp. Time in seconds since 1/1/1970.
+   * @param  date  Days since pivot date.
    */
-  void set_date_created(const uint64_t date);
+  void set_date_created(const uint32_t date);
 
   /**
    * Gets the version of this tile.
@@ -285,9 +284,6 @@ class GraphTileHeader {
   // GraphId (tileid and level) of this tile
   GraphId graphid_;
 
-  // Date the tile was created. Unix timestamp (seconds since 1/1/1970)
-  uint64_t date_created_;
-
   // baldr version.
   char version_[kMaxVersionSize];
 
@@ -303,6 +299,9 @@ class GraphTileHeader {
   uint64_t stopcount_      : 16;
   uint64_t routecount_     : 12;
   uint64_t transfercount_  : 12;
+
+  // Date the tile was created. Days since pivot date.
+  uint32_t date_created_;
 
   // Record counts (for fixed size records)
   uint32_t nodecount_;                  // Number of nodes

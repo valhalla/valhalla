@@ -16,7 +16,6 @@ GraphTileHeader::GraphTileHeader() {
   memset(this, 0, sizeof(GraphTileHeader));
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize-1] = 0;
-  date_created_ = DateTime::seconds_since_epoch();
 }
 
 // Get the GraphId (tileid and level) of this tile.
@@ -30,12 +29,12 @@ void GraphTileHeader::set_graphid(const baldr::GraphId& graphid) {
 }
 
 // Get the date created
-uint64_t GraphTileHeader::date_created() const {
+uint32_t GraphTileHeader::date_created() const {
   return date_created_;
 }
 
 // Set the date created
-void GraphTileHeader::set_date_created(const uint64_t date) {
+void GraphTileHeader::set_date_created(const uint32_t date) {
   date_created_ = date;
 }
 
