@@ -191,7 +191,7 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     //the start date to end date or 60 days, whichever is less.
     //set the bits based on the dow.
 
-    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, sp.origin_timezone(), dow_mask);
+    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
     dep.start_date =  DateTime::days_from_pivot_date(start_date);
     dep.end_date =  DateTime::days_from_pivot_date(end_date);
     dep.headsign = sp.trip_headsign();
@@ -923,7 +923,7 @@ void build(const std::string& transit_dir,
         uint32_t elapsed_time = dep.arr_time - dep.dep_time;
         TransitDeparture td(lineid, dep.trip,dep.route,
                     dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                    dep.start_date, dep.end_date, dep.dow, dep.days);
+                    dep.dow, dep.days);
 
         LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                      " dep time = " + std::to_string(td.departure_time()) +
