@@ -19,6 +19,7 @@
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/grid.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
@@ -379,6 +380,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     const std::unique_ptr<const valhalla::skadi::sample>& sample,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
+    const uint32_t tile_creation_date,
     std::promise<DataQuality>& result) {
 
   sequence<OSMWay> ways(ways_file, false);
@@ -415,6 +417,8 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       // What actually writes the tile
       GraphId tile_id = tile_start->first.Tile_Base();
       GraphTileBuilder graphtile(hierarchy, tile_id, false);
+
+      graphtile.AddTileCreationDate(tile_creation_date);
 
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
@@ -700,6 +704,8 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
   const std::unique_ptr<const valhalla::skadi::sample>& sample) {
 
+  uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
   // A place to hold worker threads and their results, be they exceptions or otherwise
@@ -725,7 +731,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(sample), tile_start, tile_end, tile_creation_date,
                       std::ref(results[i]))
     );
   }

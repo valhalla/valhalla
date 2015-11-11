@@ -681,6 +681,11 @@ const Admin& GraphTileBuilder::admins_builder(size_t idx) {
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
 }
 
+// Add the tile creation date
+void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
+  header_builder_.set_date_created(tile_creation_date);
+}
+
 // Bin the edges in this tile and return which ones shape leaves
 std::list<GraphId> GraphTileBuilder::Bin() {
   std::list<GraphId> strays;
