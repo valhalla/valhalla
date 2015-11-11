@@ -6,7 +6,11 @@ LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
 .PHONY: compile_tests
 
 
-compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search test_grid_range_query test_sp test_service
+compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search test_grid_range_query test_sp test_service psqlmatcher
+
+
+psqlmatcher: psqlmatcher.cc
+	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos
 
 
 test_service: service.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h costings.h sp.h
