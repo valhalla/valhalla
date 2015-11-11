@@ -76,14 +76,13 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
 uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
-                          uint32_t tile_date, uint32_t tz, uint32_t dow_mask) {
-  if (tz != 0) {
-    boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
-    if (start_date <= tile_header_date && tile_header_date <= end_date)
-      start_date = tile_header_date;
-    else if (tile_header_date > end_date) //reject.
-      return 0;
-  }
+                          uint32_t tile_date, uint32_t dow_mask) {
+
+  boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
+  if (start_date <= tile_header_date && tile_header_date <= end_date)
+    start_date = tile_header_date;
+  else if (tile_header_date > end_date) //reject.
+    return 0;
 
   // only support 60 days out.  (59 days and include the end_date = 60)
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
