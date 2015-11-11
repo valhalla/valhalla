@@ -413,7 +413,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   if (!found) {
-    LOG_WARN("No departures found for lineid = " + std::to_string(lineid));
+    LOG_DEBUG("No departures found for lineid = " + std::to_string(lineid));
     return nullptr;
   }
 
