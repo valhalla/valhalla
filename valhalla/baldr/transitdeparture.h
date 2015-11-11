@@ -19,8 +19,6 @@ class TransitDeparture {
                    const uint32_t headsign_offset,
                    const uint32_t departure_time,
                    const uint32_t elapsed_time,
-                   const uint32_t start_date,
-                   const uint32_t enddate,
                    const uint32_t days_of_week,
                    const uint64_t days);
 
@@ -74,18 +72,6 @@ class TransitDeparture {
   uint32_t elapsed_time() const;
 
   /**
-   * Get the start date of this scheduled departure.
-   * @return  Returns the start date (form TODO).
-   */
-  uint32_t start_date() const;
-
-  /**
-   * Get the end date for this scheduled departure.
-   * @return  Returns the end date (form TODO).
-   */
-  uint32_t end_date() const;
-
-  /**
    * Gets the days of the week for this departure.
    * @return  Returns the days of the week (form TODO)
    */
@@ -100,41 +86,23 @@ class TransitDeparture {
   bool operator < (const TransitDeparture& other) const;
 
  protected:
+  uint64_t days_;                // Days this departure is active relative to
+                                 // the tile's creation date. Stores bit field
+                                 // with 1's meaning the departure applies
+                                 // to the day.
+  uint32_t lineid_;              // Line Id - lookup departures by unique line
+                                 // Id (which indicates a unique departure /
+                                 // arrival stop pair.
+  uint32_t tripid_;              // TripId (internal).
+  uint32_t routeid_;             // Route Id (internal).
+  uint32_t headsign_offset_;     // Headsign offset into the names/text list.
 
-  // Stores bits for until the end date.  The end date will be less than or
-  // equal to 60 days.
-  uint64_t days_;
+  uint32_t blockid_      : 25;   // Block Id
+  uint32_t days_of_week_ : 7;    // Days of the week
 
-  // Line Id - lookup departures by unique line Id (which indicates a unique
-  // departure / arrival stop pair.
-  uint32_t lineid_;
-
-  // TripId (internal).
-  uint32_t tripid_;
-
-  // Route Id (internal).
-  uint32_t routeid_;
-
-  // Block Id
-  uint32_t blockid_;
-
-  // Headsign offset into the names/text list.
-  uint32_t headsign_offset_;
-
-  // Departure time (seconds from midnight)
-  struct ScheduleTimes {
-    uint32_t departure : 17;   // Seconds from midnight (86400 secs per day)
-    uint32_t elapsed   : 15;   // Time until arrival at next stop
-  };
-  ScheduleTimes times_;
-
-  struct ScheduleDates {
-    uint32_t start        : 12;     // Start date for the scheduled departure
-    uint32_t end          : 12;     // End date for the scheduled departure
-    uint32_t days_of_week : 7;      // Days of the week
-    uint32_t spare        : 1;
-  };
-  ScheduleDates dates_;
+  uint32_t departure_time_ : 17; // Departure time (seconds from midnight)
+                                 // (86400 secs per day)
+  uint32_t elapsed_time_   : 15; // Time (secs) until arrival at next stop
 
   // TODO - fare info, frequencies
 };

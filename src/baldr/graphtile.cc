@@ -274,6 +274,11 @@ const NodeInfo* GraphTile::node(const size_t idx) const {
 const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
   if (edge.id() < header_->directededgecount())
     return &directededges_[edge.id()];
+  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(edge.id())  + " directededgecount= " +
+                           std::to_string(header_->directededgecount()));
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
@@ -281,7 +286,11 @@ const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
 const DirectedEdge* GraphTile::directededge(const size_t idx) const {
   if (idx < header_->directededgecount())
     return &directededges_[idx];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
+  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " directededgecount= " +
+                           std::to_string(header_->directededgecount()));
 }
 
 std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
@@ -427,30 +436,22 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
+  uint32_t valid_date_plus_60 = header_->date_created() + 60;
   while (true) {
     // Make sure valid departure time
     if (departures_[mid].departure_time() >= current_time) {
-      // If date range is only one date and this date matches it is
-      // a calendar date "addition"
+      // If within 60 days of tile creation use the days mask else fallback
+      // to the day of week mask
       const TransitDeparture& dep = departures_[mid];
-      if (dep.start_date() == dep.end_date()) {
-        // If date equals the added date we use this departure, else skip it
-        if (date == dep.start_date()) {
-          return &departures_[mid];
-        }
-      } else if (dep.start_date() <= date && date <= dep.end_date()) {
-        // Within valid date range for departure. Check the days
-
-        if (DateTime::is_service_available(dep.days(), dep.start_date(), date, dep.end_date()))
-          return &departures_[mid];
-
-      } else if (date > dep.end_date()) {
-
+      if (date <= valid_date_plus_60) {
+       ; //if (DateTime::is_service_available(dep.days(), dep.start_date(),
+         //                                  date, dep.end_date()))
+        //  return &departures_[mid];
+      } else {
         if ((dep.days_of_week() & dow) > 0)
           return &departures_[mid];
       }
     }
-
 
     // Advance to next departure
     if (mid+1 < count && departures_[mid+1].lineid() == lineid) {

@@ -10,8 +10,6 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
                  const uint32_t headsign_offset,
                  const uint32_t departure_time,
                  const uint32_t elapsed_time,
-                 const uint32_t start_date,
-                 const uint32_t end_date,
                  const uint32_t days_of_week,
                  const uint64_t days)
     : lineid_(lineid),
@@ -19,14 +17,12 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
       routeid_(routeid),
       blockid_(blockid),
       headsign_offset_(headsign_offset),
-      days_(days){
-  // TODO - protect against max values...
-  times_.departure = departure_time;
+      departure_time_(departure_time),
+      days_(days),
+      days_of_week_(days_of_week) {
+  // TODO - protect against max values...blockId?
   uint32_t elapsed = (elapsed_time < 32767) ? elapsed_time : 32767;
-  times_.elapsed      = elapsed;
-  dates_.start        = start_date;
-  dates_.end          = end_date;
-  dates_.days_of_week = days_of_week;
+  elapsed_time_    = elapsed;
 }
 
 // Get the line Id - for lookup of all departures along an edge. Each line Id
@@ -57,27 +53,17 @@ uint32_t TransitDeparture::headsign_offset() const {
 
 // Get the departure time.
 uint32_t TransitDeparture::departure_time() const {
-  return times_.departure;
+  return departure_time_;
 }
 
 // Get the elapsed time until arrival at the next stop.
 uint32_t TransitDeparture::elapsed_time() const {
-  return times_.elapsed;
-}
-
-// Get the start date of this scheduled departure.
-uint32_t TransitDeparture::start_date() const {
-  return dates_.start;
-}
-
-// Get the end date for this scheduled departure.
-uint32_t TransitDeparture::end_date() const {
-  return dates_.end;
+  return elapsed_time_;
 }
 
 // Gets the days of the week for this departure.
 uint32_t TransitDeparture::days_of_week() const {
-  return dates_.days_of_week;
+  return days_of_week_;
 }
 
 // Gets the days for this departure.

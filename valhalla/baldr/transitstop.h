@@ -30,13 +30,8 @@ class TransitStop {
   uint32_t name_offset() const;
 
  protected:
-
-  // TransitLand one stop Id offset.
-  uint32_t one_stop_offset_;
-
-  // Stop name offset in the text/name list.
-  uint32_t name_offset_;
-
+  uint32_t one_stop_offset_;  // TransitLand one stop Id offset.
+  uint32_t name_offset_;      // Stop name offset in the text/name list.
 };
 
 }

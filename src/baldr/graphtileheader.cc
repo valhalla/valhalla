@@ -218,7 +218,7 @@ void GraphTileHeader::set_edge_cell_offsets(const uint32_t (&offsets)[kCellCount
 std::pair<uint32_t, uint32_t> GraphTileHeader::cell_offset(size_t column, size_t row) const {
   auto i = row * kGridDim + column;
   if(i < kCellCount)
-    return std::make_pair(i == 0 ? 0 : cell_offsets_[i], cell_offsets_[i]);
+    return std::make_pair(i == 0 ? 0 : cell_offsets_[i - 1], cell_offsets_[i]);
   throw std::runtime_error("Cell out of bounds");
 }
 

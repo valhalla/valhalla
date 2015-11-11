@@ -32,9 +32,21 @@ tz_db_t::tz_db_t() {
   std::string tz_data(date_time_zonespec_csv, date_time_zonespec_csv + date_time_zonespec_csv_len);
   std::stringstream ss(tz_data);
   load_from_stream(ss);
-  //cache the regions and add our own unclassified one
-  regions = boost::local_time::tz_database::region_list();
-  regions.insert(regions.begin(), "None");
+  //unfortunately boosts object has its map marked as private... so we have to keep our own
+  regions = region_list();
+}
+
+size_t tz_db_t::to_index(const std::string& region) const {
+  auto it = std::find(regions.cbegin(), regions.cend(), region);
+  if(it == regions.cend())
+    return 0;
+  return (it - regions.cbegin()) + 1;
+}
+
+boost::shared_ptr<boost::local_time::tz_database::time_zone_base_type> tz_db_t::from_index(size_t index) const {
+  if(index < 1 || index > regions.size())
+    return {};
+  return time_zone_from_region(regions[index - 1]);
 }
 
 const tz_db_t& get_tz_db() {
@@ -63,41 +75,26 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //Start from the tile_date or start date to end date or 60 days (whichever is less)
 //start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
-uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                          const uint32_t tile_date, const std::string& tz,
-                          const uint32_t& dow_mask) {
-
-  //start_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date s_date;
-  s_date = get_formatted_date(start_date);
-
-  //end_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date e_date;
-  e_date = get_formatted_date(end_date);
-
-  if (!tz.empty()) {
-        boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
-
-    if (s_date <= tile_header_date && tile_header_date <= e_date) {
-      s_date = tile_header_date;
-      start_date = to_iso_extended_string(s_date);
-    }
-    else if (tile_header_date > e_date) //reject.
+uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
+                          uint32_t tile_date, uint32_t tz, uint32_t dow_mask) {
+  if (tz != 0) {
+    boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
+    if (start_date <= tile_header_date && tile_header_date <= end_date)
+      start_date = tile_header_date;
+    else if (tile_header_date > end_date) //reject.
       return 0;
   }
 
   // only support 60 days out.  (59 days and include the end_date = 60)
-  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
-  if (enddate <= e_date) {
-    e_date = enddate;
-    end_date = to_iso_extended_string(e_date);
-  }
+  boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
+  if (enddate <= end_date)
+    end_date = enddate;
 
-  boost::gregorian::day_iterator itr(s_date);
+  boost::gregorian::day_iterator itr(start_date);
   uint32_t x = 0;
   std::bitset<64> bit_set;
 
-  while (itr <= e_date) {
+  while (itr <= end_date) {
 
     uint8_t dow;
 
@@ -135,29 +132,15 @@ uint64_t get_service_days(std::string& start_date, std::string& end_date,
 }
 
 //add a service day to the days if it is in range.
-uint64_t add_service_day(const uint64_t& days, const std::string& start_date,
-                         const std::string& end_date, const std::string& added_date) {
+uint64_t add_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                         const boost::gregorian::date& end_date, const boost::gregorian::date& added_date) {
+  boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
+  if (enddate > end_date)
+    enddate = end_date;
 
-  //start_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date s_date;
-  s_date = get_formatted_date(start_date);
-
-  //end_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date e_date;
-  e_date = get_formatted_date(end_date);
-
-  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
-
-  if (enddate <= e_date)
-    e_date = enddate;
-
-  //added_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date a_date;
-  a_date = get_formatted_date(added_date);
-
-  if (s_date <= a_date && a_date <= e_date) {
+  if (start_date <= added_date && added_date <= enddate) {
     std::bitset<64> bit_set(days);
-    boost::gregorian::date_period range(s_date, a_date);
+    boost::gregorian::date_period range(start_date, added_date);
     uint32_t length = range.length().days();
     bit_set.set(length);
     return bit_set.to_ulong();
@@ -166,29 +149,15 @@ uint64_t add_service_day(const uint64_t& days, const std::string& start_date,
 }
 
 //remove a service day to the days if it is in range.
-uint64_t remove_service_day(const uint64_t& days, const std::string& start_date,
-                            const std::string& end_date, const std::string& removed_date) {
+uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                            const boost::gregorian::date& end_date, const boost::gregorian::date& removed_date) {
+  boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
+  if (enddate > end_date)
+    enddate =  end_date;
 
-  //start_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date s_date;
-  s_date = get_formatted_date(start_date);
-
-  //end_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date e_date;
-  e_date = get_formatted_date(end_date);
-
-  boost::gregorian::date enddate = s_date + boost::gregorian::days(59);
-
-  if (enddate <= e_date)
-    e_date = enddate;
-
-  //removed_date is in the format of 20150516 or 2015-05-06T08:00
-  boost::gregorian::date r_date;
-  r_date = get_formatted_date(removed_date);
-
-  if (s_date <= r_date && r_date <= e_date) {
+  if (start_date <= removed_date && removed_date <= enddate) {
     std::bitset<64> bit_set(days);
-    boost::gregorian::date_period range(s_date, r_date);
+    boost::gregorian::date_period range(start_date, removed_date);
     uint32_t length = range.length().days();
     bit_set.reset(length);
     return bit_set.to_ulong();
@@ -213,13 +182,10 @@ bool is_service_available(const uint64_t& days, const uint32_t& start_date, cons
 
 //Get the number of days that have elapsed from the pivot date for the inputed date.
 //date_time is in the format of 20150516 or 2015-05-06T08:00
-uint32_t days_from_pivot_date(const std::string& date_time) {
-  boost::gregorian::date e_date;
-  e_date = get_formatted_date(date_time);
-
-  if (e_date <= pivot_date_)
+uint32_t days_from_pivot_date(const boost::gregorian::date& date_time) {
+  if (date_time <= pivot_date_)
     return 0;
-  boost::gregorian::date_period range(pivot_date_, e_date);
+  boost::gregorian::date_period range(pivot_date_, date_time);
   return static_cast<uint32_t>(range.length().days());
 }
 
