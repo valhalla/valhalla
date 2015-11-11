@@ -50,7 +50,7 @@ struct curler_t {
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url, const std::string& retry_if_no = "") {
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "", boost::optional<size_t> timeout = boost::none) {
     //set the url
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     //dont stop until we have something useful!
@@ -74,7 +74,7 @@ struct curler_t {
           log_extra = "Unusable response ";
         }
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(distribution(generator)));
+      std::this_thread::sleep_for(std::chrono::milliseconds(timeout ? *timeout : distribution(generator)));
       LOG_WARN(log_extra + "retrying " + url);
     };
     return pt;
@@ -160,7 +160,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
     //we have anything we want it
     if(stops_total > 0 || routes_total > 0|| pairs_total > 0) {
-      prioritized.push(weighted_tile_t{tile, routes_total}); //TODO: factor in stop pairs as well
+      prioritized.push(weighted_tile_t{tile, pairs_total}); //TODO: factor in stop pairs as well
       LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " should have " + std::to_string(stops_total) +  " stops " +
           std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs");
     }
@@ -414,8 +414,10 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       request = response.get_optional<std::string>("meta.next");
     }
     //um yeah.. we need these
-    if(stops.size() == 0)
+    if(stops.size() == 0) {
+      LOG_WARN(transit_tile.string() + " had no stops and will not be stored");
       continue;
+    }
 
     //pull out all operator WEBSITES
     request = url((boost::format("/api/v1/operators?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
@@ -436,12 +438,11 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     }
 
     //pull out all ROUTES
-    request = url((boost::format("/api/v1/routes?per_page=10&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/routes?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     while(request) {
       //grab some stuff
-      //TODO: remove this once we can ask for routes in parallel
       uniques.lock.lock();
       response = curler(*request, "routes");
       uniques.lock.unlock();
@@ -481,9 +482,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
   promise.set_value(dangling);
 }
 
-std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& tiles) {
-  unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                  pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& tiles, unsigned int thread_count = 1) {
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //schedule some work
@@ -637,9 +636,8 @@ void stitch_tiles(const ptree& pt, const std::unordered_set<GraphId>& all_tiles,
   }
 }
 
-void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& dangling_tiles) {
-  unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-    pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::list<GraphId>& dangling_tiles,
+    unsigned int thread_count = std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency())) {
   LOG_INFO("Stitching " + std::to_string(dangling_tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //figure out where the work should go
@@ -659,8 +657,8 @@ void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::
 
 int main(int argc, char** argv) {
   if(argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url transit_land_api_key per_page" << std::endl;
-    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ transitland-YOUR_KEY_SUFFIX 1000" << std::endl;
+    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url per_page transit_land_api_key" << std::endl;
+    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ 1000 transitland-YOUR_KEY_SUFFIX" << std::endl;
     return 1;
   }
 
@@ -668,10 +666,7 @@ int main(int argc, char** argv) {
   ptree pt;
   boost::property_tree::read_json(std::string(argv[1]), pt);
   pt.add("base_url", std::string(argv[2]));
-  if(argc > 3)
-    pt.add("per_page", std::string(argv[3]));
-  else
-    pt.add("per_page", "1000");
+  pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
   if(argc > 4)
     pt.add("api_key", std::string(argv[4]));
 

@@ -191,7 +191,7 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     //the start date to end date or 60 days, whichever is less.
     //set the bits based on the dow.
 
-    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, sp.origin_timezone(), dow_mask);
+    dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
     dep.start_date =  DateTime::days_from_pivot_date(start_date);
     dep.end_date =  DateTime::days_from_pivot_date(end_date);
     dep.headsign = sp.trip_headsign();

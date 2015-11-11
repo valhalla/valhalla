@@ -279,6 +279,12 @@ class GraphTileBuilder : public baldr::GraphTile {
   const Admin& admins_builder(size_t idx);
 
   /**
+   * Sets the tile creation date.
+   * @param  tile_creation_date  number of days from pivot date
+   */
+  void AddTileCreationDate(const uint32_t tile_creation_date);
+
+  /**
    * Bins the non shortcut non transition edges into the header
    * @return returns edges that bin into other tiles
    */
