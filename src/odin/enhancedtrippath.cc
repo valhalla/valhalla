@@ -102,6 +102,18 @@ bool EnhancedTripPath_Edge::IsUnnamed() const {
   return (name_size() == 0);
 }
 
+bool EnhancedTripPath_Edge::IsUnnamedWalkway() const {
+  return (IsUnnamed() && footway());
+}
+
+bool EnhancedTripPath_Edge::IsUnnamedCycleway() const {
+  return (IsUnnamed() && cycleway());
+}
+
+bool EnhancedTripPath_Edge::IsUnnamedMountainBikeTrail() const {
+  return (IsUnnamed() && mountain_bike());
+}
+
 bool EnhancedTripPath_Edge::IsHighway() const {
   return ((road_class() == TripPath_RoadClass_kMotorway) && (!ramp()));
 }
