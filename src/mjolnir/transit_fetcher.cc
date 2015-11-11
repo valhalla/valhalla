@@ -669,11 +669,11 @@ int main(int argc, char** argv) {
   boost::property_tree::read_json(std::string(argv[1]), pt);
   pt.add("base_url", std::string(argv[2]));
   if(argc > 3)
-    pt.add("api_key", std::string(argv[3]));
-  if(argc > 4)
-    pt.add("per_page", std::string(argv[4]));
+    pt.add("per_page", std::string(argv[3]));
   else
     pt.add("per_page", "1000");
+  if(argc > 4)
+    pt.add("api_key", std::string(argv[4]));
 
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
