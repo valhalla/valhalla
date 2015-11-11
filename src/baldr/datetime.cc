@@ -64,7 +64,7 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
 uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                          const uint64_t tile_date, const std::string& tz,
+                          const uint32_t tile_date, const std::string& tz,
                           const uint32_t& dow_mask) {
 
   //start_date is in the format of 20150516 or 2015-05-06T08:00
@@ -76,7 +76,8 @@ uint64_t get_service_days(std::string& start_date, std::string& end_date,
   e_date = get_formatted_date(end_date);
 
   if (!tz.empty()) {
-    boost::gregorian::date tile_header_date = get_formatted_date(seconds_to_date(tile_date));
+        boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
+
     if (s_date <= tile_header_date && tile_header_date <= e_date) {
       s_date = tile_header_date;
       start_date = to_iso_extended_string(s_date);

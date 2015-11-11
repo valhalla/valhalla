@@ -40,13 +40,13 @@ namespace DateTime {
    * Get the days that this transit service is running in 60 days or less
    * @param   start_date in the format of 20150516 or 2015-05-06T08:00
    * @param   end_date in the format of 20150516 or 2015-05-06T08:00
-   * @param   tile_date seconds from epoch
+   * @param   tile_date days from pivot date
    * @param   tz timezone which is used to get the current time.
    * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
   uint64_t get_service_days(std::string& start_date, std::string& end_date,
-                            const uint64_t tile_date, const std::string& tz,
+                            const uint32_t tile_date, const std::string& tz,
                             const uint32_t& dow_mask);
 
   /**
