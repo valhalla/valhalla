@@ -69,7 +69,10 @@ Maneuver::Maneuver()
       fork_(false),
       begin_intersecting_edge_name_consistency_(false),
       intersecting_forward_edge_(false),
-      tee_(false) {
+      tee_(false),
+      unnamed_walkway_(false),
+      unnamed_cycleway_(false),
+      unnamed_mountain_bike_trail_(false) {
   street_names_ = make_unique<StreetNames>();
   begin_street_names_ = make_unique<StreetNames>();
   cross_street_names_ = make_unique<StreetNames>();
@@ -509,6 +512,30 @@ void Maneuver::set_tee(bool tee) {
   tee_ = tee;
 }
 
+bool Maneuver::unnamed_walkway() const {
+  return unnamed_walkway_;
+}
+
+void Maneuver::set_unnamed_walkway(bool unnamed_walkway) {
+  unnamed_walkway_ = unnamed_walkway;
+}
+
+bool Maneuver::unnamed_cycleway() const {
+  return unnamed_cycleway_;
+}
+
+void Maneuver::set_unnamed_cycleway(bool unnamed_cycleway) {
+  unnamed_cycleway_ = unnamed_cycleway;
+}
+
+bool Maneuver::unnamed_mountain_bike_trail() const {
+  return unnamed_mountain_bike_trail_;
+}
+
+void Maneuver::set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail) {
+  unnamed_mountain_bike_trail_ = unnamed_mountain_bike_trail;
+}
+
 TripPath_TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
@@ -768,6 +795,15 @@ std::string Maneuver::ToString() const {
   man_str += " | tee=";
   man_str += std::to_string(tee_);
 
+  man_str += " | unnamed_walkway=";
+  man_str += std::to_string(unnamed_walkway_);
+
+  man_str += " | unnamed_cycleway=";
+  man_str += std::to_string(unnamed_cycleway_);
+
+  man_str += " | unnamed_mountain_bike_trail=";
+  man_str += std::to_string(unnamed_mountain_bike_trail_);
+
   man_str += " | travel_mode=";
   man_str += std::to_string(travel_mode_);
 
@@ -916,6 +952,15 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(tee_);
+
+  man_str += delim;
+  man_str += std::to_string(unnamed_walkway_);
+
+  man_str += delim;
+  man_str += std::to_string(unnamed_cycleway_);
+
+  man_str += delim;
+  man_str += std::to_string(unnamed_mountain_bike_trail_);
 
   // Transit TODO
 //  man_str += delim;

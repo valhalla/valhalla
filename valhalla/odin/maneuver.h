@@ -184,6 +184,15 @@ class Maneuver {
   bool tee() const;
   void set_tee(bool tee);
 
+  bool unnamed_walkway() const;
+  void set_unnamed_walkway(bool unnamed_walkway);
+
+  bool unnamed_cycleway() const;
+  void set_unnamed_cycleway(bool unnamed_cycleway);
+
+  bool unnamed_mountain_bike_trail() const;
+  void set_unnamed_mountain_bike_trail(bool unnamed_mountain_bike_trail);
+
   TripPath_TravelMode travel_mode() const;
   void set_travel_mode(TripPath_TravelMode travel_mode);
 
@@ -281,6 +290,9 @@ class Maneuver {
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
   bool tee_;
+  bool unnamed_walkway_;
+  bool unnamed_cycleway_;
+  bool unnamed_mountain_bike_trail_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

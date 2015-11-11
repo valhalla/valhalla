@@ -50,6 +50,12 @@ class EnhancedTripPath_Edge : public TripPath_Edge {
 
   bool IsUnnamed() const;
 
+  bool IsUnnamedWalkway() const;
+
+  bool IsUnnamedCycleway() const;
+
+  bool IsUnnamedMountainBikeTrail() const;
+
   bool IsHighway() const;
 
   bool IsOneway() const;
