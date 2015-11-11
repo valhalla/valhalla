@@ -123,7 +123,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   //block
   node = GetNode(1819036441, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 2)
+      node.type() != NodeType::kBollard || node.access_mask() != 6)
     throw std::runtime_error("Block test failed.");
 
   //border control
@@ -140,13 +140,13 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   //Is a bollard with no flags set.
   node = GetNode(569645326, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 0)
+      node.type() != NodeType::kBollard || node.access_mask() != 6)
     throw std::runtime_error("Bollard(with flags) not marked as intersection.");
 
   //Is a bollard=block with foot flag set.
   node = GetNode(1819036441, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kBollard || node.access_mask() != 2)
+      node.type() != NodeType::kBollard || node.access_mask() != 6)
     throw std::runtime_error("Bollard=block not marked as intersection.");
 
   auto bike = osmdata.bike_relations.equal_range(25452580);
