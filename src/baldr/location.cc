@@ -28,6 +28,7 @@ Location Location::FromPtree(const boost::property_tree::ptree& pt) {
       (pt.get<std::string>("type", "break") == "through" ?
         StopType::THROUGH : StopType::BREAK));
 
+  location.date_time_ = pt.get_optional<std::string>("date_time");
   location.heading_ = pt.get_optional<int>("heading");
   location.way_id_ = pt.get_optional<uint64_t>("way_id");
 
