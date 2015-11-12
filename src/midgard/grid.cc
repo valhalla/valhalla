@@ -69,7 +69,7 @@ namespace valhalla {
           std::swap(y_start, y_end);
         x_end = std::min(x_end + 1, divisions);
         y_end = std::min(y_end + 1, divisions);
-        for(; y_start <= y_end; ++y_start) {
+        for(; y_start < y_end; ++y_start) {
           for(size_t x = x_start; x < x_end; ++x) {
             size_t index = y_start * divisions + x;
             if(cells[index].Intersects(*u, *v))
