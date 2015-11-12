@@ -19,6 +19,7 @@ class TransitDeparture {
                    const uint32_t headsign_offset,
                    const uint32_t departure_time,
                    const uint32_t elapsed_time,
+                   const uint32_t end_day,
                    const uint32_t days_of_week,
                    const uint64_t days);
 
@@ -72,8 +73,14 @@ class TransitDeparture {
   uint32_t elapsed_time() const;
 
   /**
+   * Get the end day for this scheduled departure.
+   * @return  Returns the end day (what is our end day in the days_).
+   */
+  uint32_t end_day() const;
+
+  /**
    * Gets the days of the week for this departure.
-   * @return  Returns the days of the week (form TODO)
+   * @return  Returns the days of the week (dow mask)
    */
   uint32_t days_of_week() const;
 
@@ -94,8 +101,10 @@ class TransitDeparture {
                                  // Id (which indicates a unique departure /
                                  // arrival stop pair.
   uint32_t tripid_;              // TripId (internal).
-  uint32_t routeid_;             // Route Id (internal).
   uint32_t headsign_offset_;     // Headsign offset into the names/text list.
+
+  uint32_t routeid_      :26;    // Route Id (internal).
+  uint32_t end_day_      :6;     // End day (what is our end day in the days_).
 
   uint32_t blockid_      : 25;   // Block Id
   uint32_t days_of_week_ : 7;    // Days of the week
