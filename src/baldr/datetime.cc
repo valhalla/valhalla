@@ -152,7 +152,7 @@ uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& 
                             const boost::gregorian::date& end_date, const boost::gregorian::date& removed_date) {
   boost::gregorian::date enddate = start_date + boost::gregorian::days(59);
   if (enddate > end_date)
-    enddate =  end_date;
+    enddate = end_date;
 
   if (start_date <= removed_date && removed_date <= enddate) {
     std::bitset<64> bit_set(days);
