@@ -57,8 +57,7 @@ struct Departure {
   uint32_t shapeid;
   uint32_t dep_time;
   uint32_t arr_time;
-  uint32_t start_date;
-  uint32_t end_date;
+  uint32_t end_day;
   uint32_t dow;
   uint32_t wheelchair_accessible;
   std::string headsign;
@@ -115,7 +114,7 @@ struct builder_stats {
 
 // Get scheduled departures for a stop
 std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& transit,
-                                                              const uint64_t tile_date,
+                                                              const uint32_t tile_date,
                                                               const size_t node_size,
                                                               const std::unordered_map<uint32_t, uint32_t> stop_indexes,
                                                               std::unordered_map<uint32_t,bool>& stop_access) {
@@ -192,8 +191,13 @@ std::unordered_multimap<uint32_t, Departure> ProcessStopPairs(const Transit& tra
     //set the bits based on the dow.
 
     dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
-    dep.start_date =  DateTime::days_from_pivot_date(start_date);
-    dep.end_date =  DateTime::days_from_pivot_date(end_date);
+
+    if (dep.days == 0) {
+      LOG_WARN("Feed rejected!  End date:" + DateTime::days_from_pivot_date(end_date));
+      continue;
+    }
+
+    dep.end_day = (DateTime::days_from_pivot_date(end_date) - DateTime::days_from_pivot_date(start_date));
     dep.headsign = sp.trip_headsign();
 
     bool bikes_allowed = sp.bikes_allowed();
@@ -923,7 +927,7 @@ void build(const std::string& transit_dir,
         uint32_t elapsed_time = dep.arr_time - dep.dep_time;
         TransitDeparture td(lineid, dep.trip,dep.route,
                     dep.blockid, headsign_offset, dep.dep_time, elapsed_time,
-                    dep.dow, dep.days);
+                    dep.end_day, dep.dow, dep.days);
 
         LOG_DEBUG("Add departure: " + std::to_string(lineid) +
                      " dep time = " + std::to_string(td.departure_time()) +
