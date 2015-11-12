@@ -564,6 +564,38 @@ namespace {
             man->emplace("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
           }
 
+          // Process transit route
+          if (maneuver.has_transit_route()) {
+            const auto& transit_route = maneuver.transit_route();
+            auto json_transit_route = json::map({});
+
+            if (transit_route.has_onestop_id()) {
+              json_transit_route->emplace("onestop_id", transit_route.onestop_id());
+            }
+            if (transit_route.has_short_name()) {
+              json_transit_route->emplace("short_name", transit_route.short_name());
+            }
+            if (transit_route.has_long_name()) {
+              json_transit_route->emplace("long_name", transit_route.long_name());
+            }
+            if (transit_route.has_headsign()) {
+              json_transit_route->emplace("headsign", transit_route.headsign());
+            }
+            if (transit_route.has_color()) {
+              json_transit_route->emplace("color", static_cast<uint64_t>(transit_route.color()));
+            }
+            if (transit_route.has_text_color()) {
+              json_transit_route->emplace("text_color", static_cast<uint64_t>(transit_route.text_color()));
+            }
+            if (transit_route.has_operator_onestop_id()) {
+              json_transit_route->emplace("operator_onestop_id", transit_route.operator_onestop_id());
+            }
+
+            // TODO add transit stops
+
+            man->emplace("transit_route", std::move(json_transit_route));
+          }
+
           //  man->emplace("hasGate", maneuver.);
           //  man->emplace("hasFerry", maneuver.);
           //“portionsTollNote” : “<portionsTollNote>”,
