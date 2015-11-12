@@ -175,13 +175,14 @@ class GraphTile {
    * time (seconds from midnight). TODO - what if crosses midnight?
    * @param   edgeid  Directed edge Id.
    * @param   current_time  Current time (seconds from midnight).
-   * @param   date    Date (TODO - comment on standard used).
-   * @param   dow     Day of week (TODO - comment on DOW mask)
+   * @param   day     Days since the tile creation date.
+   * @param   dow     Day of week (see graphconstants.h)
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
-                                           const uint32_t current_time, const uint32_t date,
+                                           const uint32_t current_time,
+                                           const uint32_t day,
                                            const uint32_t dow) const;
 
   /**
@@ -202,11 +203,11 @@ class GraphTile {
 
   /**
    * Get the transit route given its route Id.
-   * @param   routeid  Route Id.
+   * @param   idx     Route index within the tile.
    * @return  Returns a pointer to the transit route information. Returns
    *          nullptr if the route is not found.
    */
-  const TransitRoute* GetTransitRoute(const uint32_t routeid) const;
+  const TransitRoute* GetTransitRoute(const uint32_t idx) const;
 
   /**
    * Get a pointer to the first transfer record given the stop Id and

@@ -395,7 +395,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 // Get the next departure given the directed edge Id and the current
 // time (seconds from midnight).
 const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
-                 const uint32_t current_time, const uint32_t date,
+                 const uint32_t current_time, const uint32_t day,
                  const uint32_t dow) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
@@ -436,20 +436,20 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
-  uint32_t start_date = header_->date_created();
   while (true) {
     // Make sure valid departure time
     if (departures_[mid].departure_time() >= current_time) {
       // If within 60 days of tile creation use the days mask else fallback
       // to the day of week mask
       const TransitDeparture& dep = departures_[mid];
-      uint32_t end_date = start_date + dep.end_day();
-      if (date <= end_date) {
-       if (DateTime::is_service_available(dep.days(), start_date, date, end_date))
-          return &departures_[mid];
+      if (day <= dep.end_day()) {
+        // Check days bit
+        if ((dep.days() & (1 << day))) {
+          return &dep;
+        }
       } else {
         if ((dep.days_of_week() & dow) > 0)
-          return &departures_[mid];
+          return &dep;
       }
     }
 
@@ -462,7 +462,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid));
+  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid) +
+           " current_time = " + std::to_string(current_time));
   return nullptr;
 }
 
@@ -534,32 +535,12 @@ const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
   throw std::runtime_error("GraphTile Transit Stop index out of bounds");
 }
 
-// Get the transit route given its route Id.
-const TransitRoute* GraphTile::GetTransitRoute(const uint32_t routeid) const {
-  uint32_t count = header_->routecount();
-  if (count == 0) {
-    return nullptr;
+// Get the transit route given its index with the tile.
+const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
+  if (idx < header_->routecount()) {
+    return &transit_routes_[idx];
   }
-
-  // Binary search - stop Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_routes_[mid].routeid() == routeid) {
-      return &transit_routes_[mid];
-    }
-    if (routeid < transit_routes_[mid].routeid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No route found for routeid = " + std::to_string(routeid));
-  return nullptr;
+  throw std::runtime_error("GraphTile GetTransitRoute index out of bounds");
 }
 
 // Get a pointer to the first transfer record given the stop Id and also
