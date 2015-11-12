@@ -908,7 +908,7 @@ void build(const std::string& transit_dir,
       }
 **/
       // Find unique transit graph edges.
-      std::map<std::pair<uint32_t, uint32_t>, uint32_t> unique_transit_edges;
+      std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
       auto range = departures.equal_range(stop_pbf_graphid);
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
