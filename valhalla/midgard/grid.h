@@ -27,7 +27,7 @@ class grid {
   /**
    * Constructor for grid
    * @param extents    the extents of the grid in the form of an AABB2
-   * @param divisions  the number of divisions in the grid in both the x and y axis
+   * @param divisions  the number of rows/columns within the grid
    */
   grid(const AABB2<coord_t>& extents, size_t divisions);
 
@@ -35,7 +35,7 @@ class grid {
    * Constructor for grid
    * @param min        the minimum extreme point of the grid
    * @param max        the maximum extreme point of the grid
-   * @param divisions  the number of divisions in the grid in both the x and y axis
+   * @param divisions  the number of rows/columns within the grid
    */
   grid(const coord_t& min, const coord_t& max, size_t divisions);
 
@@ -56,6 +56,16 @@ class grid {
    * @return        the set of cells indices which intersect the circle
    */
   std::unordered_set<size_t> intersect(const coord_t& center, const float radius) const;
+
+  /**
+   * @return  the number of cells within this grid
+   */
+  size_t size() const;
+
+  /**
+   * @return  the extent encompasing this grid
+   */
+  const AABB2<coord_t>& extent() const;
 
  protected:
   size_t divisions;

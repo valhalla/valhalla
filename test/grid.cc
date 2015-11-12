@@ -1,4 +1,6 @@
-#include "valhalla/midgard/grid.h"
+#include "midgard/grid.h"
+#include "midgard/point2.h"
+#include "midgard/pointll.h"
 #include "test.h"
 
 #include <list>
