@@ -437,16 +437,15 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
   uint32_t start_date = header_->date_created();
-  uint32_t end_date = header_->date_created() + 59;
   while (true) {
     // Make sure valid departure time
     if (departures_[mid].departure_time() >= current_time) {
       // If within 60 days of tile creation use the days mask else fallback
       // to the day of week mask
       const TransitDeparture& dep = departures_[mid];
+      uint32_t end_date = start_date + dep.end_day();
       if (date <= end_date) {
-       if (DateTime::is_service_available(dep.days(), start_date,
-                                          date, end_date))
+       if (DateTime::is_service_available(dep.days(), start_date, date, end_date))
           return &departures_[mid];
       } else {
         if ((dep.days_of_week() & dow) > 0)
