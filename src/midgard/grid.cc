@@ -47,7 +47,7 @@ namespace valhalla {
 
       //for each segment
       for(auto u = linestring.cbegin(); u != linestring.cend(); std::advance(u, 1)) {
-        //get some infor on u
+        //get some info on u
         size_t x_start = static_cast<size_t>((clamp(u->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
         size_t y_start = static_cast<size_t>((clamp(u->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
         if(super_cell.Contains(*u)) {
@@ -67,12 +67,13 @@ namespace valhalla {
           std::swap(x_start, x_end);
         if(y_start > y_end)
           std::swap(y_start, y_end);
+        x_end = std::min(x_end + 1, divisions);
+        y_end = std::min(y_end + 1, divisions);
         for(; y_start <= y_end; ++y_start) {
-          for(size_t x = x_start; x <= x_end; ++x) {
+          for(size_t x = x_start; x < x_end; ++x) {
             size_t index = y_start * divisions + x;
-            if(cells[index].Intersects(*u, *v)) {
+            if(cells[index].Intersects(*u, *v))
               indices.insert(index);
-            }
           }
         }
       }
@@ -101,6 +102,16 @@ namespace valhalla {
 
       //give them back
       return indices;
+    }
+
+    template <class coord_t>
+    size_t grid<coord_t>::size() const {
+      return cells.size();
+    }
+
+    template <class coord_t>
+    const AABB2<coord_t>& grid<coord_t>::extent() const {
+      return super_cell;
     }
 
     //explicit instantiation
