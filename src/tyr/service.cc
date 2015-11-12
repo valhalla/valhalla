@@ -396,7 +396,10 @@ namespace {
 
           auto man = json::map({});
 
+          // Maneuver type
           man->emplace("type", static_cast<uint64_t>(maneuver.type()));
+
+          // Instruction and verbal instructions
           man->emplace("instruction", maneuver.text_instruction());
           if (maneuver.has_verbal_transition_alert_instruction()) {
             man->emplace("verbal_transition_alert_instruction",
@@ -427,11 +430,13 @@ namespace {
             man->emplace("begin_street_names", std::move(begin_street_names));
           }
 
+          // Time, length, and shape indexes
           man->emplace("time", static_cast<uint64_t>(maneuver.time()));
           man->emplace("length", json::fp_t{maneuver.length(), 3});
           man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
           man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
+          // Portions toll and rough
           if (maneuver.portions_toll())
             man->emplace("toll", maneuver.portions_toll());
           if (maneuver.portions_unpaved())
@@ -543,6 +548,20 @@ namespace {
           // Roundabout count
           if (maneuver.has_roundabout_exit_count()) {
             man->emplace("roundabout_exit_count", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+          }
+
+          // Depart and arrive instructions
+          if (maneuver.has_depart_instruction()) {
+            man->emplace("depart_instruction", maneuver.depart_instruction());
+          }
+          if (maneuver.has_verbal_depart_instruction()) {
+            man->emplace("verbal_depart_instruction", maneuver.verbal_depart_instruction());
+          }
+          if (maneuver.has_arrive_instruction()) {
+            man->emplace("arrive_instruction", maneuver.arrive_instruction());
+          }
+          if (maneuver.has_verbal_arrive_instruction()) {
+            man->emplace("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
           }
 
           //  man->emplace("hasGate", maneuver.);
