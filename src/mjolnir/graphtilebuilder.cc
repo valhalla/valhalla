@@ -727,6 +727,9 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   for(size_t i = 1 ; i < kCellCount; ++i)
     offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
   header_->set_edge_cell_offsets(offsets);
+  //since previously we shouldnt have had anything in the bins we dont have to subtract previous bins
+  header_->set_edgeinfo_offset(header_->edgeinfo_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
+  header_->set_textlist_offset(header_->textlist_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
 
   return strays;
 }

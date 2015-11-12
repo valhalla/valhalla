@@ -104,16 +104,16 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   return opp_index;
 }
 
-void validate(const boost::property_tree::ptree& hierarchy_properties,
+void validate(const boost::property_tree::ptree& pt,
               std::queue<GraphId>& tilequeue, std::mutex& lock,
               std::promise<validator_stats>& result) {
 
     // Our local class for gathering the stats
     validator_stats vStats;
     // Local Graphreader
-    GraphReader graph_reader(hierarchy_properties);
+    GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
-    auto tile_hierarchy = graph_reader.GetTileHierarchy();
+    const auto& tile_hierarchy = graph_reader.GetTileHierarchy();
     std::vector<Tiles<PointLL> > levels;
     for (const auto& level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
@@ -143,8 +143,8 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
       GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
 
       // Bin the edges keeping a list of ones that need to go to other tiles
-      /*if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
-        auto unbinned = tilebuilder.Bin();*/
+      if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
+        auto unbinned = tilebuilder.Bin();
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;
@@ -298,10 +298,9 @@ namespace mjolnir {
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
     // Graphreader
-    boost::property_tree::ptree hierarchy_properties = (pt.get_child("mjolnir.hierarchy"));
-    GraphReader reader(hierarchy_properties);
+    TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
     // Make sure there are at least 2 levels!
-    if (reader.GetTileHierarchy().levels().size() < 2)
+    if (hierarchy.levels().size() < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
     // Setup threads
@@ -313,15 +312,14 @@ namespace mjolnir {
     std::list<std::promise<validator_stats> > results;
 
     // Create a randomized queue of tiles to work from
-    const auto tile_hierarchy = reader.GetTileHierarchy();
     std::deque<GraphId> tempqueue;
-    for (auto tier : tile_hierarchy.levels()) {
+    for (auto tier : hierarchy.levels()) {
       auto level = tier.second.level;
       auto tiles = tier.second.tiles;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
+        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
           tempqueue.push_back(tile_id);
         }
       }
@@ -336,8 +334,7 @@ namespace mjolnir {
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();
-      thread.reset(new std::thread(validate, std::cref(hierarchy_properties),
-                                   std::ref(tilequeue),
+      thread.reset(new std::thread(validate, std::cref(pt), std::ref(tilequeue),
                                    std::ref(lock), std::ref(results.back())));
     }
     // Wait for threads to finish
