@@ -76,6 +76,9 @@ class PathAlgorithm {
   // Current travel mode
   sif::TravelMode mode_;
 
+  // Tile creation date
+  uint32_t tile_creation_date_;
+
   // Current walking distance. TODO - make this distance or mode distance?
   uint32_t walking_distance_;
 
