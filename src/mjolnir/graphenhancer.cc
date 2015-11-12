@@ -341,7 +341,7 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       // Do not allow use of the start edge or any transit edges
       if ((n == 0 && diredge->endnode() == startnode) ||
-          diredge->use() >= Use::kRail) {
+          diredge->IsTransitLine()) {
         continue;
       }
 
@@ -1283,7 +1283,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Set unreachable, not_thru, or internal intersection (except
         // for transit)
-        if (directededge.use() < Use::kRail) {
+        if (!directededge.IsTransitLine()) {
           // Set unreachable (driving) flag
           if (IsUnreachable(reader, lock, directededge)) {
             directededge.set_unreachable(true);
