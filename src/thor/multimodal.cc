@@ -69,12 +69,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   if (!origin.date_time_)
     return { };
 
-  // Set route start time (seconds from midnight), date, and day of week
-  uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
-  uint32_t localtime = start_time;
-  uint32_t date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-  uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
-
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), destination.vertex(), costing);
   float mindist = astarheuristic_.GetDistance(origin.vertex());
@@ -83,6 +77,14 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   // destination first in case the origin edge includes a destination edge.
   SetDestination(graphreader, destination, costing);
   SetOrigin(graphreader, origin, destination, costing);
+
+  // Set route start time (seconds from midnight), date, and day of week.
+  // Get the number of days since tile creation.
+  uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+  uint32_t localtime = start_time;
+  uint32_t date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+  uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
+  uint32_t day = date - tile_creation_date_;
 
   // Find shortest path
   uint32_t blockid, tripid, prior_stop;
@@ -223,7 +225,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       tripid = 0;
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
-                    directededge->lineid(), localtime, date, dow);
+                    directededge->lineid(), localtime, day, dow);
         if (departure) {
           // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);
