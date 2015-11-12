@@ -172,12 +172,12 @@ message TripPath {
       kStation = 1;
     }
 
-    optional Type type = 1;
-    optional string onestop_id = 2;
+    optional Type type = 1;                  // The type of stop (station or simple stop)
+    optional string onestop_id = 2;          // Unique transitland ID
     optional string name = 3;                // The name of the stop
     optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
     optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
-    optional bool is_parent_stop = 6;
+    optional bool is_parent_stop = 6;        // true if this is a parent stop
   }
 
   message Node {

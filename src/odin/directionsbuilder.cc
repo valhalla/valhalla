@@ -267,6 +267,47 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
           maneuver.verbal_arrive_instruction());
     }
 
+    // Process transit route
+    if (maneuver.IsTransit()) {
+      auto& transit_route = maneuver.transit_route_info();
+      auto* trip_transit_route = trip_maneuver->mutable_transit_route();
+      if (!transit_route.onestop_id.empty()) {
+        trip_transit_route->set_onestop_id(transit_route.onestop_id);
+      }
+      if (!transit_route.short_name.empty()) {
+        trip_transit_route->set_short_name(transit_route.short_name);
+      }
+      if (!transit_route.long_name.empty()) {
+        trip_transit_route->set_long_name(transit_route.long_name);
+      }
+      if (!transit_route.headsign.empty()) {
+        trip_transit_route->set_headsign(transit_route.headsign);
+      }
+      trip_transit_route->set_color(transit_route.color);
+      trip_transit_route->set_text_color(transit_route.text_color);
+      if (!transit_route.operator_onestop_id.empty()) {
+        trip_transit_route->set_operator_onestop_id(transit_route.operator_onestop_id);
+      }
+
+      // Process transit stops
+      for (auto& transit_stop : transit_route.transit_stops) {
+        auto* trip_transit_stop = trip_transit_route->add_transit_stops();
+        trip_transit_stop->set_type(transit_stop.type);
+        if (!transit_stop.onestop_id.empty()) {
+          trip_transit_stop->set_onestop_id(transit_stop.onestop_id);
+        }
+        if (!transit_stop.name.empty()) {
+          trip_transit_stop->set_name(transit_stop.name);
+        }
+        if (!transit_stop.arrival_date_time.empty()) {
+          trip_transit_stop->set_arrival_date_time(transit_stop.arrival_date_time);
+        }
+        if (!transit_stop.departure_date_time.empty()) {
+          trip_transit_stop->set_departure_date_time(transit_stop.departure_date_time);
+        }
+      }
+    }
+
   }
 
   // Populate summary

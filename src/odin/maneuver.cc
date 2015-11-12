@@ -580,6 +580,12 @@ void Maneuver::set_bus(bool bus) {
   bus_ = bus;
 }
 
+bool Maneuver::IsTransit() const {
+  return ((type_ == TripDirections_Maneuver_Type_kTransit)
+      || (type_ == TripDirections_Maneuver_Type_kTransitTransfer)
+      || (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
+}
+
 const TransitRouteInfo& Maneuver::transit_route_info() const {
   return transit_route_info_;
 }

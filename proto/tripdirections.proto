@@ -42,8 +42,25 @@ message TripDirections {
       kStop = 0;
       kStation = 1;
     }
+
+    optional Type type = 1;                    // The type of stop (station or simple stop)
+    optional string onestop_id = 2;            // Unique transitland ID
+    optional string name = 3;                  // The name of the stop
+    optional string arrival_date_time = 4;     // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional string departure_date_time = 5;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
   }
-  
+
+  message TransitRoute {
+    optional string onestop_id = 1;
+    optional string short_name = 2;
+    optional string long_name = 3;
+    optional string headsign = 4;
+    optional uint32 color = 5;
+    optional uint32 text_color = 6;
+    optional string operator_onestop_id = 7;
+    repeated TransitStop transit_stops = 8;
+  }
+
   message Maneuver {
     enum CardinalDirection {
       kNorth = 0;
@@ -131,6 +148,7 @@ message TripDirections {
     optional string verbal_depart_instruction = 19;          // verbal depart instruction - used with transit
     optional string arrive_instruction = 20;                 // arrive instruction - used with transit
     optional string verbal_arrive_instruction = 21;          // verbal arrive instruction - used with transit
+    optional TransitRoute transit_route = 22;                // transit route attributes including a list of transit stops
   }
   
   optional uint64 trip_id = 1;

@@ -208,6 +208,8 @@ class Maneuver {
   bool bus() const;
   void set_bus(bool bus);
 
+  bool IsTransit() const;
+
   const TransitRouteInfo& transit_route_info() const;
   TransitRouteInfo* mutable_transit_route_info();
 
@@ -297,7 +299,7 @@ class Maneuver {
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
 
-  // Transit travel mode
+  // Travel mode
   TripPath_TravelMode travel_mode_;
   bool rail_;
   bool bus_;
