@@ -1,6 +1,8 @@
 #include "test.h"
 
 #include <string>
+#include <bitset>
+
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphconstants.h>
 
@@ -108,6 +110,27 @@ void TryIsServiceAvailable(std::string begin_date, std::string date, std::string
 
   if (value != DateTime::is_service_available(days, b, d, e))
     throw std::runtime_error("Invalid bits set for service days. " + begin_date + " " + end_date + " " + std::to_string(days));
+}
+
+void TryIsServiceDaysUsingShift(std::string begin_date, std::string date, std::string end_date,uint64_t days, bool value) {
+
+  uint32_t b = DateTime::days_from_pivot_date(DateTime::get_formatted_date(begin_date));
+  uint32_t d = DateTime::days_from_pivot_date(DateTime::get_formatted_date(date));
+  uint32_t e = DateTime::days_from_pivot_date(DateTime::get_formatted_date(end_date));
+  uint64_t day = d - b;
+
+  bool answer = false;
+
+  if (day <= (e - b)) {
+    // Check days bit
+
+    if ((days & (1ULL << day)))
+      answer = true;
+
+  }
+
+  if (value != answer)
+    throw std::runtime_error("Invalid bits set for service days using shift.  " + begin_date + " " + end_date + " " + std::to_string(days));
 }
 
 void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string date, std::string end_date, uint32_t dow_mask, uint64_t value) {
@@ -357,6 +380,9 @@ void TestEpoch() {
 void TestIsServiceAvailable() {
   TryIsServiceAvailable("2015-11-11", "2016-01-09", "2016-01-09",580999813345182728, true);
   TryIsServiceAvailable("2015-11-11", "2016-01-10", "2016-01-09",580999813345182728, false);
+
+  TryIsServiceDaysUsingShift("2015-11-11", "2016-01-09", "2016-01-09",580999813345182728, true);
+  TryIsServiceDaysUsingShift("2015-11-11", "2016-01-10", "2016-01-09",580999813345182728, false);
 
 }
 

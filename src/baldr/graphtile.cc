@@ -444,7 +444,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       const TransitDeparture& dep = departures_[mid];
       if (day <= dep.end_day()) {
         // Check days bit
-        if ((dep.days() & (1 << day))) {
+        if ((dep.days() & (1ULL << day))) {
           return &dep;
         }
       } else {
