@@ -225,7 +225,10 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
                          tilebuilder.AddName(r.name()),
                          tilebuilder.AddName(r.route_long_name()),
                          tilebuilder.AddName(r.route_desc()));
+      LOG_DEBUG("Route idx = " + std::to_string(i) + ": " + r.name() + ","
+                     + r.route_long_name());
       tilebuilder.AddTransitRoute(route);
+
       // Route type - need this to store in edge?
       route_types[i] = r.vehicle_type();
   }
@@ -375,15 +378,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::unordered_map<GraphId, bool>& stop_access,
                 const std::vector<OSMConnectionEdge>& connection_edges,
                 const std::unordered_map<uint32_t, uint32_t>& route_types) {
+  auto t1 = std::chrono::high_resolution_clock::now();
+
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder.nodes()));
+  uint32_t nodecount = currentnodes.size();
   tilebuilder.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder.directededges()));
+  uint32_t edgecount = currentedges.size();
   tilebuilder.directededges().clear();
-
-  LOG_INFO("AddToGraph for tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
-         " current directed edge count = " + std::to_string(currentedges.size()) +
-         " current node count = " + std::to_string(currentnodes.size()));
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
@@ -503,6 +506,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       LOG_ERROR("Stop key not equal!");
     }
 
+    LOG_DEBUG("Transit Stop: " + stop.name() + " stop index= " +
+              std::to_string(stop_index));
+
     // Get the Valhalla graphId of the origin node (transit stop)
     GraphId origin_node = GetGraphId(stopid, tile_node_counts);
 
@@ -528,7 +534,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     node.set_stop_index(stop_index);
     node.set_edge_index(tilebuilder.directededges().size());
     node.set_timezone(stop.timezone());
-    LOG_DEBUG("Add node for stop id = " + std::to_string(stop_index));
 
     // Add connections from the stop to the OSM network
     // TODO - change from linear search for better performance
@@ -618,15 +623,18 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
       // Find the lat,lng of the end stop
       PointLL endll;
+      std::string endstopname;
       GraphId end_stop_graphid = transitedge.dest_pbf_graphid;
-      if (end_stop_graphid.tileid() == tileid) {
+      if (end_stop_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Stop& endstop = transit.stops(end_stop_graphid.id());
+        endstopname = endstop.name();
         endll = {endstop.lon(), endstop.lat()};
       } else {
         // Get Transit PBF data for this tile
         Transit endtransit = read_pbf(end_stop_graphid.Tile_Base(), hierarchy, transit_dir);
         const Transit_Stop& endstop = endtransit.stops(end_stop_graphid.id());
+        endstopname = endstop.name();
         endll = {endstop.lon(), endstop.lat()};
       }
 
@@ -643,11 +651,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       directededge.set_reverseaccess(kPedestrianAccess);  // TODO - bikes?
       directededge.set_lineid(transitedge.lineid);
 
-      LOG_DEBUG("Add directededge - lineId = " + std::to_string(transitedge.lineid) +
-         " endnode stop id = " + std::to_string(endstop.key) +
+      LOG_DEBUG("Add transit directededge - lineId = " + std::to_string(transitedge.lineid) +
          " Route Key = " + std::to_string(transitedge.routeid) +
-         " GraphId: " + std::to_string(endstop.graphid.tileid()) + "," +
-         std::to_string(endstop.graphid.id()));
+         " EndStop " + endstopname);
 
       // Add edge info to the tile and set the offset in the directed edge
       // Leave the name empty. Use the trip Id to look up the route Id and
@@ -677,11 +683,22 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     LOG_ERROR("Added " + std::to_string(nadded) + " but there are " +
               std::to_string(connection_edges.size()) + " connections");
   }
-  LOG_INFO("AddToGraph tileID: " + std::to_string(tilebuilder.header()->graphid().tileid()) +
-           " done. New directed edge count = " + std::to_string(tilebuilder.directededges().size()));
+
+  // Log the number of added nodes and edges
+  uint32_t addededges = tilebuilder.directededges().size() - edgecount;
+  uint32_t addednodes = tilebuilder.nodes().size() - nodecount;
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                  t2 - t1).count();
+  LOG_INFO("Tile= " + std::to_string(tilebuilder.header()->graphid().tileid())
+          + ": Added " + std::to_string(addededges) + " edges and "
+          + std::to_string(addednodes) + " nodes. time = "
+          + std::to_string(msecs) + " ms");
 }
 
-void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile, const TileHierarchy& tilehierarchy,
+// Add connection edges from the transit stop to an OSM edge
+void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile,
+                      const TileHierarchy& tilehierarchy,
                       std::vector<OSMConnectionEdge>& connection_edges) {
   PointLL stop_ll = {stop.lon(), stop.lat() };
   uint64_t wayid = stop.osm_way_id();
@@ -774,19 +791,17 @@ void AddOSMConnection(const Transit_Stop& stop, const GraphTile* tile, const Til
     }
   }
 
-  if (length != 0.0f && length2 != 0.0 &&
-      (length + length2) < edgelength-1) {
+  // Check for errors
+  if (length != 0.0f && length2 != 0.0 && (length + length2) < edgelength-1) {
     LOG_ERROR("EdgeLength= " + std::to_string(edgelength) + " < connection lengths: " +
              std::to_string(length) + "," + std::to_string(length2) + " when connecting to stop "
              + stop.name());
-    return;
   }
   if (conn_count == 0) {
     LOG_ERROR("Stop " + stop.name() + " has no connections to OSM! Stop TileId = " +
               std::to_string(stop_pbf_graphid.tileid()) + " Start Node Tile: " +
               std::to_string(startnode.tileid()) + " End Node Tile: " +
               std::to_string(endnode.tileid()));
-    return;
   }
 }
 
@@ -809,12 +824,7 @@ void build(const std::string& transit_dir,
       reader.Clear();
     GraphId tile_id = tile_start->first.Tile_Base();
 
-    lock.lock();
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
-    // Read in the existing tile - deserialize it so we can add to it
-    GraphTileBuilder tilebuilder(hierarchy, tile_id, true);
-    lock.unlock();
-
+    // Get transit pbf tile
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(),0), hierarchy);
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
@@ -842,6 +852,13 @@ void build(const std::string& transit_dir,
       }
     }
 
+    // Get Valhalla tile - get a read only instance for reference and
+    // a writeable instance (deserialize it so we can add to it)
+    lock.lock();
+    const GraphTile* tile = reader.GetGraphTile(tile_id);
+    GraphTileBuilder tilebuilder(hierarchy, tile_id, true);
+    lock.unlock();
+
     // Iterate through stops and form connections to OSM network. Each
     // stop connects to 1 or 2 OSM nodes along the closest OSM way.
     // TODO - future - how to handle connections that reach nodes
@@ -859,9 +876,8 @@ void build(const std::string& transit_dir,
       AddOSMConnection(stop, tile, hierarchy, connection_edges);
 
       // Store stop information in TransitStops
-      TransitStop ts(tilebuilder.AddName(stop.onestop_id()),
-                     tilebuilder.AddName(stop.name()));
-      tilebuilder.AddTransitStop(ts);
+      tilebuilder.AddTransitStop( { tilebuilder.AddName(stop.onestop_id()),
+                                    tilebuilder.AddName(stop.name()) } );
 
       /** TODO - parent/child relationships
       if (stop.type == 0 && stop.parent.Is_Valid()) {
@@ -869,9 +885,12 @@ void build(const std::string& transit_dir,
       }       **/
     }
 
-    LOG_INFO("Tile has " + std::to_string(transit.stops_size()) + " stops");
-    LOG_INFO("Connection Edges: size= " + std::to_string(connection_edges.size()));
+    // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
+
+    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + " has " +
+             std::to_string(transit.stops_size()) + " stops and " +
+             std::to_string(connection_edges.size()) + " connection edges");
 
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
@@ -896,8 +915,7 @@ void build(const std::string& transit_dir,
       StopEdges stopedges;
       stopedges.origin_pbf_graphid = stop_pbf_graphid;
 
-/**    TODO
-      // Identify any parent-child edge connections (to add later)
+      /** TODO - Identify any parent-child edge connections
       if (stop.type == 1) {
         // Station - identify any children.
         auto range = children.equal_range(stop.pbf_graphid);
@@ -905,8 +923,8 @@ void build(const std::string& transit_dir,
           stopedges.intrastation.push_back(kv->second);
       } else if (stop.parent != 0) {
         stopedges.intrastation.push_back(stop.parent);
-      }
-**/
+      } **/
+
       // Find unique transit graph edges.
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
       auto range = departures.equal_range(stop_pbf_graphid);
@@ -989,6 +1007,7 @@ namespace mjolnir {
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
+  auto t1 = std::chrono::high_resolution_clock::now();
   std::unordered_map<GraphId, size_t> tiles;
 
   // Bail if nothing
@@ -1019,7 +1038,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       }
     }
   }
-  if(!transit_tiles.size()) {
+  if (!transit_tiles.size()) {
     LOG_INFO("No transit tiles found. Transit will not be added.");
     return;
   }
@@ -1031,9 +1050,12 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // and populate tiles
 
   // A place to hold worker threads and their results
+  // (Change threads to 1 if running DEBUG to get more info)
+//  std::vector<std::shared_ptr<std::thread> > threads(1);
   std::vector<std::shared_ptr<std::thread> > threads(
-    std::max(static_cast<uint32_t>(1),
-      pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+     std::max(static_cast<uint32_t>(1),
+       pt.get<uint32_t>("mjolnir.concurrency",
+       std::thread::hardware_concurrency())));
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -1041,9 +1063,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // A place to hold the results of those threads (exceptions, stats)
   std::list<std::promise<builder_stats> > results;
 
-  // Start the threads
+  // Start the threads, divvy up the work
   LOG_INFO("Adding " + std::to_string(transit_tiles.size()) + " transit tiles to the local graph...");
-  // Divvy up the work
   size_t floor = tiles.size() / threads.size();
   size_t at_ceiling = tiles.size() - (threads.size() * floor);
   std::unordered_map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
@@ -1081,7 +1102,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
-  LOG_INFO("Finished");
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  LOG_INFO("Finished - TransitBuider took " + std::to_string(secs) + " secs");
 }
 
 }
