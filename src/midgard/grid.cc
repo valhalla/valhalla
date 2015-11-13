@@ -47,28 +47,33 @@ namespace valhalla {
 
       //for each segment
       for(auto u = linestring.cbegin(); u != linestring.cend(); std::advance(u, 1)) {
-        //get some info on u
+        //figure out what the segment is
+        auto v = std::next(u);
+        if(v == linestring.cend())
+          v = u;
+
+        //this is outside of the cell
+        if(!super_cell.Contains(*u) || !super_cell.Contains(*v)) {
+          uncontained = true;
+          //TODO: get neighbors
+          //this is completely outside of the cell
+          if(!super_cell.Intersects(*u, *v))
+            continue;
+        }
+
+        //figure out the subset of the grid that this segment overlaps
         size_t x_start = static_cast<size_t>((clamp(u->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
         size_t y_start = static_cast<size_t>((clamp(u->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
-        if(super_cell.Contains(*u)) {
-          indices.insert(y_start * divisions + x_start);
-        }//definitely outside the grid
-        else uncontained = true;
-
-        //get some info on v
-        auto v = std::next(u);
-        if(v == linestring.cend() || !super_cell.Intersects(*u, *v))
-          continue;
         size_t x_end = static_cast<size_t>((clamp(v->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
         size_t y_end = static_cast<size_t>((clamp(v->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
-
-        //loop over the subset of the grid that intersects the bbox formed by the linestring
         if(x_start > x_end)
           std::swap(x_start, x_end);
         if(y_start > y_end)
           std::swap(y_start, y_end);
         x_end = std::min(x_end + 1, divisions);
         y_end = std::min(y_end + 1, divisions);
+
+        //loop over the subset of the grid that intersects the bbox formed by the linestring
         for(; y_start < y_end; ++y_start) {
           for(size_t x = x_start; x < x_end; ++x) {
             size_t index = y_start * divisions + x;
@@ -77,6 +82,7 @@ namespace valhalla {
           }
         }
       }
+
       //give them back
       return indices;
     }
