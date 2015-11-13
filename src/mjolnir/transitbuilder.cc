@@ -107,7 +107,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
   std::unordered_multimap<GraphId, Departure> departures;
   if (transit.stop_pairs_size() == 0) {
     if (transit.stops_size() > 0) {
-      LOG_ERROR("TileID: " + std::to_string(tile_id.tileid()) +
+      LOG_ERROR("Tile " + std::to_string(tile_id.tileid()) +
                 " has 0 schedule stop pairs but has " +
                 std::to_string(transit.stops_size()) + " stops");
     }
@@ -200,7 +200,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     // Add to the departures list
     departures.emplace(dep.orig_pbf_graphid, std::move(dep));
   }
-  LOG_INFO("TileID: " + std::to_string(tile_id.tileid()) + " Added " +
+  LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(departures.size()) + " departures");
   return departures;
 }
@@ -232,8 +232,8 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
       // Route type - need this to store in edge?
       route_types[i] = r.vehicle_type();
   }
-  LOG_INFO("TileID: " + std::to_string(tile_id.tileid()) +
-           ": Added " + std::to_string(route_types.size()) + " routes");
+  LOG_INFO("Tile " + std::to_string(tile_id.tileid()) +
+           ": added " + std::to_string(route_types.size()) + " routes");
   return route_types;
 }
 
@@ -690,8 +690,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
-  LOG_INFO("Tile= " + std::to_string(tilebuilder.header()->graphid().tileid())
-          + ": Added " + std::to_string(addededges) + " edges and "
+  LOG_INFO("Tile " + std::to_string(tilebuilder.header()->graphid().tileid())
+          + ": added " + std::to_string(addededges) + " edges and "
           + std::to_string(addednodes) + " nodes. time = "
           + std::to_string(msecs) + " ms");
 }
@@ -888,7 +888,7 @@ void build(const std::string& transit_dir,
     // Sort the connection edges
     std::sort(connection_edges.begin(), connection_edges.end());
 
-    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + " has " +
+    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.stops_size()) + " stops and " +
              std::to_string(connection_edges.size()) + " connection edges");
 
