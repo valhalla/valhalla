@@ -144,52 +144,6 @@ which_tileid(const baldr::TileHierarchy& tile_hierarchy,
 }
 
 
-GraphId
-which_graphid(const std::vector<const State*>& path,
-              const std::vector<const State*>::const_iterator iterator)
-{
-  if (iterator != path.cend() && *iterator) {
-    auto stateptr = *iterator;
-    const auto prev_iterator = std::prev(iterator);
-    const auto next_iterator = std::next(iterator);
-
-    // If previous state is available, find the last edge/node id on
-    // the route from previous state to current state
-    if (iterator != path.cbegin()
-        && prev_iterator != path.cend()
-        && *prev_iterator
-        && (*prev_iterator)->routed()) {
-      const auto label_iterator = (*prev_iterator)->RouteBegin(*stateptr);
-      if (label_iterator != (*prev_iterator)->RouteEnd()) {
-        return label_iterator->nodeid.Is_Valid()?
-            label_iterator->nodeid : label_iterator->edgeid;
-      }
-    }
-
-    // Otherwise if next state is available, find the first edge/node
-    // id on the route from current state to next state
-    else if (next_iterator != path.cend()
-             && *next_iterator
-             && stateptr->routed()) {
-      auto label_iterator = stateptr->RouteBegin(*(*next_iterator));
-      GraphId last_valid_id;
-      while (label_iterator != stateptr->RouteEnd()) {
-        auto id = label_iterator->nodeid.Is_Valid()?
-                  label_iterator->nodeid : label_iterator->edgeid;
-        if (id.Is_Valid()) {
-          last_valid_id = id;
-        }
-        label_iterator++;
-      }
-      return last_valid_id;
-    }
-  }
-
-  // Bye!
-  return GraphId();
-}
-
-
 // <sequence ID, coordinate index, edge ID>
 using Result = std::tuple<SequenceId, uint32_t, baldr::GraphId>;
 
@@ -270,14 +224,14 @@ int main(int argc, char *argv[])
         continue;
       }
 
-      const auto& path = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
-      assert (path.size() == sequence.size());
+      const auto& match_results = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
+      assert(match_results.size() == sequence.size());
 
       uint32_t stat_matched_count_of_sequence = 0;
       uint32_t coord_idx = 0;
-      for (auto state = path.cbegin(); state != path.cend(); state++, coord_idx++) {
-        if (*state) {
-          results.emplace_back(sid, coord_idx, which_graphid(path, state));
+      for (auto result = match_results.cbegin(); result != match_results.cend(); result++, coord_idx++) {
+        if (result->graphid().Is_Valid()) {
+          results.emplace_back(sid, coord_idx, result->graphid());
           stat_matched_count_of_sequence++;
         }
       }

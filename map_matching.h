@@ -17,7 +17,7 @@ class Measurement {
       : lnglat_(lnglat) {}
 
   const PointLL& lnglat() const
-  { return lnglat_; };
+  { return lnglat_; }
 
  private:
   PointLL lnglat_;
@@ -36,13 +36,6 @@ class State
         labelset_(nullptr),
         label_idx_() {}
 
-  State(const Time time, const Candidate& candidate)
-      : id_(kInvalidStateId),
-        time_(time),
-        candidate_(candidate),
-        labelset_(nullptr),
-        label_idx_() {}
-
   const StateId id() const
   { return id_; }
 
@@ -51,9 +44,6 @@ class State
 
   const Candidate& candidate() const
   { return candidate_; }
-
-  bool interpolated() const
-  { return id_ == kInvalidStateId; }
 
   bool routed() const
   { return labelset_ != nullptr; }
@@ -280,39 +270,48 @@ class MapMatching: public ViterbiSearch<State>
 };
 
 
-std::vector<Candidate>::const_iterator
-interpolate_along_route(const std::unordered_map<GraphId, std::vector<Candidate>::const_iterator>& candidate_map,
-                        const std::vector<Candidate>::const_iterator candidate_end,
-                        const RoutePathIterator route_begin,
-                        const RoutePathIterator route_end)
+class MatchResult
 {
-  auto closest_candidate = candidate_end;
-  float closest_sq_distance = std::numeric_limits<float>::infinity();
+ public:
+  MatchResult(const Point& lnglat,
+              float distance,
+              const GraphId graphid,
+              const State* state = nullptr)
+      : lnglat_(lnglat),
+        distance_(distance),
+        graphid_(graphid),
+        state_(state) {}
 
-  for (auto label = route_begin; label != route_end; label++) {
-    auto it = candidate_map.find(label->edgeid);
-    if (it != candidate_map.end()) {
-      auto candidate = it->second;
-      auto sq_distance = candidate->sq_distance();
-      if (sq_distance < closest_sq_distance) {
-        closest_candidate = candidate;
-        closest_sq_distance = sq_distance;
-      }
-    }
+  MatchResult(const Point& lnglat)
+      : lnglat_(lnglat),
+        distance_(0.f),
+        graphid_(),
+        state_(nullptr)
+  { assert(!graphid_.Is_Valid()); }
 
-    it = candidate_map.find(label->nodeid);
-    if (it != candidate_map.end()) {
-      auto candidate = it->second;
-      auto sq_distance = candidate->sq_distance();
-      if (sq_distance < closest_sq_distance) {
-        closest_candidate = candidate;
-        closest_sq_distance = sq_distance;
-      }
-    }
-  }
+  // Coordinate of the matched point
+  const PointLL& lnglat() const
+  { return lnglat_; }
 
-  return closest_candidate;
-}
+  // Distance from measurement to the matched point
+  float distance() const
+  { return distance_; }
+
+  // Which edge/node this matched point stays
+  const GraphId graphid() const
+  { return graphid_; }
+
+  // Attach the state pointer for other information (e.g. reconstruct
+  // the route path) and debugging
+  const State* state() const
+  { return state_; }
+
+ private:
+  PointLL lnglat_;
+  float distance_;
+  GraphId graphid_;
+  const State* state_;
+};
 
 
 // Collect a nodeid set of a path location
@@ -343,80 +342,136 @@ collect_nodes(GraphReader& reader, const PathLocation& location)
 }
 
 
-const State*
-interpolate(MapMatching& mm,
-            const CandidateQuery& cq,
-            float max_sq_search_radius,
-            const MapMatching::iterator target_state,
-            const Measurement& measurement)
+MatchResult
+guess_source_result(const MapMatching::iterator source,
+                    const MapMatching::iterator target,
+                    const Measurement& source_measurement)
 {
-  auto source_state = std::next(target_state);
-  if (!source_state.IsValid()) {
-    // TODO return the closest one
-    return nullptr;
-  }
-
-  const auto& candidates = cq.Query(measurement.lnglat(),
-                                    max_sq_search_radius,
-                                    mm.costing()->GetFilter());
-  if (candidates.empty()) {
-    return nullptr;
-  }
-
-  // Reverse map from GraphId to its canidate
-  std::unordered_map<GraphId, std::vector<Candidate>::const_iterator> candidate_map;
-  for (auto it = candidates.begin(); it != candidates.end(); it++) {
-    const auto& location = it->pathlocation();
-    if (!location.IsNode()) {
-      for (const auto& edge : it->pathlocation().edges()) {
-        if (edge.id.Is_Valid()) {
-          candidate_map[edge.id] = it;
-        }
-      }
-    } else {
-      for (const auto nodeid : collect_nodes(mm.graphreader(), location)) {
-        if (nodeid.Is_Valid()) {
-          candidate_map[nodeid] = it;
-        }
+  if (source.IsValid() && target.IsValid()) {
+    GraphId last_valid_id;
+    for (auto label = source->RouteBegin(*target);
+         label != source->RouteEnd(); label++) {
+      auto id = label->nodeid.Is_Valid()?
+                label->nodeid : label->edgeid;
+      if (id.Is_Valid()) {
+        last_valid_id = id;
       }
     }
-  }
-  if (candidate_map.empty()) {
-    return nullptr;
-  }
-
-  auto closest_candidate = candidates.cend();
-  if (target_state.IsValid()) {
-    // Find the closest candidate along the route path from the source
-    // state to the target state
-    closest_candidate = interpolate_along_route(
-        candidate_map, candidates.cend(),
-        source_state->RouteBegin(*target_state),
-        source_state->RouteEnd(*target_state));
-  } else {
-    // If target state is not found, we simply interpolate it on the
-    // same edge where the source state's candidate stays
-    const auto& location = source_state->candidate().pathlocation();
-    for (const auto& edge : location.edges()) {
-      const auto it = candidate_map.find(edge.id);
-      if (it != candidate_map.end()) {
-        closest_candidate = it->second;
-        break;
-      }
-    }
-    // TODO check nodes as well
+    const auto& c = source->candidate();
+    return {c.pathlocation().vertex(), c.distance(), last_valid_id, &(*source)};
+  } else if (source.IsValid()) {
+    return {source_measurement.lnglat(), 0.f, GraphId(), &(*source)};
   }
 
-  if (closest_candidate != candidates.end()) {
-    return new State(target_state.time(), *closest_candidate);
-  } else {
-    // TODO return the closest candidate and mark it as new start
-    return nullptr;
-  }
+  return {source_measurement.lnglat()};
 }
 
 
-std::vector<const State*>
+MatchResult
+guess_target_result(const MapMatching::iterator source,
+                    const MapMatching::iterator target,
+                    const Measurement& target_measurement)
+{
+  if (source.IsValid() && target.IsValid()) {
+    auto label = source->RouteBegin(*target);
+    GraphId graphid;
+    if (label != source->RouteEnd()) {
+      graphid = label->nodeid.Is_Valid()? label->nodeid : label->edgeid;
+    }
+    const auto& c = target->candidate();
+    return {c.pathlocation().vertex(), c.distance(), graphid, &(*target)};
+  } else if (target.IsValid()) {
+    return {target_measurement.lnglat(), 0.f, GraphId(), &(*target)};
+  }
+
+  return {target_measurement.lnglat()};
+}
+
+
+MatchResult
+interpolate(GraphReader& reader,
+            const std::unordered_set<GraphId>& graphset,
+            const std::vector<Candidate>::const_iterator begin,
+            const std::vector<Candidate>::const_iterator end,
+            const Measurement& measurement)
+{
+  auto closest_candidate = end;
+  float closest_sq_distance = std::numeric_limits<float>::infinity();
+  GraphId closest_graphid;
+
+  for (auto candidate = begin; candidate != end; candidate++) {
+    if (candidate->sq_distance() < closest_sq_distance) {
+      const auto& location = candidate->pathlocation();
+
+      if (!location.IsNode()) {
+        for (const auto& edge : location.edges()) {
+          const auto it = graphset.find(edge.id);
+          if (it != graphset.end()) {
+            closest_candidate = candidate;
+            closest_sq_distance = candidate->sq_distance();
+            closest_graphid = edge.id;
+          }
+        }
+      } else {
+        for (const auto nodeid : collect_nodes(reader, location)) {
+          const auto it = graphset.find(nodeid);
+          if (it != graphset.end()) {
+            closest_candidate = candidate;
+            closest_sq_distance = candidate->sq_distance();
+            closest_graphid = nodeid;
+          }
+        }
+      }
+    }
+  }
+
+  if (closest_candidate != end) {
+    return {closest_candidate->pathlocation().vertex(), closest_candidate->distance(), closest_graphid};
+  }
+
+  return {measurement.lnglat()};
+}
+
+
+std::unordered_set<GraphId>
+collect_graphset(GraphReader& reader,
+                 const MapMatching::iterator source,
+                 const MapMatching::iterator target)
+{
+  std::unordered_set<GraphId> graphset;
+  if (source.IsValid() && target.IsValid()) {
+    for (auto label = source->RouteBegin(*target);
+         label != source->RouteEnd();
+         ++label) {
+      if (label->edgeid.Is_Valid()) {
+        graphset.insert(label->edgeid);
+      }
+      if (label->nodeid.Is_Valid()) {
+        graphset.insert(label->nodeid);
+      }
+    }
+  } else if (source.IsValid()) {
+    const auto& location = source->candidate().pathlocation();
+    if (!location.IsNode()) {
+      for (const auto& edge : location.edges()) {
+        if (edge.id.Is_Valid()) {
+          graphset.insert(edge.id);
+        }
+      }
+    } else {
+      for (const auto nodeid : collect_nodes(reader, location)) {
+        if (nodeid.Is_Valid()) {
+          graphset.insert(nodeid);
+        }
+      }
+    }
+  }
+
+  return graphset;
+}
+
+
+std::vector<MatchResult>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
@@ -452,43 +507,48 @@ OfflineMatch(MapMatching& mm,
   }
 
   // Search viterbi path
-  std::vector<MapMatching::iterator> path;
-  for (auto state = mm.SearchPath(time); state != mm.PathEnd(); state++) {
-    path.push_back(state);
+  std::vector<MapMatching::iterator> iterpath;
+  iterpath.reserve(mm.size());
+  for (auto it = mm.SearchPath(time); it != mm.PathEnd(); it++) {
+    iterpath.push_back(it);
   }
-  std::reverse(path.begin(), path.end());
-  assert(path.size() == mm.size());
+  std::reverse(iterpath.begin(), iterpath.end());
+  assert(iterpath.size() == mm.size());
 
   // Interpolate proximate measurements and merge their states into
   // the results
-  std::vector<const State*> results;
-  for (Time time = 0; time < mm.size(); time++) {
-    const auto& state = path[time];
-    results.push_back(state.IsValid()? &(*state) : nullptr);
+  std::vector<MatchResult> results;
+  results.reserve(measurements.size());
+  results.emplace_back(measurements.front().lnglat());
+  assert(!results.back().graphid().Is_Valid());
+
+  for (Time time = 1; time < mm.size(); time++) {
+    const auto &source_state = iterpath[time - 1],
+               &target_state = iterpath[time];
+
+    if (!results.back().graphid().Is_Valid()) {
+      results.pop_back();
+      const auto& measurement = measurements[results.size()];
+      results.push_back(guess_source_result(source_state, target_state, measurement));
+    }
+
     auto it = proximate_measurements.find(time);
     if (it != proximate_measurements.end()) {
-      assert (time + 1 < mm.size());  // Won't be the last time
+      const auto& graphset = collect_graphset(mm.graphreader(), source_state, target_state);
       for (const auto idx : it->second) {
-        results.push_back(interpolate(mm, cq, max_sq_search_radius, path[time + 1], measurements[idx]));
+        const auto& candidates = cq.Query(measurements[idx].lnglat(),
+                                          max_sq_search_radius,
+                                          mm.costing()->GetFilter());
+        results.push_back(interpolate(mm.graphreader(), graphset,
+                                      candidates.begin(), candidates.end(),
+                                      measurements[idx]));
       }
     }
+
+    const auto& measurement = measurements[results.size()];
+    results.push_back(guess_target_result(source_state, target_state, measurement));
   }
   assert(results.size() == measurements.size());
 
   return results;
-}
-
-
-// Interpolated states won't be deleted in the destructor of
-// ViterbiSearch, so you have to manually call this helper function to
-// delete them
-
-// TODO it's a workaround maybe we should use shared_ptr
-void DeleteInterpolatedStates(const std::vector<const State*> states)
-{
-  for (const auto state : states) {
-    if (state && state->interpolated()) {
-      delete state;
-    }
-  }
 }

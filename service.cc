@@ -92,9 +92,7 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 
 
 template <typename T>
-void serialize_geometry(const std::vector<const State*>& path,
-                        const MapMatching&mm,
-                        const std::vector<Measurement>& measurements,
+void serialize_geometry(const std::vector<MatchResult>& results,
                         Writer<T>& writer)
 {
   writer.StartObject();
@@ -102,10 +100,8 @@ void serialize_geometry(const std::vector<const State*>& path,
   writer.String("MultiPoint");
   writer.String("coordinates");
   writer.StartArray();
-  for (decltype(path.size()) idx = 0; idx < path.size(); idx++) {
-    const auto& vertex = path[idx]? path[idx]->candidate().pathlocation().vertex()
-                         : measurements[idx].lnglat();
-    serialize_coordinate(vertex, writer);
+  for (const auto& result : results) {
+    serialize_coordinate(result.lnglat(), writer);
   }
   writer.EndArray();
   writer.EndObject();
@@ -191,9 +187,6 @@ void serialize_state(const State& state,
   writer.String("id");
   writer.Uint(state.id());
 
-  writer.String("interpolated");
-  writer.Bool(state.interpolated());
-
   writer.String("time");
   writer.Uint(state.time());
 
@@ -211,37 +204,47 @@ void serialize_state(const State& state,
 
 
 template <typename T>
-void serialize_properties(const std::vector<const State*>& path,
+void serialize_properties(const std::vector<MatchResult>& results,
                           const MapMatching&mm,
                           Writer<T>& writer)
 {
   writer.StartObject();
 
+  writer.String("distances");
+  writer.StartArray();
+  for (const auto& result : results) {
+    writer.Double(result.distance());
+  }
+  writer.EndArray();
+
+  writer.String("graphids");
+  writer.StartArray();
+  for (const auto& result : results) {
+    writer.Double(result.graphid().id());
+  }
+  writer.EndArray();
+
   writer.String("states");
   writer.StartArray();
-  for (const auto state : path) {
+  for (const auto& result : results) {
     writer.StartArray();
-    if (state) {
-      if (!state->interpolated()) {
-        for (const auto timed_state : mm.states(state->time())) {
-          serialize_state(*timed_state, mm, writer);
-        }
-      } else {
+    if (result.state()) {
+      for (const auto state : mm.states(result.state()->time())) {
         serialize_state(*state, mm, writer);
       }
     }
     writer.EndArray();
   }
   writer.EndArray();
+
   writer.EndObject();
 }
 
 
 template <typename T>
-void serialize_path(const std::vector<const State*>& path,
-                    const MapMatching& mm,
-                    const std::vector<Measurement>& measurements,
-                    Writer<T>& writer)
+void serialize_results(const std::vector<MatchResult>& results,
+                       const MapMatching& mm,
+                       Writer<T>& writer)
 {
   writer.StartObject();
 
@@ -249,10 +252,10 @@ void serialize_path(const std::vector<const State*>& path,
   writer.String("Feature");
 
   writer.String("geometry");
-  serialize_geometry(path, mm, measurements, writer);
+  serialize_geometry(results, writer);
 
   writer.String("properties");
-  serialize_properties(path, mm, writer);
+  serialize_properties(results, mm, writer);
 
   writer.EndObject();
 }
@@ -349,16 +352,13 @@ class mm_worker_t {
 
       LOG_INFO("Using search radius: " + std::to_string(std::sqrt(sq_search_radius)));
 
-      auto path = OfflineMatch(mm, grid, measurements, sq_search_radius);
-      assert(path.size() == measurements.size());
+      auto match_results = OfflineMatch(mm, grid, measurements, sq_search_radius);
+      assert(match_results.size() == measurements.size());
 
-      // Serialize path
+      // Serialize results
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      serialize_path(path, mm, measurements, writer);
-
-      // Clean up
-      DeleteInterpolatedStates(path);
+      serialize_results(match_results, mm, writer);
 
       worker_t::result_t result{false};
       http_response_t response(200, "OK", sb.GetString(), headers_t{CORS, JS_MIME});

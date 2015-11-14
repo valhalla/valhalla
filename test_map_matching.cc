@@ -45,9 +45,10 @@ int main(int argc, char *argv[])
       std::cout << "============================" << std::endl;
       std::cout << index++ << " id: " << std::endl;
 
-      const auto& path = OfflineMatch(mm, grid, measurements, sq_search_radius);
+      const auto& results = OfflineMatch(mm, grid, measurements, sq_search_radius);
       size_t mmt_id = 0, count = 0;
-      for (const auto state : path) {
+      for (const auto& result : results) {
+        const auto state = result.state();
         if (state) {
           std::cout << mmt_id << " ";
           std::cout << state->id() << " ";
@@ -61,7 +62,6 @@ int main(int argc, char *argv[])
       std::cout << count << "/" << measurements.size() << std::endl;
 
       // Clean up
-      DeleteInterpolatedStates(path);
       measurements.clear();
 
       if (std::cin.eof()) {
