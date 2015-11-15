@@ -10,7 +10,7 @@ compile_tests: test_queue test_viterbi_search test_map_matching test_edge_search
 
 
 psqlmatcher: psqlmatcher.cc
-	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos
+	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos -lsqlite3
 
 
 test_service: service.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h costings.h sp.h

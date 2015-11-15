@@ -18,6 +18,9 @@
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Geometry.h>
 
+// sqlite3
+#include <sqlite3.h>
+
 // valhalla
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
@@ -110,7 +113,8 @@ query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
 
 // Collect all tile IDs
 std::vector<uint32_t>
-collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy)
+collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy,
+                      const std::unordered_set<uint32_t>& excluded_tileids)
 {
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
@@ -120,7 +124,8 @@ collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy)
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
     GraphId tile_id(id, local_level, 0);
-    if (baldr::GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
+    if (baldr::GraphReader::DoesTileExist(tile_hierarchy, tile_id)
+        && excluded_tileids.find(id) == excluded_tileids.end()) {
       queue.push_back(tile_id.tileid());
     }
   }
@@ -144,8 +149,117 @@ which_tileid(const baldr::TileHierarchy& tile_hierarchy,
 }
 
 
-// <sequence ID, coordinate index, edge ID>
+bool create_tiles_table(sqlite3* db_handle)
+{
+  char *err_msg;
+  std::string sql = "CREATE TABLE IF NOT EXISTS tiles"
+                    " (id INTEGER PRIMARY KEY, matched_count INTEGER, total_count INTEGER)";
+  auto ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  return true;
+}
+
+
+
+// <sequence_id, coordinate_index, graphid>
 using Result = std::tuple<SequenceId, uint32_t, baldr::GraphId>;
+
+
+bool create_scores_table(sqlite3* db_handle)
+{
+  char *err_msg;
+  std::string sql = "CREATE TABLE IF NOT EXISTS scores"
+                    " (sequence_id INTEGER, coordinate_index INTEGER, graphid BIGINT)";
+  auto ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  return true;
+}
+
+
+bool read_finished_tiles(sqlite3* db_handle,
+                         std::unordered_set<uint32_t>& tileids)
+{
+  sqlite3_stmt* stmt;
+  std::string sql = "SELECT id FROM tiles";
+  int ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, nullptr);
+  if (SQLITE_OK != ret) {
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  do {
+    ret = sqlite3_step(stmt);
+    if (SQLITE_ROW == ret) {
+      int sequence_id = sqlite3_column_int(stmt, 0);
+      if (sequence_id >= 0) {
+        tileids.insert(static_cast<uint32_t>(sequence_id));
+      } else {
+        LOG_ERROR("FOUND negative sequence ID which is not good");
+      }
+    }
+    // Try again if busy
+  } while (SQLITE_ROW == ret || SQLITE_BUSY == ret);
+
+  if (SQLITE_DONE != ret) {
+    LOG_ERROR("Not so successfully: expect SQLITE_DONE returned");
+    sqlite3_finalize(stmt);
+    return false;
+  }
+
+  sqlite3_finalize(stmt);
+  return true;
+}
+
+
+bool write_results(sqlite3* db_handle,
+                   const std::vector<Result>& results,
+                   uint32_t tileid,
+                   uint32_t matched_count,
+                   uint32_t total_count)
+{
+  std::string sql;
+
+  sql += "BEGIN;\n";
+
+  // Insert (sequence_id, coordinate_index, graphid) into scores
+  if (!results.empty()) {
+    sql += "INSERT INTO scores VALUES ";
+    for (const auto& result : results) {
+      sql += "(";
+      sql += std::to_string(std::get<0>(result)) + ", ";
+      sql += std::to_string(std::get<1>(result)) + ", ";
+      sql += std::to_string(std::get<2>(result));
+      sql += "),";
+    }
+    sql.pop_back();  // Pop out the last comma
+    sql += ";\n";
+  }
+
+  // Insert (tileid, matched_count, total_count) into tiles
+  sql += "INSERT INTO tiles VALUES (";
+  sql += std::to_string(tileid) + ", ";
+  sql += std::to_string(matched_count) + ", ";
+  sql += std::to_string(total_count) + ");\n";
+
+  sql += "END;";
+
+  char *err_msg;
+  int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (SQLITE_OK != ret) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  return true;
+}
 
 
 int main(int argc, char *argv[])
@@ -153,8 +267,9 @@ int main(int argc, char *argv[])
   //////////////////////////////////
   // Parse arguments
   if (argc < 4) {
-    std::cerr << "usage: psqlmatcher CONF_FILE_PATH PSQL_URI SQLITE3_FILE_PATH" << std::endl;
-    std::cerr << "example: psqlmatcher conf/valhalla.json \"dbname=sequence user=postgres password=secret host=localhost\"" << std::endl;
+    std::cerr << "usage: psqlmatcher CONF_FILE_PATH PSQL_URI SQLITE3_FILE_PATH" << std::endl << std::endl;
+    std::cerr << "example: psqlmatcher conf/valhalla.json \"dbname=sequence user=postgres password=secret host=localhost\" results.sqlite3" << std::endl;
+    std::cerr << "It will read ALL GPS sequences from the psql database and write results into results.sqlite3." << std::endl;
     return 1;
   }
 
@@ -188,9 +303,40 @@ int main(int argc, char *argv[])
   LOG_INFO("Config: beta = " + std::to_string(beta));
 
   ////////////////////////
+  // Prepare sqlite3 database for writing results
+  sqlite3* db_handle;
+  int ret = sqlite3_open_v2(sqlite3_file_path.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+  if (SQLITE_OK != ret) {
+    LOG_ERROR("failed to open sqlite3 database at " + sqlite3_file_path);
+    return 2;
+  }
+  {
+    bool ok = create_tiles_table(db_handle);
+    if (!ok) {
+      sqlite3_close(db_handle);
+      return 2;
+    }
+  }
+  {
+    bool ok = create_scores_table(db_handle);
+    if (!ok) {
+      sqlite3_close(db_handle);
+      return 2;
+    }
+  }
+
+  ////////////////////////
   // Collect tiles
-  const auto& tileids = collect_local_tileids(tile_hierarchy);
-  LOG_INFO("The number of tiles collected: " + std::to_string(tileids.size()));
+  std::unordered_set<uint32_t> finished_tileids;
+  {
+    bool ok = read_finished_tiles(db_handle, finished_tileids);
+    if (!ok) {
+      sqlite3_close(db_handle);
+      return 2;
+    }
+  }
+  auto tileids = collect_local_tileids(tile_hierarchy, finished_tileids);
+  LOG_INFO("The number of tiles collected: " + std::to_string(tileids.size()) + " (excluded " + std::to_string(finished_tileids.size()) + " finished tiles)");
 
   //////////////////////
   // For each tile:
@@ -244,10 +390,20 @@ int main(int argc, char *argv[])
 
     stat_matched_count_totally += stat_matched_count_of_tile;
     stat_measurement_count_totally += stat_measurement_count_of_tile;
-    LOG_INFO("Summary of tile " + std::to_string(tileid) + ": matched " + std::to_string(stat_matched_count_of_tile) + "/" + std::to_string(stat_measurement_count_of_tile));
+
+    {
+      bool ok = write_results(db_handle, results, tileid, stat_matched_count_of_tile, stat_measurement_count_of_tile);
+      if (!ok) {
+        sqlite3_close(db_handle);
+        return 2;
+      }
+    }
+    LOG_INFO("Tile " + std::to_string(tileid) + " wrote " + std::to_string(stat_matched_count_of_tile) + "/" + std::to_string(stat_measurement_count_of_tile) + " points");
   }
 
   LOG_INFO("============= Summary ==================");
-  LOG_INFO("Matched: " + std::to_string(stat_matched_count_totally) + "/" + std::to_string(stat_measurement_count_totally));
+  LOG_INFO("Matched: " + std::to_string(stat_matched_count_totally) + "/" + std::to_string(stat_measurement_count_totally) + " points");
+
+  sqlite3_close(db_handle);
   return 0;
 }
