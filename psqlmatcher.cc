@@ -165,15 +165,16 @@ bool create_tiles_table(sqlite3* db_handle)
 
 
 
-// <sequence_id, coordinate_index, graphid>
-using Result = std::tuple<SequenceId, uint32_t, baldr::GraphId>;
+// <sequence_id, coordinate_index, graphid, graphtype> no invalid
+// graphid guaranteed
+using Result = std::tuple<SequenceId, uint32_t, baldr::GraphId, GraphType>;
 
 
 bool create_scores_table(sqlite3* db_handle)
 {
   char *err_msg;
   std::string sql = "CREATE TABLE IF NOT EXISTS scores"
-                    " (sequence_id INTEGER, coordinate_index INTEGER, graphid BIGINT)";
+                    " (sequence_id INTEGER, coordinate_index INTEGER, graphid BIGINT, graphtype SMALLINT)";
   auto ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -229,14 +230,15 @@ bool write_results(sqlite3* db_handle,
 
   sql += "BEGIN;\n";
 
-  // Insert (sequence_id, coordinate_index, graphid) into scores
+  // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
   if (!results.empty()) {
     sql += "INSERT INTO scores VALUES ";
     for (const auto& result : results) {
       sql += "(";
-      sql += std::to_string(std::get<0>(result)) + ", ";
-      sql += std::to_string(std::get<1>(result)) + ", ";
-      sql += std::to_string(std::get<2>(result));
+      sql += std::to_string(std::get<0>(result)) + ", "; // sequence_id
+      sql += std::to_string(std::get<1>(result)) + ", "; // coordinate_index
+      sql += std::to_string(std::get<2>(result)) + ", "; // graphid
+      sql += std::to_string(static_cast<uint8_t>(std::get<3>(result))); // graphtype
       sql += "),";
     }
     sql.pop_back();  // Pop out the last comma
@@ -377,7 +379,7 @@ int main(int argc, char *argv[])
       uint32_t coord_idx = 0;
       for (auto result = match_results.cbegin(); result != match_results.cend(); result++, coord_idx++) {
         if (result->graphid().Is_Valid()) {
-          results.emplace_back(sid, coord_idx, result->graphid());
+          results.emplace_back(sid, coord_idx, result->graphid(), result->graphtype());
           stat_matched_count_of_sequence++;
         }
       }

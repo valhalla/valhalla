@@ -2,6 +2,7 @@
 
 #include <sqlite3.h>
 #include <unordered_map>
+#include <tuple>
 
 // boost
 #include <boost/property_tree/ptree.hpp>
@@ -14,12 +15,14 @@
 
 using namespace valhalla;
 
+#include "map_matching.h"
 
-// element (edge/node) id -> count
+
+// Element (edge/node) id -> count
 using CountMap = std::unordered_map<uint64_t, uint16_t>;
 
-// tile id -> count map
-using ScoreMap = std::unordered_map<uint32_t, CountMap>;
+// Tile id -> a pair of count maps (first edge and second node)
+using ScoreMap = std::unordered_map<uint32_t, std::pair<CountMap, CountMap>>;
 
 
 class DirectededgeAttacher: public baldr::DirectedEdge
@@ -87,7 +90,7 @@ class GraphTileAttacher: public baldr::GraphTile
 bool aggregate_scores(sqlite3* db_handle, ScoreMap& score_map)
 {
   sqlite3_stmt* stmt;
-  std::string sql = "SELECT sequence_id, coordinate_index, graphid FROM scores";
+  std::string sql = "SELECT sequence_id, coordinate_index, graphid, graphtype FROM scores";
   int ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, nullptr);
   if (SQLITE_OK != ret) {
     LOG_ERROR("Failed to prepare " + sql);
@@ -97,13 +100,23 @@ bool aggregate_scores(sqlite3* db_handle, ScoreMap& score_map)
     ret = sqlite3_step(stmt);
     if (SQLITE_ROW == ret) {
       baldr::GraphId graphid(static_cast<uint64_t>(sqlite3_column_int64(stmt, 2)));
+      GraphType graphtype = static_cast<GraphType>(sqlite3_column_int(stmt, 3));
       if (graphid.Is_Valid()) {
-        auto count = score_map[graphid.tileid()][graphid.id()];
-        if (count < std::numeric_limits<decltype(count)>::max()) {
-          score_map[graphid.tileid()][graphid.id()]++;
-        } else {
-          // Very likely to be an error
-          LOG_ERROR("The photo count on " + std::to_string(graphid) + " exceeds the max limit");
+        uint16_t* count = nullptr;
+
+        if (graphtype == GraphType::kEdge) {
+          count = &(score_map[graphid.tileid()].first[graphid.id()]);
+        } else if (graphtype == GraphType::kNode) {
+          count = &(score_map[graphid.tileid()].second[graphid.id()]);
+        }
+
+        if (count) {
+          if (*count < std::numeric_limits<uint16_t>::max()) {
+            (*count)++;
+          } else {
+            // Very likely to be an error
+            LOG_ERROR("The photo count on " + std::to_string(graphid) + " exceeds the max limit");
+          }
         }
       } else {
         LOG_ERROR("Found invalid graphid " + std::to_string(graphid));
@@ -133,12 +146,15 @@ void write_scores(const baldr::TileHierarchy& tile_hierarchy,
       GraphTileAttacher tileattacher(tile_hierarchy, graphid);
       auto directededgeattachers = tileattacher.directededgeattachers();
       auto directededgecount = tileattacher.header()->directededgecount();
-      for (const auto countpair : scorepair.second) {
+
+      // Currently we only write down edge scores, ignore node scores
+      // which is much less than edge's
+      for (const auto countpair : scorepair.second.first) {
         auto idx = static_cast<size_t>(countpair.first);
         if (idx < directededgecount) {
           directededgeattachers[idx].set_photocount(countpair.second);
         } else {
-          LOG_ERROR("Tile " + std::to_string(tileid) + ": DirectedEdge id " + std::to_string(idx) + "out of bounds which is " + std::to_string(directededgecount));
+          LOG_ERROR("Tile " + std::to_string(tileid) + ": DirectedEdge id " + std::to_string(idx) + " is out of bounds which is " + std::to_string(directededgecount));
         }
       }
       // Write back into tiles

@@ -270,22 +270,29 @@ class MapMatching: public ViterbiSearch<State>
 };
 
 
+enum class GraphType: uint8_t
+{ kUnknown = 0, kEdge, kNode };
+
+
 class MatchResult
 {
  public:
   MatchResult(const Point& lnglat,
               float distance,
               const GraphId graphid,
+              GraphType graphtype,
               const State* state = nullptr)
       : lnglat_(lnglat),
         distance_(distance),
         graphid_(graphid),
+        graphtype_(graphtype),
         state_(state) {}
 
   MatchResult(const Point& lnglat)
       : lnglat_(lnglat),
         distance_(0.f),
         graphid_(),
+        graphtype_(GraphType::kUnknown),
         state_(nullptr)
   { assert(!graphid_.Is_Valid()); }
 
@@ -301,6 +308,9 @@ class MatchResult
   const GraphId graphid() const
   { return graphid_; }
 
+  GraphType graphtype() const
+  { return graphtype_; }
+
   // Attach the state pointer for other information (e.g. reconstruct
   // the route path) and debugging
   const State* state() const
@@ -310,6 +320,7 @@ class MatchResult
   PointLL lnglat_;
   float distance_;
   GraphId graphid_;
+  GraphType graphtype_;
   const State* state_;
 };
 
@@ -349,18 +360,21 @@ guess_source_result(const MapMatching::iterator source,
 {
   if (source.IsValid() && target.IsValid()) {
     GraphId last_valid_id;
+    GraphType last_valid_type = GraphType::kUnknown;
     for (auto label = source->RouteBegin(*target);
          label != source->RouteEnd(); label++) {
-      auto id = label->nodeid.Is_Valid()?
-                label->nodeid : label->edgeid;
-      if (id.Is_Valid()) {
-        last_valid_id = id;
+      if (label->nodeid.Is_Valid()) {
+        last_valid_id = label->nodeid;
+        last_valid_type = GraphType::kNode;
+      } else if (label->edgeid.Is_Valid()) {
+        last_valid_id = label->edgeid;
+        last_valid_type = GraphType::kEdge;
       }
     }
     const auto& c = source->candidate();
-    return {c.pathlocation().vertex(), c.distance(), last_valid_id, &(*source)};
+    return {c.pathlocation().vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
   } else if (source.IsValid()) {
-    return {source_measurement.lnglat(), 0.f, GraphId(), &(*source)};
+    return {source_measurement.lnglat(), 0.f, GraphId(), GraphType::kUnknown, &(*source)};
   }
 
   return {source_measurement.lnglat()};
@@ -375,13 +389,20 @@ guess_target_result(const MapMatching::iterator source,
   if (source.IsValid() && target.IsValid()) {
     auto label = source->RouteBegin(*target);
     GraphId graphid;
+    GraphType graphtype = GraphType::kUnknown;
     if (label != source->RouteEnd()) {
-      graphid = label->nodeid.Is_Valid()? label->nodeid : label->edgeid;
+      if (label->nodeid.Is_Valid()) {
+        graphid = label->nodeid;
+        graphtype = GraphType::kNode;
+      } else if (label->edgeid.Is_Valid()) {
+        graphid = label->edgeid;
+        graphtype = GraphType::kEdge;
+      }
     }
     const auto& c = target->candidate();
-    return {c.pathlocation().vertex(), c.distance(), graphid, &(*target)};
+    return {c.pathlocation().vertex(), c.distance(), graphid, graphtype, &(*target)};
   } else if (target.IsValid()) {
-    return {target_measurement.lnglat(), 0.f, GraphId(), &(*target)};
+    return {target_measurement.lnglat(), 0.f, GraphId(), GraphType::kUnknown, &(*target)};
   }
 
   return {target_measurement.lnglat()};
@@ -398,6 +419,7 @@ interpolate(GraphReader& reader,
   auto closest_candidate = end;
   float closest_sq_distance = std::numeric_limits<float>::infinity();
   GraphId closest_graphid;
+  GraphType closest_graphtype = GraphType::kUnknown;
 
   for (auto candidate = begin; candidate != end; candidate++) {
     if (candidate->sq_distance() < closest_sq_distance) {
@@ -410,6 +432,7 @@ interpolate(GraphReader& reader,
             closest_candidate = candidate;
             closest_sq_distance = candidate->sq_distance();
             closest_graphid = edge.id;
+            closest_graphtype = GraphType::kEdge;
           }
         }
       } else {
@@ -419,6 +442,7 @@ interpolate(GraphReader& reader,
             closest_candidate = candidate;
             closest_sq_distance = candidate->sq_distance();
             closest_graphid = nodeid;
+            closest_graphtype = GraphType::kNode;
           }
         }
       }
@@ -426,7 +450,7 @@ interpolate(GraphReader& reader,
   }
 
   if (closest_candidate != end) {
-    return {closest_candidate->pathlocation().vertex(), closest_candidate->distance(), closest_graphid};
+    return {closest_candidate->pathlocation().vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
   }
 
   return {measurement.lnglat()};
