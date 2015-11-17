@@ -61,6 +61,19 @@ class GraphTileAttacher: public baldr::GraphTile
   void Verify() const
   {
     baldr::GraphTile newtile(hierarchy_, graphid_);
+
+    auto count = newtile.header()->directededgecount();
+    if (count != header_->directededgecount()) {
+      // That would be very impossible
+      throw std::runtime_error("Directededge count is not matched");
+    }
+    for (size_t idx = 0; idx < count; idx++) {
+      const auto directededge = newtile.directededge(idx);
+      if (directededge->photocount() != directededges_[idx].photocount()) {
+        throw std::runtime_error("Photo count is not written correctly");
+      }
+    }
+
     // TODO compare graphtile_ byte by byte
   }
 
@@ -159,6 +172,7 @@ void write_scores(const baldr::TileHierarchy& tile_hierarchy,
       }
       // Write back into tiles
       tileattacher.UpdateDirectedEdges();
+      tileattacher.Verify();
     }
   }
 }
