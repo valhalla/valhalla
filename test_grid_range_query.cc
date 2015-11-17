@@ -104,9 +104,18 @@ void TestQuery()
 
 int main(int argc, char *argv[])
 {
+#if DNDEBUG
+  std::cerr << "debug is off" << std::endl;
+  return 1;
+#endif
+
   TestGridTools();
+
   TestAddLineSegment();
+
   TestQuery();
+
   std::cout << "all tests passed" << std::endl;
+
   return 0;
 }

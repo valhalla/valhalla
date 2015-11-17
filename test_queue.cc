@@ -123,8 +123,16 @@ void TestQueue()
 
 int main(int argc, char *argv[])
 {
+#if DNDEBUG
+  std::cerr << "debug is off" << std::endl;
+  return 1;
+#endif
+
   SimpleTestQueue();
+
   TestQueue();
+
   std::cout << "all tests passed" << std::endl;
+
   return 0;
 }
