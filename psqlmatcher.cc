@@ -43,7 +43,8 @@ using BoundingBox = midgard::AABB2<midgard::PointLL>;
 using Sequence = std::vector<Measurement>;
 
 
-std::string joinbbox(const BoundingBox& bbox)
+inline std::string
+joinbbox(const BoundingBox& bbox)
 {
   return std::to_string(bbox.minx())
       + " "
@@ -65,8 +66,7 @@ Sequence to_sequence(std::istringstream& wkb)
   Sequence sequence;
 
   auto coords = geometry->getCoordinates();
-  for (decltype(coords->size()) idx = 0;
-       idx < coords->size(); idx++) {
+  for (decltype(coords->size()) idx = 0; idx < coords->size(); idx++) {
     const auto& coord = coords->getAt(idx);
     sequence.emplace_back(PointLL{coord.x, coord.y});
   }

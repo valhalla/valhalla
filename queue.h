@@ -67,21 +67,21 @@ class SPQueue
     heap_.pop();
   }
 
-  inline const T& top() const {
+  const T& top() const {
     return heap_.top();
   }
 
-  inline bool empty() const {
+  bool empty() const {
     assert(heap_.empty() == handlers_.empty());
     return heap_.empty();
   }
 
-  inline void clear() {
+  void clear() {
     heap_.clear();
     handlers_.clear();
   }
 
-  inline typename Heap::size_type size() const {
+  typename Heap::size_type size() const {
     assert(handlers_.size() == heap_.size());
     return heap_.size();
   }

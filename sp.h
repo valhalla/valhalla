@@ -98,7 +98,7 @@ class BucketQueue
     return top_ >= buckets_.size();
   }
 
-  inline size_t size() const {
+  size_t size() const {
     return costmap_.size();
   }
 
@@ -115,7 +115,7 @@ class BucketQueue
   std::unordered_map<key_t, float> costmap_;
   std::vector<std::vector<key_t> > buckets_;
 
-  inline size_t bucket_idx(float cost) const {
+  size_t bucket_idx(float cost) const {
     return static_cast<size_t>(cost / bucket_size_);
   }
 };
@@ -171,7 +171,7 @@ class LabelSet
       : queue_(count, size) {
   }
 
-  inline bool put(const GraphId& nodeid) {
+  bool put(const GraphId& nodeid) {
     return put(nodeid, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex);
   }
 
@@ -203,7 +203,7 @@ class LabelSet
     return false;
   }
 
-  inline bool put(uint16_t dest) {
+  bool put(uint16_t dest) {
     return put(dest, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex);
   }
 
@@ -236,7 +236,7 @@ class LabelSet
     return false;
   }
 
-  inline uint32_t pop() {
+  uint32_t pop() {
     auto idx = queue_.pop();
 
     if (idx != kInvalidLabelIndex) {
@@ -256,19 +256,19 @@ class LabelSet
     return idx;
   }
 
-  inline bool empty() const {
+  bool empty() const {
     return queue_.empty();
   }
 
-  inline const Label& label(uint32_t label_idx) const {
+  const Label& label(uint32_t label_idx) const {
     return labels_[label_idx];
   }
 
-  inline void clear_queue() {
+  void clear_queue() {
     queue_.clear();
   }
 
-  inline void clear_status() {
+  void clear_status() {
     node_status_.clear();
     dest_status_.clear();
   }

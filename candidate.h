@@ -11,12 +11,16 @@ class Candidate
   Candidate(const baldr::PathLocation& pathlocation,
             double sq_distance)
       : pathlocation_(pathlocation),
-        sq_distance_(sq_distance) {
-  }
+        sq_distance_(sq_distance) {}
 
-  inline const baldr::PathLocation& pathlocation() const {return pathlocation_;}
-  inline float sq_distance() const {return sq_distance_;}
-  inline float distance() const {return std::sqrt(sq_distance_);}
+  const baldr::PathLocation& pathlocation() const
+  { return pathlocation_; }
+
+  float sq_distance() const
+  { return sq_distance_; }
+
+  float distance() const
+  { return std::sqrt(sq_distance_); }
 
  private:
   baldr::PathLocation pathlocation_;

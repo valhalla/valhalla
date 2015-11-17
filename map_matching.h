@@ -262,10 +262,10 @@ class MapMatching: public ViterbiSearch<State>
     return -1.f;
   }
 
-  inline float EmissionCost(const State& state) const override
+  float EmissionCost(const State& state) const override
   { return state.candidate().sq_distance() * inv_double_sq_sigma_z_; }
 
-  inline double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
+  double CostSofar(double prev_costsofar, float transition_cost, float emission_cost) const override
   { return prev_costsofar + transition_cost + emission_cost; }
 };
 
