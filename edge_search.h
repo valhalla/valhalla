@@ -162,6 +162,7 @@ CandidateQuery::Query(const PointLL& location,
   }
 
   std::vector<Candidate> candidates;
+  // TODO what does it mean?
   std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
   DistanceApproximator approximator(location);
 
@@ -269,6 +270,7 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
   if (!grid_ptr) {
     return;
   }
+  // TODO what does it mean?
   std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
   const auto first_node = tile.node(0);
   const auto last_node  = first_node + tile.header()->nodecount();

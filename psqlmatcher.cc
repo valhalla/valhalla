@@ -10,7 +10,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 // psql
-#include <postgresql/libpq-fe.h>
+// #include <postgresql/libpq-fe.h>
 #include <pqxx/pqxx>
 
 // geos
@@ -25,6 +25,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphid.h>
 
 using namespace valhalla;
 
@@ -123,10 +125,10 @@ collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy,
 
   for (uint32_t id = 0; id < tiles.TileCount(); id++) {
     // If tile exists add it to the queue
-    GraphId tile_id(id, local_level, 0);
-    if (baldr::GraphReader::DoesTileExist(tile_hierarchy, tile_id)
+    GraphId graphid(id, local_level, 0);
+    if (baldr::GraphReader::DoesTileExist(tile_hierarchy, graphid)
         && excluded_tileids.find(id) == excluded_tileids.end()) {
-      queue.push_back(tile_id.tileid());
+      queue.push_back(graphid.tileid());
     }
   }
 
@@ -203,14 +205,14 @@ bool read_finished_tiles(sqlite3* db_handle,
       if (sequence_id >= 0) {
         tileids.insert(static_cast<uint32_t>(sequence_id));
       } else {
-        LOG_ERROR("FOUND negative sequence ID which is not good");
+        LOG_ERROR("Found negative sequence ID which is not good");
       }
     }
     // Try again if busy
   } while (SQLITE_ROW == ret || SQLITE_BUSY == ret);
 
   if (SQLITE_DONE != ret) {
-    LOG_ERROR("Not so successfully: expect SQLITE_DONE returned");
+    LOG_ERROR("Expect SQLITE_DONE to return, but you got " + std::to_string(ret));
     sqlite3_finalize(stmt);
     return false;
   }

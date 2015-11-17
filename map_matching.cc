@@ -1,9 +1,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-// #include <valhalla/sif/autocost.h>
-// #include <valhalla/sif/bicyclecost.h>
-// #include <valhalla/sif/pedestriancost.h>
 #include "costings.h"
 #include "map_matching.h"
 

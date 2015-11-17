@@ -13,7 +13,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
 
-
 using Point = valhalla::midgard::PointLL;
 using LineSegment = valhalla::midgard::LineSegment2<Point>;
 using BoundingBox = valhalla::midgard::AABB2<Point>;

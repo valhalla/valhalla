@@ -17,6 +17,7 @@ constexpr Time kInvalidTime = std::numeric_limits<Time>::max();
 constexpr StateId kInvalidStateId = std::numeric_limits<StateId>::max();
 
 
+// TODO use union instead?
 inline StatePairId stateid_make_pair(StateId left, StateId right)
 { return (static_cast<StatePairId>(left) << 32) + right; }
 
@@ -105,7 +106,10 @@ class ViterbiPathIterator:
   Time time() const
   { return time_; }
 
-  // Invalid iterator can't be dereferenced
+  // Invalid iterator can't be dereferenced. Invalid iterator can be
+  // used to indicate that no state has been found at a time
+
+  // TODO give it a meaningful name
   bool IsValid() const
   { return id_ != kInvalidStateId; }
 
