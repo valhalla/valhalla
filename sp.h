@@ -516,15 +516,13 @@ class RoutePathIterator:
   }
 
   // Derefrencnce
-  std::iterator_traits<RoutePathIterator>::reference
-  operator*() const
+  reference operator*() const
   {
     return labelset_->label(label_idx_);
   }
 
   // Pointer dereference
-  std::iterator_traits<RoutePathIterator>::pointer
-  operator->() const
+  pointer operator->() const
   {
     return &(labelset_->label(label_idx_));
   }
