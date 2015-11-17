@@ -50,12 +50,22 @@ class GraphTileAttacher: public baldr::GraphTile
   // Write only directededges back into the tile
   void UpdateDirectedEdges()
   {
-    auto directededge_pos = sizeof(baldr::GraphTileHeader) + sizeof(baldr::NodeInfo) * header_->nodecount();
-    auto file = OpenFile();
-    file.seekp(directededge_pos);
-    file.write(reinterpret_cast<const char*>(directededges_),
-               (header_->directededgecount() * sizeof(baldr::DirectedEdge)) / sizeof(char));
-    file.close();
+    // Get the name of the file
+    std::string filename = hierarchy_.tile_dir()
+                           + '/'
+                           + FileSuffix(graphid_.Tile_Base(), hierarchy_);
+    // Don't overwrite
+    std::ofstream file(filename, std::ios::in | std::ios::out | std::ios::binary);
+
+    if (file.is_open()) {
+      auto directededge_pos = sizeof(baldr::GraphTileHeader) + sizeof(baldr::NodeInfo) * header_->nodecount();
+      file.seekp(directededge_pos);
+      file.write(reinterpret_cast<const char*>(directededges_),
+                 (header_->directededgecount() * sizeof(baldr::DirectedEdge)) / sizeof(char));
+      file.close();
+    } else {
+      throw std::runtime_error("Failed to open file " + filename);
+    }
   }
 
   void Verify() const
@@ -80,23 +90,6 @@ class GraphTileAttacher: public baldr::GraphTile
  private:
   baldr::TileHierarchy hierarchy_;
   baldr::GraphId graphid_;
-
-  // Open the existing tile file for writing
-  std::ofstream OpenFile() const
-  {
-    // Get the name of the file
-    std::string filename = hierarchy_.tile_dir()
-                           + '/'
-                           + FileSuffix(graphid_.Tile_Base(), hierarchy_);
-    // Open file and don't overwrite
-    std::ofstream file(filename, std::ios::in | std::ios::out | std::ios::binary);
-
-    if (!file.is_open()) {
-      throw std::runtime_error("Failed to open file " + filename);
-    }
-
-    return file;
-  }
 };
 
 
