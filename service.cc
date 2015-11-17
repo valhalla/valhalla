@@ -390,6 +390,7 @@ class mm_worker_t {
 
 
 void run_service(const boost::property_tree::ptree& config) {
+  // TODO put them into config
   std::string proxy_endpoint("ipc:///tmp/mm_secret_proxy.your_pid");
   std::string server_endpoint("tcp://*:8001");
   std::string result_endpoint("ipc:///tmp/mm_result_proxy.your_pid");
@@ -417,8 +418,13 @@ void run_service(const boost::property_tree::ptree& config) {
 
 int main(int argc, char *argv[])
 {
+  if (argc < 2) {
+    std::cerr << "usage: service CONFIG_FILENAME" << std::endl;
+    return 1;
+  }
+  std::string config_filename(argv[1]);
   boost::property_tree::ptree config;
-  boost::property_tree::read_json("conf/valhalla.json", config);
+  boost::property_tree::read_json(config_filename, config);
   run_service(config);
   return 0;
 }
