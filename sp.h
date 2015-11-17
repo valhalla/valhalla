@@ -276,7 +276,7 @@ class LabelSet
  private:
   BucketQueue<uint32_t, kInvalidLabelIndex> queue_;
   std::unordered_map<GraphId, Status> node_status_;
-  std::unordered_map<size_t, Status> dest_status_;
+  std::unordered_map<uint16_t, Status> dest_status_;
   std::vector<Label> labels_;
 };
 
