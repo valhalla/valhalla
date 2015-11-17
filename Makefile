@@ -1,13 +1,18 @@
 CC=g++
 
-FLAGS_TEST=-std=c++11 # -g -pg
+LIB_PATH=/usr/local/lib
+FLAGS_TEST=-std=c++11 -Wl,-rpath=$(LIB_PATH) # -g -pg
 ifdef DEBUG
 	FLAGS=$(FLAGS_TEST)
 else
-	FLAGS=-std=c++11 -O3 -DNDEBUG
+	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -O3 -DNDEBUG
 endif
 
 LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
+
+
+.PHONY: all
+all: commands tests
 
 
 .PHONY: commands
@@ -20,10 +25,10 @@ tests: test_queue test_viterbi_search test_grid_range_query test_sp
 
 .PHONY: run_tests
 run_tests: tests
-	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib ./test_queue
-	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib ./test_viterbi_search
-	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib ./test_grid_range_query
-	LD_LIBRARY_PATH=/usr/local/lib:/usr/lib ./test_sp
+	./test_queue
+	./test_viterbi_search
+	./test_grid_range_query
+	./test_sp
 
 
 attacher: attacher.cc map_matching.h
