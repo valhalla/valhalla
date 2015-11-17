@@ -36,13 +36,13 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/kevinkreiser/pri
     cd prime_server && \
     ./autogen.sh && ./configure && \
     make && make install && \
-    cd .. && rm -rf prime_server
+    rm -rf /source/prime_server
 
 
 RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/midgard.git && \
     cd midgard && \
     ./scripts/install.sh && \
-    cd .. && rm -rf midgard
+    rm -rf /source/midgard
 
 
 RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/baldr.git && \
@@ -50,13 +50,25 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/baldr.g
     ./autogen.sh && ./configure CPPFLAGS=-DBOOST_SPIRIT_THREADSAFE && \
     make valhalla/baldr/date_time_zonespec.h && \
     make && make install && \
-    cd .. && rm -rf baldr
+    rm -rf /source/baldr
+
+
+RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/skadi.git && \
+    cd skadi && \
+    ./scripts/install.sh && \
+    rm -rf /source/skadi
+
+
+RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/mjolnir.git && \
+    cd mjolnir && \
+    ./scripts/install.sh && \
+    rm -rf /source/mjolnir
 
 
 RUN git clone --depth=1 --recurse-submodules https://github.com/valhalla/sif.git && \
     cd sif && \
     ./scripts/install.sh && \
-    cd .. && rm -rf sif
+    rm -rf /source/sif
 
 
 RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjson.git && \
@@ -65,13 +77,10 @@ RUN git clone --depth=1 --recurse-submodules https://github.com/miloyip/rapidjso
     mkdir build && cd build && \
     cmake .. && \
     make && make install && \
-    cd /source && rm -rf rapidjson
+    rm -rf /source/rapidjson
 
 
 RUN git clone --depth=1 --recurse-submodules http://github.com/mapillary/map_matching_plus.git && \
     cd map_matching_plus && \
-    make test_service && \
-    git clone --depth=1 https://github.com/valhalla/conf.git
-
-
-ENTRYPOINT cd map_matching_plus && LD_LIBRARY_PATH=/usr/local/lib:/usr/lib ./test_service config/valhalla.json
+    make service && sudo install service /usr/local/bin/mm_service && \
+    rm -rf /source/map_matching_service
