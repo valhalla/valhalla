@@ -80,7 +80,7 @@ class GraphTileAttacher: public baldr::GraphTile
     for (size_t idx = 0; idx < count; idx++) {
       const auto directededge = newtile.directededge(idx);
       if (directededge->photocount() != directededges_[idx].photocount()) {
-        throw std::runtime_error("Photo count is not written correctly");
+        throw std::runtime_error("Score is not written correctly");
       }
     }
 
@@ -121,7 +121,7 @@ bool aggregate_scores(sqlite3* db_handle, ScoreMap& score_map)
             (*count)++;
           } else {
             // Very likely to be an error
-            LOG_ERROR("The photo count on " + std::to_string(graphid) + " exceeds the max limit");
+            LOG_ERROR("The score on " + std::to_string(graphid) + " exceeds the max limit");
           }
         }
       } else {
@@ -145,27 +145,31 @@ void write_scores(const baldr::TileHierarchy& tile_hierarchy,
                   const ScoreMap& score_map)
 {
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  for (const auto scorepair : score_map) {
+  for (const auto& scorepair : score_map) {
     auto tileid = scorepair.first;
     const baldr::GraphId graphid(tileid, local_level, 0);
     if (baldr::GraphReader::DoesTileExist(tile_hierarchy, graphid)) {
       GraphTileAttacher tileattacher(tile_hierarchy, graphid);
       auto directededgeattachers = tileattacher.directededgeattachers();
       auto directededgecount = tileattacher.header()->directededgecount();
+      size_t count = 0;
 
       // Currently we only write down edge scores, ignore node scores
       // which is much less than edge's
-      for (const auto countpair : scorepair.second.first) {
+      for (const auto& countpair : scorepair.second.first) {
         auto idx = static_cast<size_t>(countpair.first);
         if (idx < directededgecount) {
           directededgeattachers[idx].set_photocount(countpair.second);
+          count++;
         } else {
           LOG_ERROR("Tile " + std::to_string(tileid) + ": DirectedEdge id " + std::to_string(idx) + " is out of bounds which is " + std::to_string(directededgecount));
         }
       }
+
       // Write back into tiles
       tileattacher.UpdateDirectedEdges();
       tileattacher.Verify();
+      LOG_INFO(std::to_string(count) + " edges in Tile " + std::to_string(tileid) + " have scores attached");
     }
   }
 }
@@ -184,10 +188,10 @@ int main(int argc, char *argv[])
   int ret = sqlite3_open_v2(sqlite3_filename.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
   if (SQLITE_OK != ret) {
     LOG_ERROR("Failed to open sqlite3 database at " + sqlite3_filename);
-    sqlite3_close(db_handle);
     return 2;
   }
 
+  LOG_INFO("Aggregating scores");
   ScoreMap score_map;
   bool ok = aggregate_scores(db_handle, score_map);
   sqlite3_close(db_handle);
@@ -195,11 +199,21 @@ int main(int argc, char *argv[])
     return 2;
   }
 
+  // Summary the aggregation
+  size_t edge_count = 0, node_count = 0;
+  for (const auto& scorepair : score_map) {
+    edge_count += scorepair.second.first.size();
+    node_count += scorepair.second.second.size();
+  }
+  LOG_INFO("Aggregated " + std::to_string(edge_count) + " edges that have scores attached");
+  LOG_INFO("Aggregated " + std::to_string(node_count) + " nodes that have scores attached");
+
   boost::property_tree::ptree pt;
   boost::property_tree::read_json(config_filename.c_str(), pt);
   baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
+  LOG_INFO("Writing scores into tiles");
   write_scores(tile_hierarchy, score_map);
 
   return 0;
