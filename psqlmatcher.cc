@@ -257,7 +257,7 @@ bool write_results_segment(sqlite3* db_handle,
 
 
 bool write_results(sqlite3* db_handle,
-                   uint32_t segment_size,
+                   size_t segment_size,
                    const std::vector<Result>& results,
                    uint32_t tileid,
                    uint32_t matched_count,
@@ -279,9 +279,9 @@ bool write_results(sqlite3* db_handle,
   }
 
   // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
-  for (decltype(results.size()) i = 0; i < results.size(); i += kSqliteMaxCompoundSelect) {
+  for (decltype(results.size()) i = 0; i < results.size(); i += segment_size) {
     const auto cbegin = std::next(results.cbegin(), i),
-                 cend = i + kSqliteMaxCompoundSelect < results.size()? std::next(cbegin, kSqliteMaxCompoundSelect) : results.cend();
+                 cend = (i + segment_size) < results.size()? std::next(cbegin, segment_size) : results.cend();
     bool ok = write_results_segment(db_handle, cbegin, cend);
     if (!ok) {
       // TODO rollback?
