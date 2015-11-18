@@ -157,7 +157,7 @@ CandidateQuery::Query(const PointLL& location,
                       EdgeFilter filter) const
 {
   const GraphTile* tile = reader_.GetGraphTile(location);
-  if(!tile || tile->header()->directededgecount() == 0) {
+  if(!tile || tile->header()->directededgecount() == 0 || tile->header()->nodecount() == 0) {
     return {};
   }
 
@@ -267,7 +267,7 @@ inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
 // of directed edges is added
 void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
 {
-  if (!grid_ptr) {
+  if (!grid_ptr || tile.header()->nodecount() == 0 || tile.header()->directededgecount() == 0) {
     return;
   }
   // TODO what does it mean?
