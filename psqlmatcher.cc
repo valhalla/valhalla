@@ -256,11 +256,16 @@ bool write_results_segment(sqlite3* db_handle,
 
 
 bool write_results(sqlite3* db_handle,
+                   uint32_t segment_size,
                    const std::vector<Result>& results,
                    uint32_t tileid,
                    uint32_t matched_count,
                    uint32_t total_count)
 {
+  if (segment_size <= 0) {
+    throw std::invalid_argument("Expect segment size to be positive " + std::to_string(segment_size));
+  }
+
   {  // Start transaction
     std::string sql = "BEGIN";
     char *err_msg;
@@ -356,12 +361,28 @@ int main(int argc, char *argv[])
   ////////////////////////
   // Prepare sqlite3 database for writing results
   sqlite3* db_handle;
-  sqlite3_limit(db_handle, SQLITE_LIMIT_COMPOUND_SELECT, kSqliteMaxCompoundSelect);
   int ret = sqlite3_open_v2(sqlite3_file_path.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
   if (SQLITE_OK != ret) {
-    LOG_ERROR("failed to open sqlite3 database at " + sqlite3_file_path);
+    LOG_ERROR("Failed to open sqlite3 database at " + sqlite3_file_path);
     return 2;
   }
+
+  int segment_size = kSqliteMaxCompoundSelect;
+
+#if SQLITE_VERSION_NUMBER < 3008008
+  // SQLite under 3.8.8 has limitation on the number of rows in a VALUES clause
+  // See https://www.sqlite.org/changes.html
+  sqlite3_limit(db_handle, SQLITE_LIMIT_COMPOUND_SELECT, kSqliteMaxCompoundSelect);
+  // Read the true value back
+  segment_size = sqlite3_limit(db_handle, SQLITE_LIMIT_COMPOUND_SELECT, -1);
+#endif
+
+  LOG_INFO("Config: segment_size = " + std::to_string(segment_size));
+  if (segment_size <= 0) {
+    LOG_ERROR("Expect SQLITE_LIMIT_COMPOUND_SELECT to be positive " + std::to_string(segment_size));
+    return 3;
+  }
+
   {
     bool ok = create_tiles_table(db_handle);
     if (!ok) {
@@ -444,7 +465,7 @@ int main(int argc, char *argv[])
     stat_measurement_count_totally += stat_measurement_count_of_tile;
 
     {
-      bool ok = write_results(db_handle, results, tileid, stat_matched_count_of_tile, stat_measurement_count_of_tile);
+      bool ok = write_results(db_handle, segment_size, results, tileid, stat_matched_count_of_tile, stat_measurement_count_of_tile);
       if (!ok) {
         sqlite3_close(db_handle);
         return 2;
