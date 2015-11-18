@@ -296,28 +296,18 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
 
 class CandidateGridQuery: public CandidateQuery
 {
- private:
-  const TileHierarchy& hierarchy_;
-  float cell_width_;
-  float cell_height_;
-  mutable std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
-
  public:
   CandidateGridQuery(GraphReader& reader,
                      float cell_width, float cell_height)
       : CandidateQuery(reader),
         hierarchy_(reader.GetTileHierarchy()),
         cell_width_(cell_width),
-        cell_height_(cell_height) {
-  }
+        cell_height_(cell_height) {}
 
-  ~CandidateGridQuery() {
-  }
+  ~CandidateGridQuery() {}
 
   const GridRangeQuery<GraphId>* GetGrid(GraphId tile_id) const
-  {
-    return GetGrid(reader_.GetGraphTile(tile_id));
-  }
+  { return GetGrid(reader_.GetGraphTile(tile_id)); }
 
   const GridRangeQuery<GraphId>* GetGrid(const GraphTile* tile_ptr) const
   {
@@ -500,4 +490,16 @@ class CandidateGridQuery: public CandidateQuery
     }
     return candidates;
   }
+
+  std::unordered_map<GraphId, GridRangeQuery<GraphId>>::size_type size() const
+  { return grid_cache_.size(); }
+
+  void Clear()
+  { grid_cache_.clear(); }
+
+ private:
+  const TileHierarchy& hierarchy_;
+  float cell_width_;
+  float cell_height_;
+  mutable std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
 };

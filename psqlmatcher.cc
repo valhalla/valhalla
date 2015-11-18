@@ -40,6 +40,7 @@ constexpr float kDefaultBeta = 3;
 constexpr float kDefaultSquaredSearchRadius = 25 * 25;  // 25 meters
 
 constexpr int kSqliteMaxCompoundSelect = 5000;
+constexpr size_t kMaxGridCacheSize = 64;
 }
 
 
@@ -353,7 +354,7 @@ int main(int argc, char *argv[])
   const auto& tile_hierarchy = reader.GetTileHierarchy();
   const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   auto tile_size = tiles.TileSize();
-  const CandidateGridQuery grid(reader, tile_size/1000, tile_size/1000);
+  CandidateGridQuery grid(reader, tile_size/1000, tile_size/1000);
   LOG_INFO("Config: tile size = " + std::to_string(tile_size));
   LOG_INFO("Config: sigma_z = " + std::to_string(sigma_z));
   LOG_INFO("Config: beta = " + std::to_string(beta));
@@ -445,6 +446,13 @@ int main(int argc, char *argv[])
 
       const auto& match_results = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
       assert(match_results.size() == sequence.size());
+
+      if (reader.OverCommitted()) {
+        reader.Clear();
+      }
+      if (grid.size() > kMaxGridCacheSize) {
+        grid.Clear();
+      }
 
       uint32_t stat_matched_count_of_sequence = 0;
       uint32_t coord_idx = 0;

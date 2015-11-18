@@ -28,6 +28,8 @@ constexpr float kDefaultSigmaZ = 4.07;
 constexpr float kDefaultBeta = 5;
 constexpr float kDefaultSquaredSearchRadius = 40 * 40;  // 40 meters
 constexpr float kMaxSearchRadius = 200;                // 200 meters
+
+constexpr size_t kMaxGridCacheSize = 64;
 }
 
 
@@ -379,12 +381,15 @@ class mm_worker_t {
     if(reader.OverCommitted()) {
       reader.Clear();
     }
+    if (grid.size() > kMaxGridCacheSize) {
+      grid.Clear();
+    }
   }
 
  protected:
   boost::property_tree::ptree config;
   baldr::GraphReader reader;
-  const CandidateGridQuery grid;
+  CandidateGridQuery grid;
   std::shared_ptr<sif::DynamicCost> mode_costing[4];
 };
 
