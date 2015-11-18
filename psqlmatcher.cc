@@ -38,6 +38,8 @@ namespace {
 constexpr float kDefaultSigmaZ = 4.07;
 constexpr float kDefaultBeta = 3;
 constexpr float kDefaultSquaredSearchRadius = 25 * 25;  // 25 meters
+
+constexpr int kSqliteMaxCompoundSelect = 5000;
 }
 
 
@@ -270,11 +272,10 @@ bool write_results(sqlite3* db_handle,
     }
   }
 
-  constexpr size_t SEGMENT_SIZE = 5000;
   // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
-  for (decltype(results.size()) i = 0; i < results.size(); i += SEGMENT_SIZE) {
+  for (decltype(results.size()) i = 0; i < results.size(); i += kSqliteMaxCompoundSelect) {
     const auto cbegin = std::next(results.cbegin(), i),
-                 cend = i + SEGMENT_SIZE < results.size()? std::next(cbegin, SEGMENT_SIZE) : results.cend();
+                 cend = i + kSqliteMaxCompoundSelect < results.size()? std::next(cbegin, kSqliteMaxCompoundSelect) : results.cend();
     bool ok = write_results_segment(db_handle, cbegin, cend);
     if (!ok) {
       // TODO rollback?
@@ -355,6 +356,7 @@ int main(int argc, char *argv[])
   ////////////////////////
   // Prepare sqlite3 database for writing results
   sqlite3* db_handle;
+  sqlite3_limit(db_handle, SQLITE_LIMIT_COMPOUND_SELECT, kSqliteMaxCompoundSelect);
   int ret = sqlite3_open_v2(sqlite3_file_path.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
   if (SQLITE_OK != ret) {
     LOG_ERROR("failed to open sqlite3 database at " + sqlite3_file_path);
