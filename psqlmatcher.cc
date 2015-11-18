@@ -222,38 +222,24 @@ bool read_finished_tiles(sqlite3* db_handle,
 }
 
 
-bool write_results(sqlite3* db_handle,
-                   const std::vector<Result>& results,
-                   uint32_t tileid,
-                   uint32_t matched_count,
-                   uint32_t total_count)
+bool write_results_segment(sqlite3* db_handle,
+                           const std::vector<Result>::const_iterator cbegin,
+                           const std::vector<Result>::const_iterator cend)
 {
-  std::string sql;
-
-  sql += "BEGIN;\n";
-
-  // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
-  if (!results.empty()) {
-    sql += "INSERT INTO scores VALUES ";
-    for (const auto& result : results) {
-      sql += "(";
-      sql += std::to_string(std::get<0>(result)) + ", "; // sequence_id
-      sql += std::to_string(std::get<1>(result)) + ", "; // coordinate_index
-      sql += std::to_string(std::get<2>(result)) + ", "; // graphid
-      sql += std::to_string(static_cast<uint8_t>(std::get<3>(result))); // graphtype
-      sql += "),";
-    }
-    sql.pop_back();  // Pop out the last comma
-    sql += ";\n";
+  if (cbegin == cend) {
+    return true;
   }
 
-  // Insert (tileid, matched_count, total_count) into tiles
-  sql += "INSERT INTO tiles VALUES (";
-  sql += std::to_string(tileid) + ", ";
-  sql += std::to_string(matched_count) + ", ";
-  sql += std::to_string(total_count) + ");\n";
-
-  sql += "END;";
+  std::string sql = "INSERT INTO scores VALUES ";
+  for (auto result = cbegin; result != cend; result++) {
+    sql += "(";
+    sql += std::to_string(std::get<0>(*result)) + ", "; // sequence_id
+    sql += std::to_string(std::get<1>(*result)) + ", "; // coordinate_index
+    sql += std::to_string(std::get<2>(*result)) + ", "; // graphid
+    sql += std::to_string(static_cast<uint8_t>(std::get<3>(*result))); // graphtype
+    sql += "),";
+  }
+  sql.pop_back();  // Pop out the last comma
 
   char *err_msg;
   int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
@@ -262,6 +248,66 @@ bool write_results(sqlite3* db_handle,
     sqlite3_free(err_msg);
     return false;
   }
+
+  return true;
+}
+
+
+bool write_results(sqlite3* db_handle,
+                   const std::vector<Result>& results,
+                   uint32_t tileid,
+                   uint32_t matched_count,
+                   uint32_t total_count)
+{
+  {  // Start transaction
+    std::string sql = "BEGIN";
+    char *err_msg;
+    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (SQLITE_OK != ret) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      return false;
+    }
+  }
+
+  constexpr size_t SEGMENT_SIZE = 5000;
+  // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
+  for (decltype(results.size()) i = 0; i < results.size(); i += SEGMENT_SIZE) {
+    const auto cbegin = std::next(results.cbegin(), i),
+                 cend = i + SEGMENT_SIZE < results.size()? std::next(cbegin, SEGMENT_SIZE) : results.cend();
+    bool ok = write_results_segment(db_handle, cbegin, cend);
+    if (!ok) {
+      // TODO rollback?
+      return false;
+    }
+  }
+
+  {  // Insert (tileid, matched_count, total_count) into tiles
+    std::string sql = "INSERT INTO tiles VALUES (";
+    sql += std::to_string(tileid) + ", ";
+    sql += std::to_string(matched_count) + ", ";
+    sql += std::to_string(total_count) + ");\n";
+    char *err_msg;
+    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (SQLITE_OK != ret) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      // TODO rollback?
+      return false;
+    }
+  }
+
+  {  // End transaction
+    std::string sql = "END";
+    char *err_msg;
+    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+    if (SQLITE_OK != ret) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      return false;
+    }
+  }
+
   return true;
 }
 
