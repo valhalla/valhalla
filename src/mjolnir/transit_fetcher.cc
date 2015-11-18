@@ -50,7 +50,12 @@ struct curler_t {
   }
   //for now we only need to handle json
   //with templates we could return a string or whatever
-  ptree operator()(const std::string& url, const std::string& retry_if_no = "", boost::optional<size_t> timeout = boost::none) {
+  ptree operator()(const std::string& url, const std::string& retry_if_no = "", bool gzip = true, boost::optional<size_t> timeout = boost::none) {
+    //content encoding header
+    if(gzip) {
+      char encoding[] = "gzip"; //TODO: allow "identity" and "deflate"
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ACCEPT_ENCODING, encoding), "Failed to set gzip content header ");
+    }
     //set the url
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     //dont stop until we have something useful!
