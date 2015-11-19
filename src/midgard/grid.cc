@@ -1,5 +1,6 @@
 #include "midgard/grid.h"
 #include "midgard/util.h"
+#include "midgard/linesegment2.h"
 
 #include <list>
 
@@ -39,6 +40,22 @@ namespace valhalla {
     }
 
     template <class coord_t>
+    std::list<std::pair<int, int> > grid<coord_t>::update_neighbors(const coord_t& a, const coord_t& b) const {
+      auto x_start = static_cast<int>((a.first - super_cell.minx()) / super_cell.Width());
+      auto y_start = static_cast<int>((a.second - super_cell.miny()) / super_cell.Height());
+      auto x_end = static_cast<int>((b.first - super_cell.minx()) / super_cell.Width());
+      auto y_end = static_cast<int>((b.second - super_cell.miny()) / super_cell.Height());
+      if(x_start > x_end) std::swap(x_start, x_end);
+      if(y_start > y_end) std::swap(y_start, y_end);
+      std::list<std::pair<int, int> > neighbors;
+      do {
+        neighbors.emplace_back(std::make_pair(x_start, y_start));
+        LineSegment2<coord_t>(a, b).IsLeft(coord_t(x_start * super_cell.Width(), y_start * super_cell.Height())) < 0 ? ++y_start : ++x_start;
+      } while(x_start <= x_end && y_start <= y_end);
+      return neighbors;
+    }
+
+    template <class coord_t>
     template <class container_t>
     std::unordered_set<size_t> grid<coord_t>::intersect(const container_t& linestring, bool& uncontained) const {
       std::unordered_set<size_t> indices;
@@ -55,32 +72,29 @@ namespace valhalla {
         //this is outside of the cell
         if(!super_cell.Contains(*u) || !super_cell.Contains(*v)) {
           uncontained = true;
-          //TODO: get neighbors
+          //get the grids other than this one that are affected
+          update_neighbors(*u, *v);
           //this is completely outside of the cell
           if(!super_cell.Intersects(*u, *v))
             continue;
         }
 
         //figure out the subset of the grid that this segment overlaps
-        size_t x_start = static_cast<size_t>((clamp(u->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
-        size_t y_start = static_cast<size_t>((clamp(u->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
-        size_t x_end = static_cast<size_t>((clamp(v->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
-        size_t y_end = static_cast<size_t>((clamp(v->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
-        if(x_start > x_end)
-          std::swap(x_start, x_end);
-        if(y_start > y_end)
-          std::swap(y_start, y_end);
+        auto x_start = static_cast<size_t>((clamp(u->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
+        auto y_start = static_cast<size_t>((clamp(u->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
+        auto x_end = static_cast<size_t>((clamp(v->first, super_cell.minx(), super_cell.maxx()) - super_cell.minx()) * x_index_coef);
+        auto y_end = static_cast<size_t>((clamp(v->second, super_cell.miny(), super_cell.maxy()) - super_cell.miny()) * y_index_coef);
+        if(x_start > x_end) std::swap(x_start, x_end);
+        if(y_start > y_end) std::swap(y_start, y_end);
         x_end = std::min(x_end + 1, divisions);
         y_end = std::min(y_end + 1, divisions);
 
         //loop over the subset of the grid that intersects the bbox formed by the linestring
-        for(; y_start < y_end; ++y_start) {
-          for(size_t x = x_start; x < x_end; ++x) {
-            size_t index = y_start * divisions + x;
-            if(cells[index].Intersects(*u, *v))
-              indices.insert(index);
-          }
-        }
+        do {
+          auto index = y_start * divisions + x_start;
+          indices.insert(index);
+          LineSegment2<coord_t>(*u, *v).IsLeft(cells[index].maxpt()) < 0 ? ++y_start : ++x_start;
+        } while(x_start < x_end && y_start < y_end);
       }
 
       //give them back
