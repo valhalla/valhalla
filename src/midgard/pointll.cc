@@ -4,9 +4,13 @@
 #include "valhalla/midgard/vector2.h"
 
 #include <limits>
+#include <cmath>
 
 namespace {
 const float INVALID = 0xBADBADBAD;
+
+constexpr double RAD_PER_DEG = M_PI / 180.0;
+constexpr double DEG_PER_RAD = 180.0 / M_PI;
 }
 
 namespace valhalla {
@@ -43,6 +47,30 @@ void PointLL::Invalidate() {
 float PointLL::DistanceSquared(const PointLL& ll2) const {
   DistanceApproximator approx(*this);
   return approx.DistanceSquared(ll2);
+}
+
+// Mid point along the geodesic between these points
+PointLL PointLL::MidPoint(const PointLL& p) const {
+  //radians
+  auto lon1 = first * -RAD_PER_DEG;
+  auto lat1 = second * RAD_PER_DEG;
+  auto lon2 = p.first * -RAD_PER_DEG;
+  auto lat2 = p.second * RAD_PER_DEG;
+  //fairly accurate distance between points
+  auto d = acos(
+    sin(second * RAD_PER_DEG) * sin(lat2) +
+    cos(second * RAD_PER_DEG) * cos(lat2) *
+    cos(first * -RAD_PER_DEG - lon2)
+  );
+  //interpolation parameters
+  auto ab = sin(d * .5) / sin(d);
+  auto acs1 = ab * cos(lat1);
+  auto bcs2 = ab * cos(lat2);
+  //find the interpolated point along the arc
+  auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
+  auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
+  auto z = ab * (sin(lat1) + sin(lat2));
+  return PointLL(atan2(y, x) * -DEG_PER_RAD, atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD);
 }
 
 // Calculates the distance between two lat/lng's in meters. Uses spherical

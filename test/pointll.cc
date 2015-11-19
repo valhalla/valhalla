@@ -220,6 +220,45 @@ void TestWithinConvexPolygon() {
   TryWithinConvexPolygon(pts, PointLL( 1.0f,-3.5f), false);
 }
 
+void TestMidPoint() {
+  //lines of longitude are geodesics so the mid point of points
+  //on the same line of longitude should still be at the same longitude
+  auto mid = PointLL(0, 90).MidPoint({0, 0});
+  if(mid != PointLL(0, 45))
+    throw std::logic_error("Wrong mid point");
+  mid = PointLL(0, 90).MidPoint({0, -66});
+  if(mid != PointLL(0,12))
+    throw std::logic_error("Wrong mid point");
+  mid = PointLL(-23, 45).MidPoint({157, 45});
+  if(mid != PointLL(0, 90))
+    throw std::logic_error("Wrong mid point");
+
+  //in the northern hemisphere we should expect midpoints on
+  //geodesics between point of the same latitude to have higher latitude
+  mid = PointLL(-15, 45).MidPoint({15, 45});
+  if(mid.second <= 45.1)
+    throw std::logic_error("Wrong mid point");
+  mid = PointLL(-80, 1).MidPoint({80, 1});
+  if(mid.second <= 1.1)
+    throw std::logic_error("Wrong mid point");
+
+  //conversely in the southern hemisphere we should expect them lower
+  mid = PointLL(-15, -45).MidPoint({15, -45});
+  if(mid.second >= -45.1)
+    throw std::logic_error("Wrong mid point");
+  mid = PointLL(-80, -1).MidPoint({80, -1});
+  if(mid.second >= -1.1)
+    throw std::logic_error("Wrong mid point");
+
+  //the equator is the only line of latitude that is also a geodesic
+  mid = PointLL(-15, 0).MidPoint({15, 0});
+  if(mid != PointLL(0, 0))
+    throw std::logic_error("Wrong mid point");
+  mid = PointLL(-170, 0).MidPoint({160, 0});
+  if(mid != PointLL(175, 0))
+    throw std::logic_error("Wrong mid point");
+}
+
 }
 
 int main(void) {
@@ -238,6 +277,9 @@ int main(void) {
 
   // Test if within polygon
   suite.test(TEST_CASE(TestWithinConvexPolygon));
+
+  // Test midpoint
+  suite.test(TEST_CASE(TestMidPoint));
 
   //TODO: many more!
 
