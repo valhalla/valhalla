@@ -48,6 +48,13 @@ class PointLL : public Point2 {
   void Invalidate();
 
   /**
+   * Gets the midpoint on a line segment between this point and point p1.
+   * @param   p1  Point
+   * @return  Returns the midpoint between this point and p1.
+   */
+  PointLL MidPoint(const PointLL& p1) const;
+
+  /**
    * Calculates the distance between two lat/lng's in meters. Uses spherical
    * geometry (law of cosines).
    * @param   ll2   Second lat,lng position to calculate distance to.

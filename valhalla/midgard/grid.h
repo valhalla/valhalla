@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_GRID_H_
 
 #include <vector>
+#include <list>
 #include <unordered_set>
 
 #include <valhalla/midgard/aabb2.h>
@@ -68,6 +69,15 @@ class grid {
   const AABB2<coord_t>& extent() const;
 
  protected:
+
+  /**
+   * Update the neighboring grids that a segment of linestring bleeds into
+   * @param  the first point on the segment
+   * @param  the second point on the segment
+   * @param  the set of neighbors to update with this segments information
+   */
+  std::list<std::pair<int, int> > update_neighbors(const coord_t& a, const coord_t& b) const;
+
   size_t divisions;
   AABB2<coord_t> super_cell;
   std::vector<AABB2<coord_t> > cells;
