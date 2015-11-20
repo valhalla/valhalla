@@ -52,24 +52,29 @@ float PointLL::DistanceSquared(const PointLL& ll2) const {
 // Mid point along the geodesic between these points
 PointLL PointLL::MidPoint(const PointLL& p) const {
   //radians
-  auto lon1 = first * -RAD_PER_DEG;
-  auto lat1 = second * RAD_PER_DEG;
-  auto lon2 = p.first * -RAD_PER_DEG;
-  auto lat2 = p.second * RAD_PER_DEG;
+  const auto lon1 = first * -RAD_PER_DEG;
+  const auto lat1 = second * RAD_PER_DEG;
+  const auto lon2 = p.first * -RAD_PER_DEG;
+  const auto lat2 = p.second * RAD_PER_DEG;
+  //useful throughout
+  const auto sl1 = sin(lat1);
+  const auto sl2 = sin(lat2);
+  const auto cl1 = cos(lat1);
+  const auto cl2 = cos(lat2);
   //fairly accurate distance between points
-  auto d = acos(
-    sin(second * RAD_PER_DEG) * sin(lat2) +
-    cos(second * RAD_PER_DEG) * cos(lat2) *
-    cos(first * -RAD_PER_DEG - lon2)
+  const auto d = acos(
+    sl1 * sl2 +
+    cl1 * cl2 *
+    cos(lon1 - lon2)
   );
   //interpolation parameters
-  auto ab = sin(d * .5) / sin(d);
-  auto acs1 = ab * cos(lat1);
-  auto bcs2 = ab * cos(lat2);
+  const auto ab = sin(d * .5) / sin(d);
+  const auto acs1 = ab * cl1;
+  const auto bcs2 = ab * cl2;
   //find the interpolated point along the arc
-  auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
-  auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
-  auto z = ab * (sin(lat1) + sin(lat2));
+  const auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
+  const auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
+  const auto z = ab * (sl1 + sl2);
   return PointLL(atan2(y, x) * -DEG_PER_RAD, atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD);
 }
 
