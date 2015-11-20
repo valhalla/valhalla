@@ -591,7 +591,48 @@ namespace {
               json_transit_route->emplace("operator_onestop_id", transit_route.operator_onestop_id());
             }
 
-            // TODO add transit stops
+            // Add transit stops
+            if (transit_route.transit_stops().size() > 0) {
+
+              auto json_transit_stops = json::array({});
+              for (const auto& transit_stop : transit_route.transit_stops()) {
+                auto json_transit_stop = json::map({});
+
+                // type
+                if (transit_stop.has_type()) {
+                  if (transit_stop.type() == TripDirections_TransitStop_Type_kStation) {
+                    json_transit_stop->emplace("type", std::string("station"));
+                  } else {
+                    json_transit_stop->emplace("type", std::string("stop"));
+                  }
+                }
+
+                // onestop_id
+                if (transit_stop.has_onestop_id()) {
+                    json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
+                }
+
+                // name
+                if (transit_stop.has_name()) {
+                    json_transit_stop->emplace("name", transit_stop.name());
+                }
+
+                // arrival_date_time
+                if (transit_stop.has_arrival_date_time()) {
+                    json_transit_stop->emplace("arrival_date_time", transit_stop.arrival_date_time());
+                }
+
+                // departure_date_time
+                if (transit_stop.has_departure_date_time()) {
+                    json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
+                }
+
+                json_transit_stops->emplace_back(json_transit_stop);
+
+              }
+              json_transit_route->emplace("transit_stops",
+                                          std::move(json_transit_stops));
+            }
 
             man->emplace("transit_route", std::move(json_transit_route));
           }
