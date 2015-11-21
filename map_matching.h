@@ -556,7 +556,7 @@ OfflineMatch(MapMatching& mm,
       results.push_back(guess_source_result(source_state, target_state, measurement));
     }
 
-    auto it = proximate_measurements.find(time);
+    auto it = proximate_measurements.find(time - 1);
     if (it != proximate_measurements.end()) {
       const auto& graphset = collect_graphset(mm.graphreader(), source_state, target_state);
       for (const auto idx : it->second) {
