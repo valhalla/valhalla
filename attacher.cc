@@ -141,6 +141,82 @@ bool aggregate_scores(sqlite3* db_handle, ScoreMap& score_map)
 }
 
 
+size_t set_edge_scores(GraphTileAttacher& tileattacher,
+                       const CountMap& count_map)
+{
+  if (count_map.empty()) {
+    return 0;
+  }
+
+  auto directededgeattachers = tileattacher.directededgeattachers();
+  auto directededgecount = tileattacher.header()->directededgecount();
+  size_t count = 0;
+
+  for (const auto& pair : count_map) {
+    auto idx = static_cast<size_t>(pair.first);
+    if (idx < directededgecount) {
+      if (directededgeattachers[idx].photocount() != pair.second) {
+        directededgeattachers[idx].set_photocount(pair.second);
+        count++;
+      }
+    } else {
+      LOG_ERROR("Tile " + std::to_string(tileattacher.id()) + ": DirectedEdge id " + std::to_string(idx) + " is out of bounds which is " + std::to_string(directededgecount));
+    }
+  }
+
+  return count;
+}
+
+
+size_t clear_tile_scores(GraphTileAttacher& tileattacher)
+{
+  auto directededgeattachers = tileattacher.directededgeattachers();
+  size_t count = 0;
+
+  for (uint32_t idx = 0; idx < tileattacher.header()->directededgecount(); idx++) {
+    if (directededgeattachers[idx].photocount() != 0) {
+      directededgeattachers[idx].set_photocount(0);
+      count++;
+    }
+  }
+
+  return count;
+}
+
+
+void reset_scores(const baldr::TileHierarchy& tile_hierarchy,
+                  const ScoreMap& score_map)
+{
+  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  for (uint32_t tileid = 0; tileid < tiles.TileCount(); tileid++) {
+    const baldr::GraphId graphid(tileid, local_level, 0);
+    if (baldr::GraphReader::DoesTileExist(tile_hierarchy, graphid)) {
+      GraphTileAttacher tileattacher(tile_hierarchy, graphid);
+      auto cleared_count = clear_tile_scores(tileattacher);
+
+      size_t set_count = 0;
+      auto it = score_map.find(tileid);
+      if (it != score_map.end()) {
+        set_count = set_edge_scores(tileattacher, it->second.first);
+        // TODO set_node_scores(tileattacher, scorepair.second.second);
+      }
+
+      if (cleared_count > 0 || set_count > 0) {
+        tileattacher.UpdateDirectedEdges();
+        if (cleared_count > 0) {
+          LOG_INFO("Tile " + std::to_string(tileid) + ": " + std::to_string(cleared_count) + " edges have been cleared");
+        }
+        if (set_count > 0) {
+          LOG_INFO("Tile " + std::to_string(tileid) + ": " + std::to_string(set_count) + " edges have scores attached");
+        }
+        tileattacher.Verify();
+      }
+    }
+  }
+}
+
+
 void write_scores(const baldr::TileHierarchy& tile_hierarchy,
                   const ScoreMap& score_map)
 {
@@ -150,26 +226,14 @@ void write_scores(const baldr::TileHierarchy& tile_hierarchy,
     const baldr::GraphId graphid(tileid, local_level, 0);
     if (baldr::GraphReader::DoesTileExist(tile_hierarchy, graphid)) {
       GraphTileAttacher tileattacher(tile_hierarchy, graphid);
-      auto directededgeattachers = tileattacher.directededgeattachers();
-      auto directededgecount = tileattacher.header()->directededgecount();
-      size_t count = 0;
-
-      // Currently we only write down edge scores, ignore node scores
-      // which is much less than edge's
-      for (const auto& countpair : scorepair.second.first) {
-        auto idx = static_cast<size_t>(countpair.first);
-        if (idx < directededgecount) {
-          directededgeattachers[idx].set_photocount(countpair.second);
-          count++;
-        } else {
-          LOG_ERROR("Tile " + std::to_string(tileid) + ": DirectedEdge id " + std::to_string(idx) + " is out of bounds which is " + std::to_string(directededgecount));
-        }
-      }
-
+      auto count = set_edge_scores(tileattacher, scorepair.second.first);
+      // TODO set_node_scores(tileattacher, scorepair.second.second);
       // Write back into tiles
-      tileattacher.UpdateDirectedEdges();
-      tileattacher.Verify();
-      LOG_INFO(std::to_string(count) + " edges in Tile " + std::to_string(tileid) + " have scores attached");
+      if (count > 0) {
+        tileattacher.UpdateDirectedEdges();
+        LOG_INFO("Tile " + std::to_string(tileid) + ": " + std::to_string(count) + " edges have scores attached");
+        tileattacher.Verify();
+      }
     }
   }
 }
@@ -178,11 +242,19 @@ void write_scores(const baldr::TileHierarchy& tile_hierarchy,
 int main(int argc, char *argv[])
 {
   if (argc < 3) {
-    std::cerr << "usage: attacher CONFIG_FILENAME SQLITE3_FILENAME" << std::endl;
+    std::cerr << "usage: attacher [--reset] CONFIG_FILENAME SQLITE3_FILENAME" << std::endl;
     return 1;
   }
-  std::string config_filename = argv[1],
-            sqlite3_filename  = argv[2];
+
+  bool reset = false;
+  size_t config_position = 1;
+  std::string first_arg = argv[1];
+  if (4 <= argc && (first_arg == "--reset" || first_arg == "-r")) {
+    reset = true;
+    config_position++;
+  }
+  std::string config_filename = argv[config_position],
+            sqlite3_filename  = argv[config_position + 1];
 
   sqlite3* db_handle;
   int ret = sqlite3_open_v2(sqlite3_filename.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
@@ -213,8 +285,13 @@ int main(int argc, char *argv[])
   baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
   const auto& tile_hierarchy = reader.GetTileHierarchy();
 
-  LOG_INFO("Writing scores into tiles");
-  write_scores(tile_hierarchy, score_map);
+  if (reset) {
+    LOG_INFO("Resetting scores into tiles");
+    reset_scores(tile_hierarchy, score_map);
+  } else {
+    LOG_INFO("Writing scores into tiles");
+    write_scores(tile_hierarchy, score_map);
+  }
 
   return 0;
 }
