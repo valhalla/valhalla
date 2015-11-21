@@ -98,7 +98,7 @@ query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
 
   auto bbox_clause = txn.quote("BOX(" + joinbbox(bbox) + ")") + "::box2d";
   std::string statement = "SELECT id, ST_AsBinary(path_gm) AS geom FROM sequences WHERE "
-                          + bbox_clause + " && path_gm"
+                          + bbox_clause + " && path_gm AND NOT ST_IsEmpty(path_gm)"
                           + " LIMIT " + std::to_string(std::numeric_limits<uint32_t>::max());
   LOG_INFO("Querying: " + statement);
 
