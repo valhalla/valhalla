@@ -181,7 +181,7 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   max_mode_distance_ = pt.get<uint32_t>("max_mode_distance", kMaxModeDistance);
   walking_speed_     = pt.get<float>("walking_speed", kDefaultWalkingSpeed);
   walkway_factor_    = pt.get<float>("walkway_factor", kDefaultWalkwayFactor);
-  alley_factor_      = pt.get<float>("alley_factor_", kDefaultAlleyFactor);
+  alley_factor_      = pt.get<float>("alley_factor", kDefaultAlleyFactor);
   driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
   step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
   gate_penalty_      = pt.get<float>("gate_penalty", kDefaultGatePenalty);
