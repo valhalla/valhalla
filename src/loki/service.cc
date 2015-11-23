@@ -38,7 +38,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  boost::property_tree::ptree from_request(const http_request_t& request) {
+  boost::property_tree::ptree from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
 
     //parse the input
@@ -80,7 +80,6 @@ namespace {
       pt.add_child(kv.first, array);
     }
 
-    auto action = PATH_TO_ACTION.find(request.path);
     //if its osrm compatible lets make the location object conform to our standard input
     if(action == loki_worker_t::VIAROUTE) {
       auto& array = pt.put_child("locations", boost::property_tree::ptree());
@@ -162,7 +161,7 @@ namespace valhalla {
         }
 
         //parse the query's json
-        auto request_pt = from_request(request);
+        auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
         switch (action->second) {
           case ROUTE:
