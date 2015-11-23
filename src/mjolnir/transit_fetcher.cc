@@ -130,15 +130,22 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
       continue;
     }
     //grab the tile row and column ranges for the max box around the polygon
-    int32_t min_c = tile_level.tiles.ncolumns(), max_c = 0, min_r = tile_level.tiles.nrows(), max_r = 0;
+    float min_x = 180, max_x = -180, min_y = 90, max_y = -90;
     for(const auto& coord :feature.second.get_child("geometry.coordinates").front().second) {
-      auto c = tile_level.tiles.Col(coord.second.front().second.get_value<float>());
-      auto r = tile_level.tiles.Row(coord.second.back().second.get_value<float>());
-      if(c < min_c) min_c = c;
-      if(c > max_c) max_c = c;
-      if(r < min_r) min_r = r;
-      if(r > max_r) max_r = r;
+      auto x = coord.second.front().second.get_value<float>();
+      auto y = coord.second.back().second.get_value<float>();
+      if(x < min_x) min_x = x;
+      if(x > max_x) max_x = x;
+      if(y < min_y) min_y = y;
+      if(y > max_y) max_y = y;
     }
+    //convert coordinates to tile id bounding box accounting for geodesics
+    min_y = std::min(min_y, PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
+    max_y = std::max(max_y, PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
+    auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
+    auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
+    if(min_c > max_c) std::swap(min_c, max_c);
+    if(min_r > max_r) std::swap(min_r, max_r);
     //for each tile in the polygon figure out how heavy it is and keep track of it
     for(auto i = min_c; i <= max_c; ++i)
       for(auto j = min_r; j <= max_r; ++j)
@@ -151,6 +158,9 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   auto* utc = gmtime(&now); utc->tm_year += 1900; ++utc->tm_mon;
   for(const auto& tile : tiles) {
     auto bbox = tile_level.tiles.TileBounds(tile.tileid());
+    auto min_y = std::max(bbox.miny(), bbox.minpt().MidPoint({bbox.maxx(), bbox.miny()}).second);
+    auto max_y = std::min(bbox.maxy(), PointLL(bbox.minx(), bbox.maxy()).MidPoint(bbox.maxpt()).second);
+    bbox = AABB2<PointLL>(bbox.minx(), min_y, bbox.maxx(), max_y);
     //stop count
     auto request = url((boost::format("/api/v1/stops?per_page=0&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
@@ -182,12 +192,12 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
 }
 
 void get_stops(Transit& tile, std::unordered_map<std::string, uint64_t>& stops,
-    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& bbox) {
+    const GraphId& tile_id, const ptree& response, const AABB2<PointLL>& filter) {
   for(const auto& stop_pt : response.get_child("stops")) {
     const auto& ll_pt = stop_pt.second.get_child("geometry.coordinates");
     auto lon = ll_pt.front().second.get_value<float>();
     auto lat = ll_pt.back().second.get_value<float>();
-    if(!bbox.Contains({lon, lat}))
+    if(!filter.Contains({lon, lat}))
       continue;
     auto* stop = tile.add_stops();
     stop->set_lon(lon);
@@ -398,7 +408,11 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     current = queue.top().t;
     queue.pop();
     uniques.lock.unlock();
-    auto bbox = tiles.TileBounds(current.tileid());
+    auto filter = tiles.TileBounds(current.tileid());
+    //account for geodesics
+    auto min_y = std::max(filter.miny(), filter.minpt().MidPoint({filter.maxx(), filter.miny()}).second);
+    auto max_y = std::min(filter.maxy(), PointLL(filter.minx(), filter.maxy()).MidPoint(filter.maxpt()).second);
+    AABB2<PointLL> bbox(filter.minx(), min_y, filter.maxx(), max_y);
     ptree response;
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current, hierarchy);
@@ -414,7 +428,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       //grab some stuff
       response = curler(*request, "stops");
       //copy stops in, keeping map of stopid to graphid
-      get_stops(tile, stops, current, response, bbox);
+      get_stops(tile, stops, current, response, filter);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
     }
@@ -487,7 +501,8 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
   promise.set_value(dangling);
 }
 
-std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& tiles, unsigned int thread_count = 1) {
+std::list<GraphId> fetch(const ptree& pt, std::priority_queue<weighted_tile_t>& tiles,
+    unsigned int thread_count = std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency())) {
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " + std::to_string(thread_count) + " threads...");
 
   //schedule some work
