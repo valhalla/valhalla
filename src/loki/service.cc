@@ -27,6 +27,7 @@ namespace {
 
   const std::unordered_map<std::string, loki_worker_t::ACTION_TYPE> PATH_TO_ACTION{
     {"/route", loki_worker_t::ROUTE},
+    {"/viaroute", loki_worker_t::VIAROUTE},
     {"/locate", loki_worker_t::LOCATE},
     {"/one_to_many", loki_worker_t::ONE_TO_MANY},
     {"/many_to_one", loki_worker_t::MANY_TO_ONE},
@@ -37,7 +38,7 @@ namespace {
   const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
   const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-  boost::property_tree::ptree from_request(const http_request_t& request) {
+  boost::property_tree::ptree from_request(const loki_worker_t::ACTION_TYPE& action, const http_request_t& request) {
     boost::property_tree::ptree pt;
 
     //parse the input
@@ -77,6 +78,19 @@ namespace {
         array.push_back(std::make_pair("", element));
       }
       pt.add_child(kv.first, array);
+    }
+
+    //if its osrm compatible lets make the location object conform to our standard input
+    if(action == loki_worker_t::VIAROUTE) {
+      auto& array = pt.put_child("locations", boost::property_tree::ptree());
+      for(const auto& location : pt.get_child("loc")) {
+        Location l = Location::FromCsv(location.second.get_value<std::string>());
+        boost::property_tree::ptree element;
+        element.put("lon", l.latlng_.first);
+        element.put("lat", l.latlng_.second);
+        array.push_back(std::make_pair("", element));
+      }
+      pt.erase("loc");
     }
 
     return pt;
@@ -147,10 +161,11 @@ namespace valhalla {
         }
 
         //parse the query's json
-        auto request_pt = from_request(request);
+        auto request_pt = from_request(action->second, request);
         init_request(action->second, request_pt);
         switch (action->second) {
           case ROUTE:
+          case VIAROUTE:
             return route(action->second, request_pt);
           case LOCATE:
             return locate(request_pt, info);

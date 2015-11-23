@@ -57,6 +57,9 @@ namespace valhalla {
         request.put_child("correlated_" + std::to_string(i), correlated.ToPtree(i));
       }
 
+      //let tyr know if its valhalla or osrm format
+      if(action == loki_worker_t::VIAROUTE)
+        request.put("osrm", "compatibility");
       std::stringstream stream;
       boost::property_tree::write_info(stream, request);
 
