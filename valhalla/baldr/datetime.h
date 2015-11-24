@@ -6,6 +6,9 @@
 #include <vector>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/local_time/local_time_io.hpp>
+
 
 namespace valhalla {
 namespace baldr {
@@ -104,36 +107,36 @@ namespace DateTime {
 
   /**
    * Get the iso date and time from a DOW mask and time.
-   * @param   dow_mask  Day of the week mask.
-   * @param   time      Time in the format of 08:00
-   * @param   tz        Timezone.  defaults to America/New_York.
+   * @param   dow_mask    Day of the week mask.
+   * @param   time        Time in the format of 08:00
+   * @param   time_zone   Timezone.
    * @return  Returns the formated date 2015-05-06.
    */
   std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
-                            const std::string& tz = "America/New_York");
+                            const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the iso date and time from the current date and time.
-   * @param   tz        Timezone.  defaults to America/New_York.
+   * @param   time_zone        Timezone.
    * @return  Returns the formated date 2015-05-06.
    *
    */
-  std::string iso_date_time(const std::string& tz = "America/New_York");
+  std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the seconds from epoch based on timezone.
-   * @param   tz        Timezone.  defaults to America/New_York.
+   * @param   time_zone        Timezone.
    * @return  Returns the seconds from epoch based on timezone.
    */
-  uint64_t seconds_since_epoch(const std::string& tz = "America/New_York");
+  uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the iso date time from seconds since epoch and timezone.
-   * @param   seconds   seconds since epoch
-   * @param   tz        Timezone.  defaults to America/New_York.
+   * @param   seconds     seconds since epoch
+   * @param   time_zone   Timezone.
    * @return  Returns the formated date 2015-05-06.
    */
-  std::string seconds_to_date(uint64_t seconds, const std::string& tz = "America/New_York");
+  std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the dow mask.

@@ -6,8 +6,6 @@
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/date_time/local_time/local_time_io.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/datetime.h>
@@ -247,12 +245,12 @@ std::string date(const std::string& date_time) {
 
 //Get the iso date and time from a DOW mask and time.
 std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
-                          const std::string& tz) {
+                          const boost::local_time::time_zone_ptr& time_zone) {
 
 
   std::string iso_date_time;
   std::stringstream ss("");
-  if (time.empty() || time.find(":") == std::string::npos || tz.empty())
+  if (time.empty() || time.find(":") == std::string::npos || !time_zone)
     return iso_date_time;
 
   uint8_t dow;
@@ -293,7 +291,6 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
     ss >> desired_time;
 
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
 
     pt = local_date_time.local_time();
@@ -318,15 +315,14 @@ std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
 }
 
 //Get the current iso date and time.
-std::string iso_date_time(const std::string& tz) {
+std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
   std::string iso_date_time;
-  if (tz.empty())
+  if (!time_zone)
     return iso_date_time;
 
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
     std::string tz_string;
-    boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
     boost::local_time::local_date_time local_date_time(pt,time_zone);
 
     pt = local_date_time.local_time();
@@ -345,16 +341,15 @@ std::string iso_date_time(const std::string& tz) {
   return iso_date_time;
 }
 
-// Get the seconds since epoch based on timezone.  Defaults to NY timezone.
-uint64_t seconds_since_epoch(const std::string& tz) {
+// Get the seconds since epoch based on timezone.
+uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) {
 
-    if (tz.empty())
+    if (!time_zone)
       return 0;
 
     try {
       boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
       std::string tz_string;
-      boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
       boost::local_time::local_date_time local_date_time(pt,time_zone);
 
       boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
@@ -366,36 +361,35 @@ uint64_t seconds_since_epoch(const std::string& tz) {
     return 0;
 }
 
-// Get the date from seconds and timezone.  Defaults to NY timezone.
-std::string seconds_to_date(uint64_t seconds, const std::string& tz) {
+// Get the date from seconds and timezone.
+std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone_ptr& time_zone) {
 
   std::string iso_date_time;
-    if (tz.empty())
-      return iso_date_time;
-
-    try {
-      std::string tz_string;
-      boost::local_time::time_zone_ptr time_zone = get_tz_db().time_zone_from_region(tz);
-
-      boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
-      boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
-      boost::local_time::local_date_time local_date_time(pt,time_zone);
-
-      pt = local_date_time.local_time();
-      boost::gregorian::date date = pt.date();
-
-      std::stringstream ss_time;
-      ss_time << pt.time_of_day();
-      std::string time = ss_time.str();
-
-      std::size_t found = time.find_last_of(":"); // remove seconds.
-      if (found != std::string::npos)
-       time = time.substr(0,found);
-
-      iso_date_time = to_iso_extended_string(date) + "T" + time;
-
-    } catch (std::exception& e){}
+  if (!time_zone)
     return iso_date_time;
+
+  try {
+    std::string tz_string;
+
+    boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
+    boost::posix_time::ptime pt = time_epoch + boost::posix_time::seconds(seconds);
+    boost::local_time::local_date_time local_date_time(pt,time_zone);
+
+    pt = local_date_time.local_time();
+    boost::gregorian::date date = pt.date();
+
+    std::stringstream ss_time;
+    ss_time << pt.time_of_day();
+    std::string time = ss_time.str();
+
+    std::size_t found = time.find_last_of(":"); // remove seconds.
+    if (found != std::string::npos)
+     time = time.substr(0,found);
+
+    iso_date_time = to_iso_extended_string(date) + "T" + time;
+
+  } catch (std::exception& e){}
+  return iso_date_time;
 }
 
 //Get the dow mask

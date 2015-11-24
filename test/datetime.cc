@@ -60,33 +60,37 @@ void TryGetDate(std::string date_time, std::string expected_date_time) {
 
 void TryIsoDateTime() {
 
-  std::string current_date_time = DateTime::iso_date_time();
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+
+  std::string current_date_time = DateTime::iso_date_time(tz);
   std::string time;
   std::size_t found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found+1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time) != current_date_time) {
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time, tz) != current_date_time) {
     throw std::runtime_error(
         std::string("Iso date time failed ") + current_date_time);
   }
 
-  current_date_time = DateTime::iso_date_time("America/Chicago");
+  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/Chicago"));
+  current_date_time = DateTime::iso_date_time(tz);
   found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found+1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,"America/Chicago") != current_date_time) {
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,tz) != current_date_time) {
     throw std::runtime_error(
         std::string("Iso date time failed ") + current_date_time);
   }
 
-  current_date_time = DateTime::iso_date_time("Africa/Porto-Novo");
+  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Porto-Novo"));
+  current_date_time = DateTime::iso_date_time(tz);
   found = current_date_time.find("T"); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
     time = current_date_time.substr(found+1);
 
-  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,"Africa/Porto-Novo") != current_date_time) {
+  if (DateTime::iso_date_time(DateTime::day_of_week_mask(current_date_time),time,tz) != current_date_time) {
     throw std::runtime_error(
         std::string("Iso date time failed ") + current_date_time);
   }
@@ -139,7 +143,8 @@ void TryGetServiceDays(bool check_b_date, std::string begin_date, std::string da
   std::string bdate = begin_date;
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
-  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
 
   uint64_t days = DateTime::get_service_days(b, e, tile_date, dow_mask);
 
@@ -156,8 +161,9 @@ void TryRejectFeed(std::string begin_date, std::string end_date, uint32_t dow_ma
 
   auto b = DateTime::get_formatted_date(begin_date);
   auto e = DateTime::get_formatted_date(end_date);
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
-  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+  auto tile_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
 
   uint64_t days = DateTime::get_service_days(b, e, tile_date, dow_mask);
 
@@ -202,10 +208,11 @@ void TryTestServiceEndDate(std::string begin_date, std::string end_date, std::st
 
 void TryTestEpoch() {
 
-  uint64_t sec =  DateTime::seconds_since_epoch();
-  std::string today = DateTime::seconds_to_date(sec);
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  uint64_t sec =  DateTime::seconds_since_epoch(tz);
+  std::string today = DateTime::seconds_to_date(sec,tz);
 
-  if (today != DateTime::iso_date_time())
+  if (today != DateTime::iso_date_time(tz))
     throw std::runtime_error("Test Epoch failed.");
 }
 
@@ -325,9 +332,10 @@ void TestServiceDays() {
 
   //Test using a date far in the past.  Feed will be rejected.
   TryRejectFeed("2014-09-25", "2014-09-28", dow_mask, 0);
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   boost::gregorian::date today =  DateTime::get_formatted_date(
-      DateTime::iso_date_time("America/New_York"));
+      DateTime::iso_date_time(tz));
 
   boost::gregorian::date startdate = today - boost::gregorian::days(30);
   boost::gregorian::date enddate = today + boost::gregorian::days(59);
