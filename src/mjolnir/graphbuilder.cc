@@ -704,7 +704,8 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
   const std::unique_ptr<const valhalla::skadi::sample>& sample) {
 
-  uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time()));
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
