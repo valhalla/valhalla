@@ -115,16 +115,17 @@ constexpr uint32_t kMaxCurvatureFactor = 15;
 
 // Node types.
 enum class NodeType : uint8_t {
-  kStreetIntersection = 0,  // Regular intersection of 2 roads
-  kGate = 1,                // Gate or rising bollard
-  kBollard = 2,             // Bollard (fixed obstruction)
-  kTollBooth = 3,           // Toll booth / fare collection
-  kRailStop = 4,            // Rail/metro/subway stop
-  kBusStop = 5,             // Bus stop
-  kMultiUseTransitStop = 6, // Multi-use transit stop (rail and bus)
-  kBikeShare = 7,           // Bike share location
-  kParking = 8,             // Parking location
-  kMotorWayJunction = 9     // Highway = motorway_junction
+  kStreetIntersection = 0,    // Regular intersection of 2 roads
+  kGate = 1,                  // Gate or rising bollard
+  kBollard = 2,               // Bollard (fixed obstruction)
+  kTollBooth = 3,             // Toll booth / fare collection
+  kRailStop = 4,              // Rail/metro/subway stop
+  kBusStop = 5,               // Bus stop
+  kMultiUseTransitStop = 6,   // Multi-use transit stop (rail and bus)
+  kBikeShare = 7,             // Bike share location
+  kParking = 8,               // Parking location
+  kMotorWayJunction = 9,      // Highway = motorway_junction
+  kBorderControl = 10         // Highway = motorway_junction
 };
 const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
