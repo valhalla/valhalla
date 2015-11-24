@@ -99,8 +99,8 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
+             PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing

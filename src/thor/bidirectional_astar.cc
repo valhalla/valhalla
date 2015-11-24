@@ -73,8 +73,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
-std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
+             PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<sif::DynamicCost>* mode_costing,
              const sif::TravelMode mode) {
   // Set the mode and costing
