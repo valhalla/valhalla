@@ -74,8 +74,8 @@ namespace {
 /**
  * Test a single path from origin to destination.
  */
-TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, PathAlgorithm* pathalgorithm,
+TripPath PathTest(GraphReader& reader, PathLocation& origin,
+                  PathLocation& dest, PathAlgorithm* pathalgorithm,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
                   bool multi_run, uint32_t iterations) {
