@@ -364,6 +364,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
+  // TODO: this is temp until we use transit stop type from transitland
+  TripPath_TransitStopInfo_Type prev_transit_node_type =
+      TripPath_TransitStopInfo_Type_kStop;
   for (auto edge_itr = path.begin(); edge_itr != path.end(); ++edge_itr) {
     const GraphId& edge = edge_itr->edgeid;
     const uint32_t trip_id = edge_itr->trip_id;
@@ -412,16 +415,38 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     // Assign the elapsed time from the start of the leg
     trip_node->set_elapsed_time(elapsedtime);
 
+    ///////////////////////////////////////////////////////////////////////////
     // Add transit information if this is a transit stop
     if (node->is_transit()) {
       // Get the transit stop information and add transit stop info
-      const TransitStop* stop = graphtile->GetTransitStop(graphtile->node(startnode)->stop_index());
+      const TransitStop* transit_stop = graphtile->GetTransitStop(
+          graphtile->node(startnode)->stop_index());
       TripPath_TransitStopInfo* transit_stop_info = trip_node
           ->mutable_transit_stop_info();
-      if (!stop)
-    	  transit_stop_info->set_name("");
-      else
-        transit_stop_info->set_name(graphtile->GetName(stop->name_offset()));
+
+      // TODO: for now we will set to station for rail and stop for others
+      //       in future, we will set based on transitland value
+      // Set type
+      if (directededge->use() == Use::kRail) {
+        transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
+        prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
+      }
+      else if (directededge->use() == Use::kTransitConnection)
+        transit_stop_info->set_type(prev_transit_node_type);
+      else {
+        transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
+        prev_transit_node_type = TripPath_TransitStopInfo_Type_kStop;
+      }
+
+      if (transit_stop) {
+        // Set onstop_id
+        if (transit_stop->one_stop_offset())
+          transit_stop_info->set_onestop_id(graphtile->GetName(transit_stop->one_stop_offset()));
+
+        // Set name
+        if (transit_stop->name_offset())
+          transit_stop_info->set_name(graphtile->GetName(transit_stop->name_offset()));
+      }
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure)
@@ -432,7 +457,8 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       // If this edge has a trip id then there is a transit departure
       if (trip_id) {
         const TransitDeparture* transit_departure = graphtile
-            ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id);
+            ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
+                                  trip_id);
 
         if (transit_departure) {
 
@@ -458,6 +484,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         block_id = 0;
       }
 
+      // Set is_parent_stop
       transit_stop_info->set_is_parent_stop(graphtile->node(startnode)->parent());
     }
 
@@ -799,6 +826,8 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
   else if (mode == sif::TravelMode::kPublicTransit)
     trip_edge->set_travel_mode(TripPath_TravelMode::TripPath_TravelMode_kPublicTransit);
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Process transit information
   if (trip_id
       && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
@@ -811,29 +840,51 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
       trip_edge->set_transit_type(
           TripPath_TransitType::TripPath_TransitType_kBus);
 
-    TripPath_TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
-    transit_route_info->set_trip_id(trip_id);
+    TripPath_TransitRouteInfo* transit_route_info = trip_edge
+        ->mutable_transit_route_info();
+
+    // Set block_id and trip_id
     transit_route_info->set_block_id(block_id);
+    transit_route_info->set_trip_id(trip_id);
+
     const TransitDeparture* transit_departure = graphtile->GetTransitDeparture(
         directededge->lineid(), trip_id);
 
     if (transit_departure) {
 
-      const TransitRoute* transit_route = graphtile->GetTransitRoute(
-          transit_departure->routeid());
-
-      //use route short name if available otherwise trip short name.
-      if (transit_route && transit_route->short_name_offset())
-        transit_route_info->set_short_name(
-            graphtile->GetName(transit_route->short_name_offset()));
-
-      if (transit_route && transit_route->long_name_offset())
-        transit_route_info->set_long_name(
-            graphtile->GetName(transit_route->long_name_offset()));
-
+      // Set headsign
       if (transit_departure->headsign_offset())
         transit_route_info->set_headsign(
             graphtile->GetName(transit_departure->headsign_offset()));
+
+      const TransitRoute* transit_route = graphtile->GetTransitRoute(
+          transit_departure->routeid());
+
+      if (transit_route) {
+        // Set onestop_id
+        if (transit_route->one_stop_offset())
+          transit_route_info->set_onestop_id(
+              graphtile->GetName(transit_route->one_stop_offset()));
+
+        // Set short_name
+        if (transit_route->short_name_offset())
+          transit_route_info->set_short_name(
+              graphtile->GetName(transit_route->short_name_offset()));
+
+        // Set long_name
+        if (transit_route->long_name_offset())
+          transit_route_info->set_long_name(
+              graphtile->GetName(transit_route->long_name_offset()));
+
+        // Set color and text_color
+        transit_route_info->set_color(transit_route->route_color());
+        transit_route_info->set_text_color(transit_route->route_text_color());
+
+        // Set operator_onestop_id
+        if (transit_route->op_by_onestop_id_offset())
+          transit_route_info->set_operator_onestop_id(
+              graphtile->GetName(transit_route->op_by_onestop_id_offset()));
+      }
     }
   }
 

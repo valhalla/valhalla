@@ -340,6 +340,9 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
+    // Set the tile creation date
+    tile_creation_date_ = tile->header()->date_created();
+
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
     const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
