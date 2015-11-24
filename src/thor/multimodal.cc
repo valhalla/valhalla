@@ -42,7 +42,7 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
 
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
-            const PathLocation& origin, const PathLocation& destination,
+            PathLocation& origin, PathLocation& destination,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
@@ -69,11 +69,15 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   if (!origin.date_time_)
     return { };
 
-  // Set route start time (seconds from midnight), date, and day of week
-  uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
-  uint32_t localtime = start_time;
-  uint32_t date = DateTime::days_from_pivot_date(*origin.date_time_);
-  uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
+  uint32_t start_time, localtime, date, dow;
+
+  if (*origin.date_time_ != "current") {
+    // Set route start time (seconds from midnight), date, and day of week
+    start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+    localtime = start_time;
+    date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+    dow  = DateTime::day_of_week_mask(*origin.date_time_);
+  }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), destination.vertex(), costing);
@@ -142,6 +146,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     if (!costing->Allowed(nodeinfo)) {
       continue;
     }
+
+    if (pred.origin() && *origin.date_time_ == "current") {
+
+      origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+
+      // Set route start time (seconds from midnight), date, and day of week
+      start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+      localtime = start_time;
+      date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+      dow  = DateTime::day_of_week_mask(*origin.date_time_);
+    }
+
 
     // Set a default transfer at a stop (if not same trip Id and block Id)
     // TODO - support in transit costing method
