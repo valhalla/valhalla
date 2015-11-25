@@ -57,8 +57,11 @@ message TripDirections {
     optional string headsign = 4;
     optional uint32 color = 5;
     optional uint32 text_color = 6;
-    optional string operator_onestop_id = 7;
-    repeated TransitStop transit_stops = 8;
+    optional string description = 7;
+    optional string operator_onestop_id = 8;
+    optional string operator_name = 9;
+    optional string operator_url = 10;
+    repeated TransitStop transit_stops = 11;
   }
 
   message Maneuver {

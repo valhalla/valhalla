@@ -107,7 +107,10 @@ message TripPath {
     optional string headsign = 6;
     optional uint32 color = 7;
     optional uint32 text_color = 8;
-    optional string operator_onestop_id = 9;
+    optional string description = 9;
+    optional string operator_onestop_id = 10;
+    optional string operator_name = 11;
+    optional string operator_url = 12;
   }
 
   message Edge {

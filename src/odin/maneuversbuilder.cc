@@ -678,15 +678,20 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->travel_mode() == TripPath_TravelMode_kPublicTransit) {
     maneuver.set_rail(prev_edge->rail());
     maneuver.set_bus(prev_edge->bus());
-    maneuver.mutable_transit_route_info()->onestop_id = prev_edge->transit_route_info().onestop_id();
-    maneuver.mutable_transit_route_info()->block_id = prev_edge->transit_route_info().block_id();
-    maneuver.mutable_transit_route_info()->trip_id = prev_edge->transit_route_info().trip_id();
-    maneuver.mutable_transit_route_info()->short_name = prev_edge->transit_route_info().short_name();
-    maneuver.mutable_transit_route_info()->long_name = prev_edge->transit_route_info().long_name();
-    maneuver.mutable_transit_route_info()->headsign = prev_edge->transit_route_info().headsign();
-    maneuver.mutable_transit_route_info()->color = prev_edge->transit_route_info().color();
-    maneuver.mutable_transit_route_info()->text_color = prev_edge->transit_route_info().text_color();
-    maneuver.mutable_transit_route_info()->operator_onestop_id = prev_edge->transit_route_info().operator_onestop_id();
+    auto* transit_route = maneuver.mutable_transit_route_info();
+    const auto& pe_transit_route = prev_edge->transit_route_info();
+    transit_route->onestop_id = pe_transit_route.onestop_id();
+    transit_route->block_id = pe_transit_route.block_id();
+    transit_route->trip_id = pe_transit_route.trip_id();
+    transit_route->short_name = pe_transit_route.short_name();
+    transit_route->long_name = pe_transit_route.long_name();
+    transit_route->headsign = pe_transit_route.headsign();
+    transit_route->color = pe_transit_route.color();
+    transit_route->text_color = pe_transit_route.text_color();
+    transit_route->description = pe_transit_route.description();
+    transit_route->operator_onestop_id = pe_transit_route.operator_onestop_id();
+    transit_route->operator_name = pe_transit_route.operator_name();
+    transit_route->operator_url = pe_transit_route.operator_url();
   }
 
   // Transit connection

@@ -21,7 +21,10 @@ struct TransitRouteInfo {
   std::string headsign;
   uint32_t color;
   uint32_t text_color;
+  std::string description;
   std::string operator_onestop_id;
+  std::string operator_name;
+  std::string operator_url;
   std::list<TransitStop> transit_stops;
 
 };

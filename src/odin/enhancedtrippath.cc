@@ -348,8 +348,17 @@ std::string EnhancedTripPath_Edge::ToString() const {
     str += " | transit_route_info.text_color=";
     str += std::to_string(transit_route_info().text_color());
 
+    str += " | transit_route_info.description=";
+    str += transit_route_info().description();
+
     str += " | transit_route_info.operator_onestop_id=";
     str += transit_route_info().operator_onestop_id();
+
+    str += " | transit_route_info.operator_name=";
+    str += transit_route_info().operator_name();
+
+    str += " | transit_route_info.operator_url=";
+    str += transit_route_info().operator_url();
   }
 
   return str;

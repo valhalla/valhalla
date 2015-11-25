@@ -269,7 +269,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
     // Process transit route
     if (maneuver.IsTransit()) {
-      auto& transit_route = maneuver.transit_route_info();
+      const auto& transit_route = maneuver.transit_route_info();
       auto* trip_transit_route = trip_maneuver->mutable_transit_route();
       if (!transit_route.onestop_id.empty()) {
         trip_transit_route->set_onestop_id(transit_route.onestop_id);
@@ -285,8 +285,17 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
       }
       trip_transit_route->set_color(transit_route.color);
       trip_transit_route->set_text_color(transit_route.text_color);
+      if (!transit_route.description.empty()) {
+        trip_transit_route->set_description(transit_route.description);
+      }
       if (!transit_route.operator_onestop_id.empty()) {
         trip_transit_route->set_operator_onestop_id(transit_route.operator_onestop_id);
+      }
+      if (!transit_route.operator_name.empty()) {
+        trip_transit_route->set_operator_name(transit_route.operator_name);
+      }
+      if (!transit_route.operator_url.empty()) {
+        trip_transit_route->set_operator_url(transit_route.operator_url);
       }
 
       // Process transit stops
