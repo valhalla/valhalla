@@ -587,8 +587,17 @@ namespace {
             if (transit_route.has_text_color()) {
               json_transit_route->emplace("text_color", static_cast<uint64_t>(transit_route.text_color()));
             }
+            if (transit_route.has_description()) {
+              json_transit_route->emplace("description", transit_route.description());
+            }
             if (transit_route.has_operator_onestop_id()) {
               json_transit_route->emplace("operator_onestop_id", transit_route.operator_onestop_id());
+            }
+            if (transit_route.has_operator_name()) {
+              json_transit_route->emplace("operator_name", transit_route.operator_name());
+            }
+            if (transit_route.has_operator_url()) {
+              json_transit_route->emplace("operator_url", transit_route.operator_url());
             }
 
             // Add transit stops
