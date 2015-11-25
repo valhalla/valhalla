@@ -430,10 +430,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       if (directededge->use() == Use::kRail) {
         transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
-      }
-      else if (directededge->use() == Use::kTransitConnection)
+      } else if (directededge->use() == Use::kTransitConnection) {
         transit_stop_info->set_type(prev_transit_node_type);
-      else {
+      } else {
         transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStop;
       }
