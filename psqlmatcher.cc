@@ -225,6 +225,38 @@ bool read_finished_tiles(sqlite3* db_handle,
 }
 
 
+// Start transaction
+bool write_begin(sqlite3* db_handle)
+{
+  std::string sql = "BEGIN";
+  char *err_msg;
+  int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (SQLITE_OK == ret) {
+    return true;
+  } else {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+}
+
+
+// End transaction
+bool write_end(sqlite3* db_handle)
+{
+  std::string sql = "END";
+  char *err_msg;
+  int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (SQLITE_OK == ret) {
+    return true;
+  } else {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+}
+
+
 bool write_results_segment(sqlite3* db_handle,
                            const std::vector<Result>::const_iterator cbegin,
                            const std::vector<Result>::const_iterator cend)
@@ -256,66 +288,45 @@ bool write_results_segment(sqlite3* db_handle,
 }
 
 
+// Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
 bool write_results(sqlite3* db_handle,
                    size_t segment_size,
-                   const std::vector<Result>& results,
-                   uint32_t tileid,
-                   uint32_t matched_count,
-                   uint32_t total_count)
+                   const std::vector<Result>& results)
 {
   if (segment_size <= 0) {
     throw std::invalid_argument("Expect segment size to be positive " + std::to_string(segment_size));
   }
 
-  {  // Start transaction
-    std::string sql = "BEGIN";
-    char *err_msg;
-    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (SQLITE_OK != ret) {
-      LOG_ERROR("Error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      return false;
-    }
-  }
-
-  // Insert (sequence_id, coordinate_index, graphid, graphtype) into scores
   for (decltype(results.size()) i = 0; i < results.size(); i += segment_size) {
     const auto cbegin = std::next(results.cbegin(), i),
                  cend = (i + segment_size) < results.size()? std::next(cbegin, segment_size) : results.cend();
     bool ok = write_results_segment(db_handle, cbegin, cend);
     if (!ok) {
-      // TODO rollback?
-      return false;
-    }
-  }
-
-  {  // Insert (tileid, matched_count, total_count) into tiles
-    std::string sql = "INSERT INTO tiles VALUES (";
-    sql += std::to_string(tileid) + ", ";
-    sql += std::to_string(matched_count) + ", ";
-    sql += std::to_string(total_count) + ");\n";
-    char *err_msg;
-    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (SQLITE_OK != ret) {
-      LOG_ERROR("Error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      // TODO rollback?
-      return false;
-    }
-  }
-
-  {  // End transaction
-    std::string sql = "END";
-    char *err_msg;
-    int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-    if (SQLITE_OK != ret) {
-      LOG_ERROR("Error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
       return false;
     }
   }
 
   return true;
+}
+
+
+// Insert (tileid, matched_count, total_count) into tiles
+bool write_summary(sqlite3* db_handle,
+                   uint32_t tileid,
+                   uint32_t matched_count,
+                   uint32_t total_count)
+{
+  std::string sql = "INSERT INTO tiles VALUES (";
+  sql += std::to_string(tileid) + ", ";
+  sql += std::to_string(matched_count) + ", ";
+  sql += std::to_string(total_count) + ");\n";
+  char *err_msg;
+  int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (SQLITE_OK != ret) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
 }
 
 
@@ -473,7 +484,27 @@ int main(int argc, char *argv[])
     stat_measurement_count_totally += stat_measurement_count_of_tile;
 
     {
-      bool ok = write_results(db_handle, segment_size, results, tileid, stat_matched_count_of_tile, stat_measurement_count_of_tile);
+      bool ok;
+
+      ok = write_begin(db_handle);
+      if (!ok) {
+        sqlite3_close(db_handle);
+        return 2;
+      }
+
+      ok = write_results(db_handle, segment_size, results);
+      if (!ok) {
+        sqlite3_close(db_handle);
+        return 2;
+      }
+
+      ok = write_summary(db_handle, tileid, stat_matched_count_of_tile, stat_measurement_count_of_tile);
+      if (!ok) {
+        sqlite3_close(db_handle);
+        return 2;
+      }
+
+      ok = write_end(db_handle);
       if (!ok) {
         sqlite3_close(db_handle);
         return 2;
