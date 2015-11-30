@@ -622,7 +622,7 @@ ConstructRoute(iterator_t begin, iterator_t end)
   iterator_t previous_match = end;
 
   for (auto match = begin; match != end; match++) {
-    if (match->state()) {
+    if (!match->state()) {
       continue;
     }
     if (previous_match != end) {
