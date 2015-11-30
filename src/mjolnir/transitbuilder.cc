@@ -674,7 +674,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
     // Get the directed edge count, log an error if no directed edges are added
     uint32_t edge_count = tilebuilder.directededges().size() - node.edge_index();
     if (edge_count == 0) {
-      // Do not add the node (TODO - will this cause issues?)
+      // Set the edge index to 0
+      node.set_edge_index(0);
       LOG_ERROR("No directed edges from this node");
     }
 
