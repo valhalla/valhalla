@@ -3460,20 +3460,22 @@ std::string NarrativeBuilder::FormPostTransitConnectionDestinationInstruction(
   // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
   // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
+  // Assign the street names and the begin street names
+  std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                             true);
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names());
+
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string street_names;
-  std::string begin_street_names;
   std::string cardinal_direction = FormCardinalDirection(
         maneuver.begin_cardinal_direction());
 
-  if (maneuver.HasBeginStreetNames()) {
+  if (!begin_street_names.empty() && !street_names.empty()) {
     phrase_id = 2;
-    begin_street_names = maneuver.begin_street_names().ToString();
-  } else if (maneuver.HasStreetNames()) {
+  } else if (!street_names.empty()) {
     phrase_id = 1;
-    street_names = maneuver.street_names().ToString();
   }
 
   switch (phrase_id) {
@@ -3506,22 +3508,24 @@ std::string NarrativeBuilder::FormVerbalPostTransitConnectionDestinationInstruct
   // 1 "Head <FormCardinalDirection> on <STREET_NAMES>."
   // 2 "Head <FormCardinalDirection> on <BEGIN_STREET_NAMES>. Continue on <STREET_NAMES>."
 
+  // Assign the street names and the begin street names
+  std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                             true, element_max_count, delim,
+                                             maneuver.verbal_formatter());
+  std::string begin_street_names = FormStreetNames(
+      maneuver, maneuver.begin_street_names(), false, element_max_count, delim,
+      maneuver.verbal_formatter());
+
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
   uint8_t phrase_id = 0;
-  std::string street_names;
-  std::string begin_street_names;
   std::string cardinal_direction = FormCardinalDirection(
         maneuver.begin_cardinal_direction());
 
-  if (maneuver.HasBeginStreetNames()) {
+  if (!begin_street_names.empty() && !street_names.empty()) {
     phrase_id = 2;
-    begin_street_names = maneuver.begin_street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
-  } else if (maneuver.HasStreetNames()) {
+  } else if (!street_names.empty()) {
     phrase_id = 1;
-    street_names = maneuver.street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
   }
 
   switch (phrase_id) {
@@ -3555,14 +3559,18 @@ std::string NarrativeBuilder::FormVerbalPostTransitionInstruction(
   // "Continue for <DISTANCE>."
   // "Continue on <STREET_NAMES(2)> for <DISTANCE>."
 
+  // Assign the street names
+  std::string street_names = FormStreetNames(maneuver, maneuver.street_names(),
+                                             true, element_max_count, delim,
+                                             maneuver.verbal_formatter());
+
   std::string instruction;
   instruction.reserve(kTextInstructionInitialCapacity);
   instruction += "Continue";
 
-  if (include_street_names && maneuver.HasStreetNames()) {
+  if (include_street_names && !street_names.empty()) {
     instruction += " on ";
-    instruction += maneuver.street_names().ToString(
-        element_max_count, delim, maneuver.verbal_formatter());
+    instruction += street_names;
   }
   instruction += " for ";
   instruction += FormDistance(maneuver, units);
