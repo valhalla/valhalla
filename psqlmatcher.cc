@@ -190,6 +190,21 @@ bool create_scores_table(sqlite3* db_handle)
 }
 
 
+bool create_routes_table(sqlite3* db_handle)
+{
+  char *err_msg;
+  std::string sql = "CREATE TABLE IF NOT EXISTS routes"
+                    " (sequence_id INTEGER, route_index INTEGER, edgeid BIGINT, source FLOAT, target FLOAT)";
+  auto ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  return true;
+}
+
+
 bool read_finished_tiles(sqlite3* db_handle,
                          std::unordered_set<uint32_t>& tileids)
 {
@@ -301,6 +316,66 @@ bool write_results(sqlite3* db_handle,
     const auto cbegin = std::next(results.cbegin(), i),
                  cend = (i + segment_size) < results.size()? std::next(cbegin, segment_size) : results.cend();
     bool ok = write_results_segment(db_handle, cbegin, cend);
+    if (!ok) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+using EdgeSegmentTuple = std::tuple<SequenceId, uint32_t, baldr::GraphId, float, float>;
+
+
+bool write_routes_segment(sqlite3* db_handle,
+                          std::vector<EdgeSegmentTuple>::const_iterator begin,
+                          std::vector<EdgeSegmentTuple>::const_iterator end)
+{
+  std::string sql = "INSERT INTO routes VALUES ";
+  for (auto tuple = begin; tuple != end; tuple++) {
+    sql += "(";
+    sql += std::to_string(std::get<0>(*tuple)) + ", "; // sequence_id
+    sql += std::to_string(std::get<1>(*tuple)) + ", "; // route_index
+    sql += std::to_string(std::get<2>(*tuple)) + ", "; // edgeid
+    sql += std::to_string(std::get<3>(*tuple)) + ", "; // source
+    sql += std::to_string(std::get<4>(*tuple)) + ", "; // target
+    sql += "),";
+  }
+  sql.pop_back();  // Pop out the last comma
+
+  char *err_msg;
+  int ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (SQLITE_OK != ret) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+
+  return true;
+}
+
+
+// Insert (sequence_id, route_idx, edgeid, source, target) into routes
+bool write_routes(sqlite3* db_handle,
+                  size_t segment_size,
+                  const std::unordered_map<SequenceId, std::vector<EdgeSegment>>& routes)
+{
+  std::vector<EdgeSegmentTuple> tuples;
+
+  // Convert routes into tuples
+  for (const auto& pair : routes) {
+    uint32_t route_index = 0;
+    for (const auto& segment : pair.second) {
+      tuples.emplace_back(pair.first, route_index, segment.edgeid, segment.source, segment.target);
+      route_index++;
+    }
+  }
+
+  for (decltype(tuples.size()) i = 0; i < tuples.size(); i += segment_size) {
+    const auto begin = std::next(tuples.cbegin(), i),
+                 end = (i + segment_size) < tuples.size()? std::next(begin, segment_size) : tuples.cend();
+    bool ok = write_routes_segment(db_handle, begin, end);
     if (!ok) {
       return false;
     }
@@ -436,6 +511,7 @@ int main(int argc, char *argv[])
   pqxx::connection conn(psql_uri.c_str());
   for (auto tileid : tileids) {
     std::vector<Result> results;
+    std::unordered_map<SequenceId, std::vector<EdgeSegment>> routes;
 
     uint32_t stat_matched_count_of_tile = 0;
     uint32_t stat_measurement_count_of_tile = 0;
@@ -458,13 +534,6 @@ int main(int argc, char *argv[])
       const auto& match_results = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
       assert(match_results.size() == sequence.size());
 
-      if (reader.OverCommitted()) {
-        reader.Clear();
-      }
-      if (grid.size() > kMaxGridCacheSize) {
-        grid.Clear();
-      }
-
       uint32_t stat_matched_count_of_sequence = 0;
       uint32_t coord_idx = 0;
       for (auto result = match_results.cbegin(); result != match_results.cend(); result++, coord_idx++) {
@@ -474,15 +543,25 @@ int main(int argc, char *argv[])
         }
       }
 
+      routes[sid] = ConstructRoute(match_results.begin(), match_results.end());
+
       stat_matched_count_of_tile += stat_matched_count_of_sequence;
       stat_measurement_count_of_tile += sequence.size();
       // Too verbose
       // LOG_INFO("Matched " + std::to_string(stat_matched_count_of_sequence) + "/" + std::to_string(sequence.size()));
+
+      if (reader.OverCommitted()) {
+        reader.Clear();
+      }
+      if (grid.size() > kMaxGridCacheSize) {
+        grid.Clear();
+      }
     }
 
     stat_matched_count_totally += stat_matched_count_of_tile;
     stat_measurement_count_totally += stat_measurement_count_of_tile;
 
+    // Write into sqlite
     {
       bool ok;
 
@@ -493,6 +572,12 @@ int main(int argc, char *argv[])
       }
 
       ok = write_results(db_handle, segment_size, results);
+      if (!ok) {
+        sqlite3_close(db_handle);
+        return 2;
+      }
+
+      ok = write_routes(db_handle, segment_size, routes);
       if (!ok) {
         sqlite3_close(db_handle);
         return 2;

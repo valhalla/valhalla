@@ -576,3 +576,70 @@ OfflineMatch(MapMatching& mm,
 
   return results;
 }
+
+
+struct EdgeSegment
+{
+  EdgeSegment(GraphId the_edgeid,
+              float the_source,
+              float the_target)
+      : edgeid(the_edgeid),
+        source(the_source),
+        target(the_target) {}
+
+  GraphId edgeid;
+  float source;
+  float target;
+};
+
+
+void MergeRoute(std::vector<EdgeSegment>& route,
+                const std::vector<EdgeSegment>& segments)
+{
+  for (auto segment = segments.rbegin(); segment != segments.rend(); segment++) {
+    if (segment->edgeid.Is_Valid()) {
+      if (!route.empty()) {
+        auto& last_segment = route.back();
+        if (last_segment.edgeid == segment->edgeid) {
+          // TODO assert(segment->target >= last_segment.target)
+          last_segment.target = std::max(last_segment.target, segment->target);
+        } else {
+          route.push_back(*segment);
+        }
+      } else {
+        route.push_back(*segment);
+      }
+    }
+  }
+}
+
+
+template <typename iterator_t>
+std::vector<EdgeSegment>
+ConstructRoute(iterator_t begin, iterator_t end)
+{
+  std::vector<EdgeSegment> route;
+  iterator_t previous_match = end;
+
+  for (auto match = begin; match != end; match++) {
+    if (match->state()) {
+      continue;
+    }
+    if (previous_match != end) {
+      std::vector<EdgeSegment> segments;
+      auto previous_state = previous_match->state(),
+            current_state = match->state();
+      for (auto label = previous_state->RouteBegin(*current_state),
+                  end = previous_state->RouteEnd(); label != end; label++) {
+        if (label->edgeid.Is_Valid()) {
+          assert(label->source <= label->target);
+          segments.emplace_back(label->edgeid, label->source, label->target);
+        }
+      }
+      MergeRoute(route, segments);
+    }
+    previous_match = match;
+  }
+
+  return route;
+}
