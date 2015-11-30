@@ -223,7 +223,7 @@ namespace {
         if (costing == "multimodal" && (!origin.date_time_ && !destination.date_time_))
           throw std::runtime_error("Date and time required for origin or destination.");
 
-        bool is_current = (*origin.date_time_ == "current" ? true : false);
+        bool is_current = (origin.date_time_ && *origin.date_time_ == "current" ? true : false);
 
         // Through edge is valid if last destination was "through"
         if (through_edge.Is_Valid()) {
@@ -431,19 +431,18 @@ namespace {
 
     std::string init_request(const boost::property_tree::ptree& request) {
       //we require locations
-      std::vector<Location> locs;
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
         throw std::runtime_error("Insufficiently specified required parameter 'locations'");
       for(const auto& location : *request_locations) {
         try{
-          locs.push_back(baldr::Location::FromPtree(location.second));
+          locations.push_back(baldr::Location::FromPtree(location.second));
         }
         catch (...) {
           throw std::runtime_error("Failed to parse location");
         }
       }
-      if(locs.size() < 2)
+      if(locations.size() < 2)
         throw std::runtime_error("Insufficient number of locations provided");
 
       //type - 0: none(default), 1: current, 2: depart, 3: arrive
@@ -451,13 +450,12 @@ namespace {
       auto date_value = request.get_optional<std::string>("date_time.value");
 
       if (date_type == 2) //no date time or depart at
-          locs.at(0).date_time_ = date_value;
+        locations.front().date_time_ = date_value;
       else if (date_type == 1) //current.
-          locs.at(0).date_time_ = "current";
+        locations.front().date_time_ = "current";
       else if (date_type == 3) //arrive)
-        locs.at(locs.size()-1).date_time_ = date_value;
+        locations.back().date_time_ = date_value;
 
-      locations = locs;
       //we require correlated locations
       size_t i = 0;
       do {
