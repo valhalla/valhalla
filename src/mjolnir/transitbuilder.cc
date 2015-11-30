@@ -670,14 +670,17 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       // Add to list of directed edges
       tilebuilder.directededges().emplace_back(std::move(directededge));
     }
-    if (tilebuilder.directededges().size() - node.edge_index() == 0) {
+
+    // Get the directed edge count, log an error if no directed edges are added
+    uint32_t edge_count = tilebuilder.directededges().size() - node.edge_index();
+    if (edge_count == 0) {
       // Do not add the node (TODO - will this cause issues?)
       LOG_ERROR("No directed edges from this node");
-    } else {
-      // Add the node
-      node.set_edge_count(tilebuilder.directededges().size() - node.edge_index());
-      tilebuilder.nodes().emplace_back(std::move(node));
     }
+
+    // Add the node
+    node.set_edge_count(edge_count);
+    tilebuilder.nodes().emplace_back(std::move(node));
   }
   if (nadded != connection_edges.size()) {
     LOG_ERROR("Added " + std::to_string(nadded) + " but there are " +
