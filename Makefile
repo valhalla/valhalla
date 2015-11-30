@@ -1,11 +1,11 @@
 CC=g++
 
 LIB_PATH=/usr/local/lib
-FLAGS_TEST=-std=c++11 -Wl,-rpath=$(LIB_PATH) # -g -pg
+FLAGS_TEST=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall # -g -pg
 ifdef DEBUG
-	FLAGS=$(FLAGS_TEST)
+	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -Wall
 else
-	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -O3 -DNDEBUG
+	FLAGS=-std=c++11 -Wl,-rpath=$(LIB_PATH) -O3 -DNDEBUG -Wall
 endif
 
 LIBS=-lvalhalla_midgard -lvalhalla_baldr -lvalhalla_sif
