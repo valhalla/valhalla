@@ -332,7 +332,7 @@ size_t write_routes_segment(sqlite3* db_handle,
     sql += std::to_string(std::get<1>(*tuple)) + ", "; // route_index
     sql += std::to_string(std::get<2>(*tuple)) + ", "; // edgeid
     sql += std::to_string(std::get<3>(*tuple)) + ", "; // source
-    sql += std::to_string(std::get<4>(*tuple)) + ", "; // target
+    sql += std::to_string(std::get<4>(*tuple)); // target
     sql += "),";
   }
   sql.pop_back();  // Pop out the last comma
