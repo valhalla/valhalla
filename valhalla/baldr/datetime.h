@@ -126,9 +126,18 @@ namespace DateTime {
   /**
    * Get the seconds from epoch based on timezone.
    * @param   time_zone        Timezone.
+   *
    * @return  Returns the seconds from epoch based on timezone.
    */
   uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
+   * Get the seconds from epoch
+   * @param   date_time        date_time.  Time is already adjusted to TZ
+   *
+   * @return  Returns the seconds from epoch.
+   */
+  uint64_t seconds_since_epoch(const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the iso date time from seconds since epoch and timezone.

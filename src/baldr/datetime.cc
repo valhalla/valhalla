@@ -6,6 +6,8 @@
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/c_local_time_adjustor.hpp>
+
 #include <boost/algorithm/string.hpp>
 
 #include <valhalla/baldr/datetime.h>
@@ -322,7 +324,6 @@ std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone) {
 
   try {
     boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-    std::string tz_string;
     boost::local_time::local_date_time local_date_time(pt,time_zone);
 
     pt = local_date_time.local_time();
@@ -349,7 +350,6 @@ uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) 
 
     try {
       boost::posix_time::ptime pt = boost::posix_time::second_clock::universal_time();
-      std::string tz_string;
       boost::local_time::local_date_time local_date_time(pt,time_zone);
 
       boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
@@ -359,6 +359,51 @@ uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone) 
 
     } catch (std::exception& e){}
     return 0;
+}
+
+// Get the seconds since epoch time is already adjusted based on TZ
+uint64_t seconds_since_epoch(const std::string& date_time,
+                             const boost::local_time::time_zone_ptr& time_zone) {
+  if (date_time.empty())
+    return 0;
+
+  try {
+    boost::posix_time::ptime pt;
+    boost::gregorian::date date;
+    boost::posix_time::time_duration td;
+
+    std::size_t found = date_time.find("T"); // YYYY-MM-DDTHH:MM
+    if (found != std::string::npos) {
+      std::string dt = date_time;
+      dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+      pt = boost::posix_time::from_iso_string(dt);
+      date = boost::gregorian::date_from_iso_string(dt);
+      td = boost::posix_time::duration_from_string(date_time.substr(found+1));
+    }
+    else if (date_time.find("-") != std::string::npos) {
+      std::string dt = date_time;
+      dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+      pt = boost::posix_time::from_iso_string(dt + "T0000");
+      date = boost::gregorian::date_from_iso_string(dt);
+      td = boost::posix_time::duration_from_string("0000");
+
+    } else {
+      //No time on date.  Make it midnight.
+      pt = boost::posix_time::from_iso_string(date_time + "T0000");
+      date = boost::gregorian::date_from_iso_string("0000");
+
+    }
+
+    boost::local_time::local_date_time in_local_time(date, td, time_zone, false);
+    boost::local_time::time_zone_ptr tz_utc(new boost::local_time::posix_time_zone("UTC"));
+    boost::local_time::local_date_time local_date_time = in_local_time.local_time_in(tz_utc);
+    boost::posix_time::ptime const time_epoch(boost::gregorian::date(1970, 1, 1));
+    boost::posix_time::time_duration diff = local_date_time.utc_time() - time_epoch;
+
+    return diff.total_seconds();
+
+  } catch (std::exception& e){}
+  return 0;
 }
 
 // Get the date from seconds and timezone.
@@ -384,7 +429,7 @@ std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone
 
     std::size_t found = time.find_last_of(":"); // remove seconds.
     if (found != std::string::npos)
-     time = time.substr(0,found);
+      time = time.substr(0,found);
 
     iso_date_time = to_iso_extended_string(date) + "T" + time;
 
@@ -452,34 +497,34 @@ std::string get_duration(const std::string& date_time, const uint32_t seconds) {
   std::string formatted_date_time;
   boost::posix_time::ptime start;
   boost::gregorian::date date;
-    if (date_time.find("T") != std::string::npos) {
-      std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
-      start = boost::posix_time::from_iso_string(dt);
-      date = boost::gregorian::date_from_iso_string(dt);
-    }
-    else if (date_time.find("-") != std::string::npos) {
-      std::string dt = date_time;
-      dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
-      start = boost::posix_time::from_iso_string(dt + "T0000");
-      date = boost::gregorian::from_undelimited_string(dt);
-    } else {
-      //No time on date.  Make it midnight.
-      start = boost::posix_time::from_iso_string(date_time + "T0000");
-      date = boost::gregorian::from_undelimited_string(date_time);
-    }
+  if (date_time.find("T") != std::string::npos) {
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-,:")), dt.end());
+    start = boost::posix_time::from_iso_string(dt);
+    date = boost::gregorian::date_from_iso_string(dt);
+  }
+  else if (date_time.find("-") != std::string::npos) {
+    std::string dt = date_time;
+    dt.erase(boost::remove_if(dt, boost::is_any_of("-")), dt.end());
+    start = boost::posix_time::from_iso_string(dt + "T0000");
+    date = boost::gregorian::from_undelimited_string(dt);
+  } else {
+    //No time on date.  Make it midnight.
+    start = boost::posix_time::from_iso_string(date_time + "T0000");
+    date = boost::gregorian::from_undelimited_string(date_time);
+  }
 
-    if (date < pivot_date_)
-      return formatted_date_time;
-
-    boost::posix_time::ptime end = start + boost::posix_time::seconds(seconds);
-    formatted_date_time = boost::posix_time::to_iso_extended_string(end);
-
-    std::size_t found = formatted_date_time.find_last_of(":"); // remove seconds.
-    if (found != std::string::npos)
-      formatted_date_time = formatted_date_time.substr(0,found);
-
+  if (date < pivot_date_)
     return formatted_date_time;
+
+  boost::posix_time::ptime end = start + boost::posix_time::seconds(seconds);
+  formatted_date_time = boost::posix_time::to_iso_extended_string(end);
+
+  std::size_t found = formatted_date_time.find_last_of(":"); // remove seconds.
+  if (found != std::string::npos)
+    formatted_date_time = formatted_date_time.substr(0,found);
+
+  return formatted_date_time;
 }
 
 }
