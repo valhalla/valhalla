@@ -167,6 +167,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         continue;
       }
 
+      if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current")
+        origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+
       // Check hierarchy. Count upward transitions (counted on the level
       // transitioned from). Do not expand based on hierarchy level based on
       // number of upward transitions and distance to the destination
