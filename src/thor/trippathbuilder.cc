@@ -430,10 +430,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
       if (directededge->use() == Use::kRail) {
         transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStation);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStation;
-      }
-      else if (directededge->use() == Use::kTransitConnection)
+      } else if (directededge->use() == Use::kTransitConnection) {
         transit_stop_info->set_type(prev_transit_node_type);
-      else {
+      } else {
         transit_stop_info->set_type(TripPath_TransitStopInfo_Type_kStop);
         prev_transit_node_type = TripPath_TransitStopInfo_Type_kStop;
       }
@@ -899,10 +898,25 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
         transit_route_info->set_color(transit_route->route_color());
         transit_route_info->set_text_color(transit_route->route_text_color());
 
+        // Set description
+        if (transit_route->desc_offset())
+          transit_route_info->set_description(
+              graphtile->GetName(transit_route->desc_offset()));
+
         // Set operator_onestop_id
         if (transit_route->op_by_onestop_id_offset())
           transit_route_info->set_operator_onestop_id(
               graphtile->GetName(transit_route->op_by_onestop_id_offset()));
+
+        // Set operator_name
+        if (transit_route->op_by_name_offset())
+          transit_route_info->set_operator_name(
+              graphtile->GetName(transit_route->op_by_name_offset()));
+
+        // Set operator_url
+        if (transit_route->op_by_website_offset())
+          transit_route_info->set_operator_url(
+              graphtile->GetName(transit_route->op_by_website_offset()));
       }
     }
   }
