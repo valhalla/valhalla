@@ -449,10 +449,10 @@ namespace {
       auto date_type = request.get<int>("date_time.type",0);
       auto date_value = request.get_optional<std::string>("date_time.value");
 
-      if (date_type == 2) //no date time or depart at
-        locations.front().date_time_ = date_value;
-      else if (date_type == 1) //current.
+      if (date_type == 1) //current.
         locations.front().date_time_ = "current";
+      else if (date_type == 2) //depart at
+        locations.front().date_time_ = date_value;
       else if (date_type == 3) //arrive)
         locations.back().date_time_ = date_value;
 
