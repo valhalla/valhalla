@@ -523,9 +523,8 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   return nullptr;
 }
 
-// Get the transit stop given its GraphId.
+// Get the transit stop given its index within the tile.
 const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
-
   uint32_t count = header_->stopcount();
   if (count == 0)
     return nullptr;
@@ -535,9 +534,13 @@ const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
   throw std::runtime_error("GraphTile Transit Stop index out of bounds");
 }
 
-// Get the transit route given its index with the tile.
+// Get the transit route given its index within the tile.
 const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
-  if (idx < header_->routecount()) {
+  uint32_t count = header_->stopcount();
+  if (count == 0)
+    return nullptr;
+
+  if (idx < count) {
     return &transit_routes_[idx];
   }
   throw std::runtime_error("GraphTile GetTransitRoute index out of bounds");
