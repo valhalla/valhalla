@@ -589,15 +589,13 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     uint64_t sec = DateTime::seconds_since_epoch(*dest.date_time_,
                                                  DateTime::get_tz_db().
                                                  from_index(last_tile->node(startnode)->timezone()));
-
-    tp_orig->set_date_time(DateTime::seconds_to_date(elapsedtime - sec,
+    tp_orig->set_date_time(DateTime::seconds_to_date(sec - elapsedtime,
                                                      DateTime::get_tz_db().
                                                      from_index(first_node->timezone())));
   } else if (origin.date_time_) {
     uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
                                                  DateTime::get_tz_db().
                                                  from_index(first_node->timezone()));
-
     tp_dest->set_date_time(DateTime::seconds_to_date(sec + elapsedtime,
                                                      DateTime::get_tz_db().
                                                      from_index(last_tile->node(startnode)->timezone())));
