@@ -112,6 +112,7 @@ query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
     sequences[sid] = to_sequence(bs.str());
   }
 
+  tuples.clear();
   return sequences;
 }
 
