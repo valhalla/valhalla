@@ -180,7 +180,8 @@ namespace {
         }
 
         // Initialize request - get the PathALgorithm to use
-        std::string costing = init_request(request);
+        uint32_t date_time_type = 0;//default is none
+        std::string costing = init_request(request, date_time_type);
 
         auto matrix = request.get_optional<std::string>("matrix_type");
         if (matrix) {
@@ -192,7 +193,7 @@ namespace {
             throw std::runtime_error("Incorrect matrix_type provided:: " + *matrix + "  Accepted types are 'one_to_many', 'many_to_one' or 'many_to_many'.");
           }
         }
-        return get_trip_path(costing, request_str);
+        return get_trip_path(costing, request_str, date_time_type);
 
       }
       catch(const std::exception& e) {
@@ -204,7 +205,7 @@ namespace {
       }
     }
 
-    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str){
+    worker_t::result_t get_trip_path(const std::string &costing, const std::string &request_str, const uint32_t &date_time_type){
       worker_t::result_t result{true};
 
       // Forward the original request
@@ -216,14 +217,21 @@ namespace {
       baldr::PathLocation& last_break_origin = correlated[0];
       std::vector<baldr::PathLocation> through_loc;
       std::vector<thor::PathInfo> path_edges;
+      std::string origin_date_time, dest_date_time;
       for(auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
         auto origin = *std::prev(path_location);
         auto destination = *path_location;
 
-        if (costing == "multimodal" && (!origin.date_time_ && !destination.date_time_))
-          throw std::runtime_error("Date and time required for origin or destination.");
+        if ((date_time_type == 1 || date_time_type == 2) && !dest_date_time.empty())
+          origin.date_time_ = dest_date_time;
 
-        bool is_current = (origin.date_time_ && *origin.date_time_ == "current" ? true : false);
+        if (date_time_type != 0) {
+          //type - 0: none(default), 1: current, 2: depart, 3: arrive
+          if (date_time_type == 2 && !origin.date_time_)
+            throw std::runtime_error("Date and time required for origin for date_type of depart at.");
+          else if (date_time_type == 3 && !destination.date_time_)
+            throw std::runtime_error("Date and time required for destination for date_type of arrive by");
+        }
 
         // Through edge is valid if last destination was "through"
         if (through_edge.Is_Valid()) {
@@ -234,6 +242,7 @@ namespace {
 
         // Get the algorithm type for this location pair
         thor::PathAlgorithm* path_algorithm;
+
         if (costing == "multimodal") {
           path_algorithm = &multi_modal_astar;
         } else if (costing == "pedestrian" || costing == "bicycle") {
@@ -251,7 +260,7 @@ namespace {
             throw std::runtime_error("No path could be found for input");
           }
 
-          if (is_current)
+          if (date_time_type == 1 && origin_date_time.empty())
             last_break_origin.date_time_ = origin.date_time_;
 
         } else {
@@ -262,7 +271,7 @@ namespace {
             throw std::runtime_error("No path could be found for input");
           }
 
-          if (is_current)
+          if (date_time_type == 1 && origin_date_time.empty())
             last_break_origin.date_time_ = origin.date_time_;
 
           // Append the temp_path edges to path_edges, adding the elapsed
@@ -285,6 +294,11 @@ namespace {
           // Form output information based on path edges
           auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
                               last_break_origin, destination, through_loc);
+
+          if (date_time_type != 0) {
+            origin_date_time = *last_break_origin.date_time_;
+            dest_date_time = *destination.date_time_;
+          }
 
           // The protobuf path
           result.messages.emplace_back(trip_path.SerializeAsString());
@@ -429,7 +443,7 @@ namespace {
       return factory.Create(costing, *config_costing);
     }
 
-    std::string init_request(const boost::property_tree::ptree& request) {
+    std::string init_request(const boost::property_tree::ptree& request, uint32_t& date_time_type) {
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -448,6 +462,7 @@ namespace {
       //type - 0: none(default), 1: current, 2: depart, 3: arrive
       auto date_type = request.get<int>("date_time.type",0);
       auto date_value = request.get_optional<std::string>("date_time.value");
+      date_time_type = date_type;
 
       if (date_type == 1) //current.
         locations.front().date_time_ = "current";
