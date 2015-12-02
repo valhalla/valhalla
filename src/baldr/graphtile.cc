@@ -678,6 +678,7 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   }
 
   if (!found) {
+    LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
     return restrictions;
   }
 
@@ -694,8 +695,8 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
 
   if (restrictions.size() == 0) {
     LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
-    return restrictions;
   }
+  return restrictions;
 }
 
 // Get the array of graphids for this cell
