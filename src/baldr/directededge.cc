@@ -373,7 +373,7 @@ void DirectedEdge::set_restrictions(const uint32_t mask) {
   if (mask >= (1 << kMaxTurnRestrictionEdges)) {
     LOG_WARN("Restrictions mask exceeds allowable limit: " +
                 std::to_string(mask));
-    restrictions_ &= ((1 << kMaxTurnRestrictionEdges) - 1);
+    restrictions_ = (mask & ((1 << kMaxTurnRestrictionEdges) - 1));
   } else {
     restrictions_ = mask;
   }
