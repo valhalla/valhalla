@@ -4,6 +4,19 @@
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
 
+#include <list>
+#include <cmath>
+
+namespace {
+
+  template <class T>
+  bool between(T v, T a, T b) {
+    auto d = std::abs(a - b);
+    return std::abs(v - a) <= d && std::abs(v - b) <= d;
+  }
+
+}
+
 namespace valhalla {
 namespace midgard {
 
@@ -197,6 +210,159 @@ bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
          c.DistanceSquared(coord_t{maxx_, horizontal}) <= r || //intersects the right side
          c.DistanceSquared(coord_t{vertical,   miny_}) <= r || //intersects the bottom side
          c.DistanceSquared(coord_t{vertical,   maxy_}) <= r;   //intersects the top side
+}
+
+// Intersects the segment formed by u,v with the bounding box
+template <class coord_t>
+bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) const {
+  //which do we need to move
+  bool need_u = u.first < minx_ || u.first > maxx_ || u.second < miny_ || u.second > maxy_;
+  bool need_v = v.first < minx_ || v.first > maxx_ || v.second < miny_ || v.second > maxy_;
+  if(!(need_u || need_v))
+    return true;
+  //find intercepts with each box edge
+  std::list<coord_t> intersections;
+  bool assigned = false;
+  x_t x;
+  y_t y;
+  //intersect with each edge keeping it if its on this box and on the segment uv
+  if(!std::isnan(x = y_intercept(u, v, miny_)) && x >= minx_ && x <= maxx_ && between(x, u.first, v.first))
+    intersections.emplace_back(x, miny_);
+  if(!std::isnan(x = y_intercept(u, v, maxy_)) && x >= minx_ && x <= maxx_ && between(x, u.first, v.first))
+    intersections.emplace_back(x, maxy_);
+  if(!std::isnan(y = x_intercept(u, v, maxx_)) && y >= miny_ && y <= maxy_ && between(y, u.second, v.second))
+    intersections.emplace_back(maxx_, y);
+  if(!std::isnan(y = x_intercept(u, v, minx_)) && y >= miny_ && y <= maxy_ && between(y, u.second, v.second))
+    intersections.emplace_back(minx_, y);
+  //pick the best one for each that needs it
+  float u_dist = std::numeric_limits<float>::infinity(), v_dist = std::numeric_limits<float>::infinity(), d;
+  for(const auto& intersection : intersections) {
+    if(need_u && (d = u.DistanceSquared(intersection)) < u_dist) { u = intersection; u_dist = d; }
+    if(need_v && (d = v.DistanceSquared(intersection)) < v_dist) { v = intersection; v_dist = d; }
+  }
+  //are we inside now?
+  return intersections.size();
+}
+
+// Clips the input set of vertices to the specified boundary.  Uses a
+// method where the shape is clipped against each edge in succession.
+template <class coord_t>
+uint32_t AABB2<coord_t>::Clip(std::vector<coord_t>& pts, const bool closed) const {
+  // Temporary vertex list
+  std::vector<coord_t> tmp_pts;
+
+  // Clip against each edge in succession. At each step we swap the roles
+  // of the 2 vertex lists. If at any time there are no points remaining we
+  // return 0 (everything outside)
+  if (ClipAgainstEdge(kLeft, closed, pts, tmp_pts) == 0) {
+    return 0;
+  }
+  if (ClipAgainstEdge(kRight, closed, tmp_pts, pts) == 0) {
+    return 0;
+  }
+  if (ClipAgainstEdge(kBottom, closed, pts, tmp_pts) == 0) {
+    return 0;
+  }
+  if (ClipAgainstEdge(kTop, closed, tmp_pts, pts) == 0) {
+    return 0;
+  }
+
+  // Return number of vertices in the clipped shape
+  return pts.size();
+}
+
+// Clips the polyline/polygon against a single edge.
+template <class coord_t>
+uint32_t AABB2<coord_t>::ClipAgainstEdge(const ClipEdge bdry,
+                              const bool closed,
+                              const std::vector<coord_t>& vin,
+                              std::vector<coord_t>& vout) const {
+  // Clear the output vector
+  vout.clear();
+
+  // Special case for the 1st vertex. For polygons (closed) connect
+  // last vertex to first vertex. For polylines repeat the first vertex
+  uint32_t n  = vin.size();
+  uint32_t v1 = closed ? n - 1 : 0;
+
+  // Loop through all vertices (edges are created from v1 to v2).
+  for (uint32_t v2 = 0; v2 < n; v1 = v2, v2++) {
+    // Relation of v1 and v2 with the bdry
+    bool v1in = Inside(bdry, vin[v1]);
+    bool v2in = Inside(bdry, vin[v2]);
+
+    // Add vertices to the output list based on the 4 cases
+    if (v1in && v2in) {
+      // Both vertices inside - output v2
+      Add(vin[v2], vout);
+    } else if (!v1in && v2in) {
+      // v1 is outside and v2 is inside - clip and add intersection
+      // followed by v2
+      Add(ClipIntersection(bdry, vin[v2], vin[v1]), vout);
+      Add(vin[v2], vout);
+    } else if (v1in && !v2in) {
+      // v1 is inside and v2 is outside - clip and add the intersection
+      Add(ClipIntersection(bdry, vin[v1], vin[v2]), vout);
+    }
+    // Both are outside - do nothing
+  }
+  return vout.size();
+}
+
+// Finds the intersection of the segment from insidept to outsidept with the
+// specified boundary edge.  Finds the intersection using the parametric
+// line equation.
+template <class coord_t>
+coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
+                                            const coord_t& insidept,
+                                            const coord_t& outsidept) const {
+  float t = 0.0f;
+  float inx = insidept.x();
+  float iny = insidept.y();
+  float dx = outsidept.x() - inx;
+  float dy = outsidept.y() - iny;
+  switch (bdry) {
+    case kLeft:
+      t = (minx_ - inx) / dx;
+      break;
+    case kRight:
+      t = (maxx_ - inx) / dx;
+      break;
+    case kBottom:
+      t = (miny_ - iny) / dy;
+      break;
+    case kTop:
+      t = (maxy_ - iny) / dy;
+      break;
+  }
+
+  // Return the intersection point.
+  return coord_t(inx + t * dx, iny + t * dy);
+}
+
+// Tests if the vertex is inside the rectangular boundary with respect to
+// the specified edge.
+template <class coord_t>
+bool AABB2<coord_t>::Inside(const ClipEdge edge, const coord_t& v) const {
+  switch (edge) {
+    case kLeft:
+      return (v.x() > minx_);
+    case kRight:
+      return (v.x() < maxx_);
+    case kBottom:
+      return (v.y() > miny_);
+    case kTop:
+      return (v.y() < maxy_);
+  }
+  return false;
+}
+
+// Add vertex to clip output (if not same as prior vertex)
+template <class coord_t>
+void AABB2<coord_t>::Add(const coord_t& pt, std::vector<coord_t>& vout) const {
+  if (vout.size() == 0 || vout.back() != pt) {
+    vout.push_back(pt);
+  }
 }
 
 // Gets the width of the bounding box.

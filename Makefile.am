@@ -44,7 +44,6 @@ nobase_include_HEADERS = \
 	valhalla/midgard/obb2.h \
 	valhalla/midgard/pointll.h \
 	valhalla/midgard/vector2.h \
-	valhalla/midgard/clipper2.h \
 	valhalla/midgard/constants.h \
 	valhalla/midgard/aabb2.h \
 	valhalla/midgard/point2.h \
@@ -52,7 +51,6 @@ nobase_include_HEADERS = \
 	valhalla/midgard/distanceapproximator.h \
 	valhalla/midgard/ellipse.h \
 	valhalla/midgard/sequence.h \
-	valhalla/midgard/grid.h \
 	valhalla/midgard/logging.h
 libvalhalla_midgard_la_SOURCES = \
 	src/midgard/linesegment2.cc \
@@ -61,13 +59,11 @@ libvalhalla_midgard_la_SOURCES = \
 	src/midgard/obb2.cc \
 	src/midgard/pointll.cc \
 	src/midgard/vector2.cc \
-	src/midgard/clipper2.cc \
 	src/midgard/aabb2.cc \
 	src/midgard/point2.cc \
 	src/midgard/util.cc \
 	src/midgard/distanceapproximator.cc \
 	src/midgard/ellipse.cc \
-        src/midgard/grid.cc \
 	src/midgard/logging.cc
 libvalhalla_midgard_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 libvalhalla_midgard_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS)
@@ -87,8 +83,7 @@ check_PROGRAMS = \
 	test/encode \
 	test/tiles \
 	test/sequence \
-	test/util \
-	test/grid
+	test/util
 test_point2_SOURCES = test/point2.cc test/test.cc
 test_point2_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_point2_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
@@ -133,13 +128,6 @@ test_sequence_SOURCES = test/sequence.cc test/test.cc
 test_sequence_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) -DLOGGING_LEVEL_ALL
 test_sequence_LDFLAGS = -pthread
 test_sequence_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
-test_grid_SOURCES = test/grid.cc test/test.cc
-test_grid_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) -DLOGGING_LEVEL_ALL
-test_grid_LDFLAGS = -pthread
-test_grid_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_midgard.la
-
-
-
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh

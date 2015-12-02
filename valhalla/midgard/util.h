@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <limits>
 
 #include <valhalla/midgard/pointll.h>
 
@@ -217,6 +218,37 @@ struct iterable_t {
   T* tail;
   size_t count;
 };
+
+/**
+ * Return the intersection of two infinite lines if any
+ * @param u  first point on first line
+ * @param v  second point on first line
+ * @param a  first point on second line
+ * @param b  second point on second line
+ * @param i  the intersection point if there was one
+ * @return true if there was an intersection false if now
+ */
+template <class coord_t>
+bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
+
+/**
+ * Return the intercept of the line passing through uv with the horizontal line defined by y
+ * @param u  first point on line
+ * @param v  second point on line
+ * @param y  y component of horizontal line
+ * @return x component (or NaN if parallel) of the intercept of uv with the horizontal line
+ */
+template <class coord_t>
+typename coord_t::first_type y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y = 0);
+/**
+ * Return the intercept of the line passing through uv with the vertical line defined by x
+ * @param u  first point on line
+ * @param v  second point on line
+ * @param x  x component of vertical line
+ * @return y component (or NaN if parallel) of the intercept of uv with the vertical line
+ */
+template <class coord_t>
+typename coord_t::first_type x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x = 0);
 
 }
 }

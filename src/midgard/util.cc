@@ -310,5 +310,52 @@ container_t resample_spherical_polyline(const container_t& polyline, double reso
 template std::vector<PointLL> resample_spherical_polyline<std::vector<PointLL> >(const std::vector<PointLL>&, double);
 template std::list<PointLL> resample_spherical_polyline<std::list<PointLL> >(const std::list<PointLL>&, double);
 
+//Return the intersection of two infinite lines if any
+template <class coord_t>
+bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i) {
+  auto uv_xd = u.first - v.first;
+  auto uv_yd = u.second - v.second;
+  auto ab_xd = a.first - b.first;
+  auto ab_yd = a.second - b.second;
+  auto d_cross = uv_xd*ab_yd - ab_xd*uv_yd;
+  if(std::abs(d_cross) < 1e-5)
+    return false;
+  auto uv_cross = u.first*v.second - u.second*v.first;
+  auto ab_cross = a.first*b.second - a.second*b.first;
+  i.first  = (uv_cross*ab_xd - uv_xd*ab_cross) / d_cross;
+  i.second = (uv_cross*ab_yd - uv_yd*ab_cross) / d_cross;
+  return true;
+}
+template bool intersect<PointLL>(const PointLL& u, const PointLL& v, const PointLL& a, const PointLL& b, PointLL& i);
+template bool intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
+
+//Return the intercept of the line passing through uv with the horizontal line defined by y
+template <class coord_t>
+typename coord_t::first_type y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
+  if(std::abs(u.first - v.first) < 1e-5)
+    return u.first;
+  if(std::abs(u.second - u.second) < 1e-5)
+    return NAN;
+  auto m = (v.second - u.second) / (v.first - u.first);
+  auto b = u.second - (u.first * m);
+  return (y - b) / m;
+}
+template PointLL::first_type y_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::first_type y);
+template Point2::first_type y_intercept<Point2>(const Point2& u, const Point2& v, const Point2::first_type y);
+
+//Return the intercept of the line passing through uv with the vertical line defined by x
+template <class coord_t>
+typename coord_t::first_type x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
+  if(std::abs(u.second - v.second) < 1e-5)
+    return u.second;
+  if(std::abs(u.first - v.first) < 1e-5)
+    return NAN;
+  auto m = (v.second - u.second) / (v.first - u.first);
+  auto b = u.second - (u.first * m);
+  return x * m + b;
+}
+template PointLL::second_type x_intercept<PointLL>(const PointLL& u, const PointLL& v, const PointLL::second_type x);
+template Point2::second_type x_intercept<Point2>(const Point2& u, const Point2& v, const Point2::second_type x);
+
 }
 }

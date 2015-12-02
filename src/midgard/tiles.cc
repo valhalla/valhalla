@@ -8,7 +8,8 @@ namespace midgard {
 // Sets class data members and computes the number of rows and columns
 // based on the bounding box and tile size.
 template <class coord_t>
-Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize) {
+Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsigned short subdivisions):
+  tilebounds_(bounds), tilesize_(tilesize), subdivisions_(subdivisions){
   tilebounds_ = bounds;
   tilesize_ = tilesize;
   ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) /
@@ -331,9 +332,83 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t,
   }
 }
 
+template <class coord_t>
+template <class container_t>
+std::unordered_map<int32_t, std::list<unsigned short> > Tiles<coord_t>::Intersect(const container_t& linestring) const {
+  //reserving capacity shouldnt be a problem because its highly unlikely we'll
+  //hit more than 10 (default preallocation) tiles with a single linestring
+  std::unordered_map<int32_t, std::list<unsigned short> > intersection;
+/*
+  //for each segment
+  for(auto u = linestring.cbegin(); u != linestring.cend(); std::advance(u, 1)) {
+    //figure out what the segment is
+    auto v = std::next(u);
+    if(v == linestring.cend())
+      v = u;
+
+    //intersect this with the tile bounds to clip off any that is outside
+    //TODO: handle wrap around?
+    if(TileId(*u) == -1) {
+
+    }
+    if(TileId(*v) == -1) {
+
+    }
+
+    //figure out the subset of the grid that this segment overlaps
+    auto x_start = static_cast<int32_t>((clamp(u->first, tilebounds_.minx(), tilebounds_.maxx()) - tilebounds_.minx()) / tilebounds_.Width());
+    auto y_start = static_cast<int32_t>((clamp(u->second, tilebounds_.miny(), tilebounds_.maxy()) - tilebounds_.miny()) / tilebounds_.Height());
+    auto x_end = static_cast<int32_t>((clamp(v->first, tilebounds_.minx(), tilebounds_.maxx()) - tilebounds_.minx()) / tilebounds_.Width());
+    auto y_end = static_cast<int32_t>((clamp(v->second, tilebounds_.miny(), tilebounds_.maxy()) - tilebounds_.miny()) / tilebounds_.Height());
+    if(x_start > x_end) std::swap(x_start, x_end);
+    if(y_start > y_end) std::swap(y_start, y_end);
+    x_end = std::min(x_end + 1, divisions);
+    y_end = std::min(y_end + 1, divisions);
+
+    //loop over the subset of the grid that intersects the bbox formed by the linestring
+    do {
+      auto index = y_start * divisions + x_start;
+      if(index >= cells.size())
+        throw std::logic_error(std::to_string(index));
+      indices.insert(index);
+      LineSegment2<coord_t>(*u, *v).IsLeft(cells[index].maxpt()) < 0 ? ++y_start : ++x_start;
+    } while(x_start < x_end && y_start < y_end);
+  }
+*/
+  //give them back
+  return intersection;
+}
+
+template <class coord_t>
+std::unordered_map<int32_t, std::list<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
+  std::unordered_map<int32_t, std::list<unsigned short> > intersection;
+/*
+  //super cell doesnt intersect it then nothing inside it can
+  if(!super_cell.Intersects(center, radius))
+    return indices;
+
+  //for each cell
+  //TODO: flood fill can terminate early and has equivalent worst case would
+  //be helpful to seed it with intersection point from super_cell.Intersect()
+  for(size_t i = 0; i < cells.size(); ++i) {
+    //does it intersect
+    if(cells[i].Intersects(center, radius)) {
+      indices.insert(i);
+    }
+  }
+*/
+  //give them back
+  return intersection;
+}
+
 // Explicit instantiation
 template class Tiles<Point2>;
 template class Tiles<PointLL>;
+
+template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<Point2>::Intersect(const std::list<Point2>&) const;
+template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<PointLL>::Intersect(const std::list<PointLL>&) const;
+template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
+template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
 
 }
 }
