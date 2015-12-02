@@ -217,27 +217,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   if (origin.heading_)
     tp_orig->set_heading(*origin.heading_);
 
-  // Set destination (assumed to be a break)
-  TripPath_Location* tp_dest = trip_path.add_location();
-  TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
-  dest_ll->set_lat(dest.latlng_.lat());
-  dest_ll->set_lng(dest.latlng_.lng());
-  tp_dest->set_type(TripPath_Location_Type_kBreak);
-  if (!dest.name_.empty())
-    tp_dest->set_name(dest.name_);
-  if (!dest.street_.empty())
-    tp_dest->set_street(dest.street_);
-  if (!dest.city_.empty())
-    tp_dest->set_city(dest.city_);
-  if (!dest.state_.empty())
-    tp_dest->set_state(dest.state_);
-  if (!dest.zip_.empty())
-    tp_dest->set_postal_code(dest.zip_);
-  if (!dest.country_.empty())
-    tp_dest->set_country(dest.country_);
-  if (dest.heading_)
-    tp_dest->set_heading(*dest.heading_);
-
   // Add list of through locations
   for (auto through : through_loc) {
     TripPath_Location* tp_through = trip_path.add_location();
@@ -262,6 +241,27 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     if (through.date_time_)
       tp_through->set_date_time(*through.date_time_);
   }
+
+  // Set destination (assumed to be a break)
+  TripPath_Location* tp_dest = trip_path.add_location();
+  TripPath_LatLng* dest_ll = tp_dest->mutable_ll();
+  dest_ll->set_lat(dest.latlng_.lat());
+  dest_ll->set_lng(dest.latlng_.lng());
+  tp_dest->set_type(TripPath_Location_Type_kBreak);
+  if (!dest.name_.empty())
+    tp_dest->set_name(dest.name_);
+  if (!dest.street_.empty())
+    tp_dest->set_street(dest.street_);
+  if (!dest.city_.empty())
+    tp_dest->set_city(dest.city_);
+  if (!dest.state_.empty())
+    tp_dest->set_state(dest.state_);
+  if (!dest.zip_.empty())
+    tp_dest->set_postal_code(dest.zip_);
+  if (!dest.country_.empty())
+    tp_dest->set_country(dest.country_);
+  if (dest.heading_)
+    tp_dest->set_heading(*dest.heading_);
 
   uint32_t origin_sec_from_mid = 0;
   if (origin.date_time_)
