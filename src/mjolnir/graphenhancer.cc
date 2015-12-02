@@ -1324,7 +1324,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Replace access restrictions
     if (ar_before != access_restrictions.size()) {
-      LOG_ERROR("Mismatch in access restriction count before and after!");
+      LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) + ""
+          " and after " + std::to_string(access_restrictions.size()) +
+          " tileid = " + std::to_string(tile_id.tileid()));
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
