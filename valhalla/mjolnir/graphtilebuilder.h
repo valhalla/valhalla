@@ -13,8 +13,6 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include <valhalla/midgard/grid.h>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
@@ -379,7 +377,6 @@ class GraphTileBuilder : public baldr::GraphTile {
 
   // Cells of the tile to intersect with the edges' shapes
   bool write_bins_;
-  grid<PointLL> binner_;
   std::array<std::vector<GraphId>, kCellCount> bins_;
 };
 

@@ -143,8 +143,8 @@ void validate(const boost::property_tree::ptree& pt,
       GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
 
       // Bin the edges keeping a list of ones that need to go to other tiles
-      /*if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
-        auto unbinned = tilebuilder.Bin();*/
+      if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
+        auto unbinned = tilebuilder.Bin();
 
       // Update nodes and directed edges as needed
       std::vector<NodeInfo> nodes;

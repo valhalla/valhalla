@@ -31,8 +31,7 @@ namespace mjolnir {
 // StoreTileData.
 GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid, bool deserialize)
-    : GraphTile(hierarchy, graphid), hierarchy_(hierarchy),
-      binner_(get_tile_bbox(hierarchy, graphid), kGridDim) {
+    : GraphTile(hierarchy, graphid), hierarchy_(hierarchy){
 
   // Keep the id
   header_builder_.set_graphid(graphid);
@@ -692,7 +691,7 @@ std::list<GraphId> GraphTileBuilder::Bin() {
   write_bins_ = true;
 
   //each edge please
-  std::unordered_set<uint64_t> ids;
+  std::unordered_set<uint64_t> ids(header_->directededgecount() / 2);
   for(const DirectedEdge* edge = directededges_; edge < directededges_ + header_->directededgecount(); ++edge) {
     //dont bin these
     if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
@@ -703,11 +702,14 @@ std::list<GraphId> GraphTileBuilder::Bin() {
     if(id != ids.cend())
       continue;
 
+    //TODO: compare the end and begin node tiles, if it ends in another tile
+    //let the left most, lower most tile win so that we dont have dups
+
     //crack open that shape
     ids.emplace(edge->edgeinfo_offset());
     auto info = edgeinfo(edge->edgeinfo_offset());
     const auto& shape = info->shape();
-    bool uncontained;
+    /*bool uncontained;
     auto intersected_bins = binner_.intersect(shape, uncontained);
     GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
 
@@ -717,7 +719,7 @@ std::list<GraphId> GraphTileBuilder::Bin() {
 
     //add keep the bin information
     for(const auto& bin : intersected_bins)
-      bins_[bin].push_back(edge_id);
+      bins_[bin].push_back(edge_id);*/
   }
 
   //TODO: worry about edges in the builder?

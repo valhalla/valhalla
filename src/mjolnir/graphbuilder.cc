@@ -18,7 +18,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/grid.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
