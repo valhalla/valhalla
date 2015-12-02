@@ -190,8 +190,8 @@ TripPathBuilder::~TripPathBuilder() {
 // add to the TripPath
 TripPath TripPathBuilder::Build(GraphReader& graphreader,
                                 const std::vector<PathInfo>& path,
-                                const PathLocation& origin,
-                                const PathLocation& dest,
+                                PathLocation& origin,
+                                PathLocation& dest,
                                 const std::vector<PathLocation>& through_loc) {
   // TripPath is a protocol buffer that contains information about the trip
   TripPath trip_path;
@@ -216,8 +216,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_country(origin.country_);
   if (origin.heading_)
     tp_orig->set_heading(*origin.heading_);
-  if (origin.date_time_)
-    tp_orig->set_date_time(*origin.date_time_);
 
   // Set destination (assumed to be a break)
   TripPath_Location* tp_dest = trip_path.add_location();
@@ -239,8 +237,6 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_country(dest.country_);
   if (dest.heading_)
     tp_dest->set_heading(*dest.heading_);
-  if (dest.date_time_)
-    tp_dest->set_date_time(*dest.date_time_);
 
   // Add list of through locations
   for (auto through : through_loc) {
@@ -592,6 +588,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_orig->set_date_time(DateTime::seconds_to_date(sec - elapsedtime,
                                                      DateTime::get_tz_db().
                                                      from_index(first_node->timezone())));
+    origin.date_time_ = tp_orig->date_time();
+    if (dest.date_time_)
+      tp_dest->set_date_time(*dest.date_time_);
+
   } else if (origin.date_time_) {
     uint64_t sec = DateTime::seconds_since_epoch(*origin.date_time_,
                                                  DateTime::get_tz_db().
@@ -599,6 +599,9 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
     tp_dest->set_date_time(DateTime::seconds_to_date(sec + elapsedtime,
                                                      DateTime::get_tz_db().
                                                      from_index(last_tile->node(startnode)->timezone())));
+    dest.date_time_ = tp_dest->date_time();
+    if (origin.date_time_)
+      tp_orig->set_date_time(*origin.date_time_);
   }
 
   // Add the last node

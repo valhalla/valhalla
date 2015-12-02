@@ -34,8 +34,8 @@ class TripPathBuilder {
    */
   static odin::TripPath Build(baldr::GraphReader& graphreader,
              const std::vector<PathInfo>& path,
-             const baldr::PathLocation& origin,
-             const baldr::PathLocation& dest,
+             baldr::PathLocation& origin,
+             baldr::PathLocation& dest,
              const std::vector<baldr::PathLocation>& through_loc);
 
   /**
