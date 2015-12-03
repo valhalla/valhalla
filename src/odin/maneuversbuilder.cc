@@ -106,9 +106,9 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 //    LOG_TRACE(std::string("shape lng/lat[") + std::to_string(i++) + "]=" + std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
 //  }
   if (shape.empty() || (trip_path_->node_size() < 2))
-  throw std::runtime_error("Error - No shape or invalid node count");
-  PointLL first_point = shape.at(0);
-  PointLL last_point = shape.at(shape.size() - 1);
+    throw std::runtime_error("Error - No shape or invalid node count");
+  const auto& orig = trip_path_->GetOrigin();
+  const auto& dest = trip_path_->GetDestination();
   std::string first_name = (trip_path_->GetCurrEdge(0)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(0)->name(0);
   auto last_node_index = (trip_path_->node_size() - 2);
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0) ? "" : trip_path_->GetCurrEdge(last_node_index)->name(0);
@@ -116,8 +116,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   LOG_DEBUG(
       (boost::format(
               "ROUTE_REQUEST|-j '{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":\"auto\",\"directions_options\":{\"units\":\"%7%\"}}' --config ../conf/valhalla.json")
-          % first_point.lat() % first_point.lng() % first_name
-          % last_point.lat() % last_point.lng() % last_name
+          % orig.ll().lat() % orig.ll().lng() % first_name
+          % dest.ll().lat() % dest.ll().lng() % last_name
           % units).str());
 #endif
 
