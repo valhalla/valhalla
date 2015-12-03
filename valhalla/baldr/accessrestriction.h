@@ -55,6 +55,12 @@ class AccessRestriction {
   uint64_t value() const;
 
   /**
+   * Set the value for this restriction.
+   * @param  v  Value for this restriction.
+   */
+  void set_value(const uint64_t v);
+
+  /**
    * operator < - for sorting. Sort by edge Id.
    * @param  other  Other access restriction to compare to.
    * @return  Returns true if edgeid < other edgeid.

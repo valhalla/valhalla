@@ -47,6 +47,11 @@ uint64_t AccessRestriction::value() const {
   return value_;
 }
 
+// Set the value
+void AccessRestriction::set_value(const uint64_t v) {
+  value_ = v;
+}
+
 // operator < - for sorting. Sort by route Id.
 bool AccessRestriction::operator < (const AccessRestriction& other) const {
   return edgeindex() < other.edgeindex();
