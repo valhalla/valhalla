@@ -498,16 +498,15 @@ int main(int argc, char *argv[]) {
     // Grab the date_time, if is exists
     auto date_time_ptr = json_ptree.get_child_optional("date_time");
     if (date_time_ptr) {
-      auto date_time_type = (*date_time_ptr).get<int>("type", 0);
+      auto date_time_type = (*date_time_ptr).get<int>("type");
       auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
 
-      if (date_time_type == 1) // current
+      if (date_time_type == 0) // current
         locations.front().date_time_ = "current";
-      else if (date_time_type == 2) // depart at
+      else if (date_time_type == 1) // depart at
         locations.front().date_time_ = date_time_value;
-      else if (date_time_type == 3) // arrive by
+      else if (date_time_type == 2) // arrive by
         locations.back().date_time_ = date_time_value;
-
     }
 
   }
