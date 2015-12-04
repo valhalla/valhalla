@@ -162,6 +162,17 @@ namespace valhalla {
 
         //parse the query's json
         auto request_pt = from_request(action->second, request);
+        auto date_type = request_pt.get_optional<int>("date_time.type");
+        auto costing = request_pt.get_optional<std::string>("costing");
+        if (date_type && *date_type == 2 && (*costing == "multimodal" || *costing == "transit")) {
+
+          worker_t::result_t result{false};
+          http_response_t response(501, "Arrive by for multimodal not implemented yet", "Arrive by for multimodal not implemented yet", headers_t{CORS});
+          response.from_info(info);
+          result.messages.emplace_back(response.to_string());
+          return result;
+        }
+
         init_request(action->second, request_pt);
         switch (action->second) {
           case ROUTE:
@@ -209,6 +220,17 @@ namespace valhalla {
       if(locations.size() < (action == LOCATE ? 1 : 2))
         throw std::runtime_error("Insufficient number of locations provided");
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
+
+      //type - 0: current, 1: depart, 2: arrive
+      auto date_time_type = request.get_optional<int>("date_time.type");
+      auto date_time_value = request.get_optional<std::string>("date_time.value");
+
+      if (date_time_type && *date_time_type > 2)
+        throw std::runtime_error("Invalid date_type");
+      else if (date_time_type && !date_time_value && *date_time_type == 1) //depart at
+        throw std::runtime_error("Date and time required for origin for date_type of depart at.");
+      else if (date_time_type && !date_time_value && *date_time_type == 2) //arrive
+        throw std::runtime_error("Date and time required for destination for date_type of arrive by");
 
       //using the costing we can determine what type of edge filtering to use
       if(!costing) {
