@@ -4,13 +4,15 @@
 #include <vector>
 #include <cassert>
 #include <iostream>
+// For converting network byte order to host byte order
+#include <arpa/inet.h>
 
 // boost
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 // psql
-// #include <postgresql/libpq-fe.h>
+#include <postgresql/libpq-fe.h>
 #include <pqxx/pqxx>
 
 // geos
@@ -113,6 +115,54 @@ query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
   }
 
   tuples.clear();
+  return sequences;
+}
+
+
+
+
+// Query all sequences within the bounding box
+std::unordered_map<SequenceId, Sequence>
+query_sequences(PGconn* conn, const BoundingBox& bbox)
+{
+  auto bbox_clause = "'BOX(" + joinbbox(bbox) + ")'::box2d";
+  std::string statement = "SELECT id, ST_AsBinary(path_gm) AS geom FROM sequences WHERE "
+                          + bbox_clause + " && path_gm AND NOT ST_IsEmpty(path_gm)"
+                          + " LIMIT " + std::to_string(std::numeric_limits<int>::max());
+  LOG_INFO("Querying: " + statement);
+
+  // Send query
+  auto result = PQexecParams(conn, statement.c_str(), 0, NULL, NULL, NULL, NULL, 1);
+  if (PQresultStatus(result) != PGRES_TUPLES_OK) {
+    PQclear(result);
+    throw std::runtime_error(PQresultErrorMessage(result));
+  }
+
+  int nrows = PQntuples(result);
+  std::unordered_map<SequenceId, Sequence> sequences;
+  for (int row = 0; row < nrows; row++) {
+    // Sequence Id
+    auto size0 = PQgetlength(result, row, 0);
+    assert(size0 == 4);
+    int* val0 = (int*)PQgetvalue(result, row, 0);
+    assert(sizeof(SequenceId) == sizeof(int) == size0);
+    // Integers are stored in network byte order (big-endian), we need
+    // to convert it to host byte order (little-endian)
+    SequenceId sid = ntohl(*val0);
+
+    // WKB geometry
+    auto size1 = PQgetlength(result, row, 1);
+    const char* val1 = PQgetvalue(result, row, 1);
+    std::string bs(val1, size1);
+    // It seems that binary data are stored in host byte order
+    // already, no need to reverse it
+    // std::reverse(bs.begin(), bs.end());
+
+    sequences[sid] = to_sequence(bs);
+  }
+
+  PQclear(result);
+
   return sequences;
 }
 
@@ -377,9 +427,9 @@ size_t write_routes(sqlite3* db_handle,
 
 // Insert (tileid, matched_count, total_count) into tiles
 void write_tiles_summary(sqlite3* db_handle,
-                   uint32_t tileid,
-                   uint32_t matched_count,
-                   uint32_t total_count)
+                         uint32_t tileid,
+                         uint32_t matched_count,
+                         uint32_t total_count)
 {
   std::string sql = "INSERT INTO tiles VALUES (";
   sql += std::to_string(tileid) + ", ";
@@ -481,7 +531,9 @@ int main(int argc, char *argv[])
   uint64_t total_matched_results_count = 0;
   uint64_t total_measurement_count = 0;
 
-  pqxx::connection conn(psql_uri.c_str());
+  // pqxx::connection conn(psql_uri.c_str());
+  auto conn = PQconnectdb(psql_uri.c_str());
+
   for (auto tileid : tileids) {
     std::unordered_map<SequenceId, std::vector<MatchResult>> results;
     std::unordered_map<SequenceId, std::vector<EdgeSegment>> routes;
@@ -533,6 +585,8 @@ int main(int argc, char *argv[])
   LOG_INFO("============= Summary ==================");
   LOG_INFO("Matched: " + std::to_string(total_matched_results_count) + "/" + std::to_string(total_measurement_count) + " points");
 
+  PQfinish(conn);
   sqlite3_close(db_handle);
+
   return 0;
 }
