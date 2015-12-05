@@ -145,7 +145,7 @@ query_sequences(PGconn* conn, const BoundingBox& bbox)
     auto size0 = PQgetlength(result, row, 0);
     assert(size0 == 4);
     int* val0 = (int*)PQgetvalue(result, row, 0);
-    assert(sizeof(SequenceId) == sizeof(int) == size0);
+    assert(sizeof(SequenceId) == size0 && sizeof(int) == size0);
     // Integers are stored in network byte order (big-endian), we need
     // to convert it to host byte order (little-endian)
     SequenceId sid = ntohl(*val0);
