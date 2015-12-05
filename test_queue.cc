@@ -105,7 +105,7 @@ void TestQueue()
   assert(queue.size() == 0);
   assert(queue.empty());
 
-  int i = 0;
+  uint32_t i = 0;
   for (const auto& label : labels) {
     assert(label.id() == i);
     assert(label.sortcost() == i);

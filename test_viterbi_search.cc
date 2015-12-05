@@ -330,8 +330,8 @@ void TestStatePair()
   assert(stateid_right(pair) == 30);
 
   pair = ~0;
-  assert(stateid_left(pair) == ~0);
-  assert(stateid_right(pair) == ~0);
+  assert(stateid_left(pair) == ~0u);
+  assert(stateid_right(pair) == ~0u);
 }
 
 
