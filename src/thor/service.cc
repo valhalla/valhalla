@@ -220,20 +220,17 @@ namespace {
       if (date_time_type && *date_time_type == 2) {
 
         std::list<std::string> messages;
-        baldr::PathLocation& last_break_origin = *std::next(correlated.rbegin());
+        baldr::PathLocation& last_break_dest = *correlated.rbegin();
 
         for(auto path_location = ++correlated.crbegin(); path_location != correlated.crend(); ++path_location) {
           auto origin = *path_location;
           auto destination = *std::prev(path_location);
 
-          if (!origin_date_time.empty())
-            destination.date_time_ = origin_date_time;
-
-          // Through edge is valid if last destination was "through"
+          // Through edge is valid if last orgin was "through"
           if (through_edge.Is_Valid()) {
             UpdateOrigin(origin, prior_is_node, through_edge);
           } else {
-            last_break_origin = origin;
+            last_break_dest = destination;
           }
 
           // Get the algorithm type for this location pair
@@ -278,28 +275,35 @@ namespace {
 
           // Build trip path for this leg and add to the result if this
           // location is a BREAK or if this is the last location
-          if (destination.stoptype_ == Location::StopType::BREAK ||
+          if (origin.stoptype_ == Location::StopType::BREAK ||
               path_location == --correlated.crend()) {
-            // Form output information based on path edges
-            auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                last_break_origin, destination, through_loc);
 
-            origin_date_time = *last_break_origin.date_time_;
-            dest_date_time = *destination.date_time_;
+              if (!origin_date_time.empty())
+                destination.date_time_ = origin_date_time;
 
-            // The protobuf path
-            messages.emplace_front(trip_path.SerializeAsString());
+              // Form output information based on path edges
+              auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                                  origin, last_break_dest, through_loc);
 
-            // Clear path edges and set through edge to invalid
-            path_edges.clear();
-            through_edge = baldr::GraphId();
+              if (origin.date_time_)
+                origin_date_time = *origin.date_time_;
+
+              if (last_break_dest.date_time_)
+                dest_date_time = *last_break_dest.date_time_;
+
+              // The protobuf path
+              messages.emplace_front(trip_path.SerializeAsString());
+
+              // Clear path edges and set through edge to invalid
+              path_edges.clear();
+              through_edge = baldr::GraphId();
           } else {
-            // This is a through location. Save last edge as the through_edge
-            prior_is_node = destination.IsNode();
-            through_edge = path_edges.back().edgeid;
+              // This is a through location. Save last edge as the through_edge
+              prior_is_node = origin.IsNode();
+              through_edge = path_edges.back().edgeid;
 
-            // Add to list of through locations for this leg
-            through_loc.emplace_back(destination);
+              // Add to list of through locations for this leg
+              through_loc.emplace_back(origin);
           }
 
           // If we have another one coming we need to clear
@@ -316,7 +320,8 @@ namespace {
           auto origin = *std::prev(path_location);
           auto destination = *path_location;
 
-          if (date_time_type && (*date_time_type == 0 || *date_time_type == 1) && !dest_date_time.empty())
+          if (date_time_type && (*date_time_type == 0 || *date_time_type == 1) &&
+              !dest_date_time.empty() && origin.stoptype_ == Location::StopType::BREAK)
             origin.date_time_ = dest_date_time;
 
           // Through edge is valid if last destination was "through"
@@ -346,7 +351,8 @@ namespace {
               throw std::runtime_error("No path could be found for input");
             }
 
-            if (date_time_type && *date_time_type == 0 && origin_date_time.empty())
+            if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
+                origin.stoptype_ == Location::StopType::BREAK)
               last_break_origin.date_time_ = origin.date_time_;
 
           } else {
@@ -357,7 +363,8 @@ namespace {
               throw std::runtime_error("No path could be found for input");
             }
 
-            if (date_time_type && *date_time_type == 0 && origin_date_time.empty())
+            if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
+                origin.stoptype_ == Location::StopType::BREAK)
               last_break_origin.date_time_ = origin.date_time_;
 
             // Append the temp_path edges to path_edges, adding the elapsed
@@ -377,28 +384,28 @@ namespace {
           // location is a BREAK or if this is the last location
           if (destination.stoptype_ == Location::StopType::BREAK ||
               path_location == --correlated.cend()) {
-            // Form output information based on path edges
-            auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
-                                last_break_origin, destination, through_loc);
+              // Form output information based on path edges
+              auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                                                            last_break_origin, destination, through_loc);
 
-            if (date_time_type) {
-              origin_date_time = *last_break_origin.date_time_;
-              dest_date_time = *destination.date_time_;
-            }
+              if (date_time_type) {
+                origin_date_time = *last_break_origin.date_time_;
+                dest_date_time = *destination.date_time_;
+              }
 
-            // The protobuf path
-            result.messages.emplace_back(trip_path.SerializeAsString());
+              // The protobuf path
+              result.messages.emplace_back(trip_path.SerializeAsString());
 
-            // Clear path edges and set through edge to invalid
-            path_edges.clear();
-            through_edge = baldr::GraphId();
+              // Clear path edges and set through edge to invalid
+              path_edges.clear();
+              through_edge = baldr::GraphId();
           } else {
-            // This is a through location. Save last edge as the through_edge
-            prior_is_node = destination.IsNode();
-            through_edge = path_edges.back().edgeid;
+              // This is a through location. Save last edge as the through_edge
+              prior_is_node = destination.IsNode();
+              through_edge = path_edges.back().edgeid;
 
-            // Add to list of through locations for this leg
-            through_loc.emplace_back(destination);
+              // Add to list of through locations for this leg
+              through_loc.emplace_back(destination);
           }
 
           // If we have another one coming we need to clear
