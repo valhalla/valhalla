@@ -42,7 +42,7 @@ constexpr float kDefaultBeta = 3;
 constexpr float kDefaultSquaredSearchRadius = 25 * 25;  // 25 meters
 
 constexpr int kSqliteMaxCompoundSelect = 5000;
-constexpr size_t kMaxGridCacheSize = 64;
+constexpr size_t kMaxGridCacheSize = 32;
 }
 
 
@@ -564,13 +564,6 @@ int main(int argc, char *argv[])
       results[sid] = match_results;
       routes[sid] = ConstructRoute(match_results.begin(), match_results.end());
 
-      if (reader.OverCommitted()) {
-        reader.Clear();
-      }
-      if (grid.size() > kMaxGridCacheSize) {
-        grid.Clear();
-      }
-
       measurement_count += sequence.size();
     }
 
@@ -593,6 +586,12 @@ int main(int argc, char *argv[])
              + std::to_string(accomplished_tileids.size()) + "/" + std::to_string(total_tiles)
              + " tiles");
 
+    if (reader.OverCommitted()) {
+      reader.Clear();
+    }
+    if (grid.size() > kMaxGridCacheSize) {
+      grid.Clear();
+    }
   }
 
   PQfinish(conn);
