@@ -13,7 +13,6 @@
 
 // psql
 #include <postgresql/libpq-fe.h>
-#include <pqxx/pqxx>
 
 // geos
 #include <geos/io/WKBReader.h>
@@ -90,33 +89,6 @@ inline Sequence to_sequence(const std::string& wkb)
 
 
 using SequenceId = uint32_t;
-
-
-// Query all sequences within the bounding box
-std::unordered_map<SequenceId, Sequence>
-query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
-{
-  pqxx::work txn(conn);
-
-  auto bbox_clause = txn.quote("BOX(" + joinbbox(bbox) + ")") + "::box2d";
-  std::string statement = "SELECT id, ST_AsBinary(path_gm) AS geom FROM sequences WHERE "
-                          + bbox_clause + " && path_gm AND NOT ST_IsEmpty(path_gm)"
-                          + " LIMIT " + std::to_string(std::numeric_limits<uint32_t>::max());
-  LOG_INFO("Fetching sequences in BBOX (" + joinbbox(bbox) + ")");
-
-  // Send query
-  auto tuples = txn.exec(statement);
-
-  std::unordered_map<SequenceId, Sequence> sequences;
-  for (auto it = tuples.begin(); it != tuples.end(); it++) {
-    auto sid = it->at("id").as<SequenceId>();
-    auto bs = pqxx::binarystring(it->at("geom"));
-    sequences[sid] = to_sequence(bs.str());
-  }
-
-  tuples.clear();
-  return sequences;
-}
 
 
 
@@ -535,7 +507,6 @@ int main(int argc, char *argv[])
   uint64_t total_matched_results_count = 0;
   uint64_t total_measurement_count = 0;
 
-  // pqxx::connection conn(psql_uri.c_str());
   auto conn = PQconnectdb(psql_uri.c_str());
 
   for (auto tileid : tileids) {
