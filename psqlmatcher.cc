@@ -102,7 +102,7 @@ query_sequences(pqxx::connection& conn, const BoundingBox& bbox)
   std::string statement = "SELECT id, ST_AsBinary(path_gm) AS geom FROM sequences WHERE "
                           + bbox_clause + " && path_gm AND NOT ST_IsEmpty(path_gm)"
                           + " LIMIT " + std::to_string(std::numeric_limits<uint32_t>::max());
-  LOG_INFO("Querying: " + statement);
+  LOG_INFO("Fetching sequences in BBOX (" + joinbbox(bbox) + ")");
 
   // Send query
   auto tuples = txn.exec(statement);
@@ -129,7 +129,7 @@ query_sequences(PGconn* conn, const BoundingBox& bbox)
   std::string statement = "SELECT id, ST_AsBinary(path_gm) AS geom FROM sequences WHERE "
                           + bbox_clause + " && path_gm AND NOT ST_IsEmpty(path_gm)"
                           + " LIMIT " + std::to_string(std::numeric_limits<int>::max());
-  LOG_INFO("Querying: " + statement);
+  LOG_INFO("Fetching sequences in BBOX (" + joinbbox(bbox) + ")");
 
   // Send query
   auto result = PQexecParams(conn, statement.c_str(), 0, NULL, NULL, NULL, NULL, 1);
@@ -219,7 +219,7 @@ simple_sqlite3_exec(sqlite3* db_handle, const char* const statement)
   if (SQLITE_OK != ret) {
     std::string message(err_msg);
     sqlite3_free(err_msg);
-    throw SqliteWriteError(message + "while executing " + statement);
+    throw SqliteWriteError(message + " while executing " + statement);
   }
   return ret;
 }
@@ -475,9 +475,9 @@ int main(int argc, char *argv[])
   const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   auto tile_size = tiles.TileSize();
   CandidateGridQuery grid(reader, tile_size/1000, tile_size/1000);
-  LOG_INFO("Config: tile size = " + std::to_string(tile_size));
-  LOG_INFO("Config: sigma_z = " + std::to_string(sigma_z));
-  LOG_INFO("Config: beta = " + std::to_string(beta));
+  LOG_INFO("Read config tile size = " + std::to_string(tile_size));
+  LOG_INFO("Read config sigma_z = " + std::to_string(sigma_z));
+  LOG_INFO("Read config beta = " + std::to_string(beta));
 
   ////////////////////////
   // Prepare sqlite3 database for writing results
@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
   write_size = sqlite3_limit(db_handle, SQLITE_LIMIT_COMPOUND_SELECT, -1);
 #endif
 
-  LOG_INFO("Config: write_size = " + std::to_string(write_size));
+  LOG_INFO("Read config write_size = " + std::to_string(write_size));
   if (write_size <= 0) {
     LOG_ERROR("Expect SQLITE_LIMIT_COMPOUND_SELECT to be positive " + std::to_string(write_size));
     return 3;
@@ -510,16 +510,20 @@ int main(int argc, char *argv[])
 
   ////////////////////////
   // Collect tiles
-  std::unordered_set<uint32_t> finished_tileids;
+  std::unordered_set<uint32_t> accomplished_tileids;
   {
-    bool ok = read_finished_tiles(db_handle, finished_tileids);
+    bool ok = read_finished_tiles(db_handle, accomplished_tileids);
     if (!ok) {
       sqlite3_close(db_handle);
       return 2;
     }
   }
-  auto tileids = collect_local_tileids(tile_hierarchy, finished_tileids);
-  LOG_INFO("The number of tiles collected: " + std::to_string(tileids.size()) + " (excluded " + std::to_string(finished_tileids.size()) + " finished tiles)");
+  auto tileids = collect_local_tileids(tile_hierarchy, accomplished_tileids);
+  auto total_tiles = tileids.size() + accomplished_tileids.size();
+  if (accomplished_tileids.size() > 0) {
+    LOG_INFO("Found " + std::to_string(accomplished_tileids.size()) + " tiles accomplished in " + sqlite3_file_path);
+  }
+  LOG_INFO("Need to match " + std::to_string(tileids.size()) + " tiles");
 
   //////////////////////
   // For each tile:
@@ -576,14 +580,20 @@ int main(int argc, char *argv[])
     write_routes(db_handle, write_size, routes);
     write_tiles_summary(db_handle, tileid, matched_results_count, measurement_count);
     write_end(db_handle);
-    LOG_INFO("Tile " + std::to_string(tileid) + " wrote " + std::to_string(matched_results_count) + "/" + std::to_string(measurement_count) + " points");
+
+    bool inserted = accomplished_tileids.insert(tileid).second;
+    assert(inserted.second);
 
     total_matched_results_count += matched_results_count;
     total_measurement_count += measurement_count;
-  }
 
-  LOG_INFO("============= Summary ==================");
-  LOG_INFO("Matched: " + std::to_string(total_matched_results_count) + "/" + std::to_string(total_measurement_count) + " points");
+    LOG_INFO("Matched " + std::to_string(matched_results_count) + "/" + std::to_string(measurement_count) + " points in Tile " + std::to_string(tileid));
+    LOG_INFO("So far matched " + std::to_string(total_matched_results_count) + "/" + std::to_string(total_measurement_count)
+             + " points and processed "
+             + std::to_string(accomplished_tileids.size()) + "/" + std::to_string(total_tiles)
+             + " tiles");
+
+  }
 
   PQfinish(conn);
   sqlite3_close(db_handle);
