@@ -9,7 +9,7 @@
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/streetnames_us.h>
-#include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::odin;
@@ -63,7 +63,7 @@ Maneuver::Maneuver()
       roundabout_exit_count_(0),
       travel_mode_(TripPath_TravelMode_kDrive),
       transit_connection_(false),
-      transit_connection_stop_("", "", ""),
+      transit_connection_stop_(TripPath_TransitStopInfo_Type_kStop, "", "", "", "", false),
       rail_(false),
       bus_(false),
       fork_(false),
@@ -580,88 +580,103 @@ void Maneuver::set_bus(bool bus) {
   bus_ = bus;
 }
 
-uint32_t Maneuver::transit_block_id() const {
-  return transit_info_.block_id;
+bool Maneuver::IsTransit() const {
+  return ((type_ == TripDirections_Maneuver_Type_kTransit)
+      || (type_ == TripDirections_Maneuver_Type_kTransitTransfer)
+      || (type_ == TripDirections_Maneuver_Type_kTransitRemainOn));
 }
 
-void Maneuver::set_transit_block_id(uint32_t transit_block_id) {
-  transit_info_.block_id = transit_block_id;
+const TransitRouteInfo& Maneuver::transit_route_info() const {
+  return transit_route_info_;
 }
 
-uint32_t Maneuver::transit_trip_id() const {
-  return transit_info_.trip_id;
-}
-
-void Maneuver::set_transit_trip_id(uint32_t transit_trip_id) {
-  transit_info_.trip_id = transit_trip_id;
-}
-
-std::string Maneuver::transit_short_name() const {
-  return transit_info_.short_name;
-}
-
-void Maneuver::set_transit_short_name(std::string transit_short_name) {
-  transit_info_.short_name = transit_short_name;
-}
-
-std::string Maneuver::transit_long_name() const {
-  return transit_info_.long_name;
-}
-
-void Maneuver::set_transit_long_name(std::string transit_long_name) {
-  transit_info_.long_name = transit_long_name;
-}
-
-std::string Maneuver::transit_headsign() const {
-  return transit_info_.headsign;
-}
-
-void Maneuver::set_transit_headsign(std::string transit_headsign) {
-  transit_info_.headsign = transit_headsign;
-}
-
-std::string Maneuver::GetTransitName() const {
-  if (!transit_short_name().empty()) {
-    return transit_short_name();
-  } else if (!transit_long_name().empty()) {
-    return (transit_long_name());
-  } else if (bus()) {
-    return "bus";
-  }
-  return "train";
+TransitRouteInfo* Maneuver::mutable_transit_route_info() {
+  return &transit_route_info_;
 }
 
 std::string Maneuver::GetTransitArrivalTime() const {
-  return transit_info_.transit_stops.back().arrival_date_time;
+  return transit_route_info_.transit_stops.back().arrival_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitArrivalTime() const {
-  return DateTime::time(transit_info_.transit_stops.back().arrival_date_time);
+  return DateTime::time(transit_route_info_.transit_stops.back().arrival_date_time);
 }
 
 std::string Maneuver::GetTransitDepartureTime() const {
-  return transit_info_.transit_stops.front().departure_date_time;
+  return transit_route_info_.transit_stops.front().departure_date_time;
 }
 
 std::string Maneuver::GetFormattedTransitDepartureTime() const {
-  return DateTime::time(transit_info_.transit_stops.front().departure_date_time);
+  return DateTime::time(transit_route_info_.transit_stops.front().departure_date_time);
 }
 
 const std::list<TransitStop>& Maneuver::GetTransitStops() const {
-  return transit_info_.transit_stops;
+  return transit_route_info_.transit_stops;
 }
 
 size_t Maneuver::GetTransitStopCount() const {
   return
-      (transit_info_.transit_stops.size() > 0) ?
-          (transit_info_.transit_stops.size() - 1) : 0;
+      (transit_route_info_.transit_stops.size() > 0) ?
+          (transit_route_info_.transit_stops.size() - 1) : 0;
 }
 
-void Maneuver::InsertTransitStop(std::string name,
+void Maneuver::InsertTransitStop(TripPath_TransitStopInfo_Type type,
+                                 std::string onestop_id, std::string name,
                                  std::string arrival_date_time,
-                                 std::string departure_date_time) {
-  transit_info_.transit_stops.emplace_front(name, arrival_date_time,
-                                            departure_date_time);
+                                 std::string departure_date_time,
+                                 bool is_parent_stop) {
+  transit_route_info_.transit_stops.emplace_front(type, onestop_id, name,
+                                                  arrival_date_time,
+                                                  departure_date_time,
+                                                  is_parent_stop);
+}
+
+const std::string& Maneuver::depart_instruction() const {
+  return depart_instruction_;
+}
+
+void Maneuver::set_depart_instruction(const std::string& depart_instruction) {
+  depart_instruction_ = depart_instruction;
+}
+
+void Maneuver::set_depart_instruction(std::string&& depart_instruction) {
+  depart_instruction_ = std::move(depart_instruction);
+}
+
+const std::string& Maneuver::verbal_depart_instruction() const {
+  return verbal_depart_instruction_;
+}
+
+void Maneuver::set_verbal_depart_instruction(const std::string& verbal_depart_instruction) {
+  verbal_depart_instruction_ = verbal_depart_instruction;
+}
+
+void Maneuver::set_verbal_depart_instruction(std::string&& verbal_depart_instruction) {
+  verbal_depart_instruction_ = std::move(verbal_depart_instruction);
+}
+
+const std::string& Maneuver::arrive_instruction() const {
+  return arrive_instruction_;
+}
+
+void Maneuver::set_arrive_instruction(const std::string& arrive_instruction) {
+  arrive_instruction_ = arrive_instruction;
+}
+
+void Maneuver::set_arrive_instruction(std::string&& arrive_instruction) {
+  arrive_instruction_ = std::move(arrive_instruction);
+}
+
+const std::string& Maneuver::verbal_arrive_instruction() const {
+  return verbal_arrive_instruction_;
+}
+
+void Maneuver::set_verbal_arrive_instruction(const std::string& verbal_arrive_instruction) {
+  verbal_arrive_instruction_ = verbal_arrive_instruction;
+}
+
+void Maneuver::set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction) {
+  verbal_arrive_instruction_ = std::move(verbal_arrive_instruction);
 }
 
 const VerbalTextFormatter* Maneuver::verbal_formatter() const {
@@ -808,7 +823,12 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(transit_connection_);
 
   // TODO: transit_connection_stop
-  // TODO: transit_info
+  // TODO: transit_route_info
+//TODO
+//  std::string depart_instruction_;
+//  std::string verbal_depart_instruction_;
+//  std::string arrive_instruction_;
+//  std::string verbal_arrive_instruction_;
 
   return man_str;
 }
@@ -962,6 +982,10 @@ std::string Maneuver::ToParameterString() const {
 
   // The transit info including list of stops
 //  TransitInfo transit_info_;
+//  std::string depart_instruction_;
+//  std::string verbal_depart_instruction_;
+//  std::string arrive_instruction_;
+//  std::string verbal_arrive_instruction_;
 
   return man_str;
 }

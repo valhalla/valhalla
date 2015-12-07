@@ -257,6 +257,8 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | travel_mode=";
   str += std::to_string(travel_mode());
 
+  // NOTE: Current PopulateEdge implementation
+
   str += " | vehicle_type=";
   str += std::to_string(vehicle_type());
 
@@ -320,22 +322,43 @@ std::string EnhancedTripPath_Edge::ToString() const {
   str += " | other=";
   str += std::to_string(other());
 
-  str += " | transit_block_id=";
-  str += std::to_string(transit_block_id());
+  // Process transit route info, if needed
+  if (has_transit_route_info()) {
+    str += " | transit_route_info.onestop_id=";
+    str += transit_route_info().onestop_id();
 
-  str += " | transit_trip_id=";
-  str += std::to_string(transit_trip_id());
+    str += " | transit_route_info.block_id=";
+    str += std::to_string(transit_route_info().block_id());
 
-  // Process transit info, if needed
-  if (this->has_transit_info()) {
-    str += " | transit_info.short_name=";
-    str += this->transit_info().short_name();
+    str += " | transit_route_info.trip_id=";
+    str += std::to_string(transit_route_info().trip_id());
 
-    str += " | transit_info.long_name=";
-    str += this->transit_info().long_name();
+    str += " | transit_route_info.short_name=";
+    str += transit_route_info().short_name();
 
-    str += " | transit_info.headsign=";
-    str += this->transit_info().headsign();
+    str += " | transit_route_info.long_name=";
+    str += transit_route_info().long_name();
+
+    str += " | transit_route_info.headsign=";
+    str += transit_route_info().headsign();
+
+    str += " | transit_route_info.color=";
+    str += std::to_string(transit_route_info().color());
+
+    str += " | transit_route_info.text_color=";
+    str += std::to_string(transit_route_info().text_color());
+
+    str += " | transit_route_info.description=";
+    str += transit_route_info().description();
+
+    str += " | transit_route_info.operator_onestop_id=";
+    str += transit_route_info().operator_onestop_id();
+
+    str += " | transit_route_info.operator_name=";
+    str += transit_route_info().operator_name();
+
+    str += " | transit_route_info.operator_url=";
+    str += transit_route_info().operator_url();
   }
 
   return str;
@@ -428,6 +451,8 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
         ->name();
   }
 
+  // NOTE: Current PopulateEdge implementation
+
   str += delim;
   if (this->has_vehicle_type()) {
     str += "TripPath_VehicleType_";
@@ -508,29 +533,49 @@ std::string EnhancedTripPath_Edge::ToParameterString() const {
   str += std::to_string(other());
 
   str += delim;
-  str += std::to_string(transit_block_id());
-
-  str += delim;
-  str += std::to_string(transit_trip_id());
-
-  str += delim;
-  if (this->transit_info().has_short_name()) {
+  if (transit_route_info().has_onestop_id()) {
     str += "\"";
-    str += this->transit_info().short_name();
+    str += transit_route_info().onestop_id();
     str += "\"";
   }
 
   str += delim;
-  if (this->transit_info().has_long_name()) {
+  str += std::to_string(transit_route_info().block_id());
+
+  str += delim;
+  str += std::to_string(transit_route_info().trip_id());
+
+  str += delim;
+  if (transit_route_info().has_short_name()) {
     str += "\"";
-    str += this->transit_info().long_name();
+    str += transit_route_info().short_name();
     str += "\"";
   }
 
   str += delim;
-  if (this->transit_info().has_headsign()) {
+  if (transit_route_info().has_long_name()) {
     str += "\"";
-    str += this->transit_info().headsign();
+    str += transit_route_info().long_name();
+    str += "\"";
+  }
+
+  str += delim;
+  if (transit_route_info().has_headsign()) {
+    str += "\"";
+    str += transit_route_info().headsign();
+    str += "\"";
+  }
+
+  str += delim;
+  str += std::to_string(transit_route_info().color());
+
+  str += delim;
+  str += std::to_string(transit_route_info().text_color());
+
+  str += delim;
+  if (transit_route_info().has_operator_onestop_id()) {
+    str += "\"";
+    str += transit_route_info().operator_onestop_id();
     str += "\"";
   }
 
@@ -815,34 +860,37 @@ std::string EnhancedTripPath_Node::ToString() const {
   str += " | toll_booth=";
   str += std::to_string(toll_booth());
 
-  str += " | transit_stop=";
-  str += std::to_string(transit_stop());
-
-  str += " | transit_parent_stop=";
-  str += std::to_string(transit_parent_stop());
-
   str += " | bike_share=";
   str += std::to_string(bike_share());
 
   str += " | parking=";
   str += std::to_string(parking());
 
-  if (this->has_transit_stop_info()) {
-    str += " | transit_stop_info.name=";
-    str += this->transit_stop_info().name();
-
-    str += " | transit_stop_info.arrival_date_time=";
-    str += this->transit_stop_info().arrival_date_time();
-
-    str += " | transit_stop_info.departure_date_time=";
-    str += this->transit_stop_info().departure_date_time();
-  }
-
   str += " | motorway_junction=";
   str += std::to_string(motorway_junction());
 
   str += " | fork=";
   str += std::to_string(fork());
+
+  if (has_transit_stop_info()) {
+    str += " | transit_stop_info.type=";
+    str += std::to_string(transit_stop_info().type());
+
+    str += " | transit_stop_info.onestop_id=";
+    str += transit_stop_info().onestop_id();
+
+    str += " | transit_stop_info.name=";
+    str += transit_stop_info().name();
+
+    str += " | transit_stop_info.arrival_date_time=";
+    str += transit_stop_info().arrival_date_time();
+
+    str += " | transit_stop_info.departure_date_time=";
+    str += transit_stop_info().departure_date_time();
+
+    str += " | transit_stop_info.is_parent_stop=";
+    str += std::to_string(transit_stop_info().is_parent_stop());
+  }
 
   return str;
 }
@@ -865,12 +913,6 @@ std::string EnhancedTripPath_Admin::ToString() const {
 
   str += " | state_text=";
   str += state_text();
-
-  str += " | start_dst=";
-  str += start_dst();
-
-  str += " | end_dst=";
-  str += end_dst();
 
   return str;
 }

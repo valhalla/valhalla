@@ -89,19 +89,28 @@ message TripPath {
   // TODO: review and update as needed
   enum TransitType {
     kTram = 0;
-    kSubway = 1;
+    kMetro = 1;
     kRail = 2;
     kBus = 3;
     kFerry = 4;
     kCableCar = 5;
     kGondola = 6;
-    kFenicular = 7;
+    kFunicular = 7;
   }
 
-  message TransitInfo {
-    optional string short_name = 1;
-    optional string long_name = 2;
-    optional string headsign = 3;
+  message TransitRouteInfo {
+    optional string onestop_id = 1;
+    optional uint32 block_id = 2;
+    optional uint32 trip_id = 3;
+    optional string short_name = 4;
+    optional string long_name = 5;
+    optional string headsign = 6;
+    optional uint32 color = 7;
+    optional uint32 text_color = 8;
+    optional string description = 9;
+    optional string operator_onestop_id = 10;
+    optional string operator_name = 11;
+    optional string operator_url = 12;
   }
 
   message Edge {
@@ -148,9 +157,7 @@ message TripPath {
     optional bool bus = 41;
     optional bool transit_connection = 42;
     optional bool other = 43;
-    optional uint32 transit_block_id = 44;
-    optional uint32 transit_trip_id = 45;
-    optional TransitInfo transit_info = 46;
+    optional TransitRouteInfo transit_route_info = 44;
   }
 
   message IntersectingEdge {
@@ -161,11 +168,19 @@ message TripPath {
     optional Traversability cyclability = 5;
     optional Traversability walkability = 6;
   }
-  
+
   message TransitStopInfo {
-    optional string name = 1;                // The name of the stop
-    optional string arrival_date_time = 2;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
-    optional string departure_date_time = 3; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    enum Type {
+      kStop = 0;
+      kStation = 1;
+    }
+
+    optional Type type = 1;                  // The type of stop (station or simple stop)
+    optional string onestop_id = 2;          // Unique transitland ID
+    optional string name = 3;                // The name of the stop
+    optional string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+    optional string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+    optional bool is_parent_stop = 6;        // true if this is a parent stop
   }
 
   message Node {
@@ -177,13 +192,11 @@ message TripPath {
     optional bool gate = 6;                  // Gate or rising bollard
     optional bool bollard = 7;               // Bollard (fixed obstruction)
     optional bool toll_booth = 8;            // toll booth / fare collection
-    optional bool transit_stop = 9;          // Multi-use transit stop (rail and bus)
-    optional bool transit_parent_stop = 10;  // Multi-use transit parent stop
-    optional bool bike_share = 11;           // Bike share location
-    optional bool parking = 12;              // Parking location
+    optional bool bike_share = 9;            // Bike share location
+    optional bool parking = 10;              // Parking location
+    optional bool motorway_junction = 11;    // Motorway junction
+    optional bool fork = 12;                 // Fork
     optional TransitStopInfo transit_stop_info = 13;
-    optional bool motorway_junction = 14;    // Motorway junction
-    optional bool fork = 15;                 // Fork
   }
 
   message Admin {
@@ -191,8 +204,6 @@ message TripPath {
     optional string country_text = 2;
     optional string state_code = 3;
     optional string state_text = 4;
-    optional string start_dst = 5;
-    optional string end_dst = 6;
   }
   
   optional uint64 trip_id = 1;

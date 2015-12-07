@@ -12,7 +12,7 @@
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/odin/signs.h>
-#include <valhalla/odin/transitinfo.h>
+#include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/odin/transitstop.h>
 
 using namespace valhalla::baldr;
@@ -208,22 +208,10 @@ class Maneuver {
   bool bus() const;
   void set_bus(bool bus);
 
-  uint32_t transit_block_id() const;
-  void set_transit_block_id(uint32_t transit_block_id);
+  bool IsTransit() const;
 
-  uint32_t transit_trip_id() const;
-  void set_transit_trip_id(uint32_t transit_trip_id);
-
-  std::string transit_short_name() const;
-  void set_transit_short_name(std::string transit_short_name);
-
-  std::string transit_long_name() const;
-  void set_transit_long_name(std::string transit_long_name);
-
-  std::string transit_headsign() const;
-  void set_transit_headsign(std::string transit_headsign);
-
-  std::string GetTransitName() const;
+  const TransitRouteInfo& transit_route_info() const;
+  TransitRouteInfo* mutable_transit_route_info();
 
   std::string GetTransitArrivalTime() const;
 
@@ -237,8 +225,27 @@ class Maneuver {
 
   size_t GetTransitStopCount() const;
 
-  void InsertTransitStop(std::string name, std::string arrival_date_time,
-                         std::string departure_date_time);
+  void InsertTransitStop(TripPath_TransitStopInfo_Type type,
+                         std::string onestop_id, std::string name,
+                         std::string arrival_date_time,
+                         std::string departure_date_time,
+                         bool is_parent_stop);
+
+  const std::string& depart_instruction() const;
+  void set_depart_instruction(const std::string& depart_instruction);
+  void set_depart_instruction(std::string&& depart_instruction);
+
+  const std::string& verbal_depart_instruction() const;
+  void set_verbal_depart_instruction(const std::string& verbal_depart_instruction);
+  void set_verbal_depart_instruction(std::string&& verbal_depart_instruction);
+
+  const std::string& arrive_instruction() const;
+  void set_arrive_instruction(const std::string& arrive_instruction);
+  void set_arrive_instruction(std::string&& arrive_instruction);
+
+  const std::string& verbal_arrive_instruction() const;
+  void set_verbal_arrive_instruction(const std::string& verbal_arrive_instruction);
+  void set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction);
 
   const VerbalTextFormatter* verbal_formatter() const;
   void set_verbal_formatter(
@@ -292,7 +299,7 @@ class Maneuver {
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
 
-  // Transit travel mode
+  // Travel mode
   TripPath_TravelMode travel_mode_;
   bool rail_;
   bool bus_;
@@ -301,8 +308,13 @@ class Maneuver {
   bool transit_connection_;
   TransitStop transit_connection_stop_; // TODO determine how we want to handle in the future
 
-  // The transit info including list of stops
-  TransitInfo transit_info_;
+  // The transit route info including list of stops
+  TransitRouteInfo transit_route_info_;
+
+  std::string depart_instruction_;
+  std::string verbal_depart_instruction_;
+  std::string arrive_instruction_;
+  std::string verbal_arrive_instruction_;
   ////////////////////////////////////////////////////////////////////////////
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;

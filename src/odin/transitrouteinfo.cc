@@ -1,11 +1,11 @@
-#include "odin/transitinfo.h"
+#include <odin/transitrouteinfo.h>
 #include "odin/util.h"
 
 namespace valhalla {
 namespace odin {
 
 // TODO: do we need?
-std::string TransitInfo::ToParameterString() const {
+std::string TransitRouteInfo::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
   str += "{ ";

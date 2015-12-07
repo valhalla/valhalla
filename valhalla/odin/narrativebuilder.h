@@ -286,28 +286,59 @@ class NarrativeBuilder {
       uint32_t element_max_count = kVerbalPreElementMaxCount,
       std::string delim = kVerbalDelim);
 
-  // TODO: Add verbal instructions for transit maneuvers after the transit
-  //       maneuvers are refactored
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitConnectionStartInstruction(Maneuver& maneuver);
+  static std::string FormTransitConnectionStartInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitConnectionStartInstruction(
+      Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitConnectionTransferInstruction(Maneuver& maneuver);
+  static std::string FormTransitConnectionTransferInstruction(
+      Maneuver& maneuver);
+
+  static std::string FormVerbalTransitConnectionTransferInstruction(
+      Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitConnectionDestinationInstruction(Maneuver& maneuver);
+  static std::string FormTransitConnectionDestinationInstruction(
+      Maneuver& maneuver);
+
+  static std::string FormVerbalTransitConnectionDestinationInstruction(
+      Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitInstruction(Maneuver& maneuver);
+  static std::string FormDepartInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalDepartInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitRemainOnInstruction(Maneuver& maneuver);
+  static std::string FormArriveInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalArriveInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormTransitTransferInstruction(Maneuver& maneuver);
+  static std::string FormTransitInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitInstruction(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
-  static void FormPostTransitConnectionDestinationInstruction(Maneuver& maneuver);
+  static std::string FormTransitRemainOnInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitRemainOnInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormTransitTransferInstruction(Maneuver& maneuver);
+
+  static std::string FormVerbalTransitTransferInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormPostTransitConnectionDestinationInstruction(
+      Maneuver& maneuver);
+
+  static std::string FormVerbalPostTransitConnectionDestinationInstruction(
+      Maneuver& maneuver,
+      uint32_t element_max_count = kVerbalPreElementMaxCount,
+      std::string delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormVerbalPostTransitionInstruction(
@@ -315,6 +346,9 @@ class NarrativeBuilder {
       bool include_street_names = false,
       uint32_t element_max_count = kVerbalPostElementMaxCount,
       std::string delim = kVerbalDelim);
+
+  static std::string FormVerbalPostTransitionTransitInstruction(
+      Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormDistance(Maneuver& maneuver,
@@ -333,6 +367,12 @@ class NarrativeBuilder {
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormOrdinalValue(uint32_t value);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormStopCountLabel(size_t stop_count);
+
+  /////////////////////////////////////////////////////////////////////////////
+  static std::string FormTransitName(Maneuver& maneuver);
 
   /////////////////////////////////////////////////////////////////////////////
   static std::string FormStreetNames(
