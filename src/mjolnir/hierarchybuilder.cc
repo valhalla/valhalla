@@ -343,10 +343,10 @@ uint32_t GetGrade(const std::unique_ptr<const valhalla::skadi::sample>& sample, 
 // Add shortcut edges (if they should exist) from the specified node
 // Should never combine 2 directed edges with different exit information so
 // no need to worry about it here.
+// TODO - need to add access restrictions?
 void AddShortcutEdges(
     const NewNode& newnode, const GraphId& nodea, const NodeInfo* baseni,
     const GraphTile* tile, const RoadClass rcc, GraphTileBuilder& tilebuilder,
-    std::vector<DirectedEdgeBuilder>& directededges,
     std::unordered_map<uint32_t, uint32_t>& shortcuts, hierarchy_info& info,
     const std::unique_ptr<const valhalla::skadi::sample>& sample) {
   // Get the edge pairs for this node (if contracted)
@@ -384,9 +384,7 @@ void AddShortcutEdges(
         IsEnteringEdgeOfContractedNode(nodeb, base_edge_id, info.contractions_)) {
 
       // Form a shortcut edge.
-      //TODO: this seems really dangerous, we need a virtual destructor in directededge
-      //then we need to do dynamic_cast<const DirectedEdgeBuilder&>(*directededge);
-      DirectedEdgeBuilder newedge = static_cast<const DirectedEdgeBuilder&>(*directededge);
+      DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
       // Get the shape for this edge. If this initial directed edge is not
@@ -401,7 +399,16 @@ void AddShortcutEdges(
       std::vector<std::string> names = tile->GetNames(
           directededge->edgeinfo_offset());
 
-      // TODO - should not be any signs
+      // Add any access restriction records. TODO - make sure we don't contract
+      // across edges with different restrictions.
+      if (newedge.access_restriction()) {
+        auto restrictions = tile->GetAccessRestrictions(base_edge_id.id());
+        for (const auto& res : restrictions) {
+          tilebuilder.AddAccessRestriction(
+              AccessRestriction(tilebuilder.directededges().size(),
+                  res.type(), res.modes(), res.days_of_week(), res.value()));
+        }
+      }
 
       // Connect while the node is marked as contracted. Use the edge pair
       // mapping
@@ -477,11 +484,11 @@ if (nodea.level() == 0) {
       // Make sure shortcut edge is not marked as internal edge
       newedge.set_internal(false);
 
-      directededges.emplace_back(std::move(newedge));
+      tilebuilder.directededges().emplace_back(std::move(newedge));
+      ++info.shortcutcount_;
       shortcut++;
     }
   }
-  info.shortcutcount_ += directededges.size();
 }
 
 // Form tiles in the new level.
@@ -493,7 +500,6 @@ void FormTilesInNewLevel(
   bool added = false;
   uint32_t tileid = 0;
   uint32_t nodeid = 0;
-  uint32_t edgeindex = 0;
   uint32_t edge_info_offset;
   uint8_t level = new_level.level;
   RoadClass rcc = new_level.importance;
@@ -512,14 +518,14 @@ void FormTilesInNewLevel(
       info.graphreader_.Clear();
 
     // Create GraphTileBuilder for the new tile
-    GraphTileBuilder tilebuilder;
+    GraphId tile(tileid, level, 0);
+    GraphTileBuilder tilebuilder(info.graphreader_.GetTileHierarchy(), tile, false);
 
     //Creating a dummy admin at index 0.  Used if admins are not used/created.
-    tilebuilder.AddAdmin("None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","");
 
     // Iterate through the nodes in the tile at the new level
     nodeid = 0;
-    edgeindex = 0;
     GraphId nodea, nodeb;
     for (const auto& newnode : newtile) {
       // Get the node in the base level
@@ -528,18 +534,22 @@ void FormTilesInNewLevel(
       // Copy node information
       nodea.Set(tileid, level, nodeid);
       NodeInfo baseni = *(tile->node(newnode.basenode.id()));
-      NodeInfoBuilder node = static_cast<NodeInfoBuilder&>(baseni);
-      node.set_edge_index(edgeindex);
-
+      tilebuilder.nodes().push_back(baseni);
       const auto& admin = tile->admininfo(baseni.admin_index());
+
+      NodeInfo& node = tilebuilder.nodes().back();
+      node.set_edge_index(tilebuilder.directededges().size());
+      node.set_timezone(baseni.timezone());
       node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
-                                                admin.country_iso(), admin.state_iso(),
-                                                admin.start_dst(), admin.end_dst()));
+                                                admin.country_iso(), admin.state_iso()));
+
+      // Edge count
+      size_t edge_count = tilebuilder.directededges().size();
+
       // Add shortcut edges first
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      std::vector<DirectedEdgeBuilder> directededges;
       AddShortcutEdges(newnode, nodea, &baseni, tile, rcc, tilebuilder,
-                         directededges, shortcuts, info, sample);
+                       shortcuts, info, sample);
 
       // Iterate through directed edges of the base node to get remaining
       // directed edges (based on classification/importance cutoff)
@@ -553,9 +563,7 @@ void FormTilesInNewLevel(
             && !directededge->is_shortcut()) {
           // Copy the directed edge information and update end node,
           // edge data offset, and opp_index
-          DirectedEdge oldedge = *directededge;
-          DirectedEdgeBuilder newedge =
-              static_cast<DirectedEdgeBuilder&>(oldedge);
+          DirectedEdge newedge = *directededge;
 
           // Set the end node for this edge. Opposing edge indexes
           // get set in graph optimizer so set to 0 here.
@@ -564,12 +572,24 @@ void FormTilesInNewLevel(
           newedge.set_opp_index(0);
 
           // Get signs from the base directed edge
-          if (oldedge.exitsign()) {
+          if (directededge->exitsign()) {
             std::vector<SignInfo> signs = tile->GetSigns(oldedgeid.id());
             if (signs.size() == 0) {
               LOG_ERROR("Base edge should have signs, but none found");
             }
-            tilebuilder.AddSigns(edgeindex + directededges.size(), signs);
+            tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
+          }
+
+          // Get access restrictions from the base directed edge. Add these to
+          // the list of access restrictions in the new tile. Update the
+          // edge index in the restriction to be the current directed edge Id
+          if (directededge->access_restriction()) {
+            auto restrictions = tile->GetAccessRestrictions(oldedgeid.id());
+            for (const auto& res : restrictions) {
+              tilebuilder.AddAccessRestriction(
+                  AccessRestriction(tilebuilder.directededges().size(),
+                     res.type(), res.modes(), res.days_of_week(), res.value()));
+            }
           }
 
           // Get edge info, shape, and names from the old tile and add
@@ -593,32 +613,27 @@ void FormTilesInNewLevel(
           }
 
           // Add directed edge
-          directededges.emplace_back(std::move(newedge));
+          tilebuilder.directededges().emplace_back(std::move(newedge));
         }
       }
 
       // Add the downward transition edge.
       // TODO - what access for downward transitions
-      DirectedEdgeBuilder downwardedge;
+      DirectedEdge downwardedge;
       downwardedge.set_endnode(newnode.basenode);
       downwardedge.set_trans_down(true);
       downwardedge.set_all_forward_access();
-      directededges.emplace_back(std::move(downwardedge));
+      tilebuilder.directededges().emplace_back(std::move(downwardedge));
 
       // Set the edge count for the new node
-      node.set_edge_count(directededges.size());
-
-      // Add node and directed edge information to the tile
-      tilebuilder.AddNodeAndDirectedEdges(node, directededges);
+      node.set_edge_count(tilebuilder.directededges().size() - edge_count);
 
       // Increment node Id and edgeindex
       nodeid++;
-      edgeindex += directededges.size();
     }
 
     // Store the new tile
-    GraphId tile(tileid, level, 0);
-    tilebuilder.StoreTileData(info.graphreader_.GetTileHierarchy(), tile);
+    tilebuilder.StoreTileData();
     LOG_DEBUG((boost::format("HierarchyBuilder created tile %1%: %2% bytes") %
          tile % tilebuilder.size()).str());
 
@@ -647,33 +662,38 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
   // Copy existing header and update directed edge count and some offsets
   GraphTileHeader existinghdr = *(tilebuilder.header());
-  GraphTileHeaderBuilder hdrbuilder =
-        static_cast<GraphTileHeaderBuilder&>(existinghdr);
-  hdrbuilder.set_directededgecount(
-      existinghdr.directededgecount() + connections.size());
-  std::size_t addedsize = connections.size() * sizeof(DirectedEdgeBuilder);
-  hdrbuilder.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
-  hdrbuilder.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
+  GraphTileHeader hdr = existinghdr;
+  hdr.set_directededgecount( existinghdr.directededgecount() + connections.size());
+  std::size_t addedsize = connections.size() * sizeof(DirectedEdge);
+  hdr.set_edgeinfo_offset(existinghdr.edgeinfo_offset() + addedsize);
+  hdr.set_textlist_offset(existinghdr.textlist_offset() + addedsize);
 
   // TODO - adjust these offsets if needed
-  hdrbuilder.set_merlist_offset(existinghdr.merlist_offset());
+  hdr.set_complex_restriction_offset(existinghdr.complex_restriction_offset());
 
   // Get the directed edge index of the first sign. If no signs are
   // present in this tile set a value > number of directed edges
+  uint32_t signidx = 0;
   uint32_t nextsignidx = (tilebuilder.header()->signcount() > 0) ?
       tilebuilder.sign(0).edgeindex() : existinghdr.directededgecount() + 1;
+  uint32_t signcount = existinghdr.signcount();
+
+  // Get the directed edge index of the first access restriction.
+  uint32_t residx = 0;
+  uint32_t nextresidx = (tilebuilder.header()->access_restriction_count() > 0) ?
+      tilebuilder.accessrestriction(0).edgeindex() : existinghdr.directededgecount() + 1;
+  uint32_t rescount = existinghdr.access_restriction_count();
 
   // Get the nodes. For any that have a connection add to the edge count
   // and increase the edge_index by (n = number of directed edges added so far)
   uint32_t n = 0;
-  uint32_t signidx = 0;
-  uint32_t signcount = existinghdr.signcount();
   uint32_t nextconnectionid = connections[0].basenode.id();
-  std::vector<NodeInfoBuilder> nodes;
-  std::vector<DirectedEdgeBuilder> directededges;
-  std::vector<SignBuilder> signs;
+  std::vector<NodeInfo> nodes;
+  std::vector<DirectedEdge> directededges;
+  std::vector<Sign> signs;
+  std::vector<AccessRestriction> restrictions;
   for (uint32_t id = 0; id < existinghdr.nodecount(); id++) {
-    NodeInfoBuilder node = tilebuilder.node(id);
+    NodeInfo node = tilebuilder.node(id);
 
     // Add existing directed edges
     uint32_t idx = node.edge_index();
@@ -687,7 +707,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
         if (!has_sign) {
           LOG_ERROR("Signs for this index but directededge says no sign");
         }
-        SignBuilder sign = tilebuilder.sign(signidx);
+        Sign sign = tilebuilder.sign(signidx);
         sign.set_edgeindex(idx + n);
         signs.emplace_back(std::move(sign));
 
@@ -695,6 +715,19 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
         signidx++;
         nextsignidx = (signidx >= signcount) ?
               0 : tilebuilder.sign(signidx).edgeindex();
+      }
+
+      // Add any restrictions that use this idx - increment their index by the
+      // number of added edges
+      while (idx == nextresidx && residx < rescount) {
+        AccessRestriction res = tilebuilder.accessrestriction(residx);
+        res.set_edgeindex(idx + n);
+        restrictions.emplace_back(std::move(res));
+
+        // Increment to the next restriction and update nextresidx
+        residx++;
+        nextresidx = (residx >= rescount) ?
+              0 : tilebuilder.accessrestriction(residx).edgeindex();
       }
 
       // Increment index
@@ -712,7 +745,7 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
 
       // Append a new directed edge that forms the connection.
       // TODO - what access do we allow on upward transitions?
-      DirectedEdgeBuilder edgeconnection;
+      DirectedEdge edgeconnection;
       edgeconnection.set_trans_up(true);
       edgeconnection.set_endnode(connections[n].newnode);
       edgeconnection.set_all_forward_access();
@@ -733,14 +766,19 @@ void AddConnectionsToBaseTile(const uint32_t basetileid,
     LOG_ERROR("Added " + std::to_string(n) + " directed edges. connections size = " +
               std::to_string(connections.size()));
   }
-  if (signs.size() != hdrbuilder.signcount()) {
+  if (signs.size() != hdr.signcount()) {
     LOG_ERROR("AddConnectionsToBaseTile: sign size = " +
               std::to_string(signs.size()) + " Header says: " +
-              std::to_string(hdrbuilder.signcount()));
+              std::to_string(hdr.signcount()));
+  }
+  if (restrictions.size() != hdr.access_restriction_count()) {
+      LOG_ERROR("AddConnectionsToBaseTile: restriction size = " +
+                std::to_string(restrictions.size()) + " Header says: " +
+                std::to_string(hdr.access_restriction_count()));
   }
 
   // Write the new file
-  tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges, signs);
+  tilebuilder.Update(hdr, nodes, directededges, signs, restrictions);
 
   LOG_DEBUG((boost::format("HierarchyBuilder updated tile %1%: %2% bytes") %
       basetile % tilebuilder.size()).str());
@@ -888,4 +926,3 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt) {
 
 }
 }
-

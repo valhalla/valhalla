@@ -35,17 +35,15 @@ namespace {
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-                              GraphReader& graphreader_, uint32_t& dupcount_, std::string& endnodeiso_, std::mutex& lock) {
+                              const GraphTile* tile, uint32_t& dupcount_,
+                              std::string& endnodeiso) {
 
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
-  lock.lock();
-  const GraphTile* tile = graphreader_.GetGraphTile(endnode);
-  lock.unlock();
   const NodeInfo* nodeinfo = tile->node(endnode.id());
 
   // Set the end node iso.  Used for country crossings.
-  endnodeiso_ = tile->admin(nodeinfo->admin_index())->country_iso();
+  endnodeiso = tile->admin(nodeinfo->admin_index())->country_iso();
 
   // TODO - check if more than 1 edge has matching startnode and
   // distance!
@@ -76,7 +74,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
       // TODO - verify if we need opposing directed edges for transit lines
       if (edge.use() == Use::kTransitConnection)
         LOG_ERROR("No opposing transit connection edge: endstop = " +
-                  std::to_string(nodeinfo->stop_id()) + " has " +
+                  std::to_string(nodeinfo->stop_index()) + " has " +
                   std::to_string(nodeinfo->edge_count()));
     } else {
       bool sc = edge.shortcut();
@@ -106,18 +104,18 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   return opp_index;
 }
 
-void validate(const boost::property_tree::ptree& hierarchy_properties,
+void validate(const boost::property_tree::ptree& pt,
               std::queue<GraphId>& tilequeue, std::mutex& lock,
               std::promise<validator_stats>& result) {
 
     // Our local class for gathering the stats
     validator_stats vStats;
     // Local Graphreader
-    GraphReader graph_reader(hierarchy_properties);
+    GraphReader graph_reader(pt.get_child("mjolnir.hierarchy"));
     // Get some things we need throughout
-    auto tile_hierarchy = graph_reader.GetTileHierarchy();
-    std::vector<Tiles<PointLL>> levels;
-    for (auto level : tile_hierarchy.levels()) {
+    const auto& tile_hierarchy = graph_reader.GetTileHierarchy();
+    std::vector<Tiles<PointLL> > levels;
+    for (const auto& level : tile_hierarchy.levels()) {
       levels.push_back(level.second.tiles);
     }
     Tiles<PointLL> *tiles;
@@ -143,43 +141,60 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Get the tile
       GraphTileBuilder tilebuilder(tile_hierarchy, tile_id, false);
-      const GraphTile signtile(tile_hierarchy, tile_id);
 
-      // Copy existing header. No need to update any counts or offsets.
-      GraphTileHeader existinghdr = *(tilebuilder.header());
-      const GraphTileHeaderBuilder hdrbuilder =
-          static_cast<const GraphTileHeaderBuilder&>(existinghdr);
+      // Bin the edges keeping a list of ones that need to go to other tiles
+      if(tile_id.level() == tile_hierarchy.levels().rbegin()->first)
+        auto unbinned = tilebuilder.Bin();
 
       // Update nodes and directed edges as needed
-      std::vector<NodeInfoBuilder> nodes;
-      std::vector<DirectedEdgeBuilder> directededges;
+      std::vector<NodeInfo> nodes;
+      std::vector<DirectedEdge> directededges;
+
+      // Get this tile
+      lock.lock();
+      const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+      lock.unlock();
 
       // Iterate through the nodes and the directed edges
       float roadlength = 0.0f;
       uint32_t nodecount = tilebuilder.header()->nodecount();
       GraphId node = tile_id;
       for (uint32_t i = 0; i < nodecount; i++, node++) {
-        NodeInfoBuilder nodeinfo = tilebuilder.node(i);
-        const NodeInfo* signnodeinfo = signtile.node(i);
-
-        lock.lock();
-        const GraphTile* tile = graph_reader.GetGraphTile(node);
-        lock.unlock();
+        NodeInfo nodeinfo = tilebuilder.node(i);
+        auto ni = tile->node(i);
         std::string begin_node_iso = tile->admin(nodeinfo.admin_index())->country_iso();
 
-        // Go through directed edges and update data
-        uint32_t idx = signnodeinfo->edge_index();
+        // Go through directed edges and validate/update data
+        uint32_t idx = ni->edge_index();
         for (uint32_t j = 0, n = nodeinfo.edge_count(); j < n; j++, idx++) {
-          const DirectedEdge* signdirectededge = signtile.directededge(idx);
+          auto de = tile->directededge(idx);
+
           // Validate signs
-          if (signdirectededge->exitsign()) {
-            if (signtile.GetSigns(idx).size() == 0) {
+          if (de->exitsign()) {
+            if (tile->GetSigns(idx).size() == 0) {
               LOG_ERROR("Directed edge marked as having signs but none found");
             }
           }
 
-          DirectedEdgeBuilder& directededge = tilebuilder.directededge(
-              nodeinfo.edge_index() + j);
+          // Validate access restrictions. TODO - should check modes as well
+          uint32_t ar_modes = de->access_restriction();
+          if (ar_modes) {
+            auto res = tile->GetAccessRestrictions(idx);
+            if (res.size() == 0) {
+              LOG_ERROR("Directed edge marked as having access restriction but none found ; tile level = " +
+                        std::to_string(tile_id.level()));
+            } else {
+              for (auto r : res) {
+                if (r.edgeindex() != idx) {
+                  LOG_ERROR("Access restriction edge index does not match idx");
+                }
+              }
+            }
+          }
+
+          DirectedEdge& directededge = tilebuilder.directededge(
+                    nodeinfo.edge_index() + j);
+
           // Road Length and some variables for statistics
           float tempLength;
           bool validLength = false;
@@ -189,11 +204,24 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
             roadlength += tempLength;
             validLength = true;
           }
+
+          // Check if end node is in a different tile
+          const GraphTile* endnode_tile = tile;
+          if (tile_id != directededge.endnode().Tile_Base()) {
+            directededge.set_leaves_tile(true);
+
+            // Get the end node tile
+            lock.lock();
+            endnode_tile = graph_reader.GetGraphTile(directededge.endnode());
+            lock.unlock();
+          }
+
           // Set the opposing edge index and get the country ISO at the
           // end node)
           std::string end_node_iso;
           directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                                                          graph_reader, dupcount, end_node_iso, lock));
+                         endnode_tile, dupcount, end_node_iso));
+
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
               begin_node_iso != end_node_iso)
@@ -248,11 +276,9 @@ void validate(const boost::property_tree::ptree& hierarchy_properties,
 
       // Write the new tile
       lock.lock();
-      tilebuilder.Update(tile_hierarchy, hdrbuilder, nodes, directededges);
-      lock.unlock();
+      tilebuilder.Update(nodes, directededges);
 
       // Check if we need to clear the tile cache
-      lock.lock();
       if (graph_reader.OverCommitted())
         graph_reader.Clear();
       lock.unlock();
@@ -272,10 +298,9 @@ namespace mjolnir {
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
     // Graphreader
-    boost::property_tree::ptree hierarchy_properties = (pt.get_child("mjolnir.hierarchy"));
-    GraphReader reader(hierarchy_properties);
+    TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
     // Make sure there are at least 2 levels!
-    if (reader.GetTileHierarchy().levels().size() < 2)
+    if (hierarchy.levels().size() < 2)
       throw std::runtime_error("Bad tile hierarchy - need 2 levels");
 
     // Setup threads
@@ -287,15 +312,14 @@ namespace mjolnir {
     std::list<std::promise<validator_stats> > results;
 
     // Create a randomized queue of tiles to work from
-    const auto tile_hierarchy = reader.GetTileHierarchy();
     std::deque<GraphId> tempqueue;
-    for (auto tier : tile_hierarchy.levels()) {
+    for (auto tier : hierarchy.levels()) {
       auto level = tier.second.level;
       auto tiles = tier.second.tiles;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
         GraphId tile_id(id, level, 0);
-        if (GraphReader::DoesTileExist(tile_hierarchy, tile_id)) {
+        if (GraphReader::DoesTileExist(hierarchy, tile_id)) {
           tempqueue.push_back(tile_id);
         }
       }
@@ -310,8 +334,7 @@ namespace mjolnir {
     // Spawn the threads
     for (auto& thread : threads) {
       results.emplace_back();
-      thread.reset(new std::thread(validate, std::cref(hierarchy_properties),
-                                   std::ref(tilequeue),
+      thread.reset(new std::thread(validate, std::cref(pt), std::ref(tilequeue),
                                    std::ref(lock), std::ref(results.back())));
     }
     // Wait for threads to finish

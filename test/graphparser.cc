@@ -129,7 +129,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   //border control
   node = GetNode(3256854624, way_nodes);
   if (!node.intersection() ||
-      node.type() != NodeType::kGate || node.access_mask() != 95)
+      node.type() != NodeType::kBorderControl || node.access_mask() != 95)
     throw std::runtime_error("Border control test failed.");
 
   //has bike tag but all should have access

@@ -186,12 +186,12 @@ void validator_stats::add (const validator_stats& stats) {
 //TODO: split this into separate methods!
 void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   // Get the location of the db file to write
-  std::string dir = pt.get<std::string>("mjolnir.statistics.statistics_dir");
-  std::string db_name = pt.get<std::string>("mjolnir.statistics.db_name");
-  std::string database = dir + "/" + db_name;
-
-  if (boost::filesystem::exists(database)) {
-    boost::filesystem::remove(database);
+  auto database = pt.get_optional<std::string>("mjolnir.statistics");
+  if(!database) {
+    return;
+  }
+  else if(boost::filesystem::exists(*database)) {
+    boost::filesystem::remove(*database);
   }
 
   spatialite_init(0);
@@ -202,9 +202,9 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
   char *err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2(database.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+  ret = sqlite3_open_v2(database->c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
   if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + database);
+    LOG_ERROR("cannot open " + *database);
     sqlite3_close(db_handle);
     db_handle = NULL;
     return;
@@ -220,7 +220,6 @@ void validator_stats::build_db(const boost::property_tree::ptree& pt) {
     sqlite3_close(db_handle);
     return;
   }
-  LOG_INFO("SpatiaLite loaded as an extension");
   LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys

@@ -18,6 +18,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/signinfo.h>
@@ -301,8 +302,35 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
     }
   }
 
+  // Check if mask exceeds the limit
+  if (mask >= (1 << kMaxTurnRestrictionEdges)) {
+    LOG_WARN("Restrictions mask exceeds allowable limit on wayid: " +
+                std::to_string(wayid));
+  }
+
   // Return the restriction mask
   return mask;
+}
+
+// Add an access restriction. Returns the mode(s) that have access
+// restrictions on this edge.
+uint32_t AddAccessRestrictions(const uint32_t edgeid, const uint64_t wayid,
+                        const OSMData& osmdata, GraphTileBuilder& graphtile) {
+  auto res = osmdata.access_restrictions.equal_range(wayid);
+  if (res.first == osmdata.access_restrictions.end()) {
+    return 0;
+  }
+
+  // TODO - support modes (for now is just truck), days of week,
+  // 64 bit values (with different meanings based on restriction type).
+  uint32_t modes = kTruckAccess;
+  uint32_t days_of_week = kAllDaysOfWeek;
+  for (auto r = res.first; r != res.second; ++r) {
+    AccessRestriction access_restriction(edgeid, r->second.type(), modes,
+                                         days_of_week, r->second.value());
+    graphtile.AddAccessRestriction(access_restriction);
+  }
+  return modes;
 }
 
 // Walk the shape and look for any empty tiles that the shape intersects
@@ -357,6 +385,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
     const std::unique_ptr<const valhalla::skadi::sample>& sample,
     std::map<GraphId, size_t>::const_iterator tile_start,
     std::map<GraphId, size_t>::const_iterator tile_end,
+    const uint32_t tile_creation_date,
     std::promise<DataQuality>& result) {
 
   sequence<OSMWay> ways(ways_file, false);
@@ -391,12 +420,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
   for(; tile_start != tile_end; ++tile_start) {
     try {
       // What actually writes the tile
-      GraphTileBuilder graphtile;
-      GraphId tileid1 = tile_start->first.Tile_Base();
+      GraphId tile_id = tile_start->first.Tile_Base();
+      GraphTileBuilder graphtile(hierarchy, tile_id, false);
+
+      graphtile.AddTileCreationDate(tile_creation_date);
 
       // Iterate through the nodes
       uint32_t idx = 0;                 // Current directed edge index
-      uint32_t directededgecount = 0;
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
@@ -406,7 +436,7 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
       geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end ? nodes.end() - node_itr :
         std::next(tile_start)->second - tile_start->second));
 
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tileid1) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
         //amalgamate all the node duplicates into one and the edges that connect to it
         //this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -430,7 +460,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // of outbound edges from this node.
         uint32_t n = 0;
         RoadClass bestclass = RoadClass::kServiceOther;
-        std::vector<DirectedEdgeBuilder> directededges;
         for (const auto& edge_pair : bundle.node_edges) {
           // Get the edge and way
           const Edge& edge = edge_pair.first;
@@ -449,6 +478,13 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             LOG_WARN("Speed = " + std::to_string(speed) + " wayId= " +
                        std::to_string(w.way_id()));
             speed = kMaxSpeedKph;
+          }
+
+          uint32_t truck_speed = static_cast<uint32_t>(w.truck_speed());
+          if (truck_speed > kMaxSpeedKph) {
+            LOG_WARN("Truck Speed = " + std::to_string(truck_speed) + " wayId= " +
+                       std::to_string(w.way_id()));
+            truck_speed = kMaxSpeedKph;
           }
 
           // Cul du sac
@@ -571,9 +607,9 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             // If the end node is in a different tile and the tile is not
             // a neighboring tile then check for possible shape intersection with
             // empty tiles
-            GraphId tileid2 = (*nodes[target]).graph_id.Tile_Base();
-            if (tileid1 != tileid2 && !tiling.AreNeighbors(tileid1, tileid2))
-              CheckForIntersectingTiles(tileid1, tileid2, tiling, shape, stats);
+            GraphId other_tile = (*nodes[target]).graph_id.Tile_Base();
+            if (tile_id != other_tile && !tiling.AreNeighbors(tile_id, other_tile))
+              CheckForIntersectingTiles(tile_id, other_tile, tiling, shape, stats);
           }//now we have the edge info offset
           else {
             found = geo_attribute_cache.find(edge_info_offset);
@@ -583,10 +619,11 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             throw std::runtime_error("GeoAttributes cached object should be there!");
 
           // Add a directed edge and get a reference to it
-          directededges.emplace_back(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
-                                     speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                     n, has_signal, restrictions, bike_network);
-          DirectedEdgeBuilder& directededge = directededges.back();
+          DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward, std::get<0>(found->second),
+                        speed, truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                        n, has_signal, restrictions, bike_network);
+          graphtile.directededges().emplace_back(de);
+          DirectedEdge& directededge = graphtile.directededges().back();
           directededge.set_edgeinfo_offset(found->first);
           //if this is against the direction of the shape we must use the second one
           directededge.set_weighted_grade(forward ? std::get<1>(found->second) : std::get<2>(found->second));
@@ -612,6 +649,16 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
             directededge.set_exitsign(true);
           }
 
+          // Add restrictions..For now only storing access restrictions for trucks
+          // TODO - support more than one mode
+          if (directededge.forwardaccess() & kTruckAccess) {
+            uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(),
+                                      osmdata, graphtile);
+            if (ar_modes) {
+              directededge.set_access_restriction(ar_modes);
+            }
+          }
+
           // Increment the directed edge index within the tile
           idx++;
           n++;
@@ -620,28 +667,25 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
         // Set the node lat,lng, index of the first outbound edge, and the
         // directed edge count from this edge and the best road class
         // from the node. Increment directed edge count.
-        NodeInfoBuilder nodebuilder(node_ll, bestclass, node.access_mask(),
-                                    node.type(), (n == 1), node.traffic_signal());
+        graphtile.nodes().emplace_back(node_ll, bestclass, node.access_mask(),
+                                       node.type(), node.traffic_signal());
+        graphtile.nodes().back().set_edge_index(graphtile.directededges().size() - bundle.node_edges.size());
+        graphtile.nodes().back().set_edge_count(bundle.node_edges.size());
         if (fork) {
-          nodebuilder.set_intersection(IntersectionType::kFork);
+          graphtile.nodes().back().set_intersection(IntersectionType::kFork);
         }
-
-        directededgecount += n;
-
-        // Add node and directed edge information to the tile
-        graphtile.AddNodeAndDirectedEdges(nodebuilder, directededges);
 
         // Increment the counts in the histogram
         stats.nodecount++;
-        stats.directededge_count += directededges.size();
-        stats.node_counts[directededges.size()]++;
+        stats.directededge_count += bundle.node_edges.size();
+        stats.node_counts[bundle.node_edges.size()]++;
 
         // Next node in the tile
         node_itr += bundle.node_count;
       }
 
       // Write the actual tile to disk
-      graphtile.StoreTileData(hierarchy, tile_start->first);
+      graphtile.StoreTileData();
 
       // Made a tile
       LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first % graphtile.size()).str());
@@ -663,6 +707,9 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   const std::string& nodes_file, const std::string& edges_file,
   const std::map<GraphId, size_t>& tiles, const TileHierarchy& tile_hierarchy, DataQuality& stats,
   const std::unique_ptr<const valhalla::skadi::sample>& sample) {
+
+  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  uint32_t tile_creation_date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
 
   LOG_INFO("Building " + std::to_string(tiles.size()) + " tiles with " + std::to_string(thread_count) + " threads...");
 
@@ -689,7 +736,7 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
     threads[i].reset(
       new std::thread(BuildTileSet,  std::cref(ways_file), std::cref(way_nodes_file),
                       std::cref(nodes_file), std::cref(edges_file), std::cref(tile_hierarchy),
-                      std::cref(osmdata), std::cref(sample), tile_start, tile_end,
+                      std::cref(osmdata), std::cref(sample), tile_start, tile_end, tile_creation_date,
                       std::ref(results[i]))
     );
   }
@@ -718,9 +765,9 @@ void BuildLocalTiles(const unsigned int thread_count, const OSMData& osmdata,
   // Add "empty" tiles for any intersected tiles
   for (auto& empty_tile : stats.intersected_tiles) {
     if (!GraphReader::DoesTileExist(tile_hierarchy, empty_tile)) {
-      GraphTileBuilder graphtile;
+      GraphTileBuilder graphtile(tile_hierarchy, empty_tile, false);
       LOG_DEBUG("Add empty tile for: " + std::to_string(empty_tile.tileid()));
-      graphtile.StoreTileData(tile_hierarchy, empty_tile);
+      graphtile.StoreTileData();
     }
   }
   LOG_DEBUG("Added " + std::to_string(stats.intersected_tiles.size()) +

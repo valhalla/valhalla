@@ -34,6 +34,7 @@ adminbenchmark
 pbfgraphbuilder
 pbfadminbuilder
 connectivitymap
+transit_fetcher
 *.o
 .deps/
 .dirstamp
@@ -46,9 +47,7 @@ libvalhalla_mjolnir.la
 test-suite.log
 test-driver
 test/test_config
-test/directededgebuilder
 test/edgeinfobuilder
-test/nodeinfobuilder
 test/uniquenames
 test/idtable
 test/graphtilebuilder
@@ -56,7 +55,6 @@ test/graphbuilder
 test/refs
 test/graphparser
 test/signinfo
-test/admininfobuilder
 test/utrecht
 test/*.log
 test/*.trs

@@ -33,6 +33,7 @@
 #include <valhalla/baldr/streetnames_factory.h>
 #include <valhalla/baldr/streetnames_us.h>
 #include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
@@ -96,7 +97,7 @@ struct enhancer_stats {
  * @param  directededge  Directed edge to update.
  * @param  density       Relative road density.
  */
-void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
+void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
   // Set speed on ramps / turn channels
   if (directededge.link()) {
     uint32_t speed = directededge.speed();
@@ -197,8 +198,8 @@ void UpdateSpeed(DirectedEdgeBuilder& directededge, const uint32_t density) {
  */
 void UpdateLinkUse(const GraphTile* tile,
                    const GraphTile* endnodetile,
-                   const NodeInfoBuilder& nodeinfo,
-                   DirectedEdgeBuilder& directededge) {
+                   const NodeInfo& nodeinfo,
+                   DirectedEdge& directededge) {
   // Assume link that has highway = motorway or trunk is a ramp.
   // Also, if length is > kMaxTurnChannelLength or there is an exit
   // sign on the edge we assume this is a ramp
@@ -260,7 +261,7 @@ void UpdateLinkUse(const GraphTile* tile,
  * @return  Returns true if the edge is found to be unreachable.
  */
 bool IsUnreachable(GraphReader& reader, std::mutex& lock,
-                   DirectedEdgeBuilder& directededge) {
+                   DirectedEdge& directededge) {
   // Only check driveable edges. If already on a higher class road consider
   // the edge reachable
   if (!(directededge.forwardaccess() & kAutoAccess) ||
@@ -314,7 +315,7 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock,
 // has no exit other than the edge entering the region
 bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
                    const GraphId& startnode,
-                   DirectedEdgeBuilder& directededge) {
+                   DirectedEdge& directededge) {
   // Add the end node to the expand list
   std::unordered_set<GraphId> visitedset;  // Set of visited nodes
   std::unordered_set<GraphId> expandset;   // Set of nodes to expand
@@ -340,7 +341,7 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
       // Do not allow use of the start edge or any transit edges
       if ((n == 0 && diredge->endnode() == startnode) ||
-          diredge->use() >= Use::kRail) {
+          diredge->IsTransitLine()) {
         continue;
       }
 
@@ -363,8 +364,8 @@ bool IsNotThruEdge(GraphReader& reader, std::mutex& lock,
 // Test if the edge is internal to an intersection.
 bool IsIntersectionInternal(GraphReader& reader, std::mutex& lock,
                             const GraphId& startnode,
-                            NodeInfoBuilder& startnodeinfo,
-                            DirectedEdgeBuilder& directededge,
+                            NodeInfo& startnodeinfo,
+                            DirectedEdge& directededge,
                             const uint32_t idx) {
   // Internal intersection edges must be short and cannot be a roundabout
   if (directededge.length() > kMaxInternalLength ||
@@ -546,8 +547,8 @@ uint32_t GetDensity(GraphReader& reader, std::mutex& lock, const PointLL& ll,
   return (relative_density < 16) ? relative_density : 15;
 }
 
-// Get admininstrative index
-uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
+// Get polygon index.  Used by tz and admin areas
+uint32_t GetMultiPolyId(const std::unordered_map<uint32_t,multi_polygon_type>& polys, const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
@@ -555,6 +556,60 @@ uint32_t GetAdminId(const std::unordered_map<uint32_t,multi_polygon_type>& polys
       return poly.first;
   }
   return index;
+}
+
+std::unordered_map<uint32_t,multi_polygon_type> GetTimeZones(sqlite3 *db_handle,
+                                                             const AABB2<PointLL>& aabb) {
+  std::unordered_map<uint32_t,multi_polygon_type> polys;
+  if (!db_handle)
+    return polys;
+
+  sqlite3_stmt *stmt = 0;
+  uint32_t ret;
+  char *err_msg = nullptr;
+  uint32_t result = 0;
+
+  std::string sql = "select TZID, st_astext(geom) from tz_world where ";
+  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + ")) ";
+  sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
+  sql += "'tz_world' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
+  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
+  sql += std::to_string(aabb.maxy()) + "));";
+
+  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+
+  if (ret == SQLITE_OK) {
+    result = sqlite3_step(stmt);
+
+    while (result == SQLITE_ROW) {
+      std::string tz_id;
+      std::string geom;
+
+      if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT)
+        tz_id = (char*)sqlite3_column_text(stmt, 0);
+      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT)
+        geom = (char*)sqlite3_column_text(stmt, 1);
+
+      uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
+      if (idx == 0) {
+        polys.clear();
+        break;
+      }
+
+      multi_polygon_type multi_poly;
+      boost::geometry::read_wkt(geom, multi_poly);
+      polys.emplace(idx, multi_poly);
+
+      result = sqlite3_step(stmt);
+    }
+  }
+  if (stmt) {
+    sqlite3_finalize(stmt);
+    stmt = 0;
+  }
+  return polys;
 }
 
 std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle, std::unordered_map<uint32_t,bool>& drive_on_right,
@@ -638,7 +693,7 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
         geom = (char*)sqlite3_column_text(stmt, 6);
 
       uint32_t index = tilebuilder.AddAdmin(country_name,state_name,
-                                            country_iso,state_iso,"","");
+                                            country_iso,state_iso);
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
@@ -672,9 +727,9 @@ std::unordered_map<uint32_t,multi_polygon_type> GetAdminInfo(sqlite3 *db_handle,
  * @return true if edge transition is a pencil point u-turn, false otherwise.
  */
 bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
-                        const DirectedEdgeBuilder& directededge,
+                        const DirectedEdge& directededge,
                         const DirectedEdge* edges,
-                        const NodeInfoBuilder& node_info,
+                        const NodeInfo& node_info,
                         uint32_t turn_degree) {
   // Logic for drive on right
   if (directededge.drive_on_right()) {
@@ -756,9 +811,9 @@ bool IsPencilPointUturn(uint32_t from_index, uint32_t to_index,
  *          7 - large impact.
  */
 uint32_t GetStopImpact(uint32_t from, uint32_t to,
-                       const DirectedEdgeBuilder& directededge,
+                       const DirectedEdge& directededge,
                        const DirectedEdge* edges, const uint32_t count,
-                       const NodeInfoBuilder& nodeinfo, uint32_t turn_degree,
+                       const NodeInfo& nodeinfo, uint32_t turn_degree,
                        enhancer_stats& stats) {
 
   ///////////////////////////////////////////////////////////////////////////
@@ -826,9 +881,9 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
  * @param  headings       Headings of directed edges.
  */
 void ProcessEdgeTransitions(const uint32_t idx,
-          DirectedEdgeBuilder& directededge, const DirectedEdge* edges,
+          DirectedEdge& directededge, const DirectedEdge* edges,
           const uint32_t ntrans, uint32_t* headings,
-          const NodeInfoBuilder& nodeinfo,
+          const NodeInfo& nodeinfo,
           enhancer_stats& stats) {
   for (uint32_t i = 0; i < ntrans; i++) {
     // Get the turn type (reverse the heading of the from directed edge since
@@ -925,42 +980,71 @@ bool ConsistentNames(const std::string& country_code,
 // We make sure to lock on reading and writing because we dont want to race
 // since difference threads, use for the tilequeue as well
 void enhance(const boost::property_tree::ptree& pt,
-             boost::property_tree::ptree& hierarchy_properties,
+             const boost::property_tree::ptree& hierarchy_properties,
              std::queue<GraphId>& tilequeue, std::mutex& lock,
              std::promise<enhancer_stats>& result) {
+
+  auto database = pt.get_optional<std::string>("admin");
   // Initialize the admin DB (if it exists)
-  std::string dir = pt.get<std::string>("admin_dir");
-  std::string db_name = pt.get<std::string>("db_name");
-  std::string database = dir + "/" +  db_name;
-  sqlite3 *db_handle = nullptr;
-  if (boost::filesystem::exists(database)) {
+  sqlite3 *admin_db_handle = nullptr;
+  if (database && boost::filesystem::exists(*database)) {
     spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     char* err_msg = nullptr;
     std::string sql;
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
+    uint32_t ret = sqlite3_open_v2(database->c_str(), &admin_db_handle,
                         SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      db_handle = nullptr;
+      LOG_ERROR("cannot open " + *database);
+      sqlite3_close(admin_db_handle);
+      admin_db_handle = nullptr;
       return;
     }
 
     // loading SpatiaLite as an extension
-    sqlite3_enable_load_extension(db_handle, 1);
+    sqlite3_enable_load_extension(admin_db_handle, 1);
     sql = "SELECT load_extension('libspatialite.so')";
-    ret = sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
+    ret = sqlite3_exec(admin_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
     if (ret != SQLITE_OK) {
       LOG_ERROR("load_extension() error: " + std::string(err_msg));
       sqlite3_free(err_msg);
-      sqlite3_close(db_handle);
+      sqlite3_close(admin_db_handle);
       return;
     }
-    LOG_INFO("SpatiaLite loaded as an extension");
   }
   else
-    LOG_WARN("Admin db " + database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+
+  database = pt.get_optional<std::string>("timezone");
+  // Initialize the tz DB (if it exists)
+  sqlite3 *tz_db_handle = nullptr;
+  if (database && boost::filesystem::exists(*database)) {
+    spatialite_init(0);
+    sqlite3_stmt* stmt = 0;
+    char* err_msg = nullptr;
+    std::string sql;
+    uint32_t ret = sqlite3_open_v2(database->c_str(), &tz_db_handle,
+                        SQLITE_OPEN_READONLY, nullptr);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("cannot open " + *database);
+      sqlite3_close(tz_db_handle);
+      admin_db_handle = nullptr;
+      return;
+    }
+
+    // loading SpatiaLite as an extension
+    sqlite3_enable_load_extension(tz_db_handle, 1);
+    sql = "SELECT load_extension('libspatialite.so')";
+    ret = sqlite3_exec(tz_db_handle, sql.c_str(), nullptr, nullptr, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("load_extension() error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(tz_db_handle);
+      return;
+    }
+  }
+  else
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -987,7 +1071,8 @@ void enhance(const boost::property_tree::ptree& pt,
     uint32_t id  = tile_id.tileid();
     tilequeue.pop();
 
-    std::unordered_map<uint32_t,multi_polygon_type> polys;
+    std::unordered_map<uint32_t,multi_polygon_type> admin_polys;
+    std::unordered_map<uint32_t,multi_polygon_type> tz_polys;
     std::unordered_map<uint32_t,bool> drive_on_right;
 
     // Get a readable tile.If the tile is empty, skip it. Empty tiles are
@@ -1005,17 +1090,31 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Create a dummy admin record at index 0. Used if admin records
     // are not used/created or if none is found.
-    tilebuilder.AddAdmin("None","None","","","","");
+    tilebuilder.AddAdmin("None","None","","");
+
+    // this will be our updated list of restrictions.
+    // need to do some conversions on weights; therefore, we must update
+    // the restriction list.
+    uint32_t ar_before = tilebuilder.header()->access_restriction_count();
+    std::vector<AccessRestriction> access_restrictions;
 
     // Get the admin polygons. If only one exists for the tile check if the
     // tile is entirely inside the polygon
     bool tile_within_one_admin = false;
-    if (db_handle) {
-      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id),
+    if (admin_db_handle) {
+      admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, tiles.TileBounds(id),
                            tilebuilder);
-      if (polys.size() == 1) {
+      if (admin_polys.size() == 1) {
         // TODO - check if tile bounding box is entirely inside the polygon...
         tile_within_one_admin = true;
+      }
+    }
+
+    bool tile_within_one_tz = false;
+    if (tz_db_handle) {
+      tz_polys = GetTimeZones(tz_db_handle, tiles.TileBounds(id));
+      if (tz_polys.size() == 1) {
+        tile_within_one_tz = true;
       }
     }
 
@@ -1023,11 +1122,11 @@ void enhance(const boost::property_tree::ptree& pt,
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
-      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
+      NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdgeBuilder& directededge =
+        DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Skip transit lines (don't need opposing local index)
@@ -1065,7 +1164,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // Second pass - add admin information and edge transition information.
     for (uint32_t i = 0; i < tilebuilder.header()->nodecount(); i++) {
       GraphId startnode(id, local_level, i);
-      NodeInfoBuilder& nodeinfo = tilebuilder.node_builder(i);
+      NodeInfo& nodeinfo = tilebuilder.node_builder(i);
 
       // Get relative road density and local density
       uint32_t density = GetDensity(reader, lock, nodeinfo.latlng(),
@@ -1073,11 +1172,15 @@ void enhance(const boost::property_tree::ptree& pt,
 
       // Set admin index
       uint32_t admin_index = (tile_within_one_admin) ?
-                    polys.begin()->first :
-                    GetAdminId(polys, nodeinfo.latlng());
+                    admin_polys.begin()->first :
+                    GetMultiPolyId(admin_polys, nodeinfo.latlng());
       nodeinfo.set_admin_index(admin_index);
 
-      // TODO - timezone
+      // Set the time zone index
+      uint32_t tz_index = (tile_within_one_tz) ?
+                    tz_polys.begin()->first :
+                    GetMultiPolyId(tz_polys, nodeinfo.latlng());
+      nodeinfo.set_timezone(tz_index);
 
       // Set the country code
       std::string country_code = "";
@@ -1095,8 +1198,9 @@ void enhance(const boost::property_tree::ptree& pt,
       uint32_t heading[ntrans];
       nodeinfo.set_local_edge_count(ntrans);
       for (uint32_t j = 0; j < ntrans; j++) {
-        DirectedEdgeBuilder& directededge =
+        DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
+
         auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
@@ -1122,7 +1226,7 @@ void enhance(const boost::property_tree::ptree& pt,
       // Go through directed edges and "enhance" directed edge attributes
       const DirectedEdge* edges = tile->directededge(nodeinfo.edge_index());
       for (uint32_t j = 0; j <  nodeinfo.edge_count(); j++) {
-        DirectedEdgeBuilder& directededge =
+        DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
         // Update speed.
@@ -1145,18 +1249,15 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // No need for edge transitions on transit edges
+        // Set edge transitions and unreachable, not_thru, and internal
+        // intersection flags. Do not do this for transit edges.
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
             ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
                                    nodeinfo, stats);
           }
-        }
 
-        // Set unreachable, not_thru, or internal intersection (except
-        // for transit)
-        if (directededge.use() < Use::kRail) {
           // Set unreachable (driving) flag
           if (IsUnreachable(reader, lock, directededge)) {
             directededge.set_unreachable(true);
@@ -1179,6 +1280,25 @@ void enhance(const boost::property_tree::ptree& pt,
             directededge.set_internal(true);
             stats.internalcount++;
           }
+
+          // Update access restrictions (update weight units)
+          if (directededge.access_restriction()) {
+            auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
+
+            // Convert any US weight values from short ton (U.S. customary)
+            // to metric and add to the tile's access restriction list
+            if (country_code == "US" || country_code == "MM" || country_code == "LR") {
+              for (auto& res : restrictions) {
+                if (res.type() == AccessType::kMaxWeight ||
+                    res.type() == AccessType::kMaxAxleLoad) {
+                  res.set_value(std::round(res.value() * kTonsShortToMetric));
+                }
+              }
+            }
+            for (const auto& res : restrictions) {
+              access_restrictions.emplace_back(std::move(res));
+            }
+          }
         }
       }
 
@@ -1195,9 +1315,17 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
+    // Replace access restrictions
+    if (ar_before != access_restrictions.size()) {
+      LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) + ""
+          " and after " + std::to_string(access_restrictions.size()) +
+          " tileid = " + std::to_string(tile_id.tileid()));
+    }
+    tilebuilder.AddAccessRestrictions(access_restrictions);
+
     // Write the new file
     lock.lock();
-    tilebuilder.StoreTileData(tile_hierarchy, tile_id);
+    tilebuilder.StoreTileData();
     LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
 
     // Check if we need to clear the tile cache
@@ -1207,8 +1335,11 @@ void enhance(const boost::property_tree::ptree& pt,
     lock.unlock();
   }
 
-  if (db_handle)
-    sqlite3_close (db_handle);
+  if (admin_db_handle)
+    sqlite3_close (admin_db_handle);
+
+  if (tz_db_handle)
+    sqlite3_close (tz_db_handle);
 
   // Send back the statistics
   result.set_value(stats);
@@ -1254,7 +1385,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt) {
   for (auto& thread : threads) {
     results.emplace_back();
     thread.reset(new std::thread(enhance,
-                 std::ref(pt.get_child("mjolnir.admin")),
+                 std::cref(pt.get_child("mjolnir")),
                  std::ref(hierarchy_properties), std::ref(tilequeue),
                  std::ref(lock), std::ref(results.back())));
   }

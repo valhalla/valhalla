@@ -50,6 +50,18 @@ struct OSMWay {
   float speed() const;
 
   /**
+   * Sets the truck speed
+   * @param  speed   Truck speed in KPH.
+   */
+  void set_truck_speed(const float truck_speed);
+
+  /**
+   * Gets the truck speed in KPH.
+   * @return  Returns truck speed.
+   */
+  float truck_speed() const;
+
+  /**
    * Sets the index for the ref
    * @param  idx  Index for the reference.
    */
@@ -604,6 +616,19 @@ struct OSMWay {
   bool tagged_speed() const;
 
   /**
+   * Sets the truck route flag.
+   * @param  truck_route  Is this part of the local, national,
+   *                      or state truck network or designated truck way?
+   */
+  void set_truck_route(const bool truck_route);
+
+  /**
+   * Get the truck_route flag.
+   * @return  Returns truck_route flag.
+   */
+  bool truck_route() const;
+
+  /**
    * Get the road class.
    * @return  Returns road class.
    */
@@ -695,10 +720,11 @@ struct OSMWay {
       uint32_t seasonal         :1;
       uint32_t hov              :1;
       uint32_t drive_on_right   :1;
-      uint32_t bikenetwork      :4;
+      uint32_t bike_network     :4;
       uint32_t exit             :1;
       uint32_t tagged_speed     :1;
-      uint32_t spare            :5;
+      uint32_t truck_route      :1;
+      uint32_t spare            :4;
     } fields;
     uint32_t v;
   };
@@ -709,7 +735,7 @@ struct OSMWay {
       uint32_t road_class        :3;     // Importance of the road/path
       uint32_t link              :1;     // *link tag - Ramp or turn channel
       uint32_t use               :6;     // Use / form
-      uint32_t spare             :22;    // Use / form
+      uint32_t spare             :22;    // Spare
     } fields;
     uint32_t v;
   };
@@ -741,6 +767,9 @@ struct OSMWay {
 
   // Speed in kilometers per hour
   uint8_t speed_;
+
+  // Truck speed in kilometers per hour
+  uint8_t truck_speed_;
 };
 
 }

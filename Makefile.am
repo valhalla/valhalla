@@ -36,7 +36,7 @@ clean-local: clean-coverage clean-gcno
 endif
 
 # proto generation etc
-PROTO_FILES = proto/osmformat.proto proto/fileformat.proto
+PROTO_FILES = proto/osmformat.proto proto/fileformat.proto proto/transit.proto
 BUILT_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 CLEANFILES = $(patsubst %.proto,valhalla/%.pb.h,$(PROTO_FILES)) $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
 nodist_libvalhalla_mjolnir_la_SOURCES = $(patsubst %.proto,src/%.pb.cc,$(PROTO_FILES))
@@ -46,12 +46,9 @@ src/proto/%.pb.cc: proto/%.proto
 # lib valhalla compilation etc
 lib_LTLIBRARIES = libvalhalla_mjolnir.la
 nobase_include_HEADERS = \
-	valhalla/mjolnir/admininfobuilder.h \
 	valhalla/mjolnir/dataquality.h \
 	valhalla/mjolnir/directededgebuilder.h \
 	valhalla/mjolnir/graphtilebuilder.h \
-	valhalla/mjolnir/graphtileheaderbuilder.h \
-	valhalla/mjolnir/nodeinfobuilder.h \
 	valhalla/mjolnir/edgeinfobuilder.h \
 	valhalla/mjolnir/uniquenames.h \
 	valhalla/mjolnir/ferry_connections.h \
@@ -67,21 +64,19 @@ nobase_include_HEADERS = \
 	valhalla/mjolnir/osmdata.h \
 	valhalla/mjolnir/osmnode.h \
 	valhalla/mjolnir/osmpbfparser.h \
+	valhalla/mjolnir/osmaccessrestriction.h \
 	valhalla/mjolnir/osmrestriction.h \
 	valhalla/mjolnir/osmway.h \
 	valhalla/mjolnir/pbfadminparser.h \
 	valhalla/mjolnir/pbfgraphparser.h \
-	valhalla/mjolnir/signbuilder.h \
 	valhalla/mjolnir/statistics.h \
 	valhalla/mjolnir/transitbuilder.h \
 	valhalla/mjolnir/util.h
 libvalhalla_mjolnir_la_SOURCES = \
-	src/mjolnir/admininfobuilder.cc \
+	src/proto/transit.pb.cc \
 	src/mjolnir/dataquality.cc \
 	src/mjolnir/directededgebuilder.cc \
 	src/mjolnir/graphtilebuilder.cc \
-	src/mjolnir/graphtileheaderbuilder.cc \
-	src/mjolnir/nodeinfobuilder.cc \
 	src/mjolnir/edgeinfobuilder.cc \
 	src/mjolnir/uniquenames.cc \
 	src/proto/fileformat.pb.cc \
@@ -98,11 +93,11 @@ libvalhalla_mjolnir_la_SOURCES = \
 	src/mjolnir/osmadmin.cc \
 	src/mjolnir/osmnode.cc \
 	src/mjolnir/osmpbfparser.cc \
+	src/mjolnir/osmaccessrestriction.cc \
 	src/mjolnir/osmrestriction.cc \
 	src/mjolnir/osmway.cc \
 	src/mjolnir/pbfadminparser.cc \
 	src/mjolnir/pbfgraphparser.cc \
-	src/mjolnir/signbuilder.cc \
 	src/mjolnir/statistics.cc \
 	src/mjolnir/transitbuilder.cc \
 	src/mjolnir/util.cc
@@ -114,57 +109,46 @@ bin_PROGRAMS = \
 	adminbenchmark \
 	connectivitymap \
 	pbfgraphbuilder \
-	pbfadminbuilder
+	pbfadminbuilder \
+	transit_fetcher
 
-adminbenchmark_SOURCES = \
-	src/mjolnir/adminbenchmark.cc
+adminbenchmark_SOURCES = src/mjolnir/adminbenchmark.cc
 adminbenchmark_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 adminbenchmark_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
-connectivitymap_SOURCES = \
-	src/mjolnir/connectivitymap.cc
+connectivitymap_SOURCES = src/mjolnir/connectivitymap.cc
 connectivitymap_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-connectivitymap_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ libvalhalla_mjolnir.la
+connectivitymap_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) libvalhalla_mjolnir.la
 
-pbfgraphbuilder_SOURCES = \
-	src/mjolnir/pbfgraphbuilder.cc 
+pbfgraphbuilder_SOURCES = src/mjolnir/pbfgraphbuilder.cc 
 pbfgraphbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfgraphbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
-pbfadminbuilder_SOURCES = \
-        src/mjolnir/pbfadminbuilder.cc
+pbfadminbuilder_SOURCES = src/mjolnir/pbfadminbuilder.cc
 pbfadminbuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 pbfadminbuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz -lgeos -lsqlite3 -lspatialite libvalhalla_mjolnir.la
 
+transit_fetcher_SOURCES = src/mjolnir/transit_fetcher.cc
+transit_fetcher_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+transit_fetcher_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_THREAD_LIB) @PROTOC_LIBS@ -lz libvalhalla_mjolnir.la
+
 # tests
 check_PROGRAMS = \
-	test/admininfobuilder \
         test/utrecht\
-	test/directededgebuilder \
 	test/edgeinfobuilder \
 	test/uniquenames \
 	test/idtable \
 	test/graphtilebuilder \
 	test/graphbuilder \
 	test/graphparser \
-	test/nodeinfobuilder \
 	test/refs \
 	test/signinfo
-test_admininfobuilder_SOURCES = test/admininfobuilder.cc test/test.cc
-test_admininfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_admininfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_utrecht_SOURCES = test/utrecht.cc test/test.cc
 test_utrecht_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_utrecht_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_directededgebuilder_SOURCES = test/directededgebuilder.cc test/test.cc
-test_directededgebuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_directededgebuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_edgeinfobuilder_SOURCES = test/edgeinfobuilder.cc test/test.cc
 test_edgeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_edgeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
-test_nodeinfobuilder_SOURCES = test/nodeinfobuilder.cc test/test.cc
-test_nodeinfobuilder_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-test_nodeinfobuilder_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la
 test_uniquenames_SOURCES = test/uniquenames.cc test/test.cc
 test_uniquenames_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
 test_uniquenames_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_mjolnir.la

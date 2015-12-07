@@ -10,18 +10,19 @@
 
 using namespace valhalla::baldr;
 
+namespace {
+
+  AABB2<PointLL> get_tile_bbox(const TileHierarchy& h, const GraphId g) {
+    auto level = h.levels().find(g.fields.level);
+    if(level == h.levels().cend())
+      throw std::runtime_error("GraphTileBuilder for unsupported level");
+    return level->second.tiles.TileBounds(g.fields.tileid);
+  }
+
+}
+
 namespace valhalla {
 namespace mjolnir {
-
-// Constructor
-GraphTileBuilder::GraphTileBuilder()
-    : GraphTile() {
-  // Add an empty name to the list so offset 0 means blank name
-  std::string str = "";
-  textlistbuilder_.emplace_back(str);
-  text_offset_map_.emplace(str, 0);
-  text_list_offset_ = 1;
-}
 
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
@@ -30,15 +31,23 @@ GraphTileBuilder::GraphTileBuilder()
 // StoreTileData.
 GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
                                    const GraphId& graphid, bool deserialize)
-    : GraphTile(hierarchy, graphid) {
+    : GraphTile(hierarchy, graphid), hierarchy_(hierarchy){
+
+  // Keep the id
+  header_builder_.set_graphid(graphid);
+
+  // Done if not deserializing and creating builders for everything
   if (!deserialize) {
-    // Done if not deserializing and creating builders for everything
+    textlistbuilder_.emplace_back("");
+    text_offset_map_.emplace("", 0);
+    text_list_offset_ = 1;
+    write_bins_ = false;
     return;
   }
 
   // Copy tile header to a builder
   GraphTileHeader existinghdr = *(header_);
-  header_builder_ = static_cast<GraphTileHeaderBuilder&>(existinghdr);
+  header_builder_ = static_cast<GraphTileHeader&>(existinghdr);
 
   // Unique set of offsets into the text list
   std::set<uint32_t> text_offsets;
@@ -57,18 +66,17 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
     departure_builder_.emplace_back(std::move(departures_[i]));
     text_offsets.insert(departures_[i].headsign_offset());
   }
-  for (uint32_t i = 0; i < header_->tripcount(); i++) {
-    trip_builder_.emplace_back(std::move(transit_trips_[i]));
-    text_offsets.insert(transit_trips_[i].short_name_offset());
-    text_offsets.insert(transit_trips_[i].headsign_offset());
-  }
   for (uint32_t i = 0; i < header_->stopcount(); i++) {
     stop_builder_.emplace_back(std::move(transit_stops_[i]));
+    text_offsets.insert(transit_stops_[i].one_stop_offset());
     text_offsets.insert(transit_stops_[i].name_offset());
-    text_offsets.insert(transit_stops_[i].desc_offset());
   }
   for (uint32_t i = 0; i < header_->routecount(); i++) {
     route_builder_.emplace_back(std::move(transit_routes_[i]));
+    text_offsets.insert(transit_routes_[i].one_stop_offset());
+    text_offsets.insert(transit_routes_[i].op_by_onestop_id_offset());
+    text_offsets.insert(transit_routes_[i].op_by_name_offset());
+    text_offsets.insert(transit_routes_[i].op_by_website_offset());
     text_offsets.insert(transit_routes_[i].short_name_offset());
     text_offsets.insert(transit_routes_[i].long_name_offset());
     text_offsets.insert(transit_routes_[i].desc_offset());
@@ -76,8 +84,10 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->transfercount(); i++) {
     transfer_builder_.emplace_back(std::move(transit_transfers_[i]));
   }
-  for (uint32_t i = 0; i < header_->calendarcount(); i++) {
-    exception_builder_.emplace_back(std::move(transit_exceptions_[i]));
+
+  // Create access restriction list
+  for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
+    access_restriction_builder_.emplace_back(std::move(access_restrictions_[i]));
   }
 
   // Create sign builders
@@ -91,10 +101,16 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
   for (uint32_t i = 0; i < header_->admincount(); i++) {
     admins_builder_.emplace_back(admins_[i].country_offset(),
                 admins_[i].state_offset(), admins_[i].country_iso(),
-                admins_[i].state_iso(),admins_[i].start_dst(),
-                admins_[i].end_dst());
+                admins_[i].state_iso());
     text_offsets.insert(admins_[i].country_offset());
     text_offsets.insert(admins_[i].state_offset());
+  }
+
+  //get the edge cells
+  write_bins_ = true;
+  for(size_t i = 0; i < kCellCount; ++i) {
+    auto cell = GetCell(i % kGridDim, i / kGridDim);
+    bins_[i].assign(cell.begin(), cell.end());
   }
 
   // Create an ordered set of edge info offsets
@@ -142,11 +158,10 @@ GraphTileBuilder::GraphTileBuilder(const baldr::TileHierarchy& hierarchy,
 }
 
 // Output the tile to file. Stores as binary data.
-void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
-                                     const GraphId& graphid) {
+void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
-      + GraphTile::FileSuffix(graphid, hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(header_builder_.graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -157,57 +172,49 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Configure the header
-    header_builder_.set_graphid(graphid);
     header_builder_.set_nodecount(nodes_builder_.size());
     header_builder_.set_directededgecount(directededges_builder_.size());
     header_builder_.set_departurecount(departure_builder_.size());
-    header_builder_.set_tripcount(trip_builder_.size());
     header_builder_.set_stopcount(stop_builder_.size());
     header_builder_.set_routecount(route_builder_.size());
     header_builder_.set_transfercount(transfer_builder_.size());
-    header_builder_.set_calendarcount(exception_builder_.size());
+    header_builder_.set_access_restriction_count(
+                access_restriction_builder_.size());
     header_builder_.set_signcount(signs_builder_.size());
     header_builder_.set_admincount(admins_builder_.size());
     header_builder_.set_edgeinfo_offset(
-        (sizeof(GraphTileHeaderBuilder))
-            + (nodes_builder_.size() * sizeof(NodeInfoBuilder))
-            + (directededges_builder_.size() * sizeof(DirectedEdgeBuilder))
+        (sizeof(GraphTileHeader))
+            + (nodes_builder_.size() * sizeof(NodeInfo))
+            + (directededges_builder_.size() * sizeof(DirectedEdge))
             + (departure_builder_.size() * sizeof(TransitDeparture))
-            + (trip_builder_.size() * sizeof(TransitTrip))
             + (stop_builder_.size() * sizeof(TransitStop))
             + (route_builder_.size() * sizeof(TransitRoute))
             + (transfer_builder_.size() * sizeof(TransitTransfer))
-            + (exception_builder_.size() * sizeof(TransitCalendar))
-            + (signs_builder_.size() * sizeof(SignBuilder))
-            + (admins_builder_.size() * sizeof(AdminInfoBuilder)));
+            + (access_restriction_builder_.size() * sizeof(AccessRestriction))
+            + (signs_builder_.size() * sizeof(Sign))
+            + (admins_builder_.size() * sizeof(Admin)));
 
     header_builder_.set_textlist_offset(
         header_builder_.edgeinfo_offset() + edge_info_offset_);
 
     // Write the header.
     file.write(reinterpret_cast<const char*>(&header_builder_),
-               sizeof(GraphTileHeaderBuilder));
+               sizeof(GraphTileHeader));
 
     // Write the nodes
     file.write(reinterpret_cast<const char*>(&nodes_builder_[0]),
-               nodes_builder_.size() * sizeof(NodeInfoBuilder));
+               nodes_builder_.size() * sizeof(NodeInfo));
 
     // Write the directed edges
     file.write(reinterpret_cast<const char*>(&directededges_builder_[0]),
-               directededges_builder_.size() * sizeof(DirectedEdgeBuilder));
+               directededges_builder_.size() * sizeof(DirectedEdge));
 
     // Sort and write the transit departures
     std::sort(departure_builder_.begin(), departure_builder_.end());
     file.write(reinterpret_cast<const char*>(&departure_builder_[0]),
                departure_builder_.size() * sizeof(TransitDeparture));
 
-    // Sort and write the transit trips
-    std::sort(trip_builder_.begin(), trip_builder_.end());
-    file.write(reinterpret_cast<const char*>(&trip_builder_[0]),
-               trip_builder_.size() * sizeof(TransitTrip));
-
-    // Sort and write the transit stops
-    std::sort(stop_builder_.begin(), stop_builder_.end());
+    // Sort write the transit stops
     file.write(reinterpret_cast<const char*>(&stop_builder_[0]),
                stop_builder_.size() * sizeof(TransitStop));
 
@@ -221,18 +228,21 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&transfer_builder_[0]),
                transfer_builder_.size() * sizeof(TransitTransfer));
 
-    // Sort and write the transit calendar exceptions
-    std::sort(exception_builder_.begin(), exception_builder_.end());
-    file.write(reinterpret_cast<const char*>(&exception_builder_[0]),
-               exception_builder_.size() * sizeof(TransitCalendar));
+    // Sort and write the access restrictions
+    std::sort(access_restriction_builder_.begin(), access_restriction_builder_.end());
+    file.write(reinterpret_cast<const char*>(&access_restriction_builder_[0]),
+               access_restriction_builder_.size() * sizeof(AccessRestriction));
 
     // Write the signs
     file.write(reinterpret_cast<const char*>(&signs_builder_[0]),
-               signs_builder_.size() * sizeof(SignBuilder));
+               signs_builder_.size() * sizeof(Sign));
 
     // Write the admins
     file.write(reinterpret_cast<const char*>(&admins_builder_[0]),
-               admins_builder_.size() * sizeof(AdminInfoBuilder));
+               admins_builder_.size() * sizeof(Admin));
+
+    // Write the edge cells
+    SerializeEdgeCellsToOstream(file);
 
     // Write the edge data
     SerializeEdgeInfosToOstream(file);
@@ -245,12 +255,6 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
     LOG_DEBUG((boost::format("   admins = %1%  departures = %2% stops = %3% trips %4% routes = %5%" )
       % admins_builder_.size() % departure_builder_.size() % stop_builder_.size() % trip_builder_.size() % route_builder_.size()).str());
 
-    /*   size_t fsize = file.tellp();
-     if (fsize % 8 != 0) {
-     char empty[8] = {};
-     file.write(empty, (8 - (fsize % 8)));
-     }
-     */
     size_ = file.tellp();
     file.close();
   } else {
@@ -260,13 +264,12 @@ void GraphTileBuilder::StoreTileData(const baldr::TileHierarchy& hierarchy,
 
 // Update a graph tile with new header, nodes, and directed edges.
 void GraphTileBuilder::Update(
-    const baldr::TileHierarchy& hierarchy, const GraphTileHeaderBuilder& hdr,
-    const std::vector<NodeInfoBuilder>& nodes,
-    const std::vector<DirectedEdgeBuilder>& directededges) {
+    const std::vector<NodeInfo>& nodes,
+    const std::vector<DirectedEdge>& directededges) {
 
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/'
-      + GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/'
+      + GraphTile::FileSuffix(header_->graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -278,48 +281,51 @@ void GraphTileBuilder::Update(
   if (file.is_open()) {
 
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(&hdr),
-               sizeof(GraphTileHeaderBuilder));
+    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
-               nodes.size() * sizeof(NodeInfoBuilder));
+               nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
-               directededges.size() * sizeof(DirectedEdgeBuilder));
+               directededges.size() * sizeof(DirectedEdge));
 
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
-               hdr.departurecount() * sizeof(TransitDeparture));
-
-    // Write the existing transit trips
-    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
-               hdr.tripcount() * sizeof(TransitTrip));
+        header_->departurecount() * sizeof(TransitDeparture));
 
     // Write the existing transit stops
     file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
-               hdr.stopcount() * sizeof(TransitStop));
+        header_->stopcount() * sizeof(TransitStop));
 
     // Write the existing transit routes
     file.write(reinterpret_cast<const char*>(&transit_routes_[0]),
-               hdr.routecount() * sizeof(TransitRoute));
+        header_->routecount() * sizeof(TransitRoute));
 
     // Write the existing transit transfers
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
-               hdr.transfercount() * sizeof(TransitTransfer));
+        header_->transfercount() * sizeof(TransitTransfer));
 
-    // Write the existing transit calendar exceptions
-    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
-               hdr.calendarcount() * sizeof(TransitCalendar));
+    // Write the existing access restrictions
+    file.write(reinterpret_cast<const char*>(&access_restrictions_[0]),
+        header_->access_restriction_count() * sizeof(AccessRestriction));
 
     // Write the existing signs
     file.write(reinterpret_cast<const char*>(&signs_[0]),
-               hdr.signcount() * sizeof(Sign));
+        header_->signcount() * sizeof(Sign));
 
     // Write the existing admins
     file.write(reinterpret_cast<const char*>(&admins_[0]),
-               hdr.admincount() * sizeof(Admin));
+        header_->admincount() * sizeof(Admin));
+
+    // Write the edge cells
+    if(write_bins_)
+      SerializeEdgeCellsToOstream(file);
+    else {
+      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+        sizeof(GraphId) * header_->cell_offset(kGridDim - 1, kGridDim - 1).second);
+    }
 
     // Write the existing edgeinfo
     file.write(edgeinfo_, edgeinfo_size_);
@@ -336,14 +342,14 @@ void GraphTileBuilder::Update(
 }
 
 // Update a graph tile with new header, nodes, directed edges, and signs.
-void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
-                const GraphTileHeaderBuilder& hdr,
-                const std::vector<NodeInfoBuilder>& nodes,
-                const std::vector<DirectedEdgeBuilder>& directededges,
-                const std::vector<SignBuilder>& signs) {
+void GraphTileBuilder::Update(const GraphTileHeader& hdr,
+                const std::vector<NodeInfo>& nodes,
+                const std::vector<DirectedEdge>& directededges,
+                const std::vector<Sign>& signs,
+                const std::vector<AccessRestriction>& restrictions) {
   // Get the name of the file
-  boost::filesystem::path filename = hierarchy.tile_dir() + '/' +
-            GraphTile::FileSuffix(hdr.graphid(), hierarchy);
+  boost::filesystem::path filename = hierarchy_.tile_dir() + '/' +
+            GraphTile::FileSuffix(hdr.graphid(), hierarchy_);
 
   // Make sure the directory exists on the system
   if (!boost::filesystem::exists(filename.parent_path()))
@@ -354,24 +360,19 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
                      std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the updated header.
-    file.write(reinterpret_cast<const char*>(&hdr),
-               sizeof(GraphTileHeaderBuilder));
+    file.write(reinterpret_cast<const char*>(&hdr), sizeof(GraphTileHeader));
 
     // Write the updated nodes
     file.write(reinterpret_cast<const char*>(&nodes[0]),
-               nodes.size() * sizeof(NodeInfoBuilder));
+               nodes.size() * sizeof(NodeInfo));
 
     // Write the updated directed edges
     file.write(reinterpret_cast<const char*>(&directededges[0]),
-               directededges.size() * sizeof(DirectedEdgeBuilder));
+               directededges.size() * sizeof(DirectedEdge));
 
     // Write the existing transit departures
     file.write(reinterpret_cast<const char*>(&departures_[0]),
                hdr.departurecount() * sizeof(TransitDeparture));
-
-    // Write the existing transit trips
-    file.write(reinterpret_cast<const char*>(&transit_trips_[0]),
-               hdr.tripcount() * sizeof(TransitTrip));
 
     // Write the existing transit stops
     file.write(reinterpret_cast<const char*>(&transit_stops_[0]),
@@ -385,17 +386,25 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
     file.write(reinterpret_cast<const char*>(&transit_transfers_[0]),
                hdr.transfercount() * sizeof(TransitTransfer));
 
-    // Write the existing transit calendar exceptions
-    file.write(reinterpret_cast<const char*>(&transit_exceptions_[0]),
-               hdr.calendarcount() * sizeof(TransitCalendar));
+    // Write the updated access restrictions
+    file.write(reinterpret_cast<const char*>(&restrictions[0]),
+               restrictions.size() * sizeof(AccessRestriction));
 
     // Write the updated signs
     file.write(reinterpret_cast<const char*>(&signs[0]),
-               signs.size() * sizeof(SignBuilder));
+               signs.size() * sizeof(Sign));
 
     // Write the existing admins
     file.write(reinterpret_cast<const char*>(&admins_[0]),
                hdr.admincount() * sizeof(Admin));
+
+    // Write the edge cells
+    if(write_bins_)
+      SerializeEdgeCellsToOstream(file);
+    else {
+      file.write(static_cast<const char*>(static_cast<const void*>(edge_cells_)),
+        sizeof(GraphId) * hdr.cell_offset(kGridDim - 1, kGridDim - 1).second);
+    }
 
     // Write the existing edgeinfo and textlist
     file.write(edgeinfo_, edgeinfo_size_);
@@ -408,50 +417,19 @@ void GraphTileBuilder::Update(const baldr::TileHierarchy& hierarchy,
   }
 }
 
-// Add a node and list of directed edges
-void GraphTileBuilder::AddNodeAndDirectedEdges(
-    NodeInfoBuilder& node,
-    const std::vector<DirectedEdgeBuilder>& directededges) {
-  // Set the index to the first directed edge from this node and
-  // set its count. Add the node to the list
-  node.set_edge_index(directededges_builder_.size());
-  node.set_edge_count(directededges.size());
-  nodes_builder_.push_back(node);
-
-  // Add directed edges to the list
-  for (const auto& directededge : directededges) {
-    directededges_builder_.push_back(directededge);
-  }
-}
-
 // Get the current list of node builders.
-const std::vector<NodeInfoBuilder>& GraphTileBuilder::nodes() const {
+std::vector<NodeInfo>& GraphTileBuilder::nodes() {
   return nodes_builder_;
 }
 
 // Gets the current list of directed edge (builders).
-const std::vector<DirectedEdgeBuilder>& GraphTileBuilder::directededges() const {
+std::vector<DirectedEdge>& GraphTileBuilder::directededges() {
   return directededges_builder_;
-}
-
-// Clear the current list of nodes (builders).
-void GraphTileBuilder::ClearNodes() {
-  nodes_builder_.clear();
-}
-
-// Clear the current list of directed edges (builders).
-void GraphTileBuilder::ClearDirectedEdges() {
-  directededges_builder_.clear();
 }
 
 // Add a transit departure.
 void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
   departure_builder_.emplace_back(std::move(departure));
-}
-
-// Add a transit trip.
-void GraphTileBuilder::AddTransitTrip(const TransitTrip& trip) {
-  trip_builder_.emplace_back(std::move(trip));
 }
 
 // Add a transit stop.
@@ -469,9 +447,16 @@ void GraphTileBuilder::AddTransitTransfer(const TransitTransfer& transfer)  {
   transfer_builder_.emplace_back(std::move(transfer));
 }
 
-// Add a transit calendar exception.
-void GraphTileBuilder::AddTransitCalendar(const TransitCalendar& exception)  {
-  exception_builder_.emplace_back(std::move(exception));
+// Add an access restriction.
+void GraphTileBuilder::AddAccessRestriction(const AccessRestriction& access_restriction) {
+  access_restriction_builder_.emplace_back(std::move(access_restriction));
+}
+
+// Add access restrictions
+void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction>& restrictions) {
+  access_restriction_builder_.clear();
+  // Add restrictions to the list
+  access_restriction_builder_ = restrictions;
 }
 
 // Add signs
@@ -550,11 +535,12 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     // Return the offset to this edge info
     added = true;
     return current_edge_offset;
-  } else {
-    // Already have this edge - return the offset
-    added = false;
-    return existing_edge_offset_item->second;
   }
+
+  // Already have this edge - return the offset
+  added = false;
+  return existing_edge_offset_item->second;
+
 }
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL> >
   (const uint32_t edgeindex, const GraphId&, const baldr::GraphId&,const uint64_t,
@@ -590,8 +576,7 @@ uint32_t GraphTileBuilder::AddName(const std::string& name) {
 // Add admin
 uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
             const std::string& state_name, const std::string& country_iso,
-            const std::string& state_iso,const std::string& start_dst,
-            const std::string& end_dst) {
+            const std::string& state_iso) {
   // Check if admin already exists
   auto existing_admin_info_offset_item = admin_info_offset_map_.find(country_iso+state_name);
   if (existing_admin_info_offset_item == admin_info_offset_map_.end()) {
@@ -599,8 +584,7 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
     uint32_t country_offset = AddName(country_name);
     uint32_t state_offset   = AddName(state_name);
     admins_builder_.emplace_back(country_offset, state_offset,
-                                 country_iso, state_iso,
-                                 start_dst, end_dst);
+                                 country_iso, state_iso);
 
     // Add to the map
     admin_info_offset_map_.emplace(country_iso+state_name, admins_builder_.size()-1);
@@ -611,67 +595,145 @@ uint32_t GraphTileBuilder::AddAdmin(const std::string& country_name,
   }
 }
 
+// Write all edge cells to specified stream
+void GraphTileBuilder::SerializeEdgeCellsToOstream(std::ostream& out) const {
+  for (const auto& bin : bins_) {
+    out.write(reinterpret_cast<const char*>(&bin[0]), bin.size() * sizeof(GraphId));
+  }
+}
+
 // Serialize the edge info list
-void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) {
+void GraphTileBuilder::SerializeEdgeInfosToOstream(std::ostream& out) const {
   for (const auto& edgeinfo : edgeinfo_list_) {
     out << edgeinfo;
   }
 }
 
 // Serialize the text list
-void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) {
+void GraphTileBuilder::SerializeTextListToOstream(std::ostream& out) const {
   for (const auto& text : textlistbuilder_) {
     out << text << '\0';
   }
 }
 
-// Gets a non-const node (builder) from existing tile data.
-NodeInfoBuilder& GraphTileBuilder::node(const size_t idx) {
+// Gets a non-const node from existing tile data.
+NodeInfo& GraphTileBuilder::node(const size_t idx) {
   if (idx < header_->nodecount())
-    return static_cast<NodeInfoBuilder&>(nodes_[idx]);
+    return nodes_[idx];
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
 // Get the node builder at the specified index.
-NodeInfoBuilder& GraphTileBuilder::node_builder(const size_t idx) {
+NodeInfo& GraphTileBuilder::node_builder(const size_t idx) {
   if (idx < header_->nodecount())
     return nodes_builder_[idx];
   throw std::runtime_error("GraphTileBuilder NodeInfo index out of bounds");
 }
 
-// Gets a non-const directed edge (builder) from existing tile data.
-DirectedEdgeBuilder& GraphTileBuilder::directededge(const size_t idx) {
+// Gets a non-const directed edge from existing tile data.
+DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
   if (idx < header_->directededgecount())
-    return static_cast<DirectedEdgeBuilder&>(directededges_[idx]);
+    return directededges_[idx];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
 // Get the directed edge builder at the specified index.
-DirectedEdgeBuilder& GraphTileBuilder::directededge_builder(const size_t idx) {
+DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
   if (idx < header_->directededgecount())
     return directededges_builder_[idx];
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
-// Gets a non-const sign (builder) from existing tile data.
-SignBuilder& GraphTileBuilder::sign(const size_t idx) {
+// Gets a non-const access restriction from existing tile data.
+AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
+  if (idx < header_->access_restriction_count()) {
+    return access_restrictions_[idx];
+  }
+  throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
+}
+
+// Gets an access restriction builder at the specified index.
+AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx) {
+  if (idx < header_->access_restriction_count())
+     return access_restriction_builder_[idx];
+  throw std::runtime_error("GraphTileBuilder access restriction index is out of bounds");
+}
+
+// Gets a non-const sign from existing tile data.
+Sign& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount())
-    return static_cast<SignBuilder&>(signs_[idx]);
+    return signs_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
 // Gets a sign builder at the specified index.
-SignBuilder& GraphTileBuilder::sign_builder(const size_t idx) {
+Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   if (idx < header_->signcount())
     return signs_builder_[idx];
   throw std::runtime_error("GraphTileBuilder sign index is out of bounds");
 }
 
 // Gets a const admin builder at specified index.
-const AdminInfoBuilder& GraphTileBuilder::admins_builder(size_t idx) {
+const Admin& GraphTileBuilder::admins_builder(size_t idx) {
   if (idx < admins_builder_.size())
     return admins_builder_.at(idx);
   throw std::runtime_error("GraphTileBuilder admin index is out of bounds");
+}
+
+// Add the tile creation date
+void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
+  header_builder_.set_date_created(tile_creation_date);
+}
+
+// Bin the edges in this tile and return which ones shape leaves
+std::list<GraphId> GraphTileBuilder::Bin() {
+  std::list<GraphId> strays;
+  write_bins_ = true;
+
+  //each edge please
+  std::unordered_set<uint64_t> ids(header_->directededgecount() / 2);
+  for(const DirectedEdge* edge = directededges_; edge < directededges_ + header_->directededgecount(); ++edge) {
+    //dont bin these
+    if(edge->is_shortcut() || edge->trans_up() || edge->trans_down())
+      continue;
+
+    //already binned this
+    auto id = ids.find(edge->edgeinfo_offset());
+    if(id != ids.cend())
+      continue;
+
+    //TODO: compare the end and begin node tiles, if it ends in another tile
+    //let the left most, lower most tile win so that we dont have dups
+
+    //crack open that shape
+    ids.emplace(edge->edgeinfo_offset());
+    auto info = edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = info->shape();
+    /*bool uncontained;
+    auto intersected_bins = binner_.intersect(shape, uncontained);
+    GraphId edge_id(header_->graphid().tileid(), header_->graphid().level(), edge - directededges_);
+
+    //was it outside this tile
+    if(uncontained)
+      strays.emplace_back(edge_id);
+
+    //add keep the bin information
+    for(const auto& bin : intersected_bins)
+      bins_[bin].push_back(edge_id);*/
+  }
+
+  //TODO: worry about edges in the builder?
+
+  //throw the binned edge offsets back into the header
+  uint32_t offsets[kCellCount] = { static_cast<uint32_t>(bins_[0].size()) };
+  for(size_t i = 1 ; i < kCellCount; ++i)
+    offsets[i] = static_cast<uint32_t>(bins_[i].size()) + offsets[i - 1];
+  header_->set_edge_cell_offsets(offsets);
+  //since previously we shouldnt have had anything in the bins we dont have to subtract previous bins
+  header_->set_edgeinfo_offset(header_->edgeinfo_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
+  header_->set_textlist_offset(header_->textlist_offset() + offsets[kCellCount - 1] * sizeof(GraphId));
+
+  return strays;
 }
 
 }
