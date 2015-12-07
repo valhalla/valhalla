@@ -73,7 +73,7 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    worker_t::result_t loki_worker_t::matrix(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       auto action_str = ACTION_TO_STRING.find(action)->second;
       //check that location size does not exceed max.
       check_locations(locations.size(), max_locations.find(action_str)->second);
