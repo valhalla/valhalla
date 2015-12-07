@@ -74,8 +74,10 @@ Sequence to_sequence(std::istringstream& wkb)
   auto coords = geometry->getCoordinates();
   for (decltype(coords->size()) idx = 0; idx < coords->size(); idx++) {
     const auto& coord = coords->getAt(idx);
-    sequence.emplace_back(PointLL{coord.x, coord.y});
+    sequence.emplace_back(PointLL(coord.x, coord.y));
   }
+  delete coords;
+  delete geometry;
 
   return sequence;
 }
