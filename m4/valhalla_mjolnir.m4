@@ -28,9 +28,9 @@ AC_DEFUN([CHECK_VALHALLA_MJOLNIR],
 
         AC_CACHE_CHECK(whether the valhalla::mjolnir library is available, ax_cv_valhalla_mjolnir,
         	[AC_LANG_PUSH([C++])
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/mjolnir/nodeinfobuilder.h>]],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <valhalla/mjolnir/osmway.h>]],
 			[[using namespace valhalla::mjolnir;
-			NodeInfoBuilder n;]])],
+			OSMWay w;]])],
 			ax_cv_valhalla_mjolnir=yes, ax_cv_valhalla_mjolnir=no)
 		AC_LANG_POP([C++])
 	])
