@@ -1,4 +1,5 @@
 #include "baldr/graphtile.h"
+#include "baldr/datetime.h"
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
@@ -48,13 +49,13 @@ GraphTile::GraphTile()
       nodes_(nullptr),
       directededges_(nullptr),
       departures_(nullptr),
-      transit_trips_(nullptr),
       transit_stops_(nullptr),
       transit_routes_(nullptr),
       transit_transfers_(nullptr),
-      transit_exceptions_(nullptr),
+      access_restrictions_(nullptr),
       signs_(nullptr),
       admins_(nullptr),
+      edge_cells_(nullptr),
       edgeinfo_(nullptr),
       textlist_(nullptr),
       edgeinfo_size_(0),
@@ -87,71 +88,67 @@ GraphTile::GraphTile(const TileHierarchy& hierarchy, const GraphId& graphid)
     header_ = reinterpret_cast<GraphTileHeader*>(ptr);
     ptr += sizeof(GraphTileHeader);
 
-    // Check internal version
-    const GraphTileHeader gh;
-    if (header_->internal_version() != gh.internal_version()) {
-      LOG_ERROR("Version of tile is out of date or not supported!");
-      return;
-    }
+    // TODO check version
 
     // Set a pointer to the node list
-   nodes_ = reinterpret_cast<NodeInfo*>(ptr);
-   ptr += header_->nodecount() * sizeof(NodeInfo);
+    nodes_ = reinterpret_cast<NodeInfo*>(ptr);
+    ptr += header_->nodecount() * sizeof(NodeInfo);
 
-   // Set a pointer to the directed edge list
-   directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
-   ptr += header_->directededgecount() * sizeof(DirectedEdge);
+    // Set a pointer to the directed edge list
+    directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
+    ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
-   // Set a pointer to the transit departure list
-   departures_ = reinterpret_cast<TransitDeparture*>(ptr);
-   ptr += header_->departurecount() * sizeof(TransitDeparture);
+    // Set a pointer to the transit departure list
+    departures_ = reinterpret_cast<TransitDeparture*>(ptr);
+    ptr += header_->departurecount() * sizeof(TransitDeparture);
 
-   // Set a pointer to the transit trip list
-   transit_trips_ = reinterpret_cast<TransitTrip*>(ptr);
-   ptr += header_->tripcount() * sizeof(TransitTrip);
+    // Set a pointer to the transit stop list
+    transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
+    ptr += header_->stopcount() * sizeof(TransitStop);
 
-   // Set a pointer to the transit stop list
-   transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
-   ptr += header_->stopcount() * sizeof(TransitStop);
+    // Set a pointer to the transit route list
+    transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
+    ptr += header_->routecount() * sizeof(TransitRoute);
 
-   // Set a pointer to the transit route list
-   transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
-   ptr += header_->routecount() * sizeof(TransitRoute);
+    // Set a pointer to the transit transfer list
+    transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
+    ptr += header_->transfercount() * sizeof(TransitTransfer);
 
-   // Set a pointer to the transit transfer list
-   transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
-   ptr += header_->transfercount() * sizeof(TransitTransfer);
+    // Set a pointer access restriction list
+    access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+    ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
 
-   // Set a pointer to the transit calendar exception list
-   transit_exceptions_ = reinterpret_cast<TransitCalendar*>(ptr);
-   ptr += header_->calendarcount() * sizeof(TransitCalendar);
 /*
 LOG_INFO("Tile: " + std::to_string(graphid.tileid()) + "," + std::to_string(graphid.level()));
 LOG_INFO("Departures: " + std::to_string(header_->departurecount()) +
-         " Trips: " + std::to_string(header_->tripcount()) +
          " Stops: " + std::to_string(header_->stopcount()) +
          " Routes: " + std::to_string(header_->routecount()) +
          " Transfers: " + std::to_string(header_->transfercount()) +
          " Exceptions: " + std::to_string(header_->calendarcount()));
-*/
-   // Set a pointer to the sign list
-   signs_ = reinterpret_cast<Sign*>(ptr);
-   ptr += header_->signcount() * sizeof(Sign);
+    */
 
-   // Set a pointer to the admininstrative information list
-   admins_ = reinterpret_cast<Admin*>(ptr);
-   ptr += header_->admincount() * sizeof(Admin);
+    // Set a pointer to the sign list
+    signs_ = reinterpret_cast<Sign*>(ptr);
+    ptr += header_->signcount() * sizeof(Sign);
 
-   // Start of edge information and its size
-   edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
-   edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
+    // Set a pointer to the admininstrative information list
+    admins_ = reinterpret_cast<Admin*>(ptr);
+    ptr += header_->admincount() * sizeof(Admin);
 
-   // Start of text list and its size
-   textlist_ = graphtile_.get() + header_->textlist_offset();
-   textlist_size_ = filesize - header_->textlist_offset();
+    // Set a pointer to the edge cell list
+    edge_cells_ = reinterpret_cast<GraphId*>(ptr);
+    ptr += header_->cell_offset(kGridDim - 1, kGridDim - 1).second * sizeof(GraphId);
 
-   // Set the size to indicate success
-   size_ = filesize;
+    // Start of edge information and its size
+    edgeinfo_ = graphtile_.get() + header_->edgeinfo_offset();
+    edgeinfo_size_ = header_->textlist_offset() - header_->edgeinfo_offset();
+
+    // Start of text list and its size
+    textlist_ = graphtile_.get() + header_->textlist_offset();
+    textlist_size_ = filesize - header_->textlist_offset();
+
+    // Set the size to indicate success
+    size_ = filesize;
   }
   else {
     LOG_DEBUG("Tile " + file_location + " was not found");
@@ -277,6 +274,11 @@ const NodeInfo* GraphTile::node(const size_t idx) const {
 const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
   if (edge.id() < header_->directededgecount())
     return &directededges_[edge.id()];
+  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(edge.id())  + " directededgecount= " +
+                           std::to_string(header_->directededgecount()));
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
@@ -284,7 +286,11 @@ const DirectedEdge* GraphTile::directededge(const GraphId& edge) const {
 const DirectedEdge* GraphTile::directededge(const size_t idx) const {
   if (idx < header_->directededgecount())
     return &directededges_[idx];
-  throw std::runtime_error("GraphTile DirectedEdge index out of bounds");
+  throw std::runtime_error("GraphTile DirectedEdge index out of bounds: " +
+                           std::to_string(header_->graphid().tileid()) + "," +
+                           std::to_string(header_->graphid().level()) + "," +
+                           std::to_string(idx)  + " directededgecount= " +
+                           std::to_string(header_->directededgecount()));
 }
 
 std::unique_ptr<const EdgeInfo> GraphTile::edgeinfo(const size_t offset) const {
@@ -313,8 +319,7 @@ AdminInfo GraphTile::admininfo(const size_t idx) const {
     const Admin& admin = admins_[idx];
     return AdminInfo(textlist_ + admin.country_offset(),
                      textlist_ + admin.state_offset(),
-                     admin.country_iso(), admin.state_iso(),
-                     admin.start_dst(), admin.end_dst());
+                     admin.country_iso(), admin.state_iso());
   }
   throw std::runtime_error("GraphTile AdminInfo index out of bounds");
 }
@@ -390,7 +395,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 // Get the next departure given the directed edge Id and the current
 // time (seconds from midnight).
 const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
-                 const uint32_t current_time, const uint32_t date,
+                 const uint32_t current_time, const uint32_t day,
                  const uint32_t dow) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
@@ -417,7 +422,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   if (!found) {
-    LOG_WARN("No departures found for lineid = " + std::to_string(lineid));
+    LOG_DEBUG("No departures found for lineid = " + std::to_string(lineid));
     return nullptr;
   }
 
@@ -434,39 +439,19 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   while (true) {
     // Make sure valid departure time
     if (departures_[mid].departure_time() >= current_time) {
-      // If date range is only one date and this date matches it is
-      // a calendar date "addition"
+      // If within 60 days of tile creation use the days mask else fallback
+      // to the day of week mask
       const TransitDeparture& dep = departures_[mid];
-      if (dep.start_date() == dep.end_date()) {
-        // If date equals the added date we use this departure, else skip it
-        if (date == dep.start_date()) {
-          return &departures_[mid];
+      if (day <= dep.end_day()) {
+        // Check days bit
+        if ((dep.days() & (1ULL << day))) {
+          return &dep;
         }
-      } else if (dep.start_date() <= date && date <= dep.end_date()) {
-        // Within valid date range for departure. Check the day of week mask
-        if ((dep.days() & dow) > 0) {
-          // Check that there are no calendar exceptions
-          if (dep.serviceid() == 0) {
-            return &departures_[mid];
-          } else {
-            // Check if there is a calendar exception for this date.
-            bool except = false;
-            auto exceptions = GetCalendarExceptions(dep.serviceid());
-            TransitCalendar* calendar = exceptions.first;
-            for (uint32_t i = 0; i < exceptions.second; i++, calendar++) {
-              if (calendar->date() == date) {
-                except = true;
-                break;
-              }
-            }
-            if (!except) {
-              return &departures_[mid];
-            }
-          }
-        }
+      } else {
+        if ((dep.days_of_week() & dow) > 0)
+          return &dep;
       }
     }
-
 
     // Advance to next departure
     if (mid+1 < count && departures_[mid+1].lineid() == lineid) {
@@ -477,7 +462,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid));
+  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid) +
+           " current_time = " + std::to_string(current_time));
   return nullptr;
 }
 
@@ -537,88 +523,27 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   return nullptr;
 }
 
-// Get the transit trip given its trip Id.
-const TransitTrip* GraphTile::GetTransitTrip(const uint32_t tripid) const {
-  uint32_t count = header_->tripcount();
-  if (count == 0) {
-    return nullptr;
-  }
-
-  // Binary search - trip Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_trips_[mid].tripid() == tripid) {
-      return &transit_trips_[mid];
-    }
-    if (tripid < transit_trips_[mid].tripid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No trip found for tripid = " + std::to_string(tripid));
-  return nullptr;
-}
-
-// Get the transit stop given its stop Id.
-const TransitStop* GraphTile::GetTransitStop(const uint32_t stopid) const {
+// Get the transit stop given its index within the tile.
+const TransitStop* GraphTile::GetTransitStop(const uint32_t idx) const {
   uint32_t count = header_->stopcount();
-  if (count == 0) {
+  if (count == 0)
     return nullptr;
-  }
 
-  // Binary search - stop Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_stops_[mid].stopid() == stopid) {
-      return &transit_stops_[mid];
-    }
-    if (stopid < transit_stops_[mid].stopid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  // Not found
-  LOG_ERROR("No trip found for stopid = " + std::to_string(stopid));
-  return nullptr;
+  if (idx < count)
+    return &transit_stops_[idx];
+  throw std::runtime_error("GraphTile Transit Stop index out of bounds");
 }
 
-// Get the transit route given its route Id.
-const TransitRoute* GraphTile::GetTransitRoute(const uint32_t routeid) const {
-  uint32_t count = header_->routecount();
-  if (count == 0) {
+// Get the transit route given its index within the tile.
+const TransitRoute* GraphTile::GetTransitRoute(const uint32_t idx) const {
+  uint32_t count = header_->stopcount();
+  if (count == 0)
     return nullptr;
-  }
 
-  // Binary search - stop Ids should be unique
-  int32_t low = 0;
-  int32_t high = count-1;
-  int32_t mid;
-  while (low <= high) {
-    mid = (low + high) / 2;
-    if (transit_routes_[mid].routeid() == routeid) {
-      return &transit_routes_[mid];
-    }
-    if (routeid < transit_routes_[mid].routeid() ) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
+  if (idx < count) {
+    return &transit_routes_[idx];
   }
-
-  // Not found
-  LOG_ERROR("No trip found for routeid = " + std::to_string(routeid));
-  return nullptr;
+  throw std::runtime_error("GraphTile GetTransitRoute index out of bounds");
 }
 
 // Get a pointer to the first transfer record given the stop Id and also
@@ -724,54 +649,60 @@ TransitTransfer* GraphTile::GetTransfer(const uint32_t from_stopid,
   }
 }
 
+// Get the access restriction given its directed edge index
+std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t idx) const {
 
-// Get a pointer to the first calendar exception record given the service
-// Id and compute the number of calendar exception records.
-std::pair<TransitCalendar*, uint32_t> GraphTile::GetCalendarExceptions(
-               const uint32_t serviceid) const {
-  uint32_t count = header_->calendarcount();
+  std::vector<AccessRestriction> restrictions;
+  uint32_t count = header_->access_restriction_count();
   if (count == 0) {
-    return {nullptr, 0};
+    return restrictions;
   }
 
-  // Binary search
+  // Access restriction are sorted by edge Id.
+  // Binary search to find a access restriction with matching edge Id.
   int32_t low = 0;
   int32_t high = count-1;
   int32_t mid;
   bool found = false;
   while (low <= high) {
     mid = (low + high) / 2;
-    if (transit_exceptions_[mid].serviceid() == serviceid) {
+    if (access_restrictions_[mid].edgeindex() == idx) {
       found = true;
       break;
     }
-    if (serviceid < transit_exceptions_[mid].serviceid() ) {
+    if (idx < access_restrictions_[mid].edgeindex() ) {
       high = mid - 1;
     } else {
       low = mid + 1;
     }
   }
 
-  if (found) {
-    // Back up while prior is equal (or at the beginning)
-    while (mid > 0 &&
-          transit_exceptions_[mid-1].serviceid() == serviceid) {
-      mid--;
-    }
-
-    // Set the start and increment until not equal to get the count
-    uint32_t n = 0;
-    TransitCalendar* start = &transit_exceptions_[mid];
-    while (transit_exceptions_[mid].serviceid() == serviceid && mid < count) {
-      n++;
-      mid++;
-    }
-    return {start, n};
-  } else {
-    LOG_ERROR("No calendar exceptions found for serviceid = " +
-                  std::to_string(serviceid));
-    return {nullptr, 0};
+  if (!found) {
+    LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
+    return restrictions;
   }
+
+  // Back up while prior is equal (or at the beginning)
+  while (mid > 0 && access_restrictions_[mid - 1].edgeindex() == idx) {
+    mid--;
+  }
+
+  // Add restrictions
+  while (access_restrictions_[mid].edgeindex() == idx && mid < count) {
+    restrictions.emplace_back(access_restrictions_[mid]);
+    mid++;
+  }
+
+  if (restrictions.size() == 0) {
+    LOG_ERROR("No restrictions found for edge index = " + std::to_string(idx));
+  }
+  return restrictions;
+}
+
+// Get the array of graphids for this cell
+midgard::iterable_t<GraphId> GraphTile::GetCell(size_t column, size_t row) const {
+  auto offsets = header_->cell_offset(column, row);
+  return iterable_t<GraphId>{edge_cells_ + offsets.first, edge_cells_ + offsets.second};
 }
 
 }

@@ -46,6 +46,7 @@ CLEANFILES = date_time_zonespec.csv valhalla/baldr/date_time_zonespec.h
 # libvalhalla-baldr compilation etc
 lib_LTLIBRARIES = libvalhalla_baldr.la
 nobase_include_HEADERS = \
+        valhalla/baldr/accessrestriction.h \
 	valhalla/baldr/admin.h \
         valhalla/baldr/admininfo.h \
 	valhalla/baldr/connectivity_map.h \
@@ -63,7 +64,6 @@ nobase_include_HEADERS = \
 	valhalla/baldr/pathlocation.h \
 	valhalla/baldr/sign.h \
         valhalla/baldr/signinfo.h \
-	valhalla/baldr/srtmtile.h \
 	valhalla/baldr/tilehierarchy.h \
 	valhalla/baldr/turn.h \
 	valhalla/baldr/streetname.h \
@@ -71,12 +71,10 @@ nobase_include_HEADERS = \
 	valhalla/baldr/streetnames_factory.h \
 	valhalla/baldr/streetname_us.h \
 	valhalla/baldr/streetnames_us.h \
-	valhalla/baldr/transitcalendar.h \
 	valhalla/baldr/transitdeparture.h \
 	valhalla/baldr/transitroute.h \
 	valhalla/baldr/transitstop.h \
 	valhalla/baldr/transittransfer.h \
-	valhalla/baldr/transittrip.h \
 	valhalla/baldr/verbal_text_formatter.h \
 	valhalla/baldr/verbal_text_formatter_us.h \
 	valhalla/baldr/verbal_text_formatter_us_co.h \
@@ -84,6 +82,7 @@ nobase_include_HEADERS = \
 	valhalla/baldr/verbal_text_formatter_factory.h \
         valhalla/baldr/date_time_zonespec.h
 libvalhalla_baldr_la_SOURCES = \
+        src/baldr/accessrestriction.cc \
         src/baldr/admin.cc \
 	src/baldr/admininfo.cc \
 	src/baldr/connectivity_map.cc \
@@ -99,7 +98,6 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/pathlocation.cc \
 	src/baldr/sign.cc \
         src/baldr/signinfo.cc \
-        src/baldr/srtmtile.cc \
 	src/baldr/tilehierarchy.cc \
 	src/baldr/turn.cc \
 	src/baldr/streetname.cc \
@@ -107,12 +105,10 @@ libvalhalla_baldr_la_SOURCES = \
 	src/baldr/streetnames_factory.cc \
 	src/baldr/streetname_us.cc \
 	src/baldr/streetnames_us.cc \
-	src/baldr/transitcalendar.cc \
 	src/baldr/transitdeparture.cc \
 	src/baldr/transitroute.cc \
 	src/baldr/transitstop.cc \
 	src/baldr/transittransfer.cc \
-	src/baldr/transittrip.cc \
 	src/baldr/verbal_text_formatter.cc \
 	src/baldr/verbal_text_formatter_us.cc \
 	src/baldr/verbal_text_formatter_us_co.cc \
@@ -122,15 +118,15 @@ libvalhalla_baldr_la_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFL
 libvalhalla_baldr_la_LIBADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ $(BOOST_SYSTEM_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_THREAD_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_DATE_TIME_LIB)
 
 #distributed executables
-bin_PROGRAMS = srtmtest
-srtmtest_SOURCES = \
-        src/baldr/srtmtest/srtmtest.cc
-srtmtest_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
-srtmtest_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@  $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_baldr.la
+bin_PROGRAMS = 
+#_SOURCES = 
+#_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+#_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@  $(BOOST_FILESYSTEM_LIB) -lz libvalhalla_baldr.la
 
 # tests
 check_PROGRAMS = \
 	test/location \
+	test/admin \
 	test/datetime \
 	test/directededge \
 	test/graphid \
@@ -152,6 +148,9 @@ check_PROGRAMS = \
 test_location_SOURCES = test/location.cc test/test.cc
 test_location_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_location_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la
+test_admin_SOURCES = test/admin.cc test/test.cc
+test_admin_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS) @BOOST_CPPFLAGS@
+test_admin_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) @BOOST_LDFLAGS@ libvalhalla_baldr.la
 test_datetime_SOURCES = test/datetime.cc test/test.cc
 test_datetime_CPPFLAGS = $(DEPS_CFLAGS) $(VALHALLA_CPPFLAGS)
 test_datetime_LDADD = $(DEPS_LIBS) $(VALHALLA_LDFLAGS) libvalhalla_baldr.la

@@ -17,13 +17,14 @@ class GraphTile;
 constexpr uint32_t kMaxTileEdgeCount    = 4194303;  // 2^22 directed edges
 constexpr uint32_t kMaxEdgesPerNode     = 127;      // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile    = 63;       // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 63;       // Maximum TimeZones per tile
+constexpr uint32_t kMaxTimeZonesPerTile = 511;      // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex   = 7;        // Max. index of edges on
-                                                  // local level
+                                                    // local level
 constexpr uint32_t kMaxDensity = 15;              // Max. relative node density
 
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.f/359.f);
+
 // Heading expand factor to increase max heading of 255 to 359
 constexpr float kHeadingExpandFactor = (359.f/255.f);
 
@@ -40,10 +41,28 @@ class NodeInfo {
   NodeInfo();
 
   /**
+   * Constructor with arguments
+   * @param  ll  Lat,lng position of the node.
+   * @param  rc             Best road class / importance of outbound edges.
+   * @param  access         Access mask at this node.
+   * @param  type           The type of node.
+   * @param  traffic_signal Has a traffic signal at this node?
+   */
+  NodeInfo(const std::pair<float, float>& ll, const baldr::RoadClass rc,
+                  const uint32_t access, const baldr::NodeType type,
+                  const bool traffic_signal);
+
+  /**
    * Get the latitude, longitude of the node.
    * @return  Returns the latitude and longitude of the node.
    */
   const PointLL& latlng() const;
+
+  /**
+   * Sets the latitude and longitude.
+   * @param  ll  Lat,lng position of the node.
+   */
+  void set_latlng(const std::pair<float, float>& ll);
 
   /**
    * Get the index of the first outbound edge from this node. Since
@@ -54,11 +73,23 @@ class NodeInfo {
   uint32_t edge_index() const;
 
   /**
+   * Set the index within the node's tile of its first outbound edge.
+   * @param  edge_index  the GraphId of the first outbound edge.
+   */
+  void set_edge_index(const uint32_t edge_index);
+
+  /**
    * Get the number of outbound directed edges. This includes all edge
    * present on the current hierarchy level.
    * @return  Returns the number of outbound directed edges.
    */
   uint32_t edge_count() const;
+
+  /**
+   * Set the number of outbound directed edges.
+   * @param  edge_count  the number of outbound directed edges.
+   */
+  void set_edge_count(const uint32_t edge_count);
 
   /**
    * Get the best road class of the outbound directed edges.
@@ -67,11 +98,24 @@ class NodeInfo {
   RoadClass bestrc() const;
 
   /**
+   * Sets the best road class of the outbound directed edges.
+   * @param  bestrc  Best road class / importance (lowest value).
+   */
+  void set_bestrc(const baldr::RoadClass bestrc);
+
+  /**
    * Get the access modes (bit mask) allowed to pass through the node.
-   * See graphconstants.h
+   * See graphconstants.h for access constants.
    * @return  Returns the access bit mask indicating allowable modes.
    */
-  uint8_t access() const;
+  uint16_t access() const;
+
+  /**
+   * Set the access modes (bit mask) allowed to pass through the node.
+   * * See graphconstants.h for access constants.
+   * @param  access  Access mask.
+   */
+  void set_access(const uint32_t access);
 
   /**
    * Get the intersection type.
@@ -80,10 +124,22 @@ class NodeInfo {
   IntersectionType intersection() const;
 
   /**
+   * Set the intersection type.
+   * @param  type   Intersection type (see baldr/graphconstants.h)
+   */
+  void set_intersection(const baldr::IntersectionType type);
+
+  /**
    * Get the index of the administrative information within this tile.
    * @return  Returns an index within the tile's administrative information.
    */
   uint32_t admin_index() const;
+
+  /**
+   * Set the index of the administrative information within this tile.
+   * @param  admin_index  admin index.
+   */
+  void set_admin_index(const uint16_t admin_index);
 
   /**
    * Returns the timezone index. TODO - describe the timezone information.
@@ -92,10 +148,10 @@ class NodeInfo {
   uint32_t timezone() const;
 
   /**
-   * Is daylight saving time observed at the node's location.
-   * @return  Returns true if daylight savings time is observed.
+   * Set the timezone index.
+   * @param  timezone  timezone index.
    */
-  bool dst() const;
+  void set_timezone(const uint32_t timezone);
 
   /**
    * Get the driveability of the local directed edge given a local
@@ -106,16 +162,37 @@ class NodeInfo {
   Traversability local_driveability(const uint32_t localidx) const;
 
   /**
-   * Get the relative density (TODO - define) at the node.
+   * Set the auto driveability of the local directed edge given a local
+   * edge index.
+   * @param  localidx  Local edge index.
+   * @param  t         Traversability (see graphconstants.h)
+   */
+  void set_local_driveability(const uint32_t localidx,
+                              const baldr::Traversability t);
+
+  /**
+   * Get the relative road density at the node.
    * @return  Returns relative density (0-15).
    */
   uint32_t density() const;
+
+  /**
+   * Set the relative road density
+   * @param  density  density.
+   */
+  void set_density(const uint32_t density);
 
   /**
    * Gets the node type. See graphconstants.h for the list of types.
    * @return  Returns the node type.
    */
   NodeType type() const;
+
+  /**
+   * Set the node type.
+   * @param  type  node type.
+   */
+  void set_type(const baldr::NodeType type);
 
   /**
    * Checks if this node is a transit node.
@@ -130,10 +207,10 @@ class NodeInfo {
   uint32_t local_edge_count() const;
 
   /**
-   * Is this a dead-end node that connects to only one edge?
-   * @return  Returns true if this is a dead-end node.
+   * Set the number of edges on the local level (up to kMaxLocalEdgeInfo+1).
+   * @param  n  Number of edges on the local level.
    */
-  bool end() const;
+  void set_local_edge_count(const uint32_t n);
 
   /**
    * Is this a parent node (e.g. a parent transit stop).
@@ -142,10 +219,22 @@ class NodeInfo {
   bool parent() const;
 
   /**
+   * Set the parent node flag (e.g. a parent transit stop).
+   * @param  parent  parent node flag.
+   */
+  void set_parent(const bool parent);
+
+  /**
    * Is this a child node (e.g. a child transit stop).
    * @return  Returns true if this is a child node.
    */
   bool child() const;
+
+  /**
+   * Set the child node flag (e.g. a child transit stop).
+   * @param  child  child node flag.
+   */
+  void set_child(const bool child);
 
   /**
    * Is a mode change allowed at this node? The access data tells which
@@ -156,17 +245,37 @@ class NodeInfo {
   bool mode_change() const;
 
   /**
+   * Sets the flag indicating a mode change is allowed at this node.
+   * The access data tells which modes are allowed at the node. Examples
+   * include transit stops, bike share locations, and parking locations.
+   * @param  mc  True if a mode change is allowed at the node.
+   */
+  void set_mode_change(const bool mc);
+
+  /**
    * Is there a traffic signal at this node?
    * @return  Returns true if there is a traffic signal at the node.
    */
   bool traffic_signal() const;
 
   /**
-   * Gets the transit stop Id. This is used for schedule lookups
-   * and possibly queries to a transit service.
-   * @return  Returns the transit stop Id or 0 if this is not a transit node.
+   * Set the traffic signal flag.
+   * @param  traffic_signal  taffic signal flag.
    */
-  uint32_t stop_id() const;
+  void set_traffic_signal(const bool traffic_signal);
+
+  /**
+   * Gets the transit stop index. This is used for schedule lookups
+   * and possibly queries to a transit service.
+   * @return  Returns the transit stop index.
+   */
+  uint32_t stop_index() const;
+
+  /**
+   * Set the transit stop index.
+   * @param  stop_index  transit stop index.
+   */
+  void set_stop_index(const uint32_t stop_index);
 
   /**
    * Get the name consistency between a pair of local edges. This is limited
@@ -179,6 +288,16 @@ class NodeInfo {
   bool name_consistency(const uint32_t from, const uint32_t to) const;
 
   /**
+   * Set the name consistency between a pair of local edges. This is limited
+   * to the first 8 local edge indexes.
+   * @param  from  Local index of the from edge.
+   * @param  to    Local index of the to edge.
+   * @param  c     Are names consistent between the 2 edges?
+   */
+  void set_name_consistency(const uint32_t from, const uint32_t to,
+                            const bool c);
+
+  /**
    * Get the heading of the local edge given its local index. Supports
    * up to 8 local edges. Headings are stored rounded off to 2 degree
    * values.
@@ -188,67 +307,50 @@ class NodeInfo {
   uint32_t heading(const uint32_t localidx) const;
 
   /**
+   * Set the heading of the local edge given its local index. Supports
+   * up to 8 local edges. Headings are reduced to 8 bits.
+   * @param  localidx  Local edge index.
+   * @param  heading   Heading relative to N (0-359 degrees).
+   */
+  void set_heading(uint32_t localidx, uint32_t heading);
+
+  /**
    * Returns the json representation of the object
    * @param   the tile required to get admin information
    * @return  json object
    */
   json::MapPtr json(const GraphTile* tile) const;
 
-  /**
-   * Get the computed version of NodeInfo attributes.
-   * @return   Returns internal version.
-   */
-  static const uint64_t internal_version();
-
  protected:
   // Latitude, longitude position of the node.
   std::pair<float, float> latlng_;
 
-  // Node attributes.
-  struct NodeAttributes {
-    uint32_t edge_index_  : 22; // Index within the node's tile of its first
+  // Node attributes and admin information
+  uint64_t edge_index_   : 22;  // Index within the node's tile of its first
                                 // outbound directed edge
-    uint32_t edge_count_   : 7; // Number of outbound edges (on this level)
-    uint32_t bestrc_       : 3; // Best directed edge road class
-  };
-  NodeAttributes attributes_;
+  uint64_t access_       : 12;  // Access through the node - bit field
+  uint64_t edge_count_   : 7;   // Number of outbound edges (on this level)
+  uint64_t bestrc_       : 3;   // Best directed edge road class
+  uint64_t admin_index_  : 6;   // Index into this tile's list of admin data
+  uint64_t timezone_     : 9;   // Time zone
+  uint64_t intersection_ : 5;   // Intersection type
 
-  // Node access (see graphconstants.h)
-  Access access_;
+  // Node type and additional node attributes
+  uint32_t local_driveability_ : 16; // Driveability for local edges (up to
+                                     // kMaxLocalEdgeIndex+1 edges)
+  uint32_t density_            : 4;  // Relative road density
+  uint32_t type_               : 4;  // NodeType, see graphconstants
+  uint32_t local_edge_count_   : 3;  // # of edges on local level (up to
+                                     // kMaxLocalEdgeIndex+1)
+  uint32_t parent_             : 1;  // Is this a parent node
+  uint32_t child_              : 1;  // Is this a child node
+  uint32_t mode_change_        : 1;  // Mode change allowed?
+  uint32_t traffic_signal_     : 1;  // Traffic signal
+  uint32_t spare1_             : 1;
 
-  // Intersection type. Classification of the intersection.
-  // (see graphconstants.h)
-  IntersectionType intersection_;
-
-  // Administrative information
-  struct NodeAdmin {
-    uint16_t admin_index  : 6; // Index into this tile's list of admin data
-    uint16_t timezone     : 6; // Time zone
-    uint16_t dst          : 1; // Is Daylight Saving Time used?
-    uint16_t spare        : 3;
-  };
-  NodeAdmin admin_;
-
-  // Node type
-  struct NodeTypeInfo {
-    uint32_t local_driveability : 16; // Driveability for local edges (up to
-                                      // kMaxLocalEdgeIndex+1 edges)
-    uint32_t density            : 4;  // Density (population? edges?)
-    uint32_t type               : 4;  // Node type, see graphconstants NodeType
-    uint32_t local_edge_count   : 3;  // # of edges on local level (up to
-                                      // kMaxLocalEdgeIndex+1)
-    uint32_t end                : 1;  // End node (only connects to 1 edge)
-    uint32_t parent             : 1;  // Is this a parent node
-    uint32_t child              : 1;  // Is this a child node
-    uint32_t mode_change        : 1;  // Mode change allowed?
-    uint32_t traffic_signal     : 1;  // Traffic signal
-
-  };
-  NodeTypeInfo type_;
-
-  // Transit stop Id
+  // Transit stop index
   union NodeStop {
-    uint32_t stop_id;
+    uint32_t stop_index;
     uint32_t name_consistency;
   };
   NodeStop stop_;

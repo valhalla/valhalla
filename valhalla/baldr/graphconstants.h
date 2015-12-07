@@ -23,21 +23,6 @@ constexpr uint8_t kCoins  = 1; // Coins
 constexpr uint8_t kNotes  = 2; // Bills
 constexpr uint8_t kETC    = 4; // Electronic Toll Collector
 
-// Access structure used by NodeInfo and DirectedEdge
-union Access {
-  struct Fields {
-    uint8_t car          : 1; // Auto and light vehicle access
-    uint8_t pedestrian   : 1; // Pedestrian access
-    uint8_t bicycle      : 1; // Bicycle access
-    uint8_t truck        : 1; // Truck / heavy good vehicle access
-    uint8_t emergency    : 1; // Emergency vehicle access
-    uint8_t taxi         : 1; // Taxi access
-    uint8_t bus          : 1; // Bus access
-    uint8_t hov          : 1; // High occupancy vehicle access
-  } fields;
-  uint8_t v;
-};
-
 // Edge traversability
 enum class Traversability {
   kNone = 0,        // Edge is not traversable in either direction
@@ -130,16 +115,17 @@ constexpr uint32_t kMaxCurvatureFactor = 15;
 
 // Node types.
 enum class NodeType : uint8_t {
-  kStreetIntersection = 0,  // Regular intersection of 2 roads
-  kGate = 1,                // Gate or rising bollard
-  kBollard = 2,             // Bollard (fixed obstruction)
-  kTollBooth = 3,           // Toll booth / fare collection
-  kRailStop = 4,            // Rail/metro/subway stop
-  kBusStop = 5,             // Bus stop
-  kMultiUseTransitStop = 6, // Multi-use transit stop (rail and bus)
-  kBikeShare = 7,           // Bike share location
-  kParking = 8,             // Parking location
-  kMotorWayJunction = 9     // Highway = motorway_junction
+  kStreetIntersection = 0,    // Regular intersection of 2 roads
+  kGate = 1,                  // Gate or rising bollard
+  kBollard = 2,               // Bollard (fixed obstruction)
+  kTollBooth = 3,             // Toll booth / fare collection
+  kRailStop = 4,              // Rail/metro/subway stop
+  kBusStop = 5,               // Bus stop
+  kMultiUseTransitStop = 6,   // Multi-use transit stop (rail and bus)
+  kBikeShare = 7,             // Bike share location
+  kParking = 8,               // Parking location
+  kMotorWayJunction = 9,      // Highway = motorway_junction
+  kBorderControl = 10         // Border control
 };
 const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kStreetIntersection), "street_intersection"},
@@ -152,6 +138,7 @@ const std::unordered_map<uint8_t, std::string> NodeTypeStrings = {
   {static_cast<uint8_t>(NodeType::kBikeShare), "bike_share"},
   {static_cast<uint8_t>(NodeType::kParking), "parking"},
   {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
+  {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
 };
 inline std::string to_string(NodeType n) {
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
@@ -161,7 +148,7 @@ inline std::string to_string(NodeType n) {
 }
 
 // Intersection types. Classifications of various intersections.
-// TODO - enumerate and assign!
+// Maximum value = 31 (DO NOT EXCEED!)
 enum class IntersectionType : uint8_t {
   kRegular = 0,       // Regular, unclassified intersection
   kFalse = 1,         // False intersection. Only 2 edges connect. Typically
@@ -333,7 +320,7 @@ enum class DOW : uint8_t {
 //This is our pivot date for transit.  No dates will be older than this date.
 const std::string kPivotDate = "20140101";  //January 1, 2014
 
-// Used for transit DOW mask.
+// Used for day of week mask.
 constexpr uint8_t kDOWNone    = 0;
 constexpr uint8_t kSunday     = 1;
 constexpr uint8_t kMonday     = 2;
@@ -342,6 +329,7 @@ constexpr uint8_t kWednesday  = 8;
 constexpr uint8_t kThursday   = 16;
 constexpr uint8_t kFriday     = 32;
 constexpr uint8_t kSaturday   = 64;
+constexpr uint8_t kAllDaysOfWeek = 127;
 
 // Restriction types. If a restriction exists this value will be set.
 // Restrictions with "Only" will restrict all turns not adhering to the
@@ -354,6 +342,16 @@ enum class RestrictionType : uint8_t {
   kOnlyRightTurn = 4,
   kOnlyLeftTurn = 5,
   kOnlyStraightOn = 6
+};
+
+// Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
+enum class AccessType : uint8_t {
+  kHazmat = 0,
+  kMaxHeight = 1,
+  kMaxWidth= 2,
+  kMaxLength = 3,
+  kMaxWeight = 4,
+  kMaxAxleLoad = 5
 };
 
 // ------------------------------- Transit information --------------------- //

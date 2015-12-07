@@ -1,20 +1,21 @@
 #ifndef VALHALLA_BALDR_GRAPHTILE_H_
 #define VALHALLA_BALDR_GRAPHTILE_H_
 
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/transitcalendar.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
-#include <valhalla/baldr/transittrip.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/util.h>
+
 #include <boost/shared_array.hpp>
 #include <memory>
 #include "signinfo.h"
@@ -154,11 +155,11 @@ class GraphTile {
    */
   const Admin* admin(const size_t idx) const;
 
- /**
-  * Convenience method to get the text/name for a given offset to the textlist
-  * @param   textlist_offset  offset into the text list.
-  * @return  Returns the desired string
-  */
+  /**
+   * Convenience method to get the text/name for a given offset to the textlist
+   * @param   textlist_offset  offset into the text list.
+   * @return  Returns the desired string
+   */
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
@@ -174,14 +175,15 @@ class GraphTile {
    * time (seconds from midnight). TODO - what if crosses midnight?
    * @param   edgeid  Directed edge Id.
    * @param   current_time  Current time (seconds from midnight).
-   * @param   date    Date (TODO - comment on standard used).
-   * @param   dow     Day of week (TODO - comment on DOW mask)
+   * @param   day     Days since the tile creation date.
+   * @param   dow     Day of week (see graphconstants.h)
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
-              const uint32_t current_time, const uint32_t date,
-              const uint32_t dow) const;
+                                           const uint32_t current_time,
+                                           const uint32_t day,
+                                           const uint32_t dow) const;
 
   /**
    * Get the departure given the directed edge Id and tripid
@@ -190,32 +192,22 @@ class GraphTile {
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departure is found.
    */
-   const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
-                                               const uint32_t tripid) const;
-
+  const TransitDeparture* GetTransitDeparture(const uint32_t edgeid,
+                                              const uint32_t tripid) const;
   /**
-   * Get the transit trip given its trip Id.
-   * @param   tripid  Trip Id.
-   * @return  Returns a pointer to the transit trip information. Returns
-   *          nullptr if the trip is not found.
+   * Get the transit stop given its index
+   * @param   idx  stop index.
+   * @return  Returns a pointer to the transit stop information.
    */
-  const TransitTrip* GetTransitTrip(const uint32_t tripid) const;
-
-  /**
-   * Get the transit stop given its stop Id.
-   * @param   stopid  Stop Id.
-   * @return  Returns a pointer to the transit stop information. Returns
-   *          nullptr if the stop is not found.
-   */
-  const TransitStop* GetTransitStop(const uint32_t stopid) const;
+  const TransitStop* GetTransitStop(const uint32_t idx) const;
 
   /**
    * Get the transit route given its route Id.
-   * @param   routeid  Route Id.
+   * @param   idx     Route index within the tile.
    * @return  Returns a pointer to the transit route information. Returns
    *          nullptr if the route is not found.
    */
-  const TransitRoute* GetTransitRoute(const uint32_t routeid) const;
+  const TransitRoute* GetTransitRoute(const uint32_t idx) const;
 
   /**
    * Get a pointer to the first transfer record given the stop Id and
@@ -225,7 +217,7 @@ class GraphTile {
    *          and a count of transfer records from the given stop Id.
    */
   std::pair<TransitTransfer*, uint32_t> GetTransfers(
-                const uint32_t stopid) const;
+      const uint32_t stopid) const;
 
   /**
    * Get a pointer to the transfer record given the from stop Id and
@@ -239,15 +231,20 @@ class GraphTile {
                                const uint32_t to_stopid) const;
 
   /**
-   * Get a pointer to the first calendar exception record given the service
-   * Id and compute the number of calendar exception records.
-   * @param   serviceid  Service Id.
-   * @return  Returns a pair with a pointer to the initial calendar exception
-   *          record and a count of calendar exception records for this
-   *          service Id.
+   * Convenience method to get the access restrictions for an edge given the
+   * edge Id.
+   * @param   edgeid  Directed edge Id.
+   * @return  Returns a list (vector) of AccessRestrictions.
    */
-  std::pair<TransitCalendar*, uint32_t> GetCalendarExceptions(
-                const uint32_t serviceid) const;
+  std::vector<AccessRestriction> GetAccessRestrictions(const uint32_t edgeid) const;
+
+  /**
+   * Get an iteratable list of GraphIds given a cell in the tile
+   * @param  column the cell's column
+   * @param  row the cell's row
+   * @return iterable container of graphids contained in the cell
+   */
+  midgard::iterable_t<GraphId> GetCell(size_t column, size_t row) const;
 
  protected:
 
@@ -273,9 +270,6 @@ class GraphTile {
   // sorted by departure time)
   TransitDeparture* departures_;
 
-  // Transit trips (indexed by trip Id - unique)
-  TransitTrip* transit_trips_;
-
   // Transit stops (indexed by stop Id - unique)
   TransitStop* transit_stops_;
 
@@ -285,8 +279,8 @@ class GraphTile {
   // Transit transfers, 1 or more per index (indexed by from stop Id)
   TransitTransfer* transit_transfers_;
 
-  // Transit calendar exceptions, 1 or more per index (indexed by service Id)
-  TransitCalendar* transit_exceptions_;
+  // Access restrictions, 1 or more per edge id
+  AccessRestriction* access_restrictions_;
 
   // Signs (indexed by directed edge index)
   Sign* signs_;
@@ -294,6 +288,10 @@ class GraphTile {
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
   Admin* admins_;
+
+  // List of edge graph ids. The list is broken up in cells which have
+  // indices in the tile header.
+  GraphId* edge_cells_;
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.

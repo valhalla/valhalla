@@ -5,58 +5,68 @@ namespace valhalla {
 namespace baldr {
 
 // Constructor with arguments
-TransitRoute:: TransitRoute(const uint32_t routeid, const uint32_t agencyid,
-            const char* tl_routeid, const uint32_t short_name_offset,
-            const uint32_t long_name_offset, const uint32_t desc_offset)
+TransitRoute:: TransitRoute(const uint32_t routeid, uint32_t one_stop_offset,
+                            const uint32_t op_by_onestop_id_offset, const uint32_t op_by_name_offset,
+                            const uint32_t op_by_website_offset, const uint32_t route_color,
+                            const uint32_t route_text_color, const uint32_t short_name_offset,
+                            const uint32_t long_name_offset, const uint32_t desc_offset)
     : routeid_(routeid),
-      agencyid_(agencyid),
+      one_stop_offset_(one_stop_offset),
+      op_by_onestop_id_offset_(op_by_onestop_id_offset),
+      op_by_name_offset_(op_by_name_offset),
+      op_by_website_offset_(op_by_website_offset),
+      route_color_(route_color),
+      route_text_color_(route_text_color),
       short_name_offset_(short_name_offset),
       long_name_offset_(long_name_offset),
-      desc_offset_(desc_offset) {
-  strncpy(tl_routeid_, tl_routeid, kOneStopIdSize);
-}
+      desc_offset_(desc_offset) {}
 
 // Get the internal route Id.
 uint32_t TransitRoute::routeid() const {
   return routeid_;
 }
 
-/**
-* Get the internal agency Id for this route.
-* @return  Returns the internal agency Id.
-*/
-uint32_t TransitRoute::agencyid() const {
-  return agencyid_;
+// Get the TransitLand one stop Id offset for this route.
+uint32_t TransitRoute::one_stop_offset() const {
+  return one_stop_offset_;
 }
 
-/**
-* Get the TransitLand one stop Id for this route.
-* @return  Returns the TransitLand one-stop Id.
-*/
-const char* TransitRoute::tl_routeid() const {
-  return tl_routeid_;
+// Get the TransitLand operator one stop Id offset for this route.
+uint32_t TransitRoute::op_by_onestop_id_offset() const {
+  return op_by_onestop_id_offset_;
 }
 
-/**
-* Get the text/name offset for the short route name.
-* @return  Returns the short name offset in the text/name list.
-*/
+// Get the TransitLand operator name offset for this route.
+uint32_t TransitRoute::op_by_name_offset() const {
+  return op_by_name_offset_;
+}
+
+// Get the TransitLand operator website offset for this route.
+uint32_t TransitRoute::op_by_website_offset() const {
+  return op_by_website_offset_;
+}
+
+// Get the route color route.
+uint32_t TransitRoute::route_color() const {
+  return route_color_;
+}
+
+// Get the route text color route.
+uint32_t TransitRoute::route_text_color() const {
+  return route_text_color_;
+}
+
+// Get the text/name offset for the short route name.
 uint32_t TransitRoute::short_name_offset() const {
   return short_name_offset_;
 }
 
-/**
-* Get the text/name offset for the long route name.
-* @return  Returns the short name offset in the text/name list.
-*/
+// Get the text/name offset for the long route name.
 uint32_t TransitRoute::long_name_offset() const {
   return long_name_offset_;
 }
 
-/**
-* Get the text/name offset for the route description.
-* @return  Returns the description offset in the text/name list.
-*/
+// Get the text/name offset for the route description.
 uint32_t TransitRoute::desc_offset() const {
   return desc_offset_;
 }
