@@ -4,6 +4,7 @@
 #include <boost/property_tree/info_parser.hpp>
 
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
 
@@ -69,13 +70,15 @@ namespace valhalla {
         case 1: //depart
           if(!date_time_value)
             throw std::runtime_error("Date and time required for origin for date_type of depart at.");
-          //TODO: validate date_time_value string
+          if (!DateTime::is_iso_local(*date_time_value))
+            throw std::runtime_error("Date and time is invalid.  Format is YYYY-MM-DDTHH:MM");
           request.get_child("locations").front().second.add("date_time", *date_time_value);
           break;
         case 2: //arrive
           if(!date_time_value)
             throw std::runtime_error("Date and time required for destination for date_type of arrive by");
-          //TODO: validate date_time_value string
+          if (!DateTime::is_iso_local(*date_time_value))
+            throw std::runtime_error("Date and time is invalid.  Format is YYYY-MM-DDTHH:MM");
           request.get_child("locations").back().second.add("date_time", *date_time_value);
           break;
         default:
