@@ -216,6 +216,13 @@ void TryTestEpoch() {
     throw std::runtime_error("Test Epoch failed.");
 }
 
+void TryTestIsValid(std::string date, bool return_value) {
+
+  auto ret = DateTime::is_iso_local(date);
+  if (ret != return_value)
+    throw std::runtime_error("Test is_iso_local failed: " + date);
+}
+
 }
 
 void TestGetDaysFromPivotDate() {
@@ -394,6 +401,28 @@ void TestIsServiceAvailable() {
 
 }
 
+void TestIsValid(){
+  TryTestIsValid("2015-05-06T01:00",true);
+  TryTestIsValid("2015/05-06T01:00",false);
+  TryTestIsValid("2015-05/06T01:00",false);
+  TryTestIsValid("2015-05-06X01:00",false);
+  TryTestIsValid("2015-05-06T01-00",false);
+  TryTestIsValid("AAAa-05-06T01:00",false);
+  TryTestIsValid("2015-05-06T24:00",false);
+
+  TryTestIsValid("1983-02-30T24:01",false);
+  TryTestIsValid("2015-13-06T24:01",false);
+  TryTestIsValid("2015-05-06T24:60",false);
+  TryTestIsValid("2015-05-06T26:02",false);
+  TryTestIsValid("2015-05-06T23:59",true);
+  TryTestIsValid("2015-05-06T-3:-9",false);
+
+  TryTestIsValid("2015-05-06T01:0A",false);
+  TryTestIsValid("2015-05-06T01",false);
+  TryTestIsValid("01:00",false);
+
+}
+
 
 int main(void) {
   test::suite suite("datetime");
@@ -408,6 +437,7 @@ int main(void) {
   suite.test(TEST_CASE(TestServiceDays));
   suite.test(TEST_CASE(TestEpoch));
   suite.test(TEST_CASE(TestIsServiceAvailable));
+  suite.test(TEST_CASE(TestIsValid));
 
   return suite.tear_down();
 }
