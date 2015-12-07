@@ -310,11 +310,10 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // Special cases with both time and penalty: country crossing,
   // gate, toll booth
-  if (edge->ctry_crossing()) {
+  if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
-  }
-  if (node->type() == NodeType::kGate) {
+  } else if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }
@@ -368,11 +367,10 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 
   // Special cases with both time and penalty: country crossing,
   // gate, toll booth
-  if (edge->ctry_crossing()) {
+  if (node->type() == NodeType::kBorderControl) {
     seconds += country_crossing_cost_;
     penalty += country_crossing_penalty_;
-  }
-  if (node->type() == NodeType::kGate) {
+  } else if (node->type() == NodeType::kGate) {
     seconds += gate_cost_;
     penalty += gate_penalty_;
   }

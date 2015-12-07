@@ -25,6 +25,8 @@ constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
 constexpr float kDefaultAlleyFactor    = 2.0f;   // Avoid alleys
 constexpr float kDefaultDrivewayFactor = 5.0f;   // Avoid driveways
 constexpr float kDefaultStepPenalty    = 30.0f;  // 30 seconds
+constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
+constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
 // Minimum and maximum average walking speed (to validate input).
 constexpr float kMinWalkingSpeed = 0.5f;
@@ -170,6 +172,8 @@ class PedestrianCost : public DynamicCost {
   float driveway_factor_; // Avoid driveways factor.
   float step_penalty_;    // Penalty applied to steps/stairs (seconds).
   float gate_penalty_;    // Penalty (seconds) to go through gate
+  float country_crossing_cost_;     // Cost (seconds) to go through toll booth
+  float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
@@ -185,6 +189,10 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
   step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
   gate_penalty_      = pt.get<float>("gate_penalty", kDefaultGatePenalty);
+  country_crossing_cost_ = pt.get<float>("country_crossing_cost",
+                                           kDefaultCountryCrossingCost);
+  country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
+                                           kDefaultCountryCrossingPenalty);
 
   // Validate speed (make sure it is in the accepted range)
   if (walking_speed_ < kMinWalkingSpeed || walking_speed_ > kMaxWalkingSpeed) {
@@ -296,18 +304,23 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return { 0.0f, 0.0f };
   }
 
-  // Penalty through gates.
-  float penalty =  (node->type() == NodeType::kGate) ? gate_penalty_ : 0.0f;
+  // Penalty through gates and border control.
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    penalty += gate_penalty_;
+  }
 
   // Costs for crossing an intersection.
   // TODO - do we want any maneuver penalty?
   uint32_t idx = pred.opp_local_idx();
   if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
-    float sec = edge->stopimpact(idx);
-    return { sec + penalty, sec };
-  } else {
-    return { penalty, 0.0f };
+    seconds += edge->stopimpact(idx);
   }
+  return { seconds + penalty, seconds };
 }
 
 // Returns the cost to make the transition from the predecessor edge
@@ -323,17 +336,22 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     return { step_penalty_, 0.0f };
   }
 
-  // Penalty through gates.
-  float penalty =  (node->type() == NodeType::kGate) ? gate_penalty_ : 0.0f;
+  // Penalty through gates and border control.
+  float seconds = 0.0f;
+  float penalty = 0.0f;
+  if (node->type() == NodeType::kBorderControl) {
+    seconds += country_crossing_cost_;
+    penalty += country_crossing_penalty_;
+  } else if (node->type() == NodeType::kGate) {
+    penalty += gate_penalty_;
+  }
 
   // Costs for crossing an intersection.
   // TODO - do we want any maneuver penalty?
   if (opp_pred_edge->edge_to_right(idx) && opp_pred_edge->edge_to_left(idx)) {
-    float sec = opp_pred_edge->stopimpact(idx);
-    return { sec + penalty, sec };
-  } else {
-    return { penalty, 0.0f };
+    seconds += opp_pred_edge->stopimpact(idx);
   }
+  return { seconds + penalty, seconds };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
