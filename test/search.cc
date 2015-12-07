@@ -13,7 +13,7 @@
 #include <valhalla/midgard/vector2.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/mjolnir/nodeinfobuilder.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 
 namespace {
@@ -44,11 +44,11 @@ void make_tile() {
   //basic tile information
   TileHierarchy h(conf);
   GraphId tile_id = h.GetGraphId({.125,.125}, 2);
-  GraphTileBuilder tile;
+  GraphTileBuilder tile(h, tile_id, false);
   uint32_t edge_index = 0;
 
   auto add_node = [&edge_index] (const std::pair<GraphId, PointLL>& v, const uint32_t edge_count) {
-    NodeInfoBuilder node_builder;
+    NodeInfo node_builder;
     node_builder.set_latlng(v.second);
     node_builder.set_bestrc(RoadClass::kSecondary);
     node_builder.set_edge_count(edge_count);
@@ -59,11 +59,8 @@ void make_tile() {
   auto add_edge = [&tile] (const std::pair<GraphId, PointLL>& u, const std::pair<GraphId, PointLL>& v,
     const uint32_t name, const uint32_t opposing, const bool forward) {
 
-    DirectedEdgeBuilder edge_builder;
-    edge_builder.set_length(u.second.Distance(v.second) + .5);
-    edge_builder.set_endnode(v.first);
+    DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1, {}, {}, 0, false, 0, 0);
     edge_builder.set_opp_index(opposing);
-    edge_builder.set_forward(forward);
     std::vector<PointLL> shape = {u.second, u.second.AffineCombination(.7f, .3f, v.second), u.second.AffineCombination(.3f, .7f, v.second), v.second};
     if(!forward)
       std::reverse(shape.begin(), shape.end());
@@ -100,34 +97,36 @@ void make_tile() {
 
   //B
   {
-    auto node = add_node(b, 2);
-    auto edges { add_edge(b, d, 0, 0, false), add_edge(b, a, 2, 0, true) };
-    tile.AddNodeAndDirectedEdges(node, edges);
+    tile.directededges().emplace_back(add_edge(b, d, 0, 0, false));
+    tile.directededges().emplace_back(add_edge(b, a, 2, 0, true));
+    tile.nodes().emplace_back(add_node(b, 2));
   }
 
   //A
   {
-    auto node = add_node(a, 3);
-    auto edges { add_edge(a, b, 2, 1, false), add_edge(a, d, 3, 1, true), add_edge(a, c, 1, 0, false) };
-    tile.AddNodeAndDirectedEdges(node, edges);
+    tile.directededges().emplace_back(add_edge(a, b, 2, 1, false));
+    tile.directededges().emplace_back(add_edge(a, d, 3, 1, true));
+    tile.directededges().emplace_back(add_edge(a, c, 1, 0, false));
+    tile.nodes().emplace_back(add_node(a, 3));
   }
 
   //C
   {
-    auto node = add_node(c, 2);
-    auto edges { add_edge(c, a, 1, 2, true), add_edge(c, d, 4, 2, false) };
-    tile.AddNodeAndDirectedEdges(node, edges);
+    tile.directededges().emplace_back(add_edge(c, a, 1, 2, true));
+    tile.directededges().emplace_back(add_edge(c, d, 4, 2, false));
+    tile.nodes().emplace_back(add_node(c, 2));
   }
 
   //D
   {
-    auto node = add_node(d, 3);
-    auto edges { add_edge(d, b, 0, 0, true), add_edge(d, a, 3, 1, false), add_edge(d, c, 4, 1, true) };
-    tile.AddNodeAndDirectedEdges(node, edges);
+    tile.directededges().emplace_back(add_edge(d, b, 0, 0, true));
+    tile.directededges().emplace_back(add_edge(d, a, 3, 1, false));
+    tile.directededges().emplace_back(add_edge(d, c, 4, 1, true));
+    tile.nodes().emplace_back(add_node(d, 3));
   }
 
   //write the tile
-  tile.StoreTileData(h, tile_id);
+  tile.StoreTileData();
 }
 
 void search(const valhalla::baldr::Location& location, bool expected_node, const valhalla::midgard::PointLL& expected_point,
