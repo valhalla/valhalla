@@ -3,8 +3,12 @@
 
 #include <string>
 #include <memory>
-
+#include <vector>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/tz_database.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/local_time/local_time_io.hpp>
+
 
 namespace valhalla {
 namespace baldr {
@@ -12,6 +16,9 @@ namespace DateTime {
 
   struct tz_db_t : public boost::local_time::tz_database {
     tz_db_t();
+    size_t to_index(const std::string& region) const;
+    boost::shared_ptr<time_zone_base_type> from_index(size_t index) const;
+   protected:
     std::vector<std::string> regions;
   };
 
@@ -22,12 +29,65 @@ namespace DateTime {
   const tz_db_t& get_tz_db();
 
   /**
-   * Get the number of days elapsed from the pivot date until
-   * inputed date.
-   * @param   date_time in the format of 20150516 or 2015-05-06T08:00
+   * Get a formatted date from a string.
+   * @param date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the formatted date.
+   */
+  boost::gregorian::date get_formatted_date(const std::string& date);
+
+  /**
+   * Get the days that this transit service is running in 60 days or less
+   * @param   start_date
+   * @param   end_date
+   * @param   tile_date seconds from epoch
+   * @param   tz timezone which is used to get the current time.
+   * @param   dow_mask that this service runs.
    * @return  Returns the number of days.
    */
-  uint32_t days_from_pivot_date(const std::string& date_time);
+  uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
+                            uint32_t tile_date, uint32_t dow_mask);
+
+  /**
+   * Adds a service day to the days.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date
+   * @param   end_date
+   * @param   added_date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the updated days.  Days will only be updated if the added date
+   *          is in the start and end date range.
+   */
+  uint64_t add_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                           const boost::gregorian::date& end_date, const boost::gregorian::date& added_date);
+
+  /**
+   * Removes a service day to the days.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date
+   * @param   end_date
+   * @param   removed_date in the format of 20150516 or 2015-05-06T08:00
+   * @return  Returns the updated days.  Days will only be updated if the removed date
+   *          is in the start and end date range.
+   */
+  uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& start_date,
+                              const boost::gregorian::date& end_date, const boost::gregorian::date& removed_date);
+
+  /**
+   * Check if service is available for a date.
+   * @param   days supported by the gtfs feed/service
+   * @param   start_date in the format of days since pivot
+   * @param   date the date in question...in the format of days since pivot.
+   * @param   end_date in the format of days since pivot
+   */
+  bool is_service_available(const uint64_t& days, const uint32_t& start_date,
+                            const uint32_t& date, const uint32_t& end_date);
+
+  /**
+   * Get the number of days elapsed from the pivot date until
+   * inputed date.
+   * @param   date_time
+   * @return  Returns the number of days.
+   */
+  uint32_t days_from_pivot_date(const boost::gregorian::date& date_time);
 
   /**
    * Get the time from the inputed date.
@@ -47,22 +107,45 @@ namespace DateTime {
 
   /**
    * Get the iso date and time from a DOW mask and time.
-   * @param   dow_mask  Day of the week mask.
-   * @param   time      Time in the format of 08:00
-   * @param   tz        Timezone.  Currently only support 2 timezones.
-   *                    America/New_York and America/Los_Angeles and defaults
-   *                    to America/New_York.
+   * @param   dow_mask    Day of the week mask.
+   * @param   time        Time in the format of 08:00
+   * @param   time_zone   Timezone.
+   * @return  Returns the formated date 2015-05-06.
    */
   std::string iso_date_time(const uint8_t dow_mask, const std::string& time,
-                            const std::string& tz = "America/New_York");
+                            const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the iso date and time from the current date and time.
-   * @param   tz        Timezone.  Currently only support 2 timezones.
-   *                    America/New_York and America/Los_Angeles and defaults
-   *                    to America/New_York.
+   * @param   time_zone        Timezone.
+   * @return  Returns the formated date 2015-05-06.
+   *
    */
-  std::string iso_date_time(const std::string& tz = "America/New_York");
+  std::string iso_date_time(const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
+   * Get the seconds from epoch based on timezone.
+   * @param   time_zone        Timezone.
+   *
+   * @return  Returns the seconds from epoch based on timezone.
+   */
+  uint64_t seconds_since_epoch(const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
+   * Get the seconds from epoch
+   * @param   date_time        date_time.  Time is already adjusted to TZ
+   *
+   * @return  Returns the seconds from epoch.
+   */
+  uint64_t seconds_since_epoch(const std::string& date_time, const boost::local_time::time_zone_ptr& time_zone);
+
+  /**
+   * Get the iso date time from seconds since epoch and timezone.
+   * @param   seconds     seconds since epoch
+   * @param   time_zone   Timezone.
+   * @return  Returns the formated date 2015-05-06.
+   */
+  std::string seconds_to_date(uint64_t seconds, const boost::local_time::time_zone_ptr& time_zone);
 
   /**
    * Get the dow mask.

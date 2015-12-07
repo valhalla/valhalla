@@ -20,12 +20,9 @@ class AdminInfo {
    * @param  state_text   state text string.
    * @param  country_iso  country iso string.
    * @param  state_iso    state iso string.
-   * @param  start_dst    start dst string.
-   * @param  end_dst      end dst  string.
    */
   AdminInfo(const std::string& country_text, const std::string& state_text,
-            const std::string& country_iso, const std::string& state_iso,
-            const std::string& start_dst, const std::string& end_dst);
+            const std::string& country_iso, const std::string& state_iso);
 
   /**
    * Returns true if the specified object is equal to this object.
@@ -58,18 +55,6 @@ class AdminInfo {
    */
   const std::string& state_iso() const;
 
-  /**
-   * Get the start dst
-   * @return  Returns the start dst
-   */
-  const std::string& start_dst() const;
-
-  /**
-   * Get the end dst
-   * @return  Returns the end dst
-   */
-  const std::string& end_dst() const;
-
   struct AdminInfoHasher {
     std::size_t operator()(const AdminInfo& ai) const {
       std::size_t seed = 13;
@@ -77,8 +62,6 @@ class AdminInfo {
       boost::hash_combine(seed, string_hasher(ai.country_text_));
       boost::hash_combine(seed, string_hasher(ai.state_iso_));
       boost::hash_combine(seed, string_hasher(ai.state_text_));
-      boost::hash_combine(seed, string_hasher(ai.start_dst_));
-      boost::hash_combine(seed, string_hasher(ai.end_dst_));
       return seed;
     }
     //function to hash string
@@ -88,13 +71,8 @@ class AdminInfo {
  protected:
   std::string country_text_;
   std::string state_text_;
-
   std::string country_iso_;
   std::string state_iso_;
-
-  std::string start_dst_;
-  std::string end_dst_;
-
 };
 
 }

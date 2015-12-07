@@ -1,6 +1,7 @@
 #include "baldr/nodeinfo.h"
 #include <boost/functional/hash.hpp>
 #include <cmath>
+#include <valhalla/midgard/logging.h>
 
 #include <baldr/datetime.h>
 #include <baldr/graphtile.h>
@@ -11,16 +12,16 @@ namespace {
 
 const uint32_t ContinuityLookup[] = {0, 7, 13, 18, 22, 25, 27};
 
-json::MapPtr access_json(Access a) {
+json::MapPtr access_json(uint16_t access) {
   return json::map({
-    {"bicycle", static_cast<bool>(a.fields.bicycle)},
-    {"bus", static_cast<bool>(a.fields.bus)},
-    {"car", static_cast<bool>(a.fields.car)},
-    {"emergency", static_cast<bool>(a.fields.emergency)},
-    {"HOV", static_cast<bool>(a.fields.hov)},
-    {"pedestrian", static_cast<bool>(a.fields.pedestrian)},
-    {"taxi", static_cast<bool>(a.fields.taxi)},
-    {"truck", static_cast<bool>(a.fields.truck)},
+    {"bicycle", static_cast<bool>(access && kBicycleAccess)},
+    {"bus", static_cast<bool>(access && kBusAccess)},
+    {"car", static_cast<bool>(access && kAutoAccess)},
+    {"emergency", static_cast<bool>(access && kEmergencyAccess)},
+    {"HOV", static_cast<bool>(access && kHOVAccess)},
+    {"pedestrian", static_cast<bool>(access && kPedestrianAccess)},
+    {"taxi", static_cast<bool>(access && kTaxiAccess)},
+    {"truck", static_cast<bool>(access && kTruckAccess)},
   });
 }
 
@@ -35,7 +36,7 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
 
   //timezone
   const auto& tz_db = DateTime::get_tz_db();
-  auto tz = tz_db.time_zone_from_region(tz_db.regions[tz_index]);
+  auto tz = DateTime::get_tz_db().from_index(tz_index);
   if(tz) {
     //TODO: so much to do but posix tz has pretty much all the info
     m->emplace("time_zone_posix", tz->to_posix_string());
@@ -47,20 +48,40 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   return m;
 }
 
+/**
+ * Get the updated bit field.
+ * @param dst  Data member to be updated.
+ * @param src  Value to be updated.
+ * @param pos  Position (pos element within the bit field).
+ * @param len  Length of each element within the bit field.
+ * @return  Returns an updated value for the bit field.
+ */
+uint32_t OverwriteBits(const uint32_t dst, const uint32_t src,
+                       const uint32_t pos, const uint32_t len) {
+  uint32_t shift = (pos * len);
+  uint32_t mask  = (((uint32_t)1 << len) - 1) << shift;
+  return (dst & ~mask) | (src << shift);
+}
+
 }
 
 namespace valhalla {
 namespace baldr {
 
-// Default constructor
-NodeInfo::NodeInfo()
-    : latlng_{},
-      attributes_{},
-      intersection_(IntersectionType::kRegular),
-      type_{},
-      admin_{},
-      stop_{},
-      headings_(0) {
+// Default constructor. Initialize to all 0's.
+NodeInfo::NodeInfo() {
+  memset(this, 0, sizeof(NodeInfo));
+}
+
+NodeInfo::NodeInfo(const std::pair<float, float>& ll,
+                   const RoadClass rc, const uint32_t access,
+                   const NodeType type, const bool traffic_signal) {
+  memset(this, 0, sizeof(NodeInfo));
+  set_latlng(ll);
+  set_bestrc(rc);
+  set_access(access);
+  set_type(type);
+  set_traffic_signal(traffic_signal);
 }
 
 // Get the latitude, longitude
@@ -68,62 +89,149 @@ const PointLL& NodeInfo::latlng() const {
   return static_cast<const PointLL&>(latlng_);
 }
 
+// Sets the latitude and longitude.
+void NodeInfo::set_latlng(const std::pair<float, float>& ll) {
+  latlng_ = ll;
+}
+
 // Get the index in this tile of the first outbound directed edge
 uint32_t NodeInfo::edge_index() const {
-  return attributes_.edge_index_;
+  return edge_index_;
+}
+
+// Set the index in the node's tile of its first outbound edge.
+void NodeInfo::set_edge_index(const uint32_t edge_index) {
+  if (edge_index > kMaxTileEdgeCount) {
+    // Consider this a catastrophic error
+    throw std::runtime_error("NodeInfo: edge index exceeds max");
+  }
+  edge_index_ = edge_index;
 }
 
 // Get the number of outbound edges from this node.
 uint32_t NodeInfo::edge_count() const {
-  return attributes_.edge_count_;
+  return edge_count_;
+}
+
+// Set the number of outbound directed edges.
+void NodeInfo::set_edge_count(const uint32_t edge_count) {
+  if (edge_count > kMaxEdgesPerNode) {
+    // Log an error and set count to max.
+    LOG_ERROR("NodeInfo: edge count exceeds max: " +
+              std::to_string(edge_count));
+    edge_count_ = kMaxEdgesPerNode;
+  } else {
+    edge_count_ = edge_count;
+  }
 }
 
 // Get the best road class of any outbound edges.
 RoadClass NodeInfo::bestrc() const {
-  return static_cast<RoadClass>(attributes_.bestrc_);
+  return static_cast<RoadClass>(bestrc_);
+}
+
+// Set the best road class of the outbound directed edges.
+void NodeInfo::set_bestrc(const RoadClass bestrc) {
+   bestrc_ = static_cast<uint32_t>(bestrc);
 }
 
 // Get the access modes (bit mask) allowed to pass through the node.
 // See graphconstants.h
-uint8_t NodeInfo::access() const {
-  return access_.v;
+uint16_t NodeInfo::access() const {
+  return access_;
+}
+
+// Set the access modes (bit mask) allowed to pass through the node.
+void NodeInfo::set_access(const uint32_t access) {
+  access_ = access;
 }
 
 // Get the intersection type.
 IntersectionType NodeInfo::intersection() const {
-  return intersection_;
+  return static_cast<IntersectionType>(intersection_);
+}
+
+// Set the intersection type.
+void NodeInfo::set_intersection(const IntersectionType type) {
+  intersection_ = static_cast<uint32_t>(type);
 }
 
 // Get the index of the administrative information within this tile.
 uint32_t NodeInfo::admin_index() const {
-  return admin_.admin_index;
+  return admin_index_;
+}
+
+// Set the index of the administrative information within this tile.
+void NodeInfo::set_admin_index(const uint16_t admin_index) {
+  if (admin_index > kMaxAdminsPerTile) {
+    // Log an error and set count to max.
+    LOG_ERROR("NodeInfo: admin index exceeds max: " +
+              std::to_string(admin_index));
+    admin_index_ = kMaxAdminsPerTile;
+  } else {
+    admin_index_ = admin_index;
+  }
 }
 
 // Returns the timezone index.
 uint32_t NodeInfo::timezone() const {
-  return admin_.timezone;
+  return timezone_;
 }
 
-// Is daylight saving time observed at the node's location.
-bool NodeInfo::dst() const {
-  return admin_.dst;
+// Set the timezone index.
+void NodeInfo::set_timezone(const uint32_t timezone) {
+  if (timezone > kMaxTimeZonesPerTile) {
+    // Log an error and set count to max.
+    LOG_ERROR("NodeInfo: timezone index exceeds max: " +
+              std::to_string(timezone));
+    timezone_ = kMaxTimeZonesPerTile;
+  } else {
+    timezone_ = timezone;
+  }
 }
 
 // Get the driveability of the local directed edge given a local
 // edge index.
 Traversability NodeInfo::local_driveability(const uint32_t localidx) const {
   uint32_t s = localidx * 2;     // 2 bits per index
-  return static_cast<Traversability>((type_.local_driveability & (3 << s)) >> s);
+  return static_cast<Traversability>((local_driveability_ & (3 << s)) >> s);
+}
+
+// Set the driveability of the local directed edge given a local
+// edge index.
+void NodeInfo::set_local_driveability(const uint32_t localidx,
+                                             const Traversability t) {
+  if (localidx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Exceeding max local index on set_local_driveability - skip");
+  } else {
+    local_driveability_ = OverwriteBits(local_driveability_,
+                 static_cast<uint32_t>(t), localidx, 2);
+  }
 }
 
 // Get the relative density at the node.
 uint32_t NodeInfo::density() const {
-  return type_.density;
+  return density_;
+}
+
+// Set the relative density
+void NodeInfo::set_density(const uint32_t density) {
+  if (density > kMaxDensity) {
+    LOG_WARN("Exceeding max. density: " + std::to_string(density));
+    density_ = kMaxDensity;
+  } else {
+    density_ = density;
+  }
 }
 
 // Gets the node type. See graphconstants.h for the list of types.
 NodeType NodeInfo::type() const {
-  return static_cast<NodeType>(type_.type);
+  return static_cast<NodeType>(type_);
+}
+
+// Set the node type.
+void NodeInfo::set_type(const NodeType type) {
+  type_ = static_cast<uint32_t>(type);
 }
 
 // Checks if this node is a transit node.
@@ -136,40 +244,75 @@ bool NodeInfo::is_transit() const {
 // Get the number of edges on the local level. We add 1 to allow up to
 // up to kMaxLocalEdgeIndex + 1.
 uint32_t NodeInfo::local_edge_count() const {
-  return type_.local_edge_count + 1;
+  return local_edge_count_ + 1;
 }
 
-// Is this a dead-end node that connects to only one edge?
-bool NodeInfo::end() const {
-  return type_.end;
+// Set the number of driveable edges on the local level. Subtract 1 so
+// a value up to kMaxLocalEdgeIndex+1 can be stored.
+void NodeInfo::set_local_edge_count(const uint32_t n) {
+  if (n > kMaxLocalEdgeIndex+1) {
+    LOG_INFO("Exceeding max. local edge count: " + std::to_string(n));
+    local_edge_count_ = kMaxLocalEdgeIndex;
+  } else if (n == 0) {
+    LOG_ERROR("Node with 0 local edges found");
+  } else {
+    local_edge_count_ = n - 1;
+  }
 }
 
 // Is this a parent node (e.g. a parent transit stop).
 bool NodeInfo::parent() const {
-  return type_.parent;
+  return parent_;
+}
+
+// Set the parent node flag (e.g. a parent transit stop).
+void NodeInfo::set_parent(const bool parent) {
+  parent_ = parent;
 }
 
 // Is this a child node (e.g. a child transit stop).
 bool NodeInfo::child() const {
-  return type_.child;
+  return child_;
+}
+
+// Set the child node flag (e.g. a child transit stop).
+void NodeInfo::set_child(const bool child) {
+  child_ = child;
 }
 
 // Is a mode change allowed at this node? The access data tells which
 // modes are allowed at the node. Examples include transit stops, bike
 // share locations, and parking locations.
 bool NodeInfo::mode_change() const {
-  return type_.mode_change;
+  return mode_change_;
+}
+
+// Sets the flag indicating a mode change is allowed at this node.
+// The access data tells which modes are allowed at the node. Examples
+// include transit stops, bike share locations, and parking locations.
+void NodeInfo::set_mode_change(const bool mc) {
+  mode_change_ = mc;
 }
 
 // Is there a traffic signal at this node?
 bool NodeInfo::traffic_signal() const {
-  return type_.traffic_signal;
+  return traffic_signal_;
 }
 
-// Gets the transit stop Id. This is used for schedule lookups
+// Set the traffic signal flag.
+void NodeInfo::set_traffic_signal(const bool traffic_signal) {
+  traffic_signal_ = traffic_signal;
+}
+
+// Gets the transit stop index. This is used for schedule lookups
 // and possibly queries to a transit service.
-uint32_t NodeInfo::stop_id() const {
-  return (is_transit()) ? stop_.stop_id : 0;
+uint32_t NodeInfo::stop_index() const {
+  return stop_.stop_index;
+}
+
+// Set the transit stop index.
+void NodeInfo::set_stop_index(const uint32_t stop_index) {
+  stop_.stop_index = stop_index;
 }
 
 // Get the name consistency between a pair of local edges. This is limited
@@ -186,6 +329,31 @@ bool NodeInfo::name_consistency(const uint32_t from, const uint32_t to) const {
   }
 }
 
+/**
+ * Set the name consistency between a pair of local edges. This is limited
+ * to the first 8 local edge indexes.
+ * @param  from  Local index of the from edge.
+ * @param  to    Local index of the to edge.
+ * @param  c     Are names consistent between the 2 edges?
+ */
+void NodeInfo::set_name_consistency(const uint32_t from,
+                                           const uint32_t to,
+                                           const bool c) {
+  if (from == to) {
+    return;
+  } else if (from > kMaxLocalEdgeIndex || to > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_name_consistency, skip");
+  } else {
+    if (from < to) {
+      stop_.name_consistency = OverwriteBits(stop_.name_consistency, c,
+                   (ContinuityLookup[from] + (to-from-1)), 1);
+    } else {
+      stop_.name_consistency = OverwriteBits(stop_.name_consistency, c,
+                   (ContinuityLookup[to] + (from-to-1)), 1);
+    }
+  }
+}
+
 // Get the heading of the local edge given its local index. Supports
 // up to 8 local edges. Headings are expanded from 8 bits.
 uint32_t NodeInfo::heading(const uint32_t localidx) const {
@@ -196,108 +364,41 @@ uint32_t NodeInfo::heading(const uint32_t localidx) const {
           * kHeadingExpandFactor));
 }
 
+// Set the heading of the local edge given its local index. Supports
+// up to 8 local edges. Headings are reduced to 8 bits.
+void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
+  if (localidx > kMaxLocalEdgeIndex) {
+    LOG_WARN("Local index exceeds max in set_heading, skip");
+  } else {
+    // Has to be 64 bit!
+    uint64_t hdg = static_cast<uint64_t>(std::round(
+        (heading % 360) * kHeadingShrinkFactor));
+    headings_ |= hdg << static_cast<uint64_t>(localidx * 8);
+  }
+}
+
 json::MapPtr NodeInfo::json(const GraphTile* tile) const {
   auto m = json::map({
     {"lon", json::fp_t{latlng_.first, 6}},
     {"lat", json::fp_t{latlng_.second, 6}},
-    {"best_road_class", to_string(static_cast<RoadClass>(attributes_.bestrc_))},
-    {"edge_count", static_cast<uint64_t>(attributes_.edge_count_)},
+    {"best_road_class", to_string(static_cast<RoadClass>(bestrc_))},
+    {"edge_count", static_cast<uint64_t>(edge_count_)},
     {"access", access_json(access_)},
     {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
-    {"administrative", admin_json(tile->admininfo(admin_.admin_index), admin_.timezone)},
-    {"child", static_cast<uint64_t>(type_.child)},
-    {"density", static_cast<uint64_t>(type_.density)},
-    {"local_edge_count", static_cast<uint64_t>(type_.local_edge_count + 1)},
-    {"mode_change", static_cast<bool>(type_.mode_change)},
-    {"parent", static_cast<bool>(type_.parent)},
-    {"traffic_signal", static_cast<bool>(type_.traffic_signal)},
-    {"type", to_string(static_cast<NodeType>(type_.type))},
+    {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
+    {"child", static_cast<uint64_t>(child_)},
+    {"density", static_cast<uint64_t>(density_)},
+    {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
+    {"mode_change", static_cast<bool>(mode_change_)},
+    {"parent", static_cast<bool>(parent_)},
+    {"traffic_signal", static_cast<bool>(traffic_signal_)},
+    {"type", to_string(static_cast<NodeType>(type_))},
   });
   if(is_transit())
-    m->emplace("stop_id", static_cast<uint64_t>(stop_.stop_id));
+    m->emplace("stop_index", static_cast<uint64_t>(stop_.stop_index));
   return m;
 }
 
-// Get the hash_value
-const uint64_t NodeInfo::internal_version() {
-
-  NodeInfo ni;
-
-  ni.access_ = {};
-  ni.admin_ = {};
-  ni.attributes_ = {};
-  ni.intersection_ = IntersectionType::kFalse;
-  ni.stop_ = {};
-  ni.type_ = {};
-
-  size_t seed = 0;
-  boost::hash_combine(seed, ni.latlng_);
-
-  //For bitfields, negate and find the index of the most significant bit to get the "size".  Finally, combine it to the seed.
-  ni.attributes_.edge_index_ = ~ni.attributes_.edge_index_;
-  boost::hash_combine(seed,ffs(ni.attributes_.edge_index_+1)-1);
-  ni.attributes_.edge_count_ = ~ni.attributes_.edge_count_;
-  boost::hash_combine(seed, ffs(ni.attributes_.edge_count_+1)-1);
-  ni.attributes_.bestrc_ = ~ni.attributes_.bestrc_;
-  boost::hash_combine(seed, ffs(ni.attributes_.bestrc_+1)-1);
-
-  // Access
-  ni.access_.fields.car  = ~ni.access_.fields.car;
-  boost::hash_combine(seed,ffs(ni.access_.fields.car+1)-1);
-  ni.access_.fields.pedestrian  = ~ni.access_.fields.pedestrian;
-  boost::hash_combine(seed,ffs(ni.access_.fields.pedestrian+1)-1);
-  ni.access_.fields.bicycle  = ~ni.access_.fields.bicycle;
-  boost::hash_combine(seed,ffs(ni.access_.fields.bicycle+1)-1);
-  ni.access_.fields.truck  = ~ni.access_.fields.truck;
-  boost::hash_combine(seed,ffs(ni.access_.fields.truck+1)-1);
-  ni.access_.fields.emergency  = ~ni.access_.fields.emergency;
-  boost::hash_combine(seed,ffs(ni.access_.fields.emergency+1)-1);
-  ni.access_.fields.taxi  = ~ni.access_.fields.taxi;
-  boost::hash_combine(seed,ffs(ni.access_.fields.taxi+1)-1);
-  ni.access_.fields.bus  = ~ni.access_.fields.bus;
-  boost::hash_combine(seed,ffs(ni.access_.fields.bus+1)-1);
-  ni.access_.fields.hov  = ~ni.access_.fields.hov;
-  boost::hash_combine(seed,ffs(ni.access_.fields.hov+1)-1);
-
-  boost::hash_combine(seed,ni.intersection_);
-
-  ni.admin_.admin_index = ~ni.admin_.admin_index;
-  boost::hash_combine(seed,ffs(ni.admin_.admin_index+1)-1);
-  ni.admin_.timezone = ~ni.admin_.timezone;
-  boost::hash_combine(seed, ffs(ni.admin_.timezone+1)-1);
-  ni.admin_.dst = ~ni.admin_.dst;
-  boost::hash_combine(seed, ffs(ni.admin_.dst+1)-1);
-  ni.admin_.spare = ~ni.admin_.spare;
-  boost::hash_combine(seed, ffs(ni.admin_.spare+1)-1);
-
-  ni.type_.local_driveability = ~ni.type_.local_driveability;
-  boost::hash_combine(seed,ffs(ni.type_.local_driveability+1)-1);
-  ni.type_.density = ~ni.type_.density;
-  boost::hash_combine(seed,ffs(ni.type_.density+1)-1);
-  ni.type_.type = ~ni.type_.type;
-  boost::hash_combine(seed,ffs(ni.type_.type+1)-1);
-  ni.type_.local_edge_count = ~ni.type_.local_edge_count;
-  boost::hash_combine(seed,ffs(ni.type_.local_edge_count+1)-1);
-  ni.type_.end = ~ni.type_.end;
-  boost::hash_combine(seed,ffs(ni.type_.end+1)-1);
-  ni.type_.parent = ~ni.type_.parent;
-  boost::hash_combine(seed,ffs(ni.type_.parent+1)-1);
-  ni.type_.child = ~ni.type_.child;
-  boost::hash_combine(seed,ffs(ni.type_.child+1)-1);
-  ni.type_.mode_change = ~ni.type_.mode_change;
-  boost::hash_combine(seed,ffs(ni.type_.mode_change+1)-1);
-  ni.type_.traffic_signal = ~ni.type_.traffic_signal;
-  boost::hash_combine(seed,ffs(ni.type_.traffic_signal+1)-1);
-
-  boost::hash_combine(seed,ni.stop_.stop_id);
-
-  boost::hash_combine(seed,ni.headings_);
-
-  boost::hash_combine(seed,sizeof(NodeInfo));
-
-  return seed;
-
-}
 
 }
 }

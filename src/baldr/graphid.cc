@@ -80,6 +80,11 @@ void GraphId::operator ++(int) {
   fields.id++;
 }
 
+// Advance the id.
+GraphId GraphId::operator+(uint64_t offset) const {
+  return GraphId(fields.tileid, fields.level, fields.id + offset);
+}
+
 // Comparison for sorting
 bool GraphId::operator <(const GraphId& rhs) const {
   return value < rhs.value;
