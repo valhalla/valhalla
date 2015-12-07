@@ -302,6 +302,12 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid, const size_t endnode,
     }
   }
 
+  // Check if mask exceeds the limit
+  if (mask >= (1 << kMaxTurnRestrictionEdges)) {
+    LOG_WARN("Restrictions mask exceeds allowable limit on wayid: " +
+                std::to_string(wayid));
+  }
+
   // Return the restriction mask
   return mask;
 }
@@ -645,7 +651,6 @@ void BuildTileSet(const std::string& ways_file, const std::string& way_nodes_fil
 
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
-          uint32_t ar_modes = kTruckAccess;
           if (directededge.forwardaccess() & kTruckAccess) {
             uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(),
                                       osmdata, graphtile);

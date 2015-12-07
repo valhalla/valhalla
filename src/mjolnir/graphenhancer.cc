@@ -1201,29 +1201,6 @@ void enhance(const boost::property_tree::ptree& pt,
         DirectedEdge& directededge =
             tilebuilder.directededge_builder(nodeinfo.edge_index() + j);
 
-        // Update access restrictions
-        if (directededge.access_restriction()) {
-          auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
-
-          // Convert US weight values from short ton (U.S. customary) to metric
-          if (country_code == "US" || country_code == "MM" || country_code == "LR") {
-            for (const auto& res : restrictions) {
-              if (res.type() == AccessType::kMaxWeight ||
-                  res.type() == AccessType::kMaxAxleLoad) {
-                access_restrictions.emplace_back(nodeinfo.edge_index()+j,
-                                                 res.type(), res.modes(),
-                                                 res.days_of_week(),
-                                                 std::round(res.value()/1.10231));
-              } else {
-                access_restrictions.emplace_back(res);
-              }
-            }
-          } else {
-            for (const auto& res : restrictions)
-              access_restrictions.emplace_back(res);
-          }
-        }
-
         auto shape = tilebuilder.edgeinfo(directededge.edgeinfo_offset())->shape();
         if (!directededge.forward())
           std::reverse(shape.begin(), shape.end());
@@ -1272,18 +1249,15 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // No need for edge transitions on transit edges
+        // Set edge transitions and unreachable, not_thru, and internal
+        // intersection flags. Do not do this for transit edges.
         if (!directededge.IsTransitLine()) {
           // Edge transitions.
           if (j < kNumberOfEdgeTransitions) {
             ProcessEdgeTransitions(j, directededge, edges, ntrans, heading,
                                    nodeinfo, stats);
           }
-        }
 
-        // Set unreachable, not_thru, or internal intersection (except
-        // for transit)
-        if (!directededge.IsTransitLine()) {
           // Set unreachable (driving) flag
           if (IsUnreachable(reader, lock, directededge)) {
             directededge.set_unreachable(true);
@@ -1306,6 +1280,25 @@ void enhance(const boost::property_tree::ptree& pt,
             directededge.set_internal(true);
             stats.internalcount++;
           }
+
+          // Update access restrictions (update weight units)
+          if (directededge.access_restriction()) {
+            auto restrictions = tilebuilder.GetAccessRestrictions(nodeinfo.edge_index() + j);
+
+            // Convert any US weight values from short ton (U.S. customary)
+            // to metric and add to the tile's access restriction list
+            if (country_code == "US" || country_code == "MM" || country_code == "LR") {
+              for (auto& res : restrictions) {
+                if (res.type() == AccessType::kMaxWeight ||
+                    res.type() == AccessType::kMaxAxleLoad) {
+                  res.set_value(std::round(res.value() * kTonsShortToMetric));
+                }
+              }
+            }
+            for (const auto& res : restrictions) {
+              access_restrictions.emplace_back(std::move(res));
+            }
+          }
         }
       }
 
@@ -1324,7 +1317,9 @@ void enhance(const boost::property_tree::ptree& pt,
 
     // Replace access restrictions
     if (ar_before != access_restrictions.size()) {
-      LOG_ERROR("Mismatch in access restriction count before and after!");
+      LOG_ERROR("Mismatch in access restriction count before " + std::to_string(ar_before) + ""
+          " and after " + std::to_string(access_restrictions.size()) +
+          " tileid = " + std::to_string(tile_id.tileid()));
     }
     tilebuilder.AddAccessRestrictions(access_restrictions);
 
