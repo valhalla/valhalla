@@ -2,9 +2,6 @@
 #define VALHALLA_MIDGARD_AABB2_H_
 
 #include <vector>
-
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/linesegment2.h>
 
 namespace valhalla {

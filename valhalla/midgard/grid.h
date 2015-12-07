@@ -2,6 +2,7 @@
 #define VALHALLA_MIDGARD_GRID_H_
 
 #include <vector>
+#include <list>
 #include <unordered_set>
 
 #include <valhalla/midgard/aabb2.h>
@@ -27,7 +28,7 @@ class grid {
   /**
    * Constructor for grid
    * @param extents    the extents of the grid in the form of an AABB2
-   * @param divisions  the number of divisions in the grid in both the x and y axis
+   * @param divisions  the number of rows/columns within the grid
    */
   grid(const AABB2<coord_t>& extents, size_t divisions);
 
@@ -35,7 +36,7 @@ class grid {
    * Constructor for grid
    * @param min        the minimum extreme point of the grid
    * @param max        the maximum extreme point of the grid
-   * @param divisions  the number of divisions in the grid in both the x and y axis
+   * @param divisions  the number of rows/columns within the grid
    */
   grid(const coord_t& min, const coord_t& max, size_t divisions);
 
@@ -57,7 +58,26 @@ class grid {
    */
   std::unordered_set<size_t> intersect(const coord_t& center, const float radius) const;
 
+  /**
+   * @return  the number of cells within this grid
+   */
+  size_t size() const;
+
+  /**
+   * @return  the extent encompasing this grid
+   */
+  const AABB2<coord_t>& extent() const;
+
  protected:
+
+  /**
+   * Update the neighboring grids that a segment of linestring bleeds into
+   * @param  the first point on the segment
+   * @param  the second point on the segment
+   * @param  the set of neighbors to update with this segments information
+   */
+  std::list<std::pair<int, int> > update_neighbors(const coord_t& a, const coord_t& b) const;
+
   size_t divisions;
   AABB2<coord_t> super_cell;
   std::vector<AABB2<coord_t> > cells;
