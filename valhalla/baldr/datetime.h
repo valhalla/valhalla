@@ -170,6 +170,12 @@ namespace DateTime {
    */
   std::string get_duration(const std::string& date_time, const uint32_t seconds);
 
+  /**
+   * checks if string is in the format of %Y-%m-%dT%H:%M
+   * @param   date_time should be in the format of 2015-05-06T08:00
+   * @return true or false
+   */
+  bool is_iso_local(const std::string& date_time);
 }
 }
 }
