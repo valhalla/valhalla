@@ -99,8 +99,8 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
+             PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing
@@ -174,13 +174,15 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
     if ((tile = graphreader.GetGraphTile(node)) == nullptr) {
       continue;
     }
-    GraphId current_tile = node.Tile_Base();
 
     // Check access at the node
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
       continue;
     }
+
+    if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current")
+      origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
 
     // Check hierarchy. Count upward transitions (counted on the level
     // transitioned from). Do not expand based on hierarchy level based on
@@ -259,18 +261,13 @@ std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
       float dist = 0.0f;
       float sortcost = newcost.cost;
       if (p == destinations_.end()) {
-        if (directededge->endnode().Tile_Base() == current_tile) {
-          sortcost += astarheuristic_.Get(
-              tile->node(directededge->endnode())->latlng(), dist);
-        } else {
-          // Get tile at the end node. Skip if tile not found.
-          const GraphTile* t2 = graphreader.GetGraphTile(directededge->endnode());
-          if (t2 == nullptr) {
-            continue;
-          }
-          sortcost += astarheuristic_.Get(
-                    t2->node(directededge->endnode())->latlng(), dist);
+        const GraphTile* t2 = directededge->leaves_tile() ?
+            graphreader.GetGraphTile(directededge->endnode()) : tile;
+        if (t2 == nullptr) {
+          continue;
         }
+        sortcost += astarheuristic_.Get(
+                    t2->node(directededge->endnode())->latlng(), dist);
       }
 
       // Add to the adjacency list and edge labels.
@@ -345,6 +342,9 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Set the tile creation date
+    tile_creation_date_ = tile->header()->date_created();
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
