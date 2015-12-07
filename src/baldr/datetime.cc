@@ -554,8 +554,6 @@ bool is_iso_local(const std::string& date_time) {
     uint32_t hour = std::stoi(time.substr(0,2));
     uint32_t min = std::stoi(time.substr(3));
 
-    std::cout << std::to_string(hour) << " " << std::to_string(min) << std::endl;
-
     if (hour > 23 || min > 59)
       return false;
 
