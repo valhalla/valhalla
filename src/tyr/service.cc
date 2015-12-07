@@ -396,7 +396,10 @@ namespace {
 
           auto man = json::map({});
 
+          // Maneuver type
           man->emplace("type", static_cast<uint64_t>(maneuver.type()));
+
+          // Instruction and verbal instructions
           man->emplace("instruction", maneuver.text_instruction());
           if (maneuver.has_verbal_transition_alert_instruction()) {
             man->emplace("verbal_transition_alert_instruction",
@@ -427,11 +430,13 @@ namespace {
             man->emplace("begin_street_names", std::move(begin_street_names));
           }
 
+          // Time, length, and shape indexes
           man->emplace("time", static_cast<uint64_t>(maneuver.time()));
           man->emplace("length", json::fp_t{maneuver.length(), 3});
           man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
           man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
 
+          // Portions toll and rough
           if (maneuver.portions_toll())
             man->emplace("toll", maneuver.portions_toll());
           if (maneuver.portions_unpaved())
@@ -543,6 +548,102 @@ namespace {
           // Roundabout count
           if (maneuver.has_roundabout_exit_count()) {
             man->emplace("roundabout_exit_count", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+          }
+
+          // Depart and arrive instructions
+          if (maneuver.has_depart_instruction()) {
+            man->emplace("depart_instruction", maneuver.depart_instruction());
+          }
+          if (maneuver.has_verbal_depart_instruction()) {
+            man->emplace("verbal_depart_instruction", maneuver.verbal_depart_instruction());
+          }
+          if (maneuver.has_arrive_instruction()) {
+            man->emplace("arrive_instruction", maneuver.arrive_instruction());
+          }
+          if (maneuver.has_verbal_arrive_instruction()) {
+            man->emplace("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
+          }
+
+          // Process transit route
+          if (maneuver.has_transit_route()) {
+            const auto& transit_route = maneuver.transit_route();
+            auto json_transit_route = json::map({});
+
+            if (transit_route.has_onestop_id()) {
+              json_transit_route->emplace("onestop_id", transit_route.onestop_id());
+            }
+            if (transit_route.has_short_name()) {
+              json_transit_route->emplace("short_name", transit_route.short_name());
+            }
+            if (transit_route.has_long_name()) {
+              json_transit_route->emplace("long_name", transit_route.long_name());
+            }
+            if (transit_route.has_headsign()) {
+              json_transit_route->emplace("headsign", transit_route.headsign());
+            }
+            if (transit_route.has_color()) {
+              json_transit_route->emplace("color", static_cast<uint64_t>(transit_route.color()));
+            }
+            if (transit_route.has_text_color()) {
+              json_transit_route->emplace("text_color", static_cast<uint64_t>(transit_route.text_color()));
+            }
+            if (transit_route.has_description()) {
+              json_transit_route->emplace("description", transit_route.description());
+            }
+            if (transit_route.has_operator_onestop_id()) {
+              json_transit_route->emplace("operator_onestop_id", transit_route.operator_onestop_id());
+            }
+            if (transit_route.has_operator_name()) {
+              json_transit_route->emplace("operator_name", transit_route.operator_name());
+            }
+            if (transit_route.has_operator_url()) {
+              json_transit_route->emplace("operator_url", transit_route.operator_url());
+            }
+
+            // Add transit stops
+            if (transit_route.transit_stops().size() > 0) {
+
+              auto json_transit_stops = json::array({});
+              for (const auto& transit_stop : transit_route.transit_stops()) {
+                auto json_transit_stop = json::map({});
+
+                // type
+                if (transit_stop.has_type()) {
+                  if (transit_stop.type() == TripDirections_TransitStop_Type_kStation) {
+                    json_transit_stop->emplace("type", std::string("station"));
+                  } else {
+                    json_transit_stop->emplace("type", std::string("stop"));
+                  }
+                }
+
+                // onestop_id
+                if (transit_stop.has_onestop_id()) {
+                    json_transit_stop->emplace("onestop_id", transit_stop.onestop_id());
+                }
+
+                // name
+                if (transit_stop.has_name()) {
+                    json_transit_stop->emplace("name", transit_stop.name());
+                }
+
+                // arrival_date_time
+                if (transit_stop.has_arrival_date_time()) {
+                    json_transit_stop->emplace("arrival_date_time", transit_stop.arrival_date_time());
+                }
+
+                // departure_date_time
+                if (transit_stop.has_departure_date_time()) {
+                    json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
+                }
+
+                json_transit_stops->emplace_back(json_transit_stop);
+
+              }
+              json_transit_route->emplace("transit_stops",
+                                          std::move(json_transit_stops));
+            }
+
+            man->emplace("transit_route", std::move(json_transit_route));
           }
 
           //  man->emplace("hasGate", maneuver.);
