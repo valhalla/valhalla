@@ -46,10 +46,43 @@ namespace {
 namespace valhalla {
   namespace loki {
 
-    worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request) {
+    worker_t::result_t loki_worker_t::route(const ACTION_TYPE& action, boost::property_tree::ptree& request, http_request_t::info_t& request_info) {
       auto costing = request.get<std::string>("costing");
       check_locations(locations.size(), max_locations.find(costing)->second);
       check_distance(reader, locations, max_distance.find(costing)->second);
+
+      //check the date stuff
+      auto date_type = request.get_optional<int>("date_time.type");
+      auto date_time_value = request.get_optional<std::string>("date_time.value");
+      if (date_type) {
+        //not yet on this
+        if(date_type == 2 && (costing == "multimodal" || costing == "transit")) {
+          http_response_t response(501, "Not Implemented", "Arrive by for multimodal not implemented yet", headers_t{CORS});
+          response.from_info(request_info);
+          return {false, {response.to_string()}};
+        }
+        //what kind
+        switch(*date_type) {
+        case 0: //current
+          request.get_child("locations").front().second.add("date_time", "current");
+          break;
+        case 1: //depart
+          if(!date_time_value)
+            throw std::runtime_error("Date and time required for origin for date_type of depart at.");
+          //TODO: validate date_time_value string
+          request.get_child("locations").front().second.add("date_time", *date_time_value);
+          break;
+        case 2: //arrive
+          if(!date_time_value)
+            throw std::runtime_error("Date and time required for destination for date_type of arrive by");
+          //TODO: validate date_time_value string
+          request.get_child("locations").back().second.add("date_time", *date_time_value);
+          break;
+        default:
+          throw std::runtime_error("Invalid date_type");
+          break;
+        }
+      }
 
       //correlate the various locations to the underlying graph
       for(size_t i = 0; i < locations.size(); ++i) {

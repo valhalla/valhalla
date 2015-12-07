@@ -166,13 +166,13 @@ namespace valhalla {
         switch (action->second) {
           case ROUTE:
           case VIAROUTE:
-            return route(action->second, request_pt);
+            return route(action->second, request_pt, info);
           case LOCATE:
             return locate(request_pt, info);
           case ONE_TO_MANY:
           case MANY_TO_ONE:
           case MANY_TO_MANY:
-            return matrix(action->second, request_pt);
+            return matrix(action->second, request_pt, info);
         }
 
         //apparently you wanted something that we figured we'd support but havent written yet
@@ -192,8 +192,6 @@ namespace valhalla {
       }
     }
     void loki_worker_t::init_request(const ACTION_TYPE& action, const boost::property_tree::ptree& request) {
-      auto costing = request.get_optional<std::string>("costing");
-
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)
@@ -211,6 +209,7 @@ namespace valhalla {
       LOG_INFO("location_count::" + std::to_string(request_locations->size()));
 
       //using the costing we can determine what type of edge filtering to use
+      auto costing = request.get_optional<std::string>("costing");
       if(!costing) {
         //locate doesnt require a filter
         if(action == LOCATE) {
