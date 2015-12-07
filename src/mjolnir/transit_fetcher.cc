@@ -162,22 +162,24 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
     auto max_y = std::min(bbox.maxy(), PointLL(bbox.minx(), bbox.maxy()).MidPoint(bbox.maxpt()).second);
     bbox = AABB2<PointLL>(bbox.minx(), min_y, bbox.maxx(), max_y);
     //stop count
-    auto request = url((boost::format("/api/v1/stops?per_page=0&bbox=%1%,%2%,%3%,%4%")
+    auto request = url((boost::format("/api/v1/stops?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     auto stops_total = curler(request, "meta.total").get<size_t>("meta.total");
+    /*
     //route count
-    request = url((boost::format("/api/v1/routes?per_page=0&bbox=%1%,%2%,%3%,%4%")
+    request = url((boost::format("/api/v1/routes?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     auto routes_total = curler(request, "meta.total").get<size_t>("meta.total");
     //pair count
-    request = url((boost::format("/api/v1/schedule_stop_pairs?per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
+    request = url((boost::format("/api/v1/schedule_stop_pairs?total=true&per_page=0&bbox=%1%,%2%,%3%,%4%&service_from_date=%5%-%6%-%7%")
       % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
     auto pairs_total = curler(request, "meta.total").get<size_t>("meta.total");
+    */
     //we have anything we want it
-    if(stops_total > 0 || routes_total > 0|| pairs_total > 0) {
-      prioritized.push(weighted_tile_t{tile, pairs_total}); //TODO: factor in stop pairs as well
-      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " should have " + std::to_string(stops_total) +  " stops " +
-          std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs");
+    if(stops_total > 0/* || routes_total > 0|| pairs_total > 0*/) {
+      prioritized.push(weighted_tile_t{tile, stops_total + 10/* + routes_total * 1000 + pairs_total*/}); //TODO: factor in stop pairs as well
+      LOG_INFO(GraphTile::FileSuffix(tile, hierarchy) + " should have " + std::to_string(stops_total) +  " stops "/* +
+          std::to_string(routes_total) +  " routes and " + std::to_string(pairs_total) +  " stop_pairs"*/);
     }
   }
   LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " transit tiles in " +
@@ -272,6 +274,7 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> trips;
   std::unordered_map<std::string, size_t> block_ids;
   std::unordered_set<std::string> missing_routes;
+  std::unordered_map<std::string, size_t> lines;
 };
 
 bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& response,
@@ -311,6 +314,16 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
     pair->set_route_index(route->second);
 
+    //uniq line id
+    auto line_id = pair->origin_onestop_id() < pair->destination_onestop_id() ?
+                    pair->origin_onestop_id() + pair->destination_onestop_id() + route_id:
+                    pair->destination_onestop_id() + pair->origin_onestop_id() + route_id;
+    uniques.lock.lock();
+    auto inserted = uniques.lines.insert({line_id, uniques.lines.size()});
+    pair->set_line_id(inserted.first->second);
+    uniques.lock.unlock();
+
+    //timing information
     auto origin_time = pair_pt.second.get<std::string>("origin_departure_time", "null");
     auto dest_time = pair_pt.second.get<std::string>("destination_arrival_time", "null");
     auto start_date = pair_pt.second.get<std::string>("service_start_date", "null");
@@ -330,33 +343,26 @@ bool get_stop_pairs(Transit& tile, unique_transit_t& uniques, const ptree& respo
     }
 
     //trip
-    std::string t = pair_pt.second.get<std::string>("trip", "null");
-    if (t == "null") {
+    std::string trip = pair_pt.second.get<std::string>("trip", "null");
+    if (trip == "null") {
       LOG_ERROR("No trip for pair: " + pair->origin_onestop_id() + " --> " + pair->destination_onestop_id());
       tile.mutable_stop_pairs()->RemoveLast();
       continue;
     }
     uniques.lock.lock();
-    auto trip = uniques.trips.find(t);
-    if(trip == uniques.trips.cend()) {
-      pair->set_trip_key(uniques.trips.size());
-      uniques.trips.emplace(t, uniques.trips.size());
-    }
-    else pair->set_trip_key(trip->second);
+    inserted = uniques.trips.insert({trip, uniques.trips.size()});
+    pair->set_trip_key(inserted.first->second);
     uniques.lock.unlock();
 
+    //block id
     std::string block_id = pair_pt.second.get<std::string>("block_id", "null");
-    if (block_id == "null") {
+    if(block_id == "null") {
       pair->set_block_id(0);
     }
     else {
       uniques.lock.lock();
-      auto b_id = uniques.block_ids.find(block_id);
-      if (b_id == uniques.block_ids.cend()) {
-        pair->set_block_id(uniques.block_ids.size());
-        uniques.block_ids.emplace(block_id, uniques.block_ids.size());
-      }
-      else pair->set_block_id(b_id->second);
+      inserted = uniques.block_ids.insert({block_id, uniques.block_ids.size()});
+      pair->set_block_id(inserted.first->second);
       uniques.lock.unlock();
     }
 
@@ -420,9 +426,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     boost::filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") + '/' + file_name;
     LOG_INFO("Fetching " + transit_tile.string());
 
-    //pull out all the STOPS
+    //pull out all the STOPS (you see what we did there?)
     std::unordered_map<std::string, uint64_t> stops;
-    boost::optional<std::string> request = url((boost::format("/api/v1/stops?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     while(request) {
       //grab some stuff
@@ -439,7 +445,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     }
 
     //pull out all operator WEBSITES
-    request = url((boost::format("/api/v1/operators?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, std::string> websites;
     while(request) {
@@ -457,7 +463,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     }
 
     //pull out all ROUTES
-    request = url((boost::format("/api/v1/routes?per_page=%1%&bbox=%2%,%3%,%4%,%5%")
+    request = url((boost::format("/api/v1/routes?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
     while(request) {
@@ -473,7 +479,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
 
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
-    request = url((boost::format("/api/v1/schedule_stop_pairs?per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
+    request = url((boost::format("/api/v1/schedule_stop_pairs?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
     while(request) {
       //grab some stuff

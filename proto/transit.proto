@@ -33,9 +33,10 @@ message Transit {
     optional uint32 service_start_date = 17;
     optional string trip = 18;
     optional string trip_headsign = 19;
-    optional uint32 trip_key = 20; 
+    optional uint32 trip_key = 20;
     optional string trip_short_name = 21;
     optional bool wheelchair_accessible = 22;
+    optional uint32 line_id = 23;
   }
  
   enum VehicleType {
