@@ -45,42 +45,57 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   // Set the end node iso.  Used for country crossings.
   endnodeiso = tile->admin(nodeinfo->admin_index())->country_iso();
 
-  // TODO - check if more than 1 edge has matching startnode and
-  // distance!
-
   // Get the directed edges and return when the end node matches
-  // the specified node and length matches
+  // the specified node and length / transit attributes matches
+  // Check for duplicates
   constexpr uint32_t absurd_index = 777777;
   uint32_t opp_index = absurd_index;
   const DirectedEdge* directededge = tile->directededge(
       nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // End node must match the start node, shortcut (bool) must match
-    // and lengths must match
-    if (directededge->endnode() == startnode &&
-        edge.is_shortcut() == directededge->is_shortcut() &&
-        directededge->length() == edge.length()) {
-      if (opp_index != absurd_index) {
-        dupcount_++;
+    if (directededge->endnode() == startnode) {
+      if (edge.IsTransitLine()) {
+        // For a transit edge the line Id must match
+        if (directededge->IsTransitLine() &&
+            edge.lineid() == directededge->lineid()) {
+          if (opp_index != absurd_index) {
+            LOG_ERROR("Multiple transit edges have the same line Id = " +
+                        std::to_string(edge.lineid()));
+            dupcount_++;
+          }
+          opp_index = i;
+        }
+      } else {
+        // Non transit lines - length and shortcut flag must match
+        if (!directededge->IsTransitLine() &&
+             edge.is_shortcut() == directededge->is_shortcut() &&
+             edge.length() == directededge->length()) {
+          if (opp_index != absurd_index) {
+            dupcount_++;
+          }
+          opp_index = i;
+        }
       }
-      opp_index = i;
     }
   }
 
   if (opp_index == absurd_index) {
-    if (edge.use() >= Use::kRail) {
-      // Ignore any except for parent / child stop connections and
-      // stop-road connections
-      // TODO - verify if we need opposing directed edges for transit lines
-      if (edge.use() == Use::kTransitConnection)
-        LOG_ERROR("No opposing transit connection edge: endstop = " +
-                  std::to_string(nodeinfo->stop_index()) + " has " +
-                  std::to_string(nodeinfo->edge_count()));
+    if (edge.use() == Use::kTransitConnection) {
+      // Log error - no opposing edge for a transit connection
+      LOG_ERROR("No opposing transit connection edge: endstop = " +
+                std::to_string(nodeinfo->stop_index()) + " has " +
+                std::to_string(nodeinfo->edge_count()));
+    } else if (edge.IsTransitLine()) {
+      // TODO - add this when opposing transit edges with unique line Ids
+      // are present
+      ; /*LOG_ERROR("No opposing transit edge: endstop = " +
+               std::to_string(nodeinfo->stop_index()) + " has " +
+               std::to_string(nodeinfo->edge_count())); */
     } else {
       bool sc = edge.shortcut();
       LOG_ERROR((boost::format("No opposing edge at LL=%1%,%2% Length = %3% Startnode %4% EndNode %5% Shortcut %6%")
-      % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
-      % startnode % edge.endnode() % sc).str());
+          % nodeinfo->latlng().lat() % nodeinfo->latlng().lng() % edge.length()
+          % startnode % edge.endnode() % sc).str());
 
       uint32_t n = 0;
       directededge = tile->directededge(nodeinfo->edge_index());
@@ -224,10 +239,13 @@ void validate(const boost::property_tree::ptree& pt,
 
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
-              begin_node_iso != end_node_iso)
+              begin_node_iso != end_node_iso) {
             directededge.set_ctry_crossing(true);
+          }
+
           directededges.emplace_back(std::move(directededge));
 
+          // Add statistics
           // Only consider edge if edge is good and it's not a link
           if (validLength && !directededge.link()) {
             auto rclass = directededge.classification();
