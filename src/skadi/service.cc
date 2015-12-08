@@ -127,7 +127,7 @@ namespace {
     public:
     skadi_worker_t(const boost::property_tree::ptree& config):
       sample(config.get<std::string>("additional_data.elevation", "test/data/")), range(false),
-      max_shape(config.get<size_t>("service_limits.max_shape")), min_resample(config.get<float>("service_limits.min_resample")) {
+      max_shape(config.get<size_t>("service_limits.skadi.max_shape")), min_resample(config.get<float>("service_limits.skadi.min_resample")) {
     }
 
     worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
