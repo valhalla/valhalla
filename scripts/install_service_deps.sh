@@ -6,7 +6,7 @@ rm -rf libzmq
 git clone --depth=1 --recurse-submodules --single-branch --branch=master https://github.com/zeromq/libzmq.git
 pushd libzmq
 ./autogen.sh
-./configure --without-libsodium --without-documentation --with-vmci=no
+./configure --without-libsodium --without-documentation --without-vmci
 make -j4
 sudo make install
 popd
