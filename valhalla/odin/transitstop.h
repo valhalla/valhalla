@@ -12,7 +12,8 @@ struct TransitStop {
 
   TransitStop(TripPath_TransitStopInfo_Type type, std::string onestop_id,
               std::string name, std::string arrival_date_time,
-              std::string departure_date_time, bool is_parent_stop);
+              std::string departure_date_time, bool is_parent_stop,
+              bool assumed_schedule);
 
   // TODO: do we need?
   std::string ToParameterString() const;
@@ -25,6 +26,7 @@ struct TransitStop {
   std::string arrival_date_time;
   std::string departure_date_time;
   bool is_parent_stop;
+  bool assumed_schedule;
 };
 
 }

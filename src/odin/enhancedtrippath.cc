@@ -890,6 +890,9 @@ std::string EnhancedTripPath_Node::ToString() const {
 
     str += " | transit_stop_info.is_parent_stop=";
     str += std::to_string(transit_stop_info().is_parent_stop());
+
+    str += " | transit_stop_info.assumed_schedule()=";
+    str += std::to_string(transit_stop_info().assumed_schedule());
   }
 
   return str;
