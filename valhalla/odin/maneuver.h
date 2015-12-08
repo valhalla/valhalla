@@ -229,7 +229,8 @@ class Maneuver {
                          std::string onestop_id, std::string name,
                          std::string arrival_date_time,
                          std::string departure_date_time,
-                         bool is_parent_stop);
+                         bool is_parent_stop,
+                         bool assumed_schedule);
 
   const std::string& depart_instruction() const;
   void set_depart_instruction(const std::string& depart_instruction);
