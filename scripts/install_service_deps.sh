@@ -11,7 +11,7 @@ git clone --recurse-submodules --single-branch --branch=master https://github.co
 pushd libzmq
 git checkout b3f2acf7d625daef65d37ffa00dfed753cf2387b
 ./autogen.sh
-./configure --without-libsodium --without-documentation
+./configure --without-libsodium --without-documentation --with-vmci=no
 make -j4
 sudo make install
 popd
