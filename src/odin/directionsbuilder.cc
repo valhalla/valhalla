@@ -314,6 +314,12 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
         if (!transit_stop.departure_date_time.empty()) {
           trip_transit_stop->set_departure_date_time(transit_stop.departure_date_time);
         }
+        if (transit_stop.is_parent_stop) {
+          trip_transit_stop->set_is_parent_stop(true);
+        }
+        if (transit_stop.assumed_schedule) {
+          trip_transit_stop->set_assumed_schedule(true);
+        }
       }
     }
 
