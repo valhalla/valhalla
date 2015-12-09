@@ -636,6 +636,16 @@ namespace {
                     json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
                 }
 
+                // is_parent_stop
+                if (transit_stop.has_is_parent_stop()) {
+                    json_transit_stop->emplace("is_parent_stop", transit_stop.is_parent_stop());
+                }
+
+                // assumed_schedule
+                if (transit_stop.has_assumed_schedule()) {
+                    json_transit_stop->emplace("assumed_schedule", transit_stop.assumed_schedule());
+                }
+
                 json_transit_stops->emplace_back(json_transit_stop);
 
               }
