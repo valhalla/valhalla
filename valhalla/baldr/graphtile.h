@@ -173,17 +173,20 @@ class GraphTile {
   /**
    * Get the next departure given the directed edge Id and the current
    * time (seconds from midnight). TODO - what if crosses midnight?
-   * @param   edgeid  Directed edge Id.
-   * @param   current_time  Current time (seconds from midnight).
-   * @param   day     Days since the tile creation date.
-   * @param   dow     Day of week (see graphconstants.h)
+   * @param   edgeid            Directed edge Id.
+   * @param   current_time      Current time (seconds from midnight).
+   * @param   day               Days since the tile creation date.
+   * @param   dow               Day of week (see graphconstants.h)
+   * @param   date_before_tile  Is the date that was inputed before
+   *                            the tile creation date?
    * @return  Returns a pointer to the transit departure information.
    *          Returns nullptr if no departures are found.
    */
   const TransitDeparture* GetNextDeparture(const uint32_t edgeid,
                                            const uint32_t current_time,
                                            const uint32_t day,
-                                           const uint32_t dow) const;
+                                           const uint32_t dow,
+                                           bool  date_before_tile) const;
 
   /**
    * Get the departure given the directed edge Id and tripid

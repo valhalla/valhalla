@@ -396,7 +396,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx) const {
 // time (seconds from midnight).
 const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
                  const uint32_t current_time, const uint32_t day,
-                 const uint32_t dow) const {
+                 const uint32_t dow, bool date_before_tile) const {
   uint32_t count = header_->departurecount();
   if (count == 0) {
     return nullptr;
@@ -442,7 +442,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
       // If within 60 days of tile creation use the days mask else fallback
       // to the day of week mask
       const TransitDeparture& dep = departures_[mid];
-      if (day <= dep.end_day()) {
+      if (!date_before_tile && day <= dep.end_day()) {
         // Check days bit
         if ((dep.days() & (1ULL << day))) {
           return &dep;
