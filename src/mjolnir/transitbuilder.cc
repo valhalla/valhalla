@@ -205,13 +205,11 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
   return departures;
 }
 
-// Add routes to the tile. Return a map of route types vs. id/key.
-std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
-                   const std::unordered_set<uint32_t>& keys,
-                   GraphTileBuilder& tilebuilder,
-                   const GraphId& tile_id) {
-  // Map of route keys vs. types
-  std::unordered_map<uint32_t, uint32_t> route_types;
+// Add routes to the tile. Return a vector of route types.
+std::vector<uint32_t> AddRoutes(const Transit& transit,
+                   GraphTileBuilder& tilebuilder) {
+  // Route types vs. index
+  std::vector<uint32_t> route_types;
 
   for (uint32_t i = 0; i < transit.routes_size(); i++) {
     const Transit_Route& r = transit.routes(i);
@@ -229,11 +227,9 @@ std::unordered_map<uint32_t, uint32_t> AddRoutes(const Transit& transit,
                      + r.route_long_name());
       tilebuilder.AddTransitRoute(route);
 
-      // Route type - need this to store in edge?
-      route_types[i] = r.vehicle_type();
+      // Route type - need this to store in edge.
+      route_types.push_back(r.vehicle_type());
   }
-  LOG_INFO("Tile " + std::to_string(tile_id.tileid()) +
-           ": added " + std::to_string(route_types.size()) + " routes");
   return route_types;
 }
 
@@ -377,7 +373,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, bool>& stop_access,
                 const std::vector<OSMConnectionEdge>& connection_edges,
-                const std::unordered_map<uint32_t, uint32_t>& route_types) {
+                const std::vector<uint32_t>& route_types) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Move existing nodes and directed edge builder vectors and clear the lists
@@ -409,6 +405,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   // connections from a node to a transit stop. Update each nodes edge index.
   uint32_t nodeid = 0;
   uint32_t added_edges = 0;
+  uint32_t connedges = 0;
   for (auto& nb : currentnodes) {
     // Copy existing directed edges from this node and update any signs using
     // the directed edge index
@@ -479,6 +476,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       LOG_DEBUG("Add conn from OSM to stop: ei offset = " + std::to_string(edge_info_offset));
 
       // increment to next connection edge
+      connedges++;
       added_edges++;
     }
 
@@ -497,6 +495,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
   // Iterate through the stops and their edges
   uint32_t nadded = 0;
+  uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the stop information
     GraphId stopid = stop_edges.second.origin_pbf_graphid;
@@ -560,6 +559,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
         // Add to list of directed edges
         tilebuilder.directededges().emplace_back(std::move(directededge));
+        connedges++;
         nadded++;  // TEMP for error checking
       }
     }
@@ -642,7 +642,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
       DirectedEdge directededge;
       directededge.set_endnode(endnode);
       directededge.set_length(stopll.Distance(endll));
-      Use use = GetTransitUse(route_types.find(transitedge.routeid)->second);
+      Use use = GetTransitUse(route_types[transitedge.routeid]);
       directededge.set_use(use);
       directededge.set_speed(5);
       directededge.set_classification(RoadClass::kServiceOther);
@@ -669,6 +669,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
 
       // Add to list of directed edges
       tilebuilder.directededges().emplace_back(std::move(directededge));
+      transitedges++;
     }
 
     // Get the directed edge count, log an error if no directed edges are added
@@ -689,13 +690,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder,
   }
 
   // Log the number of added nodes and edges
-  uint32_t addededges = tilebuilder.directededges().size() - edgecount;
   uint32_t addednodes = tilebuilder.nodes().size() - nodecount;
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(
                   t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tilebuilder.header()->graphid().tileid())
-          + ": added " + std::to_string(addededges) + " edges and "
+          + ": added " + std::to_string(connedges) + " connection edges, "
+          + std::to_string(transitedges) + " transit edges, and "
           + std::to_string(addednodes) + " nodes. time = "
           + std::to_string(msecs) + " ms");
 }
@@ -898,7 +899,6 @@ void build(const std::string& transit_dir,
 
     // Get all scheduled departures from the stops within this tile. Record
     // unique trips, routes, TODO
-    std::unordered_set<uint32_t> route_keys;
     std::unordered_set<uint32_t> trip_keys;
     std::map<GraphId, StopEdges> stop_edge_map;
     uint32_t unique_lineid = 1;
@@ -934,7 +934,6 @@ void build(const std::string& transit_dir,
       auto range = departures.equal_range(stop_pbf_graphid);
       for(auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
-        route_keys.insert(dep.route);
         trip_keys.insert(dep.trip);
 
         // Identify unique route and arrival stop pairs - associate to a
@@ -975,9 +974,10 @@ void build(const std::string& transit_dir,
       stop_edge_map.insert({stop_pbf_graphid, stopedges});
     }
 
-    // Add routes to the tile. Get map of route types.
-    const std::unordered_map<uint32_t, uint32_t> route_types =
-                AddRoutes(transit, route_keys, tilebuilder, tile_id);
+    // Add routes to the tile. Get vector of route types.
+    std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder);
+    LOG_INFO("Tile " + std::to_string(tile_id.tileid()) +
+             ": added " + std::to_string(route_types.size()) + " routes");
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder, hierarchy, transit_dir, tiles, stop_edge_map,
@@ -1106,6 +1106,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
       //TODO: throw further up the chain?
     }
   }
+
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished - TransitBuider took " + std::to_string(secs) + " secs");
