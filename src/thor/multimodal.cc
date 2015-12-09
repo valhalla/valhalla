@@ -42,7 +42,7 @@ void MultiModalPathAlgorithm::Init(const PointLL& origll,
 
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
-            const PathLocation& origin, const PathLocation& destination,
+            PathLocation& origin, PathLocation& destination,
             GraphReader& graphreader,
             const std::shared_ptr<DynamicCost>* mode_costing,
             const TravelMode mode) {
@@ -69,11 +69,19 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   if (!origin.date_time_)
     return { };
 
-  // Set route start time (seconds from midnight), date, and day of week
-  uint32_t start_time = DateTime::seconds_from_midnight(*origin.date_time_);
-  uint32_t localtime = start_time;
-  uint32_t date = DateTime::days_from_pivot_date(*origin.date_time_);
-  uint32_t dow  = DateTime::day_of_week_mask(*origin.date_time_);
+  uint32_t start_time, localtime, date, dow, day = 0;
+  bool date_before_tile = false;
+  if (origin.date_time_ && *origin.date_time_ != "current") {
+    // Set route start time (seconds from midnight), date, and day of week
+    start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+    localtime = start_time;
+    date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+    dow  = DateTime::day_of_week_mask(*origin.date_time_);
+    if (date < tile_creation_date_)
+      date_before_tile = true;
+    else
+      day = date - tile_creation_date_;
+  }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   Init(origin.vertex(), destination.vertex(), costing);
@@ -143,6 +151,19 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       continue;
     }
 
+    if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current") {
+      origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+      // Set route start time (seconds from midnight), date, and day of week
+      start_time = DateTime::seconds_from_midnight(*origin.date_time_);
+      localtime = start_time;
+      date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+      dow  = DateTime::day_of_week_mask(*origin.date_time_);
+      if (date < tile_creation_date_)
+        date_before_tile = true;
+      else
+        day = date - tile_creation_date_;
+    }
+
     // Set a default transfer at a stop (if not same trip Id and block Id)
     // TODO - support in transit costing method
     Cost transfer_cost = { 300.0f, 60.0f };
@@ -155,12 +176,12 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     if (nodeinfo->type() == NodeType::kMultiUseTransitStop) {
       if (mode_ == TravelMode::kPedestrian && prior_stop != 0 && has_transit) {
         transfer_cost = tc->TransferCost(tile->GetTransfer(prior_stop,
-                                      nodeinfo->stop_id()));
+                                      nodeinfo->stop_index()));
       }
 
       // Update prior stop.
       // TODO - parent/child stop info?
-      prior_stop = nodeinfo->stop_id();
+      prior_stop = nodeinfo->stop_index();
     }
 
     // Set local time. TODO: adjust for time zone. Add true transfer time.
@@ -223,7 +244,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       tripid = 0;
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
-                    directededge->lineid(), localtime, date, dow);
+                    directededge->lineid(), localtime, day, dow, date_before_tile);
         if (departure) {
           // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);
@@ -292,9 +313,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
         newcost -= p->second;
       }
 
-      // Skip if the end node tile is not found
-      const GraphTile* endtile;
-      if ((endtile = graphreader.GetGraphTile(directededge->endnode())) == nullptr) {
+      // Get the end node, skip if the end node tile is not found
+      const GraphTile* endtile = (directededge->leaves_tile()) ?
+          graphreader.GetGraphTile(directededge->endnode()) : tile;
+      if (endtile == nullptr) {
         continue;
       }
 
@@ -303,7 +325,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       const NodeInfo* endnode = endtile->node(directededge->endnode());
       if (directededge->use() == Use::kTransitConnection &&
           endnode->is_transit() &&
-          endnode->stop_id() == pred.prior_stopid()) {
+          endnode->stop_index() == pred.prior_stopid()) {
         continue;
       }
 

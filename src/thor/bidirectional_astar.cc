@@ -73,8 +73,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll,
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
-std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
+             PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<sif::DynamicCost>* mode_costing,
              const sif::TravelMode mode) {
   // Set the mode and costing
@@ -167,6 +167,9 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         continue;
       }
 
+      if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current")
+        origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+
       // Check hierarchy. Count upward transitions (counted on the level
       // transitioned from). Do not expand based on hierarchy level based on
       // number of upward transitions and distance to the destination
@@ -180,9 +183,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
           continue;
         }
       }
-
-      // TODO - remove when leaves_tile is ready
-      GraphId current_tile = node.Tile_Base();
 
       // Expand from end node in forward direction.
       uint32_t shortcuts = 0;
@@ -229,9 +229,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
 
         // Get end node tile (skip if tile is not found) and opposing edge Id
-        // TODO - replace with directededge leaves_tile
-        // const GraphTile* t2 = directededge->leaves_tile() ?
-        const GraphTile* t2 = (directededge->endnode().Tile_Base() != current_tile) ?
+        const GraphTile* t2 = directededge->leaves_tile() ?
             graphreader.GetGraphTile(directededge->endnode()) : tile;
         if (t2 == nullptr) {
           continue;
@@ -311,9 +309,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
       }
 
-      // TODO - remove when leaves_tile is ready
-      GraphId current_tile2 = node.Tile_Base();
-
       // Get the opposing predecessor directed edge
       const DirectedEdge* opp_pred_edge = tile2->directededge(
               nodeinfo->edge_index() + pred2.opp_index());
@@ -345,9 +340,7 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(const PathLocation& origin
         }
 
         // Get opposing edge Id and end node tile
-        // TODO - replace with directededge leaves_tile when ready
-        // const GraphTile* t2 = directededge->leaves_tile() ?
-        const GraphTile* t2 = (directededge->endnode().Tile_Base() != current_tile2) ?
+        const GraphTile* t2 = directededge->leaves_tile() ?
              graphreader.GetGraphTile(directededge->endnode()) : tile2;
         if (t2 == nullptr) {
           continue;

@@ -50,8 +50,8 @@ class BidirectionalAStar : public PathAlgorithm {
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(const baldr::PathLocation& origin,
-           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
+           baldr::PathLocation& dest, baldr::GraphReader& graphreader,
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 
