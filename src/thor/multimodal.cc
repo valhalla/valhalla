@@ -69,14 +69,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   if (!origin.date_time_)
     return { };
 
-  uint32_t start_time, localtime, date, dow, day;
+  uint32_t start_time, localtime, date, dow, day = 0;
+  bool date_before_tile = false;
   if (origin.date_time_ && *origin.date_time_ != "current") {
     // Set route start time (seconds from midnight), date, and day of week
     start_time = DateTime::seconds_from_midnight(*origin.date_time_);
     localtime = start_time;
     date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
     dow  = DateTime::day_of_week_mask(*origin.date_time_);
-    day = date - tile_creation_date_;
+    if (date < tile_creation_date_)
+      date_before_tile = true;
+    else
+      day = date - tile_creation_date_;
   }
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
@@ -154,7 +158,10 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       localtime = start_time;
       date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
       dow  = DateTime::day_of_week_mask(*origin.date_time_);
-      day = date - tile_creation_date_;
+      if (date < tile_creation_date_)
+        date_before_tile = true;
+      else
+        day = date - tile_creation_date_;
     }
 
     // Set a default transfer at a stop (if not same trip Id and block Id)
@@ -237,7 +244,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
       tripid = 0;
       if (directededge->IsTransitLine()) {
         const TransitDeparture* departure = tile->GetNextDeparture(
-                    directededge->lineid(), localtime, day, dow);
+                    directededge->lineid(), localtime, day, dow, date_before_tile);
         if (departure) {
           // Check if there has been a mode change
           mode_change = (mode_ == TravelMode::kPedestrian);

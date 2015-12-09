@@ -360,6 +360,7 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
   uint32_t prior_opp_local_index = -1;
   std::vector<PointLL> trip_shape;
   std::string arrival_time;
+  bool assumed_schedule = false;
   // TODO: this is temp until we use transit stop type from transitland
   TripPath_TransitStopInfo_Type prev_transit_node_type =
       TripPath_TransitStopInfo_Type_kStop;
@@ -454,15 +455,22 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
                                   trip_id);
-        uint32_t date, day;
+        assumed_schedule = false;
+        uint32_t date, day = 0;
         if (origin.date_time_) {
-           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-           day = date - graphtile->header()->date_created();
+          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
 
-           if (day > transit_departure->end_day()) {
-             transit_stop_info->set_assumed_schedule(true);
-           }
-         }
+          if (graphtile->header()->date_created() > date) {
+            transit_stop_info->set_assumed_schedule(true);
+            assumed_schedule = true;
+          } else {
+            day = date - graphtile->header()->date_created();
+            if (day > transit_departure->end_day()) {
+              transit_stop_info->set_assumed_schedule(true);
+              assumed_schedule = true;
+            }
+          }
+        }
 
         if (transit_departure) {
 
@@ -486,6 +494,10 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         // and set block Id to 0
         arrival_time = "";
         block_id = 0;
+
+        if (assumed_schedule)
+          transit_stop_info->set_assumed_schedule(true);
+        assumed_schedule = false;
       }
 
       // Set is_parent_stop
