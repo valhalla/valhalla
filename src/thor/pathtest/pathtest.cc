@@ -649,7 +649,7 @@ int main(int argc, char *argv[]) {
     } else if (routetype == "pedestrian" || routetype == "bicycle") {
       pathalgorithm = (km > 10.0f) ? &bd : &astar;
     } else {
-      pathalgorithm = (km > 10.0f) ? &bd : &astar;
+      pathalgorithm = &astar; //  (km > 10.0f) ? &bd : &astar;
     }
 
     // Get the best path
