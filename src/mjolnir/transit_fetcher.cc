@@ -689,18 +689,18 @@ void stitch(const ptree& pt, const std::unordered_set<GraphId>& all_tiles, std::
 
 int main(int argc, char** argv) {
   if(argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url per_page transit_land_api_key" << std::endl;
-    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ 1000 transitland-YOUR_KEY_SUFFIX" << std::endl;
+    std::cerr << "Usage: " << std::string(argv[0]) << " valhalla_config transit_land_url per_page [target_directory] [transit_land_api_key]" << std::endl;
+    std::cerr << "Sample: " << std::string(argv[0]) << " conf/valhalla.json http://transit.land/ 1000 ./transit_tiles transitland-YOUR_KEY_SUFFIX" << std::endl;
     return 1;
   }
 
   //args and config file loading
   ptree pt;
   boost::property_tree::read_json(std::string(argv[1]), pt);
-  pt.add("base_url", std::string(argv[2]));
-  pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
-  if(argc > 4)
-    pt.add("api_key", std::string(argv[4]));
+  pt.erase("base_url"); pt.add("base_url", std::string(argv[2]));
+  pt.erase("per_page"); pt.add("per_page", argc > 3 ? std::string(argv[3]) : std::to_string(1000));
+  if(argc > 4) { pt.get_child("mjolnir").erase("transit_dir"); pt.add("mjolnir.transit_dir", std::string(argv[4])); }
+  if(argc > 5) { pt.erase("api_key"); pt.add("api_key", std::string(argv[5])); }
 
   //yes we want to curl
   curl_global_init(CURL_GLOBAL_DEFAULT);
