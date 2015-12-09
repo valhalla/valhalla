@@ -454,15 +454,19 @@ TripPath TripPathBuilder::Build(GraphReader& graphreader,
         const TransitDeparture* transit_departure = graphtile
             ->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(),
                                   trip_id);
-        uint32_t date, day;
-        if (origin.date_time_) {
-           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-           day = date - graphtile->header()->date_created();
 
-           if (day > transit_departure->end_day()) {
+        uint32_t date, day = 0;
+        if (origin.date_time_) {
+          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
+
+          if (graphtile->header()->date_created() > date)
+           transit_stop_info->set_assumed_schedule(true);
+          else {
+            day = date - graphtile->header()->date_created();
+            if (day > transit_departure->end_day())
              transit_stop_info->set_assumed_schedule(true);
-           }
-         }
+          }
+        }
 
         if (transit_departure) {
 
