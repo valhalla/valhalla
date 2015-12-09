@@ -21,8 +21,8 @@ constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
 // Default turn costs - modified by the stop impact.
 constexpr float kTCStraight         = 0.15f;
-constexpr float kTCSlight           = 0.25f;
-constexpr float kTCFavorable        = 0.4f;
+constexpr float kTCSlight           = 0.2f;
+constexpr float kTCFavorable        = 0.3f;
 constexpr float kTCFavorableSharp   = 0.5f;
 constexpr float kTCCrossing         = 0.75f;
 constexpr float kTCUnfavorable      = 1.0f;
