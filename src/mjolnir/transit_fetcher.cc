@@ -40,7 +40,7 @@ struct logged_error_t: public std::runtime_error {
 struct curler_t {
   curler_t():connection(curl_easy_init(), [](CURL* c){curl_easy_cleanup(c);}),
     generator(std::chrono::system_clock::now().time_since_epoch().count()),
-    distribution(static_cast<size_t>(500), static_cast<size_t>(1000)) {
+    distribution(static_cast<size_t>(300), static_cast<size_t>(700)) {
     if(connection.get() == nullptr)
       throw logged_error_t("Failed to created CURL connection");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_ERRORBUFFER, error), "Failed to set error buffer");
@@ -60,7 +60,8 @@ struct curler_t {
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     //dont stop until we have something useful!
     ptree pt;
-    while(true) {
+    size_t tries = 0;
+    while(++tries) {
       result.str("");
       long http_code = 0;
       std::string log_extra = "Couldn't fetch url ";
@@ -80,7 +81,9 @@ struct curler_t {
         }
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(timeout ? *timeout : distribution(generator)));
-      LOG_WARN(log_extra + "retrying " + url);
+      //dont log rate limit stuff its too frequent
+      if(http_code != 429 || (tries % 10) == 0)
+        LOG_WARN(log_extra + "retrying " + url);
     };
     return pt;
   }
@@ -121,7 +124,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
   std::set<GraphId> tiles;
   const auto& tile_level = hierarchy.levels().rbegin()->second;
   curler_t curler;
-  auto feeds = curler(pt.get<std::string>("base_url") + "/api/v1/feeds.geojson", "features");
+  auto feeds = curler(url("/api/v1/feeds.geojson?", pt), "features");
   for(const auto& feature : feeds.get_child("features")) {
     //should be a polygon
     auto type = feature.second.get_optional<std::string>("geometry.type");
@@ -420,6 +423,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     auto max_y = std::min(filter.maxy(), PointLL(filter.minx(), filter.maxy()).MidPoint(filter.maxpt()).second);
     AABB2<PointLL> bbox(filter.minx(), min_y, filter.maxx(), max_y);
     ptree response;
+    auto api_key = pt.get_optional<std::string>("api_key") ? "&api_key=" + pt.get<std::string>("api_key") : "";
     Transit tile;
     auto file_name = GraphTile::FileSuffix(current, hierarchy);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
@@ -430,14 +434,14 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     std::unordered_map<std::string, uint64_t> stops;
     boost::optional<std::string> request = url((boost::format("/api/v1/stops?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
-    while(request) {
+    do {
       //grab some stuff
       response = curler(*request, "stops");
       //copy stops in, keeping map of stopid to graphid
       get_stops(tile, stops, current, response, filter);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
-    }
+    } while(request && (request = *request + api_key));
     //um yeah.. we need these
     if(stops.size() == 0) {
       LOG_WARN(transit_tile.string() + " had no stops and will not be stored");
@@ -448,7 +452,7 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     request = url((boost::format("/api/v1/operators?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, std::string> websites;
-    while(request) {
+    do {
       //grab some stuff
       response = curler(*request, "operators");
       //save the websites to a map
@@ -460,13 +464,13 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       }
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
-    }
+    } while(request && (request = *request + api_key));
 
     //pull out all ROUTES
     request = url((boost::format("/api/v1/routes?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%")
       % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy()).str(), pt);
     std::unordered_map<std::string, size_t> routes;
-    while(request) {
+    do {
       //grab some stuff
       uniques.lock.lock();
       response = curler(*request, "routes");
@@ -475,19 +479,21 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
       get_routes(tile, routes, websites, response);
       //please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
-    }
+    } while(request && (request = *request + api_key));
 
     //pull out all SCHEDULE_STOP_PAIRS
     bool dangles = false;
-    request = url((boost::format("/api/v1/schedule_stop_pairs?total=false&per_page=%1%&bbox=%2%,%3%,%4%,%5%&service_from_date=%6%-%7%-%8%")
-      % pt.get<std::string>("per_page") % bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy() % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
-    while(request) {
-      //grab some stuff
-      response = curler(*request, "schedule_stop_pairs");
-      //copy pairs in, noting if any dont have stops
-      dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
-      //please sir may i have some more?
-      request = response.get_optional<std::string>("meta.next");
+    for(const auto& stop : stops) {
+      request = url((boost::format("/api/v1/schedule_stop_pairs?total=false&per_page=%1%&origin_onestop_id=%2%&service_from_date=%3%-%4%-%5%")
+        % pt.get<std::string>("per_page") % stop.first % utc->tm_year % utc->tm_mon % utc->tm_mday).str(), pt);
+      do {
+        //grab some stuff
+        response = curler(*request, "schedule_stop_pairs");
+        //copy pairs in, noting if any dont have stops
+        dangles = get_stop_pairs(tile, uniques, response, stops, routes) || dangles;
+        //please sir may i have some more?
+        request = response.get_optional<std::string>("meta.next");
+      } while(request && (request = *request + api_key));
     }
 
     //remember who dangles
