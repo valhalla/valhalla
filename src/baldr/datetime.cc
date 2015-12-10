@@ -76,7 +76,7 @@ boost::gregorian::date get_formatted_date(const std::string& date) {
 //start_date will be updated to the tile creation date if the start date is in the past
 //set the bits based on the dow.
 uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
-                          uint32_t tile_date, uint32_t dow_mask) {
+                          const uint32_t tile_date, const uint32_t dow_mask) {
 
   boost::gregorian::date tile_header_date = pivot_date_ + boost::gregorian::days(tile_date);
   if (start_date <= tile_header_date && tile_header_date <= end_date)
@@ -91,12 +91,15 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
 
   boost::gregorian::day_iterator itr(start_date);
   uint32_t x = 0;
-  std::bitset<64> bit_set;
+  uint64_t bit_set = 0;
 
+  //TODO: we dont have to loop over all days, we could take the week mask, shift it by the start date
+  //then use that weekly mask and shift it how ever many times a week fits into the 60 day interval
+  //loop over all the days
   while (itr <= end_date) {
 
+    //figure out what day of the week we are at
     uint8_t dow;
-
     switch ((*itr).day_of_week().as_enum()) {
       case boost::date_time::Sunday:
         dow = kSunday;
@@ -121,13 +124,14 @@ uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::
         break;
     }
 
+    //were we supposed to be on for this day
     if (dow_mask & dow)
-      bit_set.set(x);
+      bit_set |= static_cast<uint64_t>(1) << x;
 
     ++itr;
     ++x;
   }
-  return bit_set.to_ulong();
+  return bit_set;
 }
 
 //add a service day to the days if it is in range.
@@ -138,11 +142,9 @@ uint64_t add_service_day(const uint64_t& days, const boost::gregorian::date& sta
     enddate = end_date;
 
   if (start_date <= added_date && added_date <= enddate) {
-    std::bitset<64> bit_set(days);
     boost::gregorian::date_period range(start_date, added_date);
     uint32_t length = range.length().days();
-    bit_set.set(length);
-    return bit_set.to_ulong();
+    return days | (static_cast<uint64_t>(1) << length);
   }
   return days;
 }
@@ -155,11 +157,9 @@ uint64_t remove_service_day(const uint64_t& days, const boost::gregorian::date& 
     enddate = end_date;
 
   if (start_date <= removed_date && removed_date <= enddate) {
-    std::bitset<64> bit_set(days);
     boost::gregorian::date_period range(start_date, removed_date);
     uint32_t length = range.length().days();
-    bit_set.reset(length);
-    return bit_set.to_ulong();
+    return ~((~days) | (static_cast<uint64_t>(1) << length));
   }
   return days;
 }

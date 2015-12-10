@@ -45,7 +45,7 @@ namespace DateTime {
    * @return  Returns the number of days.
    */
   uint64_t get_service_days(boost::gregorian::date& start_date, boost::gregorian::date& end_date,
-                            uint32_t tile_date, uint32_t dow_mask);
+                            const uint32_t tile_date, const uint32_t dow_mask);
 
   /**
    * Adds a service day to the days.
