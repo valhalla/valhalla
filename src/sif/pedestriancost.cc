@@ -19,6 +19,7 @@ constexpr uint32_t kMaxModeDistance    = 3000;   // 3 km
 // Maximum distance of a walking route
 constexpr uint32_t kMaxDistance        = 100000; // 100 km
 
+constexpr float kDefaultManeuverPenalty = 5.0f;  // Seconds
 constexpr float kDefaultGatePenalty    = 300.0f; // Seconds
 constexpr float kDefaultWalkingSpeed   = 5.1f;   // 3.16 MPH
 constexpr float kDefaultWalkwayFactor  = 0.9f;   // Slightly favor walkways
@@ -172,6 +173,7 @@ class PedestrianCost : public DynamicCost {
   float driveway_factor_; // Avoid driveways factor.
   float step_penalty_;    // Penalty applied to steps/stairs (seconds).
   float gate_penalty_;    // Penalty (seconds) to go through gate
+  float maneuver_penalty_;          // Penalty (seconds) when inconsistent names
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
 };
@@ -189,6 +191,8 @@ PedestrianCost::PedestrianCost(const boost::property_tree::ptree& pt)
   driveway_factor_   = pt.get<float>("driveway_factor", kDefaultDrivewayFactor);
   step_penalty_      = pt.get<float>("step_penalty", kDefaultStepPenalty);
   gate_penalty_      = pt.get<float>("gate_penalty", kDefaultGatePenalty);
+  maneuver_penalty_  = pt.get<float>("maneuver_penalty",
+                                    kDefaultManeuverPenalty);
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
                                            kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
@@ -314,6 +318,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     penalty += gate_penalty_;
   }
 
+  // Slight maneuver penalty
+  if (!node->name_consistency(pred.opp_local_idx(), edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
+  }
+
   // Costs for crossing an intersection.
   // TODO - do we want any maneuver penalty?
   uint32_t idx = pred.opp_local_idx();
@@ -344,6 +353,11 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     penalty += country_crossing_penalty_;
   } else if (node->type() == NodeType::kGate) {
     penalty += gate_penalty_;
+  }
+
+  // Slight maneuver penalty
+  if (!node->name_consistency(idx, opp_pred_edge->localedgeidx())) {
+    penalty += maneuver_penalty_;
   }
 
   // Costs for crossing an intersection.
