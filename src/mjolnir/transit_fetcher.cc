@@ -142,9 +142,9 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt) {
       if(y < min_y) min_y = y;
       if(y > max_y) max_y = y;
     }
-    //convert coordinates to tile id bounding box accounting for geodesics
-    min_y = std::min(min_y, PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
-    max_y = std::max(max_y, PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
+    //expand the top and bottom edges of the box to account for geodesics
+    min_y -= std::abs(min_y - PointLL(min_x, min_y).MidPoint({max_x, min_y}).second);
+    max_y += std::abs(max_y - PointLL(min_x, max_y).MidPoint({max_x, max_y}).second);
     auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
     auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
     if(min_c > max_c) std::swap(min_c, max_c);
@@ -418,9 +418,9 @@ void fetch_tiles(const ptree& pt, std::priority_queue<weighted_tile_t>& queue, u
     queue.pop();
     uniques.lock.unlock();
     auto filter = tiles.TileBounds(current.tileid());
-    //account for geodesics
-    auto min_y = std::max(filter.miny(), filter.minpt().MidPoint({filter.maxx(), filter.miny()}).second);
-    auto max_y = std::min(filter.maxy(), PointLL(filter.minx(), filter.maxy()).MidPoint(filter.maxpt()).second);
+    //expanding both top and bottom by distance to geodesic running through the coords
+    auto min_y = filter.miny() - std::abs(filter.miny() - filter.minpt().MidPoint({filter.maxx(), filter.miny()}).second);
+    auto max_y = filter.maxy() + std::abs(filter.maxy() - filter.maxpt().MidPoint({filter.minx(), filter.maxy()}).second);
     AABB2<PointLL> bbox(filter.minx(), min_y, filter.maxx(), max_y);
     ptree response;
     auto api_key = pt.get_optional<std::string>("api_key") ? "&api_key=" + pt.get<std::string>("api_key") : "";
