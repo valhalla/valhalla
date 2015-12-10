@@ -420,6 +420,7 @@ void TestIsValid(){
   TryTestIsValid("2015-05-06T01:0A",false);
   TryTestIsValid("2015-05-06T01",false);
   TryTestIsValid("01:00",false);
+  TryTestIsValid("aefopijafepij",false);
 
 }
 

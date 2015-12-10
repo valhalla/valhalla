@@ -547,7 +547,7 @@ bool is_iso_local(const std::string& date_time) {
     ss.imbue(std::locale(ss.getloc(), input_facet));
     boost::posix_time::ptime pt;
     ss.str(date_time);
-    is_ok = ss >> pt;
+    is_ok = static_cast<bool>(ss >> pt);
 
     std::size_t found = date_time.find("T"); //YYYY-MM-DDTHH:MM
     std::string time = date_time.substr(found+1);
