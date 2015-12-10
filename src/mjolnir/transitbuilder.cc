@@ -116,10 +116,7 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
 
   // Iterate through the stop pairs in this tile and form Valhalla departure
   // records
-  uint32_t tileid;
-  for (uint32_t i = 0; i < transit.stop_pairs_size(); i++) {
-    const Transit_StopPair& sp = transit.stop_pairs(i);
-
+  for (const auto& sp : transit.stop_pairs()) {
     // We do not know in this step if the end node is in a valid (non-empty)
     // Valhalla tile. So just add the stop pair and we will address this later
 
@@ -173,8 +170,9 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     boost::gregorian::date end_date(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_end_date()));
     dep.days = DateTime::get_service_days(start_date, end_date, tile_date, dow_mask);
 
-    if (dep.days == 0) {
-      LOG_WARN("Feed rejected!  End date:" + DateTime::days_from_pivot_date(end_date));
+    // So this thing never happens
+    if (dep.days == 0 && !sp.service_added_dates_size()) {
+      LOG_WARN("Feed rejected!  End date:" + std::to_string(DateTime::days_from_pivot_date(end_date)));
       continue;
     }
 
@@ -186,14 +184,14 @@ std::unordered_multimap<GraphId, Departure> ProcessStopPairs(const Transit& tran
     stop_access[dep.dest_pbf_graphid] = bikes_allowed;
 
     //if subtractions are between start and end date then turn off bit.
-    for (uint32_t x = 0; x < sp.service_except_dates_size(); x++) {
-      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_except_dates(x)));
+    for (const auto& x : sp.service_except_dates()) {
+      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
       dep.days = DateTime::remove_service_day(dep.days, start_date, end_date, d);
     }
 
     //if additions are between start and end date then turn on bit.
-    for (uint32_t x = 0; x < sp.service_added_dates_size(); x++) {
-      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(sp.service_added_dates(x)));
+    for (const auto& x : sp.service_added_dates()) {
+      boost::gregorian::date d(boost::gregorian::gregorian_calendar::from_julian_day_number(x));
       dep.days = DateTime::add_service_day(dep.days, start_date, end_date, d);
     }
 
@@ -1055,7 +1053,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // A place to hold worker threads and their results
   // (Change threads to 1 if running DEBUG to get more info)
-//  std::vector<std::shared_ptr<std::thread> > threads(1);
+  //std::vector<std::shared_ptr<std::thread> > threads(1);
   std::vector<std::shared_ptr<std::thread> > threads(
      std::max(static_cast<uint32_t>(1),
        pt.get<uint32_t>("mjolnir.concurrency",
