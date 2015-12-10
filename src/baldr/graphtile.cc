@@ -462,7 +462,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   }
 
   // TODO - maybe wrap around, try next day?
-  LOG_WARN("No more departures found for lineid = " + std::to_string(lineid) +
+  LOG_DEBUG("No more departures found for lineid = " + std::to_string(lineid) +
            " current_time = " + std::to_string(current_time));
   return nullptr;
 }
