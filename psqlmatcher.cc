@@ -547,8 +547,7 @@ int main(int argc, char *argv[])
     write_tiles_summary(db_handle, tileid, matched_results_count, measurement_count);
     write_end(db_handle);
 
-    bool inserted = accomplished_tileids.insert(tileid).second;
-    assert(inserted.second);
+    accomplished_tileids.insert(tileid).second;
 
     total_matched_results_count += matched_results_count;
     total_measurement_count += measurement_count;
