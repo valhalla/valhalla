@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
     nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
     nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-    CreatePedestrianCost(*config.get_child_optional("costing_options.pedestrian"))
+    CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))
   };
 
   MapMatching mm(sigma_z, beta, graphreader, mode_costing, static_cast<sif::TravelMode>(mode));

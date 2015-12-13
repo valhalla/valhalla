@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
     nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
     nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
     nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-    CreatePedestrianCost(*pt.get_child_optional("costing_options.pedestrian"))
+    CreateUniversalCost(*pt.get_child_optional("costing_options.pedestrian"))
   };
   sif::TravelMode travel_mode = static_cast<sif::TravelMode>(3);
   baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));

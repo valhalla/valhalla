@@ -8,9 +8,9 @@ using namespace valhalla::sif;
 using namespace valhalla::baldr;
 
 
-class PedestrianCost : public DynamicCost {
+class UniversalCost : public DynamicCost {
  public:
-  PedestrianCost(const boost::property_tree::ptree& pt)
+  UniversalCost(const boost::property_tree::ptree& pt)
       : DynamicCost(pt, TravelMode::kPedestrian) {
   }
 
@@ -53,6 +53,6 @@ class PedestrianCost : public DynamicCost {
 };
 
 
-cost_ptr_t CreatePedestrianCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<PedestrianCost>(config);
+cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config) {
+  return std::make_shared<UniversalCost>(config);
 }

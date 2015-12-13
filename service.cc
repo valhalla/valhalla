@@ -284,7 +284,7 @@ class mm_worker_t {
       mode_costing{nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
         nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
         nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-        CreatePedestrianCost(*config.get_child_optional("costing_options.pedestrian"))} {
+        CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))} {
   }
 
   worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
