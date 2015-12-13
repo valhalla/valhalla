@@ -137,6 +137,7 @@ class ViterbiPathIterator:
       if (id_ == kInvalidStateId) {
         id_ = vs_->SearchWinner(time_);
       }
+      // If id_ is valid then assert(vs_->state(id_).time() == time_)
       assert(id_ == kInvalidStateId || vs_->state(id_).time() == time_);
     } else {
       set_end();

@@ -1,8 +1,9 @@
 // -*- mode: c++ -*-
 
-#include <sqlite3.h>
 #include <unordered_map>
 #include <tuple>
+
+#include <sqlite3.h>
 
 // boost
 #include <boost/property_tree/ptree.hpp>

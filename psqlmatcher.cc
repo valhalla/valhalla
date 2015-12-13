@@ -132,7 +132,7 @@ query_sequences(PGconn* conn, const BoundingBox& bbox)
     // already, no need to reverse it
     // std::reverse(bs.begin(), bs.end());
 
-    sequences[sid] = to_sequence(bs);
+    sequences.emplace(sid, to_sequence(bs));
   }
 
   PQclear(result);
@@ -170,7 +170,7 @@ which_tileid(const baldr::TileHierarchy& tile_hierarchy,
              const Sequence& sequence)
 {
   auto local_level = tile_hierarchy.levels().rbegin()->second.level;
-  auto graphid = tile_hierarchy.GetGraphId(sequence[0].lnglat(), local_level);
+  auto graphid = tile_hierarchy.GetGraphId(sequence.front().lnglat(), local_level);
   if (graphid.Is_Valid()) {
     return graphid.tileid();
   }
@@ -188,13 +188,15 @@ class SqliteWriteError: public std::runtime_error
 inline int
 simple_sqlite3_exec(sqlite3* db_handle, const char* const statement)
 {
-  char *err_msg;
+  char *err_msg = NULL;
   int ret = sqlite3_exec(db_handle, statement, NULL, NULL, &err_msg);
   if (SQLITE_OK != ret) {
     std::string message(err_msg);
     sqlite3_free(err_msg);
     throw SqliteWriteError(message + " while executing " + statement);
   }
+  // Passing a NULL pointer to sqlite3_free() is harmless
+  sqlite3_free(err_msg);
   return ret;
 }
 
@@ -223,8 +225,8 @@ void create_routes_table(sqlite3* db_handle)
 }
 
 
-bool read_finished_tiles(sqlite3* db_handle,
-                         std::unordered_set<uint32_t>& tileids)
+bool read_accomplished_tiles(sqlite3* db_handle,
+                             std::unordered_set<uint32_t>& tileids)
 {
   sqlite3_stmt* stmt;
   std::string sql = "SELECT id FROM tiles";
@@ -239,7 +241,7 @@ bool read_finished_tiles(sqlite3* db_handle,
     if (SQLITE_ROW == ret) {
       int sequence_id = sqlite3_column_int(stmt, 0);
       if (sequence_id >= 0) {
-        tileids.insert(static_cast<uint32_t>(sequence_id));
+        tileids.insert(static_cast<SequenceId>(sequence_id));
       } else {
         LOG_ERROR("Found negative sequence ID which is not good");
       }
@@ -486,7 +488,7 @@ int main(int argc, char *argv[])
   // Collect tiles
   std::unordered_set<uint32_t> accomplished_tileids;
   {
-    bool ok = read_finished_tiles(db_handle, accomplished_tileids);
+    bool ok = read_accomplished_tiles(db_handle, accomplished_tileids);
     if (!ok) {
       sqlite3_close(db_handle);
       return 2;
@@ -534,8 +536,8 @@ int main(int argc, char *argv[])
       const auto& match_results = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
       assert(match_results.size() == sequence.size());
 
-      results[sid] = match_results;
-      routes[sid] = ConstructRoute(match_results.begin(), match_results.end());
+      results.emplace(sid, match_results);
+      routes.emplace(sid, ConstructRoute(match_results.begin(), match_results.end()));
 
       measurement_count += sequence.size();
     }

@@ -3,7 +3,6 @@
 #include <cmath>
 #include <tuple>
 #include <algorithm>
-#include <iostream>  // TODO remove
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -26,18 +25,23 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 
-std::tuple<PointLL, float, size_t, float>
+std::tuple<PointLL, float, std::vector<PointLL>::size_type, float>
 Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator,
         float snap_distance = 0.f)
 {
-  size_t closest_segment = 0.f;
-  float closest_distance = std::numeric_limits<float>::max();
+  if (shape.size() < 2) {
+    throw std::runtime_error("A shape should have 2 or more points, but you got only "
+                             + std::to_string(shape.size()));
+  }
+
+  decltype(shape.size()) closest_segment = 0;
+  float closest_distance = std::numeric_limits<float>::infinity();
   float closest_partial_length = 0.f;
-  PointLL closest_point{};
+  PointLL closest_point;
   float total_length = 0.f;
 
   //for each segment
-  for(size_t i = 0; i < shape.size() - 1; ++i) {
+  for(decltype(shape.size()) i = 0; i < shape.size() - 1; ++i) {
     //project a onto b where b is the origin vector representing this segment
     //and a is the origin vector to the point we are projecting, (a.b/b.b)*b
     const auto& u = shape[i];
@@ -72,13 +76,12 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
     total_length += u.Distance(v);
   }
 
+  assert(closest_distance < std::numeric_limits<float>::infinity());
   // Offset is a float between 0 and 1 representing the location of
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += shape[closest_segment].Distance(closest_point);
   float offset = static_cast<float>(closest_partial_length / total_length);
-  offset = std::max(0.f, std::min(offset, 1.f));
-  assert(0.f <= offset && offset <= 1.f);
 
   if (total_length * offset <= snap_distance) {
     offset = 0.f;
@@ -89,6 +92,8 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
     closest_point = shape.back();
     closest_distance = approximator.DistanceSquared(closest_point);
   }
+  offset = std::max(0.f, std::min(offset, 1.f));
+  assert(0.f <= offset && offset <= 1.f);
 
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment, offset);
 }
@@ -162,7 +167,6 @@ CandidateQuery::Query(const PointLL& location,
   }
 
   std::vector<Candidate> candidates;
-  // TODO what does it mean?
   std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
   DistanceApproximator approximator(location);
 
@@ -182,7 +186,7 @@ CandidateQuery::Query(const PointLL& location,
         const auto& shape = edgeinfo_ptr->shape();
         PointLL point;
         float sq_distance;
-        size_t segment;
+        decltype(shape.size()) segment;
         float offset;
         std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         if (sq_distance <= sq_search_radius) {
@@ -190,12 +194,12 @@ CandidateQuery::Query(const PointLL& location,
           correlated.CorrelateVertex(point);
 
           auto edgeid = get_edgeid(*tile, edge);
-          correlated.CorrelateEdge({edgeid, edge->forward()? offset : 1.f - offset});
+          correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, edge->forward()? offset : 1.f - offset));
 
           const auto opp_edge_ptr = reader_.GetOpposingEdge(edgeid);
           if (!filter || !filter(opp_edge_ptr)) {
             auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-            correlated.CorrelateEdge({opp_edgeid, edge->forward()? 1.f - offset : offset});
+            correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, edge->forward()? 1.f - offset : offset));
           }
 
           candidates.emplace_back(correlated, std::sqrt(sq_distance));
@@ -243,7 +247,10 @@ inline float TranslateLongitudeInMeters(const PointLL& lnglat, float meters)
 
 inline BoundingBox ExtendByMeters(const BoundingBox& bbox, float meters)
 {
-  // TODO negative meters may cause problems
+  if (meters < 0.f) {
+    throw std::runtime_error("Expect non-negative meters");
+  }
+
   PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
                 TranslateLatitudeInMeters(bbox.minpt(), -meters));
   PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
@@ -254,7 +261,10 @@ inline BoundingBox ExtendByMeters(const BoundingBox& bbox, float meters)
 
 inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
 {
-  // TODO negative meters may cause problems
+  if (meters < 0.f) {
+    throw std::runtime_error("Expect non-negative meters");
+  }
+
   PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
                 TranslateLatitudeInMeters(pt, -meters));
   PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
@@ -265,12 +275,12 @@ inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
 
 // Add each road linestring's line segments into grid. Only one side
 // of directed edges is added
-void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
+void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>& grid)
 {
-  if (!grid_ptr || tile.header()->nodecount() == 0 || tile.header()->directededgecount() == 0) {
+  if (tile.header()->nodecount() == 0 || tile.header()->directededgecount() == 0) {
     return;
   }
-  // TODO what does it mean?
+
   std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
   const auto first_node = tile.node(0);
   const auto last_node  = first_node + tile.header()->nodecount();
@@ -281,12 +291,12 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>* grid_ptr)
       if (visited.insert(edge->edgeinfo_offset()).second) {
         auto edgeinfo_ptr = get_edgeinfo_ptr(tile, edge);
         const auto& shape = edgeinfo_ptr->shape();
-        if (shape.empty()) {
+        if (shape.size() < 2) {
           continue;
         }
         auto edgeid = get_edgeid(tile, edge);
         for (decltype(shape.size()) i = 0; i < shape.size() - 1; ++i) {
-          grid_ptr->AddLineSegment(edgeid, LineSegment(shape[i], shape[i+1]));
+          grid.AddLineSegment(edgeid, LineSegment(shape[i], shape[i+1]));
         }
       }
     }
@@ -302,7 +312,8 @@ class CandidateGridQuery: public CandidateQuery
       : CandidateQuery(reader),
         hierarchy_(reader.GetTileHierarchy()),
         cell_width_(cell_width),
-        cell_height_(cell_height) {}
+        cell_height_(cell_height),
+        grid_cache_() {}
 
   ~CandidateGridQuery() {}
 
@@ -321,12 +332,9 @@ class CandidateGridQuery: public CandidateQuery
       return &(cached->second);
     }
 
-    GridRangeQuery<GraphId> grid(tile_ptr->BoundingBox(hierarchy_), cell_width_, cell_height_);
-    // TODO does rehash change pointer addresses?
-    auto inserted = grid_cache_.emplace(tile_id, std::move(grid));
-    auto grid_ptr = &(inserted.first->second);
-    IndexTile(*tile_ptr, grid_ptr);
-    return grid_ptr;
+    auto inserted = grid_cache_.emplace(tile_id, GridRangeQuery<GraphId>(tile_ptr->BoundingBox(hierarchy_), cell_width_, cell_height_));
+    IndexTile(*tile_ptr, inserted.first->second);
+    return &(inserted.first->second);
   }
 
   std::unordered_set<GraphId>
@@ -435,13 +443,21 @@ class CandidateGridQuery: public CandidateQuery
       const auto edge = tile->directededge(edgeid);
       const auto opp_edge = reader_.GetOpposingEdge(edgeid);
 
-      // edgeinfo is needed here because it returns an unique ptr
+      // NOTE a pointer to edgeinfo is needed here because it returns
+      // an unique ptr
       auto edgeinfo = get_edgeinfo_ptr(*tile, edgeid);
       const auto& shape = edgeinfo->shape();
+      if (shape.size() < 2) {
+        // Otherwise Project will fail
+        continue;
+      }
+
+      // Projection information
       PointLL point;
       float sq_distance;
-      size_t segment;
+      decltype(shape.size()) segment;
       float offset;
+
       GraphId snapped_node;
       PathLocation correlated(Location(location, Location::StopType::BREAK));
 
@@ -450,6 +466,9 @@ class CandidateGridQuery: public CandidateQuery
 
       if (included) {
         std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
+        assert(segment < shape.size() - 1);
+        assert(0.f <= offset && offset <= 1.f);
+
         if (sq_distance <= sq_search_radius) {
           float dist = edge->forward()? offset : 1.f - offset;
           if (dist == 1.f) {
@@ -457,16 +476,19 @@ class CandidateGridQuery: public CandidateQuery
           } else if (dist == 0.f) {
             snapped_node = opp_edge->endnode();
           }
-          correlated.CorrelateEdge({edgeid, dist});
+          correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, dist));
           correlated.CorrelateVertex(point);
         }
       }
 
-      // Correlate its opp side
+      // Correlate its opp edge
       if (!filter || !filter(opp_edge)) {
         if (!included) {
           std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
         }
+        assert(segment < shape.size() - 1);
+        assert(0.f <= offset && offset <= 1.f);
+
         if (sq_distance <= sq_search_radius) {
           float dist = opp_edge->forward()? offset : 1.f - offset;
           if (dist == 1.f) {
@@ -475,7 +497,7 @@ class CandidateGridQuery: public CandidateQuery
             snapped_node = edge->endnode();
           }
           auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-          correlated.CorrelateEdge({opp_edgeid, dist});
+          correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, dist));
           correlated.CorrelateVertex(point);
         }
       }

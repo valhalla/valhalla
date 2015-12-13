@@ -20,10 +20,14 @@ template<typename key_t, key_t invalid_key>
 class BucketQueue
 {
  public:
-  BucketQueue(size_t count, float size = 1.f)
+  using size_type = typename std::vector<std::vector<key_t>>::size_type;
+
+  BucketQueue(size_type count, float size = 1.f)
       : bucket_count_(count),
         bucket_size_(size),
-        top_(0) {
+        top_(0),
+        costmap_(),
+        buckets_() {
     if (bucket_size_ <= 0.f) {
       throw std::invalid_argument("expect bucket size to be positive");
     }
@@ -42,7 +46,7 @@ class BucketQueue
     if (it == costmap_.end()) {
       if (idx < bucket_count_) {
         if (buckets_.size() <= idx) {
-          buckets_.resize(idx+1);
+          buckets_.resize(idx + 1);
         }
         buckets_[idx].push_back(key);
         costmap_[key] = cost;
@@ -66,6 +70,7 @@ class BucketQueue
       keys.erase(it);
 
       // Add the new one
+      assert (idx < buckets_.size());
       buckets_[idx].push_back(key);
       costmap_[key] = cost;
 
@@ -98,7 +103,7 @@ class BucketQueue
     return top_ >= buckets_.size();
   }
 
-  size_t size() const {
+  size_type size() const {
     return costmap_.size();
   }
 
@@ -109,14 +114,14 @@ class BucketQueue
   }
 
  private:
-  size_t bucket_count_;
+  size_type bucket_count_;
   float bucket_size_;
-  mutable size_t top_;
+  mutable size_type top_;
   std::unordered_map<key_t, float> costmap_;
-  std::vector<std::vector<key_t> > buckets_;
+  std::vector<std::vector<key_t>> buckets_;
 
-  size_t bucket_idx(float cost) const {
-    return static_cast<size_t>(cost / bucket_size_);
+  size_type bucket_idx(float cost) const {
+    return static_cast<size_type>(cost / bucket_size_);
   }
 };
 
@@ -167,17 +172,17 @@ struct Status
 class LabelSet
 {
  public:
-  LabelSet(size_t count, float size = 1.f)
-      : queue_(count, size) {
-  }
+  LabelSet(typename BucketQueue<uint32_t, kInvalidLabelIndex>::size_type count,
+           float size = 1.f)
+      : queue_(count, size) {}
 
-  bool put(const GraphId& nodeid) {
-    return put(nodeid, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex);
-  }
+  bool put(const GraphId& nodeid)
+  { return put(nodeid, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex); }
 
   bool put(const GraphId& nodeid, const GraphId& edgeid,
            float source, float target,
-           float cost, uint32_t predecessor) {
+           float cost, uint32_t predecessor)
+  {
     if (!nodeid.Is_Valid()) {
       throw std::runtime_error("invalid nodeid");
     }
@@ -203,13 +208,13 @@ class LabelSet
     return false;
   }
 
-  bool put(uint16_t dest) {
-    return put(dest, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex);
-  }
+  bool put(uint16_t dest)
+  { return put(dest, GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex); }
 
   bool put(uint16_t dest, const GraphId& edgeid,
            float source, float target,
-           float cost, uint32_t predecessor) {
+           float cost, uint32_t predecessor)
+  {
     if (dest == kInvalidDestination) {
       throw std::runtime_error("invalid destination");
     }
@@ -236,7 +241,8 @@ class LabelSet
     return false;
   }
 
-  uint32_t pop() {
+  uint32_t pop()
+  {
     auto idx = queue_.pop();
 
     if (idx != kInvalidLabelIndex) {
@@ -256,19 +262,17 @@ class LabelSet
     return idx;
   }
 
-  bool empty() const {
-    return queue_.empty();
-  }
+  bool empty() const
+  { return queue_.empty(); }
 
-  const Label& label(uint32_t label_idx) const {
-    return labels_[label_idx];
-  }
+  const Label& label(uint32_t label_idx) const
+  { return labels_[label_idx]; }
 
-  void clear_queue() {
-    queue_.clear();
-  }
+  void clear_queue()
+  { queue_.clear(); }
 
-  void clear_status() {
+  void clear_status()
+  {
     node_status_.clear();
     dest_status_.clear();
   }
@@ -459,30 +463,23 @@ find_shortest_path(GraphReader& reader,
 
 
 class RoutePathIterator:
-    public std::iterator<std::forward_iterator_tag,
-                         const Label>
+    public std::iterator<std::forward_iterator_tag, const Label>
 {
  public:
   RoutePathIterator(const LabelSet* labelset,
                     uint32_t label_idx)
       : labelset_(labelset),
-        label_idx_(label_idx)
-  {
-  }
+        label_idx_(label_idx) {}
 
   // Construct a tail iterator
   RoutePathIterator(const LabelSet* labelset)
       : labelset_(labelset),
-        label_idx_(kInvalidLabelIndex)
-  {
-  }
+        label_idx_(kInvalidLabelIndex) {}
 
   // Construct an invalid iterator
   RoutePathIterator()
       : labelset_(nullptr),
-        label_idx_(kInvalidLabelIndex)
-  {
-  }
+        label_idx_(kInvalidLabelIndex) {}
 
   // Postfix increment
   RoutePathIterator operator++(int)
@@ -511,26 +508,18 @@ class RoutePathIterator:
   }
 
   bool operator!=(const RoutePathIterator& other) const
-  {
-    return !(*this == other);
-  }
+  { return !(*this == other); }
 
   // Derefrencnce
   reference operator*() const
-  {
-    return labelset_->label(label_idx_);
-  }
+  { return labelset_->label(label_idx_); }
 
   // Pointer dereference
   pointer operator->() const
-  {
-    return &(labelset_->label(label_idx_));
-  }
+  { return &(labelset_->label(label_idx_)); }
 
   bool is_valid() const
-  {
-    return labelset_ != nullptr;
-  }
+  { return labelset_ != nullptr; }
 
  private:
   const LabelSet* labelset_;

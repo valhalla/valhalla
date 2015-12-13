@@ -169,11 +169,11 @@ class MapMatching: public ViterbiSearch<State>
         states_()
   {
     if (sigma_z_ <= 0.f) {
-      throw std::invalid_argument("expect sigma_z to be positive");
+      throw std::invalid_argument("Expect sigma_z to be positive");
     }
 
     if (beta_ <= 0.f) {
-      throw std::invalid_argument("expect beta to be positive");
+      throw std::invalid_argument("Expect beta to be positive");
     }
   }
 
@@ -248,7 +248,6 @@ class MapMatching: public ViterbiSearch<State>
 
   float TransitionCost(const State& left, const State& right) const override
   {
-    auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
     if (!left.routed()) {
       left.route(unreached_states_[right.time()], graphreader_, MaxRouteDistance(left, right));
     }
@@ -256,6 +255,7 @@ class MapMatching: public ViterbiSearch<State>
 
     auto route_distance = left.route_distance(right);
     if (route_distance >= 0.f) {
+      auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
       return std::abs(route_distance - mmt_distance) * inv_beta_;
     }
 
@@ -552,8 +552,7 @@ OfflineMatch(MapMatching& mm,
 
     if (!results.back().graphid().Is_Valid()) {
       results.pop_back();
-      const auto& measurement = measurements[results.size()];
-      results.push_back(guess_source_result(source_state, target_state, measurement));
+      results.push_back(guess_source_result(source_state, target_state, measurements[results.size()]));
     }
 
     auto it = proximate_measurements.find(time - 1);
@@ -569,8 +568,7 @@ OfflineMatch(MapMatching& mm,
       }
     }
 
-    const auto& measurement = measurements[results.size()];
-    results.push_back(guess_target_result(source_state, target_state, measurement));
+    results.push_back(guess_target_result(source_state, target_state, measurements[results.size()]));
   }
   assert(results.size() == measurements.size());
 
@@ -601,7 +599,16 @@ void MergeRoute(std::vector<EdgeSegment>& route,
       if (!route.empty()) {
         auto& last_segment = route.back();
         if (last_segment.edgeid == segment->edgeid) {
-          // TODO assert(segment->target >= last_segment.target)
+
+          // Segments must be successive i.e. segments[i-1].target == segments[i].source where i > 0
+          if (last_segment.target != segment->source && segment != segments.rbegin()) {
+            LOG_ERROR("Found a disconnected route in which segment "
+                      + std::to_string(segment - segments.rbegin()) + " ends at "
+                      + std::to_string(last_segment.target)
+                      + " but the next segment starts at "
+                      + std::to_string(segment->source));
+          }
+
           last_segment.target = std::max(last_segment.target, segment->target);
         } else {
           route.push_back(*segment);

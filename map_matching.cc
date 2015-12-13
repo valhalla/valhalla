@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
 
   float sigma_z = std::atof(argv[1]),
            beta = std::atof(argv[2]),
-           mode = std::atoi(argv[3]),
          radius = std::atof(argv[4]);
+  int mode = std::atoi(argv[3]);
 
   boost::property_tree::ptree config;
   boost::property_tree::read_json("conf/valhalla.json", config);
@@ -74,5 +74,6 @@ int main(int argc, char *argv[])
     stream >> lng; stream >> lat;
     measurements.emplace_back(PointLL(lng, lat));
   }
+
   return 0;
 }

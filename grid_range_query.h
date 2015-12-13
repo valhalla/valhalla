@@ -28,6 +28,8 @@ template <typename key_t>
 class GridRangeQuery
 {
  public:
+  GridRangeQuery() = delete;
+
   GridRangeQuery(const BoundingBox& bbox, float cell_width, float cell_height) {
     if (cell_width <= 0.f) {
       throw std::invalid_argument("invalid cell width (require positive width)");
@@ -83,16 +85,15 @@ class GridRangeQuery
         bbox_.minx() + i * cell_width_,
         bbox_.miny() + j * cell_height_,
         bbox_.minx() + (i + 1) * cell_width_,
-        bbox_.miny() + (j + 1) * cell_height_
-      );
+        bbox_.miny() + (j + 1) * cell_height_);
   }
 
 
   Point CellCenter(int i, int j) const {
     return {
-        bbox_.minx() + (i + 0.5) * cell_width_,
-        bbox_.miny() + (j + 0.5) * cell_height_
-      };
+      bbox_.minx() + (i + 0.5) * cell_width_,
+      bbox_.miny() + (j + 0.5) * cell_height_
+    };
   }
 
 

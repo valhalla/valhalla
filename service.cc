@@ -181,7 +181,7 @@ void serialize_labels(const State& state,
 
 template <typename T>
 void serialize_state(const State& state,
-                     const MapMatching&mm,
+                     const MapMatching& mm,
                      Writer<T>& writer)
 {
   writer.StartObject();
@@ -207,7 +207,7 @@ void serialize_state(const State& state,
 
 template <typename T>
 void serialize_properties(const std::vector<MatchResult>& results,
-                          const MapMatching&mm,
+                          const MapMatching& mm,
                           Writer<T>& writer)
 {
   writer.StartObject();
