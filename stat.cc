@@ -206,13 +206,17 @@ directed_to_bidirected_map(baldr::GraphReader& graphreader,
               oppedgeid = graphreader.GetOpposingEdgeId(edgeid);
       // Log some impossible cases
       if (edgeid == oppedgeid) {
-        LOG_ERROR("Found an edge that its opposite edge is itself " + std::to_string(edgeid));
+        std::ostringstream is;
+        is << "Found an edge that its opposite edge is itself ";
+        is << edgeid;
+        LOG_ERROR(is.str());
       }
       if (graphreader.GetOpposingEdgeId(oppedgeid) != edgeid) {
-        LOG_ERROR("Found an edge " + std::to_string(edgeid)
-                  + " has opposite edge to be " + std::to_string(oppedgeid)
-                  + ", but whose opposite edge is "
-                  + std::to_string(graphreader.GetOpposingEdgeId(oppedgeid)));
+        std::ostringstream is;
+        is << "Found an edge " << edgeid;
+        is << " has opposite edge to be " << oppedgeid << ",";
+        is << " but which has another opposite edge to be " << graphreader.GetOpposingEdgeId(oppedgeid);
+        LOG_ERROR(is.str());
       }
 
       visited.insert(oppedgeid);
