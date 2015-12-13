@@ -197,6 +197,10 @@ enum class Use : uint8_t {
   // Other...
   kOther = 40,
 
+  // Ferry and rail ferry
+  kFerry = 41,
+  kRailFerry = 42,
+
   // Transit specific uses. Must be last in the list
   kRail = 50,              // Rail line
   kBus = 51,               // Bus line
