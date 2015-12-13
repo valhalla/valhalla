@@ -285,7 +285,7 @@ double complete_coverage(baldr::GraphReader& graphreader,
 
       // Write progress to log
       processed++;
-      if (processed % static_cast<CompleteEdgeMap::size_type>(total_size / 100) == 0) {
+      if (processed % std::max(static_cast<unsigned int>(total_size / 100), 1u) == 0) {
         auto percent = static_cast<unsigned int>((processed / static_cast<float>(total_size)) * 100);
         LOG_INFO("Processed " + std::to_string(processed) + "/" + std::to_string(total_size)
                  + "(" + std::to_string(percent) + "%)"
@@ -329,7 +329,7 @@ double incomplete_coverage(baldr::GraphReader& graphreader,
 
       // Write progress to log
       processed++;
-      if (processed % static_cast<IncompleteEdgeMap::size_type>(total_size / 100) == 0) {
+      if (processed % std::max(static_cast<unsigned int>(total_size / 100), 1u) == 0) {
         auto percent = static_cast<unsigned int>((processed / static_cast<float>(total_size)) * 100);
         LOG_INFO("Processed " + std::to_string(processed) + "/" + std::to_string(total_size)
                  + "(" + std::to_string(percent) + "%)"
