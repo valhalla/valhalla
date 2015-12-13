@@ -29,7 +29,7 @@ class DirectededgeAttacher: public baldr::DirectedEdge
 {
  public:
   void set_photocount(uint16_t count)
-  { attributes_.photocount = count; }
+  { photocount_ = count; }
 };
 
 
