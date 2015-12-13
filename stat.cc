@@ -1,6 +1,7 @@
 // -*- mode: c++ -*-
 
 #include <unordered_map>
+#include <sstream>
 #include <cassert>
 
 #include <sqlite3.h>
@@ -35,19 +36,19 @@ void MergeRanges(std::vector<Range>& ranges)
   }
 
   // Sort ranges by start value
-  std::sort(ranges.begin(), ranges.end(), [](const Range& rhs, const Range& lhs) {
-      return rhs.first < rhs.first;
+  std::sort(ranges.begin(), ranges.end(), [](const Range& lhs, const Range& rhs) {
+      return lhs.first < rhs.first;
     });
 
   auto merged_range = ranges.begin();
   for (auto range = std::next(ranges.begin()); range != ranges.end(); range++) {
+    // Invariant: [begin, merged_range] are guaranteed to be merged
     assert(merged_range < range);
-    // [begin, merged_range] are guaranteed to be merged
-    assert(merged_range->first <= range->first);  // since it's sorted
+    assert(merged_range->first <= range->first);  // Make sure it's sorted
 
-    if (range->first <= merged_range->second) {
+    if (merged_range->second >= range->first) { // Two ranges are intersected
       merged_range->second = std::max(merged_range->second, range->second);
-    } else {
+    } else {  // Two ranges are disjoint
       std::advance(merged_range, 1);
       if (merged_range != range) {
         merged_range->first = range->first;
@@ -57,15 +58,29 @@ void MergeRanges(std::vector<Range>& ranges)
   }
 
   ranges.erase(std::next(merged_range), ranges.end());
+  if (ranges.back().first == 0.f && ranges.back().second == 1.f) {
+    assert(ranges.size() == 1);
+  }
 }
 
 
+// A complete edge is an edge that is fullly covered. The
+// CompleteEdgeMap is to map each complete edge (GraphId) to the
+// number of times (unsigned int) it's been covered.
+using CompleteEdgeMap = std::unordered_map<baldr::GraphId, unsigned int>;
+
+// A incomplete edge is an edge that is partially covered. The
+// IncompleteEdgeMap is to map each incomplete edge (GraphId) to the
+// ranges (std::vector<Range>) it's been covered.
+using IncompleteEdgeMap = std::unordered_map<baldr::GraphId, std::vector<Range>>;
+
+
 void aggregate_routes(sqlite3* db_handle,
-                      std::unordered_map<baldr::GraphId, size_t>& complete_edges,
-                      std::unordered_map<baldr::GraphId, std::vector<Range>>& incomplete_edges)
+                      CompleteEdgeMap& complete_edges,
+                      IncompleteEdgeMap& incomplete_edges)
 {
   sqlite3_stmt* stmt;
-  std::string sql = "SELECT sequence_id, coordinate_index, graphid, graphtype FROM routes";
+  std::string sql = "SELECT sequence_id, route_index, edgeid, source, target FROM routes";
   int ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, nullptr);
   if (SQLITE_OK != ret) {
     sqlite3_finalize(stmt);
@@ -88,9 +103,12 @@ void aggregate_routes(sqlite3* db_handle,
       } else {
         auto& ranges = incomplete_edges[edgeid];
         ranges.emplace_back(source, target);
+        // If these ranges can cover the whole edge, then we move this
+        // edge to the complete edge set. NOTE an edge is either in
+        // the complete edge set or in the incomplete edge set
         MergeRanges(ranges);
         if (ranges.back().first == 0.f && ranges.back().second == 1.f) {
-          complete_edges.emplace(edgeid, 1);
+          complete_edges[edgeid]++;
           incomplete_edges.erase(edgeid);
         }
       }
@@ -106,6 +124,127 @@ void aggregate_routes(sqlite3* db_handle,
 }
 
 
+// Group directed edges by tileid.
+template <typename edge_map_t>
+std::unordered_map<uint32_t, edge_map_t>
+group_directededges_by_tileid(const edge_map_t& edges)
+{
+  std::unordered_map<uint32_t, edge_map_t> map;
+  for (const auto& pair : edges) {
+    map[pair.first.tileid()].insert(pair);
+  }
+  return map;
+}
+
+
+std::unordered_map<uint32_t, CompleteEdgeMap>
+directed_to_bidirected_map(baldr::GraphReader& graphreader,
+                           const std::unordered_map<uint32_t, CompleteEdgeMap>& complete_tiles,
+                           const CompleteEdgeMap& complete_edges,
+                           const IncompleteEdgeMap& incomplete_edges)
+{
+  std::unordered_map<uint32_t, CompleteEdgeMap> map;
+  std::unordered_set<baldr::GraphId> visited;
+
+  for (const auto& tile_pair : complete_tiles) {
+    for (const auto& pair : tile_pair.second) {
+      const auto edgeid = pair.first,
+              oppedgeid = graphreader.GetOpposingEdgeId(edgeid);
+      if (edgeid == oppedgeid) {
+        std::ostringstream is;
+        is << "Found an edge that its opposite edge is itself ";
+        is << edgeid;
+        LOG_ERROR(is.str());
+      }
+      if (graphreader.GetOpposingEdgeId(oppedgeid) != edgeid) {
+        std::ostringstream is;
+        is << "Found an edge " << edgeid;
+        is << " has opposite edge to be " << oppedgeid << ",";
+        is << " but which has another opposite edge to be " << graphreader.GetOpposingEdgeId(oppedgeid);
+        LOG_ERROR(is.str());
+      }
+
+      visited.insert(oppedgeid);
+
+      if (visited.insert(edgeid).second) {
+        // Merge coverage counts
+        unsigned int count = 0;
+        auto it = complete_edges.find(edgeid);
+        if (it != complete_edges.end()) {
+          count += it->second;
+        }
+        it = complete_edges.find(oppedgeid);
+        if (it != complete_edges.end()) {
+          count += it->second;
+        }
+        if (count > 0) {
+          map[edgeid.tileid()].emplace(edgeid, count);
+        }
+      }
+    }
+    if (graphreader.OverCommitted()) {
+      graphreader.Clear();
+    }
+  }
+
+  return map;
+}
+
+
+std::unordered_map<uint32_t, IncompleteEdgeMap>
+directed_to_bidirected_map(baldr::GraphReader& graphreader,
+                           const std::unordered_map<uint32_t, IncompleteEdgeMap>& incomplete_tiles,
+                           const CompleteEdgeMap& complete_edges,
+                           const IncompleteEdgeMap& incomplete_edges)
+{
+  std::unordered_map<uint32_t, IncompleteEdgeMap> map;
+  std::unordered_set<baldr::GraphId> visited;
+
+  for (const auto& tile_pair : incomplete_tiles) {
+    for (const auto& pair : tile_pair.second) {
+      const auto edgeid = pair.first,
+              oppedgeid = graphreader.GetOpposingEdgeId(edgeid);
+      // Log some impossible cases
+      if (edgeid == oppedgeid) {
+        LOG_ERROR("Found an edge that its opposite edge is itself " + std::to_string(edgeid));
+      }
+      if (graphreader.GetOpposingEdgeId(oppedgeid) != edgeid) {
+        LOG_ERROR("Found an edge " + std::to_string(edgeid)
+                  + " has opposite edge to be " + std::to_string(oppedgeid)
+                  + ", but whose opposite edge is "
+                  + std::to_string(graphreader.GetOpposingEdgeId(oppedgeid)));
+      }
+
+      visited.insert(oppedgeid);
+
+      if (visited.insert(edgeid).second
+          && complete_edges.find(edgeid) == complete_edges.end()
+          && complete_edges.find(oppedgeid) == complete_edges.end()) {
+        std::vector<Range> ranges;
+        auto it = incomplete_edges.find(edgeid);
+        if (it != incomplete_edges.end()) {
+          ranges.insert(ranges.end(), it->second.begin(), it->second.end());
+        }
+        if (it != incomplete_edges.end()) {
+          for (const auto& range : it->second) {
+            ranges.emplace_back(1.f - range.second, 1.f - range.first);
+          }
+        }
+        MergeRanges(ranges);
+        if (!ranges.empty()) {
+          map[edgeid.tileid()].emplace(edgeid, ranges);
+        }
+      }
+    }
+    if (graphreader.OverCommitted()) {
+      graphreader.Clear();
+    }
+  }
+
+  return map;
+}
+
+
 uint32_t get_edge_length(baldr::GraphReader& graphreader,
                          const baldr::GraphId& edgeid,
                          const baldr::GraphTile* tile = nullptr)
@@ -114,33 +253,89 @@ uint32_t get_edge_length(baldr::GraphReader& graphreader,
     tile = graphreader.GetGraphTile(edgeid);
     if (!tile) return 0;
   }
+  // If wrong tile is given, it's possible to throw exception here
   auto directededge = tile->directededge(edgeid);
   if (!directededge) return 0;
   return directededge->length();
 }
 
 
-double coverage(baldr::GraphReader& graphreader,
-                const std::unordered_map<baldr::GraphId, size_t>& complete_edges,
-                const std::unordered_map<baldr::GraphId, std::vector<Range>>& incomplete_edges)
+double complete_coverage(baldr::GraphReader& graphreader,
+                         const std::unordered_map<uint32_t, CompleteEdgeMap>& complete_tile_map)
+{
+  double total_length = 0.f;
+
+  CompleteEdgeMap::size_type total_size = 0;
+  for (const auto& pair : complete_tile_map) {
+    total_size += pair.second.size();
+  }
+  CompleteEdgeMap::size_type processed = 0;
+
+  for (const auto& tile_pair : complete_tile_map) {
+    const baldr::GraphTile* tile = nullptr;
+    for (const auto& pair : tile_pair.second) {
+      if (!tile) {
+        tile = graphreader.GetGraphTile(pair.first);
+      }
+      total_length += static_cast<double>(get_edge_length(graphreader, pair.first, tile));
+
+      // Write progress to log
+      processed++;
+      if (processed % static_cast<CompleteEdgeMap::size_type>(total_size / 100) == 0) {
+        auto percent = static_cast<unsigned int>((processed / static_cast<float>(total_size)) * 100);
+        LOG_INFO("Processed " + std::to_string(processed) + "/" + std::to_string(total_size)
+                 + "(" + std::to_string(percent) + "%)"
+                 + " complete edges");
+      }
+    }
+
+    if (graphreader.OverCommitted()) {
+      graphreader.Clear();
+    }
+  }
+
+  return total_length;
+}
+
+
+double incomplete_coverage(baldr::GraphReader& graphreader,
+                           const std::unordered_map<uint32_t, IncompleteEdgeMap>& incomplete_tile_map)
 {
   double total_length = 0;
 
-  for (const auto& pair : complete_edges) {
-    total_length += static_cast<double>(get_edge_length(graphreader, pair.first));
+  IncompleteEdgeMap::size_type total_size = 0;
+  for (const auto& pair : incomplete_tile_map) {
+    total_size += pair.second.size();
   }
+  IncompleteEdgeMap::size_type processed = 0;
 
-  for (const auto& pair : incomplete_edges) {
-    if (complete_edges.find(pair.first) == complete_edges.end()) {
-      continue;
+  for (const auto& tile_pair : incomplete_tile_map) {
+    const baldr::GraphTile* tile = nullptr;
+    for (const auto& pair : tile_pair.second) {
+      if (!tile) {
+        tile = graphreader.GetGraphTile(pair.first);
+      }
+      float partial_length = 0.f;
+      auto edge_length = get_edge_length(graphreader, pair.first, tile);
+      for (const auto& range : pair.second) {
+        assert(range.first <= range.second);
+        partial_length += (range.second - range.first) * edge_length;
+      }
+      total_length += partial_length;
+
+      // Write progress to log
+      processed++;
+      if (processed % static_cast<IncompleteEdgeMap::size_type>(total_size / 100) == 0) {
+        auto percent = static_cast<unsigned int>((processed / static_cast<float>(total_size)) * 100);
+        LOG_INFO("Processed " + std::to_string(processed) + "/" + std::to_string(total_size)
+                 + "(" + std::to_string(percent) + "%)"
+                 + " incomplete edges");
+      }
     }
-    float partial_length = 0.f;
-    auto edge_length = get_edge_length(graphreader, pair.first);
-    for (const auto& range : pair.second) {
-      assert(range.first <= range.second);
-      partial_length += (range.second - range.first) * static_cast<float>(edge_length);
+
+    if (graphreader.OverCommitted()) {
+      graphreader.Clear();
     }
-    total_length += static_cast<double>(partial_length);
   }
 
   return total_length;
@@ -154,9 +349,9 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::string action = argv[0],
-     config_filename = argv[1],
-   sqlite3_filename  = argv[2];
+  std::string action = argv[1],
+     config_filename = argv[2],
+   sqlite3_filename  = argv[3];
 
   sqlite3* db_handle;
   int ret = sqlite3_open_v2(sqlite3_filename.c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
@@ -170,12 +365,33 @@ int main(int argc, char *argv[])
   baldr::GraphReader graphreader(pt.get_child("mjolnir.hierarchy"));
 
   if (action == "coverage") {
-    std::unordered_map<baldr::GraphId, size_t> complete_edges;
-    std::unordered_map<baldr::GraphId, std::vector<Range>> incomplete_edges;
-    aggregate_routes(db_handle, complete_edges, incomplete_edges);
+    CompleteEdgeMap complete_edges;
+    IncompleteEdgeMap incomplete_edges;
 
-    auto total_length = coverage(graphreader, complete_edges, incomplete_edges);
-    LOG_INFO("Total covered street length: " + std::to_string(total_length) + " meters");
+    LOG_INFO("Aggregating edges");
+    aggregate_routes(db_handle, complete_edges, incomplete_edges);
+    LOG_INFO("Aggregated " + std::to_string(complete_edges.size()) + " complete edges");
+    LOG_INFO("Aggregated " + std::to_string(incomplete_edges.size()) + " incomplete edges");
+
+    auto complete_tile_map = group_directededges_by_tileid(complete_edges);
+    auto incomplete_tile_map = group_directededges_by_tileid(incomplete_edges);
+    auto complete_total_length = complete_coverage(graphreader, complete_tile_map),
+       incomplete_total_length = incomplete_coverage(graphreader, incomplete_tile_map),
+                  total_length = complete_total_length + incomplete_total_length;
+    std::cout << "Fully covered street length: " << std::to_string(complete_total_length) << "meters" << std::endl;
+    std::cout << "Partially covered street length: " << std::to_string(incomplete_total_length) << "meters" << std::endl;
+    std::cout << "Totally covered street length: " + std::to_string(total_length) + " meters" << std::endl;
+
+    auto bid_complete_tile_map = directed_to_bidirected_map(graphreader, complete_tile_map,
+                                                            complete_edges, incomplete_edges);
+    auto bid_incomplete_tile_map = directed_to_bidirected_map(graphreader, incomplete_tile_map,
+                                                              complete_edges, incomplete_edges);
+    auto bid_complete_total_length = complete_coverage(graphreader, bid_complete_tile_map),
+       bid_incomplete_total_length = incomplete_coverage(graphreader, bid_incomplete_tile_map),
+                  bid_total_length = bid_complete_total_length + bid_incomplete_total_length;
+    std::cout << "Fully covered street length: " << std::to_string(bid_complete_total_length) << "meters" << std::endl;
+    std::cout << "Partially covered street length: " << std::to_string(bid_incomplete_total_length) << "meters" << std::endl;
+    std::cout << "Totally covered street length (bidirectionally): " + std::to_string(bid_total_length) + " meters" << std::endl;
   } else {
     LOG_ERROR("Unsupported action");
     return 3;
