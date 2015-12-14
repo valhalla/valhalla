@@ -7,7 +7,7 @@
 
 namespace {
 // Minimum edge length
-constexpr auto kMinEdgeLength = 0.003f;
+constexpr auto kMinEdgeLength = 0.0003f;
 }
 
 namespace valhalla {
