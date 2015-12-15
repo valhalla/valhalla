@@ -1,0 +1,13 @@
+en-US:
+  instructions:
+    start:
+      cardinal_directions: ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      0: "Head %{cardinal_direction}."
+      1: "Head %{cardinal_direction} on %{street_names}."
+      2: "Head %{cardinal_direction} on %{begin_street_names}. Continue on %{street_names}."
+    start_verbal:
+      cardinal_directions: ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
+      0: "Head %{cardinal_direction} for %{length}."
+      1: "Head %{cardinal_direction} on %{street_names} for %{length}."
+      2: "Head %{cardinal_direction} on %{begin_street_names}."
+  
