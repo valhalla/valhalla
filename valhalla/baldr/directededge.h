@@ -123,31 +123,6 @@ class DirectedEdge {
   void set_drive_on_right(const bool rsd);
 
   /**
-   * Is this edge part of a ferry?
-   * @return  Returns true if this edge is part of a ferry, false if not.
-   */
-  bool ferry() const;
-
-  /**
-   * Sets the flag indicating this edge is a ferry (or part of a ferry).
-   * @param  ferry  True if this edge is a ferry, false if not.
-   */
-  void set_ferry(const bool ferry);
-
-  /**
-   * Is this edge part of a rail ferry?
-   * @return  Returns true if this edge is part of a rail ferry, false if not.
-   */
-  bool railferry() const;
-
-  /**
-   * Sets the flag indicating this edge is a rail ferry (or part of a
-   * rail ferry). Example is the EuroTunnel (Channel Tunnel).
-   * @param  ferry  True if this edge is a rail ferry, false if not.
-   */
-  void set_railferry(const bool railferry);
-
-  /**
    * Does this edge have a toll or is it part of a toll road?
    * @return  Returns true if this edge is part of a toll road, false if not.
    */
@@ -766,8 +741,8 @@ class DirectedEdge {
   uint64_t speed_type_     : 2; // Speed type (tagged vs. categorized)
   uint64_t opp_index_      : 7; // Opposing directed edge index
   uint64_t drive_on_right_ : 1; // Driving side. Right if true (false=left)
-  uint64_t ferry_          : 1; // Ferry (boat)
-  uint64_t railferry_      : 1; // Ferry (rail) - e.g. Euro Rail Tunnel
+  uint64_t spare2_         : 1;
+  uint64_t spare3_         : 1;
   uint64_t toll_           : 1; // Edge is part of a toll road.
   uint64_t seasonal_       : 1; // Seasonal access (ex. no access in winter)
   uint64_t dest_only_      : 1; // Access allowed to destination only

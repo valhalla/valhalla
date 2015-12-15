@@ -224,6 +224,8 @@ const std::unordered_map<uint8_t, std::string> UseStrings = {
   {static_cast<uint8_t>(Use::kFootway), "footway"},
   {static_cast<uint8_t>(Use::kSteps), "steps"},
   {static_cast<uint8_t>(Use::kOther), "other"},
+  {static_cast<uint8_t>(Use::kRailFerry), "rail-ferry"},
+  {static_cast<uint8_t>(Use::kFerry), "ferry"},
   {static_cast<uint8_t>(Use::kRail), "rail"},
   {static_cast<uint8_t>(Use::kBus), "bus"},
   {static_cast<uint8_t>(Use::kRailConnection), "rail_connection"},
