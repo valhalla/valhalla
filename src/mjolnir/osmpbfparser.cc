@@ -197,7 +197,9 @@ void parse_primitiveblock(char* unpack_buffer, int32_t sz, const Interest intere
         nodes.reserve(w.refs_size());
         for (int j = 0; j < w.refs_size(); ++j) {
           node += w.refs(j);
-          nodes.push_back(node);
+          //TODO: skip consecutive duplicates, make this configurable
+          if(nodes.size() == 0 || node != nodes.back())
+            nodes.push_back(node);
         }
         uint64_t id = w.id();
         callback.way_callback(id, get_tags<Way>(w, primblock), nodes);
