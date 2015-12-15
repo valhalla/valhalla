@@ -111,8 +111,6 @@ bool EdgesMatch(const GraphTile* tile, const DirectedEdge* edge1,
       || edge1->link() != edge2->link()
       || edge1->use() != edge2->use()
       || edge1->speed() != edge2->speed()
-      || edge1->ferry() != edge2->ferry()
-      || edge1->railferry() != edge2->railferry()
       || edge1->toll() != edge2->toll()
       || edge1->destonly() != edge2->destonly()
       || edge1->unpaved() != edge2->unpaved()
