@@ -228,7 +228,7 @@ struct graph_callback : public OSMPBF::Callback {
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       auto inserted = loop_nodes_.insert(std::make_pair(node, i));
       if(inserted.second == false)
-        intersection_.set(nodes[i - inserted.first->second]); //TODO: update osmdata_.*_count?
+        intersection_.set(nodes[(i + inserted.first->second) / 2]); //TODO: update osmdata_.*_count?
     }
     intersection_.set(nodes.front());
     intersection_.set(nodes.back());
