@@ -163,27 +163,6 @@ void DirectedEdge::set_drive_on_right(const bool rsd) {
   drive_on_right_ = rsd;
 }
 
-// Is this edge part of a ferry?
-bool DirectedEdge::ferry() const {
-  return ferry_;
-}
-
-// Sets the flag indicating this edge is a ferry (or part of a ferry).
-void DirectedEdge::set_ferry(const bool ferry) {
-  ferry_ = ferry;
-}
-
-// Is this edge part of a rail ferry?
-bool DirectedEdge::railferry() const {
-  return railferry_;
-}
-
-// Sets the flag indicating this edge is a rail ferry (or part of a
-// rail ferry). Example is the EuroTunnel (Channel Tunnel).
-void DirectedEdge::set_railferry(const bool railferry) {
-  railferry_ = railferry;
-}
-
 // Does this edge have a toll or is it part of a toll road?
 bool DirectedEdge::toll() const {
   return toll_;
@@ -733,8 +712,6 @@ json::MapPtr DirectedEdge::json() const {
     {"end_complex_restriction", static_cast<bool>(end_complex_restriction_)},
     {"has_exit_sign", static_cast<bool>(exitsign_)},
     {"drive_on_right", static_cast<bool>(drive_on_right_)},
-    {"ferry", static_cast<bool>(ferry_)},
-    {"rail_ferry", static_cast<bool>(railferry_)},
     {"toll", static_cast<bool>(toll_)},
     {"seasonal", static_cast<bool>(seasonal_)},
     {"destination_only", static_cast<bool>(dest_only_)},
