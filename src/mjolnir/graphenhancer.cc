@@ -142,10 +142,10 @@ void UpdateSpeed(DirectedEdge& directededge, const uint32_t density) {
   } else {
     // Set speed on ferries. Base the speed on the length - assumes
     // that longer lengths generally use a faster ferry boat
-    if (directededge.railferry()) {
-      directededge.set_speed(65);  // 40 MPH
+    if (directededge.use() == Use::kRailFerry) {
+      directededge.set_speed(65);   // 40 MPH
       return;
-    } else if (directededge.ferry()) {
+    } else if (directededge.use() == Use::kFerry) {
       if (directededge.length() < 2000) {
         directededge.set_speed(10);  // 5 knots
       } else if (directededge.length() < 8000) {

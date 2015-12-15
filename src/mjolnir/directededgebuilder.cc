@@ -22,8 +22,14 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(
   set_use(use);
   set_speed(speed);    // KPH
   set_truck_speed(truck_speed); // KPH
-  set_ferry(way.ferry());
-  set_railferry(way.rail());
+
+  // Override use for ferries/rail ferries. TODO - set this in lua
+  if (way.ferry()) {
+    set_use(Use::kFerry);
+  }
+  if (way.rail()) {
+    set_use(Use::kRailFerry);
+  }
   set_toll(way.toll());
   set_dest_only(way.destination_only());
 
