@@ -9,4 +9,4 @@ pushd yaml-cpp-release-0.5.2/
 cmake -G "Unix Makefiles" -DBUILD_SHARED_LIBS=ON
 make
 sudo make install
-
+popd
