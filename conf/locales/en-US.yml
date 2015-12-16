@@ -17,6 +17,11 @@ en-US:
 
     ###########################################################################
     destination:
+      relative_directions: ["left", "right"]
+      0: "You have arrived at your destination."
+      1: "You have arrived at %{location}."
+      2: "Your destination is on the %{relative_direction}."
+      3: "%{location} is on the %{relative_direction}."
 
     ###########################################################################
     destination_verbal_alert:
