@@ -830,10 +830,10 @@ TripPath_Edge* TripPathBuilder::AddTripEdge(const uint32_t idx,
     trip_edge->set_other(true);
 
   // Set edge attributes - only set if they are true since they are optional
-  if (directededge->ferry())
+  if (directededge->use() == Use::kFerry)
     trip_edge->set_ferry(true);
 
-  if (directededge->railferry())
+  if (directededge->use() == Use::kRailFerry)
     trip_edge->set_rail_ferry(true);
 
   if (directededge->toll())
