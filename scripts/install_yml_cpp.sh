@@ -2,7 +2,7 @@
 set -e
 
 #grab specific release of yaml
-wget https://github.com/jbeder/yaml-cpp/archive/release-0.5.2.tar.gz yaml-cpp-release-0.5.2.gz
+wget https://github.com/jbeder/yaml-cpp/archive/release-0.5.2.tar.gz yaml-cpp-release-0.5.2.tar.gz
 tar pxvf yaml-cpp-release-0.5.2.tar.gz 
 pushd yaml-cpp-release-0.5.2/
 #concoct a makefile, build it, install it
