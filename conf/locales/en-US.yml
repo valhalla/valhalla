@@ -64,12 +64,27 @@ en-US:
 
     ###########################################################################
     bear:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      2: "Bear %{relative_direction} onto %{begin_street_names}. Continue on %{street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
 
     ###########################################################################
     bear_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      2: "Bear %{relative_direction} onto %{begin_street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
 
     ###########################################################################
     bear_verbal:
+      relative_directions: ["left", "right"]
+      0: "Bear %{relative_direction}."
+      1: "Bear %{relative_direction} onto %{street_names}."
+      1: "Bear %{relative_direction} onto %{begin_street_names}."
+      3: "Bear %{relative_direction} to stay on %{street_names}."
 
     ###########################################################################
     turn:
