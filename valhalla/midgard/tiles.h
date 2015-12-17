@@ -240,7 +240,7 @@ class Tiles {
    * @return             the map of each tile intersected to a list of its intersected sub cell indices
    */
   template <class container_t>
-  std::unordered_map<int32_t, std::list<unsigned short> > Intersect(const container_t& linestring) const;
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const container_t& linestring) const;
 
   /**
    * Intersect a circle with the tiles to see which tiles and sub cells it intersects
@@ -248,7 +248,7 @@ class Tiles {
    * @param radius  the radius of the circle
    * @return        the map of each tile intersected to a list of its intersected sub cell indices
    */
-  std::unordered_map<int32_t, std::list<unsigned short> > Intersect(const coord_t& center, const float radius) const;
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > Intersect(const coord_t& center, const float radius) const;
 
  protected:
   // Bounding box of the tiling system.
@@ -264,7 +264,9 @@ class Tiles {
   int32_t ncolumns_;
 
   // Number of subdivisions within a single tile
-  unsigned short subdivisions_;
+  unsigned short nsubdivisions_;
+
+  float subdivision_size_;
 
   // Tile list - populated by the TileList method.
   std::vector<int32_t> tilelist_;

@@ -9,9 +9,10 @@ namespace midgard {
 // based on the bounding box and tile size.
 template <class coord_t>
 Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsigned short subdivisions):
-  tilebounds_(bounds), tilesize_(tilesize), subdivisions_(subdivisions){
+  tilebounds_(bounds), tilesize_(tilesize), nsubdivisions_(subdivisions){
   tilebounds_ = bounds;
   tilesize_ = tilesize;
+  subdivision_size_ = tilesize_ / nsubdivisions_;
   ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) /
                                         tilesize_));
   nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) /
@@ -334,54 +335,67 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t,
 
 template <class coord_t>
 template <class container_t>
-std::unordered_map<int32_t, std::list<unsigned short> > Tiles<coord_t>::Intersect(const container_t& linestring) const {
-  //reserving capacity shouldnt be a problem because its highly unlikely we'll
-  //hit more than 10 (default preallocation) tiles with a single linestring
-  std::unordered_map<int32_t, std::list<unsigned short> > intersection;
-/*
+std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const container_t& linestring) const {
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
+
   //for each segment
-  for(auto u = linestring.cbegin(); u != linestring.cend(); std::advance(u, 1)) {
+  for(auto ui = linestring.cbegin(); ui != linestring.cend(); std::advance(ui, 1)) {
     //figure out what the segment is
-    auto v = std::next(u);
-    if(v == linestring.cend())
-      v = u;
+    auto vi = std::next(ui);
+    if(vi == linestring.cend())
+      vi = ui;
+    auto u = *ui;
+    auto v = *vi;
 
     //intersect this with the tile bounds to clip off any that is outside
     //TODO: handle wrap around?
-    if(TileId(*u) == -1) {
-
-    }
-    if(TileId(*v) == -1) {
-
+    if(TileId(u) == -1 || TileId(v) == -1) {
+      if(!tilebounds_.Intersect(u, v))
+        continue;
     }
 
-    //figure out the subset of the grid that this segment overlaps
-    auto x_start = static_cast<int32_t>((clamp(u->first, tilebounds_.minx(), tilebounds_.maxx()) - tilebounds_.minx()) / tilebounds_.Width());
-    auto y_start = static_cast<int32_t>((clamp(u->second, tilebounds_.miny(), tilebounds_.maxy()) - tilebounds_.miny()) / tilebounds_.Height());
-    auto x_end = static_cast<int32_t>((clamp(v->first, tilebounds_.minx(), tilebounds_.maxx()) - tilebounds_.minx()) / tilebounds_.Width());
-    auto y_end = static_cast<int32_t>((clamp(v->second, tilebounds_.miny(), tilebounds_.maxy()) - tilebounds_.miny()) / tilebounds_.Height());
+    //TODO: if coord_t is spherical and the segment uv is sufficiently long
+    //then the geodesic along it cannot be approximated with linear constructs
+    //instead we need to resample uv at a sufficiently small interval so as to
+    //approximate the arc with piecewise linear segments. to do this we'd call
+    //resample to turn uv into a list of coordinates and loop over them below
+    //alternatively we could figure out how to intersect a geodesic with our
+    //planar grid but that seems harder still
+
+    //figure out global subdivision start and end points
+    auto x_start = static_cast<int64_t>((u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
+    auto y_start = static_cast<int64_t>((u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
+    auto x_end = static_cast<int64_t>((v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
+    auto y_end = static_cast<int64_t>((v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
     if(x_start > x_end) std::swap(x_start, x_end);
     if(y_start > y_end) std::swap(y_start, y_end);
-    x_end = std::min(x_end + 1, divisions);
-    y_end = std::min(y_end + 1, divisions);
+    x_end = std::min(x_end, static_cast<int64_t>(ncolumns_ * nsubdivisions_) - 1);
+    y_end = std::min(y_end, static_cast<int64_t>(nrows_ * nsubdivisions_) - 1);
 
-    //loop over the subset of the grid that intersects the bbox formed by the linestring
+    //loop over the global subdivisions along uv
     do {
-      auto index = y_start * divisions + x_start;
-      if(index >= cells.size())
-        throw std::logic_error(std::to_string(index));
-      indices.insert(index);
-      LineSegment2<coord_t>(*u, *v).IsLeft(cells[index].maxpt()) < 0 ? ++y_start : ++x_start;
-    } while(x_start < x_end && y_start < y_end);
+      //find the tile
+      int32_t tile_column = x_start / nsubdivisions_;
+      int32_t tile_row = y_start / nsubdivisions_;
+      int32_t tile = tile_row * ncolumns_ + tile_column;
+      //find the subdivision
+      unsigned short subdivision = (y_start % nsubdivisions_) * nsubdivisions_ + (x_start % nsubdivisions_);
+      intersection[tile].insert(subdivision);
+      if(subdivision >= nsubdivisions_ * nsubdivisions_)
+        throw std::logic_error(std::to_string(subdivision));
+      //figure out which way to go next to follow uv
+      auto max_corner = tilebounds_.minpt() + Vector2{subdivision_size_ * x_start, subdivision_size_ * y_start};
+      LineSegment2<coord_t>(u, v).IsLeft(max_corner) < 0 ? ++y_start : ++x_start;
+    } while(x_start != x_end && y_start != y_end);
   }
-*/
+
   //give them back
   return intersection;
 }
 
 template <class coord_t>
-std::unordered_map<int32_t, std::list<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
-  std::unordered_map<int32_t, std::list<unsigned short> > intersection;
+std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
+  std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
 /*
   //super cell doesnt intersect it then nothing inside it can
   if(!super_cell.Intersects(center, radius))
@@ -405,10 +419,10 @@ std::unordered_map<int32_t, std::list<unsigned short> > Tiles<coord_t>::Intersec
 template class Tiles<Point2>;
 template class Tiles<PointLL>;
 
-template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<Point2>::Intersect(const std::list<Point2>&) const;
-template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<PointLL>::Intersect(const std::list<PointLL>&) const;
-template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
-template class std::unordered_map<int32_t, std::list<unsigned short> > Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<Point2>::Intersect(const std::list<Point2>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<PointLL>::Intersect(const std::list<PointLL>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
+template class std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
 
 }
 }

@@ -319,5 +319,7 @@ bool PointLL::WithinConvexPolygon(const std::vector<PointLL>& poly) const {
   return true;
 }
 
+bool PointLL::IsSpherical() { return true; }
+
 }
 }

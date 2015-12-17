@@ -118,28 +118,40 @@ void TileList() {
                              " found in TileList");
   }
 }
-/*
-void assert_answer(const grid<Point2>& g, const std::list<Point2>& l, const std::unordered_set<size_t>& cells, bool uncontained) {
-  bool uc_answer;
-  auto answer = g.intersect(l, uc_answer);
-  if(uc_answer != uncontained)
-    throw std::logic_error("Expected shape to " + std::string(uncontained ? "leave" : "stay in") + " the grid");
-  if(answer != cells)
-    throw std::logic_error("Expected a different set of intersecting cells");
+
+using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
+void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
+  auto answer = g.Intersect(l);
+  //wrong number of tiles
+  if(answer.size() != expected.size())
+    throw std::logic_error("Expected " + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
+  for(const auto& t : expected) {
+    //missing tile
+    auto i = answer.find(t.first);
+    if(i == answer.cend())
+      throw std::logic_error("Expected tile " + std::to_string(t.first) + " to be intersected");
+    //wrong number of subdivisions
+    if(t.second.size() != i->second.size())
+      throw std::logic_error("In tile " + std::to_string(t.first) + " expected " + std::to_string(t.second.size()) + " intersected subdivisions but got " + std::to_string(i->second.size()));
+    //missing subdivision
+    for(const auto& s : t.second)
+      if(i->second.find(s) == i->second.cend())
+        throw std::logic_error("In tile " + std::to_string(t.first) + " expected subdivision " + std::to_string(s) + " to be intersected");
+  }
 }
 
 void test_intersect_linestring() {
-  grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
-  assert_answer(g, {}, std::unordered_set<size_t>{}, false);
-  assert_answer(g, { {-.9,0}, {.9,0} }, {10,11,12,13,14}, false);
-  assert_answer(g, { {-2,0}, {2,0} }, {10,11,12,13,14}, true);
-  assert_answer(g, { {-.9,0}, {-2,0} }, {10}, true);
-  assert_answer(g, { {-.9,.9} }, {20}, false);
-  assert_answer(g, { {.9,-.9} }, {4}, false);
-  assert_answer(g, { {.9,-1.1}, {.9, .9} }, {4, 9, 14, 19, 24}, true);
-  assert_answer(g, { {0.1, 2}, {0.1, 1.5}, {0.1, 1.0} }, {22}, true);
+  Tiles<Point2> t(AABB2<Point2>{-1,-1,1,1}, .25, 5);
+  assert_answer(t, {}, intersect_t{});
+ /* assert_answer(t, { {-.9,0}, {.9,0} }, {10,11,12,13,14});
+  assert_answer(t, { {-2,0}, {2,0} }, {10,11,12,13,14});
+  assert_answer(t, { {-.9,0}, {-2,0} }, {10});
+  assert_answer(t, { {-.9,.9} }, {20});
+  assert_answer(t, { {.9,-.9} }, {4});
+  assert_answer(t, { {.9,-1.1}, {.9, .9} }, {4, 9, 14, 19, 24});
+  assert_answer(t, { {0.1, 2}, {0.1, 1.5}, {0.1, 1.0} }, {22});*/
 }
-
+/*
 void test_intersect_circle() {
   grid<Point2> g(AABB2<Point2>{-1,-1,1,1}, 5);
   //TODO:
@@ -183,8 +195,8 @@ int main() {
   // Test tile list
   suite.test(TEST_CASE(TileList));
 
-  /*suite.test(TEST_CASE(test_intersect_linestring));
-  suite.test(TEST_CASE(test_intersect_circle));
+  suite.test(TEST_CASE(test_intersect_linestring));
+  /*suite.test(TEST_CASE(test_intersect_circle));
   suite.test(TEST_CASE(test_random_linestring));
   suite.test(TEST_CASE(test_random_circle));*/
 
