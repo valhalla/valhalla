@@ -25,15 +25,27 @@ en-US:
 
     ###########################################################################
     destination_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "You will arrive at your destination."
+      1: "You will arrive at %{location}."
+      2: "Your destination will be on the %{relative_direction}."
+      3: "%{location} will be on the %{relative_direction}"
 
     ###########################################################################
     destination_verbal:
+      relative_directions: ["left", "right"]
+      0: "You have arrived at your destination."
+      1: "You have arrived at %{location}."
+      2: "Your destination is on the %{relative_direction}."
+      3: "%{location} is on the %{relative_direction}."
 
     ###########################################################################
     becomes:
+      0: "%{prev_street_names} becomes %{street_names}."
 
     ###########################################################################
     becomes_verbal:
+      0: "%{prev_street_names} becomes %{street_names}."
 
     ###########################################################################
     continue:
