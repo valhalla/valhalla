@@ -4,6 +4,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -12,11 +13,11 @@ namespace valhalla {
 namespace sif {
 
 // Default options/values
-// TODO - alter any of these for trucks??
 namespace {
 constexpr float kDefaultManeuverPenalty         = 5.0f;   // Seconds
 constexpr float kDefaultDestinationOnlyPenalty  = 600.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
+constexpr float kDefaultLowClassPenalty         = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
@@ -25,7 +26,6 @@ constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
 
 // Default turn costs
-// TODO - alter any of these for trucks?
 constexpr float kTCStraight         = 0.5f;
 constexpr float kTCSlight           = 0.75f;
 constexpr float kTCFavorable        = 1.0f;
@@ -36,10 +36,11 @@ constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse          = 5.0f;
 
 // Default truck attributes
-constexpr float kDefaultTruckWeight = 5.0f;  // TODO - units and default value
-constexpr float kDefaultTruckHeight = 3.65f; // Meters (12 feet)
-constexpr float kDefaultTruckWidth  = 3.0f;  // Meters (10 feet)
-constexpr float kDefaultTruckLength = 21.5f; // Meters (70 feet)
+constexpr float kDefaultTruckWeight   = 36.29f; // Metric Tons (80,000 lbs)
+constexpr float kDefaultTruckAxleLoad = 9.07f;  // Metric Tons (20,000 lbs)
+constexpr float kDefaultTruckHeight   = 4.11f;  // Meters (13 feet 6 inches)
+constexpr float kDefaultTruckWidth    = 2.6f;   // Meters (102.36 inches)
+constexpr float kDefaultTruckLength   = 21.64f; // Meters (71 feet)
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
@@ -48,6 +49,22 @@ constexpr float kRightSideTurnCosts[] = { kTCStraight, kTCSlight,
 constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCSlight,
       kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
       kTCFavorable, kTCSlight };
+
+// How much to favor truck routes.
+constexpr float kTruckRouteFactor = 0.85f;
+
+// Weighting factor based on road class. These apply penalties to lower class
+// roads.
+constexpr float kRoadClassFactor[] = {
+    0.0f,  // Motorway
+    0.05f, // Trunk
+    0.1f,  // Primary
+    0.25f, // Secondary
+    0.35f, // Tertiary
+    0.5f,  // Unclassified
+    0.75f, // Residential
+    0.1f   // Service, other
+};
 }
 
 /**
@@ -84,10 +101,12 @@ class TruckCost : public DynamicCost {
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
    * @param  pred  Predecessor edge information.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const;
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -103,7 +122,8 @@ class TruckCost : public DynamicCost {
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -187,11 +207,12 @@ class TruckCost : public DynamicCost {
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
+  float low_class_penalty_;         // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
-  bool hazmat_;         // Carrying hazardous materials
-  float weight_;        // Vehicle weight (units = TODO)
-  float axleload_;      // Axle load - how does this differ from weight?
+  bool  hazmat_;        // Carrying hazardous materials
+  float weight_;        // Vehicle weight in metric tons
+  float axle_load_;     // Axle load weight in metric tons
   float height_;        // Vehicle height in meters
   float width_;         // Vehicle width in meters
   float length_;        // Vehicle length in meters
@@ -223,13 +244,16 @@ TruckCost::TruckCost(const boost::property_tree::ptree& pt)
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
                                            kDefaultCountryCrossingPenalty);
 
+  low_class_penalty_ = pt.get<float>("low_class_penalty",
+                                     kDefaultLowClassPenalty);
+
   // Get the vehicle attributes
-  hazmat_   = pt.get<bool>("hazmat", false);
-  weight_   = pt.get<float>("weight", kDefaultTruckWeight);
-  axleload_ = pt.get<float>("axleload", weight_);
-  height_   = pt.get<float>("height", kDefaultTruckHeight);
-  width_    = pt.get<float>("width", kDefaultTruckWidth);
-  length_   = pt.get<float>("length", kDefaultTruckLength);
+  hazmat_     = pt.get<bool>("hazmat", false);
+  weight_     = pt.get<float>("weight", kDefaultTruckWeight);
+  axle_load_  = pt.get<float>("axle_load", kDefaultTruckAxleLoad);
+  height_     = pt.get<float>("height", kDefaultTruckHeight);
+  width_      = pt.get<float>("width", kDefaultTruckWidth);
+  length_     = pt.get<float>("length", kDefaultTruckLength);
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -259,7 +283,8 @@ bool TruckCost::AllowMultiPass() const {
 // Check if access is allowed on the specified edge. Not worth checking
 // not_thru due to hierarchy transitions
 bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const {
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kTruckAccess) ||
@@ -267,6 +292,46 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (pred.restrictions() & (1 << edge->localedgeidx())) ||
        edge->surface() == Surface::kImpassable) {
     return false;
+  }
+
+  if ((edge->access_restriction() & kTruckAccess) &&
+       restrictions.size()) {
+
+    for (const auto& restriction : restrictions ) {
+      // TODO:  Need to handle restictions that take place only at certain
+      // times.  Currently, we only support kAllDaysOfWeek;
+      if (restriction.modes() & kTruckAccess) {
+
+        switch (restriction.type()) {
+          case AccessType::kHazmat:
+            if (hazmat_ != restriction.value())
+              return false;
+            break;
+          case AccessType::kMaxAxleLoad:
+            if (axle_load_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxHeight:
+            if (height_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxLength:
+            if (length_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWeight:
+            if (weight_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWidth:
+            if (width_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          default:
+            break;
+        }
+      }
+    }
   }
   return true;
 }
@@ -276,7 +341,8 @@ bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
 bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge) const {
+               const baldr::DirectedEdge* opp_pred_edge,
+               const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kTruckAccess) ||
@@ -284,6 +350,45 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
        (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
        opp_edge->surface() == Surface::kImpassable) {
     return false;
+  }
+  if ((opp_edge->access_restriction() & kTruckAccess) &&
+       restrictions.size()) {
+
+    for (const auto& restriction : restrictions ) {
+      // TODO:  Need to handle restictions that take place only at certain
+      // times.  Currently, we only support kAllDaysOfWeek;
+      if (restriction.modes() & kTruckAccess) {
+
+        switch (restriction.type()) {
+          case AccessType::kHazmat:
+            if (hazmat_ != restriction.value())
+              return false;
+            break;
+          case AccessType::kMaxAxleLoad:
+            if (axle_load_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxHeight:
+            if (height_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxLength:
+            if (length_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWeight:
+            if (weight_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          case AccessType::kMaxWidth:
+            if (width_ > static_cast<float>(restriction.value()*0.01))
+              return false;
+            break;
+          default:
+            break;
+        }
+      }
+    }
   }
   return true;
 }
@@ -296,8 +401,20 @@ bool TruckCost::Allowed(const baldr::NodeInfo* node) const  {
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const DirectedEdge* edge,
                         const uint32_t density) const {
-  float sec = (edge->length() * speedfactor_[edge->speed()]);
-  return Cost(sec * density_factor_[density], sec);
+
+  float factor = density_factor_[density];
+
+  if (edge->truck_route() > 0) {
+    factor *= kTruckRouteFactor;
+  }
+
+  float sec = 0.0f;
+  if (edge->truck_speed() > 0)
+    sec = (edge->length() * speedfactor_[edge->truck_speed()]);
+  else
+    sec = (edge->length() * speedfactor_[edge->speed()]);
+
+  return { sec * factor, sec };
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -334,6 +451,10 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
+
+  if (edge->classification() == RoadClass::kResidential ||
+      edge->classification() == RoadClass::kServiceOther)
+    penalty += low_class_penalty_;
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
@@ -390,6 +511,10 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
+
+  if (edge->classification() == RoadClass::kResidential ||
+      edge->classification() == RoadClass::kServiceOther)
+    penalty += low_class_penalty_;
 
   // Transition time = densityfactor * stopimpact * turncost
   if (edge->stopimpact(idx) > 0) {
