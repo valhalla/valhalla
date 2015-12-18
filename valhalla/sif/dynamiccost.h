@@ -5,6 +5,8 @@
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transittransfer.h>
+#include <valhalla/baldr/accessrestriction.h>
+
 #include <memory>
 
 #include <valhalla/sif/hierarchylimits.h>
@@ -77,10 +79,12 @@ class DynamicCost {
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
    * @param  pred  Predecessor edge information.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const = 0;
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -91,12 +95,14 @@ class DynamicCost {
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const = 0;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const std::vector<baldr::AccessRestriction>& restrictions) const = 0;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
