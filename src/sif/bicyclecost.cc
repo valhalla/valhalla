@@ -2,6 +2,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -167,10 +168,12 @@ class BicycleCost : public DynamicCost {
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
    * @param  pred  Predecessor edge information.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const;
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -181,12 +184,14 @@ class BicycleCost : public DynamicCost {
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -440,7 +445,8 @@ BicycleCost::~BicycleCost() {
 
 // Check if access is allowed on the specified edge.
 bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
-                          const EdgeLabel& pred) const {
+                          const EdgeLabel& pred,
+                          const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Disallow Uturns. Do not allow entering
   // not-thru edges except near the destination. Skip impassable edges.
@@ -460,7 +466,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
 bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge) const {
+               const baldr::DirectedEdge* opp_pred_edge,
+               const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // Check if edge is not-thru (no need to check distance from destination
   // since the search is heading out of any not_thru regions)

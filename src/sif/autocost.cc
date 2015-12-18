@@ -4,6 +4,7 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
@@ -80,10 +81,12 @@ class AutoCost : public DynamicCost {
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
    * @param  pred  Predecessor edge information.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const;
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -94,12 +97,14 @@ class AutoCost : public DynamicCost {
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const EdgeLabel& pred,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -239,7 +244,8 @@ bool AutoCost::AllowMultiPass() const {
 // Check if access is allowed on the specified edge. Not worth checking
 // not_thru due to hierarchy transitions
 bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const {
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kAutoAccess) ||
@@ -256,7 +262,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
 bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const EdgeLabel& pred,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge) const {
+               const baldr::DirectedEdge* opp_pred_edge,
+               const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
@@ -495,10 +502,12 @@ class BusCost : public AutoCost {
    * based on other parameters.
    * @param  edge  Pointer to a directed edge.
    * @param  pred  Predecessor edge information.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const;
+                       const EdgeLabel& pred,
+                       const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -508,11 +517,13 @@ class BusCost : public AutoCost {
    * @param  opp_edge  Pointer to the opposing directed edge.
    * @param  opp_pred_edge  Pointer to the opposing directed edge to the
    *                        predecessor.
+   * @param  restrictions  Restrictions at this directed edge.
    * @return  Returns true if access is allowed, false if not.
    */
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                  const baldr::DirectedEdge* opp_edge,
-                 const baldr::DirectedEdge* opp_pred_edge) const;
+                 const baldr::DirectedEdge* opp_pred_edge,
+                 const std::vector<baldr::AccessRestriction>& restrictions) const;
 
   /**
    * Checks if access is allowed for the provided node. Node access can
@@ -544,7 +555,8 @@ BusCost::~BusCost() {
 // Check if access is allowed on the specified edge. Not worth checking
 // not_thru due to hierarchy transitions
 bool BusCost::Allowed(const baldr::DirectedEdge* edge,
-                       const EdgeLabel& pred) const {
+                      const EdgeLabel& pred,
+                      const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(edge->forwardaccess() & kBusAccess) ||
@@ -560,7 +572,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
 // destination towards origin). Both opposing edges are provided.
 bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                const baldr::DirectedEdge* opp_edge,
-               const baldr::DirectedEdge* opp_pred_edge) const {
+               const baldr::DirectedEdge* opp_pred_edge,
+               const std::vector<baldr::AccessRestriction>& restrictions) const {
   // Check access, U-turn, and simple turn restriction.
   // TODO - perhaps allow U-turns at dead-end nodes?
   if (!(opp_edge->forwardaccess() & kBusAccess) ||
