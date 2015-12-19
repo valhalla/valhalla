@@ -3,6 +3,7 @@
 #include "proto/transit.pb.h"
 
 #include <unordered_map>
+#include <map>
 #include <fstream>
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
@@ -52,9 +53,22 @@ void LogDepartures(const Transit& transit, const GraphId& stopid) {
     }
 
     if (orig_graphid == stopid) {
+
+      int total_seconds = sp.origin_departure_time();
+      int seconds = total_seconds % 60;
+      int minutes = (total_seconds / 60) % 60;
+      int hours = total_seconds / 3600;
+
+      std::stringstream ss;
+      ss << std::setfill('0') << std::setw(2) << hours;
+      ss << ":";
+      ss << std::setfill('0') << std::setw(2) << minutes;
+      ss << ":";
+      ss << std::setfill('0') << std::setw(2) << seconds;
+
       LOG_INFO("LineID: " + std::to_string(sp.line_id()) +
                " Route: " + std::to_string(sp.route_index()) +
-               " Dep Time: " + std::to_string(sp.origin_departure_time()));
+               " Dep Time: " + ss.str());
     }
   }
 }
