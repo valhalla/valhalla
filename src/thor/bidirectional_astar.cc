@@ -167,6 +167,8 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         continue;
       }
 
+      std::cout << "here" << std::endl;
+
       if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current")
         origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
 
@@ -198,10 +200,15 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
           continue;
         }
 
+        // Get the access restrictions given its directed edge index
+        std::vector<AccessRestriction> restrictions;
+        if (directededge->access_restriction())
+          restrictions = tile->GetAccessRestrictions(edgeid.id());
+
         // Skip any superseded edges that match the shortcut mask. Also skip
         // if no access is allowed to this edge (based on costing method)
         if ((shortcuts & directededge->superseded()) ||
-            !costing->Allowed(directededge, pred)) {
+            !costing->Allowed(directededge, pred, restrictions)) {
           continue;
         }
 
@@ -347,9 +354,14 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
         GraphId oppedge = GetOpposingEdgeId(directededge, t2);
 
+        // Get the access restrictions given its directed edge index
+        std::vector<AccessRestriction> restrictions;
+        if (directededge->access_restriction())
+          restrictions = tile->GetAccessRestrictions(edgeid.id());
+
         // Get opposing directed edge and check if allowed
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
-        if (!costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge)) {
+        if (!costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge, restrictions)) {
           continue;
         }
 
