@@ -266,7 +266,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kPedestrianAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
         opp_edge->surface() == Surface::kImpassable ||
-        edge->not_thru() || opp_edge->use() == Use::kTransitConnection) {
+        opp_edge->use() == Use::kTransitConnection) {
     return false;
   }
   return true;
