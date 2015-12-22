@@ -278,8 +278,10 @@ namespace {
           if (origin.stoptype_ == Location::StopType::BREAK ||
               path_location == --correlated.crend()) {
 
-              if (!origin_date_time.empty())
+              if (!origin_date_time.empty()) {
                 destination.date_time_ = origin_date_time;
+                last_break_dest.date_time_ = origin_date_time;
+              }
 
               // Form output information based on path edges
               auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
@@ -287,9 +289,6 @@ namespace {
 
               if (origin.date_time_)
                 origin_date_time = *origin.date_time_;
-
-              if (last_break_dest.date_time_)
-                dest_date_time = *last_break_dest.date_time_;
 
               // The protobuf path
               messages.emplace_front(trip_path.SerializeAsString());
