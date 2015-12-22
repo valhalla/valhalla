@@ -347,9 +347,11 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         }
         GraphId oppedge = GetOpposingEdgeId(directededge, t2);
 
-        // Get opposing directed edge and check if allowed
+        // Get opposing directed edge and check if allowed. Do not enter
+        // not_thru edges
         const DirectedEdge* opp_edge = t2->directededge(oppedge);
-        if (!costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge)) {
+        if (directededge->not_thru() ||
+            !costing->AllowedReverse(directededge, pred2, opp_edge, opp_pred_edge)) {
           continue;
         }
 
