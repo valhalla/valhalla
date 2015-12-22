@@ -42,8 +42,8 @@ void jsonify(Document& document, const char* text)
   document.Parse(text);
 
   if (document.HasParseError()) {
-    auto message = GetParseError_En(document.GetParseError());
-    throw SequenceParseError(message);
+    std::string message(GetParseError_En(document.GetParseError()));
+    throw SequenceParseError("Unable to parse JSON body: " + message);
   }
 }
 
@@ -220,7 +220,7 @@ void serialize_properties(const std::vector<MatchResult>& results,
   writer.String("graphids");
   writer.StartArray();
   for (const auto& result : results) {
-    writer.Double(result.graphid().id());
+    writer.Uint64(result.graphid().id());
   }
   writer.EndArray();
 
@@ -267,10 +267,10 @@ constexpr size_t kHttpStatusCodeSize = 600;
 const char* kHttpStatusCodes[kHttpStatusCodeSize];
 
 
-inline const char*
+inline const std::string
 http_status_code(unsigned code)
 {
-  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : nullptr;
+  return code < kHttpStatusCodeSize? kHttpStatusCodes[code] : "";
 }
 
 
@@ -348,12 +348,6 @@ const headers_t::value_type CORS{"Access-Control-Allow-Origin", "*"};
 const headers_t::value_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const headers_t::value_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 
-const http_response_t RESPONSE_400(400, "Bad Request", "Malformed HTTP request", {CORS});
-const http_response_t RESPONSE_405(405, "Method Not Allowed", "The request method is inappropriate for the URL", {CORS});
-const http_response_t RESPONSE_413(413, "Request Entity Too Large", "The HTTP request was too large", {CORS});
-const http_response_t RESPONSE_501(501, "Not Implemented", "The HTTP request method is not supported", {CORS});
-const http_response_t RESPONSE_505(505, "HTTP Version Not Supported", "The HTTP request version is not supported", {CORS});
-
 
 worker_t::result_t jsonify_error(const std::string& message,
                                  http_request_t::info_t& info,
@@ -369,9 +363,7 @@ worker_t::result_t jsonify_error(const std::string& message,
   writer.String("message");
   writer.String(message.c_str());
   writer.EndObject();
-  http_response_t response(status_code,
-                           http_status_code(status_code),
-                           sb.GetString(), {JSON_MIME, CORS});
+  http_response_t response(status_code, http_status_code(status_code), sb.GetString(), {JSON_MIME, CORS});
   response.from_info(info);
   result.messages.emplace_back(response.to_string());
   return result;
@@ -425,7 +417,7 @@ update_mm_config(boost::property_tree::ptree& pt,
   for (const auto& name : kCustomizableOptions) {
     if (properties.HasMember(name)) {
       auto value = properties[name].GetDouble();
-      if (std::numeric_limits<float>::max() <= value
+      if (std::numeric_limits<float>::min() <= value
           && value <= std::numeric_limits<float>::max()) {
         pt.put<float>(name, static_cast<float>(value));
       } else {
@@ -505,7 +497,7 @@ class mm_worker_t {
       serialize_results(match_results, mm, writer);
 
       worker_t::result_t result{false};
-      http_response_t response(200, "OK", sb.GetString(), headers_t{CORS, JS_MIME});
+      http_response_t response(200, http_status_code(200), sb.GetString(), headers_t{CORS, JS_MIME});
       response.from_info(info);
       result.messages.emplace_back(response.to_string());
       return result;
@@ -538,6 +530,8 @@ void run_service(const boost::property_tree::ptree& config) {
   // Run as a standalone service
   std::string server_endpoint = config.get<std::string>("mm.service.listen");
   std::string loopback_endpoint = config.get<std::string>("mm.service.loopback");
+
+  init_http_status_codes();
 
   zmq::context_t context;
 
