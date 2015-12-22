@@ -163,7 +163,7 @@ class PathAlgorithm {
    * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 const baldr::PathLocation& origin,
+                 baldr::PathLocation& origin,
                  const baldr::PathLocation& dest,
                  const std::shared_ptr<sif::DynamicCost>& costing);
 
