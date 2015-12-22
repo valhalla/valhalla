@@ -11,6 +11,15 @@
 using namespace valhalla;
 
 
+namespace {
+constexpr float kSigmaZ = 4.07;  // meters
+constexpr float kBeta = 3.f;
+constexpr float kBreakageDistance = 2000.f;  // meters
+constexpr float kMaxRouteDistanceFactor = 3.f;
+constexpr float kInterpolationDistance = 10.f;  // meters
+}
+
+
 class Measurement {
  public:
   Measurement(const PointLL& lnglat)
@@ -145,19 +154,17 @@ inline float GreatCircleDistanceSquared(const Measurement& left,
 { return left.lnglat().DistanceSquared(right.lnglat()); }
 
 
-constexpr float kBreakageDistance = 2000.f;  // meters
-constexpr float kProximateDistance = 10.f;   // meters
-constexpr float kSquaredProximateDistance = kProximateDistance * kProximateDistance; // meters^2
-
-
 class MapMatching: public ViterbiSearch<State>
 {
  public:
+  // TODO move optional params down
   MapMatching(float sigma_z,
               float beta,
               baldr::GraphReader& graphreader,
               const std::shared_ptr<sif::DynamicCost>* mode_costing,
-              const sif::TravelMode mode)
+              const sif::TravelMode mode,
+              float breakage_distance = kBreakageDistance,
+              float max_route_distance_factor = kMaxRouteDistanceFactor)
       : sigma_z_(sigma_z),
         inv_double_sq_sigma_z_(1.f / (sigma_z_ * sigma_z_ * 2.f)),
         beta_(beta),
@@ -166,7 +173,9 @@ class MapMatching: public ViterbiSearch<State>
         graphreader_(graphreader),
         mode_costing_(mode_costing),
         mode_(mode),
-        states_()
+        states_(),
+        breakage_distance_(breakage_distance),
+        max_route_distance_factor_(max_route_distance_factor)
   {
     if (sigma_z_ <= 0.f) {
       throw std::invalid_argument("Expect sigma_z to be positive");
@@ -176,6 +185,16 @@ class MapMatching: public ViterbiSearch<State>
       throw std::invalid_argument("Expect beta to be positive");
     }
   }
+
+  MapMatching(baldr::GraphReader& graphreader,
+              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              const sif::TravelMode mode,
+              const boost::property_tree::ptree& pt)
+      : MapMatching(pt.get<float>("sigma_z", kSigmaZ),
+                    pt.get<float>("beta", kBeta),
+                    graphreader, mode_costing, mode,
+                    pt.get<float>("breakage_distance", kBreakageDistance),
+                    pt.get<float>("max_route_distance_factor", kMaxRouteDistanceFactor)) {}
 
   ~MapMatching()
   { Clear(); }
@@ -239,11 +258,14 @@ class MapMatching: public ViterbiSearch<State>
   const TravelMode mode_;
   std::vector<std::vector<const State*>> states_;
 
+  float breakage_distance_;
+  float max_route_distance_factor_;
+
  protected:
   virtual float MaxRouteDistance(const State& left, const State& right) const
   {
     auto mmt_distance = GreatCircleDistance(measurement(left), measurement(right));
-    return std::min(mmt_distance * 3, kBreakageDistance);
+    return std::min(mmt_distance * max_route_distance_factor_, breakage_distance_);
   }
 
   float TransitionCost(const State& left, const State& right) const override
@@ -499,7 +521,8 @@ std::vector<MatchResult>
 OfflineMatch(MapMatching& mm,
              const CandidateQuery& cq,
              const std::vector<Measurement>& measurements,
-             float max_sq_search_radius)
+             float max_sq_search_radius,
+             float interpolation_distance = kInterpolationDistance)
 {
   mm.Clear();
 
@@ -509,6 +532,7 @@ OfflineMatch(MapMatching& mm,
 
   using mmt_size_t = std::vector<Measurement>::size_type;
   Time time = 0;
+  float sq_interpolation_distance = interpolation_distance * interpolation_distance;
   std::unordered_map<Time, std::vector<mmt_size_t>> proximate_measurements;
 
   // Load states
@@ -519,7 +543,7 @@ OfflineMatch(MapMatching& mm,
     const auto& measurement = measurements[idx];
     auto sq_distance = GreatCircleDistanceSquared(measurements[last_idx], measurement);
     // Always match the first and the last measurement
-    if (kSquaredProximateDistance <= sq_distance || idx == 0 || idx == end_idx) {
+    if (sq_interpolation_distance <= sq_distance || idx == 0 || idx == end_idx) {
       const auto& candidates = cq.Query(measurement.lnglat(),
                                         max_sq_search_radius,
                                         mm.costing()->GetFilter());

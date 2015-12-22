@@ -24,12 +24,10 @@ using namespace valhalla;
 
 
 namespace {
-constexpr float kDefaultSigmaZ = 4.07;
-constexpr float kDefaultBeta = 5;
-constexpr float kDefaultSquaredSearchRadius = 40 * 40;  // 40 meters
-constexpr float kMaxSearchRadius = 200;                // 200 meters
-
-constexpr size_t kMaxGridCacheSize = 64;
+constexpr float kSearchRadius = 40;      // meters
+constexpr float kMaxSearchRadius = 200;  // meters
+constexpr size_t kMaxGridCacheSize = 64; // quantity
+constexpr size_t kGridSize = 500;        // quantity
 }
 
 
@@ -274,18 +272,79 @@ const http_response_t RESPONSE_501(501, "Not Implemented", "The HTTP request met
 const http_response_t RESPONSE_505(505, "HTTP Version Not Supported", "The HTTP request version is not supported", {CORS});
 
 
+inline float local_tile_size(const GraphReader& reader)
+{
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  return tiles.TileSize();
+}
+
+
+namespace {
+const char* const kCustomizableOptions[] = {
+  "beta", "sigma_z", "route_distance_factor",
+  "breakage_distance", "interpolation_distance",
+  "search_radius"
+};
+}
+
+
+boost::property_tree::ptree&
+update_mm_config(boost::property_tree::ptree& pt,
+                 const http_request_t& request)
+{
+  const auto& query = request.query;
+  for (const auto& name : kCustomizableOptions) {
+    const auto it = query.find(name);
+    if (it != query.end()) {
+      const auto& value_list = it->second;
+      if (!value_list.empty()) {
+        // Possibly throw std::invalid_argument or std::out_of_range
+        pt.put<float>(it->first, std::stof(value_list.back()));
+      }
+    }
+  }
+  return pt;
+}
+
+
+boost::property_tree::ptree&
+update_mm_config(boost::property_tree::ptree& pt,
+                 const Document& document)
+{
+  if (document.HasMember("properties")) {
+    return pt;
+  }
+  const auto& properties = document["properties"];
+  for (const auto& name : kCustomizableOptions) {
+    if (properties.HasMember(name)) {
+      auto value = properties[name].GetDouble();
+      if (std::numeric_limits<float>::max() <= value
+          && value <= std::numeric_limits<float>::max()) {
+        pt.put<float>(name, static_cast<float>(value));
+      } else {
+        throw std::out_of_range("out of float range");
+      }
+    }
+  }
+  return pt;
+}
+
+
 //TODO: throw this in the header to make it testable?
 class mm_worker_t {
  public:
   mm_worker_t(const boost::property_tree::ptree& config):
       config(config),
       reader(config.get_child("mjolnir.hierarchy")),
-      grid(reader, 0.25/1000, 0.25/1000),
+      grid(reader,
+           local_tile_size(reader)/config.get<size_t>("grid.size", kGridSize),
+           local_tile_size(reader)/config.get<size_t>("grid.size", kGridSize)),
       mode_costing{nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
         nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
         nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-        CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))} {
-  }
+        CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))},
+      max_grid_cache_size_(config.get<size_t>("grid.cache_size", kMaxGridCacheSize)) {}
 
   worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
     auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -321,40 +380,32 @@ class mm_worker_t {
         return result;
       }
 
-      float sigma_z = kDefaultSigmaZ;
-      if (json.HasMember("sigma_z")) {
-        const auto& v = json["sigma_z"];
-        if (v.IsNumber()) {
-          sigma_z = static_cast<float>(v.GetDouble());
-        }
-      }
+      // Read default config
+      auto mm_config = config.get_child("mm");
 
-      float beta = kDefaultBeta;
-      if (json.HasMember("beta")) {
-        const auto& v = json["beta"];
-        if (v.IsNumber()) {
-          beta = static_cast<float>(v.GetDouble());
-        }
-      }
+      float max_allowed_search_radius = mm_config.get<float>("max_search_radius", kMaxSearchRadius);
 
-      LOG_INFO("Using sigma_z: " + std::to_string(sigma_z));
-      LOG_INFO("Using beta: " + std::to_string(beta));
+      // Update customizable configs
+      update_mm_config(mm_config, request);
+      update_mm_config(mm_config, json);
+
+      float search_radius = mm_config.get<float>("search_radius", kSearchRadius);
+      if (search_radius > max_allowed_search_radius) {
+        std::string message = "Got search radius "
+                              + std::to_string(search_radius)
+                              + ", but we expect it not to exceed "
+                              + std::to_string(max_allowed_search_radius);
+        worker_t::result_t result{false};
+        auto response = RESPONSE_400;
+        response.body = message;
+        response.from_info(info);
+        result.messages.emplace_back(response.to_string());
+        return result;
+      }
 
       // Match
-      MapMatching mm(sigma_z, beta, reader, mode_costing, static_cast<sif::TravelMode>(3));
-
-      float sq_search_radius = kDefaultSquaredSearchRadius;
-      if (json.HasMember("radius")) {
-        const auto& v = json["radius"];
-        if (v.IsNumber()) {
-          auto radius = std::max(0.f, std::min(static_cast<float>(v.GetDouble()), kMaxSearchRadius));
-          sq_search_radius = radius * radius;
-        }
-      }
-
-      LOG_INFO("Using search radius: " + std::to_string(std::sqrt(sq_search_radius)));
-
-      auto match_results = OfflineMatch(mm, grid, measurements, sq_search_radius);
+      MapMatching mm(reader, mode_costing, static_cast<sif::TravelMode>(3), mm_config);
+      auto match_results = OfflineMatch(mm, grid, measurements, search_radius * search_radius);
       assert(match_results.size() == measurements.size());
 
       // Serialize results
@@ -381,7 +432,7 @@ class mm_worker_t {
     if(reader.OverCommitted()) {
       reader.Clear();
     }
-    if (grid.size() > kMaxGridCacheSize) {
+    if (grid.size() > max_grid_cache_size_) {
       grid.Clear();
     }
   }
@@ -391,18 +442,19 @@ class mm_worker_t {
   baldr::GraphReader reader;
   CandidateGridQuery grid;
   std::shared_ptr<sif::DynamicCost> mode_costing[4];
+  size_t max_grid_cache_size_;
 };
 
 
 void run_service(const boost::property_tree::ptree& config) {
-  // TODO put them into config
-  std::string proxy_endpoint("ipc:///tmp/mm_secret_proxy.your_pid");
-  std::string server_endpoint("tcp://*:8001");
-  std::string result_endpoint("ipc:///tmp/mm_result_proxy.your_pid");
+  std::string proxy_endpoint = config.get<std::string>("mm.service.proxy");
+  // Run as a standalone service
+  std::string server_endpoint = config.get<std::string>("mm.service.listen");
+  std::string loopback_endpoint = config.get<std::string>("mm.service.loopback");
 
   zmq::context_t context;
 
-  http_server_t server(context, server_endpoint, proxy_endpoint + ".upstream", result_endpoint);
+  http_server_t server(context, server_endpoint, proxy_endpoint + ".upstream", loopback_endpoint);
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve, server));
   server_thread.detach();
 
@@ -414,7 +466,8 @@ void run_service(const boost::property_tree::ptree& config) {
   mm_worker_t mm_worker(config);
   auto work = std::bind(&mm_worker_t::work, std::ref(mm_worker), std::placeholders::_1, std::placeholders::_2);
   auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(mm_worker));
-  prime_server::worker_t worker(context, proxy_endpoint + ".downstream", "ipc://NO_ENDPOINT", result_endpoint, work, cleanup);
+  prime_server::worker_t worker(context, proxy_endpoint + ".downstream", "ipc://NO_ENDPOINT", loopback_endpoint,
+                                work, cleanup);
   worker.work();
 
   //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
@@ -424,12 +477,14 @@ void run_service(const boost::property_tree::ptree& config) {
 int main(int argc, char *argv[])
 {
   if (argc < 2) {
-    std::cerr << "usage: service CONFIG_FILENAME" << std::endl;
+    std::cerr << "usage: service CONFIG" << std::endl;
     return 1;
   }
-  std::string config_filename(argv[1]);
+
+  std::string filename(argv[1]);
   boost::property_tree::ptree config;
-  boost::property_tree::read_json(config_filename, config);
+  boost::property_tree::read_json(filename, config);
   run_service(config);
+
   return 0;
 }
