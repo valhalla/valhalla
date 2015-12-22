@@ -278,10 +278,8 @@ namespace {
           if (origin.stoptype_ == Location::StopType::BREAK ||
               path_location == --correlated.crend()) {
 
-              if (!origin_date_time.empty()) {
-                destination.date_time_ = origin_date_time;
+              if (!origin_date_time.empty())
                 last_break_dest.date_time_ = origin_date_time;
-              }
 
               // Form output information based on path edges
               auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
