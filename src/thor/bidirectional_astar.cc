@@ -167,9 +167,6 @@ std::vector<PathInfo> BidirectionalAStar::GetBestPath(PathLocation& origin,
         continue;
       }
 
-      if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current")
-        origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-
       // Check hierarchy. Count upward transitions (counted on the level
       // transitioned from). Do not expand based on hierarchy level based on
       // number of upward transitions and distance to the destination
@@ -467,8 +464,27 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
 
 // Add edges at the origin to the forward adjacency list.
 void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
-                 const PathLocation& origin,
+                 PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
+
+  if (origin.date_time_ && *origin.date_time_ == "current") {
+
+    const auto& edge = origin.edges().front();
+    // Get the directed edge
+    GraphId edgeid = edge.id;
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr)
+      return;
+
+    const NodeInfo* nodeinfo = endtile->node(directededge->endnode());
+    origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  }
+
   // Iterate through edges and add to adjacency list
   for (const auto& edge : origin.edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
