@@ -97,12 +97,31 @@ en-US:
 
     ###########################################################################
     uturn:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
+      4: "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}."
+      5: "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}."
 
     ###########################################################################
     uturn_verbal_alert:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
 
     ###########################################################################
     uturn_verbal:
+      relative_directions: ["left", "right"]
+      0: "Make a %{relative_direction} U-turn."
+      1: "Make a %{relative_direction} U-turn onto %{street_names}."
+      2: "Make a %{relative_direction} U-turn to stay on %{street_names}."
+      3: "Make a %{relative_direction} U-turn at %{cross_street_names}."
+      4: "Make a %{relative_direction} U-turn at %{cross_street_names} onto %{street_names}."
+      5: "Make a %{relative_direction} U-turn at %{cross_street_names} to stay on %{street_names}."
 
     ###########################################################################
     ramp_straight:
