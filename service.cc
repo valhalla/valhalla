@@ -48,16 +48,28 @@ void jsonify(Document& document, const char* text)
 }
 
 
-std::vector<Measurement> read_sequence(const Document& document)
+inline bool
+is_geojson_geometry(const Value& geometry)
 {
-  // Parse coordinates
-  if (!document.HasMember("coordinates")) {
-    throw SequenceParseError("coordinates not found");
+  return geometry.IsObject() && geometry.HasMember("coordinates");
+}
+
+
+std::vector<Measurement>
+read_geojson_geometry(const Value& geometry)
+{
+  if (!is_geojson_geometry(geometry)) {
+    throw SequenceParseError("Invalid GeoJSON geometry");
   }
 
-  const auto& coordinates = document["coordinates"];
+  // Parse coordinates
+  if (!geometry.HasMember("coordinates")) {
+    throw SequenceParseError("Invalid GeoJSON geometry: coordinates not found");
+  }
+
+  const auto& coordinates = geometry["coordinates"];
   if (!coordinates.IsArray()) {
-    throw SequenceParseError("coordindates is not an array of coordinates");
+    throw SequenceParseError("Invalid GeoJSON geometry: coordindates is not an array of coordinates");
   }
 
   std::vector<Measurement> measurements;
@@ -67,19 +79,61 @@ std::vector<Measurement> read_sequence(const Document& document)
         || coordinate.Size() != 2
         || !coordinate[0].IsNumber()
         || !coordinate[1].IsNumber()) {
-      throw SequenceParseError("coordindate at " + std::to_string(i) + " is not a valid coordinate (a array of two numbers)");
+      throw SequenceParseError("Invalid GeoJSON geometry: coordindate at "
+                               + std::to_string(i)
+                               + " is not a valid coordinate (a array of two numbers)");
     }
     auto lng = coordinate[0].GetDouble(),
          lat = coordinate[1].GetDouble();
     measurements.emplace_back(midgard::PointLL(lng, lat));
   }
 
-  // TODO parse timestamps
-  if (document.HasMember("timestamps")) {
+  return measurements;
+}
+
+
+// Strictly speak a GeoJSON feature must have "id" and "properties",
+// but in our case they are optional
+
+// {"type": "Feature", "geometry": GEOMETRY, "properties": {"times": [], "radius": []}}
+inline bool
+is_geojson_feature(const Value& object)
+{
+  return object.IsObject()
+      && object.HasMember("type")
+      && std::string(object["type"].GetString()) == "Feature"
+      && object.HasMember("geometry");
+}
+
+
+std::vector<Measurement>
+read_geojson_feature(const Value& feature)
+{
+  if (!is_geojson_feature(feature)) {
+    throw SequenceParseError("Invalid GeoJSON feature");
+  }
+
+  auto measurements = read_geojson_geometry(feature["geometry"]);
+
+  if (feature.HasMember("properties")) {
+    // TODO add time and accuracy
   }
 
   return measurements;
 }
+
+
+std::vector<Measurement> read_geojson(const Value& object)
+{
+  if (is_geojson_feature(object)) {
+    return read_geojson_feature(object);
+  } else if (is_geojson_geometry(object)) {
+    return read_geojson_geometry(object);
+  } else {
+    throw SequenceParseError("Invalid GeoJSON object: expect either Feature or Geometry");
+  }
+}
+
 
 template <typename T>
 void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
@@ -463,7 +517,7 @@ class mm_worker_t {
       Document json;
       try {
         jsonify(json, request.body.c_str());
-        measurements = read_sequence(json);
+        measurements = read_geojson(json);
       } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
       }
@@ -525,33 +579,37 @@ class mm_worker_t {
 };
 
 
-void run_service(const boost::property_tree::ptree& config) {
-  std::string proxy_endpoint = config.get<std::string>("mm.service.proxy");
-  // Run as a standalone service
-  std::string server_endpoint = config.get<std::string>("mm.service.listen");
-  std::string loopback_endpoint = config.get<std::string>("mm.service.loopback");
-
-  init_http_status_codes();
+void run_service(const boost::property_tree::ptree& config)
+{
+  std::string proxy_endpoint = config.get<std::string>("mm.service.proxy"),
+     proxy_upstream_endpoint = proxy_endpoint + ".upstream",
+   proxy_downstream_endpoint = proxy_endpoint + ".downstream",
+           loopback_endpoint = config.get<std::string>("mm.service.loopback"),
+             server_endpoint = config.get<std::string>("mm.service.listen");
 
   zmq::context_t context;
 
-  http_server_t server(context, server_endpoint, proxy_endpoint + ".upstream", loopback_endpoint);
+  init_http_status_codes();
+
+  http_server_t server(context, server_endpoint, proxy_upstream_endpoint, loopback_endpoint);
   std::thread server_thread = std::thread(std::bind(&http_server_t::serve, server));
   server_thread.detach();
 
-  proxy_t proxy(context, proxy_endpoint + ".upstream", proxy_endpoint + ".downstream");
+  proxy_t proxy(context, proxy_upstream_endpoint, proxy_downstream_endpoint);
   std::thread proxy_thread(std::bind(&proxy_t::forward, proxy));
   proxy_thread.detach();
 
-  //listen for requests
+  // Listen for requests
   mm_worker_t mm_worker(config);
   auto work = std::bind(&mm_worker_t::work, std::ref(mm_worker), std::placeholders::_1, std::placeholders::_2);
   auto cleanup = std::bind(&mm_worker_t::cleanup, std::ref(mm_worker));
-  prime_server::worker_t worker(context, proxy_endpoint + ".downstream", "ipc://NO_ENDPOINT", loopback_endpoint,
+  prime_server::worker_t worker(context,
+                                proxy_downstream_endpoint, "ipc:///dev/null", loopback_endpoint,
                                 work, cleanup);
+
   worker.work();
 
-  //TODO: should we listen for SIGINT and terminate gracefully/exit(0)?
+  //TODO should we listen for SIGINT and terminate gracefully/exit(0)?
 }
 
 
