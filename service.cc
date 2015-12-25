@@ -146,25 +146,76 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 
 
 template <typename T>
-void serialize_geometry(const std::vector<MatchResult>& results,
-                        Writer<T>& writer)
+void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
+                                       Writer<T>& writer)
 {
   writer.StartObject();
+
   writer.String("type");
   writer.String("MultiPoint");
+
   writer.String("coordinates");
   writer.StartArray();
   for (const auto& result : results) {
     serialize_coordinate(result.lnglat(), writer);
   }
   writer.EndArray();
+
+  writer.EndObject();
+}
+
+
+template <typename T>
+void serialize_geometry_route(const std::vector<MatchResult>& results,
+                              const MapMatching& mm,
+                              Writer<T>& writer)
+{
+  writer.StartObject();
+
+  writer.String("type");
+  writer.String("MultiLineString");
+
+  writer.String("coordinates");
+  writer.StartArray();
+  const auto& route = ConstructRoute(results.cbegin(), results.cend());
+  bool open = false;
+  for (auto segment = route.cbegin(), prev_segment = route.cend();
+       segment != route.cend(); segment++) {
+    const auto& shape = segment->Shape(mm.graphreader());
+    if (!shape.empty()) {
+      assert(shape.size() >= 2);
+      if (prev_segment != route.cend()
+          && prev_segment->Adjoined(mm.graphreader(), *segment)) {
+        for (auto vertex = std::next(shape.begin()); vertex != shape.end(); vertex++) {
+          serialize_coordinate(*vertex, writer);
+        }
+      } else {
+        if (open) {
+          writer.EndArray();
+          open = false;
+        }
+        writer.StartArray();
+        open = true;
+        for (auto vertex = shape.begin(); vertex != shape.end(); vertex++) {
+          serialize_coordinate(*vertex, writer);
+        }
+      }
+    }
+    prev_segment = segment;
+  }
+  if (open) {
+    writer.EndArray();
+    open = false;
+  }
+  writer.EndArray();
+
   writer.EndObject();
 }
 
 
 template <typename T>
 void serialize_labels(const State& state,
-                      const MapMatching&mm,
+                      const MapMatching& mm,
                       Writer<T>& writer)
 {
   if (!state.routed()) {
@@ -296,9 +347,9 @@ void serialize_properties(const std::vector<MatchResult>& results,
 
 
 template <typename T>
-void serialize_results(const std::vector<MatchResult>& results,
-                       const MapMatching& mm,
-                       Writer<T>& writer)
+void serialize_results_as_feature(const std::vector<MatchResult>& results,
+                                  const MapMatching& mm,
+                                  Writer<T>& writer, bool route = false)
 {
   writer.StartObject();
 
@@ -306,7 +357,11 @@ void serialize_results(const std::vector<MatchResult>& results,
   writer.String("Feature");
 
   writer.String("geometry");
-  serialize_geometry(results, writer);
+  if (route) {
+    serialize_geometry_route(results, mm, writer);
+  } else {
+    serialize_geometry_matched_points(results, writer);
+  }
 
   writer.String("properties");
   serialize_properties(results, mm, writer);
@@ -548,7 +603,7 @@ class mm_worker_t {
       // Serialize results
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      serialize_results(match_results, mm, writer);
+      serialize_results_as_feature(match_results, mm, writer);
 
       worker_t::result_t result{false};
       http_response_t response(200, http_status_code(200), sb.GetString(), headers_t{CORS, JS_MIME});

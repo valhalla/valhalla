@@ -7,8 +7,11 @@
 #include "viterbi_search.h"
 #include "edge_search.h"
 #include "sp.h"
+#include "graph_helpers.h"
+#include "geometry_helpers.h"
 
 using namespace valhalla;
+using namespace mm;
 
 
 namespace {
@@ -602,13 +605,58 @@ OfflineMatch(MapMatching& mm,
 
 struct EdgeSegment
 {
-  EdgeSegment(GraphId the_edgeid,
-              float the_source,
-              float the_target)
+  EdgeSegment(baldr::GraphId the_edgeid,
+              float the_source = 0.f,
+              float the_target = 1.f)
       : edgeid(the_edgeid),
         source(the_source),
-        target(the_target) {}
+        target(the_target)
+  {
+    if (!edgeid.Is_Valid()) {
+      throw std::invalid_argument("Invalid edgeid");
+    }
 
+    if (!(0.f <= source && source <= target && target <= 1.f)) {
+      throw std::invalid_argument("Expect 0.f <= source <= source <= 1.f, but you got source = "
+                                  + std::to_string(source)
+                                  + " and target = "
+                                  + std::to_string(target));
+    }
+  }
+
+  std::vector<PointLL> Shape(baldr::GraphReader& graphreader) const
+  {
+    const baldr::GraphTile* tile = nullptr;
+    const auto edge = helpers::edge_directededge(graphreader, edgeid, tile);
+    if (edge) {
+      const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+      const auto& shape = edgeinfo->shape();
+      if (edge->forward()) {
+        return helpers::ClipLineString(shape.cbegin(), shape.cend(), source, target);
+      } else {
+        return helpers::ClipLineString(shape.crbegin(), shape.crend(), source, target);
+      }
+    }
+
+    return {};
+  }
+
+  bool Adjoined(baldr::GraphReader& graphreader, const EdgeSegment& other) const
+  {
+    if (edgeid != other.edgeid) {
+      if (target == 1.f && other.source == 0.f) {
+        const auto endnode = helpers::edge_endnodeid(graphreader, edgeid);
+        return endnode == helpers::edge_startnodeid(graphreader, other.edgeid)
+            && endnode.Is_Valid();
+      } else {
+        return false;
+      }
+    } else {
+      return target == other.source;
+    }
+  }
+
+  // TODO make them private
   GraphId edgeid;
   float source;
   float target;
