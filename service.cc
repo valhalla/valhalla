@@ -23,14 +23,6 @@ using namespace prime_server;
 using namespace valhalla;
 
 
-namespace {
-constexpr float kSearchRadius = 40;      // meters
-constexpr float kMaxSearchRadius = 200;  // meters
-constexpr size_t kMaxGridCacheSize = 64; // quantity
-constexpr size_t kGridSize = 500;        // quantity
-}
-
-
 class SequenceParseError: public std::runtime_error {
   // Need its constructor
   using std::runtime_error::runtime_error;
@@ -487,54 +479,30 @@ inline float local_tile_size(const GraphReader& reader)
 }
 
 
-namespace {
-const char* const kCustomizableOptions[] = {
-  "beta", "sigma_z", "route_distance_factor",
-  "breakage_distance", "interpolation_distance",
-  "search_radius"
-};
-}
-
-
 boost::property_tree::ptree&
-update_mm_config(boost::property_tree::ptree& pt,
+update_mm_config(boost::property_tree::ptree& config,
                  const http_request_t& request)
 {
   const auto& query = request.query;
-  for (const auto& name : kCustomizableOptions) {
+  const auto& customizables = config.get_child("customizable");
+  for (const auto& item : customizables) {
+    const auto& name = item.second.get_value<std::string>();
     const auto it = query.find(name);
     if (it != query.end()) {
-      const auto& value_list = it->second;
-      if (!value_list.empty()) {
-        // Possibly throw std::invalid_argument or std::out_of_range
-        pt.put<float>(it->first, std::stof(value_list.back()));
-      }
-    }
-  }
-  return pt;
-}
-
-
-boost::property_tree::ptree&
-update_mm_config(boost::property_tree::ptree& pt,
-                 const Document& document)
-{
-  if (document.HasMember("properties")) {
-    return pt;
-  }
-  const auto& properties = document["properties"];
-  for (const auto& name : kCustomizableOptions) {
-    if (properties.HasMember(name)) {
-      auto value = properties[name].GetDouble();
-      if (std::numeric_limits<float>::min() <= value
-          && value <= std::numeric_limits<float>::max()) {
-        pt.put<float>(name, static_cast<float>(value));
+      const auto& values = it->second;
+      if (name == "mode") {
+        if (!values.empty()) {
+          config.put<std::string>("mode", values.back());
+        }
+      } else if (name == "route" || name == "geometry") {
+        config.put<bool>(it->first, true);
       } else {
-        throw std::out_of_range("out of float range");
+        // Possibly throw std::invalid_argument or std::out_of_range
+        config.put<float>(it->first, std::stof(values.back()));
       }
     }
   }
-  return pt;
+  return config;
 }
 
 
@@ -545,13 +513,13 @@ class mm_worker_t {
       config(config),
       reader(config.get_child("mjolnir.hierarchy")),
       grid(reader,
-           local_tile_size(reader)/config.get<size_t>("grid.size", kGridSize),
-           local_tile_size(reader)/config.get<size_t>("grid.size", kGridSize)),
+           local_tile_size(reader)/config.get<size_t>("grid.size"),
+           local_tile_size(reader)/config.get<size_t>("grid.size")),
       mode_costing{nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
         nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
         nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
         CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))},
-      max_grid_cache_size_(config.get<size_t>("grid.cache_size", kMaxGridCacheSize)) {}
+      max_grid_cache_size_(config.get<size_t>("grid.cache_size")) {}
 
   worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
     auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -568,26 +536,31 @@ class mm_worker_t {
 
     if (request.method == method_t::POST) {
       std::vector<Measurement> measurements;
-      // Parse sequence
       Document json;
+
       try {
+        // Parse sequence
         jsonify(json, request.body.c_str());
         measurements = read_geojson(json);
       } catch (const SequenceParseError& ex) {
         return jsonify_error(ex.what(), info);
       }
 
-      // Read default config
+      // Get a copy of the default config
       auto mm_config = config.get_child("mm");
 
-      float max_allowed_search_radius = mm_config.get<float>("max_search_radius", kMaxSearchRadius);
+      // Update with customizable config
+      try {
+        update_mm_config(mm_config, request);
+      } catch (const std::out_of_range& ex) {
+        return jsonify_error(ex.what(), info);
+      }  catch (const std::invalid_argument& ex) {
+        return jsonify_error(ex.what(), info);
+      }
 
-      // Update customizable configs
-      update_mm_config(mm_config, request);
-      update_mm_config(mm_config, json);
-
-      float search_radius = mm_config.get<float>("search_radius", kSearchRadius);
-      if (search_radius > max_allowed_search_radius) {
+      float max_allowed_search_radius = mm_config.get<float>("max_search_radius"),
+                        search_radius = mm_config.get<float>("search_radius");
+      if (max_allowed_search_radius < search_radius) {
         std::string message = "Got search radius "
                               + std::to_string(search_radius)
                               + ", but we expect it not to exceed "
@@ -603,7 +576,17 @@ class mm_worker_t {
       // Serialize results
       StringBuffer sb;
       Writer<StringBuffer> writer(sb);
-      serialize_results_as_feature(match_results, mm, writer);
+      bool route = mm_config.get<bool>("route"),
+        geometry = mm_config.get<bool>("geometry");
+      if (geometry) {
+        if (route) {
+          serialize_geometry_route(match_results, mm, writer);
+        } else {
+          serialize_geometry_matched_points(match_results, writer);
+        }
+      } else {
+        serialize_results_as_feature(match_results, mm, writer, route);
+      }
 
       worker_t::result_t result{false};
       http_response_t response(200, http_status_code(200), sb.GetString(), headers_t{CORS, JS_MIME});

@@ -2,11 +2,20 @@
   "mm": {
     "sigma_z": 4.07,
     "beta": 3,
-    "route_distance_factor": 3,
+    "max_route_distance_factor": 3,
     "breakage_distance": 2000,
     "interpolation_distance": 10,
     "search_radius": 40,
     "max_search_radius": 200,
+    "geometry": false,
+    "route": false,
+    "mode": "multimodal",
+    "customizable": [
+      "mode",
+      "route",
+      "geometry_only",
+      "search_radius"
+    ],
     "logging": {
       "type": "std_out",
       "color": true

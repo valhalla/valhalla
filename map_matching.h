@@ -15,8 +15,6 @@ using namespace mm;
 
 
 namespace {
-constexpr float kSigmaZ = 4.07;  // meters
-constexpr float kBeta = 3.f;
 constexpr float kBreakageDistance = 2000.f;  // meters
 constexpr float kMaxRouteDistanceFactor = 3.f;
 constexpr float kInterpolationDistance = 10.f;  // meters
@@ -160,7 +158,7 @@ inline float GreatCircleDistanceSquared(const Measurement& left,
 class MapMatching: public ViterbiSearch<State>
 {
  public:
-  // TODO move optional params down
+  // TODO move params down
   MapMatching(float sigma_z,
               float beta,
               baldr::GraphReader& graphreader,
@@ -193,11 +191,11 @@ class MapMatching: public ViterbiSearch<State>
               const std::shared_ptr<sif::DynamicCost>* mode_costing,
               const sif::TravelMode mode,
               const boost::property_tree::ptree& pt)
-      : MapMatching(pt.get<float>("sigma_z", kSigmaZ),
-                    pt.get<float>("beta", kBeta),
+      : MapMatching(pt.get<float>("sigma_z"),
+                    pt.get<float>("beta"),
                     graphreader, mode_costing, mode,
-                    pt.get<float>("breakage_distance", kBreakageDistance),
-                    pt.get<float>("max_route_distance_factor", kMaxRouteDistanceFactor)) {}
+                    pt.get<float>("breakage_distance"),
+                    pt.get<float>("max_route_distance_factor")) {}
 
   ~MapMatching()
   { Clear(); }
