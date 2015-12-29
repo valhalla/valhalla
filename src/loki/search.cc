@@ -293,7 +293,9 @@ std::tuple<PointLL, float, size_t> Project(const PointLL& p, const std::vector<P
     const auto& v = shape[i + 1];
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
-    const auto scale = ((p.first - u.first)*bx + (p.second - u.second)*by) / (bx*bx + by*by);
+    auto sq = bx*bx + by*by;
+    //avoid divided-by-zero which gives a NaN scale, otherwise comparisons below will fail
+    const auto scale = sq > 0? (((p.first - u.first)*bx + (p.second - u.second)*by) / sq) : 0.f;
     //projects along the ray before u
     if(scale <= 0.f) {
       bx = u.first;
