@@ -253,10 +253,27 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       auto* next_man_begin_edge = trip_path_->GetCurrEdge(
           next_man->begin_node_index());
 
+      // Collapse the TransitConnectionStart Maneuver
+      // if the transit connection stop is a simple stop (not a station)
+      if ((curr_man->type() == TripDirections_Maneuver_Type_kTransitConnectionStart)
+          && next_man->IsTransit()
+          && curr_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+        curr_man = CollapseTransitConnectionStartManeuver(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
+        ++next_man;
+      }
+      // Collapse the TransitConnectionDestination Maneuver
+      // if the transit connection stop is a simple stop (not a station)
+      else if ((next_man->type() == TripDirections_Maneuver_Type_kTransitConnectionDestination)
+          && curr_man->IsTransit()
+          && next_man->transit_connection_stop().type == TripDirections_TransitStop_Type_kStop) {
+        next_man = CollapseTransitConnectionDestinationManeuver(maneuvers, curr_man, next_man);
+        maneuvers_have_been_combined = true;
+      }
       // Do not combine
       // if travel mode is different
       // OR next maneuver is destination
-      if ((curr_man->travel_mode() != next_man->travel_mode())
+      else if ((curr_man->travel_mode() != next_man->travel_mode())
           || (next_man->type() == TripDirections_Maneuver_Type_kDestination)) {
         // Update with no combine
         prev_man = curr_man;
@@ -342,6 +359,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
 
         next_man = CombineSameNameStraightManeuver(maneuvers, curr_man,
                                                    next_man);
+        maneuvers_have_been_combined = true;
       } else {
         // Update with no combine
         prev_man = curr_man;
@@ -350,6 +368,32 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
     }
   }
+}
+
+std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionStartManeuver(
+    std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man) {
+
+  // Set begin node index
+  next_man->set_begin_node_index(curr_man->begin_node_index());
+
+  // Set begin shape index
+  next_man->set_begin_shape_index(curr_man->begin_shape_index());
+
+  return maneuvers.erase(curr_man);
+}
+
+std::list<Maneuver>::iterator ManeuversBuilder::CollapseTransitConnectionDestinationManeuver(
+    std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator curr_man,
+    std::list<Maneuver>::iterator next_man) {
+
+  // Set end node index
+  curr_man->set_end_node_index(next_man->end_node_index());
+
+  // Set end shape index
+  curr_man->set_end_shape_index(next_man->end_shape_index());
+
+  return maneuvers.erase(next_man);
 }
 
 std::list<Maneuver>::iterator ManeuversBuilder::CombineInternalManeuver(

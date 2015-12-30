@@ -36,6 +36,16 @@ class ManeuversBuilder {
 
   void Combine(std::list<Maneuver>& maneuvers);
 
+  std::list<Maneuver>::iterator CollapseTransitConnectionStartManeuver(
+      std::list<Maneuver>& maneuvers,
+      std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man);
+
+  std::list<Maneuver>::iterator CollapseTransitConnectionDestinationManeuver(
+      std::list<Maneuver>& maneuvers,
+      std::list<Maneuver>::iterator curr_man,
+      std::list<Maneuver>::iterator next_man);
+
   std::list<Maneuver>::iterator CombineInternalManeuver(
       std::list<Maneuver>& maneuvers, std::list<Maneuver>::iterator prev_man,
       std::list<Maneuver>::iterator curr_man,
