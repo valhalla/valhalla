@@ -167,13 +167,14 @@ void TestRoutePathIterator()
   //  0         1
   //         3     4
   //        5
-  labelset.put(0);
-  labelset.put(1);
-  labelset.put(2);
-  labelset.put(3, GraphId(), 0.f, 1.f, 0.f, 1);
-  labelset.put(4, GraphId(), 0.f, 1.f, 0.f, 1);
-  labelset.put(5, GraphId(), 0.f, 1.f, 0.f, 3);
-  labelset.put(6, GraphId(), 0.f, 1.f, 0.f, 3);
+  sif::TravelMode mode = static_cast<sif::TravelMode>(0);
+  labelset.put(0, mode);
+  labelset.put(1, mode);
+  labelset.put(2, mode);
+  labelset.put(3, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, mode);
+  labelset.put(4, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, mode);
+  labelset.put(5, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, mode);
+  labelset.put(6, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, mode);
 
   RoutePathIterator the_end(&labelset, kInvalidLabelIndex),
       it0(&labelset, 0),

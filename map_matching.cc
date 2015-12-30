@@ -5,35 +5,39 @@
 #include "map_matching.h"
 
 
+inline float local_tile_size(const GraphReader& reader)
+{
+  const auto& tile_hierarchy = reader.GetTileHierarchy();
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+  return tiles.TileSize();
+}
+
+
 int main(int argc, char *argv[])
 {
-  if (argc < 5) {
-    std::cout << "usage: test_map_matching (float)SIGMA_Z (float)BETA (uint)MODE (float)RADIUS" << std::endl;
-    std::cout << " MODE: 0 auto; 1 auto shorter; 2 bicycle; 3 pedestrian" << std::endl;
+  if (argc < 2) {
+    std::cout << "usage: map_matching CONFIG" << std::endl;
     return 1;
   }
 
-  float sigma_z = std::atof(argv[1]),
-           beta = std::atof(argv[2]),
-         radius = std::atof(argv[4]);
-  int mode = std::atoi(argv[3]);
-
   boost::property_tree::ptree config;
-  boost::property_tree::read_json("conf/valhalla.json", config);
+  boost::property_tree::read_json(argv[1], config);
   baldr::GraphReader graphreader(config.get_child("mjolnir.hierarchy"));
 
-  std::shared_ptr<sif::DynamicCost> mode_costing[] = {
-    nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
-    nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
-    nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-    CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))
-  };
+  std::shared_ptr<sif::DynamicCost> mode_costing[64];
+  const auto costing = CreateUniversalCost(config.get_child("costing_options.multimodal"));
+  mode_costing[static_cast<size_t>(costing->travelmode())] = costing;
+  auto mm_config = config.get_child("mm");
 
-  MapMatching mm(sigma_z, beta, graphreader, mode_costing, static_cast<sif::TravelMode>(mode));
+  MapMatching mm(graphreader, mode_costing, costing->travelmode(), mm_config);
+  const CandidateGridQuery grid(graphreader,
+                                local_tile_size(graphreader)/config.get<size_t>("grid.size"),
+                                local_tile_size(graphreader)/config.get<size_t>("grid.size"));
+  const auto radius = mm_config.get<float>("search_radius");
+  const auto sq_search_radius = radius * radius;
+
   std::vector<Measurement> measurements;
   std::string line;
-  const CandidateGridQuery grid(graphreader, 0.25/1000, 0.25/1000);
-  float sq_search_radius = radius * radius;
 
   size_t index = 0;
   while (true) {

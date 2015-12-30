@@ -13,7 +13,7 @@
     "customizable": [
       "mode",
       "route",
-      "geometry_only",
+      "geometry",
       "search_radius"
     ],
     "logging": {

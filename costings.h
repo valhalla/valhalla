@@ -4,35 +4,32 @@
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 
-using namespace valhalla::sif;
-using namespace valhalla::baldr;
+using namespace valhalla;
 
 
-class UniversalCost : public DynamicCost {
+namespace mm {
+
+constexpr sif::TravelMode kUniversalTravelMode = static_cast<sif::TravelMode>(4);
+
+class UniversalCost : public sif::DynamicCost {
  public:
   UniversalCost(const boost::property_tree::ptree& pt)
-      : DynamicCost(pt, TravelMode::kPedestrian) {
-  }
+      : DynamicCost(pt, kUniversalTravelMode) {}
 
-  bool Allowed(const DirectedEdge* edge,
-               const EdgeLabel& pred) const {
-    return true;
-  }
+  bool Allowed(const baldr::DirectedEdge* edge,
+               const sif::EdgeLabel& pred) const
+  { return true; }
 
-  bool AllowedReverse(const DirectedEdge* edge,
-                      const EdgeLabel& pred,
-                      const DirectedEdge* opp_edge,
-                      const DirectedEdge* opp_pred_edge) const
-  {
-    return true;
-  }
+  bool AllowedReverse(const baldr::DirectedEdge* edge,
+                      const sif::EdgeLabel& pred,
+                      const baldr::DirectedEdge* opp_edge,
+                      const baldr::DirectedEdge* opp_pred_edge) const
+  { return true; }
 
-  bool Allowed(const NodeInfo* node) const
-  {
-    return true;
-  }
+  bool Allowed(const baldr::NodeInfo* node) const
+  { return true; }
 
-  Cost EdgeCost(const DirectedEdge* edge,
+  sif::Cost EdgeCost(const baldr::DirectedEdge* edge,
                 const uint32_t density) const
   {
     float length = edge->length();
@@ -40,19 +37,19 @@ class UniversalCost : public DynamicCost {
   }
 
   // Disable astar
-  float AStarCostFactor() const {
-    return 0.f;
-  }
+  float AStarCostFactor() const
+  { return 0.f; }
 
-  virtual const EdgeFilter GetFilter() const {
+  virtual const sif::EdgeFilter GetFilter() const {
     //throw back a lambda that checks the access for this type of costing
-    return [](const DirectedEdge* edge){
+    return [](const baldr::DirectedEdge* edge){
       return false;
     };
   }
 };
 
 
-cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config) {
-  return std::make_shared<UniversalCost>(config);
+sif::cost_ptr_t CreateUniversalCost(const boost::property_tree::ptree& config)
+{ return std::make_shared<UniversalCost>(config); }
+
 }

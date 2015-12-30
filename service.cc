@@ -9,6 +9,10 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/sif/autocost.h>
+#include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/pedestriancost.h>
+#include <valhalla/sif/costfactory.h>
 
 #include "costings.h"
 #include "map_matching.h"
@@ -488,17 +492,29 @@ update_mm_config(boost::property_tree::ptree& config,
   for (const auto& item : customizables) {
     const auto& name = item.second.get_value<std::string>();
     const auto it = query.find(name);
-    if (it != query.end()) {
-      const auto& values = it->second;
+    const auto& values = it->second;
+    if (it != query.end() && !values.empty()) {
       if (name == "mode") {
-        if (!values.empty()) {
+        if (!values.back().empty()) {
           config.put<std::string>("mode", values.back());
         }
       } else if (name == "route" || name == "geometry") {
-        config.put<bool>(it->first, true);
+        if (values.back() == "false") {
+          config.put<bool>(it->first, false);
+        } else {
+          config.put<bool>(it->first, true);
+        }
       } else {
-        // Possibly throw std::invalid_argument or std::out_of_range
-        config.put<float>(it->first, std::stof(values.back()));
+        if (!values.back().empty()) {
+          try {
+            // Possibly throw std::invalid_argument or std::out_of_range
+            config.put<float>(it->first, std::stof(values.back()));
+          } catch (const std::invalid_argument& ex) {
+            throw std::invalid_argument("Invalid argument: unable to parse " + it->first + " to float");
+          } catch (const std::out_of_range& ex) {
+            throw std::out_of_range("Invalid argument: " + it->first + " is out of float range");
+          }
+        }
       }
     }
   }
@@ -515,11 +531,36 @@ class mm_worker_t {
       grid(reader,
            local_tile_size(reader)/config.get<size_t>("grid.size"),
            local_tile_size(reader)/config.get<size_t>("grid.size")),
-      mode_costing{nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
-        nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
-        nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-        CreateUniversalCost(*config.get_child_optional("costing_options.pedestrian"))},
-      max_grid_cache_size_(config.get<size_t>("grid.cache_size")) {}
+      mode_costing(),
+      factory_(),
+      max_grid_cache_size_(config.get<size_t>("grid.cache_size")) {
+
+    // Register edge/node costing methods
+    factory_.Register("auto", sif::CreateAutoCost);
+    factory_.Register("bicycle", sif::CreateBicycleCost);
+    factory_.Register("pedestrian", sif::CreatePedestrianCost);
+    factory_.Register("multimodal", mm::CreateUniversalCost);
+  }
+
+  sif::TravelMode init_and_find_costing(const std::string& mode_name)
+  {
+    sif::TravelMode travelmode;
+    bool found = false;
+
+    for (const auto& name : {"auto", "bicycle", "pedestrian", "multimodal"}) {
+      const auto costing = factory_.Create(name, config.get_child(std::string("costing_options.") + name));
+      mode_costing[static_cast<size_t>(costing->travelmode())] = costing;
+      if (name == mode_name) {
+        found = true;
+        travelmode = costing->travelmode();
+      }
+    }
+    if (!found) {
+      throw std::runtime_error("Invalid mode " + mode_name);
+    }
+
+    return travelmode;
+  }
 
   worker_t::result_t work(const std::list<zmq::message_t>& job, void* request_info) {
     auto& info = *static_cast<http_request_t::info_t*>(request_info);
@@ -530,7 +571,7 @@ class mm_worker_t {
     // Parse HTTP
     try {
       request = http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-    } catch(const std::runtime_error& ex) {
+    } catch (const std::runtime_error& ex) {
       return jsonify_error(ex.what(), info);
     }
 
@@ -538,8 +579,8 @@ class mm_worker_t {
       std::vector<Measurement> measurements;
       Document json;
 
+      // Parse sequence
       try {
-        // Parse sequence
         jsonify(json, request.body.c_str());
         measurements = read_geojson(json);
       } catch (const SequenceParseError& ex) {
@@ -549,12 +590,36 @@ class mm_worker_t {
       // Get a copy of the default config
       auto mm_config = config.get_child("mm");
 
-      // Update with customizable config
+      // Get mode name
+      std::string mode_name;
+      {
+        const auto it = request.query.find("mode");
+        if (it != request.query.end()) {
+          if (!it->second.empty()) {
+            mode_name = it->second.back();
+          }
+        }
+        if (mode_name.empty()) {
+          mode_name = mm_config.get<std::string>("mode");
+        }
+      }
+
+      // Mode-specific config overwrites defaults
+      {
+        const auto mode_config = mm_config.get_child_optional(mode_name);
+        if (mode_config) {
+          for (const auto& child : *mode_config) {
+            mm_config.put_child(child.first, child.second);
+          }
+        }
+      }
+
+      // Params in the request overwrite defaults
       try {
         update_mm_config(mm_config, request);
       } catch (const std::out_of_range& ex) {
         return jsonify_error(ex.what(), info);
-      }  catch (const std::invalid_argument& ex) {
+      } catch (const std::invalid_argument& ex) {
         return jsonify_error(ex.what(), info);
       }
 
@@ -568,8 +633,15 @@ class mm_worker_t {
         return jsonify_error(message, info);
       }
 
+      sif::TravelMode travelmode;
+      try {
+        travelmode = init_and_find_costing(mode_name);
+      } catch (const std::runtime_error& ex) {
+        return jsonify_error(ex.what(), info);
+      }
+
       // Match
-      MapMatching mm(reader, mode_costing, static_cast<sif::TravelMode>(3), mm_config);
+      MapMatching mm(reader, mode_costing, travelmode, mm_config);
       auto match_results = OfflineMatch(mm, grid, measurements, search_radius * search_radius);
       assert(match_results.size() == measurements.size());
 
@@ -612,7 +684,8 @@ class mm_worker_t {
   boost::property_tree::ptree config;
   baldr::GraphReader reader;
   CandidateGridQuery grid;
-  std::shared_ptr<sif::DynamicCost> mode_costing[4];
+  sif::cost_ptr_t mode_costing[32];
+  sif::CostFactory<sif::DynamicCost> factory_;
   size_t max_grid_cache_size_;
 };
 

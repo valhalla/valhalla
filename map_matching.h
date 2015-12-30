@@ -60,7 +60,8 @@ class State
 
   void route(const std::vector<const State*>& states,
              GraphReader& graphreader,
-             float max_route_distance) const
+             float max_route_distance,
+             const std::shared_ptr<sif::DynamicCost> costing = nullptr) const
   {
     // TODO disable routing to interpolated states
 
