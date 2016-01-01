@@ -282,26 +282,21 @@ CandidateQuery::Filter(const PointLL& location,
 // of directed edges is added
 void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>& grid)
 {
-  if (tile.header()->nodecount() == 0 || tile.header()->directededgecount() == 0) {
+  auto edgecount = tile.header()->directededgecount();
+  if (edgecount <= 0) {
     return;
   }
 
-  std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
-  const auto first_node = tile.node(0);
-  const auto last_node  = first_node + tile.header()->nodecount();
+  std::unordered_set<uint32_t> visited(edgecount);
   auto edgeid = tile.header()->graphid();
-  const auto edge0 = tile.directededge(0);
-  for (auto start_node = first_node; start_node < last_node; start_node++) {
-    const auto first_edge = tile.directededge(start_node->edge_index());
-    const auto last_edge  = first_edge + start_node->edge_count();
-    for (auto edge = first_edge; edge < last_edge; edge++) {
-      if (visited.insert(edge->edgeinfo_offset()).second) {
-        const auto edgeinfo_ptr = tile.edgeinfo(edge->edgeinfo_offset());
-        const auto& shape = edgeinfo_ptr->shape();
-        edgeid.fields.id = edge - edge0;
-        for (decltype(shape.size()) i = 1; i < shape.size(); ++i) {
-          grid.AddLineSegment(edgeid, LineSegment(shape[i - 1], shape[i]));
-        }
+  auto directededge = tile.directededge(0);
+  for (size_t idx = 0; idx < edgecount; edgeid++, directededge++, idx++) {
+    auto offset = directededge->edgeinfo_offset();
+    if (visited.insert(offset).second) {
+      const auto edgeinfo = tile.edgeinfo(offset);
+      const auto& shape = edgeinfo->shape();
+      for (decltype(shape.size()) j = 1; j < shape.size(); ++j) {
+        grid.AddLineSegment(edgeid, LineSegment(shape[j - 1], shape[j]));
       }
     }
   }
