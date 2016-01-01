@@ -1,7 +1,13 @@
 // -*- mode: c++ -*-
 
+#ifndef MM_GEOMETRY_HELPERS_H_
+#define MM_GEOMETRY_HELPERS_H_
+
 #include <algorithm>
 #include <cassert>
+
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
 
 
 namespace {
@@ -18,6 +24,8 @@ normalize(float num, float den)
 
 namespace mm {
 namespace helpers {
+
+using namespace valhalla;
 
 
 template <typename coord_t>
@@ -95,11 +103,9 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
   }
 
   if (clip.empty()) {
-    assert(1.f <= source && 1.f <= target);
-    if (source == 1.f) {
-      clip.push_back(*prev_vertex);
-      clip.push_back(*prev_vertex);
-    }
+    assert(1.f == source && 1.f == target);
+    clip.push_back(*prev_vertex);
+    clip.push_back(*prev_vertex);
   }
 
   assert(clip.size() != 1);
@@ -107,5 +113,59 @@ ClipLineString(const iterator_t& begin, const iterator_t& end,
 }
 
 
+inline float
+TranslateLatitudeInMeters(float lat, float meters)
+{
+  float offset = meters / midgard::kMetersPerDegreeLat;
+  return lat + offset;
+}
+
+
+inline float
+TranslateLatitudeInMeters(const midgard::PointLL& lnglat, float meters)
+{ return TranslateLatitudeInMeters(lnglat.lat(), meters); }
+
+
+inline float
+TranslateLongitudeInMeters(const midgard::PointLL& lnglat, float meters)
+{
+  float offset = meters / midgard::DistanceApproximator::MetersPerLngDegree(lnglat.lat());
+  return lnglat.lng() + offset;
+}
+
+
+inline midgard::AABB2<midgard::PointLL>
+ExpandMeters(const midgard::AABB2<midgard::PointLL>& bbox, float meters)
+{
+  if (meters < 0.f) {
+    throw std::runtime_error("Expect non-negative meters");
+  }
+
+  PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
+                TranslateLatitudeInMeters(bbox.minpt(), -meters));
+  PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
+                TranslateLatitudeInMeters(bbox.maxpt(), meters));
+  return {minpt, maxpt};
+}
+
+
+inline midgard::AABB2<midgard::PointLL>
+ExpandMeters(const midgard::PointLL& pt, float meters)
+{
+  if (meters < 0.f) {
+    throw std::runtime_error("Expect non-negative meters");
+  }
+
+  PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
+                TranslateLatitudeInMeters(pt, -meters));
+  PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
+                TranslateLatitudeInMeters(pt, meters));
+  return {minpt, maxpt};
+}
+
+
 }
 }
+
+
+#endif // MM_GEOMETRY_HELPERS_H_

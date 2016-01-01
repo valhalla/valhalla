@@ -5,10 +5,10 @@
 #include <algorithm>
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/linesegment2.h>
-
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,26 +18,35 @@
 
 #include "candidate.h"
 #include "grid_range_query.h"
+#include "graph_helpers.h"
+#include "geometry_helpers.h"
 
 
+using namespace mm;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 
-std::tuple<PointLL, float, std::vector<PointLL>::size_type, float>
-Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceApproximator& approximator,
+namespace mm {
+namespace helpers {
+
+// snapped point, sqaured distance, segment index, offset
+template <typename coord_t>
+std::tuple<coord_t, float, typename std::vector<coord_t>::size_type, float>
+Project(const coord_t& p,
+        const typename std::vector<coord_t>& shape,
+        const DistanceApproximator& approximator,
         float snap_distance = 0.f)
 {
-  if (shape.size() < 2) {
-    throw std::runtime_error("A shape should have 2 or more points, but you got only "
-                             + std::to_string(shape.size()));
+  if (shape.empty()) {
+    throw std::invalid_argument("Got empty shape");
   }
 
+  coord_t closest_point(shape.front());
+  float closest_distance = approximator.DistanceSquared(closest_point);
   decltype(shape.size()) closest_segment = 0;
-  float closest_distance = std::numeric_limits<float>::infinity();
   float closest_partial_length = 0.f;
-  PointLL closest_point;
   float total_length = 0.f;
 
   //for each segment
@@ -48,13 +57,14 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
     const auto& v = shape[i + 1];
     auto bx = v.first - u.first;
     auto by = v.second - u.second;
-    const auto scale = ((p.first - u.first)*bx + (p.second - u.second)*by) / (bx*bx + by*by);
+    auto sq = bx*bx + by*by;
+    const auto scale = sq > 0? (((p.first - u.first)*bx + (p.second - u.second)*by) / sq) : 0.f;
     //projects along the ray before u
-    if(scale <= 0.f) {
+    if (scale <= 0.f) {
       bx = u.first;
       by = u.second;
     }//projects along the ray after v
-    else if(scale >= 1.f) {
+    else if (scale >= 1.f) {
       bx = v.first;
       by = v.second;
     }//projects along the ray between u and v
@@ -63,12 +73,12 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
       by = by*scale + u.second;
     }
     //check if this point is better
-    PointLL point(bx, by);
+    coord_t point(bx, by);
     const auto distance = approximator.DistanceSquared(point);
-    if(distance < closest_distance) {
-      closest_segment = i;
-      closest_distance = distance;
+    if (distance < closest_distance) {
       closest_point = std::move(point);
+      closest_distance = distance;
+      closest_segment = i;
       closest_partial_length = total_length;
     }
 
@@ -76,84 +86,64 @@ Project(const PointLL& p, const std::vector<PointLL>& shape, const DistanceAppro
     total_length += u.Distance(v);
   }
 
-  assert(closest_distance < std::numeric_limits<float>::infinity());
   // Offset is a float between 0 and 1 representing the location of
   // the closest point on LineString to the given Point, as a fraction
   // of total 2d line length.
   closest_partial_length += shape[closest_segment].Distance(closest_point);
-  float offset = static_cast<float>(closest_partial_length / total_length);
+  float offset = total_length > 0.f? static_cast<float>(closest_partial_length / total_length) : 0.f;
+  offset = std::max(0.f, std::min(offset, 1.f));
 
+  // Snapp to vertexes if it's close
   if (total_length * offset <= snap_distance) {
-    offset = 0.f;
     closest_point = shape.front();
     closest_distance = approximator.DistanceSquared(closest_point);
+    closest_segment = 0;
+    offset = 0.f;
   } else if (total_length * (1.f - offset) <= snap_distance) {
-    offset = 1.f;
     closest_point = shape.back();
     closest_distance = approximator.DistanceSquared(closest_point);
+    closest_segment = shape.size() - 1;
+    offset = 1.f;
   }
-  offset = std::max(0.f, std::min(offset, 1.f));
-  assert(0.f <= offset && offset <= 1.f);
 
   return std::make_tuple(std::move(closest_point), closest_distance, closest_segment, offset);
 }
 
-
-// Some helpers
-inline std::unique_ptr<const EdgeInfo>
-get_edgeinfo_ptr(const GraphTile& tile, const DirectedEdge* directededge)
-{
-  auto offset = directededge->edgeinfo_offset();
-  return tile.edgeinfo(offset);
 }
-
-
-inline std::unique_ptr<const EdgeInfo>
-get_edgeinfo_ptr(const GraphTile& tile, const GraphId edgeid)
-{
-  return get_edgeinfo_ptr(tile, tile.directededge(edgeid));
-}
-
-
-inline GraphId
-get_edgeid(const GraphTile& tile, const DirectedEdge* directededge)
-{
-  auto edgeid = tile.header()->graphid();
-  edgeid.fields.id = directededge - tile.directededge(0);
-  return edgeid;
-}
-
-
-const DirectedEdge* GetOpposingEdge(GraphReader& reader, const DirectedEdge* edge) {
-  //get the node at the end of this edge
-  const auto node_id = edge->endnode();
-  //we are looking for the nth edge exiting this node
-  const auto opposing_index = edge->opp_index();
-  //the node could be in another tile so we grab that
-  const auto tile = reader.GetGraphTile(node_id);
-  //grab the nth edge leaving the node
-  return tile->directededge(tile->node(node_id)->edge_index() + opposing_index);
 }
 
 
 class CandidateQuery
 {
  public:
-  CandidateQuery(GraphReader& reader)
-      : reader_(reader) {
-  }
+  CandidateQuery(GraphReader& reader);
 
-  virtual ~CandidateQuery() {
-  }
+  virtual ~CandidateQuery();
 
-  virtual std::vector<Candidate> Query(const PointLL& point, float radius, EdgeFilter filter = nullptr) const;
+  virtual std::vector<Candidate>
+  Query(const PointLL& point, float radius, EdgeFilter filter = nullptr) const;
 
   virtual std::vector<std::vector<Candidate>>
   QueryBulk(const std::vector<PointLL>& points, float radius, EdgeFilter filter = nullptr);
 
  protected:
+  template <typename iterator_t> std::vector<Candidate>
+  Filter(const PointLL& location,
+         float sq_search_radius,
+         iterator_t edge_begin,
+         iterator_t edge_end,
+         EdgeFilter filter,
+         bool directed) const;
+
   GraphReader& reader_;
 };
+
+
+CandidateQuery::CandidateQuery(GraphReader& reader)
+    : reader_(reader) {}
+
+
+CandidateQuery::~CandidateQuery() {}
 
 
 std::vector<Candidate>
@@ -162,53 +152,13 @@ CandidateQuery::Query(const PointLL& location,
                       EdgeFilter filter) const
 {
   const GraphTile* tile = reader_.GetGraphTile(location);
-  if(!tile || tile->header()->directededgecount() == 0 || tile->header()->nodecount() == 0) {
-    return {};
+  if (tile && tile->header()->directededgecount() > 0) {
+    const auto begin = boost::counting_iterator<uint64_t>(tile->id()),
+                 end = boost::counting_iterator<uint64_t>(static_cast<uint64_t>(tile->id())
+                                                          + tile->header()->directededgecount());
+    return Filter(location, sq_search_radius, begin, end, filter, true);
   }
-
-  std::vector<Candidate> candidates;
-  std::unordered_set<uint32_t> visited(tile->header()->directededgecount());
-  DistanceApproximator approximator(location);
-
-  //for each edge
-  const auto first_node = tile->node(0);
-  const auto last_node  = first_node + tile->header()->nodecount();
-  for (auto start_node = first_node; start_node < last_node; start_node++) {
-
-    //for each edge at this node
-    const auto first_edge = tile->directededge(start_node->edge_index());
-    const auto last_edge  = first_edge + start_node->edge_count();
-    for (auto edge = first_edge; edge < last_edge; edge++) {
-
-      //we haven't looked at this edge yet and its not junk
-      if (visited.insert(edge->edgeinfo_offset()).second && (!filter || !filter(edge))) {
-        auto edgeinfo_ptr = get_edgeinfo_ptr(*tile, edge);
-        const auto& shape = edgeinfo_ptr->shape();
-        PointLL point;
-        float sq_distance;
-        decltype(shape.size()) segment;
-        float offset;
-        std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
-        if (sq_distance <= sq_search_radius) {
-          PathLocation correlated(Location(location, Location::StopType::BREAK));
-          correlated.CorrelateVertex(point);
-
-          auto edgeid = get_edgeid(*tile, edge);
-          correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, edge->forward()? offset : 1.f - offset));
-
-          const auto opp_edge_ptr = reader_.GetOpposingEdge(edgeid);
-          if (!filter || !filter(opp_edge_ptr)) {
-            auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-            correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, edge->forward()? 1.f - offset : offset));
-          }
-
-          candidates.emplace_back(correlated, std::sqrt(sq_distance));
-        }
-      }
-    }
-  }
-
-  return candidates;
+  return {};
 }
 
 
@@ -218,58 +168,113 @@ CandidateQuery::QueryBulk(const std::vector<PointLL>& locations,
                           EdgeFilter filter)
 {
   std::vector<std::vector<Candidate>> results;
+  results.reserve(locations.size());
   for (const auto& location : locations) {
-    results.push_back(Query(location, radius));
+    results.push_back(Query(location, radius, filter));
   }
   return results;
 }
 
 
-inline float TranslateLatitudeInMeters(float lat, float meters)
+template <typename iterator_t>
+std::vector<Candidate>
+CandidateQuery::Filter(const PointLL& location,
+                       float sq_search_radius,
+                       iterator_t begin,
+                       iterator_t end,
+                       EdgeFilter filter,
+                       bool directed) const
 {
-  float offset = meters / kMetersPerDegreeLat;
-  return lat + offset;
-}
+  std::vector<Candidate> candidates;
+  std::unordered_set<GraphId> visited_nodes, visited_edges;
+  DistanceApproximator approximator(location);
 
+  for (auto it = begin; it != end; it++) {
+    // Do a explict cast here as the iterator is probably of type
+    // uint64_t
+    const auto edgeid = static_cast<GraphId>(*it);
 
-inline float TranslateLatitudeInMeters(const PointLL& lnglat, float meters)
-{
-  return TranslateLatitudeInMeters(lnglat.lat(), meters);
-}
+    // Skip if it's visited
+    if (directed) {
+      if (!visited_edges.insert(edgeid).second) continue;
+    }
 
+    const auto tile = reader_.GetGraphTile(edgeid);
+    if (!tile) continue;
 
-inline float TranslateLongitudeInMeters(const PointLL& lnglat, float meters)
-{
-  float offset = meters / DistanceApproximator::MetersPerLngDegree(lnglat.lat());
-  return lnglat.lng() + offset;
-}
+    const auto edge = tile->directededge(edgeid);
+    const auto opp_edge = reader_.GetOpposingEdge(edgeid);
+    const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
 
+    if (directed) {
+      visited_edges.insert(edgeid);
+      visited_edges.insert(opp_edgeid);
+    }
 
-inline BoundingBox ExtendByMeters(const BoundingBox& bbox, float meters)
-{
-  if (meters < 0.f) {
-    throw std::runtime_error("Expect non-negative meters");
+    // NOTE a pointer to edgeinfo is needed here because it returns
+    // an unique ptr
+    const auto edgeinfo = tile->edgeinfo(edge->edgeinfo_offset());
+    const auto& shape = edgeinfo->shape();
+    if (shape.empty()) {
+      // Otherwise Project will fail
+      continue;
+    }
+
+    // Projection information
+    PointLL point;
+    float sq_distance;
+    decltype(shape.size()) segment;
+    float offset;
+
+    GraphId snapped_node;
+    PathLocation correlated(Location(location, Location::StopType::BREAK));
+
+    // Flag for avoiding recomputing projection later
+    bool included = !filter || !filter(edge);
+
+    if (included) {
+      std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
+
+      if (sq_distance <= sq_search_radius) {
+        float dist = edge->forward()? offset : 1.f - offset;
+        if (dist == 1.f) {
+          snapped_node = edge->endnode();
+        } else if (dist == 0.f) {
+          snapped_node = opp_edge->endnode();
+        }
+        correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, dist));
+        correlated.CorrelateVertex(point);
+      }
+    }
+
+    // Correlate its opp edge
+    if (!filter || !filter(opp_edge)) {
+      if (!included) {
+        std::tie(point, sq_distance, segment, offset) = helpers::Project(location, shape, approximator);
+      }
+
+      if (sq_distance <= sq_search_radius) {
+        float dist = opp_edge->forward()? offset : 1.f - offset;
+        if (dist == 1.f) {
+          snapped_node = opp_edge->endnode();
+        } else if (dist == 0.f) {
+          snapped_node = edge->endnode();
+        }
+        correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, dist));
+        correlated.CorrelateVertex(point);
+      }
+    }
+
+    if (!correlated.edges().empty()) {
+      // Add back if it is an edge correlated or it's a node correlated
+      // but it's not added yet
+      if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
+        candidates.emplace_back(correlated, sq_distance);
+      }
+    }
   }
 
-  PointLL minpt(TranslateLongitudeInMeters(bbox.minpt(), -meters),
-                TranslateLatitudeInMeters(bbox.minpt(), -meters));
-  PointLL maxpt(TranslateLongitudeInMeters(bbox.maxpt(), meters),
-                TranslateLatitudeInMeters(bbox.maxpt(), meters));
-  return {minpt, maxpt};
-}
-
-
-inline BoundingBox ExtendByMeters(const PointLL& pt, float meters)
-{
-  if (meters < 0.f) {
-    throw std::runtime_error("Expect non-negative meters");
-  }
-
-  PointLL minpt(TranslateLongitudeInMeters(pt, -meters),
-                TranslateLatitudeInMeters(pt, -meters));
-  PointLL maxpt(TranslateLongitudeInMeters(pt, meters),
-                TranslateLatitudeInMeters(pt, meters));
-  return {minpt, maxpt};
+  return candidates;
 }
 
 
@@ -284,19 +289,18 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>& grid)
   std::unordered_set<uint32_t> visited(tile.header()->directededgecount());
   const auto first_node = tile.node(0);
   const auto last_node  = first_node + tile.header()->nodecount();
+  auto edgeid = tile.header()->graphid();
+  const auto edge0 = tile.directededge(0);
   for (auto start_node = first_node; start_node < last_node; start_node++) {
     const auto first_edge = tile.directededge(start_node->edge_index());
     const auto last_edge  = first_edge + start_node->edge_count();
     for (auto edge = first_edge; edge < last_edge; edge++) {
       if (visited.insert(edge->edgeinfo_offset()).second) {
-        auto edgeinfo_ptr = get_edgeinfo_ptr(tile, edge);
+        const auto edgeinfo_ptr = tile.edgeinfo(edge->edgeinfo_offset());
         const auto& shape = edgeinfo_ptr->shape();
-        if (shape.size() < 2) {
-          continue;
-        }
-        auto edgeid = get_edgeid(tile, edge);
-        for (decltype(shape.size()) i = 0; i < shape.size() - 1; ++i) {
-          grid.AddLineSegment(edgeid, LineSegment(shape[i], shape[i+1]));
+        edgeid.fields.id = edge - edge0;
+        for (decltype(shape.size()) i = 1; i < shape.size(); ++i) {
+          grid.AddLineSegment(edgeid, LineSegment(shape[i - 1], shape[i]));
         }
       }
     }
@@ -307,8 +311,7 @@ void IndexTile(const GraphTile& tile, GridRangeQuery<GraphId>& grid)
 class CandidateGridQuery: public CandidateQuery
 {
  public:
-  CandidateGridQuery(GraphReader& reader,
-                     float cell_width, float cell_height)
+  CandidateGridQuery(GraphReader& reader, float cell_width, float cell_height)
       : CandidateQuery(reader),
         hierarchy_(reader.GetTileHierarchy()),
         cell_width_(cell_width),
@@ -338,7 +341,7 @@ class CandidateGridQuery: public CandidateQuery
   }
 
   std::unordered_set<GraphId>
-  RangeQuery(const BoundingBox& range) const
+  RangeQuery(const AABB2<PointLL>& range) const
   {
     auto tile_of_minpt = reader_.GetGraphTile(range.minpt()),
          tile_of_maxpt = reader_.GetGraphTile(range.maxpt());
@@ -425,95 +428,16 @@ class CandidateGridQuery: public CandidateQuery
     return result;
   }
 
-
   std::vector<Candidate>
   Query(const PointLL& location, float sq_search_radius, EdgeFilter filter) const override
   {
-    std::vector<Candidate> candidates;
-    std::unordered_set<GraphId> visited_nodes;
-    DistanceApproximator approximator(location);
-    auto range = ExtendByMeters(location, std::sqrt(sq_search_radius));
-
-    for (const auto edgeid : RangeQuery(range)) {
-      auto tile = reader_.GetGraphTile(edgeid);
-      if (!tile) {
-        continue;
-      }
-
-      const auto edge = tile->directededge(edgeid);
-      const auto opp_edge = reader_.GetOpposingEdge(edgeid);
-
-      // NOTE a pointer to edgeinfo is needed here because it returns
-      // an unique ptr
-      auto edgeinfo = get_edgeinfo_ptr(*tile, edgeid);
-      const auto& shape = edgeinfo->shape();
-      if (shape.size() < 2) {
-        // Otherwise Project will fail
-        continue;
-      }
-
-      // Projection information
-      PointLL point;
-      float sq_distance;
-      decltype(shape.size()) segment;
-      float offset;
-
-      GraphId snapped_node;
-      PathLocation correlated(Location(location, Location::StopType::BREAK));
-
-      // Flag for avoiding recomputing projection later
-      bool included = !filter || !filter(edge);
-
-      if (included) {
-        std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
-        assert(segment < shape.size() - 1);
-        assert(0.f <= offset && offset <= 1.f);
-
-        if (sq_distance <= sq_search_radius) {
-          float dist = edge->forward()? offset : 1.f - offset;
-          if (dist == 1.f) {
-            snapped_node = edge->endnode();
-          } else if (dist == 0.f) {
-            snapped_node = opp_edge->endnode();
-          }
-          correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, dist));
-          correlated.CorrelateVertex(point);
-        }
-      }
-
-      // Correlate its opp edge
-      if (!filter || !filter(opp_edge)) {
-        if (!included) {
-          std::tie(point, sq_distance, segment, offset) = Project(location, shape, approximator);
-        }
-        assert(segment < shape.size() - 1);
-        assert(0.f <= offset && offset <= 1.f);
-
-        if (sq_distance <= sq_search_radius) {
-          float dist = opp_edge->forward()? offset : 1.f - offset;
-          if (dist == 1.f) {
-            snapped_node = opp_edge->endnode();
-          } else if (dist == 0.f) {
-            snapped_node = edge->endnode();
-          }
-          auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid);
-          correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, dist));
-          correlated.CorrelateVertex(point);
-        }
-      }
-
-      if (!correlated.edges().empty()) {
-        // Add back if it is an edge correlated or it's a node correlated
-        // but it's not added yet
-        if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
-          candidates.emplace_back(correlated, sq_distance);
-        }
-      }
-    }
-    return candidates;
+    const auto& range = helpers::ExpandMeters(location, std::sqrt(sq_search_radius));
+    const auto& edges = RangeQuery(range);
+    return Filter(location, sq_search_radius, edges.begin(), edges.end(), filter, false);
   }
 
-  std::unordered_map<GraphId, GridRangeQuery<GraphId>>::size_type size() const
+  std::unordered_map<GraphId, GridRangeQuery<GraphId> >::size_type
+  size() const
   { return grid_cache_.size(); }
 
   void Clear()
