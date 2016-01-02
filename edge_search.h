@@ -10,7 +10,6 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
@@ -68,6 +67,8 @@ CandidateQuery::Query(const PointLL& location,
 {
   const GraphTile* tile = reader_.GetGraphTile(location);
   if (tile && tile->header()->directededgecount() > 0) {
+    // TODO it doesn't work since it is not the right to increase
+    // graphids :(
     const auto begin = boost::counting_iterator<uint64_t>(tile->id()),
                  end = boost::counting_iterator<uint64_t>(static_cast<uint64_t>(tile->id())
                                                           + tile->header()->directededgecount());
@@ -137,12 +138,12 @@ CandidateQuery::Filter(const PointLL& location,
 
     // Projection information
     PointLL point;
-    float sq_distance;
+    float sq_distance = 0.f;
     decltype(shape.size()) segment;
     float offset;
 
     GraphId snapped_node;
-    PathLocation correlated(Location(location, Location::StopType::BREAK));
+    Candidate correlated(Location(location, Location::StopType::BREAK));
 
     // Flag for avoiding recomputing projection later
     bool included = !filter || !filter(edge);
@@ -157,7 +158,7 @@ CandidateQuery::Filter(const PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = opp_edge->endnode();
         }
-        correlated.CorrelateEdge(PathLocation::PathEdge(edgeid, dist));
+        correlated.CorrelateEdge(Candidate::PathEdge(edgeid, dist));
         correlated.CorrelateVertex(point);
       }
     }
@@ -175,7 +176,7 @@ CandidateQuery::Filter(const PointLL& location,
         } else if (dist == 0.f) {
           snapped_node = edge->endnode();
         }
-        correlated.CorrelateEdge(PathLocation::PathEdge(opp_edgeid, dist));
+        correlated.CorrelateEdge(Candidate::PathEdge(opp_edgeid, dist));
         correlated.CorrelateVertex(point);
       }
     }
@@ -184,7 +185,8 @@ CandidateQuery::Filter(const PointLL& location,
       // Add back if it is an edge correlated or it's a node correlated
       // but it's not added yet
       if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
-        candidates.emplace_back(correlated, sq_distance);
+        correlated.set_sq_distance(sq_distance);
+        candidates.push_back(correlated);
       }
     }
   }

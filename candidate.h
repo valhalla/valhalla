@@ -1,28 +1,36 @@
 /* -*- mode: c++ -*- */
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/pathlocation.h>
+
+namespace mm {
 
 using namespace valhalla;
 
 
-class Candidate
+// A thin wrapper of PathLocation
+class Candidate: public baldr::PathLocation
 {
  public:
-  Candidate(const baldr::PathLocation& pathlocation,
-            double sq_distance)
-      : pathlocation_(pathlocation),
-        sq_distance_(sq_distance) {}
+  Candidate() = delete;
 
-  const baldr::PathLocation& pathlocation() const
-  { return pathlocation_; }
+  Candidate(const baldr::Location& location)
+      : baldr::PathLocation(location), sq_distance_(0.f) {}
 
   float sq_distance() const
   { return sq_distance_; }
+
+  Candidate& set_sq_distance(float sq_distance)
+  {
+    sq_distance_ = sq_distance;
+    return *this;
+  }
 
   float distance() const
   { return std::sqrt(sq_distance_); }
 
  private:
-  baldr::PathLocation pathlocation_;
   float sq_distance_;
 };
+
+}

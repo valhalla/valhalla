@@ -295,7 +295,7 @@ void serialize_state(const State& state,
   writer.Double(state.candidate().distance());
 
   writer.String("coordinate");
-  serialize_coordinate(state.candidate().pathlocation().vertex(), writer);
+  serialize_coordinate(state.candidate().vertex(), writer);
 
   writer.String("labels");
   serialize_labels(state, mm, writer);

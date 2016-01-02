@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <valhalla/midgard/pointll.h>
+#include <valhalla/baldr/pathlocation.h>
 
 #include "viterbi_search.h"
 #include "edge_search.h"
@@ -68,9 +69,9 @@ class State
     // Prepare locations
     std::vector<PathLocation> locations;
     locations.reserve(1 + states.size());
-    locations.push_back(candidate_.pathlocation());
+    locations.push_back(candidate_);
     for (const auto state : states) {
-      locations.push_back(state->candidate().pathlocation());
+      locations.push_back(state->candidate());
     }
 
     // Route
@@ -127,8 +128,8 @@ class State
 inline float GreatCircleDistance(const State& left,
                                  const State& right)
 {
-  const auto &left_pt = left.candidate().pathlocation().vertex(),
-            &right_pt = right.candidate().pathlocation().vertex();
+  const auto &left_pt = left.candidate().vertex(),
+            &right_pt = right.candidate().vertex();
   return left_pt.Distance(right_pt);
 }
 
@@ -136,8 +137,8 @@ inline float GreatCircleDistance(const State& left,
 inline float GreatCircleDistanceSquared(const State& left,
                                         const State& right)
 {
-  const auto &left_pt = left.candidate().pathlocation().vertex(),
-            &right_pt = right.candidate().pathlocation().vertex();
+  const auto &left_pt = left.candidate().vertex(),
+            &right_pt = right.candidate().vertex();
   return left_pt.DistanceSquared(right_pt);
 }
 
@@ -213,7 +214,7 @@ class MapMatching: public ViterbiSearch<State>
 
     // Append to base class
     std::vector<const State*> column;
-    for (candidate_iterator_t it = begin; it != end; it++) {
+    for (auto it = begin; it != end; it++) {
       StateId id = state_.size();
       state_.push_back(new State(id, time, *it));
       column.push_back(state_.back());
@@ -231,7 +232,7 @@ class MapMatching: public ViterbiSearch<State>
   { return states_[time]; }
 
   const std::shared_ptr<sif::DynamicCost> costing() const
-  { return mode_costing_[static_cast<uint32_t>(mode_)]; }
+  { return mode_costing_[static_cast<size_t>(mode_)]; }
 
   baldr::GraphReader& graphreader() const
   { return graphreader_; }
@@ -347,7 +348,7 @@ class MatchResult
 
 // Collect a nodeid set of a path location
 std::unordered_set<GraphId>
-collect_nodes(GraphReader& reader, const PathLocation& location)
+collect_nodes(GraphReader& reader, const Candidate& location)
 {
   std::unordered_set<GraphId> results;
 
@@ -392,7 +393,7 @@ guess_source_result(const MapMatching::iterator source,
       }
     }
     const auto& c = source->candidate();
-    return {c.pathlocation().vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
+    return {c.vertex(), c.distance(), last_valid_id, last_valid_type, &(*source)};
   } else if (source.IsValid()) {
     return {source_measurement.lnglat(), 0.f, GraphId(), GraphType::kUnknown, &(*source)};
   }
@@ -420,7 +421,7 @@ guess_target_result(const MapMatching::iterator source,
       }
     }
     const auto& c = target->candidate();
-    return {c.pathlocation().vertex(), c.distance(), graphid, graphtype, &(*target)};
+    return {c.vertex(), c.distance(), graphid, graphtype, &(*target)};
   } else if (target.IsValid()) {
     return {target_measurement.lnglat(), 0.f, GraphId(), GraphType::kUnknown, &(*target)};
   }
@@ -429,11 +430,12 @@ guess_target_result(const MapMatching::iterator source,
 }
 
 
+template <typename candidate_iterator_t>
 MatchResult
 interpolate(GraphReader& reader,
             const std::unordered_set<GraphId>& graphset,
-            const std::vector<Candidate>::const_iterator begin,
-            const std::vector<Candidate>::const_iterator end,
+            candidate_iterator_t begin,
+            candidate_iterator_t end,
             const Measurement& measurement)
 {
   auto closest_candidate = end;
@@ -443,10 +445,8 @@ interpolate(GraphReader& reader,
 
   for (auto candidate = begin; candidate != end; candidate++) {
     if (candidate->sq_distance() < closest_sq_distance) {
-      const auto& location = candidate->pathlocation();
-
-      if (!location.IsNode()) {
-        for (const auto& edge : location.edges()) {
+      if (!candidate->IsNode()) {
+        for (const auto& edge : candidate->edges()) {
           const auto it = graphset.find(edge.id);
           if (it != graphset.end()) {
             closest_candidate = candidate;
@@ -456,7 +456,7 @@ interpolate(GraphReader& reader,
           }
         }
       } else {
-        for (const auto nodeid : collect_nodes(reader, location)) {
+        for (const auto nodeid : collect_nodes(reader, *candidate)) {
           const auto it = graphset.find(nodeid);
           if (it != graphset.end()) {
             closest_candidate = candidate;
@@ -470,7 +470,7 @@ interpolate(GraphReader& reader,
   }
 
   if (closest_candidate != end) {
-    return {closest_candidate->pathlocation().vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
+    return {closest_candidate->vertex(), closest_candidate->distance(), closest_graphid, closest_graphtype};
   }
 
   return {measurement.lnglat()};
@@ -495,7 +495,7 @@ collect_graphset(GraphReader& reader,
       }
     }
   } else if (source.IsValid()) {
-    const auto& location = source->candidate().pathlocation();
+    const auto& location = source->candidate();
     if (!location.IsNode()) {
       for (const auto& edge : location.edges()) {
         if (edge.id.Is_Valid()) {
