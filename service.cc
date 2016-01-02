@@ -224,7 +224,7 @@ void serialize_labels(const State& state,
   if (state.time() + 1 < mm.size()) {
     for (const auto& next_state : mm.states(state.time() + 1)) {
       auto label = state.RouteBegin(*next_state);
-      if (label != state.RouteEnd(*next_state)) {
+      if (label != state.RouteEnd()) {
         writer.StartObject();
 
         writer.String("next_state");
@@ -239,7 +239,7 @@ void serialize_labels(const State& state,
         writer.String("route");
         writer.StartArray();
         for (auto label = state.RouteBegin(*next_state);
-             label != state.RouteEnd(*next_state);
+             label != state.RouteEnd();
              label++) {
           writer.StartObject();
 

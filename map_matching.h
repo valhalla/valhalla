@@ -108,10 +108,6 @@ class State
     return RoutePathIterator(labelset_.get());
   }
 
-  // TODO remove it
-  RoutePathIterator RouteEnd(const State& state) const
-  { return RoutePathIterator(labelset_.get()); }
-
   RoutePathIterator RouteEnd() const
   { return RoutePathIterator(labelset_.get()); }
 
