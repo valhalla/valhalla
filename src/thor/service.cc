@@ -532,6 +532,7 @@ namespace {
         }
         return factory.Create(costing, overridden);
       }
+      // No options to override so use the config options verbatim
       return factory.Create(costing, *config_costing);
     }
 
