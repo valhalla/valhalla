@@ -2,7 +2,7 @@
 #include "valhalla/midgard/tiles.h"
 #include "valhalla/midgard/aabb2.h"
 #include "valhalla/midgard/pointll.h"
-
+#include <iostream>
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -122,6 +122,13 @@ void TileList() {
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
 void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
+  for(auto x : answer) {
+    std::cout << std::endl << x.first << ":";
+    for(auto y : x.second) {
+      std::cout << y << ",";
+    }
+    std::cout << std::endl;
+  }
   //wrong number of tiles
   if(answer.size() != expected.size())
     throw std::logic_error("Expected " + std::to_string(expected.size()) + " intersected tiles but got " + std::to_string(answer.size()));
@@ -141,9 +148,10 @@ void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const int
 }
 
 void test_intersect_linestring() {
-  Tiles<Point2> t(AABB2<Point2>{-1,-1,1,1}, .25, 5);
+  Tiles<Point2> t(AABB2<Point2>{-5,-5,5,5}, 2.5, 5);
   assert_answer(t, {}, intersect_t{});
- /* assert_answer(t, { {-.9,0}, {.9,0} }, {10,11,12,13,14});
+  assert_answer(t, { {-4.9,-4.9}, {4.9,-4.9} }, intersect_t{{0,{0,1,2,3,4}},{1,{0,1,2,3,4}},{2,{0,1,2,3,4}},{3,{0,1,2,3,4}}});
+  /*assert_answer(t, { {-9,0}, {9,0} }, intersect_t{10,11,12,13,14});
   assert_answer(t, { {-2,0}, {2,0} }, {10,11,12,13,14});
   assert_answer(t, { {-.9,0}, {-2,0} }, {10});
   assert_answer(t, { {-.9,.9} }, {20});

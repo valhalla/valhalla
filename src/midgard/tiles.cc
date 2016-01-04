@@ -1,5 +1,45 @@
 #include "midgard/tiles.h"
 #include <cmath>
+#include <functional>
+
+namespace {
+  void bresenham_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, const std::function<void (int32_t, int32_t)>& set_pixel) {
+    int32_t dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
+    int32_t dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
+    int32_t err = dx+dy, e2; /* error value e_xy */
+
+    while(true) {
+      set_pixel(x0,y0);
+      if (x0==x1 && y0==y1) break;
+      e2 = 2*err;
+      if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+      if (e2 < dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+    }
+  }
+
+  void bresenham_elipse(int32_t xm, int32_t ym, int32_t a, int32_t b, const std::function<void (int32_t, int32_t)>& set_pixel) {
+    int32_t dx = 0, dy = b; /* im I. Quadranten von links oben nach rechts unten */
+    int64_t a2 = a*a, b2 = b*b;
+    int64_t err = b2-(2*b-1)*a2, e2; /* Fehler im 1. Schritt */
+
+    do {
+      set_pixel(xm+dx, ym+dy); /* I. Quadrant */
+      set_pixel(xm-dx, ym+dy); /* II. Quadrant */
+      set_pixel(xm-dx, ym-dy); /* III. Quadrant */
+      set_pixel(xm+dx, ym-dy); /* IV. Quadrant */
+
+      e2 = 2*err;
+      if (e2 <  (2*dx+1)*b2) { dx++; err += (2*dx+1)*b2; }
+      if (e2 > -(2*dy-1)*a2) { dy--; err -= (2*dy-1)*a2; }
+    } while (dy >= 0);
+
+    while (dx++ < a) {
+      set_pixel(xm+dx, ym);
+      set_pixel(xm-dx, ym);
+    }
+  }
+
+}
 
 namespace valhalla {
 namespace midgard {
@@ -338,6 +378,19 @@ template <class container_t>
 std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const container_t& linestring) const {
   std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
 
+  //what to do when we want to mark a subdivision as containing a segment of this linestring
+  const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //find the tile
+    int32_t tile_column = x / nsubdivisions_;
+    int32_t tile_row = y / nsubdivisions_;
+    int32_t tile = tile_row * ncolumns_ + tile_column;
+    //find the subdivision
+    unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
+    intersection[tile].insert(subdivision);
+    if(subdivision >= nsubdivisions_ * nsubdivisions_)
+      throw std::logic_error(std::to_string(subdivision));
+  };
+
   //for each segment
   for(auto ui = linestring.cbegin(); ui != linestring.cend(); std::advance(ui, 1)) {
     //figure out what the segment is
@@ -363,30 +416,13 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //planar grid but that seems harder still
 
     //figure out global subdivision start and end points
-    auto x_start = static_cast<int64_t>((u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
-    auto y_start = static_cast<int64_t>((u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
-    auto x_end = static_cast<int64_t>((v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
-    auto y_end = static_cast<int64_t>((v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
-    if(x_start > x_end) std::swap(x_start, x_end);
-    if(y_start > y_end) std::swap(y_start, y_end);
-    x_end = std::min(x_end, static_cast<int64_t>(ncolumns_ * nsubdivisions_) - 1);
-    y_end = std::min(y_end, static_cast<int64_t>(nrows_ * nsubdivisions_) - 1);
+    auto x0 = static_cast<int32_t>((u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
+    auto y0 = static_cast<int32_t>((u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
+    auto x1 = static_cast<int32_t>((v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
+    auto y1 = static_cast<int32_t>((v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
 
-    //loop over the global subdivisions along uv
-    do {
-      //find the tile
-      int32_t tile_column = x_start / nsubdivisions_;
-      int32_t tile_row = y_start / nsubdivisions_;
-      int32_t tile = tile_row * ncolumns_ + tile_column;
-      //find the subdivision
-      unsigned short subdivision = (y_start % nsubdivisions_) * nsubdivisions_ + (x_start % nsubdivisions_);
-      intersection[tile].insert(subdivision);
-      if(subdivision >= nsubdivisions_ * nsubdivisions_)
-        throw std::logic_error(std::to_string(subdivision));
-      //figure out which way to go next to follow uv
-      auto max_corner = tilebounds_.minpt() + Vector2{subdivision_size_ * x_start, subdivision_size_ * y_start};
-      LineSegment2<coord_t>(u, v).IsLeft(max_corner) < 0 ? ++y_start : ++x_start;
-    } while(x_start != x_end && y_start != y_end);
+    //pretend the subdivisions are pixels and we are doing line rasterization
+    bresenham_line(x0, y0, x1, y1, set_pixel);
   }
 
   //give them back
@@ -396,21 +432,24 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 template <class coord_t>
 std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>::Intersect(const coord_t& center, const float radius) const {
   std::unordered_map<int32_t, std::unordered_set<unsigned short> > intersection;
-/*
-  //super cell doesnt intersect it then nothing inside it can
-  if(!super_cell.Intersects(center, radius))
-    return indices;
 
-  //for each cell
-  //TODO: flood fill can terminate early and has equivalent worst case would
-  //be helpful to seed it with intersection point from super_cell.Intersect()
-  for(size_t i = 0; i < cells.size(); ++i) {
-    //does it intersect
-    if(cells[i].Intersects(center, radius)) {
-      indices.insert(i);
-    }
-  }
-*/
+  //what to do when we want to mark a subdivision as containing a segment of this linestring
+  const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //find the tile
+    int32_t tile_column = x / nsubdivisions_;
+    int32_t tile_row = y / nsubdivisions_;
+    int32_t tile = tile_row * ncolumns_ + tile_column;
+    //find the subdivision
+    unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
+    intersection[tile].insert(subdivision);
+    if(subdivision >= nsubdivisions_ * nsubdivisions_)
+      throw std::logic_error(std::to_string(subdivision));
+  };
+
+  //TODO: convert center point and radius to subdivision coordinates/units
+
+  //TODO: call bresenham ellipse algorithm then flood fill the ellipse
+
   //give them back
   return intersection;
 }
