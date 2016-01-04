@@ -240,7 +240,7 @@ namespace valhalla {
         for(const auto& r : *request_costing)
           overridden.put_child(r.first, r.second);
         costing_filter = factory.Create(*costing, overridden)->GetFilter();
-      }
+      }// No options to override so use the config options verbatim
       else
         costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
     }
