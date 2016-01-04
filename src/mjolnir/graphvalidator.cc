@@ -40,6 +40,7 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
   }
 
   if (shape1.front() == shape2.front()) {
+    // Compare shape in forward direction
     auto iter1 = shape1.begin();
     auto iter2 = shape2.begin();
     for ( ; iter2 != shape2.end(); iter2++, iter1++) {
@@ -49,9 +50,11 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
     }
     return true;
   } else if (shape1.front() == shape2.back()) {
-    int n = shape2.size() - 1;
-    for (auto iter1 = shape1.begin(); iter1 != shape1.end(); iter1++, n--) {
-      if (*iter1 != shape2[n]) {
+    // Compare shape (reverse direction for shape2)
+    auto iter1 = shape1.begin();
+    auto iter2 = shape2.rbegin();
+    for ( ; iter2 != shape2.rend(); iter2++, iter1++) {
+      if (*iter1 != *iter2) {
         return false;
       }
     }
@@ -390,7 +393,6 @@ namespace valhalla {
 namespace mjolnir {
 
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
-	auto t0 = std::chrono::high_resolution_clock::now();
 
     // Graphreader
     TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
@@ -464,11 +466,6 @@ namespace mjolnir {
                " max = " + std::to_string(max_density));
     }
     stats.build_db(pt);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    uint32_t msecs = std::chrono::duration_cast<std::chrono::seconds>(
-				  t1 - t0).count();
-    LOG_INFO("GraphValidator took " + std::to_string(msecs) + " sec");
   }
 }
 }
