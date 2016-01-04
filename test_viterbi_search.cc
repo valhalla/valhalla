@@ -312,29 +312,6 @@ void TestViterbiSearch()
 }
 
 
-void TestStatePair()
-{
-  StatePairId pair;
-  pair = stateid_make_pair(0, 1);
-  assert(pair == 1);
-  assert(stateid_left(pair) == 0);
-  assert(stateid_right(pair) == 1);
-
-  pair = stateid_make_pair(1, 0);
-  assert(pair == static_cast<StatePairId>(1) << 32);
-  assert(stateid_left(pair) == 1);
-  assert(stateid_right(pair) == 0);
-
-  pair = stateid_make_pair(12, 30);
-  assert(stateid_left(pair) == 12);
-  assert(stateid_right(pair) == 30);
-
-  pair = ~0;
-  assert(stateid_left(pair) == ~0u);
-  assert(stateid_right(pair) == ~0u);
-}
-
-
 int main(int argc, char *argv[])
 {
 #if DNDEBUG
@@ -343,8 +320,6 @@ int main(int argc, char *argv[])
 #endif
 
   TestViterbiSearch();
-
-  TestStatePair();
 
   std::cout << "all tests passed" << std::endl;
 

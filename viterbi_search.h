@@ -10,24 +10,9 @@
 
 using Time = uint32_t;
 using StateId = uint32_t;
-using StatePairId = uint64_t;
-
 
 constexpr Time kInvalidTime = std::numeric_limits<Time>::max();
 constexpr StateId kInvalidStateId = std::numeric_limits<StateId>::max();
-
-
-// TODO use union instead?
-inline StatePairId stateid_make_pair(StateId left, StateId right)
-{ return (static_cast<StatePairId>(left) << 32) + right; }
-
-
-inline StateId stateid_left(StatePairId pair)
-{ return static_cast<StateId>(pair >> 32); }
-
-
-inline StateId stateid_right(StatePairId pair)
-{ return static_cast<StateId>((pair << 32) >> 32); }
 
 
 template <typename T>
