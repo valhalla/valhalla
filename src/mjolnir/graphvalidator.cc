@@ -36,18 +36,18 @@ namespace {
 bool ShapesMatch(const std::vector<PointLL>& shape1,
 		         const std::vector<PointLL>& shape2) {
   if (shape1.size() != shape2.size()) {
-	return false;
+    return false;
   }
 
   if (shape1.front() == shape2.front()) {
-	auto iter1 = shape1.begin();
-	auto iter2 = shape2.begin();
-	for ( ; iter2 != shape2.end(); iter2++, iter1++) {
-	  if (*iter1 != *iter2) {
-	    return false;
-	  }
-	}
-	return true;
+    auto iter1 = shape1.begin();
+    auto iter2 = shape2.begin();
+    for ( ; iter2 != shape2.end(); iter2++, iter1++) {
+      if (*iter1 != *iter2) {
+        return false;
+      }
+    }
+    return true;
   } else if (shape1.front() == shape2.back()) {
     int n = shape2.size() - 1;
     for (auto iter1 = shape1.begin(); iter1 != shape1.end(); iter1++, n--) {
@@ -55,9 +55,9 @@ bool ShapesMatch(const std::vector<PointLL>& shape1,
         return false;
       }
     }
-	return true;
+    return true;
   } else {
-	LOG_INFO("Neither end of the shape matches");
+    LOG_INFO("Neither end of the shape matches");
     return false;
   }
 }
@@ -81,64 +81,64 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
   constexpr uint32_t absurd_index = 777777;
   uint32_t opp_index = absurd_index;
   const DirectedEdge* directededge = end_tile->directededge(
-      nodeinfo->edge_index());
+                  nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode) {
       // If on the local level the logic for matching needs to include
       // transit edges and wayid matching
       if (startnode.level() == 2) {
-    	if (edge.IsTransitLine() && directededge->IsTransitLine()) {
-    	  // For a transit edge the line Id must match
-    	  if (edge.lineid() == directededge->lineid()) {
-    	    if (opp_index != absurd_index) {
-			  LOG_ERROR("Multiple transit edges have the same line Id = " +
-						  std::to_string(edge.lineid()));
-			  dupcount++;
-			}
-			opp_index = i;
-		  }
-    	} else if (!edge.IsTransitLine() && !directededge->IsTransitLine()) {
-		  // Non transit lines - length, shortcut flag, and wayids must match
-		  bool match = false;
-		  uint64_t wayid2 = 0;
-		  if ((edge.trans_down() && directededge->trans_up()) ||
-		      (edge.trans_up() && directededge->trans_down())) {
-		    match = true;
-		  } else if (edge.is_shortcut() == directededge->is_shortcut()) {
-		    // Match wayids and length. Also need to match edge info offset
-		    // or shape (if not in same tile)
-		    wayid2 = (directededge->trans_down() || directededge->trans_up()) ?
-		      0 : end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid();
-		    if (wayid == wayid2 &&
-		        edge.length() == directededge->length()) {
-		      if (sametile) {
-		        // If in same tile the edge info offsets must match
-		        if (edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
-		          match = true;
-		        }
-		      } else {
-		        // Get shape for the edges
-		        auto shape1 = tile->edgeinfo(edge.edgeinfo_offset())->shape();
-		        auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset())->shape();
-		        if (ShapesMatch(shape1, shape2)) {
-		          match = true;
-		        }
-		      }
-		    }
-		  }
-		  if (match) {
-			// Check if multiple edges match - log any duplicates
-			if (opp_index != absurd_index) {
-			  if (startnode.level() == 2) {
-				LOG_INFO("Potential duplicate: wayids " + std::to_string(wayid) +
-				  " and " + std::to_string(wayid2) + " level = " +
-				  std::to_string(startnode.level()) +
-				  " sametile = " + std::to_string(sametile));
-			  }
-			  dupcount++;
-			}
-			opp_index = i;
-		  }
+        if (edge.IsTransitLine() && directededge->IsTransitLine()) {
+          // For a transit edge the line Id must match
+          if (edge.lineid() == directededge->lineid()) {
+            if (opp_index != absurd_index) {
+              LOG_ERROR("Multiple transit edges have the same line Id = " +
+                          std::to_string(edge.lineid()));
+              dupcount++;
+            }
+            opp_index = i;
+          }
+        } else if (!edge.IsTransitLine() && !directededge->IsTransitLine()) {
+          // Non transit lines - length, shortcut flag, and wayids must match
+          bool match = false;
+          uint64_t wayid2 = 0;
+          if ((edge.trans_down() && directededge->trans_up()) ||
+              (edge.trans_up() && directededge->trans_down())) {
+            match = true;
+          } else if (edge.is_shortcut() == directededge->is_shortcut()) {
+            // Match wayids and length. Also need to match edge info offset
+            // or shape (if not in same tile)
+            wayid2 = (directededge->trans_down() || directededge->trans_up()) ?
+                  0 : end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid();
+            if (wayid == wayid2 &&
+                edge.length() == directededge->length()) {
+              if (sametile) {
+                // If in same tile the edge info offsets must match
+                if (edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
+                  match = true;
+                }
+              } else {
+                // Get shape for the edges
+                auto shape1 = tile->edgeinfo(edge.edgeinfo_offset())->shape();
+                auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset())->shape();
+                if (ShapesMatch(shape1, shape2)) {
+                  match = true;
+                }
+              }
+            }
+          }
+          if (match) {
+            // Check if multiple edges match - log any duplicates
+            if (opp_index != absurd_index) {
+              if (startnode.level() == 2) {
+                LOG_INFO("Potential duplicate: wayids " + std::to_string(wayid) +
+                         " and " + std::to_string(wayid2) + " level = " +
+                         std::to_string(startnode.level()) +
+                         " sametile = " + std::to_string(sametile));
+              }
+              dupcount++;
+            }
+            opp_index = i;
+          }
         }
       } else {
         // If not on the local level the length and shortcut flag must match
