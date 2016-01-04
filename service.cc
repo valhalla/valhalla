@@ -142,6 +142,24 @@ void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 
 
 template <typename T>
+void serialize_graphid(const baldr::GraphId& graphid, Writer<T>& writer)
+{
+  writer.StartObject();
+
+  writer.String("id");
+  writer.Uint(graphid.id());
+
+  writer.String("level");
+  writer.Uint(graphid.level());
+
+  writer.String("tileid");
+  writer.Uint(graphid.tileid());
+
+  writer.EndObject();
+}
+
+
+template <typename T>
 void serialize_geometry_matched_points(const std::vector<MatchResult>& results,
                                        Writer<T>& writer)
 {
@@ -230,8 +248,8 @@ void serialize_labels(const State& state,
         writer.String("next_state");
         writer.Uint(next_state->id());
 
-        writer.String("edge_id");
-        writer.Uint(label->edgeid.id());
+        writer.String("edgeid");
+        serialize_graphid(label->edgeid, writer);
 
         writer.String("route_distance");
         writer.Double(state.route_distance(*next_state));
@@ -243,16 +261,16 @@ void serialize_labels(const State& state,
              label++) {
           writer.StartObject();
 
-          writer.String("edge_id");
+          writer.String("edgeid");
           if (label->edgeid.Is_Valid()) {
-            writer.Uint(label->edgeid.id());
+            serialize_graphid(label->edgeid, writer);
           } else {
             writer.Null();
           }
 
-          writer.String("node_id");
+          writer.String("nodeid");
           if (label->nodeid.Is_Valid()) {
-            writer.Uint(label->nodeid.id());
+            serialize_graphid(label->nodeid, writer);
           } else {
             writer.Null();
           }
