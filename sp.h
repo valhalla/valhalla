@@ -521,6 +521,11 @@ find_shortest_path(baldr::GraphReader& reader,
       assert(other_edge);
 
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
+        // Disable shortcut TODO perhaps we should use
+        // other_edge->is_shortcut()? but it failed to guarantee same
+        // level
+        if (nodeid.level() != other_edge->endnode().level()) continue;
+
         if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter)) continue;
 
         // If destinations found along the edge, add segments to each
