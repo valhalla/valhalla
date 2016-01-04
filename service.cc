@@ -22,6 +22,8 @@
 #include "rapidjson/stringbuffer.h"
 #include <rapidjson/error/en.h>
 
+#define VERBOSE
+
 using namespace rapidjson;
 using namespace prime_server;
 using namespace valhalla;
@@ -329,6 +331,14 @@ void serialize_properties(const std::vector<MatchResult>& results,
 {
   writer.StartObject();
 
+  writer.String("matched_points");
+  writer.StartArray();
+  for (const auto& result : results) {
+    serialize_coordinate(result.lnglat(), writer);
+  }
+  writer.EndArray();
+
+#ifdef VERBOSE
   writer.String("distances");
   writer.StartArray();
   for (const auto& result : results) {
@@ -355,6 +365,7 @@ void serialize_properties(const std::vector<MatchResult>& results,
     writer.EndArray();
   }
   writer.EndArray();
+#endif
 
   writer.EndObject();
 }
