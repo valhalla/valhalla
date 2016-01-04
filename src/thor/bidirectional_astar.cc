@@ -466,26 +466,8 @@ void BidirectionalAStar::CheckIfLowerCostPathReverse(const uint32_t idx,
 void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                  PathLocation& origin,
                  const std::shared_ptr<DynamicCost>& costing) {
-
-  if (origin.date_time_ && *origin.date_time_ == "current") {
-
-    const auto& edge = origin.edges().front();
-    // Get the directed edge
-    GraphId edgeid = edge.id;
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
-    const DirectedEdge* directededge = tile->directededge(edgeid);
-
-    // Get the tile at the end node. Skip if tile not found as we won't be
-    // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (endtile == nullptr)
-      return;
-
-    const NodeInfo* nodeinfo = endtile->node(directededge->endnode());
-    origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-  }
-
   // Iterate through edges and add to adjacency list
+  const NodeInfo* nodeinfo = nullptr;
   for (const auto& edge : origin.edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (origin.IsNode() && edge.dist == 1) {
@@ -506,10 +488,10 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
+    nodeinfo = endtile->node(directededge->endnode());
     Cost cost = costing->EdgeCost(directededge,
                    graphreader.GetEdgeDensity(edgeid)) * (1.0f - edge.dist);
-    float dist = astarheuristic_.GetDistance(endtile->node(
-                    directededge->endnode())->latlng());
+    float dist = astarheuristic_.GetDistance(nodeinfo->latlng());
     float sortcost = cost.cost + astarheuristic_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -518,6 +500,13 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost,
             sortcost, dist, directededge->restrictions(),
             directededge->opp_local_idx(), mode_);
+  }
+
+  // Set the origin timezone
+  if (nodeinfo != nullptr && origin.date_time_ &&
+      *origin.date_time_ == "current") {
+    origin.date_time_= DateTime::iso_date_time(
+    		DateTime::get_tz_db().from_index(nodeinfo->timezone()));
   }
 }
 
