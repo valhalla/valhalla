@@ -526,7 +526,7 @@ namespace {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
-        boost::property_tree::ptree overridden = *request_costing;
+        boost::property_tree::ptree overridden = *config_costing;
         for (const auto& r : *request_costing) {
           overridden.put_child(r.first, r.second);
         }
