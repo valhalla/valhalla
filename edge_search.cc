@@ -19,11 +19,15 @@ int main(int argc, char *argv[])
      radius = std::atof(argv[3]);
 
   boost::property_tree::ptree config;
-  boost::property_tree::read_json("conf/valhalla.json", config);
+  boost::property_tree::read_json("mm.json", config);
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir.hierarchy"));
-  auto costing = sif::CreatePedestrianCost(*config.get_child_optional("costing_options.pedestrian"));
+  auto costing = sif::CreatePedestrianCost(config.get_child("costing_options.pedestrian"));
   PointLL location(lon, lat);
   auto tile = reader.GetGraphTile(location);
+  if (!tile) {
+    std::cerr << "Nothing found" << std::endl;
+    return 2;
+  }
   auto bbox = tile->BoundingBox(reader.GetTileHierarchy());
   std::cout << "Bounding box: ";
   std::cout << bbox.minx();
