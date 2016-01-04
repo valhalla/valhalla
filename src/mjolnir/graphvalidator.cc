@@ -33,45 +33,119 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+bool ShapesMatch(const std::vector<PointLL>& shape1,
+		         const std::vector<PointLL>& shape2) {
+  if (shape1.size() != shape2.size()) {
+	return false;
+  }
+
+  if (shape1.front() == shape2.front()) {
+	auto iter1 = shape1.begin();
+	auto iter2 = shape2.begin();
+	for ( ; iter2 != shape2.end(); iter2++, iter1++) {
+	  if (*iter1 != *iter2) {
+	    return false;
+	  }
+	}
+	return true;
+  } else if (shape1.front() == shape2.back()) {
+    int n = shape2.size() - 1;
+    for (auto iter1 = shape1.begin(); iter1 != shape1.end(); iter1++, n--) {
+      if (*iter1 != shape2[n]) {
+        return false;
+      }
+    }
+	return true;
+  } else {
+	LOG_INFO("Neither end of the shape matches");
+    return false;
+  }
+}
+
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
-                              const GraphTile* tile, uint32_t& dupcount_,
-                              std::string& endnodeiso) {
+		uint64_t wayid, const GraphTile* tile, const GraphTile* end_tile,
+		uint32_t& dupcount, std::string& endnodeiso) {
 
   // Get the tile at the end node and get the node info
   GraphId endnode = edge.endnode();
-  const NodeInfo* nodeinfo = tile->node(endnode.id());
+  const NodeInfo* nodeinfo = end_tile->node(endnode.id());
+  bool sametile = (startnode.tileid() == endnode.tileid());
 
   // Set the end node iso.  Used for country crossings.
-  endnodeiso = tile->admin(nodeinfo->admin_index())->country_iso();
+  endnodeiso = end_tile->admin(nodeinfo->admin_index())->country_iso();
 
   // Get the directed edges and return when the end node matches
   // the specified node and length / transit attributes matches
   // Check for duplicates
   constexpr uint32_t absurd_index = 777777;
   uint32_t opp_index = absurd_index;
-  const DirectedEdge* directededge = tile->directededge(
+  const DirectedEdge* directededge = end_tile->directededge(
       nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     if (directededge->endnode() == startnode) {
-      if (edge.IsTransitLine()) {
-        // For a transit edge the line Id must match
-        if (directededge->IsTransitLine() &&
-            edge.lineid() == directededge->lineid()) {
-          if (opp_index != absurd_index) {
-            LOG_ERROR("Multiple transit edges have the same line Id = " +
-                        std::to_string(edge.lineid()));
-            dupcount_++;
-          }
-          opp_index = i;
+      // If on the local level the logic for matching needs to include
+      // transit edges and wayid matching
+      if (startnode.level() == 2) {
+    	if (edge.IsTransitLine() && directededge->IsTransitLine()) {
+    	  // For a transit edge the line Id must match
+    	  if (edge.lineid() == directededge->lineid()) {
+    	    if (opp_index != absurd_index) {
+			  LOG_ERROR("Multiple transit edges have the same line Id = " +
+						  std::to_string(edge.lineid()));
+			  dupcount++;
+			}
+			opp_index = i;
+		  }
+    	} else if (!edge.IsTransitLine() && !directededge->IsTransitLine()) {
+		  // Non transit lines - length, shortcut flag, and wayids must match
+		  bool match = false;
+		  uint64_t wayid2 = 0;
+		  if ((edge.trans_down() && directededge->trans_up()) ||
+		      (edge.trans_up() && directededge->trans_down())) {
+		    match = true;
+		  } else if (edge.is_shortcut() == directededge->is_shortcut()) {
+		    // Match wayids and length. Also need to match edge info offset
+		    // or shape (if not in same tile)
+		    wayid2 = (directededge->trans_down() || directededge->trans_up()) ?
+		      0 : end_tile->edgeinfo(directededge->edgeinfo_offset())->wayid();
+		    if (wayid == wayid2 &&
+		        edge.length() == directededge->length()) {
+		      if (sametile) {
+		        // If in same tile the edge info offsets must match
+		        if (edge.edgeinfo_offset() == directededge->edgeinfo_offset()) {
+		          match = true;
+		        }
+		      } else {
+		        // Get shape for the edges
+		        auto shape1 = tile->edgeinfo(edge.edgeinfo_offset())->shape();
+		        auto shape2 = end_tile->edgeinfo(directededge->edgeinfo_offset())->shape();
+		        if (ShapesMatch(shape1, shape2)) {
+		          match = true;
+		        }
+		      }
+		    }
+		  }
+		  if (match) {
+			// Check if multiple edges match - log any duplicates
+			if (opp_index != absurd_index) {
+			  if (startnode.level() == 2) {
+				LOG_INFO("Potential duplicate: wayids " + std::to_string(wayid) +
+				  " and " + std::to_string(wayid2) + " level = " +
+				  std::to_string(startnode.level()) +
+				  " sametile = " + std::to_string(sametile));
+			  }
+			  dupcount++;
+			}
+			opp_index = i;
+		  }
         }
       } else {
-        // Non transit lines - length and shortcut flag must match
-        if (!directededge->IsTransitLine() &&
-             edge.is_shortcut() == directededge->is_shortcut() &&
-             edge.length() == directededge->length()) {
+        // If not on the local level the length and shortcut flag must match
+        if (edge.is_shortcut() == directededge->is_shortcut() &&
+            edge.length() == directededge->length()) {
           if (opp_index != absurd_index) {
-            dupcount_++;
+            dupcount++;
           }
           opp_index = i;
         }
@@ -98,7 +172,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode, DirectedEdge& edge,
           % startnode % edge.endnode() % sc).str());
 
       uint32_t n = 0;
-      directededge = tile->directededge(nodeinfo->edge_index());
+      directededge = end_tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
         if (sc == directededge->is_shortcut() && directededge->is_shortcut()) {
           LOG_WARN((boost::format("    Length = %1% Endnode: %2%")
@@ -234,8 +308,10 @@ void validate(const boost::property_tree::ptree& pt,
           // Set the opposing edge index and get the country ISO at the
           // end node)
           std::string end_node_iso;
+          uint64_t wayid = (directededge.trans_down() || directededge.trans_up()) ?
+                 0 : tile->edgeinfo(directededge.edgeinfo_offset())->wayid();
           directededge.set_opp_index(GetOpposingEdgeIndex(node, directededge,
-                         endnode_tile, dupcount, end_node_iso));
+                         wayid, tile, endnode_tile, dupcount, end_node_iso));
 
           // Mark a country crossing if country ISO codes do not match
           if (!begin_node_iso.empty() && !end_node_iso.empty() &&
@@ -314,6 +390,7 @@ namespace valhalla {
 namespace mjolnir {
 
   void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+	auto t0 = std::chrono::high_resolution_clock::now();
 
     // Graphreader
     TileHierarchy hierarchy(pt.get_child("mjolnir.hierarchy"));
@@ -387,6 +464,11 @@ namespace mjolnir {
                " max = " + std::to_string(max_density));
     }
     stats.build_db(pt);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    uint32_t msecs = std::chrono::duration_cast<std::chrono::seconds>(
+				  t1 - t0).count();
+    LOG_INFO("GraphValidator took " + std::to_string(msecs) + " sec");
   }
 }
 }
