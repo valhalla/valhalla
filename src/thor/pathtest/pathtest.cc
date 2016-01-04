@@ -74,8 +74,8 @@ namespace {
 /**
  * Test a single path from origin to destination.
  */
-TripPath PathTest(GraphReader& reader, const PathLocation& origin,
-                  const PathLocation& dest, PathAlgorithm* pathalgorithm,
+TripPath PathTest(GraphReader& reader, PathLocation& origin,
+                  PathLocation& dest, PathAlgorithm* pathalgorithm,
                   const std::shared_ptr<DynamicCost>* mode_costing,
                   const TravelMode mode, PathStatistics& data,
                   bool multi_run, uint32_t iterations) {
@@ -436,8 +436,7 @@ int main(int argc, char *argv[]) {
     multi_run = true;
   }
 
-  // Directions options
-  // TODO - read options?
+  // Directions options - set defaults
   DirectionsOptions directions_options;
   directions_options.set_units(
       DirectionsOptions::Units::DirectionsOptions_Units_kMiles);
@@ -462,7 +461,10 @@ int main(int argc, char *argv[]) {
     }
     locations.push_back(Location::FromCsv(origin));
     locations.push_back(Location::FromCsv(destination));
-  } else {
+  }
+  ////////////////////////////////////////////////////////////////////////////
+  // Process json input
+  else {
     std::stringstream stream;
     stream << json;
     boost::property_tree::read_json(stream, json_ptree);
@@ -492,6 +494,21 @@ int main(int argc, char *argv[]) {
       directions_options = valhalla::odin::GetDirectionsOptions(
           *directions_options_ptree_ptr);
     }
+
+    // Grab the date_time, if is exists
+    auto date_time_ptr = json_ptree.get_child_optional("date_time");
+    if (date_time_ptr) {
+      auto date_time_type = (*date_time_ptr).get<int>("type");
+      auto date_time_value = (*date_time_ptr).get_optional<std::string>("value");
+
+      if (date_time_type == 0) // current
+        locations.front().date_time_ = "current";
+      else if (date_time_type == 1) // depart at
+        locations.front().date_time_ = date_time_value;
+      else if (date_time_type == 2) // arrive by
+        locations.back().date_time_ = date_time_value;
+    }
+
   }
 
   // TODO: remove after input files are transformed
@@ -632,7 +649,7 @@ int main(int argc, char *argv[]) {
     } else if (routetype == "pedestrian" || routetype == "bicycle") {
       pathalgorithm = (km > 10.0f) ? &bd : &astar;
     } else {
-      pathalgorithm = &astar;
+      pathalgorithm = &astar; //  (km > 10.0f) ? &bd : &astar;
     }
 
     // Get the best path

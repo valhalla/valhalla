@@ -59,8 +59,8 @@ class PathAlgorithm {
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<PathInfo> GetBestPath(const baldr::PathLocation& origin,
-          const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  virtual std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
+          baldr::PathLocation& dest, baldr::GraphReader& graphreader,
           const std::shared_ptr<sif::DynamicCost>* mode_costing,
           const sif::TravelMode mode);
 
@@ -75,6 +75,9 @@ class PathAlgorithm {
 
   // Current travel mode
   sif::TravelMode mode_;
+
+  // Tile creation date
+  uint32_t tile_creation_date_;
 
   // Current walking distance. TODO - make this distance or mode distance?
   uint32_t walking_distance_;
@@ -160,7 +163,7 @@ class PathAlgorithm {
    * @param  costing      Dynamic costing.
    */
   void SetOrigin(baldr::GraphReader& graphreader,
-                 const baldr::PathLocation& origin,
+                 baldr::PathLocation& origin,
                  const baldr::PathLocation& dest,
                  const std::shared_ptr<sif::DynamicCost>& costing);
 
@@ -225,8 +228,8 @@ class MultiModalPathAlgorithm : public PathAlgorithm {
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<PathInfo> GetBestPath(const baldr::PathLocation& origin,
-           const baldr::PathLocation& dest, baldr::GraphReader& graphreader,
+  std::vector<PathInfo> GetBestPath(baldr::PathLocation& origin,
+           baldr::PathLocation& dest, baldr::GraphReader& graphreader,
            const std::shared_ptr<sif::DynamicCost>* mode_costing,
            const sif::TravelMode mode);
 

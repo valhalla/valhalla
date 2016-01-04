@@ -1,1 +1,3 @@
 -j '{"locations":[{"lat":48.927010865329,"lon":-113.74776363372803,"type":"break"},{"lat":48.907156769554426,"lon":-113.92101287841797,"type":"break"}],"costing":"pedestrian"}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":37.741725,"lon":-122.422686,"type":"break"},{"lat":37.743766,"lon":-122.425508,"type":"break"}],"costing":"pedestrian"}' --config ../conf/valhalla.json
+-j '{"locations":[{"lat":37.743766,"lon":-122.425508,"type":"break"},{"lat":37.741725,"lon":-122.422686,"type":"break"}],"costing":"pedestrian"}' --config ../conf/valhalla.json

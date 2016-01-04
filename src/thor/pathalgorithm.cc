@@ -99,8 +99,8 @@ void PathAlgorithm::ModifyHierarchyLimits(const float dist,
 }
 
 // Calculate best path. This method is single mode, not time-dependent.
-std::vector<PathInfo> PathAlgorithm::GetBestPath(const PathLocation& origin,
-             const PathLocation& destination, GraphReader& graphreader,
+std::vector<PathInfo> PathAlgorithm::GetBestPath(PathLocation& origin,
+             PathLocation& destination, GraphReader& graphreader,
              const std::shared_ptr<DynamicCost>* mode_costing,
              const TravelMode mode) {
   // Set the mode and costing
@@ -325,9 +325,28 @@ void PathAlgorithm::HandleTransitionEdge(const uint32_t level,
 
 // Add an edge at the origin to the adjacency list
 void PathAlgorithm::SetOrigin(GraphReader& graphreader,
-                 const PathLocation& origin,
+                 PathLocation& origin,
                  const PathLocation& destination,
                  const std::shared_ptr<DynamicCost>& costing) {
+
+  if (origin.date_time_ && *origin.date_time_ == "current") {
+
+    const auto& edge = origin.edges().front();
+    // Get the directed edge
+    GraphId edgeid = edge.id;
+    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Get the tile at the end node. Skip if tile not found as we won't be
+    // able to expand from this origin edge.
+    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr)
+      return;
+
+    const NodeInfo* nodeinfo = endtile->node(directededge->endnode());
+    origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
+  }
+
   // Iterate through edges and add to adjacency list
   for (const auto& edge : (origin.edges())) {
     // If origin is at a node - skip any inbound edge (dist = 1)
@@ -339,6 +358,9 @@ void PathAlgorithm::SetOrigin(GraphReader& graphreader,
     GraphId edgeid = edge.id;
     const GraphTile* tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
+
+    // Set the tile creation date
+    tile_creation_date_ = tile->header()->date_created();
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
