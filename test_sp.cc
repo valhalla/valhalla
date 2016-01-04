@@ -163,18 +163,20 @@ void Benchmark()
 void TestRoutePathIterator()
 {
   LabelSet labelset(100);
+  // Travel mode is insignificant in the tests
+  sif::TravelMode travelmode = static_cast<sif::TravelMode>(0);
+
   // Construct two poor trees:
   //  0         1
   //         3     4
   //        5
-  sif::TravelMode mode = static_cast<sif::TravelMode>(0);
-  labelset.put(0, mode);
-  labelset.put(1, mode);
-  labelset.put(2, mode);
-  labelset.put(3, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, mode);
-  labelset.put(4, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, mode);
-  labelset.put(5, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, mode);
-  labelset.put(6, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, mode);
+  labelset.put(0, travelmode, nullptr);
+  labelset.put(1, travelmode, nullptr);
+  labelset.put(2, travelmode, nullptr);
+  labelset.put(3, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, travelmode, nullptr);
+  labelset.put(4, baldr::GraphId(), 0.f, 1.f, 0.f, 1, nullptr, travelmode, nullptr);
+  labelset.put(5, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
+  labelset.put(6, baldr::GraphId(), 0.f, 1.f, 0.f, 3, nullptr, travelmode, nullptr);
 
   RoutePathIterator the_end(&labelset, kInvalidLabelIndex),
       it0(&labelset, 0),
