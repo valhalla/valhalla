@@ -62,7 +62,8 @@ class State
   void route(const std::vector<const State*>& states,
              GraphReader& graphreader,
              float max_route_distance,
-             const std::shared_ptr<sif::DynamicCost> costing = nullptr) const
+             sif::cost_ptr_t costing,
+             std::shared_ptr<const sif::EdgeLabel> edgelabel) const
   {
     // TODO disable routing to interpolated states
 
@@ -77,7 +78,7 @@ class State
     // Route
     labelset_ = std::make_shared<LabelSet>(std::ceil(max_route_distance));
     // TODO pass labelset_ as shared_ptr
-    const auto& results = find_shortest_path(graphreader, locations, 0, *labelset_);
+    const auto& results = find_shortest_path(graphreader, locations, 0, *labelset_, costing, edgelabel);
 
     // Cache results
     label_idx_.clear();
@@ -98,6 +99,16 @@ class State
       return labelset_->label(it->second).cost;
     }
     return -1.f;
+  }
+
+  std::shared_ptr<const sif::EdgeLabel>
+  route_end_label(const State& state) const
+  {
+    const auto it = label_idx_.find(state.id());
+    if (it != label_idx_.end()) {
+      return labelset_->label(it->second).edgelabel;
+    }
+    return nullptr;
   }
 
   RoutePathIterator RouteBegin(const State& state) const
@@ -160,7 +171,7 @@ class MapMatching: public ViterbiSearch<State>
   MapMatching(float sigma_z,
               float beta,
               baldr::GraphReader& graphreader,
-              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
               float breakage_distance = kBreakageDistance,
               float max_route_distance_factor = kMaxRouteDistanceFactor)
@@ -186,7 +197,7 @@ class MapMatching: public ViterbiSearch<State>
   }
 
   MapMatching(baldr::GraphReader& graphreader,
-              const std::shared_ptr<sif::DynamicCost>* mode_costing,
+              sif::cost_ptr_t* mode_costing,
               const sif::TravelMode mode,
               const boost::property_tree::ptree& pt)
       : MapMatching(pt.get<float>("sigma_z"),
@@ -195,7 +206,7 @@ class MapMatching: public ViterbiSearch<State>
                     pt.get<float>("breakage_distance"),
                     pt.get<float>("max_route_distance_factor")) {}
 
-  ~MapMatching()
+  virtual ~MapMatching()
   { Clear(); }
 
   void Clear()
@@ -231,7 +242,7 @@ class MapMatching: public ViterbiSearch<State>
   states(Time time) const
   { return states_[time]; }
 
-  const std::shared_ptr<sif::DynamicCost> costing() const
+  sif::cost_ptr_t costing() const
   { return mode_costing_[static_cast<size_t>(mode_)]; }
 
   baldr::GraphReader& graphreader() const
@@ -253,7 +264,7 @@ class MapMatching: public ViterbiSearch<State>
   float inv_beta_;  // equals to 1.f / beta_
   std::vector<Measurement> measurements_;
   baldr::GraphReader& graphreader_;
-  const std::shared_ptr<DynamicCost>* mode_costing_;
+  sif::cost_ptr_t* mode_costing_;
   const TravelMode mode_;
   std::vector<std::vector<const State*>> states_;
 
@@ -270,7 +281,16 @@ class MapMatching: public ViterbiSearch<State>
   float TransitionCost(const State& left, const State& right) const override
   {
     if (!left.routed()) {
-      left.route(unreached_states_[right.time()], graphreader_, MaxRouteDistance(left, right));
+      std::shared_ptr<const sif::EdgeLabel> edgelabel;
+      auto prev_stateid = predecessor(left.id());
+      if (prev_stateid != kInvalidStateId) {
+        const auto& prev_state = state(prev_stateid);
+        assert(prev_state.routed());
+        edgelabel = prev_state.route_end_label(left);
+      } else {
+        edgelabel = nullptr;
+      }
+      left.route(unreached_states_[right.time()], graphreader_, MaxRouteDistance(left, right), costing(), edgelabel);
     }
     assert(left.routed());
 
@@ -280,6 +300,7 @@ class MapMatching: public ViterbiSearch<State>
       return std::abs(route_distance - mmt_distance) * inv_beta_;
     }
 
+    assert(IsInvalidCost(-1.f));
     return -1.f;
   }
 

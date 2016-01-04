@@ -134,33 +134,37 @@ struct Label
   Label(const baldr::GraphId& the_nodeid, const baldr::GraphId& the_edgeid,
         float the_source, float the_target, float the_cost,
         uint32_t the_predecessor,
-        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode)
+        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode,
+        std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : Label(the_nodeid, kInvalidDestination,
               the_edgeid,
               the_source, the_target, the_cost,
               the_predecessor,
-              the_edge, the_travelmode) {}
+              the_edge, the_travelmode, the_edgelabel) {}
 
   Label(uint16_t the_dest, const baldr::GraphId& the_edgeid,
         float the_source, float the_target, float the_cost,
         uint32_t the_predecessor,
-        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode)
+        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode,
+        std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : Label(baldr::GraphId(), the_dest,
               the_edgeid,
               the_source, the_target, the_cost,
               the_predecessor,
-              the_edge, the_travelmode) {}
+              the_edge, the_travelmode,
+              the_edgelabel) {}
 
   Label(const baldr::GraphId& the_nodeid, uint16_t the_dest,
         const baldr::GraphId& the_edgeid,
         float the_source, float the_target, float the_cost,
         uint32_t the_predecessor,
-        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode)
+        const baldr::DirectedEdge* the_edge, sif::TravelMode the_travelmode,
+        std::shared_ptr<const sif::EdgeLabel> the_edgelabel)
       : nodeid(the_nodeid), dest(the_dest),
         edgeid(the_edgeid),
         source(the_source), target(the_target), cost(the_cost),
         predecessor(the_predecessor),
-        edgelabel(nullptr)
+        edgelabel(the_edgelabel)
   {
     if (!(0.f <= source && source <= target && target <= 1.f)) {
       throw std::runtime_error("invalid source ("
@@ -169,19 +173,20 @@ struct Label
                                + std::to_string(target) + ")");
     }
 
-    if (the_edge) {
-      edgelabel = std::make_shared<sif::EdgeLabel>(the_predecessor,
-                                                   the_edgeid,
-                                                   the_edge,
-                                                   sif::Cost(the_cost, the_cost), // Cost
-                                                   the_cost, // Sortcost
-                                                   the_cost, // Distance
-                                                   the_edge->restrictions(),
-                                                   the_edge->opp_local_idx(),
-                                                   the_travelmode);
+    if (!edgelabel && the_edge) {
+      edgelabel = std::make_shared<const sif::EdgeLabel>(the_predecessor,
+                                                         the_edgeid,
+                                                         the_edge,
+                                                         sif::Cost(the_cost, the_cost), // Cost
+                                                         the_cost, // Sortcost
+                                                         the_cost, // Distance
+                                                         the_edge->restrictions(),
+                                                         the_edge->opp_local_idx(),
+                                                         the_travelmode);
     }
   }
 
+  // assert: nodeid.Is_Valid() XOR dest != kInvalidDestination
   baldr::GraphId nodeid;
   uint16_t dest;
 
@@ -197,7 +202,7 @@ struct Label
   uint32_t predecessor;
 
   // An EdgeLabel is needed here for passing to sif's filters later
-  std::shared_ptr<sif::EdgeLabel> edgelabel;
+  std::shared_ptr<const sif::EdgeLabel> edgelabel;
 };
 
 
@@ -215,14 +220,16 @@ class LabelSet
            float size = 1.f)
       : queue_(count, size) {}
 
-  bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode)
-  { return put(nodeid, baldr::GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex, nullptr, travelmode); }
+  bool put(const baldr::GraphId& nodeid, sif::TravelMode travelmode,
+           std::shared_ptr<const sif::EdgeLabel> edgelabel)
+  { return put(nodeid, baldr::GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex, nullptr, travelmode, edgelabel); }
 
   bool put(const baldr::GraphId& nodeid,
            const baldr::GraphId& edgeid,
            float source, float target, float cost,
            uint32_t predecessor,
-           const baldr::DirectedEdge* edge, sif::TravelMode travelmode)
+           const baldr::DirectedEdge* edge, sif::TravelMode travelmode,
+           std::shared_ptr<const sif::EdgeLabel> edgelabel)
   {
     if (!nodeid.Is_Valid()) {
       throw std::runtime_error("invalid nodeid");
@@ -232,14 +239,15 @@ class LabelSet
       uint32_t idx = labels_.size();
       bool inserted = queue_.add(idx, cost);
       if (inserted) {
-        labels_.emplace_back(nodeid, edgeid, source, target, cost, predecessor, edge, travelmode);
+        labels_.emplace_back(nodeid, edgeid, source, target, cost, predecessor, edge, travelmode, edgelabel);
         node_status_[nodeid] = {idx, false};
         return true;
       }
     } else {
       const auto& status = it->second;
       if (!status.permanent && cost < labels_[status.label_idx].cost) {
-        labels_[status.label_idx] = {nodeid, edgeid, source, target, cost, predecessor, edge, travelmode};
+        // TODO check if it goes through constructor
+        labels_[status.label_idx] = {nodeid, edgeid, source, target, cost, predecessor, edge, travelmode, edgelabel};
         bool updated = queue_.add(status.label_idx, cost);
         assert(updated);
         return true;
@@ -249,14 +257,16 @@ class LabelSet
     return false;
   }
 
-  bool put(uint16_t dest, sif::TravelMode travelmode)
-  { return put(dest, baldr::GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex, nullptr, travelmode); }
+  bool put(uint16_t dest, sif::TravelMode travelmode,
+           std::shared_ptr<const sif::EdgeLabel> edgelabel)
+  { return put(dest, baldr::GraphId(), 0.f, 0.f, 0.f, kInvalidLabelIndex, nullptr, travelmode, edgelabel); }
 
   bool put(uint16_t dest,
            const baldr::GraphId& edgeid,
            float source, float target, float cost,
            uint32_t predecessor,
-           const baldr::DirectedEdge* edge, sif::TravelMode travelmode)
+           const baldr::DirectedEdge* edge, sif::TravelMode travelmode,
+           std::shared_ptr<const sif::EdgeLabel> edgelabel)
   {
     if (dest == kInvalidDestination) {
       throw std::runtime_error("invalid destination");
@@ -267,14 +277,15 @@ class LabelSet
       uint32_t idx = labels_.size();
       bool inserted = queue_.add(idx, cost);
       if (inserted) {
-        labels_.emplace_back(dest, edgeid, source, target, cost, predecessor, edge, travelmode);
+        labels_.emplace_back(dest, edgeid, source, target, cost, predecessor, edge, travelmode, edgelabel);
         dest_status_[dest] = {idx, false};
         return true;
       }
     } else {
       const auto& status = it->second;
       if (!status.permanent && cost < labels_[status.label_idx].cost) {
-        labels_[status.label_idx] = {dest, edgeid, source, target, cost, predecessor, edge, travelmode};
+        // TODO check if it goes through constructor
+        labels_[status.label_idx] = {dest, edgeid, source, target, cost, predecessor, edge, travelmode, edgelabel};
         bool updated = queue_.add(status.label_idx, cost);
         assert(updated);
         return true;
@@ -328,12 +339,41 @@ class LabelSet
 };
 
 
+inline bool
+IsEdgeAllowed(const baldr::DirectedEdge* edge,
+              const baldr::GraphId& edgeid,
+              sif::cost_ptr_t costing,
+              std::shared_ptr<const sif::EdgeLabel> pred_edgelabel,
+              sif::EdgeFilter edgefilter)
+{
+  if (costing) {
+    if (pred_edgelabel) {
+      // Still on the same edge and the predecessor's show-up here
+      // means it was allowed so we give it a pass directly
+
+      // TODO let sif do this?
+      return edgeid == pred_edgelabel->edgeid()
+          || costing->Allowed(edge, *pred_edgelabel);
+    } else {
+      if (edgefilter) {
+        return !edgefilter(edge);
+      } else {
+        return true;
+      }
+    }
+  } else {
+    return true;
+  }
+}
+
+
 void set_origin(baldr::GraphReader& reader,
                 const std::vector<baldr::PathLocation>& destinations,
                 uint16_t origin_idx,
                 LabelSet& labelset,
                 const sif::TravelMode travelmode,
-                const std::shared_ptr<sif::DynamicCost> costing)
+                sif::cost_ptr_t costing,
+                std::shared_ptr<const sif::EdgeLabel> edgelabel)
 {
   for (const auto& edge : destinations[origin_idx].edges()) {
     assert(edge.id.Is_Valid());
@@ -345,39 +385,38 @@ void set_origin(baldr::GraphReader& reader,
       if (!opp_edge) continue;
       assert(tile);
 
+#if 1  // TODO perhaps we shouldn't check start node
       if (opp_edge->leaves_tile()) {
         tile = reader.GetGraphTile(opp_edge->endnode());
         if (!tile) continue;
       }
-
       const auto nodeinfo = tile->node(opp_edge->endnode());
       assert(nodeinfo);
-
       if (costing && !costing->Allowed(nodeinfo)) continue;
+#endif
 
-      labelset.put(opp_edge->endnode(), travelmode);
+      labelset.put(opp_edge->endnode(), travelmode, edgelabel);
     } else if (edge.dist == 1.f) {
       auto tile = reader.GetGraphTile(edge.id);
       if (!tile) continue;
-
       const auto directededge = tile->directededge(edge.id);
       assert(directededge);
 
+#if 1  // TODO perhaps we shouldn't check start node
       if (directededge->leaves_tile()) {
         tile = reader.GetGraphTile(directededge->endnode());
         if (!tile) continue;
       }
-
       const auto nodeinfo = tile->node(directededge->endnode());
       assert(nodeinfo);
-
       if (costing && !costing->Allowed(nodeinfo)) continue;
+#endif
 
-      labelset.put(directededge->endnode(), travelmode);
+      labelset.put(directededge->endnode(), travelmode, edgelabel);
     } else {
       assert(0.f < edge.dist && edge.dist < 1.f);
       // Will decide whether to filter out this edge later
-      labelset.put(origin_idx, travelmode);
+      labelset.put(origin_idx, travelmode, edgelabel);
     }
   }
 }
@@ -416,7 +455,8 @@ find_shortest_path(baldr::GraphReader& reader,
                    const std::vector<baldr::PathLocation>& destinations,
                    uint16_t origin_idx,
                    LabelSet& labelset,
-                   const std::shared_ptr<sif::DynamicCost> costing = nullptr)
+                   sif::cost_ptr_t costing = nullptr,
+                   std::shared_ptr<const sif::EdgeLabel> edgelabel = nullptr)
 {
   // Destinations at nodes
   std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>> node_dests;
@@ -430,9 +470,11 @@ find_shortest_path(baldr::GraphReader& reader,
   const sif::TravelMode travelmode = costing? costing->travelmode() : static_cast<sif::TravelMode>(0);
 
   // Load origin to the queue of the labelset
-  set_origin(reader, destinations, origin_idx, labelset, travelmode, costing);
+  set_origin(reader, destinations, origin_idx, labelset, travelmode, costing, edgelabel);
 
   std::unordered_map<uint16_t, uint32_t> results;
+
+  auto edgefilter = costing? costing->GetFilter() : nullptr;
 
   while (!labelset.empty()) {
     const auto label_idx = labelset.pop();
@@ -444,7 +486,7 @@ find_shortest_path(baldr::GraphReader& reader,
     // So we cache the cost that will be used during expanding
     const auto label_cost = label.cost;
     // and edgelabel pointer for checking edge accessibility later
-    const auto pred = label.edgelabel;
+    const auto pred_edgelabel = label.edgelabel;
 
     if (label.nodeid.Is_Valid()) {
       const auto nodeid = label.nodeid;
@@ -479,9 +521,7 @@ find_shortest_path(baldr::GraphReader& reader,
       assert(other_edge);
 
       for (size_t i = 0; i < nodeinfo->edge_count(); i++, other_edge++, other_edgeid++) {
-        if (costing && pred && !costing->Allowed(other_edge, *pred)) {
-          continue;
-        }
+        if (!IsEdgeAllowed(other_edge, other_edgeid, costing, pred_edgelabel, edgefilter)) continue;
 
         // If destinations found along the edge, add segments to each
         // destination to the queue
@@ -491,14 +531,14 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& edge : destinations[dest].edges()) {
               if (edge.id == other_edgeid) {
                 auto cost = label_cost + other_edge->length() * edge.dist;
-                labelset.put(dest, other_edgeid, 0.f, edge.dist, cost, label_idx, other_edge, travelmode);
+                labelset.put(dest, other_edgeid, 0.f, edge.dist, cost, label_idx, other_edge, travelmode, nullptr);
               }
             }
           }
         }
 
         const float cost = label_cost + other_edge->length();
-        labelset.put(other_edge->endnode(), other_edgeid, 0.f, 1.f, cost, label_idx, other_edge, travelmode);
+        labelset.put(other_edge->endnode(), other_edgeid, 0.f, 1.f, cost, label_idx, other_edge, travelmode, nullptr);
       }
     } else {
       assert(label.dest != kInvalidDestination);
@@ -532,7 +572,7 @@ find_shortest_path(baldr::GraphReader& reader,
           const auto directededge = tile->directededge(origin_edge.id);
           assert(directededge);
 
-          if (costing && pred && !costing->Allowed(directededge, *pred)) continue;
+          if (!IsEdgeAllowed(directededge, origin_edge.id, costing, pred_edgelabel, edgefilter)) continue;
 
           // All destinations on this origin edge
           for (const auto other_dest : edge_dests[origin_edge.id]) {
@@ -540,13 +580,13 @@ find_shortest_path(baldr::GraphReader& reader,
             for (const auto& other_edge : destinations[other_dest].edges()) {
               if (origin_edge.id == other_edge.id && origin_edge.dist <= other_edge.dist) {
                 const float cost = label_cost + directededge->length() * (other_edge.dist - origin_edge.dist);
-                labelset.put(other_dest, origin_edge.id, origin_edge.dist, other_edge.dist, cost, label_idx, directededge, travelmode);
+                labelset.put(other_dest, origin_edge.id, origin_edge.dist, other_edge.dist, cost, label_idx, directededge, travelmode, nullptr);
               }
             }
           }
 
           const float cost = label_cost + directededge->length() * (1.f - origin_edge.dist);
-          labelset.put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f, cost, label_idx, directededge, travelmode);
+          labelset.put(directededge->endnode(), origin_edge.id, origin_edge.dist, 1.f, cost, label_idx, directededge, travelmode, nullptr);
         }
       }
     }
