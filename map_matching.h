@@ -396,8 +396,8 @@ collect_nodes(GraphReader& reader, const Candidate& location)
 
 
 MatchResult
-guess_source_result(const MapMatching::iterator source,
-                    const MapMatching::iterator target,
+guess_source_result(const MapMatching::state_iterator source,
+                    const MapMatching::state_iterator target,
                     const Measurement& source_measurement)
 {
   if (source.IsValid() && target.IsValid()) {
@@ -424,8 +424,8 @@ guess_source_result(const MapMatching::iterator source,
 
 
 MatchResult
-guess_target_result(const MapMatching::iterator source,
-                    const MapMatching::iterator target,
+guess_target_result(const MapMatching::state_iterator source,
+                    const MapMatching::state_iterator target,
                     const Measurement& target_measurement)
 {
   if (source.IsValid() && target.IsValid()) {
@@ -500,8 +500,8 @@ interpolate(GraphReader& reader,
 
 std::unordered_set<GraphId>
 collect_graphset(GraphReader& reader,
-                 const MapMatching::iterator source,
-                 const MapMatching::iterator target)
+                 const MapMatching::state_iterator source,
+                 const MapMatching::state_iterator target)
 {
   std::unordered_set<GraphId> graphset;
   if (source.IsValid() && target.IsValid()) {
@@ -574,7 +574,7 @@ OfflineMatch(MapMatching& mm,
   }
 
   // Search viterbi path
-  std::vector<MapMatching::iterator> iterpath;
+  std::vector<MapMatching::state_iterator> iterpath;
   iterpath.reserve(mm.size());
   for (auto it = mm.SearchPath(time); it != mm.PathEnd(); it++) {
     iterpath.push_back(it);

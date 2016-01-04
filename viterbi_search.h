@@ -56,18 +56,18 @@ class IViterbiSearch;
 
 
 template <typename T>
-class ViterbiPathIterator:
+class StateIterator:
     public std::iterator<std::forward_iterator_tag, T>
 {
  public:
-  ViterbiPathIterator(IViterbiSearch<T>* vs, StateId id, Time time)
+  StateIterator(IViterbiSearch<T>* vs, StateId id, Time time)
       : vs_(vs), id_(id), time_(time) {}
 
-  ViterbiPathIterator(IViterbiSearch<T>* vs): vs_(vs)
+  StateIterator(IViterbiSearch<T>* vs): vs_(vs)
   { set_end(); }
 
   // Postfix increment
-  ViterbiPathIterator operator++(int)
+  StateIterator operator++(int)
   {
     if (!is_end()) {
       auto copy = *this;
@@ -78,7 +78,7 @@ class ViterbiPathIterator:
   }
 
   // Prefix increment
-  ViterbiPathIterator<T> operator++()
+  StateIterator<T> operator++()
   {
     if (!is_end()) {
       goback();
@@ -86,10 +86,10 @@ class ViterbiPathIterator:
     return *this;
   }
 
-  bool operator==(const ViterbiPathIterator<T>& other) const
+  bool operator==(const StateIterator<T>& other) const
   { return id_ == other.id_ && time_ == other.time_ && vs_ == other.vs_; }
 
-  bool operator!=(const ViterbiPathIterator<T>& other) const
+  bool operator!=(const StateIterator<T>& other) const
   { return !(*this == other); }
 
   // Derefrencnce
@@ -149,12 +149,12 @@ class ViterbiPathIterator:
 template <typename T>
 class IViterbiSearch
 {
-  friend class ViterbiPathIterator<T>;
+  friend class StateIterator<T>;
 
  public:
-  using iterator = ViterbiPathIterator<T>;
+  using state_iterator = StateIterator<T>;
 
-  IViterbiSearch(): path_end_(iterator(this)) {};
+  IViterbiSearch(): path_end_(state_iterator(this)) {};
 
   virtual ~IViterbiSearch() {};
 
@@ -165,10 +165,10 @@ class IViterbiSearch
   // Get the state reference given its ID
   virtual const T& state(StateId id) const = 0;
 
-  iterator SearchPath(Time time)
-  { return iterator(this, SearchWinner(time), time); }
+  state_iterator SearchPath(Time time)
+  { return state_iterator(this, SearchWinner(time), time); }
 
-  iterator PathEnd() const
+  state_iterator PathEnd() const
   { return path_end_; }
 
  protected:
@@ -186,7 +186,7 @@ class IViterbiSearch
                            float emission_cost) const = 0;
 
  private:
-  const iterator path_end_;
+  const state_iterator path_end_;
 };
 
 
