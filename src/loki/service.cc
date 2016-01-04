@@ -236,10 +236,13 @@ namespace valhalla {
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
         // TODO: suboptions are probably getting smashed when we do this, preserve them
+        boost::property_tree::ptree overridden = *config_costing;
         for(const auto& r : *request_costing)
-          config_costing->put_child(r.first, r.second);
-      }
-      costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
+          overridden.put_child(r.first, r.second);
+        costing_filter = factory.Create(*costing, overridden)->GetFilter();
+      }// No options to override so use the config options verbatim
+      else
+        costing_filter = factory.Create(*costing, *config_costing)->GetFilter();
     }
 
     void loki_worker_t::cleanup() {
