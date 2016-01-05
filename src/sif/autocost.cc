@@ -262,8 +262,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
-       opp_edge->surface() == Surface::kImpassable ||
-       edge->not_thru()) {
+        opp_edge->surface() == Surface::kImpassable) {
     return false;
   }
   return true;
