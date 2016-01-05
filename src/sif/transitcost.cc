@@ -17,8 +17,8 @@ constexpr float kDefaultBusFactor   = 1.0f;
 constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
-constexpr float kDefaultTransferCost = 60.0f;
-constexpr float kDefaultTransferPenalty = 600.0f;  // 10 minute default
+constexpr float kDefaultTransferCost = 30.0f;
+constexpr float kDefaultTransferPenalty = 300.0f;  // 10 minute default
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
 // 1 (totally comfortable riding on buses).
@@ -314,13 +314,13 @@ Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
 Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   if (transfer == nullptr) {
     // No transfer record exists - use defaults
-    return { transfer_cost_ +  transfer_penalty_, transfer_cost_  };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   }
   switch (transfer->type()) {
   case TransferType::kRecommended:
-    return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   case TransferType::kTimed:
-    return { 15.0f + (transfer_penalty_ * transfer_factor_), 15.0f };
+    return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
   case TransferType::kMinTime:
     return { static_cast<float>(transfer->mintime() + (transfer_penalty_ * transfer_factor_)),
              static_cast<float>(transfer->mintime()) };
@@ -331,7 +331,7 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
 
 // Returns the default transfer cost between 2 transit lines.
 Cost TransitCost::DefaultTransferCost() const {
-  return { (transfer_penalty_ * transfer_factor_), transfer_cost_ };
+  return { transfer_cost_ + (transfer_penalty_ * transfer_factor_), transfer_cost_ };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
