@@ -504,14 +504,6 @@ worker_t::result_t jsonify_error(const std::string& message,
 }
 
 
-inline float local_tile_size(const GraphReader& reader)
-{
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  return tiles.TileSize();
-}
-
-
 boost::property_tree::ptree&
 update_mm_config(boost::property_tree::ptree& config,
                  const http_request_t& request)

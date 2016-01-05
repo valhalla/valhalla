@@ -5,14 +5,6 @@
 #include "map_matching.h"
 
 
-inline float local_tile_size(const GraphReader& reader)
-{
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  return tiles.TileSize();
-}
-
-
 int main(int argc, char *argv[])
 {
   if (argc < 2) {
