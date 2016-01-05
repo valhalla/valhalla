@@ -69,9 +69,18 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
   if (!origin.date_time_)
     return { };
 
+  // Initialize - create adjacency list, edgestatus support, A*, etc.
+  Init(origin.vertex(), destination.vertex(), costing);
+  float mindist = astarheuristic_.GetDistance(origin.vertex());
+
+  // Initialize the origin and destination locations. Initialize the
+  // destination first in case the origin edge includes a destination edge.
+  SetDestination(graphreader, destination, costing);
+  SetOrigin(graphreader, origin, destination, costing);
+
   uint32_t start_time, localtime, date, dow, day = 0;
   bool date_before_tile = false;
-  if (origin.date_time_ && *origin.date_time_ != "current") {
+  if (origin.date_time_) {
     // Set route start time (seconds from midnight), date, and day of week
     start_time = DateTime::seconds_from_midnight(*origin.date_time_);
     localtime = start_time;
@@ -82,15 +91,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     else
       day = date - tile_creation_date_;
   }
-
-  // Initialize - create adjacency list, edgestatus support, A*, etc.
-  Init(origin.vertex(), destination.vertex(), costing);
-  float mindist = astarheuristic_.GetDistance(origin.vertex());
-
-  // Initialize the origin and destination locations. Initialize the
-  // destination first in case the origin edge includes a destination edge.
-  SetDestination(graphreader, destination, costing);
-  SetOrigin(graphreader, origin, destination, costing);
 
   // Find shortest path
   uint32_t blockid, tripid, prior_stop;
@@ -149,19 +149,6 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     const NodeInfo* nodeinfo = tile->node(node);
     if (!costing->Allowed(nodeinfo)) {
       continue;
-    }
-
-    if (pred.origin() && origin.date_time_ && *origin.date_time_ == "current") {
-      origin.date_time_= DateTime::iso_date_time(DateTime::get_tz_db().from_index(nodeinfo->timezone()));
-      // Set route start time (seconds from midnight), date, and day of week
-      start_time = DateTime::seconds_from_midnight(*origin.date_time_);
-      localtime = start_time;
-      date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(*origin.date_time_));
-      dow  = DateTime::day_of_week_mask(*origin.date_time_);
-      if (date < tile_creation_date_)
-        date_before_tile = true;
-      else
-        day = date - tile_creation_date_;
     }
 
     // Set a default transfer at a stop (if not same trip Id and block Id)

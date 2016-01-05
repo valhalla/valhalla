@@ -280,7 +280,7 @@ namespace {
               path_location == --correlated.crend()) {
 
               if (!origin_date_time.empty())
-                destination.date_time_ = origin_date_time;
+                last_break_dest.date_time_ = origin_date_time;
 
               // Form output information based on path edges
               auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
@@ -288,9 +288,6 @@ namespace {
 
               if (origin.date_time_)
                 origin_date_time = *origin.date_time_;
-
-              if (last_break_dest.date_time_)
-                dest_date_time = *last_break_dest.date_time_;
 
               // The protobuf path
               messages.emplace_front(trip_path.SerializeAsString());
@@ -530,10 +527,13 @@ namespace {
         // If the request has any options for this costing type, merge the 2
         // costing options - override any config options that are in the request.
         // and add any request options not in the config.
+        boost::property_tree::ptree overridden = *config_costing;
         for (const auto& r : *request_costing) {
-          config_costing->put_child(r.first, r.second);
+          overridden.put_child(r.first, r.second);
         }
+        return factory.Create(costing, overridden);
       }
+      // No options to override so use the config options verbatim
       return factory.Create(costing, *config_costing);
     }
 
