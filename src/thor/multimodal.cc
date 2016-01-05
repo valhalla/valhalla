@@ -152,8 +152,7 @@ std::vector<PathInfo> MultiModalPathAlgorithm::GetBestPath(
     }
 
     // Set a default transfer at a stop (if not same trip Id and block Id)
-    // TODO - support in transit costing method
-    Cost transfer_cost = { 300.0f, 60.0f };
+    Cost transfer_cost = tc->DefaultTransferCost();
 
     // Get any transfer times and penalties if this is a transit stop (and
     // transit has been taken at some point on the path) and mode is pedestrian
