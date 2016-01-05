@@ -174,6 +174,12 @@ class DynamicCost {
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
+   * Returns the default transfer cost between 2 transit lines.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost DefaultTransferCost() const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the

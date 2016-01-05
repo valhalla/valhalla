@@ -18,11 +18,11 @@ constexpr float kDefaultBusPenalty  = 0.0f;
 constexpr float kDefaultRailFactor  = 1.0f;
 constexpr float kDefaultRailPenalty = 0.0f;
 constexpr float kDefaultTransferCost = 60.0f;
-constexpr float kDefaultTransferPenalty = 600.0f;  // 5 minute default
+constexpr float kDefaultTransferPenalty = 600.0f;  // 10 minute default
 
 // User propensity to use buses. Range of values from 0 (avoid buses) to
 // 1 (totally comfortable riding on buses).
-constexpr float kDefaultUseBusFactor = 0.5f;
+constexpr float kDefaultUseBusFactor = 0.3f;
 
 // User propensity to use rail. Range of values from 0 (avoid rail) to
 // 1 (totally comfortable riding on rail).
@@ -30,7 +30,7 @@ constexpr float kDefaultUseRailFactor = 0.5f;
 
 // User propensity to use/allow transfers. Range of values from 0
 // (avoid transfers) to 1 (totally comfortable with transfers).
-constexpr float kDefaultUseTransfersFactor = 0.5f;
+constexpr float kDefaultUseTransfersFactor = 1.0f;
 
 Cost kImpossibleCost = { 10000000.0f, 10000000.0f };
 }
@@ -134,6 +134,12 @@ class TransitCost : public DynamicCost {
   virtual Cost TransferCost(const baldr::TransitTransfer* transfer) const;
 
   /**
+   * Returns the default transfer cost between 2 transit lines.
+   * @return  Returns the transfer cost and time (seconds).
+   */
+  virtual Cost DefaultTransferCost() const;
+
+  /**
    * Get the cost factor for A* heuristics. This factor is multiplied
    * with the distance to the destination to produce an estimate of the
    * minimum cost to the destination. The A* heuristic must underestimate the
@@ -180,7 +186,7 @@ class TransitCost : public DynamicCost {
   float use_transfers_;
   float transfer_factor_;
 
-  float transfer_cost_;     // Transfer cost when no transfer record exists
+  float transfer_cost_;     // Transfer cost
   float transfer_penalty_;  // Transfer penalty
 };
 
@@ -221,10 +227,7 @@ TransitCost::TransitCost(const boost::property_tree::ptree& pt)
                  1.0f - (use_rail_ - 0.5f) :
                  1.0f + (0.5f - use_rail_) * 5.0f;
 
-  transfer_factor_ = (use_transfers_ >= 0.5f) ?
-                 1.0f - (use_transfers_ - 0.5f) :
-                 1.0f + (0.5f - use_transfers_);
-
+  transfer_factor_ = use_transfers_;
   transfer_cost_ = pt.get<float>("transfer_cost", kDefaultTransferCost);
   transfer_penalty_ = pt.get<float>("transfer_penalty", kDefaultTransferPenalty);
 }
@@ -324,6 +327,11 @@ Cost TransitCost::TransferCost(const TransitTransfer* transfer) const {
   case TransferType::kNotPossible:
     return kImpossibleCost;
   }
+}
+
+// Returns the default transfer cost between 2 transit lines.
+Cost TransitCost::DefaultTransferCost() const {
+  return { (transfer_penalty_ * transfer_factor_), transfer_cost_ };
 }
 
 // Get the cost factor for A* heuristics. This factor is multiplied
