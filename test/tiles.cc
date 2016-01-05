@@ -122,6 +122,7 @@ void TileList() {
 using intersect_t = std::unordered_map<int32_t, std::unordered_set<unsigned short> >;
 void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const intersect_t& expected) {
   auto answer = g.Intersect(l);
+  std::cout << "answer" << std::endl;
   for(auto x : answer) {
     std::cout << std::endl << x.first << ":";
     for(auto y : x.second) {
@@ -150,7 +151,11 @@ void assert_answer(const Tiles<Point2>& g, const std::list<Point2>& l, const int
 void test_intersect_linestring() {
   Tiles<Point2> t(AABB2<Point2>{-5,-5,5,5}, 2.5, 5);
   assert_answer(t, {}, intersect_t{});
+  assert_answer(t, { {-10,-10} }, intersect_t{});
+  assert_answer(t, { {-1,-1} }, intersect_t{{5,{18}}});
   assert_answer(t, { {-4.9,-4.9}, {4.9,-4.9} }, intersect_t{{0,{0,1,2,3,4}},{1,{0,1,2,3,4}},{2,{0,1,2,3,4}},{3,{0,1,2,3,4}}});
+  assert_answer(t, { {-4.9,4.9}, {4.9,4.9} }, intersect_t{{12,{20,21,22,23,24}},{13,{20,21,22,23,24}},{14,{20,21,22,23,24}},{15,{20,21,22,23,24}}});
+
   /*assert_answer(t, { {-9,0}, {9,0} }, intersect_t{10,11,12,13,14});
   assert_answer(t, { {-2,0}, {2,0} }, {10,11,12,13,14});
   assert_answer(t, { {-.9,0}, {-2,0} }, {10});

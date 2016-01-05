@@ -3,39 +3,51 @@
 #include <functional>
 
 namespace {
+
   void bresenham_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, const std::function<void (int32_t, int32_t)>& set_pixel) {
-    int32_t dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
-    int32_t dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
+    int32_t dx =  std::abs(x1-x0), sx = x0 < x1 ? 1 : -1;
+    int32_t dy = -std::abs(y1-y0), sy = y0 < y1 ? 1 : -1;
     int32_t err = dx+dy, e2; /* error value e_xy */
 
     while(true) {
-      set_pixel(x0,y0);
-      if (x0==x1 && y0==y1) break;
+      set_pixel(x0, y0);
+      if (x0 == x1 && y0 == y1) break;
       e2 = 2*err;
       if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
       if (e2 < dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
     }
   }
 
-  void bresenham_elipse(int32_t xm, int32_t ym, int32_t a, int32_t b, const std::function<void (int32_t, int32_t)>& set_pixel) {
-    int32_t dx = 0, dy = b; /* im I. Quadranten von links oben nach rechts unten */
-    int64_t a2 = a*a, b2 = b*b;
-    int64_t err = b2-(2*b-1)*a2, e2; /* Fehler im 1. Schritt */
+  void bresenham_circle(int32_t x0, int32_t y0, int32_t r, const std::function<void (int32_t, int32_t)>& set_pixel) {
+    int32_t f = 1 - r;
+    int32_t ddF_x = 0;
+    int32_t ddF_y = -2 * r;
+    int32_t x = 0;
+    int32_t y = r;
 
-    do {
-      set_pixel(xm+dx, ym+dy); /* I. Quadrant */
-      set_pixel(xm-dx, ym+dy); /* II. Quadrant */
-      set_pixel(xm-dx, ym-dy); /* III. Quadrant */
-      set_pixel(xm+dx, ym-dy); /* IV. Quadrant */
+    set_pixel(x0, y0 + r);
+    set_pixel(x0, y0 - r);
+    set_pixel(x0 + r, y0);
+    set_pixel(x0 - r, y0);
 
-      e2 = 2*err;
-      if (e2 <  (2*dx+1)*b2) { dx++; err += (2*dx+1)*b2; }
-      if (e2 > -(2*dy-1)*a2) { dy--; err -= (2*dy-1)*a2; }
-    } while (dy >= 0);
+    while(x < y) {
+      if(f >= 0) {
+        y--;
+        ddF_y += 2;
+        f += ddF_y;
+      }
+      x++;
+      ddF_x += 2;
+      f += ddF_x + 1;
 
-    while (dx++ < a) {
-      set_pixel(xm+dx, ym);
-      set_pixel(xm-dx, ym);
+      set_pixel(x0 + x, y0 + y);
+      set_pixel(x0 - x, y0 + y);
+      set_pixel(x0 + x, y0 - y);
+      set_pixel(x0 - x, y0 - y);
+      set_pixel(x0 + y, y0 + x);
+      set_pixel(x0 - y, y0 + x);
+      set_pixel(x0 + y, y0 - x);
+      set_pixel(x0 - y, y0 - x);
     }
   }
 
@@ -53,10 +65,8 @@ Tiles<coord_t>::Tiles(const AABB2<coord_t>& bounds, const float tilesize, unsign
   tilebounds_ = bounds;
   tilesize_ = tilesize;
   subdivision_size_ = tilesize_ / nsubdivisions_;
-  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) /
-                                        tilesize_));
-  nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) /
-                                        tilesize_));
+  ncolumns_ = static_cast<int32_t>(ceil((bounds.maxx() - bounds.minx()) / tilesize_));
+  nrows_    = static_cast<int32_t>(ceil((bounds.maxy() - bounds.miny()) / tilesize_));
 }
 
 // Get the tile size. Tiles are square.
@@ -448,7 +458,7 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 
   //TODO: convert center point and radius to subdivision coordinates/units
 
-  //TODO: call bresenham ellipse algorithm then flood fill the ellipse
+  //TODO: call bresenham circle algorithm then flood fill the circle
 
   //give them back
   return intersection;
