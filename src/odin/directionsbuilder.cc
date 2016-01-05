@@ -16,24 +16,6 @@ namespace odin {
 DirectionsBuilder::DirectionsBuilder() {
 }
 
-namespace {
-std::string GetStreetName(std::vector<std::string>& maneuver_names) {
-  std::string street_name;
-  if (maneuver_names.empty()) {
-    street_name = "unnamed road";
-  } else {
-    for (const auto& name : maneuver_names) {
-      if (!street_name.empty()) {
-        street_name += "/";
-      }
-      street_name += name;
-    }
-  }
-  return street_name;
-}
-
-}
-
 // Returns the trip directions based on the specified directions options
 // and trip path. This method calls ManeuversBuilder::Build and
 // NarrativeBuilder::Build to form the maneuver list. This method
