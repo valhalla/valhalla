@@ -390,6 +390,9 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 
   //what to do when we want to mark a subdivision as containing a segment of this linestring
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //cant mark ones that are outside the valid range of tiles
+    if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
+      return;
     //find the tile
     int32_t tile_column = x / nsubdivisions_;
     int32_t tile_row = y / nsubdivisions_;
@@ -397,8 +400,6 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //find the subdivision
     unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
     intersection[tile].insert(subdivision);
-    if(subdivision >= nsubdivisions_ * nsubdivisions_)
-      throw std::logic_error(std::to_string(subdivision));
   };
 
   //for each segment
@@ -445,6 +446,9 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
 
   //what to do when we want to mark a subdivision as containing a segment of this linestring
   const auto set_pixel = [this, &intersection](int32_t x, int32_t y) {
+    //cant mark ones that are outside the valid range of tiles
+    if(x < 0 || y < 0 || x >= nsubdivisions_ * ncolumns_ || y >= nsubdivisions_ * nrows_)
+      return;
     //find the tile
     int32_t tile_column = x / nsubdivisions_;
     int32_t tile_row = y / nsubdivisions_;
@@ -452,8 +456,6 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //find the subdivision
     unsigned short subdivision = (y % nsubdivisions_) * nsubdivisions_ + (x % nsubdivisions_);
     intersection[tile].insert(subdivision);
-    if(subdivision >= nsubdivisions_ * nsubdivisions_)
-      throw std::logic_error(std::to_string(subdivision));
   };
 
   //TODO: convert center point and radius to subdivision coordinates/units
