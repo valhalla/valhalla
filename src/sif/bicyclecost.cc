@@ -425,7 +425,7 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
   // Set the cost (seconds) to enter a ferry (only apply entering since
   // a route must exit a ferry (except artificial test routes ending on
   // a ferry!)
-  ferry_cost_ = kDefaultFerryCost;
+  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
 
   // Modify ferry penalty and edge weighting based on use_ferry factor
   float use_ferry = pt.get<float>("use_ferry", 0.5f);
