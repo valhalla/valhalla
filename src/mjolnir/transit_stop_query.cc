@@ -68,6 +68,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid) {
 
       LOG_INFO("LineID: " + std::to_string(sp.line_id()) +
                " Route: " + std::to_string(sp.route_index()) +
+               " Trip: " + std::to_string(sp.trip_key()) +
                " Dep Time: " + ss.str());
     }
   }
