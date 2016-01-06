@@ -305,7 +305,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // No cost from transit connection
   if (pred.use() == Use::kTransitConnection) {
-    return { 0.0f, 0.0f };
+    return { 20.0f, 0.0f };
   }
 
   // Penalty through gates and border control.
