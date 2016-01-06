@@ -36,7 +36,7 @@ constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse          = 5.0f;
 
 // Default truck attributes
-constexpr float kDefaultTruckWeight   = 36.29f; // Metric Tons (80,000 lbs)
+constexpr float kDefaultTruckWeight   = 21.77f; // Metric Tons (48,000 lbs)
 constexpr float kDefaultTruckAxleLoad = 9.07f;  // Metric Tons (20,000 lbs)
 constexpr float kDefaultTruckHeight   = 4.11f;  // Meters (13 feet 6 inches)
 constexpr float kDefaultTruckWidth    = 2.6f;   // Meters (102.36 inches)
