@@ -303,9 +303,11 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
     return { step_penalty_, 0.0f };
   }
 
-  // No cost from transit connection
+  // Nominal cost from transit connection
+  // TODO - validate if this is needed to prevent going into transit
+  // stops (without boarding a transit line) as a shortcut
   if (pred.use() == Use::kTransitConnection) {
-    return { 0.0f, 0.0f };
+    return { 20.0f, 0.0f };
   }
 
   // Penalty through gates and border control.
