@@ -21,8 +21,13 @@ constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
 constexpr float kDefaultTollBoothCost           = 15.0f;  // Seconds
 constexpr float kDefaultTollBoothPenalty        = 0.0f;   // Seconds
+constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+
+// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// since a ferry is sometimes required to complete a route.
+constexpr float kMaxFerryPenalty = 6.0f * 3600.0f; // 6 hours
 
 // Default turn costs
 constexpr float kTCStraight         = 0.5f;
@@ -42,7 +47,6 @@ constexpr float kLeftSideTurnCosts[]  = { kTCStraight, kTCSlight,
       kTCUnfavorable, kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
       kTCFavorable, kTCSlight };
 }
-
 
 /**
  * Derived class providing dynamic edge costing for "direct" auto routes. This
@@ -184,6 +188,9 @@ class AutoCost : public DynamicCost {
   float gate_penalty_;              // Penalty (seconds) to go through gate
   float tollbooth_cost_;            // Cost (seconds) to go through toll booth
   float tollbooth_penalty_;         // Penalty (seconds) to go through a toll booth
+  float ferry_cost_;                // Cost (seconds) to enter a ferry
+  float ferry_penalty_;             // Penalty (seconds) to enter a ferry
+  float ferry_weight_;              // Weighting to apply to ferry edges
   float alley_penalty_;             // Penalty (seconds) to use a alley
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
@@ -209,12 +216,33 @@ AutoCost::AutoCost(const boost::property_tree::ptree& pt)
   tollbooth_cost_ = pt.get<float>("toll_booth_cost", kDefaultTollBoothCost);
   tollbooth_penalty_ = pt.get<float>("toll_booth_penalty",
                                      kDefaultTollBoothPenalty);
-  alley_penalty_ = pt.get<float>("alley_penalty",
-                                 kDefaultAlleyPenalty);
+  alley_penalty_ = pt.get<float>("alley_penalty", kDefaultAlleyPenalty);
   country_crossing_cost_ = pt.get<float>("country_crossing_cost",
                                            kDefaultCountryCrossingCost);
   country_crossing_penalty_ = pt.get<float>("country_crossing_penalty",
                                            kDefaultCountryCrossingPenalty);
+
+  // Set the cost (seconds) to enter a ferry (only apply entering since
+  // a route must exit a ferry (except artificial test routes ending on
+  // a ferry!)
+  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
+
+  // Modify ferry penalty and edge weighting based on use_ferry factor
+  float use_ferry = pt.get<float>("use_ferry", 0.5f);
+  if (use_ferry < 0.5f) {
+    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
+    float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+
+    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
+    ferry_weight_ = 1.0f + w;
+  } else {
+    // Add a ferry weighting factor to influence cost along ferries to make
+    // them more favorable if desired rather than driving. No ferry penalty.
+    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    ferry_penalty_ = 0.0f;
+    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+  }
 
   // Create speed cost table
   speedfactor_[0] = kSecPerHour;  // TODO - what to make speed=0?
@@ -269,8 +297,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!(opp_edge->forwardaccess() & kAutoAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
        (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
-       opp_edge->surface() == Surface::kImpassable ||
-       edge->not_thru()) {
+        opp_edge->surface() == Surface::kImpassable) {
     return false;
   }
   return true;
@@ -284,8 +311,10 @@ bool AutoCost::Allowed(const baldr::NodeInfo* node) const  {
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const DirectedEdge* edge,
                         const uint32_t density) const {
+  float factor = (edge->use() == Use::kFerry) ?
+        ferry_weight_ : density_factor_[density];
   float sec = (edge->length() * speedfactor_[edge->speed()]);
-  return Cost(sec * density_factor_[density], sec);
+  return Cost(sec * factor, sec);
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
@@ -318,6 +347,10 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   }
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
+  }
+  if (pred.use() != Use::kFerry && edge->use() == Use::kFerry) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
   }
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
@@ -374,6 +407,10 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
+  }
+  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
   }
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
@@ -469,7 +506,8 @@ AutoShorterCost::~AutoShorterCost() {
 // (in seconds) to traverse the edge.
 Cost AutoShorterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                const uint32_t density) const {
-  return Cost(edge->length() * adjspeedfactor_[edge->speed()],
+  float factor = (edge->use() == Use::kFerry) ? ferry_weight_ : 1.0f;
+  return Cost(edge->length() * adjspeedfactor_[edge->speed()] * factor,
               edge->length() * speedfactor_[edge->speed()]);
 }
 

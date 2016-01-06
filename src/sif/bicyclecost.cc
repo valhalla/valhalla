@@ -17,8 +17,13 @@ constexpr float kDefaultDestinationOnlyPenalty  = 300.0f; // Seconds
 constexpr float kDefaultAlleyPenalty            = 30.0f;  // Seconds
 constexpr float kDefaultGateCost                = 30.0f;  // Seconds
 constexpr float kDefaultGatePenalty             = 300.0f; // Seconds
+constexpr float kDefaultFerryCost               = 300.0f; // Seconds
 constexpr float kDefaultCountryCrossingCost     = 600.0f; // Seconds
 constexpr float kDefaultCountryCrossingPenalty  = 0.0f;   // Seconds
+
+// Maximum ferry penalty (when use_ferry == 0). Can't make this too large
+// since a ferry is sometimes required to complete a route.
+constexpr float kMaxFerryPenalty = 8.0f * 3600.0f; // 8 hours
 
 // Default turn costs - modified by the stop impact.
 constexpr float kTCStraight         = 0.15f;
@@ -265,6 +270,9 @@ class BicycleCost : public DynamicCost {
   float gate_cost_;                 // Cost (seconds) to go through gate
   float gate_penalty_;              // Penalty (seconds) to go through gate
   float alley_penalty_;             // Penalty (seconds) to use a alley
+  float ferry_cost_;                // Cost (seconds) to exit a ferry
+  float ferry_penalty_;             // Penalty (seconds) to enter a ferry
+  float ferry_weight_;              // Weighting to apply to ferry edges
   float country_crossing_cost_;     // Cost (seconds) to go through toll booth
   float country_crossing_penalty_;  // Penalty (seconds) to go across a country border
 
@@ -419,6 +427,28 @@ BicycleCost::BicycleCost(const boost::property_tree::ptree& pt)
                  1.0f - (useroads_ - 0.5f) :
                  1.0f + (0.5f - useroads_) * 3.0f;
 
+  // Set the cost (seconds) to enter a ferry (only apply entering since
+  // a route must exit a ferry (except artificial test routes ending on
+  // a ferry!)
+  ferry_cost_ = pt.get<float>("ferry_cost", kDefaultFerryCost);
+
+  // Modify ferry penalty and edge weighting based on use_ferry factor
+  float use_ferry = pt.get<float>("use_ferry", 0.5f);
+  if (use_ferry < 0.5f) {
+    // Penalty goes from max at use_ferry = 0 to 0 at use_ferry = 0.5
+    float w = 1.0f - ((0.5f - use_ferry) * 2.0f);
+    ferry_penalty_ = static_cast<uint32_t>(kMaxFerryPenalty * (1.0f - w));
+
+    // Double the cost at use_ferry == 0, progress to 1.0 at use_ferry = 0.5
+    ferry_weight_ = 1.0f + w;
+  } else {
+    // Add a ferry weighting factor to influence cost along ferries to make
+    // them more favorable if desired rather than driving. No ferry penalty.
+    // Half the cost at use_ferry == 1, progress to 1.0 at use_ferry = 0.5
+    ferry_penalty_ = 0.0f;
+    ferry_weight_  = 1.0f - (use_ferry - 0.5f);
+  }
+
   // Set the speed penalty threshold and factor. With useroads = 1 the
   // threshold is 70 kph (near 50 MPH).
   speed_penalty_threshold_ = kSpeedPenaltyThreshold +
@@ -473,8 +503,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // since the search is heading out of any not_thru regions)
   if (!(opp_edge->forwardaccess() & kBicycleAccess) ||
        (pred.opp_local_idx() == edge->localedgeidx()) ||
-       (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx())) ||
-        edge->not_thru()) {
+       (opp_edge->restrictions() & (1 << opp_pred_edge->localedgeidx()))) {
     return false;
   }
 
@@ -494,6 +523,13 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Stairs/steps - use a high fixed cost so they are generally avoided.
   if (edge->use() == Use::kSteps) {
     return kBicycleStepsCost;
+  }
+
+  // Ferries are a special case - they use the ferry speed (stored on the edge)
+  if (edge->use() == Use::kFerry) {
+    // Compute elapsed time based on speed. Modulate cost with weighting factors.
+    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    return { sec * ferry_weight_, sec };
   }
 
   // Update speed based on surface factor. Lower speed for rougher surfaces
@@ -587,6 +623,10 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   if (pred.use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
   }
+  if ((pred.use() != Use::kFerry && edge->use() == Use::kFerry)) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
+  }
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
   }
@@ -637,6 +677,10 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
   }
   if (pred->use() != Use::kAlley && edge->use() == Use::kAlley) {
     penalty += alley_penalty_;
+  }
+  if (pred->use() != Use::kFerry && edge->use() == Use::kFerry) {
+    seconds += ferry_cost_;
+    penalty += ferry_penalty_;
   }
   if (!node->name_consistency(idx, edge->localedgeidx())) {
     penalty += maneuver_penalty_;
