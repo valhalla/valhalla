@@ -16,7 +16,7 @@ all: commands tests
 
 
 .PHONY: commands
-commands: map_matching edge_search service psqlmatcher attacher stat
+commands: simple_matcher edge_search service psqlmatcher attacher stat
 
 
 .PHONY: tests
@@ -39,7 +39,7 @@ attacher: attacher.cc map_matching.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lsqlite3
 
 
-psqlmatcher: psqlmatcher.cc map_matching
+psqlmatcher: psqlmatcher.cc simple_matcher
 	$(CC) $(FLAGS) $< -o $@ $(LIBS) -lpqxx -lpq -lgeos -lsqlite3
 
 
@@ -51,7 +51,7 @@ edge_search: edge_search.cc edge_search.h candidate.h grid_range_query.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
-map_matching: map_matching.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h costings.h sp.h
+simple_matcher: simple_matcher.cc map_matching.h edge_search.h viterbi_search.h queue.h candidate.h costings.h sp.h
 	$(CC) $(FLAGS) $< -o $@ $(LIBS)
 
 
