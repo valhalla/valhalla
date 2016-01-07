@@ -4,17 +4,32 @@
 
 namespace {
 
-  void bresenham_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, const std::function<void (int32_t, int32_t)>& set_pixel) {
-    int32_t dx =  std::abs(x1-x0), sx = x0 < x1 ? 1 : -1;
-    int32_t dy = -std::abs(y1-y0), sy = y0 < y1 ? 1 : -1;
-    int32_t err = dx+dy, e2; /* error value e_xy */
-
-    while(true) {
+  //this is slightly modified to include ALL pixels that are intersected by the FLOATING POINT line
+  //the original implementation simply uses integers the block commented incrementing below
+  void bresenham_line(float x0, float y0, float x1, float y1, const std::function<void (int32_t, int32_t)>& set_pixel) {
+    //mark this pixel
+    set_pixel(x0, y0);
+    //early termination is likely for our use case
+    if(static_cast<int>(x0) == static_cast<int>(x1) && static_cast<int>(y0) == static_cast<int>(y1))
+      return;
+    //compute the steps in the proper direction
+    float dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    float dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    auto err = dx + dy;
+    //keep going until we make it to the ending pixel
+    while(static_cast<int>(x0) != static_cast<int>(x1) || static_cast<int>(y0) != static_cast<int>(y1)) {
+      auto e2 = err * 2;
+      //what will the error look like if we move in either direction
+      auto ex = dx - e2;
+      auto ey = e2 - dy;
+      //less error moving in the x
+      if(ex < ey) { err += dy;  x0 += sx; }
+      //less error moving in the y
+      else if(ey < ex) { err += dx; y0 += sy; }
+      //equal error for both so move diagonally
+      else { err += dy + dx; x0 += sx; y0 += sy; }
+      //mark this pixel
       set_pixel(x0, y0);
-      if (x0 == x1 && y0 == y1) break;
-      e2 = 2*err;
-      if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
-      if (e2 < dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
     }
   }
 
@@ -403,20 +418,17 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
   };
 
   //for each segment
-  for(auto ui = linestring.cbegin(); ui != linestring.cend(); std::advance(ui, 1)) {
+  auto ui = linestring.cbegin(), vi = linestring.cbegin();
+  while(vi != linestring.cend()) {
     //figure out what the segment is
-    auto vi = std::next(ui);
-    if(vi == linestring.cend())
-      vi = ui;
     auto u = *ui;
-    auto v = *vi;
-
-    //intersect this with the tile bounds to clip off any that is outside
-    //TODO: handle wrap around?
-    if(TileId(u) == -1 || TileId(v) == -1) {
-      if(!tilebounds_.Intersect(u, v))
-        continue;
-    }
+    auto v = u;
+    std::advance(vi, 1);
+    if(vi != linestring.cend())
+      v = *vi;
+    else if(linestring.size() > 1)
+      return intersection;
+    ui = vi;
 
     //TODO: if coord_t is spherical and the segment uv is sufficiently long
     //then the geodesic along it cannot be approximated with linear constructs
@@ -427,10 +439,10 @@ std::unordered_map<int32_t, std::unordered_set<unsigned short> > Tiles<coord_t>:
     //planar grid but that seems harder still
 
     //figure out global subdivision start and end points
-    auto x0 = static_cast<int32_t>((u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
-    auto y0 = static_cast<int32_t>((u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
-    auto x1 = static_cast<int32_t>((v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_);
-    auto y1 = static_cast<int32_t>((v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_);
+    auto x0 = (u.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
+    auto y0 = (u.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
+    auto x1 = (v.first - tilebounds_.minx()) / tilebounds_.Width() * ncolumns_ * nsubdivisions_;
+    auto y1 = (v.second - tilebounds_.miny()) / tilebounds_.Height() * nrows_ * nsubdivisions_;
 
     //pretend the subdivisions are pixels and we are doing line rasterization
     bresenham_line(x0, y0, x1, y1, set_pixel);
