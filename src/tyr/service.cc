@@ -665,7 +665,9 @@ namespace {
           maneuvers->emplace_back(man);
 
         }
-        leg->emplace("maneuvers", maneuvers);
+        if (directions_leg.maneuver_size() > 0) {
+          leg->emplace("maneuvers", maneuvers);
+        }
         summary->emplace("time", static_cast<uint64_t>(directions_leg.summary().time()));
         summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
         leg->emplace("summary",summary);
@@ -741,8 +743,6 @@ namespace {
           legs.emplace_back();
           try {
             legs.back().ParseFromArray(leg->data(), static_cast<int>(leg->size()));
-            if(legs.back().maneuver_size() < 1)
-              throw std::runtime_error("Maneuver-less leg");
           }
           catch(...) {
             worker_t::result_t result{false};
