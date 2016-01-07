@@ -36,12 +36,7 @@ using namespace valhalla;
 
 
 namespace {
-constexpr float kDefaultSigmaZ = 4.07;
-constexpr float kDefaultBeta = 3;
-constexpr float kDefaultSquaredSearchRadius = 25 * 25;  // 25 meters
-
-constexpr int kSqliteMaxCompoundSelect = 5000;
-constexpr size_t kMaxGridCacheSize = 32;
+constexpr int kSqliteMaxCompoundSelect = 10000;
 }
 
 
@@ -146,7 +141,7 @@ std::vector<uint32_t>
 collect_local_tileids(const baldr::TileHierarchy& tile_hierarchy,
                       const std::unordered_set<uint32_t>& excluded_tileids)
 {
-  auto local_level = tile_hierarchy.levels().rbegin()->second.level;
+  const auto local_level = tile_hierarchy.levels().rbegin()->second.level;
   const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
 
   std::vector<uint32_t> queue;
@@ -432,28 +427,11 @@ int main(int argc, char *argv[])
 
   /////////////////////////////////
   // Initialize
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(config_file_path.c_str(), pt);
-  std::shared_ptr<sif::DynamicCost> mode_costing[4] = {
-    nullptr, // CreateAutoCost(*config.get_child_optional("costing_options.auto")),
-    nullptr, // CreateAutoShorterCost(*config.get_child_optional("costing_options.auto_shorter")),
-    nullptr, // CreateBicycleCost(*config.get_child_optional("costing_options.bicycle")),
-    CreateUniversalCost(*pt.get_child_optional("costing_options.pedestrian"))
-  };
-  sif::TravelMode travel_mode = static_cast<sif::TravelMode>(3);
-  baldr::GraphReader reader(pt.get_child("mjolnir.hierarchy"));
-  // TODO read them from config
-  auto sigma_z = kDefaultSigmaZ;
-  auto beta = kDefaultBeta;
-  MapMatching mm(sigma_z, beta, reader, mode_costing, travel_mode);
+  boost::property_tree::ptree config;
+  boost::property_tree::read_json(config_file_path, config);
 
-  const auto& tile_hierarchy = reader.GetTileHierarchy();
-  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
-  auto tile_size = tiles.TileSize();
-  CandidateGridQuery grid(reader, tile_size/1000, tile_size/1000);
-  LOG_INFO("Read config tile size = " + std::to_string(tile_size));
-  LOG_INFO("Read config sigma_z = " + std::to_string(sigma_z));
-  LOG_INFO("Read config beta = " + std::to_string(beta));
+  mm::MapMatcherFactory matcher_factory_(config);
+  auto matcher = matcher_factory_.Create(config.get<std::string>("mode"));
 
   ////////////////////////
   // Prepare sqlite3 database for writing results
@@ -494,6 +472,8 @@ int main(int argc, char *argv[])
       return 2;
     }
   }
+  const auto& tile_hierarchy = matcher_factory_.graphreader().GetTileHierarchy();
+  const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
   auto tileids = collect_local_tileids(tile_hierarchy, accomplished_tileids);
   auto total_tiles = tileids.size() + accomplished_tileids.size();
   if (accomplished_tileids.size() > 0) {
@@ -533,11 +513,11 @@ int main(int argc, char *argv[])
         continue;
       }
 
-      const auto& match_results = OfflineMatch(mm, grid, sequence, kDefaultSquaredSearchRadius);
+      const auto& match_results = matcher->OfflineMatch(sequence);
       assert(match_results.size() == sequence.size());
 
       results.emplace(sid, match_results);
-      routes.emplace(sid, ConstructRoute(match_results.begin(), match_results.end()));
+      routes.emplace(sid, mm::ConstructRoute(match_results.begin(), match_results.end()));
 
       measurement_count += sequence.size();
     }
@@ -560,14 +540,10 @@ int main(int argc, char *argv[])
              + std::to_string(accomplished_tileids.size()) + "/" + std::to_string(total_tiles)
              + " tiles");
 
-    if (reader.OverCommitted()) {
-      reader.Clear();
-    }
-    if (grid.size() > kMaxGridCacheSize) {
-      grid.Clear();
-    }
+    matcher_factory_.ClearCacheIfPossible();
   }
 
+  matcher_factory_.ClearCache();
   PQfinish(conn);
   sqlite3_close(db_handle);
 
