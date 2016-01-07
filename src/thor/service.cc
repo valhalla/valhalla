@@ -151,7 +151,8 @@ namespace {
   class thor_worker_t {
    public:
     thor_worker_t(const boost::property_tree::ptree& config): mode(valhalla::sif::TravelMode::kPedestrian),
-      config(config), reader(config.get_child("mjolnir.hierarchy")) {
+      config(config), reader(config.get_child("mjolnir.hierarchy")),
+      long_request(config.get<float>("thor.logging.long_request")){
       // Register edge/node costing methods
       factory.Register("auto", sif::CreateAutoCost);
       factory.Register("auto_shorter", sif::CreateAutoShorterCost);
@@ -510,7 +511,7 @@ namespace {
       std::stringstream ss;
       //log request if greater then X (ms)
       write_json(ss, request);
-      if ((elapsed_time / correlated.size()) > config.get<float>("thor.logging.long_request")) {
+      if ((elapsed_time / correlated.size()) > long_request) {
         warn_counter++;
         LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("matrix request exceeded threshold::"+ ss.str());
@@ -646,6 +647,7 @@ namespace {
     thor::PathAlgorithm astar;
     thor::BidirectionalAStar bidir_astar;
     thor::MultiModalPathAlgorithm multi_modal_astar;
+    float long_request;
   };
 }
 
