@@ -824,11 +824,6 @@ uint32_t GetStopImpact(uint32_t from, uint32_t to,
     return 0;
   }
 
-  // Shared, Dedicated, and Separated Lanes going to Cycleways.
-  if (edges[from].cyclelane() != CycleLane::kNone && edges[to].use() == Use::kCycleway) {
-    return 0;
-  }
-
   // No stop impact going from a turn channel. Stop impact will
   // be set entering a turn channel
   if (edges[from].use() == Use::kTurnChannel) {
