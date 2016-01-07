@@ -138,7 +138,7 @@ namespace valhalla {
       std::stringstream ss;
       //log request if greater then X (ms)
       write_json(ss, request);
-      if ((elapsed_time / locations.size()) > config.get<float>("loki.logging.long_request")) {
+      if ((elapsed_time / locations.size()) > long_request) {
         warn_counter++;
         LOG_WARN("locate request elapsed time (ms)::"+ std::to_string(elapsed_time));
         LOG_WARN("locate request exceeded threshold::"+ ss.str());

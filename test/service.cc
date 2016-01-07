@@ -99,6 +99,7 @@ namespace {
         {\"name\": \"highway\", \"level\": 0, \"size\": 4, \"importance_cutoff\": \"Trunk\"} \
       ] } }, \
       \"loki\": { \"actions\": [ \"locate\",\"route\",\"one_to_many\",\"many_to_one\",\"many_to_many\"], \
+                  \"logging\": { \"long_request\": 100.0 }, \
                   \"service\": { \"proxy\": \"ipc:///tmp/test_loki_proxy\" } }, \
       \"thor\": { \"service\": { \"proxy\": \"ipc:///tmp/test_thor_proxy\" } }, \
       \"httpd\": { \"service\": { \"loopback\": \"ipc:///tmp/test_loki_results\" } }, \

@@ -37,6 +37,7 @@ namespace valhalla {
       std::string action_str;
       std::unordered_map<std::string, size_t> max_locations;
       std::unordered_map<std::string, float> max_distance;
+      float long_request;
     };
   }
 }
