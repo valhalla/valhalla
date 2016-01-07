@@ -4,6 +4,7 @@
 #include "costings.h"
 #include "map_matching.h"
 
+using namespace mm;
 
 int main(int argc, char *argv[])
 {
@@ -14,19 +15,9 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree config;
   boost::property_tree::read_json(argv[1], config);
-  baldr::GraphReader graphreader(config.get_child("mjolnir.hierarchy"));
 
-  std::shared_ptr<sif::DynamicCost> mode_costing[64];
-  const auto costing = CreateUniversalCost(config.get_child("costing_options.multimodal"));
-  mode_costing[static_cast<size_t>(costing->travelmode())] = costing;
-  auto mm_config = config.get_child("mm");
-
-  MapMatching mm(graphreader, mode_costing, costing->travelmode(), mm_config);
-  const CandidateGridQuery grid(graphreader,
-                                local_tile_size(graphreader)/config.get<size_t>("grid.size"),
-                                local_tile_size(graphreader)/config.get<size_t>("grid.size"));
-  const auto radius = mm_config.get<float>("search_radius");
-  const auto sq_search_radius = radius * radius;
+  MapMatcherFactory matcher_factory(config);
+  auto matcher = matcher_factory.Create(config.get<std::string>("mm.mode"));
 
   std::vector<Measurement> measurements;
   std::string line;
@@ -35,10 +26,12 @@ int main(int argc, char *argv[])
   while (true) {
     std::getline(std::cin, line);
     if (std::cin.eof() || line.empty()) {
-      std::cout << "============================" << std::endl;
-      std::cout << index++ << " id: " << std::endl;
 
-      const auto& results = OfflineMatch(mm, grid, measurements, sq_search_radius);
+      // Offline match
+      std::cout << "Sequence " << index++ << std::endl;
+      const auto& results = matcher->OfflineMatch(measurements);
+
+      // Show results
       size_t mmt_id = 0, count = 0;
       for (const auto& result : results) {
         const auto state = result.state();
@@ -52,10 +45,11 @@ int main(int argc, char *argv[])
       }
 
       // Summary
-      std::cout << count << "/" << measurements.size() << std::endl;
+      std::cout << count << "/" << measurements.size() << std::endl << std::endl;
 
       // Clean up
       measurements.clear();
+      matcher_factory.ClearCacheIfPossible();
 
       if (std::cin.eof()) {
         break;
@@ -64,12 +58,15 @@ int main(int argc, char *argv[])
       }
     }
 
-    // Load coordinates from the input line
+    // Read coordinates from the input line
     float lng, lat;
     std::stringstream stream(line);
     stream >> lng; stream >> lat;
     measurements.emplace_back(PointLL(lng, lat));
   }
+
+  delete matcher;
+  matcher_factory.ClearCache();
 
   return 0;
 }
