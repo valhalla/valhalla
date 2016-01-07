@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <sstream>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
 #include <prime_server/prime_server.hpp>
@@ -184,6 +185,7 @@ namespace {
         auto date_time_type = request.get_optional<int>("date_time.type");
         auto matrix = request.get_optional<std::string>("matrix_type");
         if (matrix) {
+          valhalla::midgard::logging::Log("matrix_type::" + *matrix, "[ANALYTICS]");
           auto matrix_iter = MATRIX.find(*matrix);
           if (matrix_iter != MATRIX.cend()) {
             return get_matrix(matrix_iter->second, costing, request, info);
@@ -193,13 +195,14 @@ namespace {
           }
         }
         return get_trip_path(costing, request_str, date_time_type);
-
       }
+
       catch(const std::exception& e) {
         worker_t::result_t result{false};
         http_response_t response(400, "Bad Request", e.what(), headers_t{CORS});
         response.from_info(info);
         result.messages.emplace_back(response.to_string());
+        LOG_ERROR("400::" + response.to_string());
         return result;
       }
     }
@@ -445,6 +448,7 @@ namespace {
     void GetPath(thor::PathAlgorithm* path_algorithm,
                  baldr::PathLocation& origin, baldr::PathLocation& destination,
                  std::vector<thor::PathInfo>& path_edges) {
+      midgard::logging::Log("#_passes::1", "[ANALYTICS]");
       // Find the path.
       path_edges = path_algorithm->GetBestPath(origin, destination, reader,
                                                mode_costing, mode);
@@ -456,6 +460,7 @@ namespace {
           // 2nd pass
           path_algorithm->Clear();
           cost->RelaxHierarchyLimits(16.0f);
+          midgard::logging::Log("#_passes::2", "[ANALYTICS]");
           path_edges = path_algorithm->GetBestPath(origin, destination,
                                     reader, mode_costing, mode);
 
@@ -463,6 +468,7 @@ namespace {
           if (path_edges.size() == 0) {
             path_algorithm->Clear();
             cost->DisableHighwayTransitions();
+            midgard::logging::Log("#_passes::3", "[ANALYTICS]");
             path_edges = path_algorithm->GetBestPath(origin, destination,
                                      reader, mode_costing, mode);
           }
@@ -494,6 +500,21 @@ namespace {
        case MATRIX_TYPE::MANY_TO_MANY:
          json = serialize_many_to_many(correlated, tdmatrix.ManyToMany(correlated, reader, mode_costing, mode), units, distance_scale);
          break;
+      }
+
+      //get processing time for locate
+      auto time = std::chrono::high_resolution_clock::now();
+      auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count();
+      auto elapsed_time = (msecs - request.get<size_t>("start_time"));
+      auto warn_counter = 0;
+      std::stringstream ss;
+      //log request if greater then X (ms)
+      write_json(ss, request);
+      if ((elapsed_time / correlated.size()) > config.get<float>("thor.logging.long_request")) {
+        warn_counter++;
+        LOG_WARN("matrix request elapsed time (ms)::"+ std::to_string(elapsed_time));
+        LOG_WARN("matrix request exceeded threshold::"+ ss.str());
+        midgard::logging::Log("long_matrix_request_count::" + std::to_string(warn_counter), "[ANALYTICS]");
       }
 
       //jsonp callback if need be
@@ -537,6 +558,8 @@ namespace {
     }
 
     std::string init_request(const boost::property_tree::ptree& request) {
+      auto route_name = request.get_optional<std::string>("route_name");
+
       //we require locations
       auto request_locations = request.get_child_optional("locations");
       if(!request_locations)

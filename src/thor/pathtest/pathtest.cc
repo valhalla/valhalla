@@ -665,9 +665,12 @@ int main(int argc, char *argv[]) {
                         locations[i], locations[i+1], data);
       t2 = std::chrono::high_resolution_clock::now();
       msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-      LOG_INFO("TripDirections took " + std::to_string(msecs) + " ms");
-      LOG_INFO("Trip time in seconds = " + std::to_string(trip_directions.summary().time()));
-      LOG_INFO("Trip Length in meters = " + std::to_string(trip_directions.summary().length() * 1609.344f));
+
+      auto trip_time = trip_directions.summary().time();
+      auto trip_length = trip_directions.summary().length() * 1609.344f;
+      LOG_INFO("trip_processing_time (ms)::" + std::to_string(msecs));
+      LOG_INFO("trip_time (secs)::" + std::to_string(trip_time));
+      LOG_INFO("trip_length (meters)::" + std::to_string(trip_length));
       data.setSuccess("success");
     } else {
       // Route was unsuccessful
