@@ -21,8 +21,8 @@ DirectionsBuilder::DirectionsBuilder() {
 // NarrativeBuilder::Build to form the maneuver list. This method
 // calls PopulateTripDirections to transform the maneuver list into the
 // trip directions.
-TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_options,
-                                        TripPath& trip_path) {
+TripDirections DirectionsBuilder::Build(
+    const DirectionsOptions& directions_options, TripPath& trip_path) {
   // Validate trip path node list
   if (trip_path.node_size() < 1) {
     throw std::runtime_error("Trip path does not have any nodes");
@@ -30,16 +30,20 @@ TripDirections DirectionsBuilder::Build(const DirectionsOptions& directions_opti
 
   EnhancedTripPath* etp = static_cast<EnhancedTripPath*>(&trip_path);
 
-  // Update the heading of ~0 length edges
-  UpdateHeading(etp);
+  // Produce maneuvers and narrative if enabled
+  std::list<Maneuver> maneuvers;
+  if (directions_options.narrative()) {
+    // Update the heading of ~0 length edges
+    UpdateHeading(etp);
 
-  // Create maneuvers
-  ManeuversBuilder maneuversBuilder(directions_options, etp);
-  auto maneuvers = maneuversBuilder.Build();
+    // Create maneuvers
+    ManeuversBuilder maneuversBuilder(directions_options, etp);
+    maneuvers = maneuversBuilder.Build();
 
-  // Create the narrative
-  // TODO - factory
-  NarrativeBuilder::Build(directions_options, etp, maneuvers);
+    // Create the narrative
+    // TODO - factory
+    NarrativeBuilder::Build(directions_options, etp, maneuvers);
+  }
 
   // Return trip directions
   return PopulateTripDirections(directions_options, etp, maneuvers);
@@ -56,16 +60,14 @@ void DirectionsBuilder::UpdateHeading(EnhancedTripPath* etp) {
       // Set the current begin heading
       if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_begin_heading(prev_edge->end_heading());
-      }
-      else if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
+      } else if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_begin_heading(next_edge->begin_heading());
       }
 
       // Set the current end heading
       if (next_edge && (next_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_end_heading(next_edge->begin_heading());
-      }
-      else if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
+      } else if (prev_edge && (prev_edge->length() >= kMinEdgeLength)) {
         curr_edge->set_end_heading(prev_edge->end_heading());
       }
     }
@@ -128,7 +130,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   }
 
   // Populate maneuvers
-  float leg_length = 0.0f;
   for (const auto& maneuver : maneuvers) {
     auto* trip_maneuver = trip_directions.add_maneuver();
     trip_maneuver->set_type(maneuver.type());
@@ -145,7 +146,6 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
     }
 
     trip_maneuver->set_length(maneuver.length(directions_options.units()));
-    leg_length += maneuver.length(directions_options.units());
     trip_maneuver->set_time(maneuver.time());
     trip_maneuver->set_begin_cardinal_direction(
         maneuver.begin_cardinal_direction());
@@ -214,8 +214,7 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
       // Process exit name info
       if (maneuver.HasExitNameSign()) {
-        auto* trip_exit_name_elements = trip_sign
-            ->mutable_exit_name_elements();
+        auto* trip_exit_name_elements = trip_sign->mutable_exit_name_elements();
         for (const auto& exit_name : maneuver.signs().exit_name_list()) {
           auto* trip_exit_name_element = trip_exit_name_elements->Add();
           trip_exit_name_element->set_text(exit_name.text());
@@ -228,7 +227,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
 
     // Roundabout exit count
     if (maneuver.roundabout_exit_count() > 0) {
-      trip_maneuver->set_roundabout_exit_count(maneuver.roundabout_exit_count());
+      trip_maneuver->set_roundabout_exit_count(
+          maneuver.roundabout_exit_count());
     }
 
     // Depart instructions
@@ -271,7 +271,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
         trip_transit_route->set_description(transit_route.description);
       }
       if (!transit_route.operator_onestop_id.empty()) {
-        trip_transit_route->set_operator_onestop_id(transit_route.operator_onestop_id);
+        trip_transit_route->set_operator_onestop_id(
+            transit_route.operator_onestop_id);
       }
       if (!transit_route.operator_name.empty()) {
         trip_transit_route->set_operator_name(transit_route.operator_name);
@@ -291,10 +292,12 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
           trip_transit_stop->set_name(transit_stop.name);
         }
         if (!transit_stop.arrival_date_time.empty()) {
-          trip_transit_stop->set_arrival_date_time(transit_stop.arrival_date_time);
+          trip_transit_stop->set_arrival_date_time(
+              transit_stop.arrival_date_time);
         }
         if (!transit_stop.departure_date_time.empty()) {
-          trip_transit_stop->set_departure_date_time(transit_stop.departure_date_time);
+          trip_transit_stop->set_departure_date_time(
+              transit_stop.departure_date_time);
         }
         if (transit_stop.is_parent_stop) {
           trip_transit_stop->set_is_parent_stop(true);
@@ -308,7 +311,8 @@ TripDirections DirectionsBuilder::PopulateTripDirections(
   }
 
   // Populate summary
-  trip_directions.mutable_summary()->set_length(leg_length);
+  trip_directions.mutable_summary()->set_length(
+      etp->GetLength(directions_options.units()));
   trip_directions.mutable_summary()->set_time(
       etp->node(etp->GetLastNodeIndex()).elapsed_time());
 

@@ -50,6 +50,11 @@ DirectionsOptions GetDirectionsOptions(const boost::property_tree::ptree& pt) {
     directions_options.set_language(*lang_ptr);
   }
 
+  auto narr_ptr = pt.get_optional<bool>("narrative");
+  if (narr_ptr) {
+    directions_options.set_narrative(*narr_ptr);
+  }
+
   return directions_options;
 }
 
