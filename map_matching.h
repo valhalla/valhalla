@@ -1080,7 +1080,7 @@ MapMatcherFactory::init_costings(const ptree& root)
   register_costing("auto", sif::CreateAutoCost, root.get_child("costing_options.auto"));
   register_costing("bicycle", sif::CreateBicycleCost, root.get_child("costing_options.bicycle"));
   register_costing("pedestrian", sif::CreatePedestrianCost, root.get_child("costing_options.pedestrian"));
-  register_costing("multimodal", mm::CreateUniversalCost, root.get_child("costing_options.multimodal"));
+  register_costing("multimodal", CreateUniversalCost, root.get_child("costing_options.multimodal"));
 
   return mode_costing_;
 }

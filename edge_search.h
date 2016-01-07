@@ -21,7 +21,8 @@
 #include "geometry_helpers.h"
 
 
-using namespace mm;
+namespace mm {
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -363,3 +364,5 @@ class CandidateGridQuery: public CandidateQuery
   float cell_height_;
   mutable std::unordered_map<GraphId, GridRangeQuery<GraphId>> grid_cache_;
 };
+
+}

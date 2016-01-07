@@ -29,10 +29,11 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/graphid.h>
 
-using namespace valhalla;
-
 #include "costings.h"
 #include "map_matching.h"
+
+using namespace valhalla;
+using namespace mm;
 
 
 namespace {

@@ -14,19 +14,21 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/costfactory.h>
 
-#include "costings.h"
-#include "map_matching.h"
-
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include "rapidjson/stringbuffer.h"
 #include <rapidjson/error/en.h>
 
-#define VERBOSE
+#include "costings.h"
+#include "map_matching.h"
 
-using namespace rapidjson;
 using namespace prime_server;
 using namespace valhalla;
+using namespace rapidjson;
+using namespace mm;
+
+
+#define VERBOSE
 
 
 class SequenceParseError: public std::runtime_error {
@@ -137,6 +139,7 @@ template <typename T>
 void serialize_coordinate(const midgard::PointLL& coord, Writer<T>& writer)
 {
   writer.StartArray();
+  // TODO lower precision
   writer.Double(coord.lng());
   writer.Double(coord.lat());
   writer.EndArray();
@@ -197,6 +200,7 @@ void serialize_geometry_route(const std::vector<MatchResult>& results,
   bool open = false;
   for (auto segment = route.cbegin(), prev_segment = route.cend();
        segment != route.cend(); segment++) {
+    assert(segment->edgeid.Is_Valid());
     const auto& shape = segment->Shape(mm.graphreader());
     if (!shape.empty()) {
       assert(shape.size() >= 2);
@@ -641,7 +645,7 @@ class mm_worker_t {
 
  protected:
   const boost::property_tree::ptree config_;
-  mm::MapMatcherFactory matcher_factory_;
+  MapMatcherFactory matcher_factory_;
   std::vector<std::string> customizable_;
 };
 

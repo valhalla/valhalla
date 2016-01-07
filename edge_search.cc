@@ -20,15 +20,15 @@ int main(int argc, char *argv[])
 
   boost::property_tree::ptree config;
   boost::property_tree::read_json("mm.json", config);
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir.hierarchy"));
+  valhalla::baldr::GraphReader graphreader(config.get_child("mjolnir.hierarchy"));
   auto costing = sif::CreatePedestrianCost(config.get_child("costing_options.pedestrian"));
   PointLL location(lon, lat);
-  auto tile = reader.GetGraphTile(location);
+  auto tile = graphreader.GetGraphTile(location);
   if (!tile) {
     std::cerr << "Nothing found" << std::endl;
     return 2;
   }
-  auto bbox = tile->BoundingBox(reader.GetTileHierarchy());
+  auto bbox = tile->BoundingBox(graphreader.GetTileHierarchy());
   std::cout << "Bounding box: ";
   std::cout << bbox.minx();
   std::cout << " " << bbox.maxx();
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   std::cout << "Number of directed edges: ";
   std::cout << tile->header()->directededgecount() << std::endl;
 
-  CandidateQuery cq(reader);
+  mm::CandidateQuery cq(graphreader);
   for (int i=0; i < 10; i++) {
     auto candidates = cq.Query(location, radius * radius, costing->GetFilter());
   }
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
   float cell_width = 0.25/1000,
        cell_height = 0.25/1000;
-  CandidateGridQuery cgq(reader, cell_width, cell_height);
+  mm::CandidateGridQuery cgq(graphreader, cell_width, cell_height);
   std::cout << "Fast query result:" << std::endl;
   float sq_search_radius = radius * radius;
   auto filter = costing->GetFilter();
