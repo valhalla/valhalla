@@ -95,6 +95,19 @@ const ::valhalla::odin::TripPath_Location& EnhancedTripPath::GetDestination() co
   return location(location_size() - 1);
 }
 
+float EnhancedTripPath::GetLength(const DirectionsOptions::Units& units) {
+  float length = 0.0f;
+  for (const auto& n : node()) {
+    if (n.has_edge()) {
+      length += n.edge().length();
+    }
+  }
+  if (units == DirectionsOptions::Units::DirectionsOptions_Units_kMiles) {
+    return (length * kMilePerKm);
+  }
+  return length;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripPath_Edge
 

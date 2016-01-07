@@ -42,6 +42,8 @@ class EnhancedTripPath : public TripPath {
 
   const ::valhalla::odin::TripPath_Location& GetDestination() const;
 
+  float GetLength(const DirectionsOptions::Units& units);
+
 };
 
 class EnhancedTripPath_Edge : public TripPath_Edge {
